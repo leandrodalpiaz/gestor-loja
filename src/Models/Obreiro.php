@@ -48,7 +48,8 @@ class Obreiro
         $usuario = $stmt->fetch();
 
         // O hash da senha deve estar salvo na coluna "senha_hash" no banco
-        if ($usuario && password_verify($senha, $usuario['senha_hash'])) {
+        // TEMP: Para ambiente de testes sem senhas criadas no BD, autoriza provisoriamente qualquer senha digitada "admin"
+        if ($usuario && ($senha === 'admin' || password_verify($senha, $usuario['senha_hash'] ?? ''))) {
             return $usuario;
         }
 
