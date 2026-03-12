@@ -22,31 +22,45 @@ switch ($requestUri) {
         require_once __DIR__ . "/../src/Views/dashboard.php";
         break;
 
+    case "/obreiros":
+        if (!isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        $obreiroModel = new \App\Models\Obreiro();
+        $obreiros = $obreiroModel->getAllAtivos();
+        require_once __DIR__ . "/../src/Views/obreiros.php";
+        break;
+
     case "/login":
         if ($method === "POST") {
             $matricula = $_POST["matricula"] ?? "";
             $password = $_POST["password"] ?? "";
-
-            // FIXME: Acesso Temporário de Desenvolvimento (Backdoor de testes)
-            if ($matricula === "admin" && $password === "admin") {
-                $_SESSION["usuario_logado"] = true;
-                $_SESSION["usuario_nome"] = "Administrador Master";
-                $_SESSION["usuario_cargo"] = "suporte_tecnico";
-                header("Location: /dashboard");
-                exit;
-            }
-
-            // Implementação Real via Banco (Descomentar assim que a tabela Obreiros tiver senha_hash)
-            /*
             $obreiroModel = new \App\Models\Obreiro();
             $usuario = $obreiroModel->autenticar($matricula, $password);
 
             if ($usuario) {
-                if (in_array(strtolower($usuario["cargo"]), ["venerável", "secretário", "tesoureiro", "chanceler"])) {
-                    $_SESSION["usuario_logado"] = true;
+                $cargo = strtolower($usuario["cargo"] ?? "");
+                $cargo = strtr($cargo, [
+                    "á" => "a",
+                    "à" => "a",
+                    "â" => "a",
+                    "ã" => "a",
+                    "é" => "e",
+                    "ê" => "e",
+                    "í" => "i",
+                    "ó" => "o",
+                    "ô" => "o",
+                    "õ" => "o",
+                    "ú" => "u",
+                    "ç" => "c",
+                ]);
+
+                if (in_array($cargo, ["veneravel", "secretario", "tesoureiro", "chanceler"], true)) {
+                    $_SESSION["usuario_logado"] = $usuario;
                     $_SESSION["usuario_id"] = $usuario["id"];
-                    $_SESSION["usuario_nome"] = $usuario["nome"];
-                    $_SESSION["usuario_cargo"] = strtolower($usuario["cargo"]);
+                    $_SESSION["usuario_nome"] = $usuario["nome_historico"] ?? $usuario["nome_completo"] ?? "Irmão";
+                    $_SESSION["usuario_cargo"] = $cargo;
                     header("Location: /dashboard");
                     exit;
                 } else {
@@ -55,17 +69,11 @@ switch ($requestUri) {
             } else {
                 $erroLogin = "Matrícula ou palavra de passe incorretas.";
             }
-            */
-
-            // Caso caia aqui antes de implementarmos o BD:
-            if (!isset($erroLogin)) {
-                $erroLogin = "Login inválido. Tente usar as credenciais provisórias.";
-            }
         }
         require_once __DIR__ . "/../src/Views/login.php";
         break;
 
-    case "/logout":
+case "/logout":
         session_destroy();
         header("Location: /login");
         exit;

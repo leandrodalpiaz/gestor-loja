@@ -21,6 +21,7 @@ class Obreiro
     {
         // Garante que o obreiro encontrado não apenas existe, mas está ATIVO no quadro da loja
         $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE telegram_id = :telegram_id AND ativo = true LIMIT 1");
+        $stmt->execute(['telegram_id' => $telegramId]);
         $result = $stmt->fetch();
         return $result ?: null;
     }
