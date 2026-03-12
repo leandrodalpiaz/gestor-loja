@@ -10,12 +10,26 @@ Env::load(__DIR__ . "/../.env");
 
 $requestUri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 $method = $_SERVER["REQUEST_METHOD"];
+$openTestAccess = filter_var($_ENV["APP_TEST_OPEN_ACCESS"] ?? "false", FILTER_VALIDATE_BOOL);
+
+if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
+    $_SESSION["usuario_logado"] = [
+        "id" => 0,
+        "nome_historico" => "Modo Teste",
+        "nome_completo" => "Acesso temporario para homologacao",
+        "cargo" => "suporte_tecnico",
+        "ativo" => true,
+    ];
+    $_SESSION["usuario_id"] = 0;
+    $_SESSION["usuario_nome"] = "Modo Teste";
+    $_SESSION["usuario_cargo"] = "suporte_tecnico";
+}
 
 switch ($requestUri) {
     case "/":
     case "/index.php":
     case "/dashboard":
-        if (!isset($_SESSION["usuario_logado"])) {
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
             exit;
         }
@@ -23,7 +37,7 @@ switch ($requestUri) {
         break;
 
     case "/obreiros":
-        if (!isset($_SESSION["usuario_logado"])) {
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
             exit;
         }
@@ -33,6 +47,11 @@ switch ($requestUri) {
         break;
 
     case "/login":
+        if ($openTestAccess) {
+            header("Location: /dashboard");
+            exit;
+        }
+
         if ($method === "POST") {
             $matricula = $_POST["matricula"] ?? "";
             $password = $_POST["password"] ?? "";
