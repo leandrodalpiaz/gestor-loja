@@ -15,12 +15,19 @@ Env::load(__DIR__ . '/../.env');
 
 // Lógica principal do webhook
 $content = file_get_contents("php://input");
+error_log("WEBHOOK RECEBIDO: " . $content);
+
 $update = json_decode($content, true);
 
 if ($update) {
-    $client = new TelegramClient();
-    $handler = new CommandHandler($client);
-    $handler->handle($update);
+    try {
+        $client = new TelegramClient();
+        $handler = new CommandHandler($client);
+        $handler->handle($update);
+        error_log("WEBHOOK PROCESSADO COM SUCESSO");
+    } catch (\Throwable $e) {
+        error_log("ERRO NO WEBHOOK: " . $e->getMessage());
+    }
 }
 
 // Responde ao servidor do Telegram que recebemos os dados com sucesso

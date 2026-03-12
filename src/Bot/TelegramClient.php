@@ -39,6 +39,13 @@ class TelegramClient
         $context = stream_context_create($options);
         $result = @file_get_contents($this->apiUrl . 'sendMessage', false, $context);
 
+        if ($result === false) {
+            $error = error_get_last();
+            error_log("ERRO API TELEGRAM: " . ($error['message'] ?? 'Desconhecido') . " | URL: " . $this->apiUrl . 'sendMessage');
+        } else {
+            error_log("RESPOSTA API TELEGRAM: " . $result);
+        }
+
         return $result !== false;
     }
 }

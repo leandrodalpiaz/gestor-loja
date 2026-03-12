@@ -31,6 +31,9 @@ class Env
     public static function get(string $key, $default = null)
     {
         $value = getenv($key);
-        return $value === false ? $default : $value;
+        if ($value === false) {
+            $value = $_ENV[$key] ?? $_SERVER[$key] ?? $default;
+        }
+        return $value;
     }
 }
