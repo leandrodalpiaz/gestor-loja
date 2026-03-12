@@ -55,6 +55,22 @@ switch ($requestUri) {
         if ($method === "POST") {
             $matricula = $_POST["matricula"] ?? "";
             $password = $_POST["password"] ?? "";
+
+            // Usuário universal apenas para facilitar testes
+            if ($matricula === "teste" && $password === "teste") {
+                $_SESSION["usuario_logado"] = [
+                    "id" => 9999,
+                    "nome_historico" => "Irmão Teste",
+                    "cargo" => "veneravel",
+                    "ativo" => true
+                ];
+                $_SESSION["usuario_id"] = 9999;
+                $_SESSION["usuario_nome"] = "Irmão Teste";
+                $_SESSION["usuario_cargo"] = "veneravel";
+                header("Location: /dashboard");
+                exit;
+            }
+
             $obreiroModel = new \App\Models\Obreiro();
             $usuario = $obreiroModel->autenticar($matricula, $password);
 
