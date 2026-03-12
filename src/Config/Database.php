@@ -27,8 +27,9 @@ class Database
                     PDO::ATTR_EMULATE_PREPARES => false,
                 ]);
             } catch (PDOException $e) {
-                // Return generic error or specific error based on environment
-                die("Erro de conexão com o banco de dados: " . $e->getMessage());
+                // Registrar no log o motivo exato de o banco estar rejeitando
+                error_log("FALHA CRÍTICA NO PDO: " . $e->getMessage() . " | DSN: " . $dsn);
+                throw $e; // Propagar a exceção para o webhook capturar no try-catch dele
             }
         }
 
