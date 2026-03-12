@@ -166,12 +166,9 @@ $appTitle = "Chancelaria - Obreiros";
                             
                             <!-- Right: Actions -->
                             <div class="flex items-center gap-2 w-full sm:w-auto justify-end sm:mt-0 mt-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100">
-                                <button class="p-2 text-gray-400 hover:text-cobalto bg-pedra hover:bg-blue-50 rounded-lg transition-colors" title="Ver Detalhes">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="p-2 text-gray-400 hover:text-ouro bg-pedra hover:bg-yellow-50 rounded-lg transition-colors" title="Editar">
+                                <a href="/obreiros/editar?id=<?= htmlspecialchars($obreiro['id']) ?>" class="p-2 text-gray-400 hover:text-ouro bg-pedra hover:bg-yellow-50 rounded-lg transition-colors flex items-center justify-center min-w-[40px] min-h-[40px]" title="Editar / Ver Ficha">
                                     <i class="fas fa-edit"></i>
-                                </button>
+                                </a>
                             </div>
                         </div>
                         <?php endforeach; ?>

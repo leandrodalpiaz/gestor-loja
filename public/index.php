@@ -89,6 +89,41 @@ switch ($requestUri) {
         }
         break;
 
+    case "/obreiros/editar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        $id = $_GET['id'] ?? 0;
+        $obreiroModel = new \App\Models\Obreiro();
+        $obreiro = $obreiroModel->findById((int)$id);
+        
+        if (!$obreiro) {
+            header("Location: /obreiros");
+            exit;
+        }
+        
+        require_once __DIR__ . "/../src/Views/obreiro_editar.php";
+        break;
+
+    case "/obreiros/atualizar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if ($method === "POST") {
+            $obreiroModel = new \App\Models\Obreiro();
+            try {
+                $obreiroModel->update($_POST);
+                header("Location: /obreiros/editar?id=" . urlencode($_POST['id']) . "&sucesso=1");
+            } catch (\PDOException $e) {
+                echo "Erro ao atualizar: " . htmlspecialchars($e->getMessage());
+                echo "<br><a href='/obreiros/editar?id=" . urlencode($_POST['id']) . "'>Voltar</a>";
+            }
+            exit;
+        }
+        break;
+
     case "/login":
         if ($openTestAccess) {
             header("Location: /dashboard");

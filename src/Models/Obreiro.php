@@ -76,6 +76,60 @@ class Obreiro
     }
 
     /**
+     * Busca um obreiro pelo ID do banco (PK)
+     */
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE id = :id LIMIT 1");
+        $stmt->execute(['id' => $id]);
+        $result = $stmt->fetch();
+        return $result ?: null;
+    }
+
+    /**
+     * Atualiza os dados do obreiro no banco
+     */
+    public function update(array $data): bool
+    {
+        $sql = "UPDATE obreiros SET
+            cim = :cim,
+            nome = :nome,
+            nome_historico = :nome_historico,
+            grau = :grau,
+            cargo = :cargo,
+            loja_origem = :loja_origem,
+            data_nascimento_civil = :data_nascimento_civil,
+            data_iniciacao = :data_iniciacao,
+            telefone = :telefone,
+            email = :email,
+            ativo = :ativo
+            WHERE id = :id";
+
+        $stmt = $this->db->prepare($sql);
+
+        $nascimento = !empty($data['data_nascimento_civil']) ? $data['data_nascimento_civil'] : null;
+        $iniciacao = !empty($data['data_iniciacao']) ? $data['data_iniciacao'] : null;
+        
+        // Converte o valor do checkbox de string para boolean do Postgres
+        $ativo = (isset($data['ativo']) && $data['ativo'] == '1') ? 'true' : 'false';
+
+        return $stmt->execute([
+            'id' => $data['id'],
+            'cim' => $data['cim'],
+            'nome' => $data['nome_completo'],
+            'nome_historico' => $data['nome_historico'],
+            'grau' => $data['grau'],
+            'cargo' => $data['cargo'],
+            'loja_origem' => $data['loja_origem'],
+            'data_nascimento_civil' => $nascimento,
+            'data_iniciacao' => $iniciacao,
+            'telefone' => $data['telefone'],
+            'email' => $data['email'],
+            'ativo' => $ativo
+        ]);
+    }
+
+    /**
      * Autenticação para o painel administrativo via matrícula (cim) e senha
      */
     public function autenticar(string $matricula, string $senha): ?array
