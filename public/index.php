@@ -36,18 +36,17 @@ switch ($requestUri) {
                 exit;
             }
 
-            // Implementação Real via Banco (Descomentar assim que a tabela Obreiros tiver 'senha_hash')
+            // Implementação Real via Banco (Descomentar assim que a tabela Obreiros tiver senha_hash)
             /*
             $obreiroModel = new \App\Models\Obreiro();
             $usuario = $obreiroModel->autenticar($matricula, $password);
 
             if ($usuario) {
-                // Checa se o membro tem um cargo da diretoria (venerável, secretário, tesoureiro, chanceler)
-                if (in_array(strtolower($usuario['cargo']), ['venerável', 'secretário', 'tesoureiro', 'chanceler'])) {
+                if (in_array(strtolower($usuario["cargo"]), ["venerável", "secretário", "tesoureiro", "chanceler"])) {
                     $_SESSION["usuario_logado"] = true;
-                    $_SESSION["usuario_id"] = $usuario['id'];
-                    $_SESSION["usuario_nome"] = $usuario['nome'];
-                    $_SESSION["usuario_cargo"] = strtolower($usuario['cargo']);
+                    $_SESSION["usuario_id"] = $usuario["id"];
+                    $_SESSION["usuario_nome"] = $usuario["nome"];
+                    $_SESSION["usuario_cargo"] = strtolower($usuario["cargo"]);
                     header("Location: /dashboard");
                     exit;
                 } else {
@@ -61,6 +60,8 @@ switch ($requestUri) {
             // Caso caia aqui antes de implementarmos o BD:
             if (!isset($erroLogin)) {
                 $erroLogin = "Login inválido. Tente usar as credenciais provisórias.";
+            }
+        }
         require_once __DIR__ . "/../src/Views/login.php";
         break;
 
