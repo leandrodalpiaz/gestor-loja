@@ -36,6 +36,13 @@ switch ($requestUri) {
         require_once __DIR__ . "/../src/Views/dashboard.php";
         break;
 
+    case "/schema":
+        $db = \App\Config\Database::getConnection();
+        $stmt = $db->query("SELECT column_name FROM information_schema.columns WHERE table_name = 'obreiros'");
+        echo "COLUNAS DA TABELA OBREIROS: ";
+        print_r($stmt->fetchAll(\PDO::FETCH_COLUMN));
+        exit;
+
     case "/obreiros":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
