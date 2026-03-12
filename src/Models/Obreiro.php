@@ -31,10 +31,47 @@ class Obreiro
      */
     public function getAllAtivos(): array
     {
-        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE ativo = true ORDER BY nome ASC");
+        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE ativo = true ORDER BY nome_completo ASC");
         $stmt->execute();
 
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Cria um novo obreiro no banco de dados
+     */
+    public function create(array $data): bool
+    {
+        $sql = "INSERT INTO obreiros (
+            cim, nome_completo, nome_historico, cpf, 
+            data_nascimento_civil, data_iniciacao, telefone, 
+            email, profissao, loja_origem, grau, cargo, ativo
+        ) VALUES (
+            :cim, :nome_completo, :nome_historico, :cpf,
+            :data_nascimento_civil, :data_iniciacao, :telefone,
+            :email, :profissao, :loja_origem, :grau, :cargo, true
+        )";
+
+        $stmt = $this->db->prepare($sql);
+
+        // Trata campos de data vazios para null 
+        $nascimento = !empty($data['data_nascimento_civil']) ? $data['data_nascimento_civil'] : null;
+        $iniciacao = !empty($data['data_iniciacao']) ? $data['data_iniciacao'] : null;
+
+        return $stmt->execute([
+            'cim' => $data['cim'] ?? null,
+            'nome_completo' => $data['nome_completo'] ?? null,
+            'nome_historico' => $data['nome_historico'] ?? null,
+            'cpf' => $data['cpf'] ?? null,
+            'data_nascimento_civil' => $nascimento,
+            'data_iniciacao' => $iniciacao,
+            'telefone' => $data['telefone'] ?? null,
+            'email' => $data['email'] ?? null,
+            'profissao' => $data['profissao'] ?? null,
+            'loja_origem' => $data['loja_origem'] ?? null,
+            'grau' => $data['grau'] ?? null,
+            'cargo' => $data['cargo'] ?? null,
+        ]);
     }
 
     /**

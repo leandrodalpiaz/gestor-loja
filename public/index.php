@@ -54,6 +54,25 @@ switch ($requestUri) {
         require_once __DIR__ . "/../src/Views/obreiro_form.php";
         break;
 
+    case "/obreiros/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if ($method === "POST") {
+            $obreiroModel = new \App\Models\Obreiro();
+            try {
+                $obreiroModel->create($_POST);
+                header("Location: /obreiros?sucesso=1");
+            } catch (\PDOException $e) {
+                // Em caso de erro (ex: CIM duplicado), volta para o form
+                echo "Erro ao salvar: " . htmlspecialchars($e->getMessage());
+                echo "<br><a href='/obreiros/novo'>Voltar</a>";
+            }
+            exit;
+        }
+        break;
+
     case "/login":
         if ($openTestAccess) {
             header("Location: /dashboard");
