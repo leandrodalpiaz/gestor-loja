@@ -81,12 +81,12 @@ class CommandHandler
 
             $this->telegram->sendMessage($chatId, $mensagem, $teclado);
         } else {
-            // Conta nova/não vinculada
-            $mensagem = "Olá! Bem-vindo ao assistente da Loja Renascença.\n\n";
+            // Conta nova/não vinculada ou membro inativo
+            $mensagem = "Olá! Bem-vindo ao assistente da nossa Loja.\n\n";
             $mensagem .= "Seu ID do Telegram é: <b>{$chatId}</b>\n\n";
-            $mensagem .= "⚠️ <i>Ainda não encontrei o seu cadastro no meu banco de dados.</i> \n";
-            $mensagem .= "Por favor, envie este número ({$chatId}) para o Irmão Secretário ou Chanceler para ele vincular você ao nosso quadro!";
-            
+            $mensagem .= "⚠️ <i>Ainda não encontrei um cadastro de membro ATIVO no banco de dados vinculado a este Telegram.</i> \n";
+            $mensagem .= "Por favor, encaminhe este número ({$chatId}) para o Irmão Secretário ou Chanceler para liberar o seu acesso!";
+
             $this->telegram->sendMessage($chatId, $mensagem);
         }
     }

@@ -19,9 +19,8 @@ class Obreiro
      */
     public function findByTelegramId(int $telegramId): ?array
     {
-        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE telegram_id = :telegram_id LIMIT 1");
-        $stmt->execute(['telegram_id' => $telegramId]);
-        
+        // Garante que o obreiro encontrado não apenas existe, mas está ATIVO no quadro da loja
+        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE telegram_id = :telegram_id AND ativo = true LIMIT 1");
         $result = $stmt->fetch();
         return $result ?: null;
     }
