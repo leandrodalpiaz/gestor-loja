@@ -38,12 +38,12 @@ class Obreiro
     }
 
     /**
-     * Autenticação para o painel administrativo via matrícula e senha
+     * Autenticação para o painel administrativo via matrícula (cim) e senha
      */
     public function autenticar(string $matricula, string $senha): ?array
     {
         // Certifica de puxar apenas se o membro for ativo para login
-        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE matricula = :matricula AND ativo = true LIMIT 1");
+        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE cim = :matricula AND ativo = true LIMIT 1");
         $stmt->execute(['matricula' => $matricula]);
         $usuario = $stmt->fetch();
 
