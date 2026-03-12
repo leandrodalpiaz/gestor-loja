@@ -94,9 +94,9 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
-        $id = $_GET['id'] ?? 0;
+        $id = $_GET['id'] ?? '';
         $obreiroModel = new \App\Models\Obreiro();
-        $obreiro = $obreiroModel->findById((int)$id);
+        $obreiro = $obreiroModel->findById($id);
         
         if (!$obreiro) {
             header("Location: /obreiros");

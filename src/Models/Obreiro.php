@@ -78,7 +78,7 @@ class Obreiro
     /**
      * Busca um obreiro pelo ID do banco (PK)
      */
-    public function findById(int $id): ?array
+    public function findById(string $id): ?array
     {
         $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE id = :id LIMIT 1");
         $stmt->execute(['id' => $id]);
