@@ -48,4 +48,29 @@ class TelegramClient
 
         return $result !== false;
     }
+
+    public function answerCallbackQuery(string $callbackQueryId, string $text = ''): bool
+    {
+        $data = [
+            'callback_query_id' => $callbackQueryId
+        ];
+
+        if (!empty($text)) {
+            $data['text'] = $text;
+        }
+
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method'  => 'POST',
+                'content' => http_build_query($data),
+                'ignore_errors' => true
+            ]
+        ];
+
+        $context = stream_context_create($options);
+        $result = @file_get_contents($this->apiUrl . 'answerCallbackQuery', false, $context);
+        
+        return $result !== false;
+    }
 }
