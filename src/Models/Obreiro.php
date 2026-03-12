@@ -42,12 +42,13 @@ class Obreiro
      */
     public function create(array $data): bool
     {
+        // Renomeando de nome_completo para nome provisoriamente pra garantir compatibilidade com o db inicial
         $sql = "INSERT INTO obreiros (
-            cim, nome_completo, nome_historico, cpf, 
+            cim, nome, nome_historico, cpf, 
             data_nascimento_civil, data_iniciacao, telefone, 
             email, profissao, loja_origem, grau, cargo, ativo
         ) VALUES (
-            :cim, :nome_completo, :nome_historico, :cpf,
+            :cim, :nome, :nome_historico, :cpf,
             :data_nascimento_civil, :data_iniciacao, :telefone,
             :email, :profissao, :loja_origem, :grau, :cargo, true
         )";
@@ -60,7 +61,7 @@ class Obreiro
 
         return $stmt->execute([
             'cim' => $data['cim'] ?? null,
-            'nome_completo' => $data['nome_completo'] ?? null,
+            'nome' => $data['nome_completo'] ?? null,
             'nome_historico' => $data['nome_historico'] ?? null,
             'cpf' => $data['cpf'] ?? null,
             'data_nascimento_civil' => $nascimento,

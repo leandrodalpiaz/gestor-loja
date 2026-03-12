@@ -38,6 +38,15 @@ switch ($requestUri) {
 
     case "/schema":
         $db = \App\Config\Database::getConnection();
+        
+        // Roda a migration de chancelaria se a tabela antiga existir
+        try {
+            $db->exec('ALTER TABLE obreiros ADD COLUMN cargo VARCHAR(255), ADD COLUMN nome_historico VARCHAR(255), ADD COLUMN cpf VARCHAR(20), ADD COLUMN data_nascimento_civil DATE, ADD COLUMN data_iniciacao DATE, ADD COLUMN telefone VARCHAR(20), ADD COLUMN email VARCHAR(255), ADD COLUMN profissao VARCHAR(255), ADD COLUMN loja_origem VARCHAR(255), ADD COLUMN senha_hash VARCHAR(255);');
+            echo "NOVAS COLUNAS ADICIONADAS COM SUCESSO! <br><br>";
+        } catch (\PDOException $e) {
+            echo "Info Migração: " . $e->getMessage() . " <br><br>";
+        }
+
         $stmt = $db->query("SELECT column_name FROM information_schema.columns WHERE table_name = 'obreiros'");
         echo "COLUNAS DA TABELA OBREIROS: ";
         print_r($stmt->fetchAll(\PDO::FETCH_COLUMN));
