@@ -62,7 +62,7 @@
                                 <path fill-rule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 6.908V16a2 2 0 002 2h8a2 2 0 002-2V6.908a2.5 2.5 0 00-1.042-2.031L11.542 2.3A2.5 2.5 0 0010 2.062V6.5h2v2h-2v2h2v2h-2v2h-2v-2h-2v-2h2v-2h-2v-2H9.99V2.062a2.5 2.5 0 00-1.542.237L5.042 4.877A2.5 2.5 0 004 6.908l.001.001z" clip-rule="evenodd" />
                             </svg>
                         </div>
-                        <input type="text" name="matricula" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-pedra/30 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-ouro focus:border-ouro sm:text-sm transition-all" placeholder="Digite seu CIM..." required>
+                        <input type="text" name="matricula" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-pedra/30 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-ouro focus:border-ouro sm:text-sm transition-all" placeholder="Digite seu CIM...">
                     </div>
                 </div>
 
@@ -75,7 +75,7 @@
                                 <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
                             </svg>
                         </div>
-                        <input type="password" name="password" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-pedra/30 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-ouro focus:border-ouro sm:text-sm transition-all" placeholder="••••••••" required>
+                        <input type="password" name="password" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-pedra/30 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-ouro focus:border-ouro sm:text-sm transition-all" placeholder="••••••••">
                     </div>
                 </div>
 
