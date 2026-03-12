@@ -154,7 +154,7 @@ $appTitle = "Chancelaria - Obreiros";
                                         </span>
                                         <span class="flex items-center gap-1">
                                             <i class="fas fa-id-card text-gray-400 text-xs"></i> 
-                                            CIM: <?= htmlspecialchars($obreiro['matricula']) ?>
+                                            CIM: <?= htmlspecialchars($obreiro['cim'] ?? 'Não informado') ?>
                                         </span>
                                     </div>
                                     <div class="mt-2 text-xs text-gray-400 flex items-center gap-1">
