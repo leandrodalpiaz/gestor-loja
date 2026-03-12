@@ -2,13 +2,17 @@
 
 namespace App\Bot;
 
+use App\Models\Obreiro;
+
 class CommandHandler
 {
     private TelegramClient $telegram;
+    private Obreiro $obreiroModel;
 
     public function __construct(TelegramClient $telegram)
     {
         $this->telegram = $telegram;
+        $this->obreiroModel = new Obreiro();
     }
 
     public function handle(array $update): void
@@ -40,7 +44,25 @@ class CommandHandler
 
     private function handleStart($chatId): void
     {
-        $mensagem = "Olá, Irmão! O Bot da Loja Renascença está online e estruturado em nossa nova arquitetura.\n\nSeu ID de registro é: <b>{$chatId}</b>.";
+        // Verifica no banco de dados se esse ID do Telegram já pertence a um Irmão
+        $obreiro = $this->obreiroModel->findByTelegramId($chatId);
+
+        if ($obreiro) {
+            // Obreiro reconhecido no banco de dados!
+            $grau = ucfirst($obreiro['grau']);
+            $mensagem = "TFA, Meu Irmão <b>{$obreiro['nome']}</b>!\n";
+            $mensagem .= "Seu cadastro foi reconhecido ({$grau}).\n\n";
+            $mensagem .= "Utilize o menu para interagir com a Loja.";
+            
+            // Aqui futuramente colocaremos os botões In-Line do Telegram
+        } else {
+            // Conta nova/não vinculada
+            $mensagem = "Olá! Bem-vindo ao assistente da Loja Renascença.\n\n";
+            $mensagem .= "Seu ID do Telegram é: <b>{$chatId}</b>\n\n";
+            $mensagem .= "⚠️ <i>Ainda não encontrei o seu cadastro no meu banco de dados.</i> \n";
+            $mensagem .= "Por favor, envie este número ({$chatId}) para o Irmão Secretário ou Chanceler para ele vincular você ao nosso quadro!";
+        }
+
         $this->telegram->sendMessage($chatId, $mensagem);
     }
 
