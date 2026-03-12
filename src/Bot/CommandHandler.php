@@ -91,6 +91,18 @@ class CommandHandler
         }
     }
 
+    private function handleHelp(int $chatId): void
+    {
+        $mensagem = "ℹ️ <b>Ajuda do Gestor da Loja</b>\n\n";
+        $mensagem .= "Este bot auxilia na gestão da nossa Loja Maçônica.\n\n";
+        $mensagem .= "<b>Comandos disponíveis:</b>\n";
+        $mensagem .= "/start - Inicia a interação e valida seu cadastro\n";
+        $mensagem .= "/ajuda - Exibe esta mensagem de ajuda\n\n";
+        $mensagem .= "Para outras dúvidas, contate a Secretaria da Loja.";
+
+        $this->telegram->sendMessage($chatId, $mensagem);
+    }
+
     private function handleCallback(array $callbackQuery): void
     {
         $chatId = $callbackQuery['message']['chat']['id'];

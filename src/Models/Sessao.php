@@ -20,14 +20,13 @@ class Sessao
     public function getProximaSessao(): ?array
     {
         $stmt = $this->db->prepare("
-            SELECT * FROM sessoes 
-            WHERE ativa = true 
-            AND data_hora > NOW() 
-            ORDER BY data_hora ASC 
+            SELECT * FROM eventos
+            WHERE data_hora > NOW()
+            ORDER BY data_hora ASC
             LIMIT 1
         ");
         $stmt->execute();
-        
+
         $result = $stmt->fetch();
         return $result ?: null;
     }
