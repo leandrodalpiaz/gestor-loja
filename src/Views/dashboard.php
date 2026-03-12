@@ -28,6 +28,12 @@
 </head>
 <body class="bg-pedra min-h-screen font-sans text-gray-800" x-data="{ menuOpen: false }">
 
+    <?php
+    $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
+    $usuarioCargo = $_SESSION['usuario_cargo'] ?? '';
+    $isChanceler = $usuarioCargo === 'chanceler';
+    ?>
+
     <!-- Navbar Mobile / Topbar Desktop -->
     <header class="bg-cobalto text-white shadow-md relative z-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -41,7 +47,7 @@
 
                 <!-- Menu Botões Direita (Desktop) -->
                 <div class="hidden sm:flex sm:items-center space-x-6">
-                    <span class="text-sm border-r border-blue-700 pr-6">Olá, Venerável Mestre</span>
+                    <span class="text-sm border-r border-blue-700 pr-6">Olá, <?= htmlspecialchars($usuarioNome) ?></span>
                     <a href="/logout" class="text-gray-300 hover:text-white transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -64,10 +70,13 @@
         <div x-show="menuOpen" @click.away="menuOpen = false" class="sm:hidden bg-blue-900 border-t border-blue-800" style="display: none;">
             <div class="px-2 pt-2 pb-3 space-y-1">
                 <a href="/dashboard" class="bg-blue-800 text-white block px-3 py-2 rounded-md text-base font-medium">Dashboard</a>
-                <a href="#" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Obreiros</a>
+                <a href="/obreiros" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Obreiros</a>
+                <?php if ($isChanceler): ?>
+                    <a href="/chancelaria/efemerides" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Sessão do Chanceler</a>
+                <?php endif; ?>
                 <a href="#" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Sessões</a>
                 <div class="border-t border-blue-800 my-2"></div>
-                <div class="px-3 py-2 text-sm text-blue-300">Venerável Mestre</div>
+                <div class="px-3 py-2 text-sm text-blue-300"><?= htmlspecialchars(ucfirst($usuarioCargo)) ?></div>
                 <a href="/logout" class="text-red-400 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Sair</a>
             </div>
         </div>
@@ -81,9 +90,14 @@
                 <a href="/dashboard" class="bg-white text-cobalto border-l-4 border-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-r-md shadow-sm">
                     Dashboard
                 </a>
-                <a href="#" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
+                <a href="/obreiros" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
                     Obreiros (Chancelaria)
                 </a>
+                <?php if ($isChanceler): ?>
+                <a href="/chancelaria/efemerides" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
+                    Sessão do Chanceler (Efemérides)
+                </a>
+                <?php endif; ?>
                 <a href="#" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
                     Sessões (Secretaria)
                 </a>

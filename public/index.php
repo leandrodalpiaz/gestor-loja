@@ -12,17 +12,53 @@ $requestUri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 $method = $_SERVER["REQUEST_METHOD"];
 $openTestAccess = filter_var($_ENV["APP_TEST_OPEN_ACCESS"] ?? "false", FILTER_VALIDATE_BOOL);
 
+$normalizeRole = static function (?string $cargo): string {
+    $cargo = strtolower(trim((string) $cargo));
+    return strtr($cargo, [
+        "á" => "a",
+        "à" => "a",
+        "â" => "a",
+        "ã" => "a",
+        "é" => "e",
+        "ê" => "e",
+        "í" => "i",
+        "ó" => "o",
+        "ô" => "o",
+        "õ" => "o",
+        "ú" => "u",
+        "ç" => "c",
+    ]);
+};
+
+$buildEfemeridesPreview = static function (): array {
+    $obreiroModel = new \App\Models\Obreiro();
+    $registroModel = new \App\Models\EfemerideRegistro();
+    $composer = new \App\Services\EfemeridesComposer();
+
+    $aniversariantes = $obreiroModel->getEfemeridesDoDia();
+    $registrosHoje = $registroModel->getRegistrosDoDia();
+    $registrosRecentes = $registroModel->getRecentes();
+    $mensagemPreview = $composer->composeDailyPreview($aniversariantes, $registrosHoje);
+
+    return [
+        'aniversariantes' => $aniversariantes,
+        'registrosHoje' => $registrosHoje,
+        'registrosRecentes' => $registrosRecentes,
+        'mensagemPreview' => $mensagemPreview,
+    ];
+};
+
 if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
     $_SESSION["usuario_logado"] = [
         "id" => 0,
         "nome_historico" => "Modo Teste",
         "nome_completo" => "Acesso temporario para homologacao",
-        "cargo" => "suporte_tecnico",
+        "cargo" => "chanceler",
         "ativo" => true,
     ];
     $_SESSION["usuario_id"] = 0;
     $_SESSION["usuario_nome"] = "Modo Teste";
-    $_SESSION["usuario_cargo"] = "suporte_tecnico";
+    $_SESSION["usuario_cargo"] = "chanceler";
 }
 
 switch ($requestUri) {
@@ -36,6 +72,180 @@ switch ($requestUri) {
         require_once __DIR__ . "/../src/Views/dashboard.php";
         break;
 
+    case "/chancelaria/efemerides":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+
+        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
+        if ($cargoUsuario !== 'chanceler') {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler.";
+            exit;
+        }
+
+        $previewData = $buildEfemeridesPreview();
+        $registrosRecentes = $previewData['registrosRecentes'];
+        $mensagemPreview = $previewData['mensagemPreview'];
+
+        $sucessoMensagem = null;
+        if (isset($_GET['sucesso']) && $_GET['sucesso'] === 'registro') {
+            $sucessoMensagem = 'Registro salvo com sucesso.';
+        } elseif (isset($_GET['sucesso']) && $_GET['sucesso'] === 'desativado') {
+            $sucessoMensagem = 'Registro desativado com sucesso.';
+        } elseif (isset($_GET['sucesso']) && $_GET['sucesso'] === 'previa_enviada') {
+            $sucessoMensagem = 'Prévia enviada no Telegram privado do chanceler.';
+        } elseif (isset($_GET['sucesso']) && $_GET['sucesso'] === 'grupo_enviado') {
+            $sucessoMensagem = 'Mensagem enviada no grupo oficial com sucesso.';
+        }
+
+        $erroMensagem = $_GET['erro'] ?? null;
+
+        require_once __DIR__ . "/../src/Views/efemerides_chanceler.php";
+        break;
+
+    case "/chancelaria/efemerides/enviar-previa":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+
+        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
+        if ($cargoUsuario !== 'chanceler') {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler.";
+            exit;
+        }
+
+        if ($method !== 'POST') {
+            http_response_code(405);
+            echo "Método não permitido.";
+            exit;
+        }
+
+        $previewData = $buildEfemeridesPreview();
+        $mensagem = $previewData['mensagemPreview'];
+
+        $telegram = new \App\Services\TelegramService();
+        $ok = $telegram->sendMessageToReview($mensagem);
+
+        if (!$ok) {
+            header("Location: /chancelaria/efemerides?erro=" . urlencode('Falha ao enviar prévia no Telegram do chanceler.'));
+            exit;
+        }
+
+        header("Location: /chancelaria/efemerides?sucesso=previa_enviada");
+        exit;
+
+    case "/chancelaria/efemerides/enviar-grupo":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+
+        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
+        if ($cargoUsuario !== 'chanceler') {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler.";
+            exit;
+        }
+
+        if ($method !== 'POST') {
+            http_response_code(405);
+            echo "Método não permitido.";
+            exit;
+        }
+
+        $previewData = $buildEfemeridesPreview();
+        $mensagem = $previewData['mensagemPreview'];
+
+        $telegram = new \App\Services\TelegramService();
+        $ok = $telegram->sendMessageToGroup($mensagem);
+
+        if (!$ok) {
+            header("Location: /chancelaria/efemerides?erro=" . urlencode('Falha ao enviar mensagem no grupo.'));
+            exit;
+        }
+
+        header("Location: /chancelaria/efemerides?sucesso=grupo_enviado");
+        exit;
+
+    case "/chancelaria/efemerides/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+
+        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
+        if ($cargoUsuario !== 'chanceler') {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler.";
+            exit;
+        }
+
+        if ($method !== 'POST') {
+            http_response_code(405);
+            echo "Método não permitido.";
+            exit;
+        }
+
+        $nome = trim((string) ($_POST['nome'] ?? ''));
+        $tipo = trim((string) ($_POST['tipo'] ?? ''));
+        $dataEvento = trim((string) ($_POST['data_evento'] ?? ''));
+
+        if ($nome === '' || $tipo === '' || $dataEvento === '') {
+            header("Location: /chancelaria/efemerides?erro=" . urlencode('Nome, tipo e data são obrigatórios.'));
+            exit;
+        }
+
+        $registroModel = new \App\Models\EfemerideRegistro();
+        $ok = $registroModel->create($_POST, (int) ($_SESSION['usuario_id'] ?? 0));
+
+        if (!$ok) {
+            header("Location: /chancelaria/efemerides?erro=" . urlencode('Não foi possível salvar o registro.'));
+            exit;
+        }
+
+        header("Location: /chancelaria/efemerides?sucesso=registro");
+        exit;
+
+    case "/chancelaria/efemerides/desativar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+
+        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
+        if ($cargoUsuario !== 'chanceler') {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler.";
+            exit;
+        }
+
+        if ($method !== 'POST') {
+            http_response_code(405);
+            echo "Método não permitido.";
+            exit;
+        }
+
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            header("Location: /chancelaria/efemerides?erro=" . urlencode('Registro inválido.'));
+            exit;
+        }
+
+        $registroModel = new \App\Models\EfemerideRegistro();
+        $ok = $registroModel->desativar($id);
+
+        if (!$ok) {
+            header("Location: /chancelaria/efemerides?erro=" . urlencode('Não foi possível desativar o registro.'));
+            exit;
+        }
+
+        header("Location: /chancelaria/efemerides?sucesso=desativado");
+        exit;
+
     case "/cron/efemerides":
         // Proteção simples: require a secret token parameter to prevent malicious invocation
         $triggerToken = $_GET['token'] ?? '';
@@ -47,40 +257,20 @@ switch ($requestUri) {
             exit;
         }
 
-        $obreiroModel = new \App\Models\Obreiro();
-        $telegram = new \App\Services\TelegramService();
-        $aniversariantes = $obreiroModel->getEfemeridesDoDia();
+        $previewData = $buildEfemeridesPreview();
+        $message = $previewData['mensagemPreview'];
 
-        if (empty($aniversariantes)) {
+        if (trim($message) === '' || $message === 'Nenhuma efeméride para hoje.') {
             echo "Nenhuma efeméride hoje.";
             exit;
         }
 
-        $mensagens = [];
-        foreach ($aniversariantes as $ob) {
-            $nome = $ob['nome_historico'] ?: $ob['nome'];
-            $grau = $ob['grau'] ? " (" . ucfirst($ob['grau']) . ")" : "";
-            
-            if ($ob['is_aniversario_civil']) {
-                $mensagens[] = "🎂 Hoje é o aniversário natalício do nosso Amado Ir. <b>{$nome}</b>{$grau}! Desejamos muita saúde, paz e prosperidade!";
-            }
-            if ($ob['is_aniversario_maconico']) {
-                $mensagens[] = "🎉 Hoje nosso Amado Ir. <b>{$nome}</b>{$grau} comemora seu Aniversário de Iniciação Maçônica! Parabéns pela caminhada na Ordem!";
-            }
-        }
-
-        if (!empty($mensagens)) {
-            $textoBase = "🏛️ <b>A:.R:.L:.S:. Renascença</b> - Efemérides do Dia\n\n";
-            $message = $textoBase . implode("\n\n", $mensagens);
-            
-            $success = $telegram->sendMessage($message);
-            if ($success) {
-                echo "Efemérides enviadas com sucesso no Telegram!";
-            } else {
-                echo "Falha ao enviar efemérides no Telegram. Verifique os logs e os tokens.";
-            }
+        $telegram = new \App\Services\TelegramService();
+        $success = $telegram->sendMessageToGroup($message);
+        if ($success) {
+            echo "Efemérides enviadas com sucesso no Telegram!";
         } else {
-            echo "Efemérides computadas, mas sem mensagens.";
+            echo "Falha ao enviar efemérides no Telegram. Verifique os logs e os tokens.";
         }
         exit;
 
@@ -187,12 +377,12 @@ switch ($requestUri) {
                 $_SESSION["usuario_logado"] = [
                     "id" => 9999,
                     "nome_historico" => "Irmão Teste",
-                    "cargo" => "veneravel",
+                    "cargo" => "chanceler",
                     "ativo" => true
                 ];
                 $_SESSION["usuario_id"] = 9999;
                 $_SESSION["usuario_nome"] = "Irmão Teste";
-                $_SESSION["usuario_cargo"] = "veneravel";
+                $_SESSION["usuario_cargo"] = "chanceler";
                 header("Location: /dashboard");
                 exit;
             }
@@ -201,21 +391,7 @@ switch ($requestUri) {
             $usuario = $obreiroModel->autenticar($matricula, $password);
 
             if ($usuario) {
-                $cargo = strtolower($usuario["cargo"] ?? "");
-                $cargo = strtr($cargo, [
-                    "á" => "a",
-                    "à" => "a",
-                    "â" => "a",
-                    "ã" => "a",
-                    "é" => "e",
-                    "ê" => "e",
-                    "í" => "i",
-                    "ó" => "o",
-                    "ô" => "o",
-                    "õ" => "o",
-                    "ú" => "u",
-                    "ç" => "c",
-                ]);
+                $cargo = $normalizeRole($usuario["cargo"] ?? "");
 
                 if (in_array($cargo, ["veneravel", "secretario", "tesoureiro", "chanceler"], true)) {
                     $_SESSION["usuario_logado"] = $usuario;
