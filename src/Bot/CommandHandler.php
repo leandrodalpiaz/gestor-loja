@@ -3,16 +3,22 @@
 namespace App\Bot;
 
 use App\Models\Obreiro;
+use App\Models\Sessao;
+use App\Models\Presenca;
 
 class CommandHandler
 {
     private TelegramClient $telegram;
     private Obreiro $obreiroModel;
+    private Sessao $sessaoModel;
+    private Presenca $presencaModel;
 
     public function __construct(TelegramClient $telegram)
     {
         $this->telegram = $telegram;
         $this->obreiroModel = new Obreiro();
+        $this->sessaoModel = new Sessao();
+        $this->presencaModel = new Presenca();
     }
 
     public function handle(array $update): void
@@ -100,17 +106,37 @@ class CommandHandler
 
         switch ($callbackData) {
             case 'presenca_confirmar':
-                $mensagem = "✅ Irmão {$obreiro['nome']}, sua presença para a próxima sessão foi confirmada com sucesso!";
-                // Futuramente: Chamar o Model para Salvar no Banco
+                $proxima = $this->sessaoModel->getProximaSessao();
+                if ($proxima) {
+                    $this->presencaModel->registrar($proxima['id'], $chatId, 'Confirmado');
+                    $mensagem = "✅ Irmão {$obreiro['nome']}, sua presença para a sessão de <b>".date('d/m/Y', strtotime($proxima['data_hora']))."</b> foi confirmada com sucesso!";
+                } else {
+                    $mensagem = "❌ Nenhuma sessão futura está agendada no momento.";
+                }
                 break;
-            
+
             case 'presenca_ausencia':
-                $mensagem = "❌ Entendido, Irmão. Sua ausência foi registrada. Desejamos que tudo esteja bem!";
-                // Futuramente: Chamar o Model para Salvar no Banco
+                $proxima = $this->sessaoModel->getProximaSessao();
+                if ($proxima) {
+                    $this->presencaModel->registrar($proxima['id'], $chatId, 'Ausente');
+                    $mensagem = "❌ Entendido, Irmão {$obreiro['nome']}. Sua ausência para a sessão de <b>".date('d/m/Y', strtotime($proxima['data_hora']))."</b> foi devidamente justificada/registrada.";
+                } else {
+                    $mensagem = "❌ Nenhuma sessão futura está agendada no momento.";
+                }
                 break;
 
             case 'sessao_info':
-                $mensagem = "📜 <b>Próxima Sessão:</b>\nData: (Exemplo) Quinta-feira às 20h\nGrau: Companheiro\nTraje: Maçônico";
+                $proxima = $this->sessaoModel->getProximaSessao();
+                if ($proxima) {
+                    $data = date('d/m/Y à\s H:i', strtotime($proxima['data_hora']));
+                    $mensagem = "📜 <b>Próxima Sessão:</b>\n\n";
+                    $mensagem .= "<b>Título:</b> {$proxima['titulo']}\n";
+                    $mensagem .= "<b>Data:</b> {$data}\n";
+                    $mensagem .= "<b>Grau:</b> {$proxima['grau']}\n";
+                    $mensagem .= "<b>Traje:</b> {$proxima['traje']}";
+                } else {
+                    $mensagem = "Nenhuma sessão futura programada no momento.";
+                }
                 break;
 
             default:
@@ -119,9 +145,8 @@ class CommandHandler
         }
 
         $this->telegram->sendMessage($chatId, $mensagem);
-        
-        // As boas práticas da API do Telegram exigem responder ao CallbackQuery para tirar o ícone de "carregando" (reloginho) do botão
-        // Como o TelegramClient ainda não tem "answerCallbackQuery" nativo, enviaremos apenas a mensagem e o frontend do Telegram aceita após alguns segundos.
-        $this->telegram->sendMessage($chatId, $mensagem);
+
+        // Avisar o Telegram oficial que nós recebemos o clique para remover o reloginho do botão e evitar duplicação de requests
+        $this->telegram->answerCallbackQuery($callbackId);
     }
 }
