@@ -5,5 +5,5 @@ spl_autoload_register(function ($class) {
     }
 });
 $db = App\Config\Database::getConnection();
-print_r($db->query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'obreiros'")->fetchAll(PDO::FETCH_ASSOC));
+print_r($db->query("SELECT column_name FROM information_schema.columns WHERE table_name = 'obreiros'")->fetchAll(PDO::FETCH_ASSOC));
 

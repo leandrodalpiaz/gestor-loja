@@ -52,17 +52,17 @@
         <div class="p-8 pt-4">
             <form action="/login" method="POST" class="space-y-5">
                 
-                <!-- Email / Identificação -->
+                <!-- Matrícula / Identificação -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Identidade (E-mail)</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">CIM / Matrícula</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <!-- Ícone de Identidade -->
                             <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                <path fill-rule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 6.908V16a2 2 0 002 2h8a2 2 0 002-2V6.908a2.5 2.5 0 00-1.042-2.031L11.542 2.3A2.5 2.5 0 0010 2.062V6.5h2v2h-2v2h2v2h-2v2h-2v-2h-2v-2h2v-2h-2v-2H9.99V2.062a2.5 2.5 0 00-1.542.237L5.042 4.877A2.5 2.5 0 004 6.908l.001.001z" clip-rule="evenodd" />
                             </svg>
                         </div>
-                        <input type="email" name="email" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-pedra/30 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-ouro focus:border-ouro sm:text-sm transition-all" placeholder="veneravel@loja.com" required>
+                        <input type="text" name="matricula" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-pedra/30 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-ouro focus:border-ouro sm:text-sm transition-all" placeholder="Digite seu CIM..." required>
                     </div>
                 </div>
 

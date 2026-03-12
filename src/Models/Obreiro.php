@@ -32,7 +32,25 @@ class Obreiro
     {
         $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE ativo = true ORDER BY nome ASC");
         $stmt->execute();
-        
+
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Autenticação para o painel administrativo via matrícula e senha
+     */
+    public function autenticar(string $matricula, string $senha): ?array
+    {
+        // Certifica de puxar apenas se o membro for ativo para login
+        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE matricula = :matricula AND ativo = true LIMIT 1");
+        $stmt->execute(['matricula' => $matricula]);
+        $usuario = $stmt->fetch();
+
+        // O hash da senha deve estar salvo na coluna "senha_hash" no banco
+        if ($usuario && password_verify($senha, $usuario['senha_hash'])) {
+            return $usuario;
+        }
+
+        return null;
     }
 }

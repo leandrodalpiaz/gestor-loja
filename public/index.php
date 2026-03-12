@@ -24,18 +24,43 @@ switch ($requestUri) {
 
     case "/login":
         if ($method === "POST") {
-            $email = $_POST["email"] ?? "";
+            $matricula = $_POST["matricula"] ?? "";
             $password = $_POST["password"] ?? "";
-            
-            // FIXME: Apenas um mock-up da regra de negócio de login para abrir a tela
-            if (strpos($email, "@") !== false && $password != "") {
+
+            // FIXME: Acesso Temporário de Desenvolvimento (Backdoor de testes)
+            if ($matricula === "admin" && $password === "admin") {
                 $_SESSION["usuario_logado"] = true;
+                $_SESSION["usuario_nome"] = "Administrador Master";
+                $_SESSION["usuario_cargo"] = "suporte_tecnico";
                 header("Location: /dashboard");
                 exit;
-            } else {
-                $erroLogin = "Credenciais inválidas. Verifique com a Secretaria.";
             }
-        }
+
+            // Implementação Real via Banco (Descomentar assim que a tabela Obreiros tiver 'senha_hash')
+            /*
+            $obreiroModel = new \App\Models\Obreiro();
+            $usuario = $obreiroModel->autenticar($matricula, $password);
+
+            if ($usuario) {
+                // Checa se o membro tem um cargo da diretoria (venerável, secretário, tesoureiro, chanceler)
+                if (in_array(strtolower($usuario['cargo']), ['venerável', 'secretário', 'tesoureiro', 'chanceler'])) {
+                    $_SESSION["usuario_logado"] = true;
+                    $_SESSION["usuario_id"] = $usuario['id'];
+                    $_SESSION["usuario_nome"] = $usuario['nome'];
+                    $_SESSION["usuario_cargo"] = strtolower($usuario['cargo']);
+                    header("Location: /dashboard");
+                    exit;
+                } else {
+                    $erroLogin = "Irmão, suas permissões são apenas para o uso do Bot via Telegram.";
+                }
+            } else {
+                $erroLogin = "Matrícula ou palavra de passe incorretas.";
+            }
+            */
+
+            // Caso caia aqui antes de implementarmos o BD:
+            if (!isset($erroLogin)) {
+                $erroLogin = "Login inválido. Tente usar as credenciais provisórias.";
         require_once __DIR__ . "/../src/Views/login.php";
         break;
 
