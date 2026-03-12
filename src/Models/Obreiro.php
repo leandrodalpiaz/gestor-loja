@@ -31,7 +31,7 @@ class Obreiro
      */
     public function getAllAtivos(): array
     {
-        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE ativo = true ORDER BY nome_completo ASC");
+        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE ativo = true ORDER BY nome ASC");
         $stmt->execute();
 
         return $stmt->fetchAll();

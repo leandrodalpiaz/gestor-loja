@@ -142,11 +142,11 @@ $appTitle = "Chancelaria - Obreiros";
                             <!-- Left: Info -->
                             <div class="flex items-start gap-4 w-full sm:w-auto">
                                 <div class="h-12 w-12 rounded-full bg-pedra-escura flex items-center justify-center text-cobalto text-xl font-bold border border-gray-200 shrink-0">
-                                    <?= substr(htmlspecialchars($obreiro['nome_historico'] ?? $obreiro['nome_completo']), 0, 1) ?>
+                                    <?= substr(htmlspecialchars($obreiro['nome_historico'] ?? $obreiro['nome']), 0, 1) ?>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <h3 class="text-base font-bold text-gray-900 truncate">
-                                        <?= htmlspecialchars($obreiro['nome_historico'] ?? $obreiro['nome_completo']) ?>
+                                        <?= htmlspecialchars($obreiro['nome_historico'] ?? $obreiro['nome']) ?>
                                     </h3>
                                     <div class="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
