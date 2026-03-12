@@ -46,6 +46,14 @@ switch ($requestUri) {
         require_once __DIR__ . "/../src/Views/obreiros.php";
         break;
 
+    case "/obreiros/novo":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        require_once __DIR__ . "/../src/Views/obreiro_form.php";
+        break;
+
     case "/login":
         if ($openTestAccess) {
             header("Location: /dashboard");

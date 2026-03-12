@@ -113,9 +113,9 @@ $appTitle = "Chancelaria - Obreiros";
                         <h2 class="text-2xl font-serif font-bold text-cobalto">Lista de Obreiros</h2>
                         <p class="text-sm text-gray-500 mt-1">Gerencie os membros ativos da Loja.</p>
                     </div>
-                    <button class="w-full sm:w-auto bg-cobalto hover:bg-blue-900 text-white font-medium py-2.5 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2">
+                    <a href="/obreiros/novo" class="w-full sm:w-auto bg-cobalto hover:bg-blue-900 text-white font-medium py-2.5 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2">
                         <i class="fas fa-user-plus text-ouro"></i> Adicionar Obreiro
-                    </button>
+                    </a>
                 </div>
 
                 <!-- Search/Filter -->
