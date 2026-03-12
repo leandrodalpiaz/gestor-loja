@@ -36,6 +36,54 @@ switch ($requestUri) {
         require_once __DIR__ . "/../src/Views/dashboard.php";
         break;
 
+    case "/cron/efemerides":
+        // Proteção simples: require a secret token parameter to prevent malicious invocation
+        $triggerToken = $_GET['token'] ?? '';
+        $expectedToken = $_ENV['CRON_SECRET_TOKEN'] ?? 'renascenca-test';
+        
+        if ($triggerToken !== $expectedToken) {
+            http_response_code(403);
+            echo "Acesso negado.";
+            exit;
+        }
+
+        $obreiroModel = new \App\Models\Obreiro();
+        $telegram = new \App\Services\TelegramService();
+        $aniversariantes = $obreiroModel->getEfemeridesDoDia();
+
+        if (empty($aniversariantes)) {
+            echo "Nenhuma efeméride hoje.";
+            exit;
+        }
+
+        $mensagens = [];
+        foreach ($aniversariantes as $ob) {
+            $nome = $ob['nome_historico'] ?: $ob['nome'];
+            $grau = $ob['grau'] ? " (" . ucfirst($ob['grau']) . ")" : "";
+            
+            if ($ob['is_aniversario_civil']) {
+                $mensagens[] = "🎂 Hoje é o aniversário natalício do nosso Amado Ir. <b>{$nome}</b>{$grau}! Desejamos muita saúde, paz e prosperidade!";
+            }
+            if ($ob['is_aniversario_maconico']) {
+                $mensagens[] = "🎉 Hoje nosso Amado Ir. <b>{$nome}</b>{$grau} comemora seu Aniversário de Iniciação Maçônica! Parabéns pela caminhada na Ordem!";
+            }
+        }
+
+        if (!empty($mensagens)) {
+            $textoBase = "🏛️ <b>A:.R:.L:.S:. Renascença</b> - Efemérides do Dia\n\n";
+            $message = $textoBase . implode("\n\n", $mensagens);
+            
+            $success = $telegram->sendMessage($message);
+            if ($success) {
+                echo "Efemérides enviadas com sucesso no Telegram!";
+            } else {
+                echo "Falha ao enviar efemérides no Telegram. Verifique os logs e os tokens.";
+            }
+        } else {
+            echo "Efemérides computadas, mas sem mensagens.";
+        }
+        exit;
+
     case "/schema":
         $db = \App\Config\Database::getConnection();
         

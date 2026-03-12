@@ -38,6 +38,40 @@ class Obreiro
     }
 
     /**
+     * Busca efemérides do dia (aniversário civil ou maçônico)
+     */
+    public function getEfemeridesDoDia(): array
+    {
+        // PostgreSQL extract function para pegar dia e mês atual
+        $sql = "
+            SELECT 
+                nome_historico, 
+                nome, 
+                grau,
+                data_nascimento_civil,
+                data_iniciacao,
+                CASE WHEN EXTRACT(MONTH FROM data_nascimento_civil) = EXTRACT(MONTH FROM CURRENT_DATE) 
+                      AND EXTRACT(DAY FROM data_nascimento_civil) = EXTRACT(DAY FROM CURRENT_DATE) 
+                     THEN true ELSE false END as is_aniversario_civil,
+                CASE WHEN EXTRACT(MONTH FROM data_iniciacao) = EXTRACT(MONTH FROM CURRENT_DATE) 
+                      AND EXTRACT(DAY FROM data_iniciacao) = EXTRACT(DAY FROM CURRENT_DATE) 
+                     THEN true ELSE false END as is_aniversario_maconico
+            FROM obreiros 
+            WHERE ativo = true
+              AND (
+                  (EXTRACT(MONTH FROM data_nascimento_civil) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM data_nascimento_civil) = EXTRACT(DAY FROM CURRENT_DATE))
+                  OR 
+                  (EXTRACT(MONTH FROM data_iniciacao) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM data_iniciacao) = EXTRACT(DAY FROM CURRENT_DATE))
+              )
+        ";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Cria um novo obreiro no banco de dados
      */
     public function create(array $data): bool
