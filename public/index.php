@@ -70,6 +70,15 @@ if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
 }
 
 switch ($requestUri) {
+    case "/health":
+        header("Content-Type: application/json; charset=utf-8");
+        echo json_encode([
+            "status" => "ok",
+            "service" => "gestor-loja",
+            "timestamp" => date(DATE_ATOM),
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+
     case "/":
     case "/index.php":
     case "/dashboard":

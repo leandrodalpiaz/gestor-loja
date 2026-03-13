@@ -16,3 +16,15 @@ services:
         sync: false
       - key: DB_PASS
         sync: false
+
+  - type: cron
+    name: gestor-loja-keepalive
+    runtime: docker
+    schedule: "*/5 * * * *"
+    plan: free
+    startCommand: php scripts/keep_alive_ping.php
+    envVars:
+      - key: APP_URL
+        sync: false
+      - key: KEEPALIVE_TARGET_URL
+        sync: false
