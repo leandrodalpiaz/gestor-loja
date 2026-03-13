@@ -173,9 +173,8 @@ class Obreiro
         $stmt->execute(['matricula' => $matricula]);
         $usuario = $stmt->fetch();
 
-        // O hash da senha deve estar salvo na coluna "senha_hash" no banco
-        // TEMP: Para ambiente de testes sem senhas criadas no BD, autoriza provisoriamente qualquer senha digitada "admin"
-        if ($usuario && ($senha === 'admin' || password_verify($senha, $usuario['senha_hash'] ?? ''))) {
+        // O hash da senha deve estar salvo na coluna "senha_hash" no banco.
+        if ($usuario && !empty($usuario['senha_hash']) && password_verify($senha, $usuario['senha_hash'])) {
             return $usuario;
         }
 
