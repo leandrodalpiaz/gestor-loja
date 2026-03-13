@@ -64,6 +64,19 @@ class EfemeridePreviaDiaria
         $existente = $this->buscarPorData($hoje);
 
         if ($existente) {
+            // Se foi editada manualmente, preserva o conteúdo do chanceler.
+            if (isset($existente['gerada_automaticamente']) && !$existente['gerada_automaticamente']) {
+                return (string) ($existente['mensagem'] ?? '');
+            }
+
+            // Se a prévia é automática, mantém sincronizada com a base atual.
+            $mensagemExistente = trim((string) ($existente['mensagem'] ?? ''));
+            $mensagemCalculada = trim($mensagemBase);
+            if ($mensagemExistente !== $mensagemCalculada) {
+                $this->salvarOuAtualizar($hoje, $mensagemBase, true);
+                return $mensagemBase;
+            }
+
             return (string) ($existente['mensagem'] ?? '');
         }
 

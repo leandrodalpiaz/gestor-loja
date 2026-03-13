@@ -40,17 +40,25 @@ class EfemerideRegistro
 
     public function getRegistrosDoDia(): array
     {
+        $timezone = trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo'));
+        try {
+            $hoje = new \DateTimeImmutable('now', new \DateTimeZone($timezone));
+        } catch (\Throwable $e) {
+            $hoje = new \DateTimeImmutable('now', new \DateTimeZone('America/Sao_Paulo'));
+        }
+
+        $diaMes = $hoje->format('d/m');
+
         $sql = "
             SELECT *
             FROM efemerides_registros
             WHERE ativo = true
-              AND EXTRACT(MONTH FROM data_evento) = EXTRACT(MONTH FROM CURRENT_DATE)
-              AND EXTRACT(DAY FROM data_evento) = EXTRACT(DAY FROM CURRENT_DATE)
+              AND TO_CHAR(data_evento, 'DD/MM') = :dia_mes
             ORDER BY tipo, nome
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute();
+        $stmt->execute(['dia_mes' => $diaMes]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

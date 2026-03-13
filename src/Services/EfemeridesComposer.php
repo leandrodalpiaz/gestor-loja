@@ -294,7 +294,7 @@ class EfemeridesComposer
 
     private function normalizarTipo(string $tipo): string
     {
-        $tipo = mb_strtolower(trim($tipo), 'UTF-8');
+        $tipo = $this->toLower(trim($tipo));
         return strtr($tipo, [
             'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a',
             'é' => 'e', 'ê' => 'e',
@@ -337,5 +337,14 @@ class EfemeridesComposer
             return $dataEvento !== '' ? $dataEvento : 'data não informada';
         }
         return $base->format('d/m/Y');
+    }
+
+    private function toLower(string $value): string
+    {
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($value, 'UTF-8');
+        }
+
+        return strtolower($value);
     }
 }

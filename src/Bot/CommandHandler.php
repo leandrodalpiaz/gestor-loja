@@ -221,21 +221,17 @@ class CommandHandler
     private function sendMensagemHoje(int $chatId): void
     {
         $hoje = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        $registroModel = new EfemerideRegistro();
+        $composer = new EfemeridesComposer();
         $previaModel = new EfemeridePreviaDiaria();
-        $previa = $previaModel->buscarPorData($hoje);
-
-        // Garante usabilidade mesmo se o cron ainda não tiver executado.
-        if (!$previa) {
-            $registroModel = new EfemerideRegistro();
-            $composer = new EfemeridesComposer();
-            $mensagemBase = $composer->composeDailyPreview($registroModel->getRegistrosDoDia());
-            $previaModel->salvarOuAtualizar($hoje, $mensagemBase, true);
-            $previa = $previaModel->buscarPorData($hoje) ?? [
-                'mensagem' => $mensagemBase,
-                'gerada_automaticamente' => true,
-                'updated_at' => date('Y-m-d H:i:s'),
-            ];
-        }
+        $mensagemBase = $composer->composeDailyPreview($registroModel->getRegistrosDoDia());
+        // Sincroniza prévia automática com o estado atual sem sobrescrever edição manual.
+        $previaModel->garantirPreviaDoDia($mensagemBase);
+        $previa = $previaModel->buscarPorData($hoje) ?? [
+            'mensagem' => $mensagemBase,
+            'gerada_automaticamente' => true,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ];
 
         $mensagem = trim((string) ($previa['mensagem'] ?? ''));
         if ($mensagem === '') {
@@ -260,9 +256,9 @@ class CommandHandler
 
         // Mantém margem do limite do Telegram (4096 chars).
         $conteudo = $mensagem;
-        if (mb_strlen($header . "\n\n" . $conteudo, 'UTF-8') > 3900) {
-            $limite = max(0, 3900 - mb_strlen($header . "\n\n", 'UTF-8'));
-            $conteudo = mb_substr($conteudo, 0, $limite, 'UTF-8') . "\n\n<i>(mensagem truncada por limite do Telegram)</i>";
+        if ($this->safeLen($header . "\n\n" . $conteudo) > 3900) {
+            $limite = max(0, 3900 - $this->safeLen($header . "\n\n"));
+            $conteudo = $this->safeSubstr($conteudo, 0, $limite) . "\n\n<i>(mensagem truncada por limite do Telegram)</i>";
         }
 
         $base = $this->resolveAppBaseUrl();
@@ -422,5 +418,23 @@ class CommandHandler
         $host = trim((string) $host);
 
         return $host !== '' ? ($proto . '://' . $host) : '';
+    }
+
+    private function safeLen(string $value): int
+    {
+        if (function_exists('mb_strlen')) {
+            return (int) mb_strlen($value, 'UTF-8');
+        }
+
+        return (int) strlen($value);
+    }
+
+    private function safeSubstr(string $value, int $start, int $length): string
+    {
+        if (function_exists('mb_substr')) {
+            return (string) mb_substr($value, $start, $length, 'UTF-8');
+        }
+
+        return (string) substr($value, $start, $length);
     }
 }
