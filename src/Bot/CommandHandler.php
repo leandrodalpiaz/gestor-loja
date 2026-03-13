@@ -2,9 +2,12 @@
 
 namespace App\Bot;
 
+use App\Models\EfemeridePreviaDiaria;
+use App\Models\EfemerideRegistro;
 use App\Models\Obreiro;
 use App\Models\Sessao;
 use App\Models\Presenca;
+use App\Services\EfemeridesComposer;
 
 class CommandHandler
 {
@@ -126,6 +129,7 @@ class CommandHandler
             "🏛️ <b>Sessão do Chanceler</b>\n\nOlá, Irmão <b>{$nome}</b>.\nEscolha o tipo de efeméride a gerenciar:",
             [
                 'inline_keyboard' => [
+                    [['text' => '🗓️ Neste dia (Hoje)',    'callback_data' => 'menu_hoje']],
                     [['text' => '🎂 Aniversários',       'callback_data' => 'menu_aniversarios']],
                     [['text' => '⚒️ Datas Maçônicas',     'callback_data' => 'menu_datas_maconicas']],
                     [['text' => '📜 Histórico da Ordem',  'callback_data' => 'menu_historico']],
@@ -214,6 +218,66 @@ class CommandHandler
         );
     }
 
+    private function sendMensagemHoje(int $chatId): void
+    {
+        $hoje = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        $previaModel = new EfemeridePreviaDiaria();
+        $previa = $previaModel->buscarPorData($hoje);
+
+        // Garante usabilidade mesmo se o cron ainda não tiver executado.
+        if (!$previa) {
+            $registroModel = new EfemerideRegistro();
+            $composer = new EfemeridesComposer();
+            $mensagemBase = $composer->composeDailyPreview($registroModel->getRegistrosDoDia());
+            $previaModel->salvarOuAtualizar($hoje, $mensagemBase, true);
+            $previa = $previaModel->buscarPorData($hoje) ?? [
+                'mensagem' => $mensagemBase,
+                'gerada_automaticamente' => true,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ];
+        }
+
+        $mensagem = trim((string) ($previa['mensagem'] ?? ''));
+        if ($mensagem === '') {
+            $mensagem = 'Nenhuma mensagem disponível para hoje.';
+        }
+
+        $status = !empty($previa['gerada_automaticamente']) ? 'automática' : 'editada manualmente pelo chanceler';
+        $atualizadaEm = '';
+        if (!empty($previa['updated_at'])) {
+            $ts = strtotime((string) $previa['updated_at']);
+            if ($ts !== false) {
+                $atualizadaEm = date('d/m/Y H:i', $ts);
+            }
+        }
+
+        $header = "🗓️ <b>Neste dia</b>\n";
+        $header .= "<i>Data:</i> " . date('d/m/Y') . "\n";
+        $header .= "<i>Status da prévia:</i> {$status}";
+        if ($atualizadaEm !== '') {
+            $header .= "\n<i>Última atualização:</i> {$atualizadaEm}";
+        }
+
+        // Mantém margem do limite do Telegram (4096 chars).
+        $conteudo = $mensagem;
+        if (mb_strlen($header . "\n\n" . $conteudo, 'UTF-8') > 3900) {
+            $limite = max(0, 3900 - mb_strlen($header . "\n\n", 'UTF-8'));
+            $conteudo = mb_substr($conteudo, 0, $limite, 'UTF-8') . "\n\n<i>(mensagem truncada por limite do Telegram)</i>";
+        }
+
+        $base = $this->resolveAppBaseUrl();
+        $keyboard = [];
+        if ($base !== '') {
+            $keyboard = [
+                'inline_keyboard' => [
+                    [['text' => '✏️ Abrir painel de revisão', 'url' => "{$base}/chancelaria/efemerides"]],
+                ],
+            ];
+        }
+
+        $this->telegram->sendMessage($chatId, $header . "\n\n" . $conteudo, $keyboard);
+    }
+
 
     // ---------------------------------------------------------------
     // Callbacks de botões inline
@@ -228,6 +292,15 @@ class CommandHandler
 
         // Menus do chanceler tratados antes de verificar obreiro
         switch ($callbackData) {
+            case 'menu_hoje':
+                if (!$this->isChancelerTelegramId($fromId)) {
+                    $this->telegram->sendMessage($chatId, '⛔ Acesso restrito ao Chanceler da Loja.');
+                    $this->telegram->answerCallbackQuery($callbackId);
+                    return;
+                }
+                $this->sendMensagemHoje($chatId);
+                $this->telegram->answerCallbackQuery($callbackId);
+                return;
             case 'menu_aniversarios':
                 if (!$this->isChancelerTelegramId($fromId)) {
                     $this->telegram->sendMessage($chatId, '⛔ Acesso restrito ao Chanceler da Loja.');
@@ -266,7 +339,7 @@ class CommandHandler
                 return;
         }
 
-        $obreiro = $this->obreiroModel->findByTelegramId($chatId);
+        $obreiro = $this->obreiroModel->findByTelegramId($fromId);
 
         if (!$obreiro) {
             $this->telegram->sendMessage($chatId, 'Usuário não autenticado.');
@@ -280,7 +353,7 @@ class CommandHandler
             case 'presenca_confirmar':
                 $proxima = $this->sessaoModel->getProximaSessao();
                 if ($proxima) {
-                    $this->presencaModel->registrar($proxima['id'], $chatId, 'Confirmado');
+                    $this->presencaModel->registrar($proxima['id'], $fromId, 'Confirmado');
                     $mensagem = "✅ Irmão {$obreiro['nome']}, sua presença para a sessão de <b>" . date('d/m/Y', strtotime($proxima['data_hora'])) . "</b> foi confirmada com sucesso!";
                 } else {
                     $mensagem = '❌ Nenhuma sessão futura está agendada no momento.';
@@ -290,7 +363,7 @@ class CommandHandler
             case 'presenca_ausencia':
                 $proxima = $this->sessaoModel->getProximaSessao();
                 if ($proxima) {
-                    $this->presencaModel->registrar($proxima['id'], $chatId, 'Ausente');
+                    $this->presencaModel->registrar($proxima['id'], $fromId, 'Ausente');
                     $mensagem = "❌ Entendido, Irmão {$obreiro['nome']}. Sua ausência para a sessão de <b>" . date('d/m/Y', strtotime($proxima['data_hora'])) . "</b> foi devidamente registrada.";
                 } else {
                     $mensagem = '❌ Nenhuma sessão futura está agendada no momento.';
