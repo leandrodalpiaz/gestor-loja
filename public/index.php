@@ -31,17 +31,14 @@ $normalizeRole = static function (?string $cargo): string {
 };
 
 $buildEfemeridesPreview = static function (): array {
-    $obreiroModel = new \App\Models\Obreiro();
     $registroModel = new \App\Models\EfemerideRegistro();
     $composer = new \App\Services\EfemeridesComposer();
 
-    $aniversariantes = $obreiroModel->getEfemeridesDoDia();
     $registrosHoje = $registroModel->getRegistrosDoDia();
     $registrosRecentes = $registroModel->getRecentes();
-    $mensagemPreview = $composer->composeDailyPreview($aniversariantes, $registrosHoje);
+    $mensagemPreview = $composer->composeDailyPreview($registrosHoje);
 
     return [
-        'aniversariantes' => $aniversariantes,
         'registrosHoje' => $registrosHoje,
         'registrosRecentes' => $registrosRecentes,
         'mensagemPreview' => $mensagemPreview,
@@ -413,6 +410,131 @@ switch ($requestUri) {
 case "/logout":
         session_destroy();
         header("Location: /login");
+        exit;
+
+    // ─── Mini App pages (GET) — served inside Telegram WebApp ────────────────
+    case "/miniapp/aniversario":
+    case "/miniapp/data-maconica":
+    case "/miniapp/historico":
+    case "/miniapp/fallback":
+        // Mini Apps are opened inside Telegram; they validate via initData, not session.
+        // A basic referer/user-agent guard keeps direct browser browsing out.
+        $viewMap = [
+            '/miniapp/aniversario'  => 'aniversario.php',
+            '/miniapp/data-maconica'=> 'data-maconica.php',
+            '/miniapp/historico'    => 'historico.php',
+            '/miniapp/fallback'     => 'fallback.php',
+        ];
+        require_once __DIR__ . '/../src/Views/miniapp/' . $viewMap[$requestUri];
+        break;
+
+    // ─── Mini App API endpoints (POST, JSON, validate initData) ──────────────
+    case "/api/miniapp/efemeride/salvar":
+    case "/api/miniapp/efemeride/desativar":
+    case "/api/miniapp/fallback/listar":
+    case "/api/miniapp/fallback/salvar":
+    case "/api/miniapp/fallback/toggle":
+    case "/api/miniapp/fallback/excluir":
+    case "/api/miniapp/historico/listar":
+        header('Content-Type: application/json; charset=utf-8');
+
+        // Accept initData both from GET (listar) and POST body (mutations)
+        if ($method === 'GET') {
+            $initData = $_GET['initData'] ?? '';
+        } else {
+            $raw = file_get_contents('php://input');
+            $body = json_decode($raw ?: '{}', true) ?? [];
+            $initData = $body['initData'] ?? '';
+        }
+
+        $botToken = $_ENV['TELEGRAM_BOT_TOKEN'] ?? '';
+        $validator = new \App\Services\TelegramInitDataValidator();
+        $tgUser = $validator->validate($initData, $botToken);
+
+        if ($tgUser === null) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'erro' => 'initData inválido ou expirado.']);
+            exit;
+        }
+
+        // Verify telegram_id belongs to a chanceler
+        $obreiroModel = new \App\Models\Obreiro();
+        $membro = $obreiroModel->findByTelegramId((int) ($tgUser['id'] ?? 0));
+        if (!$membro || $normalizeRole($membro['cargo'] ?? '') !== 'chanceler') {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Chanceler.']);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/efemeride/salvar') {
+            if ($method !== 'POST') { http_response_code(405); echo json_encode(['ok'=>false,'erro'=>'POST requerido']); exit; }
+            $nome = trim((string) ($body['nome'] ?? ''));
+            $tipo = trim((string) ($body['tipo'] ?? ''));
+            $dataEvento = trim((string) ($body['data_evento'] ?? ''));
+            if ($nome === '' || $tipo === '' || $dataEvento === '') {
+                echo json_encode(['ok' => false, 'erro' => 'nome, tipo e data_evento são obrigatórios.']);
+                exit;
+            }
+            $registroModel = new \App\Models\EfemerideRegistro();
+            $ok = $registroModel->create($body, (int) ($membro['id'] ?? 0));
+            echo json_encode(['ok' => (bool) $ok]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/efemeride/desativar') {
+            if ($method !== 'POST') { http_response_code(405); echo json_encode(['ok'=>false,'erro'=>'POST requerido']); exit; }
+            $id = (int) ($body['id'] ?? 0);
+            if ($id <= 0) { echo json_encode(['ok'=>false,'erro'=>'ID inválido']); exit; }
+            $registroModel = new \App\Models\EfemerideRegistro();
+            echo json_encode(['ok' => (bool) $registroModel->desativar($id)]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/historico/listar') {
+            $registroModel = new \App\Models\EfemerideRegistro();
+            $registros = $registroModel->listarPorTipo('História');
+            echo json_encode(['ok' => true, 'registros' => $registros]);
+            exit;
+        }
+
+        $complementarModel = new \App\Models\MensagemComplementar();
+
+        if ($requestUri === '/api/miniapp/fallback/listar') {
+            echo json_encode(['ok' => true, 'mensagens' => $complementarModel->listarPorTipo('fallback')]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/fallback/salvar') {
+            if ($method !== 'POST') { http_response_code(405); echo json_encode(['ok'=>false,'erro'=>'POST requerido']); exit; }
+            $mensagem = trim((string) ($body['mensagem'] ?? ''));
+            if ($mensagem === '') { echo json_encode(['ok'=>false,'erro'=>'Mensagem não pode estar vazia.']); exit; }
+            if (!empty($body['id'])) {
+                $ok = $complementarModel->atualizar((int) $body['id'], $mensagem);
+            } else {
+                $ok = $complementarModel->criar('fallback', $mensagem);
+            }
+            echo json_encode(['ok' => (bool) $ok]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/fallback/toggle') {
+            if ($method !== 'POST') { http_response_code(405); echo json_encode(['ok'=>false,'erro'=>'POST requerido']); exit; }
+            $id = (int) ($body['id'] ?? 0);
+            if ($id <= 0) { echo json_encode(['ok'=>false,'erro'=>'ID inválido']); exit; }
+            echo json_encode(['ok' => (bool) $complementarModel->toggleAtivo($id)]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/fallback/excluir') {
+            if ($method !== 'POST') { http_response_code(405); echo json_encode(['ok'=>false,'erro'=>'POST requerido']); exit; }
+            $id = (int) ($body['id'] ?? 0);
+            if ($id <= 0) { echo json_encode(['ok'=>false,'erro'=>'ID inválido']); exit; }
+            echo json_encode(['ok' => (bool) $complementarModel->excluir($id)]);
+            exit;
+        }
+
+        http_response_code(404);
+        echo json_encode(['ok' => false, 'erro' => 'Rota não encontrada.']);
         exit;
 
     default:

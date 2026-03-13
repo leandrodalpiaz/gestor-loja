@@ -2,141 +2,320 @@
 
 namespace App\Services;
 
+use App\Models\MensagemComplementar;
+
+/**
+ * Compositor de mensagens diárias de efemérides.
+ *
+ * Ordem de montagem (idêntica ao pipeline Python event_manager.py):
+ *   1. Evento histórico fixo/banco da Ordem
+ *   2. Eventos especiais: Posse GM, Membro Honorário, Filiação
+ *   3. Aniversários (agrupados por tratamento)
+ *   4. Cerimônias maçônicas: Iniciação, Elevação, Exaltação, Instalação (agrupadas por tipo)
+ *   5. Oriente Eterno
+ *   Fallback: curiosidade rotativa quando não há eventos
+ *
+ * Fonte única de dados: efemerides_registros (tabela do banco).
+ * Parse mode: HTML (o TelegramService usa parse_mode HTML).
+ */
 class EfemeridesComposer
 {
-    public function composeDailyPreview(array $obreiros, array $registros): string
+    private MensagemComplementar $comp;
+
+    public function __construct()
     {
+        $this->comp = new MensagemComplementar();
+    }
+
+    /**
+     * Ponto de entrada principal.
+     *
+     * @param array $registros  Resultado de EfemerideRegistro::getRegistrosDoDia()
+     */
+    public function composeDailyPreview(array $registros): string
+    {
+        $hoje = new \DateTimeImmutable('today');
+
+        // Agrupa por tipo para facilitar processamento
+        $porTipo = [];
+        foreach ($registros as $r) {
+            $porTipo[$r['tipo']][] = $r;
+        }
+
         $mensagens = [];
 
-        foreach ($obreiros as $ob) {
-            $nome = $ob['nome_historico'] ?: ($ob['nome'] ?? 'Irmão');
-            $grau = !empty($ob['grau']) ? ' (' . ucfirst((string) $ob['grau']) . ')' : '';
+        // 1. Evento histórico da Ordem (banco prevalece sobre dicionário fixo)
+        $historico = HistoricoEventos::getParaHoje($porTipo['História'] ?? [], $hoje);
+        if ($historico !== '') {
+            $mensagens[] = $historico;
+        }
 
-            if (!empty($ob['is_aniversario_civil'])) {
-                $mensagens[] = "Hoje é o aniversário natalício do nosso Amado Ir. <b>{$nome}</b>{$grau}! Desejamos muita saúde, paz e prosperidade!";
-            }
-
-            if (!empty($ob['is_aniversario_maconico'])) {
-                $mensagens[] = "Hoje nosso Amado Ir. <b>{$nome}</b>{$grau} comemora seu Aniversário de Iniciação Maçônica! Parabéns pela caminhada na Ordem!";
+        // 2. Eventos especiais
+        foreach (['Posse Grão Mestre', 'Concessão de Membro Honorário', 'Filiação'] as $tipo) {
+            foreach (($porTipo[$tipo] ?? []) as $r) {
+                $msg = $this->formatarEspecial($r, $tipo);
+                if ($msg !== '') {
+                    $mensagens[] = $msg;
+                }
             }
         }
 
-        foreach ($registros as $registro) {
-            $mensagens[] = $this->formatarRegistro((array) $registro);
+        // 3. Aniversários agrupados por tratamento
+        if (!empty($porTipo['Aniversário'])) {
+            $mensagens = array_merge(
+                $mensagens,
+                $this->formatarAniversariosAgrupados($porTipo['Aniversário'])
+            );
+        }
+
+        // 4. Cerimônias maçônicas
+        foreach (['Iniciação', 'Elevação', 'Exaltação', 'Instalação'] as $tipo) {
+            if (!empty($porTipo[$tipo])) {
+                $msg = $this->formatarCerimoniasAgrupadas($porTipo[$tipo], $tipo);
+                if ($msg !== '') {
+                    $mensagens[] = $msg;
+                }
+            }
+        }
+
+        // 5. Oriente Eterno
+        foreach (($porTipo['Oriente Eterno'] ?? []) as $r) {
+            $msg = $this->formatarOrienteEterno($r);
+            if ($msg !== '') {
+                $mensagens[] = $msg;
+            }
         }
 
         $mensagens = array_values(array_filter(array_map('trim', $mensagens)));
 
         if (empty($mensagens)) {
-            return 'Nenhuma efeméride para hoje.';
+            return $this->fallbackSemEventos();
         }
 
-        $cabecalho = "🏛️ <b>A:.R:.L:.S:. Renascença</b> - Prévia de Efemérides";
+        $cabecalho = "🏛️ <b>A:.R:.L:.S:. Renascença</b> – Efemérides do dia";
         return $cabecalho . "\n\n" . implode("\n\n", $mensagens);
     }
 
-    private function formatarRegistro(array $r): string
+    // ---------------------------------------------------------------
+    // Aniversários
+    // ---------------------------------------------------------------
+
+    private function formatarAniversariosAgrupados(array $eventos): array
     {
-        $tipo = $this->normalizarTipo((string) ($r['tipo'] ?? ''));
-        $nome = trim((string) ($r['nome'] ?? '')) ?: 'Nome não informado';
-        $dataEvento = (string) ($r['data_evento'] ?? '');
-        $local = trim((string) ($r['local'] ?? '')) ?: 'Loja Renascença nº 270';
-        $mensagemCustom = trim((string) ($r['mensagem_custom'] ?? ''));
-
-        if (in_array($tipo, ['historia', 'historico'], true)) {
-            return $mensagemCustom !== '' ? $mensagemCustom : 'Mensagem histórica sem texto definido.';
+        // Agrupa por tratamento (Irmão / Cunhada / Sobrinha / Sobrinho)
+        $porTratamento = [];
+        foreach ($eventos as $r) {
+            $tratamento = $this->tratamentoPorVinculo((int) ($r['cod_vinculo'] ?? 0));
+            $porTratamento[$tratamento][] = $r;
         }
 
-        $anos = $this->calcularAnos($dataEvento);
-        $dataFormatada = $this->formatarData($dataEvento);
+        $mensagens = [];
+        foreach ($porTratamento as $tratamento => $grupo) {
+            $tipoComp = 'aniversario_' . $this->normalizarTipo($tratamento);
+            $complementar = $this->comp->sortear($tipoComp);
 
-        if ($tipo === 'aniversario') {
-            $codVinculo = isset($r['cod_vinculo']) ? (int) $r['cod_vinculo'] : 0;
-            $tratamento = $this->tratamentoPorVinculo($codVinculo);
-            $vinculo = trim((string) ($r['vinculo'] ?? '')) ?: 'vínculo não informado';
-            $parentesco = trim((string) ($r['parentesco'] ?? '')) ?: 'parentesco não informado';
-            $tratamentoNormalizado = $this->normalizarTipo($tratamento);
-            $artigo = in_array($tratamentoNormalizado, ['cunhada', 'sobrinha', 'filha', 'enteada', 'esposa'], true) ? 'nossa' : 'nosso';
-
-            if (in_array($tratamentoNormalizado, ['cunhada', 'esposa'], true)) {
-                $msg = "Hoje celebramos, com fraterna alegria, o aniversário de {$artigo} {$tratamento} {$nome}, {$vinculo} do nosso Irmão {$parentesco}.";
+            if (count($grupo) === 1) {
+                $mensagens[] = $this->formatarAniversario($grupo[0], $tratamento, $complementar);
             } else {
-                $msg = "Hoje celebramos, com fraterna alegria, os {$anos} ano(s) de vida de {$artigo} {$tratamento} {$nome}, {$vinculo} do nosso Irmão {$parentesco}.";
+                $mensagens[] = $this->formatarAniversarioGrupo($grupo, $tratamento, $complementar);
             }
-
-            if ($mensagemCustom !== '') {
-                $msg .= ' ' . $mensagemCustom;
-            }
-
-            return $msg;
         }
 
-        if (in_array($tipo, ['iniciacao', 'elevacao', 'exaltacao', 'instalacao'], true)) {
-            $tipoLabel = $this->labelTipo($tipo);
-            $msg = "Neste dia, registramos com honra, {$anos} ano(s) de um passo fundamental em vossa jornada: em {$dataFormatada}, ocorria a vossa {$tipoLabel}, querido Irmão {$nome}, nas colunas da {$local}.";
-            if ($mensagemCustom !== '') {
-                $msg .= ' ' . $mensagemCustom;
-            }
-            return $msg;
-        }
-
-        if ($tipo === 'orienteeterno') {
-            return "Com profundo pesar, lembramos de nosso Irmão {$nome} que partiu para o Oriente Eterno em {$dataFormatada}.";
-        }
-
-        if ($mensagemCustom !== '') {
-            return $mensagemCustom;
-        }
-
-        return "Registro de efeméride sem template para o tipo {$r['tipo']}.";
+        return $mensagens;
     }
+
+    private function formatarAniversario(array $r, string $tratamento, string $complementar): string
+    {
+        $nome       = trim((string) ($r['nome'] ?? '')) ?: 'Nome não informado';
+        $anos       = $this->calcularAnos((string) ($r['data_evento'] ?? ''));
+        $vinculo    = trim((string) ($r['vinculo'] ?? '')) ?: 'vínculo não informado';
+        $parentesco = trim((string) ($r['parentesco'] ?? '')) ?: 'parentesco não informado';
+        $tNorm      = $this->normalizarTipo($tratamento);
+        $artigo     = in_array($tNorm, ['cunhada', 'sobrinha', 'filha', 'enteada', 'esposa'], true) ? 'nossa' : 'nosso';
+
+        if ($tNorm === 'irmao') {
+            $msg = "Com fraterna alegria, hoje celebramos os {$anos} ano(s) de vida do nosso Irmão <b>{$nome}</b>. Parabéns pelo seu aniversário!";
+        } elseif (in_array($tNorm, ['cunhada', 'esposa'], true)) {
+            // Oculta idade para Cunhadas/Esposas (regra do Python)
+            $msg = "Hoje celebramos, com fraterna alegria, o aniversário de {$artigo} {$tratamento} <b>{$nome}</b>, {$vinculo} do nosso Irmão {$parentesco}.";
+        } else {
+            $msg = "Hoje celebramos, com fraterna alegria, os {$anos} ano(s) de vida de {$artigo} {$tratamento} <b>{$nome}</b>, {$vinculo} do nosso Irmão {$parentesco}.";
+        }
+
+        if ($complementar !== '') {
+            $msg .= "\n\n{$complementar}";
+        }
+
+        return $msg;
+    }
+
+    private function formatarAniversarioGrupo(array $grupo, string $tratamento, string $complementar): string
+    {
+        $tNorm = $this->normalizarTipo($tratamento);
+
+        if ($tNorm === 'irmao') {
+            // Exatamente como o Python: bloco único com "Ainda celebramos:"
+            $partes = ['Com fraterna alegria, hoje celebramos:'];
+            foreach ($grupo as $i => $r) {
+                $nome = trim((string) ($r['nome'] ?? '')) ?: 'Nome não informado';
+                $anos = $this->calcularAnos((string) ($r['data_evento'] ?? ''));
+                $partes[] = "Os {$anos} ano(s) de vida do nosso Irmão <b>{$nome}</b>. Parabéns pelo seu aniversário!";
+                if ($i < count($grupo) - 1) {
+                    $partes[] = 'Ainda celebramos:';
+                }
+            }
+            if ($complementar !== '') {
+                $partes[] = $complementar;
+            }
+            return implode("\n", $partes);
+        }
+
+        // Outros tratamentos: uma mensagem por registro
+        return implode("\n\n", array_map(
+            fn(array $r) => $this->formatarAniversario($r, $tratamento, $complementar),
+            $grupo
+        ));
+    }
+
+    // ---------------------------------------------------------------
+    // Cerimônias maçônicas
+    // ---------------------------------------------------------------
+
+    private function formatarCerimoniasAgrupadas(array $eventos, string $tipo): string
+    {
+        $tipoComp    = $this->normalizarTipo($tipo);
+        $complementar = $this->comp->sortear($tipoComp);
+
+        if (count($eventos) === 1) {
+            return $this->formatarCerimonia($eventos[0], $tipo, $complementar);
+        }
+
+        // Múltiplos no mesmo dia: bloco unificado (igual ao Python)
+        $partes = ['Neste dia, registramos com honra:'];
+        foreach ($eventos as $i => $r) {
+            $nome  = trim((string) ($r['nome'] ?? '')) ?: 'Nome não informado';
+            $anos  = $this->calcularAnos((string) ($r['data_evento'] ?? ''));
+            $data  = $this->formatarData((string) ($r['data_evento'] ?? ''));
+            $local = trim((string) ($r['local'] ?? ''));
+            $sufixoLocal = $local !== '' ? ", nas colunas da {$local}" : '';
+
+            $texto = "{$anos} ano(s) de um passo fundamental em vossa jornada: em {$data}, ocorria a vossa {$tipo}, querido Irmão <b>{$nome}</b>{$sufixoLocal}.";
+            $partes[] = $i === 0 ? $texto : "E também: {$texto}";
+        }
+
+        if ($complementar !== '') {
+            $partes[] = $complementar;
+        }
+
+        return implode("\n", $partes);
+    }
+
+    private function formatarCerimonia(array $r, string $tipo, string $complementar): string
+    {
+        $nome  = trim((string) ($r['nome'] ?? '')) ?: 'Nome não informado';
+        $anos  = $this->calcularAnos((string) ($r['data_evento'] ?? ''));
+        $data  = $this->formatarData((string) ($r['data_evento'] ?? ''));
+        $local = trim((string) ($r['local'] ?? ''));
+        $sufixoLocal = $local !== '' ? ", nas colunas da {$local}" : '';
+        $custom = trim((string) ($r['mensagem_custom'] ?? ''));
+
+        if ($custom !== '') {
+            return $custom;
+        }
+
+        $msg = "Neste dia, registramos com honra, {$anos} ano(s) de um passo fundamental em vossa jornada: em {$data}, ocorria a vossa {$tipo}, querido Irmão <b>{$nome}</b>{$sufixoLocal}.";
+
+        if ($complementar !== '') {
+            $msg .= "\n\n{$complementar}";
+        }
+
+        return $msg;
+    }
+
+    // ---------------------------------------------------------------
+    // Eventos especiais
+    // ---------------------------------------------------------------
+
+    private function formatarEspecial(array $r, string $tipo): string
+    {
+        $custom = trim((string) ($r['mensagem_custom'] ?? ''));
+        if ($custom !== '') {
+            return $custom;
+        }
+
+        $nome  = trim((string) ($r['nome'] ?? '')) ?: 'Nome não informado';
+        $anos  = $this->calcularAnos((string) ($r['data_evento'] ?? ''));
+        $data  = $this->formatarData((string) ($r['data_evento'] ?? ''));
+        $local = trim((string) ($r['local'] ?? ''));
+        $sufixoLocal = $local !== '' ? " do {$local}" : '';
+
+        switch ($tipo) {
+            case 'Posse Grão Mestre':
+                return "Recordamos hoje com profundo respeito a data magna em que o Malhete da Grande Loja foi confiado às vossas mãos. Há {$anos} anos, em {$data}, a Maçonaria celebrava a vossa Posse como Grão Mestre, querido Irmão <b>{$nome}</b>, um momento que fortaleceu as colunas{$sufixoLocal} e de toda a nossa Jurisdição.";
+
+            case 'Concessão de Membro Honorário':
+                return "Com imensa alegria e o coração grato celebramos hoje o aniversário de um dia de grande honra para nossa Oficina. Há exatamente {$anos} anos, em {$data}, tivemos o privilégio de realizar a Concessão do Título de Membro Honorário ao nosso estimado Irmão <b>{$nome}</b>.";
+
+            case 'Filiação':
+                $sufixoLocalFil = $local !== '' ? ", nas colunas da {$local}" : '';
+                return "Neste dia, registramos com honra, {$anos} ano(s) de um passo fundamental em vossa jornada: em {$data}, ocorria a vossa Filiação, querido Irmão <b>{$nome}</b>{$sufixoLocalFil}.";
+        }
+
+        return '';
+    }
+
+    // ---------------------------------------------------------------
+    // Oriente Eterno
+    // ---------------------------------------------------------------
+
+    private function formatarOrienteEterno(array $r): string
+    {
+        $nome = trim((string) ($r['nome'] ?? '')) ?: 'Nome não informado';
+        $data = $this->formatarData((string) ($r['data_evento'] ?? ''));
+        return "Com profundo pesar, lembramos de nosso Irmão <b>{$nome}</b> que partiu para o Oriente Eterno em {$data}.";
+    }
+
+    // ---------------------------------------------------------------
+    // Fallback sem eventos
+    // ---------------------------------------------------------------
+
+    private function fallbackSemEventos(): string
+    {
+        $curiosidade = $this->comp->sortear('fallback');
+        if ($curiosidade !== '') {
+            return "🔨 <b>Um Toque da Trolha:</b>\n\n{$curiosidade}\n\n<i>Que este toque provoque a busca que suaviza nossas arestas.</i>";
+        }
+        return 'Nenhuma efeméride para hoje.';
+    }
+
+    // ---------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------
 
     private function normalizarTipo(string $tipo): string
     {
-        $tipo = strtolower(trim($tipo));
+        $tipo = mb_strtolower(trim($tipo), 'UTF-8');
         return strtr($tipo, [
-            'á' => 'a',
-            'à' => 'a',
-            'â' => 'a',
-            'ã' => 'a',
-            'é' => 'e',
-            'ê' => 'e',
+            'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a',
+            'é' => 'e', 'ê' => 'e',
             'í' => 'i',
-            'ó' => 'o',
-            'ô' => 'o',
-            'õ' => 'o',
+            'ó' => 'o', 'ô' => 'o', 'õ' => 'o',
             'ú' => 'u',
             'ç' => 'c',
-            ' ' => '',
-            '-' => '',
-            '_' => '',
+            ' ' => '', '-' => '', '_' => '',
         ]);
-    }
-
-    private function labelTipo(string $tipoNormalizado): string
-    {
-        $map = [
-            'iniciacao' => 'Iniciação',
-            'elevacao' => 'Elevação',
-            'exaltacao' => 'Exaltação',
-            'instalacao' => 'Instalação',
-        ];
-
-        return $map[$tipoNormalizado] ?? ucfirst($tipoNormalizado);
     }
 
     private function tratamentoPorVinculo(int $codVinculo): string
     {
-        $map = [
+        return [
             1 => 'Irmão',
             2 => 'Cunhada',
             3 => 'Sobrinha',
             4 => 'Sobrinho',
             5 => 'Sobrinha',
             6 => 'Sobrinho',
-        ];
-
-        return $map[$codVinculo] ?? 'familiar';
+        ][$codVinculo] ?? 'familiar';
     }
 
     private function calcularAnos(string $dataEvento): int
@@ -144,23 +323,19 @@ class EfemeridesComposer
         if ($dataEvento === '') {
             return 0;
         }
-
         $base = \DateTimeImmutable::createFromFormat('Y-m-d', $dataEvento);
-        if (!$base) {
+        if ($base === false) {
             return 0;
         }
-
-        $hoje = new \DateTimeImmutable('today');
-        return (int) $hoje->diff($base)->y;
+        return (int) (new \DateTimeImmutable('today'))->diff($base)->y;
     }
 
     private function formatarData(string $dataEvento): string
     {
         $base = \DateTimeImmutable::createFromFormat('Y-m-d', $dataEvento);
-        if (!$base) {
+        if ($base === false) {
             return $dataEvento !== '' ? $dataEvento : 'data não informada';
         }
-
         return $base->format('d/m/Y');
     }
 }

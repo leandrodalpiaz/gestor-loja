@@ -129,4 +129,16 @@ class EfemerideRegistro
         $stmt = $this->db->prepare($sql);
         return $stmt->execute(['id' => $id]);
     }
+
+    public function listarPorTipo(string $tipo): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT id, nome, tipo, data_evento, ativo
+            FROM efemerides_registros
+            WHERE tipo = :tipo
+            ORDER BY data_evento DESC, id DESC
+        ");
+        $stmt->execute(['tipo' => $tipo]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

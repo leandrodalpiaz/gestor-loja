@@ -44,6 +44,9 @@ class CommandHandler
             case '/start':
                 $this->handleStart($chatId);
                 break;
+            case '/chancelaria':
+                $this->handleChancelaria($chatId);
+                break;
             case '/ajuda':
             case '/help':
                 $this->handleHelp($chatId);
@@ -97,33 +100,168 @@ class CommandHandler
         $mensagem .= "Este bot auxilia na gestão da nossa Loja Maçônica.\n\n";
         $mensagem .= "<b>Comandos disponíveis:</b>\n";
         $mensagem .= "/start - Inicia a interação e valida seu cadastro\n";
+        $mensagem .= "/chancelaria - Painel do Chanceler (cadastro de efemérides)\n";
         $mensagem .= "/ajuda - Exibe esta mensagem de ajuda\n\n";
         $mensagem .= "Para outras dúvidas, contate a Secretaria da Loja.";
 
         $this->telegram->sendMessage($chatId, $mensagem);
     }
 
-    private function handleCallback(array $callbackQuery): void
-    {
-        $chatId = $callbackQuery['message']['chat']['id'];
-        $callbackData = $callbackQuery['data']; // ex: 'presenca_confirmar'
-        $callbackId = $callbackQuery['id'];
+    // ---------------------------------------------------------------
+    // Sessão do Chanceler
+    // ---------------------------------------------------------------
 
+    private function handleChancelaria(int $chatId): void
+    {
         $obreiro = $this->obreiroModel->findByTelegramId($chatId);
-        
-        if (!$obreiro) {
-            $this->telegram->sendMessage($chatId, "Usuário não autenticado.");
+        if (!$obreiro || strtolower(trim((string) ($obreiro['cargo'] ?? ''))) !== 'chanceler') {
+            $this->telegram->sendMessage($chatId, '⛔ Acesso restrito ao Chanceler da Loja.');
             return;
         }
+
+        $nome = $obreiro['nome_historico'] ?? $obreiro['nome'] ?? 'Chanceler';
+        $this->telegram->sendMessage(
+            $chatId,
+            "🏛️ <b>Sessão do Chanceler</b>\n\nOlá, Irmão <b>{$nome}</b>.\nEscolha o tipo de efeméride a gerenciar:",
+            [
+                'inline_keyboard' => [
+                    [['text' => '🎂 Aniversários',       'callback_data' => 'menu_aniversarios']],
+                    [['text' => '⚒️ Datas Maçônicas',     'callback_data' => 'menu_datas_maconicas']],
+                    [['text' => '📜 Histórico da Ordem',  'callback_data' => 'menu_historico']],
+                    [['text' => '💬 Mensagens Fallback',   'callback_data' => 'menu_fallback']],
+                ],
+            ]
+        );
+    }
+
+    private function sendMenuAniversarios(int $chatId): void
+    {
+        $base = rtrim((string) ($_ENV['APP_URL'] ?? ''), '/');
+        $this->telegram->sendMessage(
+            $chatId,
+            "🎂 <b>Aniversários</b>\n\nSelecione o tipo de aniversariante para abrir a ficha de cadastro:",
+            [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '👔 Irmão',    'web_app' => ['url' => "{$base}/miniapp/aniversario?tratamento=irmao"]],
+                        ['text' => '👩 Cunhada',  'web_app' => ['url' => "{$base}/miniapp/aniversario?tratamento=cunhada"]],
+                    ],
+                    [
+                        ['text' => '👧 Sobrinha', 'web_app' => ['url' => "{$base}/miniapp/aniversario?tratamento=sobrinha"]],
+                        ['text' => '👦 Sobrinho', 'web_app' => ['url' => "{$base}/miniapp/aniversario?tratamento=sobrinho"]],
+                    ],
+                ],
+            ]
+        );
+    }
+
+    private function sendMenuDatasMaconicas(int $chatId): void
+    {
+        $base = rtrim((string) ($_ENV['APP_URL'] ?? ''), '/');
+        $enc  = static fn(string $s) => rawurlencode($s);
+        $this->telegram->sendMessage(
+            $chatId,
+            "⚒️ <b>Datas Maçônicas</b>\n\nSelecione o tipo de evento para abrir a ficha de cadastro:",
+            [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '⚒️ Iniciação',  'web_app' => ['url' => "{$base}/miniapp/data-maconica?tipo=" . $enc('Iniciação')]],
+                        ['text' => '📐 Elevação',   'web_app' => ['url' => "{$base}/miniapp/data-maconica?tipo=" . $enc('Elevação')]],
+                    ],
+                    [
+                        ['text' => '👑 Exaltação',  'web_app' => ['url' => "{$base}/miniapp/data-maconica?tipo=" . $enc('Exaltação')]],
+                        ['text' => '🔨 Instalação', 'web_app' => ['url' => "{$base}/miniapp/data-maconica?tipo=" . $enc('Instalação')]],
+                    ],
+                    [
+                        ['text' => '🌙 Oriente Eterno', 'web_app' => ['url' => "{$base}/miniapp/data-maconica?tipo=" . $enc('Oriente Eterno')]],
+                        ['text' => '🔗 Filiação',        'web_app' => ['url' => "{$base}/miniapp/data-maconica?tipo=" . $enc('Filiação')]],
+                    ],
+                    [
+                        ['text' => '🌟 Posse Grão Mestre',   'web_app' => ['url' => "{$base}/miniapp/data-maconica?tipo=" . $enc('Posse Grão Mestre')]],
+                        ['text' => '🏅 Membro Honorário',     'web_app' => ['url' => "{$base}/miniapp/data-maconica?tipo=" . $enc('Concessão de Membro Honorário')]],
+                    ],
+                ],
+            ]
+        );
+    }
+
+    private function sendMenuHistorico(int $chatId): void
+    {
+        $base = rtrim((string) ($_ENV['APP_URL'] ?? ''), '/');
+        $this->telegram->sendMessage(
+            $chatId,
+            "📜 <b>Histórico da Ordem</b>\n\nAdicione datas históricas com texto explicativo. Esses registros disparam automaticamente no aniversário de cada data:",
+            [
+                'inline_keyboard' => [
+                    [['text' => '➕ Novo registro histórico', 'web_app' => ['url' => "{$base}/miniapp/historico"]]],
+                ],
+            ]
+        );
+    }
+
+    private function sendMenuFallback(int $chatId): void
+    {
+        $base = rtrim((string) ($_ENV['APP_URL'] ?? ''), '/');
+        $this->telegram->sendMessage(
+            $chatId,
+            "💬 <b>Mensagens Fallback</b>\n\nEssas frases são enviadas nos dias sem nenhum evento cadastrado. Gerencie, ative ou desative cada mensagem:",
+            [
+                'inline_keyboard' => [
+                    [['text' => '⚙️ Gerenciar mensagens fallback', 'web_app' => ['url' => "{$base}/miniapp/fallback"]]],
+                ],
+            ]
+        );
+    }
+
+
+    // ---------------------------------------------------------------
+    // Callbacks de botões inline
+    // ---------------------------------------------------------------
+
+    private function handleCallback(array $callbackQuery): void
+    {
+        $chatId       = $callbackQuery['message']['chat']['id'];
+        $callbackData = $callbackQuery['data'];
+        $callbackId   = $callbackQuery['id'];
+
+        // Menus do chanceler tratados antes de verificar obreiro
+        switch ($callbackData) {
+            case 'menu_aniversarios':
+                $this->sendMenuAniversarios($chatId);
+                $this->telegram->answerCallbackQuery($callbackId);
+                return;
+            case 'menu_datas_maconicas':
+                $this->sendMenuDatasMaconicas($chatId);
+                $this->telegram->answerCallbackQuery($callbackId);
+                return;
+            case 'menu_historico':
+                $this->sendMenuHistorico($chatId);
+                $this->telegram->answerCallbackQuery($callbackId);
+                return;
+            case 'menu_fallback':
+                $this->sendMenuFallback($chatId);
+                $this->telegram->answerCallbackQuery($callbackId);
+                return;
+        }
+
+        $obreiro = $this->obreiroModel->findByTelegramId($chatId);
+
+        if (!$obreiro) {
+            $this->telegram->sendMessage($chatId, 'Usuário não autenticado.');
+            $this->telegram->answerCallbackQuery($callbackId);
+            return;
+        }
+
+        $mensagem = '';
 
         switch ($callbackData) {
             case 'presenca_confirmar':
                 $proxima = $this->sessaoModel->getProximaSessao();
                 if ($proxima) {
                     $this->presencaModel->registrar($proxima['id'], $chatId, 'Confirmado');
-                    $mensagem = "✅ Irmão {$obreiro['nome']}, sua presença para a sessão de <b>".date('d/m/Y', strtotime($proxima['data_hora']))."</b> foi confirmada com sucesso!";
+                    $mensagem = "✅ Irmão {$obreiro['nome']}, sua presença para a sessão de <b>" . date('d/m/Y', strtotime($proxima['data_hora'])) . "</b> foi confirmada com sucesso!";
                 } else {
-                    $mensagem = "❌ Nenhuma sessão futura está agendada no momento.";
+                    $mensagem = '❌ Nenhuma sessão futura está agendada no momento.';
                 }
                 break;
 
@@ -131,34 +269,35 @@ class CommandHandler
                 $proxima = $this->sessaoModel->getProximaSessao();
                 if ($proxima) {
                     $this->presencaModel->registrar($proxima['id'], $chatId, 'Ausente');
-                    $mensagem = "❌ Entendido, Irmão {$obreiro['nome']}. Sua ausência para a sessão de <b>".date('d/m/Y', strtotime($proxima['data_hora']))."</b> foi devidamente justificada/registrada.";
+                    $mensagem = "❌ Entendido, Irmão {$obreiro['nome']}. Sua ausência para a sessão de <b>" . date('d/m/Y', strtotime($proxima['data_hora'])) . "</b> foi devidamente registrada.";
                 } else {
-                    $mensagem = "❌ Nenhuma sessão futura está agendada no momento.";
+                    $mensagem = '❌ Nenhuma sessão futura está agendada no momento.';
                 }
                 break;
 
             case 'sessao_info':
                 $proxima = $this->sessaoModel->getProximaSessao();
                 if ($proxima) {
-                    $data = date('d/m/Y à\s H:i', strtotime($proxima['data_hora']));
-                    $mensagem = "📜 <b>Próxima Sessão:</b>\n\n";
+                    $data      = date("d/m/Y \\à\\s H:i", strtotime($proxima['data_hora']));
+                    $mensagem  = "📜 <b>Próxima Sessão:</b>\n\n";
                     $mensagem .= "<b>Título:</b> {$proxima['titulo']}\n";
                     $mensagem .= "<b>Data:</b> {$data}\n";
                     $mensagem .= "<b>Grau:</b> {$proxima['grau']}\n";
                     $mensagem .= "<b>Traje:</b> {$proxima['traje']}";
                 } else {
-                    $mensagem = "Nenhuma sessão futura programada no momento.";
+                    $mensagem = 'Nenhuma sessão futura programada no momento.';
                 }
                 break;
 
             default:
-                $mensagem = "Opção não reconhecida.";
+                $mensagem = 'Opção não reconhecida.';
                 break;
         }
 
-        $this->telegram->sendMessage($chatId, $mensagem);
+        if ($mensagem !== '') {
+            $this->telegram->sendMessage($chatId, $mensagem);
+        }
 
-        // Avisar o Telegram oficial que nós recebemos o clique para remover o reloginho do botão e evitar duplicação de requests
         $this->telegram->answerCallbackQuery($callbackId);
     }
 }
