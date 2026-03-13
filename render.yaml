@@ -20,7 +20,7 @@ services:
   - type: cron
     name: gestor-loja-keepalive
     runtime: docker
-    schedule: "*/5 * * * *"
+    schedule: "*/14 * * * *"
     plan: free
     startCommand: php scripts/keep_alive_ping.php
     envVars:

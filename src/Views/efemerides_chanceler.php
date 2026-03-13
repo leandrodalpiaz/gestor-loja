@@ -19,12 +19,6 @@
             </div>
         <?php endif; ?>
 
-        <?php if (isset($_GET['sucesso']) && $_GET['sucesso'] === 'previa_salva'): ?>
-            <div class="mb-4 rounded border border-green-200 bg-green-50 text-green-700 px-4 py-3">
-                Prévia diária salva com sucesso.
-            </div>
-        <?php endif; ?>
-
         <?php if (!empty($erroMensagem)): ?>
             <div class="mb-4 rounded border border-red-200 bg-red-50 text-red-700 px-4 py-3">
                 <?= htmlspecialchars($erroMensagem) ?>
@@ -37,8 +31,17 @@
                     <h2 class="font-semibold">Prévia diária para revisão</h2>
                     <span class="text-xs text-gray-500">Gerada automaticamente após 00:01 para o chanceler revisar</span>
                 </div>
+                <?php
+                    $previewRaw = (string) ($mensagemPreview ?? '');
+                    $previewRender = strip_tags($previewRaw, '<b><i><u><strong><em>');
+                    $previewRender = nl2br($previewRender, false);
+                ?>
+                <div class="mb-2 rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6">
+                    <?= $previewRender ?>
+                </div>
                 <form method="POST" action="/chancelaria/efemerides/salvar-previa">
                     <textarea id="previewMsg" name="mensagem_preview" class="w-full h-72 p-3 text-sm border border-gray-300 rounded bg-white"><?= htmlspecialchars($mensagemPreview ?? '') ?></textarea>
+                    <p class="mt-2 text-xs text-gray-500">Campo de edição mantém o HTML do Telegram (ex.: &lt;b&gt; e &lt;i&gt;).</p>
                     <div class="mt-3 flex flex-wrap gap-2">
                         <button type="submit" class="px-3 py-2 text-sm rounded bg-gray-800 text-white hover:bg-gray-900">Salvar edição</button>
                         <button type="button" onclick="copiarPreview()" class="px-3 py-2 text-sm rounded bg-blue-700 text-white hover:bg-blue-800">Copiar mensagem</button>
