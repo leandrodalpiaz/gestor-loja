@@ -34,7 +34,7 @@ class EfemeridesComposer
      */
     public function composeDailyPreview(array $registros): string
     {
-        $hoje = new \DateTimeImmutable('today');
+        $hoje = $this->today();
 
         // Agrupa por tipo para facilitar processamento
         $porTipo = [];
@@ -327,7 +327,7 @@ class EfemeridesComposer
         if ($base === false) {
             return 0;
         }
-        return (int) (new \DateTimeImmutable('today'))->diff($base)->y;
+        return (int) $this->today()->diff($base)->y;
     }
 
     private function formatarData(string $dataEvento): string
@@ -346,5 +346,15 @@ class EfemeridesComposer
         }
 
         return strtolower($value);
+    }
+
+    private function today(): \DateTimeImmutable
+    {
+        $timezone = trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo'));
+        try {
+            return new \DateTimeImmutable('today', new \DateTimeZone($timezone));
+        } catch (\Throwable $e) {
+            return new \DateTimeImmutable('today', new \DateTimeZone('America/Sao_Paulo'));
+        }
     }
 }

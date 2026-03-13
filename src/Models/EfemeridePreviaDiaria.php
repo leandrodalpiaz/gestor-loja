@@ -60,7 +60,7 @@ class EfemeridePreviaDiaria
 
     public function garantirPreviaDoDia(string $mensagemBase): string
     {
-        $hoje = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        $hoje = $this->today()->format('Y-m-d');
         $existente = $this->buscarPorData($hoje);
 
         if ($existente) {
@@ -86,7 +86,7 @@ class EfemeridePreviaDiaria
 
     public function prepararAutomaticaDoDia(string $mensagemBase): bool
     {
-        $hoje = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        $hoje = $this->today()->format('Y-m-d');
         $existente = $this->buscarPorData($hoje);
 
         if (!$existente) {
@@ -99,5 +99,15 @@ class EfemeridePreviaDiaria
         }
 
         return $this->salvarOuAtualizar($hoje, $mensagemBase, true);
+    }
+
+    private function today(): \DateTimeImmutable
+    {
+        $timezone = trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo'));
+        try {
+            return new \DateTimeImmutable('today', new \DateTimeZone($timezone));
+        } catch (\Throwable $e) {
+            return new \DateTimeImmutable('today', new \DateTimeZone('America/Sao_Paulo'));
+        }
     }
 }

@@ -220,7 +220,8 @@ class CommandHandler
 
     private function sendMensagemHoje(int $chatId): void
     {
-        $hoje = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        $hojeObj = $this->appToday();
+        $hoje = $hojeObj->format('Y-m-d');
         $registroModel = new EfemerideRegistro();
         $composer = new EfemeridesComposer();
         $previaModel = new EfemeridePreviaDiaria();
@@ -248,7 +249,7 @@ class CommandHandler
         }
 
         $header = "🗓️ <b>Neste dia</b>\n";
-        $header .= "<i>Data:</i> " . date('d/m/Y') . "\n";
+        $header .= "<i>Data:</i> " . $hojeObj->format('d/m/Y') . "\n";
         $header .= "<i>Status da prévia:</i> {$status}";
         if ($atualizadaEm !== '') {
             $header .= "\n<i>Última atualização:</i> {$atualizadaEm}";
@@ -436,5 +437,15 @@ class CommandHandler
         }
 
         return (string) substr($value, $start, $length);
+    }
+
+    private function appToday(): \DateTimeImmutable
+    {
+        $timezone = trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo'));
+        try {
+            return new \DateTimeImmutable('today', new \DateTimeZone($timezone));
+        } catch (\Throwable $e) {
+            return new \DateTimeImmutable('today', new \DateTimeZone('America/Sao_Paulo'));
+        }
     }
 }

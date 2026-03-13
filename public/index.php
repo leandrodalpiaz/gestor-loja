@@ -29,6 +29,15 @@ $normalizeRole = static function (?string $cargo): string {
     ]);
 };
 
+$appToday = static function (): \DateTimeImmutable {
+    $timezone = trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo'));
+    try {
+        return new \DateTimeImmutable('today', new \DateTimeZone($timezone));
+    } catch (\Throwable $e) {
+        return new \DateTimeImmutable('today', new \DateTimeZone('America/Sao_Paulo'));
+    }
+};
+
 $buildEfemeridesPreview = static function (): array {
     $registroModel = new \App\Models\EfemerideRegistro();
     $previaModel = new \App\Models\EfemeridePreviaDiaria();
@@ -93,6 +102,8 @@ switch ($requestUri) {
             $sucessoMensagem = 'Registro salvo com sucesso.';
         } elseif (isset($_GET['sucesso']) && $_GET['sucesso'] === 'desativado') {
             $sucessoMensagem = 'Registro desativado com sucesso.';
+        } elseif (isset($_GET['sucesso']) && $_GET['sucesso'] === 'previa_salva') {
+            $sucessoMensagem = 'Prévia diária salva com sucesso.';
         } elseif (isset($_GET['sucesso']) && $_GET['sucesso'] === 'previa_enviada') {
             $sucessoMensagem = 'Prévia enviada no Telegram privado do chanceler.';
         } elseif (isset($_GET['sucesso']) && $_GET['sucesso'] === 'grupo_enviado') {
@@ -195,7 +206,7 @@ switch ($requestUri) {
             exit;
         }
 
-        $hoje = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        $hoje = $appToday()->format('Y-m-d');
         $previaModel = new \App\Models\EfemeridePreviaDiaria();
         $ok = $previaModel->salvarOuAtualizar($hoje, $mensagemEditada, false);
 

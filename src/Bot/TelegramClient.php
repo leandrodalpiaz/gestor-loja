@@ -42,11 +42,18 @@ class TelegramClient
         if ($result === false) {
             $error = error_get_last();
             error_log("ERRO API TELEGRAM: " . ($error['message'] ?? 'Desconhecido') . " | URL: " . $this->apiUrl . 'sendMessage');
-        } else {
-            error_log("RESPOSTA API TELEGRAM: " . $result);
+            return false;
         }
 
-        return $result !== false;
+        $payload = json_decode((string) $result, true);
+        $ok = is_array($payload) && !empty($payload['ok']);
+        if (!$ok) {
+            error_log("ERRO API TELEGRAM sendMessage: " . (string) $result);
+            return false;
+        }
+
+        error_log("RESPOSTA API TELEGRAM: " . $result);
+        return true;
     }
 
     public function answerCallbackQuery(string $callbackQueryId, string $text = ''): bool
@@ -70,7 +77,11 @@ class TelegramClient
 
         $context = stream_context_create($options);
         $result = @file_get_contents($this->apiUrl . 'answerCallbackQuery', false, $context);
-        
-        return $result !== false;
+        if ($result === false) {
+            return false;
+        }
+
+        $payload = json_decode((string) $result, true);
+        return is_array($payload) && !empty($payload['ok']);
     }
 }
