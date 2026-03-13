@@ -31,15 +31,18 @@ $normalizeRole = static function (?string $cargo): string {
 
 $buildEfemeridesPreview = static function (): array {
     $registroModel = new \App\Models\EfemerideRegistro();
+    $previaModel = new \App\Models\EfemeridePreviaDiaria();
     $composer = new \App\Services\EfemeridesComposer();
 
     $registrosHoje = $registroModel->getRegistrosDoDia();
     $registrosRecentes = $registroModel->getRecentes();
-    $mensagemPreview = $composer->composeDailyPreview($registrosHoje);
+    $mensagemBase = $composer->composeDailyPreview($registrosHoje);
+    $mensagemPreview = $previaModel->garantirPreviaDoDia($mensagemBase);
 
     return [
         'registrosHoje' => $registrosHoje,
         'registrosRecentes' => $registrosRecentes,
+        'mensagemBase' => $mensagemBase,
         'mensagemPreview' => $mensagemPreview,
     ];
 };
@@ -167,6 +170,43 @@ switch ($requestUri) {
         header("Location: /chancelaria/efemerides?sucesso=grupo_enviado");
         exit;
 
+    case "/chancelaria/efemerides/salvar-previa":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+
+        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
+        if ($cargoUsuario !== 'chanceler') {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler.";
+            exit;
+        }
+
+        if ($method !== 'POST') {
+            http_response_code(405);
+            echo "Método não permitido.";
+            exit;
+        }
+
+        $mensagemEditada = trim((string) ($_POST['mensagem_preview'] ?? ''));
+        if ($mensagemEditada === '') {
+            header("Location: /chancelaria/efemerides?erro=" . urlencode('A prévia não pode estar vazia.'));
+            exit;
+        }
+
+        $hoje = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        $previaModel = new \App\Models\EfemeridePreviaDiaria();
+        $ok = $previaModel->salvarOuAtualizar($hoje, $mensagemEditada, false);
+
+        if (!$ok) {
+            header("Location: /chancelaria/efemerides?erro=" . urlencode('Falha ao salvar a prévia diária.'));
+            exit;
+        }
+
+        header("Location: /chancelaria/efemerides?sucesso=previa_salva");
+        exit;
+
     case "/chancelaria/efemerides/salvar":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
@@ -254,20 +294,19 @@ switch ($requestUri) {
         }
 
         $previewData = $buildEfemeridesPreview();
-        $message = $previewData['mensagemPreview'];
+        $message = $previewData['mensagemBase'] ?? $previewData['mensagemPreview'];
 
-        if (trim($message) === '' || $message === 'Nenhuma efeméride para hoje.') {
-            echo "Nenhuma efeméride hoje.";
+        // Após 00:01, este cron apenas prepara (ou atualiza) a prévia do dia para revisão do chanceler.
+        $hoje = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        $previaModel = new \App\Models\EfemeridePreviaDiaria();
+        $ok = $previaModel->prepararAutomaticaDoDia($message);
+
+        if (!$ok) {
+            echo "Falha ao preparar prévia diária.";
             exit;
         }
 
-        $telegram = new \App\Services\TelegramService();
-        $success = $telegram->sendMessageToGroup($message);
-        if ($success) {
-            echo "Efemérides enviadas com sucesso no Telegram!";
-        } else {
-            echo "Falha ao enviar efemérides no Telegram. Verifique os logs e os tokens.";
-        }
+        echo "Prévia diária preparada com sucesso para revisão do chanceler.";
         exit;
 
     case "/obreiros":
@@ -351,21 +390,6 @@ switch ($requestUri) {
         if ($method === "POST") {
             $matricula = $_POST["matricula"] ?? "";
             $password = $_POST["password"] ?? "";
-
-            // Usuário universal apenas para facilitar testes
-            if ($matricula === "teste" && $password === "teste") {
-                $_SESSION["usuario_logado"] = [
-                    "id" => 9999,
-                    "nome_historico" => "Irmão Teste",
-                    "cargo" => "chanceler",
-                    "ativo" => true
-                ];
-                $_SESSION["usuario_id"] = 9999;
-                $_SESSION["usuario_nome"] = "Irmão Teste";
-                $_SESSION["usuario_cargo"] = "chanceler";
-                header("Location: /dashboard");
-                exit;
-            }
 
             $obreiroModel = new \App\Models\Obreiro();
             $usuario = $obreiroModel->autenticar($matricula, $password);

@@ -34,6 +34,7 @@ class CommandHandler
         }
 
         $chatId = $update['message']['chat']['id'] ?? null;
+        $fromId = $update['message']['from']['id'] ?? null;
         $text = $update['message']['text'] ?? '';
 
         if (!$chatId) {
@@ -45,7 +46,7 @@ class CommandHandler
                 $this->handleStart($chatId);
                 break;
             case '/chancelaria':
-                $this->handleChancelaria($chatId);
+                $this->handleChancelaria($chatId, (int) ($fromId ?? $chatId));
                 break;
             case '/ajuda':
             case '/help':
@@ -111,9 +112,9 @@ class CommandHandler
     // Sessão do Chanceler
     // ---------------------------------------------------------------
 
-    private function handleChancelaria(int $chatId): void
+    private function handleChancelaria(int $chatId, int $requesterTelegramId): void
     {
-        $obreiro = $this->obreiroModel->findByTelegramId($chatId);
+        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
         if (!$obreiro || strtolower(trim((string) ($obreiro['cargo'] ?? ''))) !== 'chanceler') {
             $this->telegram->sendMessage($chatId, '⛔ Acesso restrito ao Chanceler da Loja.');
             return;
@@ -136,7 +137,7 @@ class CommandHandler
 
     private function sendMenuAniversarios(int $chatId): void
     {
-        $base = rtrim((string) ($_ENV['APP_URL'] ?? ''), '/');
+        $base = $this->resolveAppBaseUrl();
         $this->telegram->sendMessage(
             $chatId,
             "🎂 <b>Aniversários</b>\n\nSelecione o tipo de aniversariante para abrir a ficha de cadastro:",
@@ -157,7 +158,7 @@ class CommandHandler
 
     private function sendMenuDatasMaconicas(int $chatId): void
     {
-        $base = rtrim((string) ($_ENV['APP_URL'] ?? ''), '/');
+        $base = $this->resolveAppBaseUrl();
         $enc  = static fn(string $s) => rawurlencode($s);
         $this->telegram->sendMessage(
             $chatId,
@@ -187,7 +188,7 @@ class CommandHandler
 
     private function sendMenuHistorico(int $chatId): void
     {
-        $base = rtrim((string) ($_ENV['APP_URL'] ?? ''), '/');
+        $base = $this->resolveAppBaseUrl();
         $this->telegram->sendMessage(
             $chatId,
             "📜 <b>Histórico da Ordem</b>\n\nAdicione datas históricas com texto explicativo. Esses registros disparam automaticamente no aniversário de cada data:",
@@ -201,7 +202,7 @@ class CommandHandler
 
     private function sendMenuFallback(int $chatId): void
     {
-        $base = rtrim((string) ($_ENV['APP_URL'] ?? ''), '/');
+        $base = $this->resolveAppBaseUrl();
         $this->telegram->sendMessage(
             $chatId,
             "💬 <b>Mensagens Fallback</b>\n\nEssas frases são enviadas nos dias sem nenhum evento cadastrado. Gerencie, ative ou desative cada mensagem:",
@@ -221,24 +222,45 @@ class CommandHandler
     private function handleCallback(array $callbackQuery): void
     {
         $chatId       = $callbackQuery['message']['chat']['id'];
+        $fromId       = (int) ($callbackQuery['from']['id'] ?? 0);
         $callbackData = $callbackQuery['data'];
         $callbackId   = $callbackQuery['id'];
 
         // Menus do chanceler tratados antes de verificar obreiro
         switch ($callbackData) {
             case 'menu_aniversarios':
+                if (!$this->isChancelerTelegramId($fromId)) {
+                    $this->telegram->sendMessage($chatId, '⛔ Acesso restrito ao Chanceler da Loja.');
+                    $this->telegram->answerCallbackQuery($callbackId);
+                    return;
+                }
                 $this->sendMenuAniversarios($chatId);
                 $this->telegram->answerCallbackQuery($callbackId);
                 return;
             case 'menu_datas_maconicas':
+                if (!$this->isChancelerTelegramId($fromId)) {
+                    $this->telegram->sendMessage($chatId, '⛔ Acesso restrito ao Chanceler da Loja.');
+                    $this->telegram->answerCallbackQuery($callbackId);
+                    return;
+                }
                 $this->sendMenuDatasMaconicas($chatId);
                 $this->telegram->answerCallbackQuery($callbackId);
                 return;
             case 'menu_historico':
+                if (!$this->isChancelerTelegramId($fromId)) {
+                    $this->telegram->sendMessage($chatId, '⛔ Acesso restrito ao Chanceler da Loja.');
+                    $this->telegram->answerCallbackQuery($callbackId);
+                    return;
+                }
                 $this->sendMenuHistorico($chatId);
                 $this->telegram->answerCallbackQuery($callbackId);
                 return;
             case 'menu_fallback':
+                if (!$this->isChancelerTelegramId($fromId)) {
+                    $this->telegram->sendMessage($chatId, '⛔ Acesso restrito ao Chanceler da Loja.');
+                    $this->telegram->answerCallbackQuery($callbackId);
+                    return;
+                }
                 $this->sendMenuFallback($chatId);
                 $this->telegram->answerCallbackQuery($callbackId);
                 return;
@@ -299,5 +321,33 @@ class CommandHandler
         }
 
         $this->telegram->answerCallbackQuery($callbackId);
+    }
+
+    private function isChancelerTelegramId(int $telegramId): bool
+    {
+        if ($telegramId <= 0) {
+            return false;
+        }
+        $obreiro = $this->obreiroModel->findByTelegramId($telegramId);
+        return $obreiro && strtolower(trim((string) ($obreiro['cargo'] ?? ''))) === 'chanceler';
+    }
+
+    private function resolveAppBaseUrl(): string
+    {
+        $base = rtrim((string) ($_ENV['APP_URL'] ?? ''), '/');
+        if ($base !== '') {
+            return $base;
+        }
+
+        $proto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+        if ($proto === '') {
+            $https = $_SERVER['HTTPS'] ?? 'off';
+            $proto = ($https !== 'off' && $https !== '') ? 'https' : 'http';
+        }
+
+        $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? ($_SERVER['HTTP_HOST'] ?? '');
+        $host = trim((string) $host);
+
+        return $host !== '' ? ($proto . '://' . $host) : '';
     }
 }

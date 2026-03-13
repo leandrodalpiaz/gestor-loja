@@ -10,9 +10,12 @@ require_once __DIR__ . '/../src/autoload.php';
 Env::load(__DIR__ . '/../.env');
 
 $content = file_get_contents("php://input");
-error_log("[webhook] payload recebido: " . $content);
-
 $update = json_decode($content, true);
+
+$updateId = $update['update_id'] ?? 'n/a';
+$hasMessage = isset($update['message']) ? '1' : '0';
+$hasCallback = isset($update['callback_query']) ? '1' : '0';
+error_log("[webhook] recebido update_id={$updateId} message={$hasMessage} callback={$hasCallback}");
 
 if ($update) {
     try {

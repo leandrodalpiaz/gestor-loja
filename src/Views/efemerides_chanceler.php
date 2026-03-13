@@ -19,6 +19,12 @@
             </div>
         <?php endif; ?>
 
+        <?php if (isset($_GET['sucesso']) && $_GET['sucesso'] === 'previa_salva'): ?>
+            <div class="mb-4 rounded border border-green-200 bg-green-50 text-green-700 px-4 py-3">
+                Prévia diária salva com sucesso.
+            </div>
+        <?php endif; ?>
+
         <?php if (!empty($erroMensagem)): ?>
             <div class="mb-4 rounded border border-red-200 bg-red-50 text-red-700 px-4 py-3">
                 <?= htmlspecialchars($erroMensagem) ?>
@@ -28,12 +34,17 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
                 <div class="flex items-center justify-between mb-2">
-                    <h2 class="font-semibold">Prévia automática do dia</h2>
-                    <span class="text-xs text-gray-500">Apenas conferência do chanceler</span>
+                    <h2 class="font-semibold">Prévia diária para revisão</h2>
+                    <span class="text-xs text-gray-500">Gerada automaticamente após 00:01 para o chanceler revisar</span>
                 </div>
-                <textarea id="previewMsg" readonly class="w-full h-72 p-3 text-sm border border-gray-300 rounded bg-gray-50"><?= htmlspecialchars($mensagemPreview ?? '') ?></textarea>
+                <form method="POST" action="/chancelaria/efemerides/salvar-previa">
+                    <textarea id="previewMsg" name="mensagem_preview" class="w-full h-72 p-3 text-sm border border-gray-300 rounded bg-white"><?= htmlspecialchars($mensagemPreview ?? '') ?></textarea>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <button type="submit" class="px-3 py-2 text-sm rounded bg-gray-800 text-white hover:bg-gray-900">Salvar edição</button>
+                        <button type="button" onclick="copiarPreview()" class="px-3 py-2 text-sm rounded bg-blue-700 text-white hover:bg-blue-800">Copiar mensagem</button>
+                    </div>
+                </form>
                 <div class="mt-3 flex flex-wrap gap-2">
-                    <button type="button" onclick="copiarPreview()" class="px-3 py-2 text-sm rounded bg-blue-700 text-white hover:bg-blue-800">Copiar mensagem</button>
                     <form method="POST" action="/chancelaria/efemerides/enviar-previa" onsubmit="return confirm('Enviar a prévia para o Telegram privado do chanceler?');">
                         <button type="submit" class="px-3 py-2 text-sm rounded bg-indigo-700 text-white hover:bg-indigo-800">Enviar prévia no privado</button>
                     </form>
@@ -41,7 +52,7 @@
                         <button type="submit" class="px-3 py-2 text-sm rounded bg-emerald-700 text-white hover:bg-emerald-800">Enviar no grupo oficial</button>
                     </form>
                 </div>
-                <p class="mt-2 text-xs text-gray-500">Para funcionar, configure no .env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID_CHANCELER e TELEGRAM_CHAT_ID_GROUP.</p>
+                <p class="mt-2 text-xs text-gray-500">Fluxo recomendado: gerar automática (cron) → revisar/editar/salvar → enviar no privado → enviar no grupo.</p>
             </section>
 
             <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
