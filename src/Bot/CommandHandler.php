@@ -66,4 +66,107 @@ class CommandHandler {
             ]
         );
     }
+
+    // Painel Tesouraria
+    public function handleTesouraria($chatId, $requesterTelegramId) {
+        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
+        $cargo = strtolower(trim((string) ($obreiro['cargo'] ?? '')));
+        if (!in_array($requesterTelegramId, $this->devIds) && (!$obreiro || $cargo !== 'tesoureiro')) {
+            $this->telegram->sendMessage($chatId, '⛔ Acesso restrito ao Tesoureiro.');
+            return;
+        }
+        $this->telegram->sendMessage(
+            $chatId,
+            "💰 <b>Painel Tesouraria</b>\nEscolha uma opção:",
+            [
+                'inline_keyboard' => [
+                    [['text' => '📊 Livro-Caixa', 'callback_data' => 'tesouraria_caixa']],
+                    [['text' => '🧾 Comprovantes', 'callback_data' => 'tesouraria_comprovantes']],
+                    [['text' => '✅ Regularidade', 'callback_data' => 'tesouraria_regularidade']],
+                    [['text' => '📅 Fechamento Mensal', 'callback_data' => 'tesouraria_fechamento']],
+                ],
+            ]
+        );
+    }
+
+    // Roteamento de callbacks para tesouraria
+    public function handleCallback($chatId, $callbackData) {
+        switch ($callbackData) {
+            case 'tesouraria_caixa':
+                $this->handleTesourariaCaixa($chatId);
+                break;
+            case 'tesouraria_comprovantes':
+                $this->handleTesourariaComprovantes($chatId);
+                break;
+            case 'tesouraria_regularidade':
+                $this->handleTesourariaRegularidade($chatId);
+                break;
+            case 'tesouraria_fechamento':
+                $this->handleTesourariaFechamento($chatId);
+                break;
+            default:
+                $this->telegram->sendMessage($chatId, '❓ Opção inválida ou não implementada.');
+        }
+    }
+
+    // Consulta Livro-Caixa
+    public function handleTesourariaCaixa($chatId) {
+        $response = @file_get_contents('https://gestor-loja-web.onrender.com/api/tesouraria/caixa?mes=' . date('n') . '&ano=' . date('Y'));
+        $data = json_decode($response, true);
+        if (!$data || !$data['ok']) {
+            $this->telegram->sendMessage($chatId, '❌ Falha ao consultar o livro-caixa.');
+            return;
+        }
+        $mensagem = "📊 <b>Livro-Caixa</b>\n";
+        foreach ($data['lancamentos'] as $lanc) {
+            $mensagem .= "• {$lanc['data_lancamento']} - {$lanc['valor']} ({$lanc['categoria_nome']})\n";
+        }
+        $mensagem .= "\nSaldo: <b>{$data['totais']['saldo']}</b>";
+        $this->telegram->sendMessage($chatId, $mensagem);
+    }
+
+    // Consulta Comprovantes
+    public function handleTesourariaComprovantes($chatId) {
+        $response = @file_get_contents('https://gestor-loja-web.onrender.com/api/tesouraria/comprovantes');
+        $data = json_decode($response, true);
+        if (!$data || !$data['ok']) {
+            $this->telegram->sendMessage($chatId, '❌ Falha ao consultar comprovantes.');
+            return;
+        }
+        $mensagem = "🧾 <b>Comprovantes PIX</b>\n";
+        foreach ($data['comprovantes'] as $comp) {
+            $mensagem .= "• {$comp['nome']} - {$comp['valor']} ({$comp['status']})\n";
+        }
+        $this->telegram->sendMessage($chatId, $mensagem);
+    }
+
+    // Consulta Regularidade
+    public function handleTesourariaRegularidade($chatId) {
+        $response = @file_get_contents('https://gestor-loja-web.onrender.com/api/tesouraria/regularidade?mes=' . date('n') . '&ano=' . date('Y'));
+        $data = json_decode($response, true);
+        if (!$data || !$data['ok']) {
+            $this->telegram->sendMessage($chatId, '❌ Falha ao consultar regularidade.');
+            return;
+        }
+        $mensagem = "✅ <b>Regularidade dos Obreiros</b>\n";
+        foreach ($data['regularidade'] as $reg) {
+            $mensagem .= "• {$reg['nome']} - {$reg['status']}\n";
+        }
+        $this->telegram->sendMessage($chatId, $mensagem);
+    }
+
+    // Consulta Fechamento Mensal
+    public function handleTesourariaFechamento($chatId) {
+        $response = @file_get_contents('https://gestor-loja-web.onrender.com/api/tesouraria/fechamento?mes=' . date('n') . '&ano=' . date('Y'));
+        $data = json_decode($response, true);
+        if (!$data || !$data['ok']) {
+            $this->telegram->sendMessage($chatId, '❌ Falha ao consultar fechamento mensal.');
+            return;
+        }
+        $fechamento = $data['fechamento'];
+        $mensagem = "📅 <b>Fechamento Mensal</b>\n";
+        $mensagem .= "Saldo Inicial: {$fechamento['saldo_inicial']}\n";
+        $mensagem .= "Saldo Final: {$fechamento['saldo_final']}\n";
+        $this->telegram->sendMessage($chatId, $mensagem);
+    }
 }
