@@ -105,17 +105,17 @@ if (!isset($_SESSION["usuario_logado"])) {
 
         <!-- Gráficos -->
         <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mb-6">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 xl:col-span-2">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 xl:col-span-2 min-h-[320px]">
                 <h2 class="font-semibold mb-4">Composição do Período</h2>
-                <div class="h-72">
-                    <canvas id="chartCaixaPizza"></canvas>
+                <div class="relative h-72">
+                    <canvas id="chartCaixaPizza" height="280"></canvas>
                 </div>
             </div>
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 xl:col-span-3">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 xl:col-span-3 min-h-[320px]">
                 <h2 class="font-semibold mb-1">Tendência Financeira</h2>
                 <p class="text-xs text-gray-500 mb-4">Mês anterior, mês atual e projeção simples do próximo período.</p>
-                <div class="h-72">
-                    <canvas id="chartCaixaTendencia"></canvas>
+                <div class="relative h-72">
+                    <canvas id="chartCaixaTendencia" height="280"></canvas>
                 </div>
             </div>
         </div>
@@ -377,7 +377,17 @@ if (!isset($_SESSION["usuario_logado"])) {
         }
 
         function atualizarGraficoPizza(totais) {
-            const ctx = document.getElementById('chartCaixaPizza').getContext('2d');
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js não foi carregado.');
+                return;
+            }
+
+            const canvas = document.getElementById('chartCaixaPizza');
+            if (!canvas) {
+                return;
+            }
+
+            const ctx = canvas.getContext('2d');
             if (window.chartCaixaPizza) {
                 window.chartCaixaPizza.destroy();
             }
@@ -394,6 +404,7 @@ if (!isset($_SESSION["usuario_logado"])) {
                     }]
                 },
                 options: {
+                    responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
@@ -410,7 +421,17 @@ if (!isset($_SESSION["usuario_logado"])) {
         }
 
         function atualizarGraficoTendencia(labels, totaisAnterior, totaisAtual, totaisProjecao) {
-            const ctx = document.getElementById('chartCaixaTendencia').getContext('2d');
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js não foi carregado.');
+                return;
+            }
+
+            const canvas = document.getElementById('chartCaixaTendencia');
+            if (!canvas) {
+                return;
+            }
+
+            const ctx = canvas.getContext('2d');
             if (window.chartCaixaTendencia) {
                 window.chartCaixaTendencia.destroy();
             }
@@ -420,6 +441,7 @@ if (!isset($_SESSION["usuario_logado"])) {
             const saldos = entradas.map((entrada, index) => Number((entrada - saidas[index]).toFixed(2)));
 
             window.chartCaixaTendencia = new Chart(ctx, {
+                type: 'bar',
                 data: {
                     labels,
                     datasets: [
@@ -451,8 +473,8 @@ if (!isset($_SESSION["usuario_logado"])) {
                     ]
                 },
                 options: {
-                    maintainAspectRatio: false,
                     responsive: true,
+                    maintainAspectRatio: false,
                     interaction: {
                         mode: 'index',
                         intersect: false,
@@ -540,8 +562,10 @@ if (!isset($_SESSION["usuario_logado"])) {
         }
 
         // Carrega na página
-        filtrarCaixa();
-        carregarSugestoes();
+        window.addEventListener('load', () => {
+            filtrarCaixa();
+            carregarSugestoes();
+        });
     </script>
 </body>
 </html>
