@@ -10,6 +10,12 @@ Env::load(__DIR__ . "/../.env");
 $requestUri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 $method = $_SERVER["REQUEST_METHOD"];
 $openTestAccess = filter_var($_ENV["APP_TEST_OPEN_ACCESS"] ?? "false", FILTER_VALIDATE_BOOL);
+$testLogin = trim((string) ($_ENV["APP_TEST_DEFAULT_LOGIN"] ?? ""));
+$testPassword = (string) ($_ENV["APP_TEST_DEFAULT_PASSWORD"] ?? "");
+$testRole = trim((string) ($_ENV["APP_TEST_DEFAULT_ROLE"] ?? "tesoureiro"));
+$testDisplayName = trim((string) ($_ENV["APP_TEST_DEFAULT_NAME"] ?? "Modo Teste"));
+$isTestSession = isset($_SESSION["usuario_id"]) && (int) $_SESSION["usuario_id"] === 0;
+$bypassRoleChecks = $openTestAccess || $isTestSession;
 
 $normalizeRole = static function (?string $cargo): string {
     $cargo = strtolower(trim((string) $cargo));
@@ -56,17 +62,23 @@ $buildEfemeridesPreview = static function (): array {
     ];
 };
 
-if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
-    $_SESSION["usuario_logado"] = [
+$buildTestSessionUser = static function () use ($normalizeRole, $testDisplayName, $testRole): array {
+    $role = $normalizeRole($testRole);
+
+    return [
         "id" => 0,
-        "nome_historico" => "Modo Teste",
+        "nome_historico" => $testDisplayName,
         "nome_completo" => "Acesso temporario para homologacao",
-        "cargo" => "chanceler",
+        "cargo" => $role,
         "ativo" => true,
     ];
+};
+
+if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
+    $_SESSION["usuario_logado"] = $buildTestSessionUser();
     $_SESSION["usuario_id"] = 0;
-    $_SESSION["usuario_nome"] = "Modo Teste";
-    $_SESSION["usuario_cargo"] = "chanceler";
+    $_SESSION["usuario_nome"] = $_SESSION["usuario_logado"]["nome_historico"];
+    $_SESSION["usuario_cargo"] = $_SESSION["usuario_logado"]["cargo"];
 }
 
 switch ($requestUri) {
@@ -96,7 +108,7 @@ switch ($requestUri) {
         }
 
         $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if ($cargoUsuario !== 'chanceler') {
+        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
             http_response_code(403);
             echo "Acesso restrito ao Chanceler.";
             exit;
@@ -131,7 +143,7 @@ switch ($requestUri) {
         }
 
         $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if ($cargoUsuario !== 'chanceler') {
+        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
             http_response_code(403);
             echo "Acesso restrito ao Chanceler.";
             exit;
@@ -164,7 +176,7 @@ switch ($requestUri) {
         }
 
         $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if ($cargoUsuario !== 'chanceler') {
+        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
             http_response_code(403);
             echo "Acesso restrito ao Chanceler.";
             exit;
@@ -197,7 +209,7 @@ switch ($requestUri) {
         }
 
         $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if ($cargoUsuario !== 'chanceler') {
+        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
             http_response_code(403);
             echo "Acesso restrito ao Chanceler.";
             exit;
@@ -234,7 +246,7 @@ switch ($requestUri) {
         }
 
         $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if ($cargoUsuario !== 'chanceler') {
+        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
             http_response_code(403);
             echo "Acesso restrito ao Chanceler.";
             exit;
@@ -273,7 +285,7 @@ switch ($requestUri) {
         }
 
         $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if ($cargoUsuario !== 'chanceler') {
+        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
             http_response_code(403);
             echo "Acesso restrito ao Chanceler.";
             exit;
@@ -410,6 +422,16 @@ switch ($requestUri) {
         if ($method === "POST") {
             $matricula = $_POST["matricula"] ?? "";
             $password = $_POST["password"] ?? "";
+
+            if ($testLogin !== '' && $testPassword !== '' && hash_equals($testLogin, $matricula) && hash_equals($testPassword, $password)) {
+                $usuarioTeste = $buildTestSessionUser();
+                $_SESSION["usuario_logado"] = $usuarioTeste;
+                $_SESSION["usuario_id"] = $usuarioTeste["id"];
+                $_SESSION["usuario_nome"] = $usuarioTeste["nome_historico"];
+                $_SESSION["usuario_cargo"] = $usuarioTeste["cargo"];
+                header("Location: /dashboard");
+                exit;
+            }
 
             $obreiroModel = new \App\Models\Obreiro();
             $usuario = $obreiroModel->autenticar($matricula, $password);
@@ -574,7 +596,7 @@ case "/logout":
             exit;
         }
         $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if ($cargoUsuario !== 'tesoureiro') {
+        if (!$bypassRoleChecks && $cargoUsuario !== 'tesoureiro') {
             http_response_code(403);
             echo "Acesso restrito ao Tesoureiro.";
             exit;
@@ -600,7 +622,7 @@ case "/logout":
         }
 
         $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if ($cargoUsuario !== 'tesoureiro') {
+        if (!$bypassRoleChecks && $cargoUsuario !== 'tesoureiro') {
             http_response_code(403);
             echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Tesoureiro.']);
             exit;

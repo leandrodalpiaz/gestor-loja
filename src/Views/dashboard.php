@@ -31,6 +31,8 @@
     <?php
     $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
     $usuarioCargo = $_SESSION['usuario_cargo'] ?? '';
+    $isTestSession = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id'] === 0;
+    $showAllPanels = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VALIDATE_BOOL) || $isTestSession;
     $isChanceler = $usuarioCargo === 'chanceler';
     $isTesoureiro = $usuarioCargo === 'tesoureiro';
     ?>
@@ -72,8 +74,14 @@
             <div class="px-2 pt-2 pb-3 space-y-1">
                 <a href="/dashboard" class="bg-blue-800 text-white block px-3 py-2 rounded-md text-base font-medium">Dashboard</a>
                 <a href="/obreiros" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Obreiros</a>
-                <?php if ($isChanceler): ?>
+                <?php if ($isChanceler || $showAllPanels): ?>
                     <a href="/chancelaria/efemerides" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Sessão do Chanceler</a>
+                <?php endif; ?>
+                <?php if ($isTesoureiro || $showAllPanels): ?>
+                    <a href="/tesouraria/caixa" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Livro-Caixa</a>
+                    <a href="/tesouraria/comprovantes" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Validação de Comprovantes</a>
+                    <a href="/tesouraria/regularidade" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Regularidade</a>
+                    <a href="/tesouraria/fechamento" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Fechamento Mensal</a>
                 <?php endif; ?>
                 <a href="#" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Sessões</a>
                 <div class="border-t border-blue-800 my-2"></div>
@@ -94,7 +102,7 @@
                 <a href="/obreiros" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
                     Obreiros (Chancelaria)
                 </a>
-                <?php if ($isChanceler): ?>
+                <?php if ($isChanceler || $showAllPanels): ?>
                 <a href="/chancelaria/efemerides" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
                     Sessão do Chanceler (Efemérides)
                 </a>
@@ -102,7 +110,7 @@
                 <a href="#" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
                     Sessões (Secretaria)
                 </a>
-                <?php if ($isTesoureiro): ?>
+                <?php if ($isTesoureiro || $showAllPanels): ?>
                 <a href="/tesouraria/caixa" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
                     Livro-Caixa
                 </a>
