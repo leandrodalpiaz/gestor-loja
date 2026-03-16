@@ -32,6 +32,7 @@
     $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
     $usuarioCargo = $_SESSION['usuario_cargo'] ?? '';
     $isChanceler = $usuarioCargo === 'chanceler';
+    $isTesoureiro = $usuarioCargo === 'tesoureiro';
     ?>
 
     <!-- Navbar Mobile / Topbar Desktop -->
@@ -101,9 +102,20 @@
                 <a href="#" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
                     Sessões (Secretaria)
                 </a>
-                <a href="#" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
-                    Mensalidades (Tesouraria)
+                <?php if ($isTesoureiro): ?>
+                <a href="/tesouraria/caixa" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
+                    Livro-Caixa
                 </a>
+                <a href="/tesouraria/comprovantes" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
+                    Validação de Comprovantes
+                </a>
+                <a href="/tesouraria/regularidade" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
+                    Regularidade
+                </a>
+                <a href="/tesouraria/fechamento" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
+                    Fechamento Mensal
+                </a>
+                <?php endif; ?>
             </nav>
         </aside>
 

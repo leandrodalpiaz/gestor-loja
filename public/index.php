@@ -564,6 +564,275 @@ case "/logout":
         echo json_encode(['ok' => false, 'erro' => 'Rota não encontrada.']);
         exit;
 
+    // ─── Tesouraria (Views) ──────────────────────────────────────────────
+    case "/tesouraria/caixa":
+    case "/tesouraria/comprovantes":
+    case "/tesouraria/regularidade":
+    case "/tesouraria/fechamento":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
+        if ($cargoUsuario !== 'tesoureiro') {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro.";
+            exit;
+        }
+
+        $viewMap = [
+            '/tesouraria/caixa' => 'tesouraria_caixa.php',
+            '/tesouraria/comprovantes' => 'tesouraria_comprovantes.php',
+            '/tesouraria/regularidade' => 'tesouraria_regularidade.php',
+            '/tesouraria/fechamento' => 'tesouraria_fechamento.php',
+        ];
+        require_once __DIR__ . '/../src/Views/' . $viewMap[$requestUri];
+        break;
+
+    // ─── Tesouraria API ──────────────────────────────────────────────────
+    case (preg_match('~^/api/tesouraria~', $requestUri) ? $requestUri : null):
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!isset($_SESSION["usuario_logado"])) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'erro' => 'Não autenticado.']);
+            exit;
+        }
+
+        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
+        if ($cargoUsuario !== 'tesoureiro') {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Tesoureiro.']);
+            exit;
+        }
+
+        $usuarioId = (int) ($_SESSION['usuario_id'] ?? 0);
+
+        // GET /api/tesouraria/categorias?tipo=entrada
+        if ($requestUri === '/api/tesouraria/categorias' && $method === 'GET') {
+            $tipo = $_GET['tipo'] ?? 'entrada';
+            $categoriaModel = new \App\Models\CategoriaFinanceira();
+            $categorias = $categoriaModel->obterPorTipo($tipo);
+            echo json_encode(['ok' => true, 'categorias' => $categorias]);
+            exit;
+        }
+
+        // GET /api/tesouraria/caixa?mes=3&ano=2026
+        if ($requestUri === '/api/tesouraria/caixa' && $method === 'GET') {
+            $mes = (int) ($_GET['mes'] ?? date('n'));
+            $ano = (int) ($_GET['ano'] ?? date('Y'));
+            $lancModel = new \App\Models\LancamentoFinanceiro();
+            $lancamentos = $lancModel->obterPorMes($mes, $ano);
+            $totais = $lancModel->obterTotaisMes($mes, $ano);
+            echo json_encode(['ok' => true, 'lancamentos' => $lancamentos, 'totais' => $totais]);
+            exit;
+        }
+
+        // POST /api/tesouraria/lancamento/criar
+        if ($requestUri === '/api/tesouraria/lancamento/criar' && $method === 'POST') {
+            $body = json_decode(file_get_contents('php://input'), true) ?? [];
+            $lancModel = new \App\Models\LancamentoFinanceiro();
+            $body['created_by'] = $usuarioId;
+            $ok = $lancModel->criar($body);
+            echo json_encode(['ok' => $ok]);
+            exit;
+        }
+
+        // DELETE /api/tesouraria/lancamento/{id}
+        if (preg_match('~^/api/tesouraria/lancamento/(\d+)$~', $requestUri, $m) && $method === 'DELETE') {
+            $lancModel = new \App\Models\LancamentoFinanceiro();
+            $ok = $lancModel->deletar((int) $m[1]);
+            echo json_encode(['ok' => $ok]);
+            exit;
+        }
+
+        // GET /api/tesouraria/comprovantes
+        if ($requestUri === '/api/tesouraria/comprovantes' && $method === 'GET') {
+            $comproModel = new \App\Models\ComprovantePix();
+            $comprovantes = $comproModel->obterPendentes();
+            echo json_encode(['ok' => true, 'comprovantes' => $comprovantes]);
+            exit;
+        }
+
+        // GET /api/tesouraria/comprovantes/{id}
+        if (preg_match('~^/api/tesouraria/comprovantes/(\d+)$~', $requestUri, $m) && $method === 'GET') {
+            $comproModel = new \App\Models\ComprovantePix();
+            $comprovante = $comproModel->obterPorId((int) $m[1]);
+            echo json_encode(['ok' => $comprovante !== null, 'comprovante' => $comprovante]);
+            exit;
+        }
+
+        // POST /api/tesouraria/comprovantes/aprovar
+        if ($requestUri === '/api/tesouraria/comprovantes/aprovar' && $method === 'POST') {
+            $body = json_decode(file_get_contents('php://input'), true) ?? [];
+            $comproModel = new \App\Models\ComprovantePix();
+            $lancModel = new \App\Models\LancamentoFinanceiro();
+
+            $comprovante = $comproModel->obterPorId((int) ($body['id'] ?? 0));
+            if (!$comprovante) {
+                echo json_encode(['ok' => false]);
+                exit;
+            }
+
+            // Aprova comprovante
+            $validacao = [
+                'valor' => (float) ($body['valor'] ?? 0),
+                'mes' => (int) ($body['mes'] ?? date('n')),
+                'ano' => (int) ($body['ano'] ?? date('Y')),
+                'validado_por' => $usuarioId,
+            ];
+            $comproModel->aprovar((int) ($body['id'] ?? 0), $validacao);
+
+            // Cria lançamento automático
+            $lancData = [
+                'tipo' => 'entrada',
+                'categoria_id' => 1, // Mensalidades ID
+                'valor' => $validacao['valor'],
+                'data_lancamento' => date('Y-m-d'),
+                'obreiro_id' => $comprovante['obreiro_id'],
+                'mes_ref' => $validacao['mes'],
+                'ano_ref' => $validacao['ano'],
+                'created_by' => $usuarioId,
+            ];
+            $lancModel->criar($lancData);
+
+            // Atualiza mensalidade
+            if ($comprovante['obreiro_id']) {
+                $mensModel = new \App\Models\MensalidadeStatus();
+                $mensModel->registrar($comprovante['obreiro_id'], $validacao['mes'], $validacao['ano'], 'pago');
+            }
+
+            echo json_encode(['ok' => true]);
+            exit;
+        }
+
+        // POST /api/tesouraria/comprovantes/rejeitar
+        if ($requestUri === '/api/tesouraria/comprovantes/rejeitar' && $method === 'POST') {
+            $body = json_decode(file_get_contents('php://input'), true) ?? [];
+            $comproModel = new \App\Models\ComprovantePix();
+            $ok = $comproModel->rejeitar((int) ($body['id'] ?? 0), $body['motivo'] ?? '', $usuarioId);
+            echo json_encode(['ok' => $ok]);
+            exit;
+        }
+
+        // GET /api/tesouraria/regularidade?mes=3&ano=2026
+        if ($requestUri === '/api/tesouraria/regularidade' && $method === 'GET') {
+            $mes = (int) ($_GET['mes'] ?? date('n'));
+            $ano = (int) ($_GET['ano'] ?? date('Y'));
+            $regModel = new \App\Models\RegularidadeObreiro();
+            $regularidade = $regModel->obterPorMes($mes, $ano);
+            echo json_encode(['ok' => true, 'regularidade' => $regularidade]);
+            exit;
+        }
+
+        // POST /api/tesouraria/regularidade/definir
+        if ($requestUri === '/api/tesouraria/regularidade/definir' && $method === 'POST') {
+            $body = json_decode(file_get_contents('php://input'), true) ?? [];
+            $regModel = new \App\Models\RegularidadeObreiro();
+            $ok = $regModel->definir(
+                (int) ($body['obreiro_id'] ?? 0),
+                (int) ($body['mes'] ?? 0),
+                (int) ($body['ano'] ?? 0),
+                $body['status'] ?? 'irregular',
+                $body['observacao'] ?? null,
+                $usuarioId
+            );
+            echo json_encode(['ok' => $ok]);
+            exit;
+        }
+
+        // POST /api/tesouraria/regularidade/definir-todos
+        if ($requestUri === '/api/tesouraria/regularidade/definir-todos' && $method === 'POST') {
+            $body = json_decode(file_get_contents('php://input'), true) ?? [];
+            $obreiroModel = new \App\Models\Obreiro();
+            $regModel = new \App\Models\RegularidadeObreiro();
+
+            $obreiros = $obreiroModel->getAllAtivos();
+            foreach ($obreiros as $ob) {
+                $regModel->definir($ob['id'], (int) ($body['mes'] ?? 0), (int) ($body['ano'] ?? 0), $body['status'] ?? 'regular', null, $usuarioId);
+            }
+
+            echo json_encode(['ok' => true]);
+            exit;
+        }
+
+        // GET /api/tesouraria/fechamento?mes=3&ano=2026
+        if ($requestUri === '/api/tesouraria/fechamento' && $method === 'GET') {
+            $mes = (int) ($_GET['mes'] ?? date('n'));
+            $ano = (int) ($_GET['ano'] ?? date('Y'));
+            $fechModel = new \App\Models\FechamentoMensal();
+
+            $fechamento = $fechModel->obter($mes, $ano);
+            if (!$fechamento) {
+                // Cria novo fechamento com saldo anterior do mês anterior
+                $mesPrev = $mes - 1;
+                $anoPrev = $ano;
+                if ($mesPrev < 1) {
+                    $mesPrev = 12;
+                    $anoPrev--;
+                }
+
+                $fechPrev = $fechModel->obter($mesPrev, $anoPrev);
+                $saldoSugerido = $fechPrev ? (float) $fechPrev['saldo_final'] : 0;
+
+                $fechModel->criar($mes, $ano, $saldoSugerido);
+                $fechamento = $fechModel->obter($mes, $ano);
+            }
+
+            $fechModel->recalcularTotais($mes, $ano);
+            $fechamento = $fechModel->obter($mes, $ano);
+
+            echo json_encode(['ok' => true, 'fechamento' => $fechamento]);
+            exit;
+        }
+
+        // POST /api/tesouraria/fechamento/atualizar-saldo
+        if ($requestUri === '/api/tesouraria/fechamento/atualizar-saldo' && $method === 'POST') {
+            $body = json_decode(file_get_contents('php://input'), true) ?? [];
+            $fechModel = new \App\Models\FechamentoMensal();
+            $ok = $fechModel->atualizarSaldoInicial((int) ($body['fechamento_id'] ?? 0), (float) ($body['novo_saldo'] ?? 0), $body['justificativa'] ?? '', $usuarioId);
+            echo json_encode(['ok' => $ok]);
+            exit;
+        }
+
+        // GET /api/tesouraria/fechamento/{id}/lancamentos
+        if (preg_match('~^/api/tesouraria/fechamento/(\d+)/lancamentos$~', $requestUri, $m) && $method === 'GET') {
+            $fechModel = new \App\Models\FechamentoMensal();
+            $fechamento = $fechModel->obterPorId((int) $m[1]);
+            if (!$fechamento) {
+                echo json_encode(['ok' => false]); exit;
+            }
+
+            $lancModel = new \App\Models\LancamentoFinanceiro();
+            $lancamentos = $lancModel->obterPorMes($fechamento['mes_ref'], $fechamento['ano_ref']);
+            echo json_encode(['ok' => true, 'lancamentos' => $lancamentos]);
+            exit;
+        }
+
+        // GET /api/tesouraria/fechamento/{id}/auditoria
+        if (preg_match('~^/api/tesouraria/fechamento/(\d+)/auditoria$~', $requestUri, $m) && $method === 'GET') {
+            $fechModel = new \App\Models\FechamentoMensal();
+            $fechamento = $fechModel->obterComAuditoria((int) $m[1]);
+            if (!$fechamento) {
+                echo json_encode(['ok' => false]); exit;
+            }
+            echo json_encode(['ok' => true, 'auditoria' => $fechamento['auditoria']]);
+            exit;
+        }
+
+        // POST /api/tesouraria/fechamento/fechar
+        if ($requestUri === '/api/tesouraria/fechamento/fechar' && $method === 'POST') {
+            $body = json_decode(file_get_contents('php://input'), true) ?? [];
+            $fechModel = new \App\Models\FechamentoMensal();
+            $ok = $fechModel->fechar($body['mes'] ?? 0, $body['ano'] ?? 0, $usuarioId);
+            echo json_encode(['ok' => $ok]);
+            exit;
+        }
+
+        http_response_code(404);
+        echo json_encode(['ok' => false, 'erro' => 'API não encontrada.']);
+        exit;
+
     default:
         http_response_code(404);
         echo "404 - Página não encontrada.";

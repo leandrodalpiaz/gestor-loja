@@ -7,6 +7,7 @@ use App\Models\EfemerideRegistro;
 use App\Models\Obreiro;
 use App\Models\Sessao;
 use App\Models\Presenca;
+use App\Models\ComprovantePix;
 use App\Services\EfemeridesComposer;
 
 class CommandHandler
@@ -38,9 +39,16 @@ class CommandHandler
 
         $chatId = $update['message']['chat']['id'] ?? null;
         $fromId = $update['message']['from']['id'] ?? null;
+        $fromName = $update['message']['from']['first_name'] ?? 'Irmão';
         $text = $update['message']['text'] ?? '';
 
         if (!$chatId) {
+            return;
+        }
+
+        // Verifica se é um comprovante (foto ou documento)
+        if (isset($update['message']['photo']) || isset($update['message']['document'])) {
+            $this->handleComprovante($chatId, (int) $fromId, $fromName, $update['message']);
             return;
         }
 
@@ -446,6 +454,96 @@ class CommandHandler
             return new \DateTimeImmutable('today', new \DateTimeZone($timezone));
         } catch (\Throwable $e) {
             return new \DateTimeImmutable('today', new \DateTimeZone('America/Sao_Paulo'));
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // Tesouraria - Comprovantes PIX
+    // ---------------------------------------------------------------
+
+    private function handleComprovante(int $chatId, int $telegramId, string $fromName, array $messageData): void
+    {
+        // Valida se é um membro válido
+        $obreiro = $this->obreiroModel->findByTelegramId($telegramId);
+        if (!$obreiro) {
+            $this->telegram->sendMessage(
+                $chatId,
+                "⛔ Seu cadastro não foi encontrado. Solicite liberação de acesso ao Chanceler."
+            );
+            return;
+        }
+
+        try {
+            $comprovantePix = new ComprovantePix();
+            
+            // Extrai informações do arquivo
+            $fileId = null;
+            $fileType = 'desconhecido';
+            $fileName = null;
+
+            if (isset($messageData['photo']) && is_array($messageData['photo']) && count($messageData['photo']) > 0) {
+                // Para fotos, pega o tamanho maior disponível
+                $photos = $messageData['photo'];
+                usort($photos, function($a, $b) {
+                    return ($b['file_size'] ?? 0) <=> ($a['file_size'] ?? 0);
+                });
+                $fileId = $photos[0]['file_id'] ?? null;
+                $fileType = 'foto';
+            } elseif (isset($messageData['document'])) {
+                $fileId = $messageData['document']['file_id'] ?? null;
+                $fileName = $messageData['document']['file_name'] ?? 'comprovante';
+                $fileType = 'documento';
+            }
+
+            if (!$fileId) {
+                $this->telegram->sendMessage(
+                    $chatId,
+                    "❌ Não foi possível processar o arquivo. Tente novamente."
+                );
+                return;
+            }
+
+            // Extrai texto se foi enviado uma caption
+            $caption = $messageData['caption'] ?? '';
+
+            // Registra no banco de dados
+            $comprovantePix->registrar([
+                'obreiro_id' => $obreiro['id'],
+                'telegram_id' => $telegramId,
+                'telegram_file_id' => $fileId,
+                'tipo_arquivo' => $fileType,
+                'nome_arquivo' => $fileName,
+                'descricao_usuario' => $caption,
+                'status' => 'pendente',
+                'data_envio' => date('Y-m-d H:i:s'),
+            ]);
+
+            // Envia confirmação ao usuário
+            $mensagem = "✅ <b>Comprovante Recebido!</b>\n\n";
+            $mensagem .= "Olá, Irmão <b>{$obreiro['nome']}</b>.\n\n";
+            $mensagem .= "Seu comprovante de PIX ({$fileType}) foi registrado com sucesso na fila de validação.\n\n";
+            $mensagem .= "⏳ <i>O comprovante será validado pelo Tesoureiro em breve.</i>\n\n";
+            if ($caption !== '') {
+                $mensagem .= "📝 <b>Sua descrição:</b>\n{$caption}\n\n";
+            }
+            $mensagem .= "Obrigado por contribuir com nossa Loja! 🙏";
+
+            $this->telegram->sendMessage($chatId, $mensagem);
+
+            // Log do registro na tesouraria
+            error_log(
+                "[Tesouraria] Comprovante registrado: " .
+                "obreiro={$obreiro['id']}, " .
+                "tipo={$fileType}, " .
+                "telegram_id={$telegramId}"
+            );
+
+        } catch (\Exception $e) {
+            error_log("[Tesouraria] Erro ao registrar comprovante: " . $e->getMessage());
+            $this->telegram->sendMessage(
+                $chatId,
+                "❌ Erro ao processar comprovante. Contate o Tesoureiro da Loja."
+            );
         }
     }
 }
