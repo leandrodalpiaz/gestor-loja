@@ -29,10 +29,11 @@ if (!isset($_SESSION["usuario_logado"])) {
                     <label class="block text-sm font-medium text-gray-700 mb-1">Mês</label>
                     <select id="filter-mes" class="w-full border border-gray-300 rounded px-3 py-2" onchange="filtrarCaixa()">
                         <?php
+                        $mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                         $mesAtual = (int) date('n');
                         for ($m = 1; $m <= 12; $m++) {
                             $selected = ($m === $mesAtual) ? 'selected' : '';
-                            echo "<option value=\"$m\" $selected>" . strftime('%B', mktime(0, 0, 0, $m)) . "</option>";
+                            echo "<option value=\"$m\" $selected>{$mesesPT[$m-1]}</option>";
                         }
                         ?>
                     </select>
@@ -58,6 +59,30 @@ if (!isset($_SESSION["usuario_logado"])) {
                     <button onclick="abrirModalSaida()" class="flex-1 px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800 text-sm font-medium">
                         ➖ Nova Saída
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lançamentos Rápidos -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between cursor-pointer select-none" onclick="toggleSugestoes()">
+                <h2 class="font-semibold text-gray-700">⚡ Lançamentos Rápidos</h2>
+                <span id="sugestoes-toggle-icon" class="text-gray-400 text-xs font-medium">▲ Ocultar</span>
+            </div>
+            <div id="sugestoes-panel" class="p-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs font-semibold text-green-700 uppercase tracking-wide mb-2">Entradas</p>
+                        <div id="sugestoes-entradas" class="flex flex-wrap gap-2">
+                            <span class="text-gray-400 text-sm">Carregando...</span>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-red-700 uppercase tracking-wide mb-2">Saídas</p>
+                        <div id="sugestoes-saidas" class="flex flex-wrap gap-2">
+                            <span class="text-gray-400 text-sm">Carregando...</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -160,6 +185,55 @@ if (!isset($_SESSION["usuario_logado"])) {
         const anoAtual = new Date().getFullYear();
 
         document.getElementById('data_lancamento').valueAsDate = new Date();
+
+        function toggleSugestoes() {
+            const panel = document.getElementById('sugestoes-panel');
+            const icon = document.getElementById('sugestoes-toggle-icon');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                icon.textContent = '▲ Ocultar';
+            } else {
+                panel.classList.add('hidden');
+                icon.textContent = '▼ Mostrar';
+            }
+        }
+
+        async function carregarSugestoes() {
+            try {
+                const [resEnt, resSai] = await Promise.all([
+                    fetch('/api/tesouraria/categorias?tipo=entrada'),
+                    fetch('/api/tesouraria/categorias?tipo=saida')
+                ]);
+                const entradas = (await resEnt.json()).categorias || [];
+                const saidas = (await resSai.json()).categorias || [];
+
+                const renderPills = (cats, tipo) => cats.map(c => `
+                    <button onclick="lancarRapido(${c.id}, '${tipo}', ${JSON.stringify(c.nome)})"
+                        class="text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${
+                            tipo === 'entrada'
+                                ? 'border-green-300 text-green-700 hover:bg-green-50'
+                                : 'border-red-300 text-red-700 hover:bg-red-50'
+                        }">
+                        ${c.nome}
+                    </button>
+                `).join('');
+
+                document.getElementById('sugestoes-entradas').innerHTML = renderPills(entradas, 'entrada') || '<span class="text-gray-400 text-sm">Nenhuma categoria</span>';
+                document.getElementById('sugestoes-saidas').innerHTML = renderPills(saidas, 'saida') || '<span class="text-gray-400 text-sm">Nenhuma categoria</span>';
+            } catch (err) {
+                console.error('Erro ao carregar sugestões:', err);
+            }
+        }
+
+        async function lancarRapido(categoriaId, tipo, nomeCategoria) {
+            document.getElementById('tipo-lancamento').value = tipo;
+            document.getElementById('modal-title').textContent = tipo === 'entrada'
+                ? `Nova Entrada — ${nomeCategoria}`
+                : `Nova Saída — ${nomeCategoria}`;
+            await carregarCategorias(tipo);
+            document.getElementById('categoria_id').value = categoriaId;
+            document.getElementById('modal-lancamento').classList.remove('hidden');
+        }
 
         async function abrirModalEntrada() {
             document.getElementById('tipo-lancamento').value = 'entrada';
@@ -318,6 +392,7 @@ if (!isset($_SESSION["usuario_logado"])) {
 
         // Carrega na página
         filtrarCaixa();
+        carregarSugestoes();
     </script>
 </body>
 </html>
