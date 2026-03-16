@@ -103,10 +103,21 @@ if (!isset($_SESSION["usuario_logado"])) {
             </div>
         </div>
 
-        <!-- Gráfico -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <h2 class="font-semibold mb-4">Comparação Entrada vs Saída</h2>
-            <canvas id="chartCaixa" height="80"></canvas>
+        <!-- Gráficos -->
+        <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 xl:col-span-2">
+                <h2 class="font-semibold mb-4">Composição do Período</h2>
+                <div class="h-72">
+                    <canvas id="chartCaixaPizza"></canvas>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 xl:col-span-3">
+                <h2 class="font-semibold mb-1">Tendência Financeira</h2>
+                <p class="text-xs text-gray-500 mb-4">Mês anterior, mês atual e projeção simples do próximo período.</p>
+                <div class="h-72">
+                    <canvas id="chartCaixaTendencia"></canvas>
+                </div>
+            </div>
         </div>
 
         <!-- Tabela de Lançamentos -->
@@ -183,6 +194,7 @@ if (!isset($_SESSION["usuario_logado"])) {
     <script>
         const mesAtual = new Date().getMonth() + 1;
         const anoAtual = new Date().getFullYear();
+        const nomesMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
         document.getElementById('data_lancamento').valueAsDate = new Date();
 
@@ -272,14 +284,53 @@ if (!isset($_SESSION["usuario_logado"])) {
             }
         }
 
+        function formatarMoeda(valor) {
+            return Number(valor || 0).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+        }
+
+        function obterPeriodoAnterior(mes, ano) {
+            if (mes === 1) {
+                return { mes: 12, ano: ano - 1 };
+            }
+            return { mes: mes - 1, ano };
+        }
+
+        function obterProximoPeriodo(mes, ano) {
+            if (mes === 12) {
+                return { mes: 1, ano: ano + 1 };
+            }
+            return { mes: mes + 1, ano };
+        }
+
+        function projetarProximoPeriodo(totaisAnterior, totaisAtual) {
+            const entradaAnterior = Number(totaisAnterior.entrada || 0);
+            const entradaAtual = Number(totaisAtual.entrada || 0);
+            const saidaAnterior = Number(totaisAnterior.saida || 0);
+            const saidaAtual = Number(totaisAtual.saida || 0);
+
+            return {
+                entrada: Number(((entradaAnterior + entradaAtual) / 2).toFixed(2)),
+                saida: Number(((saidaAnterior + saidaAtual) / 2).toFixed(2)),
+            };
+        }
+
+        async function buscarTotaisPeriodo(mes, ano) {
+            const res = await fetch(`/api/tesouraria/caixa?mes=${mes}&ano=${ano}`);
+            const json = await res.json();
+            return json.totais || { entrada: 0, saida: 0 };
+        }
+
         async function filtrarCaixa() {
-            const mes = document.getElementById('filter-mes').value;
-            const ano = document.getElementById('filter-ano').value;
+            const mes = Number(document.getElementById('filter-mes').value);
+            const ano = Number(document.getElementById('filter-ano').value);
             try {
                 const res = await fetch(`/api/tesouraria/caixa?mes=${mes}&ano=${ano}`);
                 const json = await res.json();
                 atualizarTabelaCaixa(json.lancamentos, json.totais);
-                atualizarGrafico(json.totais);
+                await atualizarGraficos(mes, ano, json.totais);
             } catch (err) {
                 console.error('Erro ao carregar caixa:', err);
             }
@@ -320,33 +371,127 @@ if (!isset($_SESSION["usuario_logado"])) {
                 </tr>
             `).join('');
 
-            document.getElementById('total-entradas').textContent = `R$ ${totais.entrada.toFixed(2)}`;
-            document.getElementById('total-saidas').textContent = `R$ ${totais.saida.toFixed(2)}`;
-            document.getElementById('saldo-liquido').textContent = `R$ ${(totais.entrada - totais.saida).toFixed(2)}`;
+            document.getElementById('total-entradas').textContent = formatarMoeda(totais.entrada);
+            document.getElementById('total-saidas').textContent = formatarMoeda(totais.saida);
+            document.getElementById('saldo-liquido').textContent = formatarMoeda((totais.entrada || 0) - (totais.saida || 0));
         }
 
-        function atualizarGrafico(totais) {
-            const ctx = document.getElementById('chartCaixa').getContext('2d');
-            if (window.chartCaixa) {
-                window.chartCaixa.destroy();
+        function atualizarGraficoPizza(totais) {
+            const ctx = document.getElementById('chartCaixaPizza').getContext('2d');
+            if (window.chartCaixaPizza) {
+                window.chartCaixaPizza.destroy();
             }
-            window.chartCaixa = new Chart(ctx, {
-                type: 'bar',
+
+            window.chartCaixaPizza = new Chart(ctx, {
+                type: 'pie',
                 data: {
-                    labels: ['Entrada', 'Saída'],
+                    labels: ['Entradas', 'Saídas'],
                     datasets: [{
-                        label: 'Valor (R$)',
-                        data: [totais.entrada, totais.saida],
-                        backgroundColor: ['#22c55e', '#ef4444'],
-                        borderRadius: 4
+                        data: [Number(totais.entrada || 0), Number(totais.saida || 0)],
+                        backgroundColor: ['#16a34a', '#dc2626'],
+                        borderColor: ['#dcfce7', '#fee2e2'],
+                        borderWidth: 2,
                     }]
                 },
                 options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.label}: ${formatarMoeda(context.raw)}`
+                            }
+                        }
+                    }
                 }
             });
+        }
+
+        function atualizarGraficoTendencia(labels, totaisAnterior, totaisAtual, totaisProjecao) {
+            const ctx = document.getElementById('chartCaixaTendencia').getContext('2d');
+            if (window.chartCaixaTendencia) {
+                window.chartCaixaTendencia.destroy();
+            }
+
+            const entradas = [totaisAnterior.entrada, totaisAtual.entrada, totaisProjecao.entrada].map(valor => Number(valor || 0));
+            const saidas = [totaisAnterior.saida, totaisAtual.saida, totaisProjecao.saida].map(valor => Number(valor || 0));
+            const saldos = entradas.map((entrada, index) => Number((entrada - saidas[index]).toFixed(2)));
+
+            window.chartCaixaTendencia = new Chart(ctx, {
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: 'Entradas',
+                            data: entradas,
+                            backgroundColor: '#22c55e',
+                            borderRadius: 6,
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Saídas',
+                            data: saidas,
+                            backgroundColor: '#ef4444',
+                            borderRadius: 6,
+                        },
+                        {
+                            type: 'line',
+                            label: 'Saldo Líquido',
+                            data: saldos,
+                            borderColor: '#2563eb',
+                            backgroundColor: '#2563eb',
+                            tension: 0.35,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            yAxisID: 'y',
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: ${formatarMoeda(context.raw)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => formatarMoeda(value)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function atualizarGraficos(mes, ano, totaisAtual) {
+            atualizarGraficoPizza(totaisAtual);
+
+            const periodoAnterior = obterPeriodoAnterior(mes, ano);
+            const proximoPeriodo = obterProximoPeriodo(mes, ano);
+            const totaisAnterior = await buscarTotaisPeriodo(periodoAnterior.mes, periodoAnterior.ano);
+            const totaisProjecao = projetarProximoPeriodo(totaisAnterior, totaisAtual);
+
+            atualizarGraficoTendencia([
+                nomesMeses[periodoAnterior.mes - 1],
+                nomesMeses[mes - 1],
+                `${nomesMeses[proximoPeriodo.mes - 1]} (proj.)`
+            ], totaisAnterior, totaisAtual, totaisProjecao);
         }
 
         document.getElementById('form-lancamento').addEventListener('submit', async (e) => {
