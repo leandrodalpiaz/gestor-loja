@@ -128,7 +128,16 @@ class CommandHandler {
 
     // Consulta Livro-Caixa
     public function handleTesourariaCaixa($chatId) {
-        $response = @file_get_contents('https://gestor-loja-web.onrender.com/api/tesouraria/caixa?mes=' . date('n') . '&ano=' . date('Y'));
+        $token = $_ENV['API_TESOURARIA_TOKEN'] ?? '';
+        $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/caixa?mes=' . date('n') . '&ano=' . date('Y');
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'header' => ($token ? "Authorization: Bearer $token\r\n" : '')
+            ]
+        ];
+        $context = stream_context_create($opts);
+        $response = @file_get_contents($url, false, $context);
         $data = json_decode($response, true);
         if (!$data || !$data['ok']) {
             $this->telegram->sendMessage($chatId, '❌ Falha ao consultar o livro-caixa.');
@@ -144,7 +153,16 @@ class CommandHandler {
 
     // Consulta Comprovantes
     public function handleTesourariaComprovantes($chatId) {
-        $response = @file_get_contents('https://gestor-loja-web.onrender.com/api/tesouraria/comprovantes');
+        $token = $_ENV['API_TESOURARIA_TOKEN'] ?? '';
+        $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/comprovantes';
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'header' => ($token ? "Authorization: Bearer $token\r\n" : '')
+            ]
+        ];
+        $context = stream_context_create($opts);
+        $response = @file_get_contents($url, false, $context);
         $data = json_decode($response, true);
         if (!$data || !$data['ok']) {
             $this->telegram->sendMessage($chatId, '❌ Falha ao consultar comprovantes.');
@@ -159,7 +177,16 @@ class CommandHandler {
 
     // Consulta Regularidade
     public function handleTesourariaRegularidade($chatId) {
-        $response = @file_get_contents('https://gestor-loja-web.onrender.com/api/tesouraria/regularidade?mes=' . date('n') . '&ano=' . date('Y'));
+        $token = $_ENV['API_TESOURARIA_TOKEN'] ?? '';
+        $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/regularidade?mes=' . date('n') . '&ano=' . date('Y');
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'header' => ($token ? "Authorization: Bearer $token\r\n" : '')
+            ]
+        ];
+        $context = stream_context_create($opts);
+        $response = @file_get_contents($url, false, $context);
         $data = json_decode($response, true);
         if (!$data || !$data['ok']) {
             $this->telegram->sendMessage($chatId, '❌ Falha ao consultar regularidade.');
@@ -174,7 +201,16 @@ class CommandHandler {
 
     // Consulta Fechamento Mensal
     public function handleTesourariaFechamento($chatId) {
-        $response = @file_get_contents('https://gestor-loja-web.onrender.com/api/tesouraria/fechamento?mes=' . date('n') . '&ano=' . date('Y'));
+        $token = $_ENV['API_TESOURARIA_TOKEN'] ?? '';
+        $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/fechamento?mes=' . date('n') . '&ano=' . date('Y');
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'header' => ($token ? "Authorization: Bearer $token\r\n" : '')
+            ]
+        ];
+        $context = stream_context_create($opts);
+        $response = @file_get_contents($url, false, $context);
         $data = json_decode($response, true);
         if (!$data || !$data['ok']) {
             $this->telegram->sendMessage($chatId, '❌ Falha ao consultar fechamento mensal.');
