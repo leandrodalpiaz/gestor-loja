@@ -128,7 +128,8 @@ class CommandHandler {
 
     // Consulta Livro-Caixa
     public function handleTesourariaCaixa($chatId) {
-        $token = $_ENV['API_TESOURARIA_TOKEN'] ?? '';
+        // Usa o Telegram ID do usuário como token
+        $token = $chatId;
         $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/caixa?mes=' . date('n') . '&ano=' . date('Y');
         $opts = [
             'http' => [
@@ -153,7 +154,7 @@ class CommandHandler {
 
     // Consulta Comprovantes
     public function handleTesourariaComprovantes($chatId) {
-        $token = $_ENV['API_TESOURARIA_TOKEN'] ?? '';
+        $token = $chatId;
         $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/comprovantes';
         $opts = [
             'http' => [
@@ -177,7 +178,7 @@ class CommandHandler {
 
     // Consulta Regularidade
     public function handleTesourariaRegularidade($chatId) {
-        $token = $_ENV['API_TESOURARIA_TOKEN'] ?? '';
+        $token = $chatId;
         $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/regularidade?mes=' . date('n') . '&ano=' . date('Y');
         $opts = [
             'http' => [
@@ -201,7 +202,7 @@ class CommandHandler {
 
     // Consulta Fechamento Mensal
     public function handleTesourariaFechamento($chatId) {
-        $token = $_ENV['API_TESOURARIA_TOKEN'] ?? '';
+        $token = $chatId;
         $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/fechamento?mes=' . date('n') . '&ano=' . date('Y');
         $opts = [
             'http' => [
