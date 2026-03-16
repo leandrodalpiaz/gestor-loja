@@ -12,7 +12,6 @@ if (!isset($_SESSION["usuario_logado"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Livro-Caixa - Tesouraria</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800">
     <div class="max-w-7xl mx-auto px-4 py-8">
@@ -107,15 +106,24 @@ if (!isset($_SESSION["usuario_logado"])) {
         <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mb-6">
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 xl:col-span-2 min-h-[320px]">
                 <h2 class="font-semibold mb-4">Composição do Período</h2>
-                <div class="relative h-72">
-                    <canvas id="chartCaixaPizza" height="280"></canvas>
+                <div class="flex flex-col items-center justify-center gap-4 h-72">
+                    <div id="chartCaixaPizza" class="w-52 h-52 rounded-full border border-gray-200" aria-label="Gráfico de composição do período"></div>
+                    <div class="flex flex-wrap items-center justify-center gap-4 text-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-block w-3 h-3 rounded-full bg-green-600"></span>
+                            <span id="legenda-entradas">Entradas: R$ 0,00</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-block w-3 h-3 rounded-full bg-red-600"></span>
+                            <span id="legenda-saidas">Saídas: R$ 0,00</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 xl:col-span-3 min-h-[320px]">
                 <h2 class="font-semibold mb-1">Tendência Financeira</h2>
                 <p class="text-xs text-gray-500 mb-4">Mês anterior, mês atual e projeção simples do próximo período.</p>
-                <div class="relative h-72">
-                    <canvas id="chartCaixaTendencia" height="280"></canvas>
+                <div id="chartCaixaTendencia" class="h-72"></div>
                 </div>
             </div>
         </div>
@@ -377,128 +385,70 @@ if (!isset($_SESSION["usuario_logado"])) {
         }
 
         function atualizarGraficoPizza(totais) {
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js não foi carregado.');
-                return;
+            const entradas = Number(totais.entrada || 0);
+            const saidas = Number(totais.saida || 0);
+            const total = entradas + saidas;
+            const percentualEntradas = total > 0 ? (entradas / total) * 100 : 50;
+
+            const grafico = document.getElementById('chartCaixaPizza');
+            grafico.style.background = `conic-gradient(#16a34a 0% ${percentualEntradas}%, #dc2626 ${percentualEntradas}% 100%)`;
+
+            if (total === 0) {
+                grafico.style.background = 'conic-gradient(#d1d5db 0% 100%)';
             }
 
-            const canvas = document.getElementById('chartCaixaPizza');
-            if (!canvas) {
-                return;
-            }
-
-            const ctx = canvas.getContext('2d');
-            if (window.chartCaixaPizza) {
-                window.chartCaixaPizza.destroy();
-            }
-
-            window.chartCaixaPizza = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Entradas', 'Saídas'],
-                    datasets: [{
-                        data: [Number(totais.entrada || 0), Number(totais.saida || 0)],
-                        backgroundColor: ['#16a34a', '#dc2626'],
-                        borderColor: ['#dcfce7', '#fee2e2'],
-                        borderWidth: 2,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => `${context.label}: ${formatarMoeda(context.raw)}`
-                            }
-                        }
-                    }
-                }
-            });
+            document.getElementById('legenda-entradas').textContent = `Entradas: ${formatarMoeda(entradas)}`;
+            document.getElementById('legenda-saidas').textContent = `Saídas: ${formatarMoeda(saidas)}`;
         }
 
         function atualizarGraficoTendencia(labels, totaisAnterior, totaisAtual, totaisProjecao) {
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js não foi carregado.');
-                return;
-            }
-
-            const canvas = document.getElementById('chartCaixaTendencia');
-            if (!canvas) {
-                return;
-            }
-
-            const ctx = canvas.getContext('2d');
-            if (window.chartCaixaTendencia) {
-                window.chartCaixaTendencia.destroy();
-            }
-
             const entradas = [totaisAnterior.entrada, totaisAtual.entrada, totaisProjecao.entrada].map(valor => Number(valor || 0));
             const saidas = [totaisAnterior.saida, totaisAtual.saida, totaisProjecao.saida].map(valor => Number(valor || 0));
             const saldos = entradas.map((entrada, index) => Number((entrada - saidas[index]).toFixed(2)));
 
-            window.chartCaixaTendencia = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [
-                        {
-                            type: 'bar',
-                            label: 'Entradas',
-                            data: entradas,
-                            backgroundColor: '#22c55e',
-                            borderRadius: 6,
-                        },
-                        {
-                            type: 'bar',
-                            label: 'Saídas',
-                            data: saidas,
-                            backgroundColor: '#ef4444',
-                            borderRadius: 6,
-                        },
-                        {
-                            type: 'line',
-                            label: 'Saldo Líquido',
-                            data: saldos,
-                            borderColor: '#2563eb',
-                            backgroundColor: '#2563eb',
-                            tension: 0.35,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            yAxisID: 'y',
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => `${context.dataset.label}: ${formatarMoeda(context.raw)}`
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: (value) => formatarMoeda(value)
-                            }
-                        }
-                    }
-                }
-            });
+            const container = document.getElementById('chartCaixaTendencia');
+            const maiorValor = Math.max(...entradas, ...saidas, ...saldos.map(valor => Math.abs(valor)), 1);
+            const pontosLinha = saldos.map((saldo, index) => {
+                const x = 40 + (index * 180);
+                const y = 220 - ((saldo + maiorValor) / (maiorValor * 2)) * 180;
+                return `${x},${y}`;
+            }).join(' ');
+
+            container.innerHTML = `
+                <div class="h-full flex flex-col gap-3">
+                    <div class="flex items-center justify-center gap-4 text-xs text-gray-600">
+                        <span class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-sm bg-green-500"></span>Entradas</span>
+                        <span class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-sm bg-red-500"></span>Saídas</span>
+                        <span class="flex items-center gap-2"><span class="inline-block w-4 h-0.5 bg-blue-600"></span>Saldo Líquido</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 items-end flex-1">
+                        ${labels.map((label, index) => {
+                            const entradaAltura = Math.max((entradas[index] / maiorValor) * 140, entradas[index] > 0 ? 10 : 2);
+                            const saidaAltura = Math.max((saidas[index] / maiorValor) * 140, saidas[index] > 0 ? 10 : 2);
+                            return `
+                                <div class="flex flex-col items-center justify-end gap-3 h-full relative">
+                                    <div class="text-xs text-gray-500 text-center min-h-[32px]">${label}</div>
+                                    <div class="flex items-end gap-2 h-40">
+                                        <div class="w-10 bg-green-500 rounded-t-md" style="height:${entradaAltura}px" title="Entradas: ${formatarMoeda(entradas[index])}"></div>
+                                        <div class="w-10 bg-red-500 rounded-t-md" style="height:${saidaAltura}px" title="Saídas: ${formatarMoeda(saidas[index])}"></div>
+                                    </div>
+                                    <div class="text-xs font-semibold ${saldos[index] >= 0 ? 'text-blue-700' : 'text-red-700'}">Saldo: ${formatarMoeda(saldos[index])}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    <div class="-mt-44 pointer-events-none">
+                        <svg viewBox="0 0 400 220" class="w-full h-44 overflow-visible">
+                            <polyline fill="none" stroke="#2563eb" stroke-width="3" points="${pontosLinha}" />
+                            ${saldos.map((saldo, index) => {
+                                const x = 40 + (index * 180);
+                                const y = 220 - ((saldo + maiorValor) / (maiorValor * 2)) * 180;
+                                return `<circle cx="${x}" cy="${y}" r="5" fill="#2563eb"></circle>`;
+                            }).join('')}
+                        </svg>
+                    </div>
+                </div>
+            `;
         }
 
         async function atualizarGraficos(mes, ano, totaisAtual) {
