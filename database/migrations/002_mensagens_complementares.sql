@@ -3,27 +3,27 @@
 -- ============================================================
 
 -- Banco de frases rotativas por tipo de evento
-CREATE TABLE IF NOT EXISTS mensagens_complementares (
-    id         SERIAL PRIMARY KEY,
-    tipo       VARCHAR(60)  NOT NULL,
+CREATE TABLE mensagens_complementares (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    tipo VARCHAR(60) NOT NULL,
     -- Tipos aceitos:
     --   aniversario_irmao, aniversario_cunhada,
     --   aniversario_sobrinha, aniversario_sobrinho,
     --   iniciacao, elevacao, exaltacao, instalacao,
     --   fallback
-    mensagem   TEXT         NOT NULL,
-    ativo      BOOLEAN      NOT NULL DEFAULT true,
-    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+    mensagem NVARCHAR(MAX) NOT NULL,
+    ativo BIT NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT GETDATE()
 );
 
-CREATE INDEX IF NOT EXISTS idx_msg_comp_tipo_ativo
+CREATE INDEX idx_msg_comp_tipo_ativo
     ON mensagens_complementares(tipo, ativo);
 
 -- Histórico de rotação (evita repetir a mesma frase consecutivamente)
-CREATE TABLE IF NOT EXISTS mensagens_rotacao_historico (
-    tipo       VARCHAR(60)  NOT NULL PRIMARY KEY,
-    ids_usados INTEGER[]    NOT NULL DEFAULT '{}',
-    updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE mensagens_rotacao_historico (
+    tipo VARCHAR(60) NOT NULL PRIMARY KEY,
+    ids_usados NVARCHAR(MAX) NOT NULL DEFAULT '', -- Armazene IDs separados por vírgula
+    updated_at DATETIME NOT NULL DEFAULT GETDATE()
 );
 
 -- ============================================================

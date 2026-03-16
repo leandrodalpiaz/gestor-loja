@@ -92,6 +92,7 @@ class CommandHandler {
     // Roteamento de callbacks para tesouraria
     public function handleCallback($chatId, $callbackData) {
         switch ($callbackData) {
+            // Tesouraria
             case 'tesouraria_caixa':
                 $this->handleTesourariaCaixa($chatId);
                 break;
@@ -103,6 +104,22 @@ class CommandHandler {
                 break;
             case 'tesouraria_fechamento':
                 $this->handleTesourariaFechamento($chatId);
+                break;
+            // Chancelaria
+            case 'menu_hoje':
+                $this->handleMenuHoje($chatId);
+                break;
+            case 'menu_aniversarios':
+                $this->handleMenuAniversarios($chatId);
+                break;
+            case 'menu_datas_maconicas':
+                $this->handleMenuDatasMaconicas($chatId);
+                break;
+            case 'menu_historico':
+                $this->handleMenuHistorico($chatId);
+                break;
+            case 'menu_fallback':
+                $this->handleMenuFallback($chatId);
                 break;
             default:
                 $this->telegram->sendMessage($chatId, '❓ Opção inválida ou não implementada.');
@@ -167,6 +184,32 @@ class CommandHandler {
         $mensagem = "📅 <b>Fechamento Mensal</b>\n";
         $mensagem .= "Saldo Inicial: {$fechamento['saldo_inicial']}\n";
         $mensagem .= "Saldo Final: {$fechamento['saldo_final']}\n";
+        $this->telegram->sendMessage($chatId, $mensagem);
+    }
+
+    // Métodos do Chanceler
+    public function handleMenuHoje($chatId) {
+        $mensagem = "🗓️ Efemérides de hoje:\n• Exemplo de efeméride 1\n• Exemplo de efeméride 2";
+        $this->telegram->sendMessage($chatId, $mensagem);
+    }
+
+    public function handleMenuAniversarios($chatId) {
+        $mensagem = "🎂 Aniversários:\n• Irmão Fulano - 16/03\n• Cunhada Sicrana - 17/03";
+        $this->telegram->sendMessage($chatId, $mensagem);
+    }
+
+    public function handleMenuDatasMaconicas($chatId) {
+        $mensagem = "⚒️ Datas Maçônicas:\n• 24/06 - Dia do Maçom\n• 20/08 - Dia do Templo";
+        $this->telegram->sendMessage($chatId, $mensagem);
+    }
+
+    public function handleMenuHistorico($chatId) {
+        $mensagem = "📜 Histórico da Ordem:\n• Fundação da Loja em 1980\n• Eventos marcantes...";
+        $this->telegram->sendMessage($chatId, $mensagem);
+    }
+
+    public function handleMenuFallback($chatId) {
+        $mensagem = "💬 Mensagens de reflexão:\n• \"A Maçonaria ensina que cada ser humano tem a possibilidade de aperfeiçoar-se...\"";
         $this->telegram->sendMessage($chatId, $mensagem);
     }
 
