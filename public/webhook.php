@@ -20,7 +20,10 @@ error_log("[webhook] recebido update_id={$updateId} message={$hasMessage} callba
 if ($update) {
     try {
         $client = new TelegramClient();
-        $handler = new CommandHandler($client);
+        $obreiroModel = new \App\Models\Obreiro();
+        $sessaoModel = new \App\Models\Sessao();
+        $presencaModel = new \App\Models\Presenca();
+        $handler = new CommandHandler($client, $obreiroModel, $sessaoModel, $presencaModel);
         $handler->handle($update);
         error_log("[webhook] update processado com sucesso");
     } catch (\Throwable $e) {

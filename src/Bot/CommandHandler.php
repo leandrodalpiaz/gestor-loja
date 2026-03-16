@@ -169,4 +169,28 @@ class CommandHandler {
         $mensagem .= "Saldo Final: {$fechamento['saldo_final']}\n";
         $this->telegram->sendMessage($chatId, $mensagem);
     }
+
+    // Processa updates recebidos do Telegram
+    public function handle($update) {
+        if (isset($update['message'])) {
+            $chatId = $update['message']['chat']['id'];
+            $text = $update['message']['text'] ?? '';
+            $fromId = $update['message']['from']['id'] ?? null;
+
+            // Roteamento de comandos
+            if ($text === '/tesouraria') {
+                $this->handleTesouraria($chatId, $fromId);
+            } elseif ($text === '/ajuda') {
+                $this->handleHelp($chatId);
+            } elseif ($text === '/chancelaria') {
+                $this->handleChancelaria($chatId, $fromId);
+            } else {
+                $this->sendMenuPresenca($chatId);
+            }
+        } elseif (isset($update['callback_query'])) {
+            $chatId = $update['callback_query']['message']['chat']['id'];
+            $callbackData = $update['callback_query']['data'];
+            $this->handleCallback($chatId, $callbackData);
+        }
+    }
 }
