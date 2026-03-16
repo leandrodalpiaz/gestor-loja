@@ -17,7 +17,7 @@ class RegularidadeObreiro
     /**
      * Define regularidade de um obreiro para um mês
      */
-    public function definir(int $obreiroId, int $mes, int $ano, string $status, ?string $observacao, int $definidoPor): bool
+    public function definir(string $obreiroId, int $mes, int $ano, string $status, ?string $observacao, ?string $definidoPor): bool
     {
         $sql = "
             INSERT INTO regularidade_obreiro (obreiro_id, mes_ref, ano_ref, status, observacao, definido_por)
@@ -44,7 +44,7 @@ class RegularidadeObreiro
     /**
      * Obtém status de regularidade
      */
-    public function obter(int $obreiroId, int $mes, int $ano): ?array
+    public function obter(string $obreiroId, int $mes, int $ano): ?array
     {
         $sql = "
             SELECT ro.*, 
@@ -69,14 +69,21 @@ class RegularidadeObreiro
     public function obterPorMes(int $mes, int $ano): array
     {
         $sql = "
-            SELECT ro.*, 
-                   COALESCE(o1.nome_historico, o1.nome) as obreiro_nome,
-                   COALESCE(o2.nome_historico, o2.nome) as definido_por_nome
-            FROM regularidade_obreiro ro
-            LEFT JOIN obreiros o1 ON ro.obreiro_id = o1.id
+            SELECT 
+                o1.id as obreiro_id,
+                COALESCE(o1.nome_historico, o1.nome) as obreiro_nome,
+                COALESCE(ro.status, 'irregular') as status,
+                ro.observacao,
+                ro.definido_em,
+                COALESCE(o2.nome_historico, o2.nome) as definido_por_nome
+            FROM obreiros o1
+            LEFT JOIN regularidade_obreiro ro 
+                ON ro.obreiro_id = o1.id
+               AND ro.mes_ref = :mes 
+               AND ro.ano_ref = :ano
             LEFT JOIN obreiros o2 ON ro.definido_por = o2.id
-            WHERE ro.mes_ref = :mes AND ro.ano_ref = :ano
-            ORDER BY o1.nome_historico ASC
+            WHERE o1.ativo = true
+            ORDER BY COALESCE(o1.nome_historico, o1.nome) ASC
         ";
 
         $stmt = $this->db->prepare($sql);

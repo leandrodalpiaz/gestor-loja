@@ -27,10 +27,11 @@ if (!isset($_SESSION["usuario_logado"])) {
                     <label class="block text-sm font-medium text-gray-700 mb-1">Mês</label>
                     <select id="filter-mes" class="w-full border border-gray-300 rounded px-3 py-2" onchange="carregarFechamento()">
                         <?php
+                        $mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                         $mesAtual = (int) date('n');
                         for ($m = 1; $m <= 12; $m++) {
                             $selected = ($m === $mesAtual) ? 'selected' : '';
-                            echo "<option value=\"$m\" $selected>" . strftime('%B', mktime(0, 0, 0, $m)) . "</option>";
+                            echo "<option value=\"$m\" $selected>{$mesesPT[$m - 1]}</option>";
                         }
                         ?>
                     </select>
@@ -81,10 +82,10 @@ if (!isset($_SESSION["usuario_logado"])) {
 
         <!-- Abas -->
         <div class="flex gap-4 mb-6 border-b border-gray-200">
-            <button onclick="mudarAba('lancamentos')" class="px-4 py-2 border-b-2 border-blue-700 text-blue-700 font-semibold">
+            <button type="button" data-aba="lancamentos" onclick="mudarAba('lancamentos')" class="tab-fechamento px-4 py-2 border-b-2 border-blue-700 text-blue-700 font-semibold">
                 Lançamentos do Período
             </button>
-            <button onclick="mudarAba('auditoria')" class="px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-800">
+            <button type="button" data-aba="auditoria" onclick="mudarAba('auditoria')" class="tab-fechamento px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-800">
                 Auditoria de Ajustes
             </button>
         </div>
@@ -147,6 +148,24 @@ if (!isset($_SESSION["usuario_logado"])) {
 
     <script>
         let fechamentoAtual = null;
+        let abaAtual = 'lancamentos';
+
+        function formatarMoeda(valor) {
+            return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function atualizarAbas() {
+            document.getElementById('aba-lancamentos').classList.toggle('hidden', abaAtual !== 'lancamentos');
+            document.getElementById('aba-auditoria').classList.toggle('hidden', abaAtual !== 'auditoria');
+            document.querySelectorAll('.tab-fechamento').forEach((botao) => {
+                const ativa = botao.dataset.aba === abaAtual;
+                botao.classList.toggle('border-blue-700', ativa);
+                botao.classList.toggle('text-blue-700', ativa);
+                botao.classList.toggle('font-semibold', ativa);
+                botao.classList.toggle('border-transparent', !ativa);
+                botao.classList.toggle('text-gray-600', !ativa);
+            });
+        }
 
         async function carregarFechamento() {
             const mes = document.getElementById('filter-mes').value;
@@ -164,16 +183,18 @@ if (!isset($_SESSION["usuario_logado"])) {
         function atualizarDisplay() {
             if (!fechamentoAtual) return;
 
-            document.getElementById('saldo-inicial').textContent = 'R$ ' + parseFloat(fechamentoAtual.saldo_inicial).toFixed(2);
-            document.getElementById('total-entradas').textContent = 'R$ ' + parseFloat(fechamentoAtual.total_entradas).toFixed(2);
-            document.getElementById('total-saidas').textContent = 'R$ ' + parseFloat(fechamentoAtual.total_saidas).toFixed(2);
-            document.getElementById('saldo-final').textContent = 'R$ ' + parseFloat(fechamentoAtual.saldo_final).toFixed(2);
+            document.getElementById('saldo-inicial').textContent = formatarMoeda(fechamentoAtual.saldo_inicial);
+            document.getElementById('total-entradas').textContent = formatarMoeda(fechamentoAtual.total_entradas);
+            document.getElementById('total-saidas').textContent = formatarMoeda(fechamentoAtual.total_saidas);
+            document.getElementById('saldo-final').textContent = formatarMoeda(fechamentoAtual.saldo_final);
             document.getElementById('status-fechamento').textContent = fechamentoAtual.status === 'fechado' ? '🔒 Fechado' : 'Aberto';
 
-            if (fechamentoAtual.status === 'fechado') {
-                document.getElementById('btn-fechar').disabled = true;
-                document.getElementById('btn-fechar').classList.add('opacity-50', 'cursor-not-allowed');
-            }
+            const botaoFechar = document.getElementById('btn-fechar');
+            botaoFechar.disabled = fechamentoAtual.status === 'fechado';
+            botaoFechar.classList.toggle('opacity-50', fechamentoAtual.status === 'fechado');
+            botaoFechar.classList.toggle('cursor-not-allowed', fechamentoAtual.status === 'fechado');
+
+            atualizarAbas();
 
             atualizarAbaLancamentos();
             atualizarAbaAuditoria();
@@ -196,7 +217,7 @@ if (!isset($_SESSION["usuario_logado"])) {
                         <p class="text-xs text-gray-500">${l.descricao || '-'}</p>
                     </div>
                     <p class="font-semibold ${l.tipo === 'entrada' ? 'text-green-700' : 'text-red-700'}">
-                        ${l.tipo === 'entrada' ? '+' : '-'} R$ ${parseFloat(l.valor).toFixed(2)}
+                        ${l.tipo === 'entrada' ? '+' : '-'} ${formatarMoeda(l.valor)}
                     </p>
                 </div>
             `).join('');
@@ -215,7 +236,7 @@ if (!isset($_SESSION["usuario_logado"])) {
             container.innerHTML = json.auditoria.map(a => `
                 <div class="p-3 border border-yellow-200 bg-yellow-50 rounded">
                     <p class="font-medium text-sm">Alteração de ${a.campo_alterado}</p>
-                    <p class="text-xs text-gray-600 mt-1">De R$ ${a.valor_anterior} para R$ ${a.valor_novo}</p>
+                    <p class="text-xs text-gray-600 mt-1">De ${formatarMoeda(a.valor_anterior)} para ${formatarMoeda(a.valor_novo)}</p>
                     <p class="text-xs text-gray-500 mt-1"><strong>Justificativa:</strong> ${a.justificativa}</p>
                     <p class="text-xs text-gray-400 mt-1">Por ${a.alterado_por_nome} em ${new Date(a.alterado_em).toLocaleString('pt-BR')}</p>
                 </div>
@@ -223,8 +244,8 @@ if (!isset($_SESSION["usuario_logado"])) {
         }
 
         function mudarAba(aba) {
-            document.getElementById('aba-lancamentos').classList.toggle('hidden', aba !== 'lancamentos');
-            document.getElementById('aba-auditoria').classList.toggle('hidden', aba !== 'auditoria');
+            abaAtual = aba;
+            atualizarAbas();
         }
 
         function editarSaldoInicial() {
@@ -261,7 +282,7 @@ if (!isset($_SESSION["usuario_logado"])) {
         });
 
         async function sugerirSaldoProximo() {
-            alert('Sugestão de saldo para próximo período:\nR$ ' + parseFloat(fechamentoAtual.saldo_final).toFixed(2));
+            alert('Sugestão de saldo para próximo período:\n' + formatarMoeda(fechamentoAtual.saldo_final));
         }
 
         function fecharMes() {
@@ -270,7 +291,11 @@ if (!isset($_SESSION["usuario_logado"])) {
             fetch('/api/tesouraria/fechamento/fechar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fechamento_id: fechamentoAtual.id })
+                body: JSON.stringify({ 
+                    fechamento_id: fechamentoAtual.id,
+                    mes: parseInt(document.getElementById('filter-mes').value),
+                    ano: parseInt(document.getElementById('filter-ano').value)
+                })
             }).then(res => res.json()).then(json => {
                 if (json.ok) {
                     carregarFechamento();

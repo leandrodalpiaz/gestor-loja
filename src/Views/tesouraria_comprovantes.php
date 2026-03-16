@@ -23,13 +23,13 @@ if (!isset($_SESSION["usuario_logado"])) {
 
         <!-- Abas de Status -->
         <div class="flex gap-4 mb-6 border-b border-gray-200">
-            <button onclick="filtrarStatus('pendente')" class="px-4 py-2 border-b-2 border-blue-700 text-blue-700 font-semibold">
+            <button type="button" data-status="pendente" onclick="filtrarStatus('pendente')" class="tab-status px-4 py-2 border-b-2 border-blue-700 text-blue-700 font-semibold">
                 Pendentes (<span id="count-pendentes">0</span>)
             </button>
-            <button onclick="filtrarStatus('aprovado')" class="px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-800">
+            <button type="button" data-status="aprovado" onclick="filtrarStatus('aprovado')" class="tab-status px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-800">
                 Aprovados (<span id="count-aprovados">0</span>)
             </button>
-            <button onclick="filtrarStatus('rejeitado')" class="px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-800">
+            <button type="button" data-status="rejeitado" onclick="filtrarStatus('rejeitado')" class="tab-status px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-800">
                 Rejeitados (<span id="count-rejeitados">0</span>)
             </button>
         </div>
@@ -147,12 +147,28 @@ if (!isset($_SESSION["usuario_logado"])) {
         let statusAtual = 'pendente';
         let comprovanteSendoRejeitado = null;
 
+        function formatarMoeda(valor) {
+            return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function aplicarTabAtiva() {
+            document.querySelectorAll('.tab-status').forEach((aba) => {
+                const ativa = aba.dataset.status === statusAtual;
+                aba.classList.toggle('border-blue-700', ativa);
+                aba.classList.toggle('text-blue-700', ativa);
+                aba.classList.toggle('font-semibold', ativa);
+                aba.classList.toggle('border-transparent', !ativa);
+                aba.classList.toggle('text-gray-600', !ativa);
+            });
+        }
+
         async function carregarComprovantes() {
             try {
                 const res = await fetch('/api/tesouraria/comprovantes');
                 const json = await res.json();
                 atualizarLista(json.comprovantes);
                 atualizarContadores(json.comprovantes);
+                aplicarTabAtiva();
             } catch (err) {
                 console.error('Erro ao carregar:', err);
             }
@@ -160,9 +176,7 @@ if (!isset($_SESSION["usuario_logado"])) {
 
         function filtrarStatus(status) {
             statusAtual = status;
-            // Atualiza abas
-            document.querySelectorAll('#').forEach(aba => aba.classList.remove('border-blue-700', 'text-blue-700'));
-            event.target.classList.add('border-blue-700', 'text-blue-700');
+            aplicarTabAtiva();
             carregarComprovantes();
         }
 
@@ -190,9 +204,10 @@ if (!isset($_SESSION["usuario_logado"])) {
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <h3 class="font-semibold text-gray-900">${c.obreiro_nome || 'ID Telegram: ' + c.telegram_user_id}</h3>
-                            <p class="text-sm text-gray-600 mt-1">Valor informado: <strong>R$ ${parseFloat(c.valor_informado || 0).toFixed(2)}</strong></p>
+                            <p class="text-sm text-gray-600 mt-1">Valor informado: <strong>${formatarMoeda(c.valor_informado)}</strong></p>
                             <p class="text-sm text-gray-600">Período: <strong>${c.mes_ref_informado ? String(c.mes_ref_informado).padStart(2, '0') : '?'}/${c.ano_ref_informado || '?'}</strong></p>
                             <p class="text-xs text-gray-500 mt-2">Recebido em: ${new Date(c.criado_em).toLocaleString('pt-BR')}</p>
+                            ${c.status === 'aprovado' ? `<p class="text-xs text-green-700 mt-2"><strong>Aprovado:</strong> ${formatarMoeda(c.valor_validado)} em ${String(c.mes_ref_validado || '').padStart(2, '0')}/${c.ano_ref_validado || '?'}</p>` : ''}
                             ${c.status === 'rejeitado' ? `<p class="text-xs text-red-600 mt-2"><strong>Motivo:</strong> ${c.motivo_rejeicao || '-'}</p>` : ''}
                         </div>
                         <div class="flex gap-2 ml-4">
@@ -215,7 +230,7 @@ if (!isset($_SESSION["usuario_logado"])) {
 
                 document.getElementById('comprovante-id').value = c.id;
                 document.getElementById('obreiro-info').value = c.obreiro_nome || ('Telegram: ' + c.telegram_user_id);
-                document.getElementById('valor-informado').value = 'R$ ' + parseFloat(c.valor_informado || 0).toFixed(2);
+                document.getElementById('valor-informado').value = formatarMoeda(c.valor_informado);
                 document.getElementById('periodo-informado').value = `${String(c.mes_ref_informado || '').padStart(2, '0')}/${c.ano_ref_informado || '?'}`;
                 document.getElementById('data-envio').value = new Date(c.criado_em).toLocaleString('pt-BR');
 
@@ -232,6 +247,7 @@ if (!isset($_SESSION["usuario_logado"])) {
 
         function fecharModalValidacao() {
             document.getElementById('modal-validacao').classList.add('hidden');
+            document.getElementById('form-validacao').reset();
         }
 
         function rejeitarComprovante() {
@@ -241,6 +257,7 @@ if (!isset($_SESSION["usuario_logado"])) {
 
         function fecharModalRejeicao() {
             document.getElementById('modal-rejeicao').classList.add('hidden');
+            document.getElementById('motivo-rejeicao').value = '';
         }
 
         async function confirmarRejeicao() {

@@ -679,8 +679,10 @@ case "/logout":
 
         // GET /api/tesouraria/comprovantes
         if ($requestUri === '/api/tesouraria/comprovantes' && $method === 'GET') {
+            $status = $_GET['status'] ?? null;
+            $status = in_array($status, ['pendente', 'aprovado', 'rejeitado'], true) ? $status : null;
             $comproModel = new \App\Models\ComprovantePix();
-            $comprovantes = $comproModel->obterPendentes();
+            $comprovantes = $comproModel->obterTodos($status);
             echo json_encode(['ok' => true, 'comprovantes' => $comprovantes]);
             exit;
         }
@@ -761,7 +763,7 @@ case "/logout":
             $body = json_decode(file_get_contents('php://input'), true) ?? [];
             $regModel = new \App\Models\RegularidadeObreiro();
             $ok = $regModel->definir(
-                (int) ($body['obreiro_id'] ?? 0),
+                (string) ($body['obreiro_id'] ?? ''),
                 (int) ($body['mes'] ?? 0),
                 (int) ($body['ano'] ?? 0),
                 $body['status'] ?? 'irregular',
@@ -855,7 +857,20 @@ case "/logout":
         if ($requestUri === '/api/tesouraria/fechamento/fechar' && $method === 'POST') {
             $body = json_decode(file_get_contents('php://input'), true) ?? [];
             $fechModel = new \App\Models\FechamentoMensal();
-            $ok = $fechModel->fechar($body['mes'] ?? 0, $body['ano'] ?? 0, $usuarioId);
+
+            $mes = (int) ($body['mes'] ?? 0);
+            $ano = (int) ($body['ano'] ?? 0);
+            $fechamentoId = (int) ($body['fechamento_id'] ?? 0);
+
+            if (($mes <= 0 || $ano <= 0) && $fechamentoId > 0) {
+                $fechamento = $fechModel->obterPorId($fechamentoId);
+                if ($fechamento) {
+                    $mes = (int) $fechamento['mes_ref'];
+                    $ano = (int) $fechamento['ano_ref'];
+                }
+            }
+
+            $ok = ($mes > 0 && $ano > 0) ? $fechModel->fechar($mes, $ano, $usuarioId) : false;
             echo json_encode(['ok' => $ok]);
             exit;
         }

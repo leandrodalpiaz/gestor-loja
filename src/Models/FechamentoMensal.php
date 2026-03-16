@@ -34,7 +34,7 @@ class FechamentoMensal
     /**
      * Cria novo fechamento
      */
-    public function criar(int $mes, int $ano, float $saldoInicial, ?string $observacoes = null, ?int $criadoPor = null): bool
+    public function criar(int $mes, int $ano, float $saldoInicial, ?string $observacoes = null, ?string $criadoPor = null): bool
     {
         $sql = "
             INSERT INTO fechamento_mensal (mes_ref, ano_ref, saldo_inicial, observacoes, criado_em)
@@ -54,7 +54,7 @@ class FechamentoMensal
     /**
      * Atualiza saldo inicial com auditoria
      */
-    public function atualizarSaldoInicial(int $fechamentoId, float $novoSaldo, string $justificativa, int $alteradoPor): bool
+    public function atualizarSaldoInicial(int $fechamentoId, float $novoSaldo, string $justificativa, ?string $alteradoPor): bool
     {
         $fechamento = $this->obterPorId($fechamentoId);
         if (!$fechamento) {
@@ -175,7 +175,7 @@ class FechamentoMensal
     /**
      * Fecha período fiscal
      */
-    public function fechar(int $mes, int $ano, int $fechadoPor): bool
+    public function fechar(int $mes, int $ano, ?string $fechadoPor): bool
     {
         $sql = "
             UPDATE fechamento_mensal

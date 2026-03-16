@@ -17,7 +17,7 @@ class MensalidadeStatus
     /**
      * Obtém status de mensalidade para um obreiro/mês
      */
-    public function obter(int $obreiroId, int $mes, int $ano): ?array
+    public function obter(string $obreiroId, int $mes, int $ano): ?array
     {
         $sql = "
             SELECT * FROM mensalidades_status
@@ -36,7 +36,7 @@ class MensalidadeStatus
     /**
      * Registra ou atualiza status de mensalidade
      */
-    public function registrar(int $obreiroId, int $mes, int $ano, string $status, ?int $lancamentoId = null, ?string $nota = null): bool
+    public function registrar(string $obreiroId, int $mes, int $ano, string $status, ?int $lancamentoId = null, ?string $nota = null): bool
     {
         $sql = "
             INSERT INTO mensalidades_status (obreiro_id, mes_ref, ano_ref, status, lancamento_id, nota)

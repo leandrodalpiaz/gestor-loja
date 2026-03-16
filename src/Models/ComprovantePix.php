@@ -51,22 +51,36 @@ class ComprovantePix
     }
 
     /**
-     * Lista comprovantes pendentes
+     * Lista comprovantes por status ou todos
      */
-    public function obterPendentes(): array
+    public function obterTodos(?string $status = null): array
     {
         $sql = "
             SELECT cp.*, 
                    COALESCE(o.nome_historico, o.nome) as obreiro_nome
             FROM comprovantes_pix cp
             LEFT JOIN obreiros o ON cp.obreiro_id = o.id
-            WHERE cp.status = 'pendente'
-            ORDER BY cp.criado_em DESC
         ";
 
+        $params = [];
+        if ($status !== null && $status !== '') {
+            $sql .= " WHERE cp.status = :status";
+            $params['status'] = $status;
+        }
+
+        $sql .= " ORDER BY cp.criado_em DESC";
+
         $stmt = $this->db->prepare($sql);
-        $stmt->execute();
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Lista comprovantes pendentes
+     */
+    public function obterPendentes(): array
+    {
+        return $this->obterTodos('pendente');
     }
 
     /**
@@ -98,7 +112,7 @@ class ComprovantePix
     /**
      * Rejeita comprovante
      */
-    public function rejeitar(int $id, string $motivo, int $rejeitadoPor): bool
+    public function rejeitar(int $id, string $motivo, ?string $rejeitadoPor): bool
     {
         $sql = "
             UPDATE comprovantes_pix

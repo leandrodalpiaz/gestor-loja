@@ -27,10 +27,11 @@ if (!isset($_SESSION["usuario_logado"])) {
                     <label class="block text-sm font-medium text-gray-700 mb-1">Mês</label>
                     <select id="filter-mes" class="w-full border border-gray-300 rounded px-3 py-2" onchange="filtrarRegularidade()">
                         <?php
+                        $mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                         $mesAtual = (int) date('n');
                         for ($m = 1; $m <= 12; $m++) {
                             $selected = ($m === $mesAtual) ? 'selected' : '';
-                            echo "<option value=\"$m\" $selected>" . strftime('%B', mktime(0, 0, 0, $m)) . "</option>";
+                            echo "<option value=\"$m\" $selected>{$mesesPT[$m - 1]}</option>";
                         }
                         ?>
                     </select>
@@ -49,9 +50,12 @@ if (!isset($_SESSION["usuario_logado"])) {
                     </select>
                 </div>
 
-                <div>
+                <div class="flex gap-2">
                     <button onclick="definirTodos('regular')" class="w-full px-4 py-2 rounded bg-green-700 text-white hover:bg-green-800 font-medium text-sm">
                         Marcar Todos como Regular
+                    </button>
+                    <button onclick="definirTodos('irregular')" class="w-full px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800 font-medium text-sm">
+                        Marcar Todos como Irregular
                     </button>
                 </div>
             </div>
@@ -133,6 +137,10 @@ if (!isset($_SESSION["usuario_logado"])) {
     </div>
 
     <script>
+        function escaparAtributo(valor) {
+            return encodeURIComponent(String(valor ?? ''));
+        }
+
         async function filtrarRegularidade() {
             const mes = document.getElementById('filter-mes').value;
             const ano = document.getElementById('filter-ano').value;
@@ -174,7 +182,12 @@ if (!isset($_SESSION["usuario_logado"])) {
                     </td>
                     <td class="px-4 py-2 text-gray-600">${r.observacao || '-'}</td>
                     <td class="px-4 py-2">
-                        <button onclick="abrirEditarRegularidade(${r.obreiro_id}, '${r.obreiro_nome}', '${r.status}', \`${r.observacao || ''}\`)" 
+                        <button 
+                                data-obreiro-id="${escaparAtributo(r.obreiro_id)}"
+                                data-obreiro-nome="${escaparAtributo(r.obreiro_nome)}"
+                                data-status="${escaparAtributo(r.status)}"
+                                data-observacao="${escaparAtributo(r.observacao || '')}"
+                                onclick="abrirEditarRegularidade(this)" 
                                 class="text-blue-600 hover:text-blue-800 font-medium text-sm">
                             Editar
                         </button>
@@ -183,7 +196,12 @@ if (!isset($_SESSION["usuario_logado"])) {
             `).join('');
         }
 
-        function abrirEditarRegularidade(obreiroId, nome, statusAtual, observacao) {
+        function abrirEditarRegularidade(botao) {
+            const obreiroId = decodeURIComponent(botao.dataset.obreiroId || '');
+            const nome = decodeURIComponent(botao.dataset.obreiroNome || '');
+            const statusAtual = decodeURIComponent(botao.dataset.status || 'irregular');
+            const observacao = decodeURIComponent(botao.dataset.observacao || '');
+
             document.getElementById('obreiro-id').value = obreiroId;
             document.getElementById('obreiro-nome-modal').textContent = nome;
             document.getElementById('observacao').value = observacao;
@@ -219,7 +237,7 @@ if (!isset($_SESSION["usuario_logado"])) {
         document.getElementById('form-regularidade').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = {
-                obreiro_id: parseInt(document.getElementById('obreiro-id').value),
+                obreiro_id: document.getElementById('obreiro-id').value,
                 mes: parseInt(document.getElementById('filter-mes').value),
                 ano: parseInt(document.getElementById('filter-ano').value),
                 status: document.querySelector('input[name="status"]:checked').value,
