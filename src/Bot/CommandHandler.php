@@ -188,29 +188,73 @@ class CommandHandler {
     }
 
     // Métodos do Chanceler
+    // Efemérides reais
     public function handleMenuHoje($chatId) {
-        $mensagem = "🗓️ Efemérides de hoje:\n• Exemplo de efeméride 1\n• Exemplo de efeméride 2";
+        require_once __DIR__ . '/../Models/EfemerideRegistro.php';
+        require_once __DIR__ . '/../Services/EfemeridesComposer.php';
+        $registroModel = new \App\Models\EfemerideRegistro();
+        $composer = new \App\Services\EfemeridesComposer();
+        $registrosHoje = $registroModel->getRegistrosDoDia();
+        $mensagem = $composer->composeDailyPreview($registrosHoje);
         $this->telegram->sendMessage($chatId, $mensagem);
     }
 
     public function handleMenuAniversarios($chatId) {
-        $mensagem = "🎂 Aniversários:\n• Irmão Fulano - 16/03\n• Cunhada Sicrana - 17/03";
-        $this->telegram->sendMessage($chatId, $mensagem);
+        require_once __DIR__ . '/../Models/EfemerideRegistro.php';
+        require_once __DIR__ . '/../Services/EfemeridesComposer.php';
+        $registroModel = new \App\Models\EfemerideRegistro();
+        $composer = new \App\Services\EfemeridesComposer();
+        $registrosHoje = $registroModel->getRegistrosDoDia();
+        $aniversarios = array_filter($registrosHoje, function($r) {
+            return isset($r['tipo']) && strtolower($r['tipo']) === 'aniversário';
+        });
+        if (empty($aniversarios)) {
+            $this->telegram->sendMessage($chatId, '🎂 Nenhum aniversário hoje.');
+            return;
+        }
+        $mensagens = $composer->composeDailyPreview($aniversarios);
+        $this->telegram->sendMessage($chatId, $mensagens);
     }
 
     public function handleMenuDatasMaconicas($chatId) {
-        $mensagem = "⚒️ Datas Maçônicas:\n• 24/06 - Dia do Maçom\n• 20/08 - Dia do Templo";
-        $this->telegram->sendMessage($chatId, $mensagem);
+        require_once __DIR__ . '/../Models/EfemerideRegistro.php';
+        require_once __DIR__ . '/../Services/EfemeridesComposer.php';
+        $registroModel = new \App\Models\EfemerideRegistro();
+        $registrosHoje = $registroModel->getRegistrosDoDia();
+        $datas = array_filter($registrosHoje, function($r) {
+            return isset($r['tipo']) && in_array(strtolower($r['tipo']), ['iniciação','elevação','exaltação','instalação']);
+        });
+        if (empty($datas)) {
+            $this->telegram->sendMessage($chatId, '⚒️ Nenhuma data maçônica hoje.');
+            return;
+        }
+        $composer = new \App\Services\EfemeridesComposer();
+        $mensagens = $composer->composeDailyPreview($datas);
+        $this->telegram->sendMessage($chatId, $mensagens);
     }
 
     public function handleMenuHistorico($chatId) {
-        $mensagem = "📜 Histórico da Ordem:\n• Fundação da Loja em 1980\n• Eventos marcantes...";
-        $this->telegram->sendMessage($chatId, $mensagem);
+        require_once __DIR__ . '/../Models/EfemerideRegistro.php';
+        require_once __DIR__ . '/../Services/EfemeridesComposer.php';
+        $registroModel = new \App\Models\EfemerideRegistro();
+        $registrosHoje = $registroModel->getRegistrosDoDia();
+        $historicos = array_filter($registrosHoje, function($r) {
+            return isset($r['tipo']) && strtolower($r['tipo']) === 'história';
+        });
+        if (empty($historicos)) {
+            $this->telegram->sendMessage($chatId, '📜 Nenhum evento histórico hoje.');
+            return;
+        }
+        $composer = new \App\Services\EfemeridesComposer();
+        $mensagens = $composer->composeDailyPreview($historicos);
+        $this->telegram->sendMessage($chatId, $mensagens);
     }
 
     public function handleMenuFallback($chatId) {
-        $mensagem = "💬 Mensagens de reflexão:\n• \"A Maçonaria ensina que cada ser humano tem a possibilidade de aperfeiçoar-se...\"";
-        $this->telegram->sendMessage($chatId, $mensagem);
+        require_once __DIR__ . '/../Models/MensagemComplementar.php';
+        $comp = new \App\Models\MensagemComplementar();
+        $mensagem = $comp->sortear('fallback');
+        $this->telegram->sendMessage($chatId, "💬 Mensagem de reflexão:\n" . $mensagem);
     }
 
     // Processa updates recebidos do Telegram
