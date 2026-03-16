@@ -42,7 +42,7 @@ class CommandHandler {
     }
 
     // IDs de desenvolvedor com acesso total
-    private $devIds = [123456789]; // Substitua pelo seu Telegram ID real
+    private $devIds = [8062119710]; // Seu Telegram ID para acesso total
 
     public function handleChancelaria($chatId, $requesterTelegramId) {
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
