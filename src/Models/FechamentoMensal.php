@@ -37,8 +37,8 @@ class FechamentoMensal
     public function criar(int $mes, int $ano, float $saldoInicial, ?string $observacoes = null, ?string $criadoPor = null): bool
     {
         $sql = "
-            INSERT INTO fechamento_mensal (mes_ref, ano_ref, saldo_inicial, observacoes, criado_em)
-            VALUES (:mes, :ano, :saldo_inicial, :observacoes, CURRENT_TIMESTAMP)
+            INSERT INTO fechamento_mensal (mes_ref, ano_ref, saldo_inicial, saldo_final, criado_em, atualizado_em)
+            VALUES (:mes, :ano, :saldo_inicial, :saldo_final, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             ON CONFLICT (mes_ref, ano_ref) DO NOTHING
         ";
 
@@ -47,7 +47,7 @@ class FechamentoMensal
             'mes' => $mes,
             'ano' => $ano,
             'saldo_inicial' => $saldoInicial,
-            'observacoes' => $observacoes,
+            'saldo_final' => $saldoInicial,
         ]);
     }
 
@@ -67,7 +67,7 @@ class FechamentoMensal
         $this->db->beginTransaction();
         try {
             // Atualiza saldo
-            $sql = "UPDATE fechamento_mensal SET saldo_inicial = :saldo WHERE id = :id";
+            $sql = "UPDATE fechamento_mensal SET saldo_inicial = :saldo, saldo_final = (total_entradas - total_saidas + :saldo), atualizado_em = CURRENT_TIMESTAMP WHERE id = :id";
             $stmt = $this->db->prepare($sql);
             $stmt->execute(['saldo' => $novoSaldo, 'id' => $fechamentoId]);
 
@@ -104,11 +104,20 @@ class FechamentoMensal
         $lancModel = new LancamentoFinanceiro();
         $totais = $lancModel->obterTotaisMes($mes, $ano);
 
+        $fechamento = $this->obter($mes, $ano);
+        if (!$fechamento) {
+            return false;
+        }
+
+        $saldoInicial = (float) ($fechamento['saldo_inicial'] ?? 0);
+        $saldoFinal = $saldoInicial + (float) $totais['entrada'] - (float) $totais['saida'];
+
         $sql = "
             UPDATE fechamento_mensal
             SET total_entradas = :entradas,
                 total_saidas = :saidas,
-                updated_at = CURRENT_TIMESTAMP
+                saldo_final = :saldo_final,
+                atualizado_em = CURRENT_TIMESTAMP
             WHERE mes_ref = :mes AND ano_ref = :ano
         ";
 
@@ -116,6 +125,7 @@ class FechamentoMensal
         return $stmt->execute([
             'entradas' => $totais['entrada'],
             'saidas' => $totais['saida'],
+            'saldo_final' => $saldoFinal,
             'mes' => $mes,
             'ano' => $ano,
         ]);
