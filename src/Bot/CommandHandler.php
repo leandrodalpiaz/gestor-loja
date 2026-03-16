@@ -1,4 +1,3 @@
-
 <?php
 namespace App\Bot;
 
@@ -42,9 +41,13 @@ class CommandHandler {
         $this->telegram->sendMessage($chatId, $mensagem);
     }
 
+    // IDs de desenvolvedor com acesso total
+    private $devIds = [123456789]; // Substitua pelo seu Telegram ID real
+
     public function handleChancelaria($chatId, $requesterTelegramId) {
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
-        if (!$obreiro || strtolower(trim((string) ($obreiro['cargo'] ?? ''))) !== 'chanceler') {
+        $cargo = strtolower(trim((string) ($obreiro['cargo'] ?? '')));
+        if (!in_array($requesterTelegramId, $this->devIds) && (!$obreiro || $cargo !== 'chanceler')) {
             $this->telegram->sendMessage($chatId, '⛔ Acesso restrito ao Chanceler da Loja.');
             return;
         }
