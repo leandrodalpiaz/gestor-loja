@@ -108,13 +108,15 @@ if (!isset($_SESSION["usuario_logado"])) {
 
         <!-- Ações -->
         <div class="flex gap-2">
-            <button onclick="sugerirSaldoProximo()" class="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-800">
+            <button type="button" onclick="sugerirSaldoProximo()" class="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-800">
                 💡 Sugerir Saldo Próximo Mês
             </button>
-            <button onclick="fecharMes()" id="btn-fechar" class="px-4 py-2 rounded bg-green-700 text-white hover:bg-green-800">
+            <button type="button" onclick="fecharMes()" id="btn-fechar" class="px-4 py-2 rounded bg-green-700 text-white hover:bg-green-800">
                 🔒 Fechar Período
             </button>
         </div>
+
+        <div id="feedback-fechamento" class="hidden mt-4 rounded-lg border px-4 py-3 text-sm"></div>
     </div>
 
     <!-- Modal de Edição de Saldo -->
@@ -154,6 +156,20 @@ if (!isset($_SESSION["usuario_logado"])) {
             return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
 
+        function exibirFeedback(tipo, mensagem) {
+            const box = document.getElementById('feedback-fechamento');
+            box.textContent = mensagem;
+            box.className = 'mt-4 rounded-lg border px-4 py-3 text-sm';
+
+            if (tipo === 'erro') {
+                box.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
+            } else {
+                box.classList.add('bg-green-50', 'border-green-200', 'text-green-700');
+            }
+
+            box.classList.remove('hidden');
+        }
+
         function atualizarAbas() {
             document.getElementById('aba-lancamentos').classList.toggle('hidden', abaAtual !== 'lancamentos');
             document.getElementById('aba-auditoria').classList.toggle('hidden', abaAtual !== 'auditoria');
@@ -173,10 +189,15 @@ if (!isset($_SESSION["usuario_logado"])) {
             try {
                 const res = await fetch(`/api/tesouraria/fechamento?mes=${mes}&ano=${ano}`);
                 const json = await res.json();
+                if (!json.ok || !json.fechamento) {
+                    exibirFeedback('erro', 'Não foi possível carregar o fechamento do período.');
+                    return;
+                }
                 fechamentoAtual = json.fechamento;
                 atualizarDisplay();
             } catch (err) {
                 console.error('Erro:', err);
+                exibirFeedback('erro', 'Erro ao carregar fechamento mensal.');
             }
         }
 
@@ -201,46 +222,70 @@ if (!isset($_SESSION["usuario_logado"])) {
         }
 
         async function atualizarAbaLancamentos() {
-            const res = await fetch(`/api/tesouraria/fechamento/${fechamentoAtual.id}/lancamentos`);
-            const json = await res.json();
             const container = document.getElementById('lancamentos-container');
-            
-            if (json.lancamentos.length === 0) {
-                container.innerHTML = '<p class="text-gray-500">Nenhum lançamento neste período</p>';
-                return;
-            }
+            const mes = document.getElementById('filter-mes').value;
+            const ano = document.getElementById('filter-ano').value;
 
-            container.innerHTML = json.lancamentos.map(l => `
-                <div class="flex justify-between items-center p-2 border-b border-gray-200">
-                    <div>
-                        <p class="font-medium">${l.categoria_nome}</p>
-                        <p class="text-xs text-gray-500">${l.descricao || '-'}</p>
+            try {
+                const res = await fetch(`/api/tesouraria/caixa?mes=${mes}&ano=${ano}`);
+                const json = await res.json();
+
+                if (!json.ok || !Array.isArray(json.lancamentos)) {
+                    container.innerHTML = '<p class="text-red-600">Não foi possível carregar os lançamentos deste período.</p>';
+                    return;
+                }
+
+                if (json.lancamentos.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500">Nenhum lançamento neste período</p>';
+                    return;
+                }
+
+                container.innerHTML = json.lancamentos.map(l => `
+                    <div class="flex justify-between items-center p-2 border-b border-gray-200">
+                        <div>
+                            <p class="font-medium">${l.categoria_nome}</p>
+                            <p class="text-xs text-gray-500">${l.descricao || '-'}</p>
+                        </div>
+                        <p class="font-semibold ${l.tipo === 'entrada' ? 'text-green-700' : 'text-red-700'}">
+                            ${l.tipo === 'entrada' ? '+' : '-'} ${formatarMoeda(l.valor)}
+                        </p>
                     </div>
-                    <p class="font-semibold ${l.tipo === 'entrada' ? 'text-green-700' : 'text-red-700'}">
-                        ${l.tipo === 'entrada' ? '+' : '-'} ${formatarMoeda(l.valor)}
-                    </p>
-                </div>
-            `).join('');
+                `).join('');
+            } catch (err) {
+                console.error('Erro ao carregar lançamentos do fechamento:', err);
+                container.innerHTML = '<p class="text-red-600">Erro ao carregar os lançamentos deste período.</p>';
+            }
         }
 
         async function atualizarAbaAuditoria() {
-            const res = await fetch(`/api/tesouraria/fechamento/${fechamentoAtual.id}/auditoria`);
-            const json = await res.json();
             const container = document.getElementById('auditoria-container');
-            
-            if (json.auditoria.length === 0) {
+
+            if (!fechamentoAtual?.id) {
                 container.innerHTML = '<p class="text-gray-500">Nenhum ajuste registrado</p>';
                 return;
             }
 
-            container.innerHTML = json.auditoria.map(a => `
-                <div class="p-3 border border-yellow-200 bg-yellow-50 rounded">
-                    <p class="font-medium text-sm">Alteração de ${a.campo_alterado}</p>
-                    <p class="text-xs text-gray-600 mt-1">De ${formatarMoeda(a.valor_anterior)} para ${formatarMoeda(a.valor_novo)}</p>
-                    <p class="text-xs text-gray-500 mt-1"><strong>Justificativa:</strong> ${a.justificativa}</p>
-                    <p class="text-xs text-gray-400 mt-1">Por ${a.alterado_por_nome} em ${new Date(a.alterado_em).toLocaleString('pt-BR')}</p>
-                </div>
-            `).join('');
+            try {
+                const res = await fetch(`/api/tesouraria/fechamento/${fechamentoAtual.id}/auditoria`);
+                const json = await res.json();
+
+                if (!json.ok || !Array.isArray(json.auditoria) || json.auditoria.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500">Nenhum ajuste registrado</p>';
+                    return;
+                }
+
+                container.innerHTML = json.auditoria.map(a => `
+                    <div class="p-3 border border-yellow-200 bg-yellow-50 rounded">
+                        <p class="font-medium text-sm">Alteração de ${a.campo_alterado}</p>
+                        <p class="text-xs text-gray-600 mt-1">De ${formatarMoeda(a.valor_anterior)} para ${formatarMoeda(a.valor_novo)}</p>
+                        <p class="text-xs text-gray-500 mt-1"><strong>Justificativa:</strong> ${a.justificativa}</p>
+                        <p class="text-xs text-gray-400 mt-1">Por ${a.alterado_por_nome || 'Sistema'} em ${new Date(a.alterado_em).toLocaleString('pt-BR')}</p>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('Erro ao carregar auditoria:', err);
+                container.innerHTML = '<p class="text-red-600">Erro ao carregar auditoria do período.</p>';
+            }
         }
 
         function mudarAba(aba) {
@@ -249,6 +294,10 @@ if (!isset($_SESSION["usuario_logado"])) {
         }
 
         function editarSaldoInicial() {
+            if (!fechamentoAtual) {
+                exibirFeedback('erro', 'Fechamento ainda não carregado.');
+                return;
+            }
             document.getElementById('novo-saldo').value = fechamentoAtual.saldo_inicial;
             document.getElementById('modal-saldo').classList.remove('hidden');
         }
@@ -274,33 +323,54 @@ if (!isset($_SESSION["usuario_logado"])) {
                 const json = await res.json();
                 if (json.ok) {
                     fecharModalSaldo();
+                    exibirFeedback('sucesso', 'Saldo inicial atualizado com sucesso.');
                     carregarFechamento();
+                } else {
+                    exibirFeedback('erro', 'Não foi possível atualizar o saldo inicial.');
                 }
             } catch (err) {
                 console.error('Erro:', err);
+                exibirFeedback('erro', 'Erro ao atualizar saldo inicial.');
             }
         });
 
         async function sugerirSaldoProximo() {
+            if (!fechamentoAtual) {
+                exibirFeedback('erro', 'Fechamento ainda não carregado.');
+                return;
+            }
             alert('Sugestão de saldo para próximo período:\n' + formatarMoeda(fechamentoAtual.saldo_final));
         }
 
-        function fecharMes() {
+        async function fecharMes() {
+            if (!fechamentoAtual) {
+                exibirFeedback('erro', 'Fechamento ainda não carregado.');
+                return;
+            }
+
             if (!confirm('Tem certeza que deseja fechar este mês? Esta ação é irreversível.')) return;
-            
-            fetch('/api/tesouraria/fechamento/fechar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    fechamento_id: fechamentoAtual.id,
-                    mes: parseInt(document.getElementById('filter-mes').value),
-                    ano: parseInt(document.getElementById('filter-ano').value)
-                })
-            }).then(res => res.json()).then(json => {
+
+            try {
+                const res = await fetch('/api/tesouraria/fechamento/fechar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        fechamento_id: fechamentoAtual.id,
+                        mes: parseInt(document.getElementById('filter-mes').value),
+                        ano: parseInt(document.getElementById('filter-ano').value)
+                    })
+                });
+                const json = await res.json();
                 if (json.ok) {
+                    exibirFeedback('sucesso', 'Período fechado com sucesso.');
                     carregarFechamento();
+                } else {
+                    exibirFeedback('erro', 'Não foi possível fechar o período.');
                 }
-            });
+            } catch (err) {
+                console.error('Erro ao fechar mês:', err);
+                exibirFeedback('erro', 'Erro ao fechar o período.');
+            }
         }
 
         carregarFechamento();
