@@ -208,7 +208,7 @@ if (!isset($_SESSION["usuario_logado"])) {
                 const saidas = (await resSai.json()).categorias || [];
 
                 const renderPills = (cats, tipo) => cats.map(c => `
-                    <button onclick="lancarRapido(${c.id}, '${tipo}', ${JSON.stringify(c.nome)})"
+                    <button onclick="lancarRapido(${c.id}, '${tipo}')"
                         class="text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${
                             tipo === 'entrada'
                                 ? 'border-green-300 text-green-700 hover:bg-green-50'
@@ -225,13 +225,17 @@ if (!isset($_SESSION["usuario_logado"])) {
             }
         }
 
-        async function lancarRapido(categoriaId, tipo, nomeCategoria) {
+        async function lancarRapido(categoriaId, tipo) {
             document.getElementById('tipo-lancamento').value = tipo;
-            document.getElementById('modal-title').textContent = tipo === 'entrada'
-                ? `Nova Entrada — ${nomeCategoria}`
-                : `Nova Saída — ${nomeCategoria}`;
+            document.getElementById('modal-title').textContent = tipo === 'entrada' ? 'Nova Entrada' : 'Nova Sa\u00edda';
             await carregarCategorias(tipo);
-            document.getElementById('categoria_id').value = categoriaId;
+            const select = document.getElementById('categoria_id');
+            select.value = categoriaId;
+            const nomeCategoria = select.options[select.selectedIndex]?.text ?? '';
+            if (nomeCategoria) {
+                document.getElementById('modal-title').textContent =
+                    (tipo === 'entrada' ? 'Nova Entrada' : 'Nova Sa\u00edda') + ` \u2014 ${nomeCategoria}`;
+            }
             document.getElementById('modal-lancamento').classList.remove('hidden');
         }
 

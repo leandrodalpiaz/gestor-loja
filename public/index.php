@@ -629,7 +629,9 @@ case "/logout":
             exit;
         }
 
-        $usuarioId = (int) ($_SESSION['usuario_id'] ?? 0);
+        // obreiros.id é UUID — não converter para int (resultaria em 0)
+        $rawUserId = $_SESSION['usuario_id'] ?? null;
+        $usuarioId = ($rawUserId !== null && $rawUserId !== 0 && $rawUserId !== '0') ? $rawUserId : null;
 
         // GET /api/tesouraria/categorias?tipo=entrada
         if ($requestUri === '/api/tesouraria/categorias' && $method === 'GET') {
@@ -654,10 +656,16 @@ case "/logout":
         // POST /api/tesouraria/lancamento/criar
         if ($requestUri === '/api/tesouraria/lancamento/criar' && $method === 'POST') {
             $body = json_decode(file_get_contents('php://input'), true) ?? [];
-            $lancModel = new \App\Models\LancamentoFinanceiro();
             $body['created_by'] = $usuarioId;
-            $ok = $lancModel->criar($body);
-            echo json_encode(['ok' => $ok]);
+            try {
+                $lancModel = new \App\Models\LancamentoFinanceiro();
+                $ok = $lancModel->criar($body);
+                echo json_encode(['ok' => $ok]);
+            } catch (\Throwable $e) {
+                error_log('Erro lancamento/criar: ' . $e->getMessage());
+                http_response_code(500);
+                echo json_encode(['ok' => false, 'erro' => 'Erro ao salvar lan\u00e7amento.']);
+            }
             exit;
         }
 
