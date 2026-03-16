@@ -32,7 +32,8 @@
     $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
     $usuarioCargo = $_SESSION['usuario_cargo'] ?? '';
     $isTestSession = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id'] === 0;
-    $showAllPanels = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VALIDATE_BOOL) || $isTestSession;
+    $allowAllPanels = filter_var($_ENV['APP_TEST_ALLOW_ALL_PANELS'] ?? 'true', FILTER_VALIDATE_BOOL);
+    $showAllPanels = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VALIDATE_BOOL) || $isTestSession || $allowAllPanels;
     $isChanceler = $usuarioCargo === 'chanceler';
     $isTesoureiro = $usuarioCargo === 'tesoureiro';
     ?>
