@@ -662,9 +662,10 @@ case "/logout":
             $usuarioId = $_SESSION['usuario_id'] ?? null;
         }
 
-        if (!$bypassRoleChecks && $cargoUsuario !== 'tesoureiro') {
+        // Permitir acesso se cargo for tesoureiro OU chanceler (igual Chancelaria)
+        if (!$bypassRoleChecks && !in_array($cargoUsuario, ['tesoureiro', 'chanceler'])) {
             http_response_code(403);
-            echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Tesoureiro.']);
+            echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Tesoureiro ou Chanceler.']);
             exit;
         }
 
