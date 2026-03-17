@@ -210,6 +210,16 @@ class CommandHandler {
             $this->telegram->sendMessage($chatId, "Função da chancelaria acionada.");
             return;
         }
+
+        // Biblioteca
+        if ($callbackData === 'biblioteca_acervo') {
+            $this->handleBibliotecaAcervo($chatId);
+            return;
+        } elseif ($callbackData === 'biblioteca_meus_emprestimos') {
+            // O fromId não está disponível diretamente aqui, então será tratado no método
+            $this->handleBibliotecaMeusEmprestimos($chatId, null);
+            return;
+        }
     }
 
     // Processa updates recebidos do Telegram
@@ -226,13 +236,85 @@ class CommandHandler {
                 $this->handleHelp($chatId);
             } elseif ($text === '/chancelaria') {
                 $this->handleChancelaria($chatId, $fromId);
+            } elseif ($text === '/biblioteca') {
+                $this->handleBiblioteca($chatId, $fromId);
             } else {
                 $this->sendMenuPresenca($chatId);
             }
         } elseif (isset($update['callback_query'])) {
             $chatId = $update['callback_query']['message']['chat']['id'];
             $callbackData = $update['callback_query']['data'];
-            $this->handleCallback($chatId, $callbackData);
+            $fromId = $update['callback_query']['from']['id'] ?? null;
+            // Passa o fromId para handleBibliotecaMeusEmprestimos se necessário
+            if ($callbackData === 'biblioteca_meus_emprestimos') {
+                $this->handleBibliotecaMeusEmprestimos($chatId, $fromId);
+            } else {
+                $this->handleCallback($chatId, $callbackData);
+            }
         }
+    }
+    // =========================
+    // MÓDULO BIBLIOTECA
+    // =========================
+    public function handleBiblioteca($chatId, $fromId) {
+        $mensagem = "📚 Bem-vindo à Biblioteca!\n\nEscolha uma opção:";
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => '📚 Ver Acervo', 'callback_data' => 'biblioteca_acervo'],
+                    ['text' => '📖 Meus Empréstimos', 'callback_data' => 'biblioteca_meus_emprestimos']
+                ]
+            ]
+        ];
+        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+    }
+
+    public function handleBibliotecaAcervo($chatId) {
+        require_once __DIR__ . '/../Models/Acervo.php';
+        $acervoModel = new \App\Models\Acervo();
+        $itens = $acervoModel->listarTodos();
+
+        if (empty($itens)) {
+            $msg = "Nenhum item cadastrado no acervo.";
+        } else {
+            $msg = "📚 <b>Acervo da Biblioteca</b>\n\n";
+            foreach ($itens as $item) {
+                $msg .= "• <b>{$item['titulo']}</b> ({$item['tipo']})\n";
+                $msg .= "  Autor: {$item['autor']}\n";
+                $msg .= "  Status: " . ($item['disponivel'] ? "Disponível" : "Emprestado") . "\n\n";
+            }
+        }
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+    }
+
+    public function handleBibliotecaMeusEmprestimos($chatId, $fromId) {
+        require_once __DIR__ . '/../Models/Emprestimo.php';
+        require_once __DIR__ . '/../Models/Obreiro.php';
+
+        // Buscar o obreiro pelo Telegram ID
+        if (!$fromId) {
+            $this->telegram->sendMessage($chatId, "Não foi possível identificar seu cadastro.");
+            return;
+        }
+        $obreiroModel = new \App\Models\Obreiro();
+        $obreiro = $obreiroModel->findByTelegramId($fromId);
+
+        if (!$obreiro) {
+            $this->telegram->sendMessage($chatId, "Não foi possível identificar seu cadastro.");
+            return;
+        }
+
+        $emprestimoModel = new \App\Models\Emprestimo();
+        $emprestimos = $emprestimoModel->listarPendentesPorObreiro($obreiro['id']);
+
+        if (empty($emprestimos)) {
+            $msg = "Você não possui empréstimos pendentes.";
+        } else {
+            $msg = "📖 <b>Seus Empréstimos Pendentes</b>\n\n";
+            foreach ($emprestimos as $emp) {
+                $msg .= "• <b>{$emp['titulo']}</b> (Devolver até: " . date('d/m/Y', strtotime($emp['data_devolucao'])) . ")\n";
+            }
+        }
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 }

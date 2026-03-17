@@ -14,6 +14,16 @@ class Emprestimo
         $this->db = Database::getConnection();
     }
 
+    public function listarPendentesPorObreiro($obreiroId) {
+        $sql = "SELECT e.*, a.titulo 
+                FROM emprestimos e 
+                JOIN acervo a ON e.acervo_id = a.id 
+                WHERE e.obreiro_id = :obreiro_id AND e.status = 'pendente'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['obreiro_id' => $obreiroId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function solicitar(int $acervoId, int $obreiroId): bool
     {
         $sql = "INSERT INTO emprestimos (acervo_id, obreiro_id, data_emprestimo, data_devolucao_prevista, status) VALUES (:acervo_id, :obreiro_id, CURRENT_DATE, CURRENT_DATE + INTERVAL '14 days', 'pendente')";

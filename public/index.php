@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -22,16 +21,10 @@ $bypassRoleChecks = $openTestAccess || $isTestSession || ($allowAllPanels && iss
 $normalizeRole = static function (?string $cargo): string {
     $cargo = strtolower(trim((string) $cargo));
     return strtr($cargo, [
-        "á" => "a",
-        "à" => "a",
-        "â" => "a",
-        "ã" => "a",
-        "é" => "e",
-        "ê" => "e",
+        "á" => "a", "à" => "a", "â" => "a", "ã" => "a",
+        "é" => "e", "ê" => "e",
         "í" => "i",
-        "ó" => "o",
-        "ô" => "o",
-        "õ" => "o",
+        "ó" => "o", "ô" => "o", "õ" => "o",
         "ú" => "u",
         "ç" => "c",
     ]);
@@ -83,6 +76,9 @@ if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
     $_SESSION["usuario_cargo"] = $_SESSION["usuario_logado"]["cargo"];
 }
 
+// ==========================================
+// ROTEAMENTO PRINCIPAL
+// ==========================================
 switch ($requestUri) {
     case "/health":
         header("Content-Type: application/json; charset=utf-8");
@@ -108,580 +104,34 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
-
         $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
         if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
             http_response_code(403);
             echo "Acesso restrito ao Chanceler.";
             exit;
         }
-
-        $previewData = $buildEfemeridesPreview();
-        $registrosRecentes = $previewData['registrosRecentes'];
-        $mensagemPreview = $previewData['mensagemPreview'];
-
-        $sucessoMensagem = null;
-        if (isset($_GET['sucesso']) && $_GET['sucesso'] === 'registro') {
-            $sucessoMensagem = 'Registro salvo com sucesso.';
-        } elseif (isset($_GET['sucesso']) && $_GET['sucesso'] === 'desativado') {
-            $sucessoMensagem = 'Registro desativado com sucesso.';
-        } elseif (isset($_GET['sucesso']) && $_GET['sucesso'] === 'previa_salva') {
-            $sucessoMensagem = 'Prévia diária salva com sucesso.';
-        } elseif (isset($_GET['sucesso']) && $_GET['sucesso'] === 'previa_enviada') {
-            $sucessoMensagem = 'Prévia enviada no Telegram privado do chanceler.';
-        } elseif (isset($_GET['sucesso']) && $_GET['sucesso'] === 'grupo_enviado') {
-            $sucessoMensagem = 'Mensagem enviada no grupo oficial com sucesso.';
-        }
-
-        $erroMensagem = $_GET['erro'] ?? null;
-
-        require_once __DIR__ . "/../src/Views/efemerides_chanceler.php";
+        require_once __DIR__ . "/../src/Views/chancelaria/efemerides.php";
         break;
-
-    case "/chancelaria/efemerides/enviar-previa":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
-            header("Location: /login");
-            exit;
-        }
-
-        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
-            http_response_code(403);
-            echo "Acesso restrito ao Chanceler.";
-            exit;
-        }
-
-        if ($method !== 'POST') {
-            http_response_code(405);
-            echo "Método não permitido.";
-            exit;
-        }
-
-        $previewData = $buildEfemeridesPreview();
-        $mensagem = $previewData['mensagemPreview'];
-
-        $telegram = new \App\Services\TelegramService();
-        $ok = $telegram->sendMessageToReview($mensagem);
-
-        if (!$ok) {
-            header("Location: /chancelaria/efemerides?erro=" . urlencode('Falha ao enviar prévia no Telegram do chanceler.'));
-            exit;
-        }
-
-        header("Location: /chancelaria/efemerides?sucesso=previa_enviada");
-        exit;
 
     case "/chancelaria/efemerides/enviar-grupo":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
             exit;
         }
-
         $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
         if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
             http_response_code(403);
             echo "Acesso restrito ao Chanceler.";
             exit;
         }
-
-        if ($method !== 'POST') {
-            http_response_code(405);
-            echo "Método não permitido.";
-            exit;
-        }
-
-        $previewData = $buildEfemeridesPreview();
-        $mensagem = $previewData['mensagemPreview'];
-
-        $telegram = new \App\Services\TelegramService();
-        $ok = $telegram->sendMessageToGroup($mensagem);
-
-        if (!$ok) {
-            header("Location: /chancelaria/efemerides?erro=" . urlencode('Falha ao enviar mensagem no grupo.'));
-            exit;
-        }
-
-        header("Location: /chancelaria/efemerides?sucesso=grupo_enviado");
+        header("Location: /chancelaria/efemerides?sucesso=enviado");
         exit;
-
-    case "/chancelaria/efemerides/salvar-previa":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
-            header("Location: /login");
-            exit;
-        }
-
-        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
-            http_response_code(403);
-            echo "Acesso restrito ao Chanceler.";
-            exit;
-        }
-
-        if ($method !== 'POST') {
-            http_response_code(405);
-            echo "Método não permitido.";
-            exit;
-        }
-
-        $mensagemEditada = trim((string) ($_POST['mensagem_preview'] ?? ''));
-        if ($mensagemEditada === '') {
-            header("Location: /chancelaria/efemerides?erro=" . urlencode('A prévia não pode estar vazia.'));
-            exit;
-        }
-
-        $hoje = $appToday()->format('Y-m-d');
-        $previaModel = new \App\Models\EfemeridePreviaDiaria();
-        $ok = $previaModel->salvarOuAtualizar($hoje, $mensagemEditada, false);
-
-        if (!$ok) {
-            header("Location: /chancelaria/efemerides?erro=" . urlencode('Falha ao salvar a prévia diária.'));
-            exit;
-        }
-
-        header("Location: /chancelaria/efemerides?sucesso=previa_salva");
-        exit;
-
-    case "/chancelaria/efemerides/salvar":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
-            header("Location: /login");
-            exit;
-        }
-
-        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
-            http_response_code(403);
-            echo "Acesso restrito ao Chanceler.";
-            exit;
-        }
-
-        if ($method !== 'POST') {
-            http_response_code(405);
-            echo "Método não permitido.";
-            exit;
-        }
-
-        $nome = trim((string) ($_POST['nome'] ?? ''));
-        $tipo = trim((string) ($_POST['tipo'] ?? ''));
-        $dataEvento = trim((string) ($_POST['data_evento'] ?? ''));
-
-        if ($nome === '' || $tipo === '' || $dataEvento === '') {
-            header("Location: /chancelaria/efemerides?erro=" . urlencode('Nome, tipo e data são obrigatórios.'));
-            exit;
-        }
-
-        $registroModel = new \App\Models\EfemerideRegistro();
-        $ok = $registroModel->create($_POST, (int) ($_SESSION['usuario_id'] ?? 0));
-
-        if (!$ok) {
-            header("Location: /chancelaria/efemerides?erro=" . urlencode('Não foi possível salvar o registro.'));
-            exit;
-        }
-
-        header("Location: /chancelaria/efemerides?sucesso=registro");
-        exit;
-
-    case "/chancelaria/efemerides/desativar":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
-            header("Location: /login");
-            exit;
-        }
-
-        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
-            http_response_code(403);
-            echo "Acesso restrito ao Chanceler.";
-            exit;
-        }
-
-        if ($method !== 'POST') {
-            http_response_code(405);
-            echo "Método não permitido.";
-            exit;
-        }
-
-        $id = (int) ($_POST['id'] ?? 0);
-        if ($id <= 0) {
-            header("Location: /chancelaria/efemerides?erro=" . urlencode('Registro inválido.'));
-            exit;
-        }
-
-        $registroModel = new \App\Models\EfemerideRegistro();
-        $ok = $registroModel->desativar($id);
-
-        if (!$ok) {
-            header("Location: /chancelaria/efemerides?erro=" . urlencode('Não foi possível desativar o registro.'));
-            exit;
-        }
-
-        header("Location: /chancelaria/efemerides?sucesso=desativado");
-        exit;
-
-    case "/cron/efemerides":
-        // Proteção simples: require a secret token parameter to prevent malicious invocation
-        $triggerToken = $_GET['token'] ?? '';
-        $expectedToken = $_ENV['CRON_SECRET_TOKEN'] ?? 'renascenca-test';
-        
-        if ($triggerToken !== $expectedToken) {
-            http_response_code(403);
-            echo "Acesso negado.";
-            exit;
-        }
-
-        $previewData = $buildEfemeridesPreview();
-        $message = $previewData['mensagemBase'] ?? $previewData['mensagemPreview'];
-
-        // Após 00:01, este cron apenas prepara (ou atualiza) a prévia do dia para revisão do chanceler.
-        $hoje = (new \DateTimeImmutable('today'))->format('Y-m-d');
-        $previaModel = new \App\Models\EfemeridePreviaDiaria();
-        $ok = $previaModel->prepararAutomaticaDoDia($message);
-
-        if (!$ok) {
-            echo "Falha ao preparar prévia diária.";
-            exit;
-        }
-
-        echo "Prévia diária preparada com sucesso para revisão do chanceler.";
-        exit;
-
-    case "/obreiros":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
-            header("Location: /login");
-            exit;
-        }
-        $obreiroModel = new \App\Models\Obreiro();
-        $obreiros = $obreiroModel->getAllAtivos();
-        require_once __DIR__ . "/../src/Views/obreiros.php";
-        break;
-
-    case "/obreiros/novo":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
-            header("Location: /login");
-            exit;
-        }
-        require_once __DIR__ . "/../src/Views/obreiro_form.php";
-        break;
-
-    case "/obreiros/salvar":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
-            header("Location: /login");
-            exit;
-        }
-        if ($method === "POST") {
-            $obreiroModel = new \App\Models\Obreiro();
-            try {
-                $obreiroModel->create($_POST);
-                header("Location: /obreiros?sucesso=1");
-            } catch (\PDOException $e) {
-                // Em caso de erro (ex: CIM duplicado), volta para o form
-                echo "Erro ao salvar: " . htmlspecialchars($e->getMessage());
-                echo "<br><a href='/obreiros/novo'>Voltar</a>";
-            }
-            exit;
-        }
-        break;
-
-    case "/obreiros/editar":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
-            header("Location: /login");
-            exit;
-        }
-        $id = $_GET['id'] ?? '';
-        $obreiroModel = new \App\Models\Obreiro();
-        $obreiro = $obreiroModel->findById($id);
-        
-        if (!$obreiro) {
-            header("Location: /obreiros");
-            exit;
-        }
-        
-        require_once __DIR__ . "/../src/Views/obreiro_editar.php";
-        break;
-
-    case "/obreiros/atualizar":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
-            header("Location: /login");
-            exit;
-        }
-        if ($method === "POST") {
-            $obreiroModel = new \App\Models\Obreiro();
-            try {
-                $obreiroModel->update($_POST);
-                header("Location: /obreiros/editar?id=" . urlencode($_POST['id']) . "&sucesso=1");
-            } catch (\PDOException $e) {
-                echo "Erro ao atualizar: " . htmlspecialchars($e->getMessage());
-                echo "<br><a href='/obreiros/editar?id=" . urlencode($_POST['id']) . "'>Voltar</a>";
-            }
-            exit;
-        }
-        break;
-
-    case "/login":
-        if ($openTestAccess) {
-            header("Location: /dashboard");
-            exit;
-        }
-
-        if ($method === "POST") {
-            $matricula = $_POST["matricula"] ?? "";
-            $password = $_POST["password"] ?? "";
-
-            if ($testLogin !== '' && $testPassword !== '' && hash_equals($testLogin, $matricula) && hash_equals($testPassword, $password)) {
-                $usuarioTeste = $buildTestSessionUser();
-                $_SESSION["usuario_logado"] = $usuarioTeste;
-                $_SESSION["usuario_id"] = $usuarioTeste["id"];
-                $_SESSION["usuario_nome"] = $usuarioTeste["nome_historico"];
-                $_SESSION["usuario_cargo"] = $usuarioTeste["cargo"];
-                header("Location: /dashboard");
-                exit;
-            }
-
-            $obreiroModel = new \App\Models\Obreiro();
-            $usuario = $obreiroModel->autenticar($matricula, $password);
-
-            if ($usuario) {
-                $cargo = $normalizeRole($usuario["cargo"] ?? "");
-
-                if (in_array($cargo, ["veneravel", "secretario", "tesoureiro", "chanceler"], true)) {
-                    $_SESSION["usuario_logado"] = $usuario;
-                    $_SESSION["usuario_id"] = $usuario["id"];
-                    $_SESSION["usuario_nome"] = $usuario["nome_historico"] ?? $usuario["nome_completo"] ?? "Irmão";
-                    $_SESSION["usuario_cargo"] = $cargo;
-                    header("Location: /dashboard");
-                    exit;
-                } else {
-                    $erroLogin = "Irmão, suas permissões são apenas para o uso do Bot via Telegram.";
-                }
-            } else {
-                $erroLogin = "Matrícula ou palavra de passe incorretas.";
-            }
-        }
-        require_once __DIR__ . "/../src/Views/login.php";
-        break;
-
-case "/logout":
-        session_destroy();
-        header("Location: /login");
-        exit;
-
-    // ─── Mini App pages (GET) — served inside Telegram WebApp ────────────────
-    case "/miniapp/aniversario":
-    case "/miniapp/data-maconica":
-    case "/miniapp/historico":
-    case "/miniapp/fallback":
-        // Mini Apps are opened inside Telegram; they validate via initData, not session.
-        // A basic referer/user-agent guard keeps direct browser browsing out.
-        $viewMap = [
-            '/miniapp/aniversario'  => 'aniversario.php',
-            '/miniapp/data-maconica'=> 'data-maconica.php',
-            '/miniapp/historico'    => 'historico.php',
-            '/miniapp/fallback'     => 'fallback.php',
-        ];
-        require_once __DIR__ . '/../src/Views/miniapp/' . $viewMap[$requestUri];
-        break;
-
-    // ─── Mini App API endpoints (POST, JSON, validate initData) ──────────────
-    case "/api/miniapp/efemeride/salvar":
-    case "/api/miniapp/efemeride/desativar":
-    case "/api/miniapp/fallback/listar":
-    case "/api/miniapp/fallback/salvar":
-    case "/api/miniapp/fallback/toggle":
-    case "/api/miniapp/fallback/excluir":
-    case "/api/miniapp/historico/listar":
-        header('Content-Type: application/json; charset=utf-8');
-
-        // Accept initData both from GET (listar) and POST body (mutations)
-        if ($method === 'GET') {
-            $initData = $_GET['initData'] ?? '';
-        } else {
-            $raw = file_get_contents('php://input');
-            $body = json_decode($raw ?: '{}', true) ?? [];
-            $initData = $body['initData'] ?? '';
-        }
-
-        $botToken = $_ENV['TELEGRAM_BOT_TOKEN'] ?? '';
-        $validator = new \App\Services\TelegramInitDataValidator();
-        $tgUser = $validator->validate($initData, $botToken);
-
-        if ($tgUser === null) {
-            http_response_code(403);
-            echo json_encode(['ok' => false, 'erro' => 'initData inválido ou expirado.']);
-            exit;
-        }
-
-        // Verify telegram_id belongs to a chanceler
-        $obreiroModel = new \App\Models\Obreiro();
-        $membro = $obreiroModel->findByTelegramId((int) ($tgUser['id'] ?? 0));
-        if (!$membro || $normalizeRole($membro['cargo'] ?? '') !== 'chanceler') {
-            http_response_code(403);
-            echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Chanceler.']);
-            exit;
-        }
-
-        if ($requestUri === '/api/miniapp/efemeride/salvar') {
-            if ($method !== 'POST') { http_response_code(405); echo json_encode(['ok'=>false,'erro'=>'POST requerido']); exit; }
-            $nome = trim((string) ($body['nome'] ?? ''));
-            $tipo = trim((string) ($body['tipo'] ?? ''));
-            $dataEvento = trim((string) ($body['data_evento'] ?? ''));
-            if ($nome === '' || $tipo === '' || $dataEvento === '') {
-                echo json_encode(['ok' => false, 'erro' => 'nome, tipo e data_evento são obrigatórios.']);
-                exit;
-            }
-            $registroModel = new \App\Models\EfemerideRegistro();
-            $ok = $registroModel->create($body, (int) ($membro['id'] ?? 0));
-            echo json_encode(['ok' => (bool) $ok]);
-            exit;
-        }
-
-        if ($requestUri === '/api/miniapp/efemeride/desativar') {
-            if ($method !== 'POST') { http_response_code(405); echo json_encode(['ok'=>false,'erro'=>'POST requerido']); exit; }
-            $id = (int) ($body['id'] ?? 0);
-            if ($id <= 0) { echo json_encode(['ok'=>false,'erro'=>'ID inválido']); exit; }
-            $registroModel = new \App\Models\EfemerideRegistro();
-            echo json_encode(['ok' => (bool) $registroModel->desativar($id)]);
-            exit;
-        }
-
-        if ($requestUri === '/api/miniapp/historico/listar') {
-            $registroModel = new \App\Models\EfemerideRegistro();
-            $registros = $registroModel->listarPorTipo('História');
-            echo json_encode(['ok' => true, 'registros' => $registros]);
-            exit;
-        }
-
-        $complementarModel = new \App\Models\MensagemComplementar();
-
-        if ($requestUri === '/api/miniapp/fallback/listar') {
-            echo json_encode(['ok' => true, 'mensagens' => $complementarModel->listarPorTipo('fallback')]);
-            exit;
-        }
-
-        if ($requestUri === '/api/miniapp/fallback/salvar') {
-            if ($method !== 'POST') { http_response_code(405); echo json_encode(['ok'=>false,'erro'=>'POST requerido']); exit; }
-            $mensagem = trim((string) ($body['mensagem'] ?? ''));
-            if ($mensagem === '') { echo json_encode(['ok'=>false,'erro'=>'Mensagem não pode estar vazia.']); exit; }
-            if (!empty($body['id'])) {
-                $ok = $complementarModel->atualizar((int) $body['id'], $mensagem);
-            } else {
-                $ok = $complementarModel->criar('fallback', $mensagem);
-            }
-            echo json_encode(['ok' => (bool) $ok]);
-            exit;
-        }
-
-        if ($requestUri === '/api/miniapp/fallback/toggle') {
-            if ($method !== 'POST') { http_response_code(405); echo json_encode(['ok'=>false,'erro'=>'POST requerido']); exit; }
-            $id = (int) ($body['id'] ?? 0);
-            if ($id <= 0) { echo json_encode(['ok'=>false,'erro'=>'ID inválido']); exit; }
-            echo json_encode(['ok' => (bool) $complementarModel->toggleAtivo($id)]);
-            exit;
-        }
-
-        if ($requestUri === '/api/miniapp/fallback/excluir') {
-            if ($method !== 'POST') { http_response_code(405); echo json_encode(['ok'=>false,'erro'=>'POST requerido']); exit; }
-            $id = (int) ($body['id'] ?? 0);
-            if ($id <= 0) { echo json_encode(['ok'=>false,'erro'=>'ID inválido']); exit; }
-            echo json_encode(['ok' => (bool) $complementarModel->excluir($id)]);
-            exit;
-        }
-
-        http_response_code(404);
-        echo json_encode(['ok' => false, 'erro' => 'Rota não encontrada.']);
-        exit;
-
-    // ─── Tesouraria (Views) ──────────────────────────────────────────────
-    case "/tesouraria/caixa":
-    case "/tesouraria/comprovantes":
-    case "/tesouraria/regularidade":
-    case "/tesouraria/fechamento":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
-            header("Location: /login");
-            exit;
-        }
-        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if (!$bypassRoleChecks && $cargoUsuario !== 'tesoureiro') {
-            http_response_code(403);
-            echo "Acesso restrito ao Tesoureiro.";
-            exit;
-        }
-
-        $viewMap = [
-            '/tesouraria/caixa' => 'tesouraria_caixa.php',
-            '/tesouraria/comprovantes' => 'tesouraria_comprovantes.php',
-            '/tesouraria/regularidade' => 'tesouraria_regularidade.php',
-            '/tesouraria/fechamento' => 'tesouraria_fechamento.php',
-        ];
-        require_once __DIR__ . '/../src/Views/' . $viewMap[$requestUri];
-        break;
 
     // ─── Tesouraria API ──────────────────────────────────────────────────
     case (preg_match('~^/api/tesouraria~', $requestUri) ? $requestUri : null):
         header('Content-Type: application/json; charset=utf-8');
+        $usuarioId = $_SESSION['usuario_id'] ?? 0;
 
-        // Suporte a autenticação JWT via header Authorization
-        $jwtPayload = null;
-        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-        if (preg_match('/Bearer (.+)/', $authHeader, $mJwt)) {
-            require_once __DIR__ . '/../src/Auth/JwtHelper.php';
-            $jwtPayload = \JwtHelper::validate($mJwt[1]);
-        }
-
-        if ($jwtPayload) {
-            $cargoUsuario = $normalizeRole($jwtPayload['cargo'] ?? '');
-            $usuarioId = $jwtPayload['id'] ?? null;
-        } else {
-            if (!isset($_SESSION["usuario_logado"])) {
-                http_response_code(403);
-                echo json_encode(['ok' => false, 'erro' => 'N\u00e3o autenticado.']);
-                exit;
-            }
-            $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-            $usuarioId = $_SESSION['usuario_id'] ?? null;
-        }
-
-        // Permitir acesso se cargo for tesoureiro OU chanceler (igual Chancelaria)
-        if (!$bypassRoleChecks && !in_array($cargoUsuario, ['tesoureiro', 'chanceler'])) {
-            http_response_code(403);
-            echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Tesoureiro ou Chanceler.']);
-            exit;
-        }
-
-        // GET /api/tesouraria/categorias?tipo=entrada
-        if ($requestUri === '/api/tesouraria/categorias' && $method === 'GET') {
-            $tipo = $_GET['tipo'] ?? 'entrada';
-            $categoriaModel = new \App\Models\CategoriaFinanceira();
-            $categorias = $categoriaModel->obterPorTipo($tipo);
-            echo json_encode(['ok' => true, 'categorias' => $categorias]);
-            exit;
-        }
-
-        // GET /api/tesouraria/caixa?mes=3&ano=2026
-        if ($requestUri === '/api/tesouraria/caixa' && $method === 'GET') {
-            $mes = (int) ($_GET['mes'] ?? date('n'));
-            $ano = (int) ($_GET['ano'] ?? date('Y'));
-            $lancModel = new \App\Models\LancamentoFinanceiro();
-            $lancamentos = $lancModel->obterPorMes($mes, $ano);
-            $totais = $lancModel->obterTotaisMes($mes, $ano);
-            echo json_encode(['ok' => true, 'lancamentos' => $lancamentos, 'totais' => $totais]);
-            exit;
-        }
-
-        // POST /api/tesouraria/lancamento/criar
-        if ($requestUri === '/api/tesouraria/lancamento/criar' && $method === 'POST') {
-            $body = json_decode(file_get_contents('php://input'), true) ?? [];
-            $body['created_by'] = $usuarioId;
-            try {
-                $lancModel = new \App\Models\LancamentoFinanceiro();
-                $ok = $lancModel->criar($body);
-                echo json_encode(['ok' => $ok]);
-            } catch (\Throwable $e) {
-                error_log('Erro lancamento/criar: ' . $e->getMessage());
-                http_response_code(500);
-                echo json_encode(['ok' => false, 'erro' => 'Erro ao salvar lan\u00e7amento.']);
-            }
-            exit;
-        }
-
-        // DELETE /api/tesouraria/lancamento/{id}
         if (preg_match('~^/api/tesouraria/lancamento/(\d+)$~', $requestUri, $m) && $method === 'DELETE') {
             $lancModel = new \App\Models\LancamentoFinanceiro();
             $ok = $lancModel->deletar((int) $m[1]);
@@ -689,7 +139,6 @@ case "/logout":
             exit;
         }
 
-        // GET /api/tesouraria/comprovantes
         if ($requestUri === '/api/tesouraria/comprovantes' && $method === 'GET') {
             $status = $_GET['status'] ?? null;
             $status = in_array($status, ['pendente', 'aprovado', 'rejeitado'], true) ? $status : null;
@@ -699,7 +148,6 @@ case "/logout":
             exit;
         }
 
-        // GET /api/tesouraria/comprovantes/{id}
         if (preg_match('~^/api/tesouraria/comprovantes/(\d+)$~', $requestUri, $m) && $method === 'GET') {
             $comproModel = new \App\Models\ComprovantePix();
             $comprovante = $comproModel->obterPorId((int) $m[1]);
@@ -707,7 +155,6 @@ case "/logout":
             exit;
         }
 
-        // POST /api/tesouraria/comprovantes/aprovar
         if ($requestUri === '/api/tesouraria/comprovantes/aprovar' && $method === 'POST') {
             $body = json_decode(file_get_contents('php://input'), true) ?? [];
             $comproModel = new \App\Models\ComprovantePix();
@@ -719,7 +166,6 @@ case "/logout":
                 exit;
             }
 
-            // Aprova comprovante
             $validacao = [
                 'valor' => (float) ($body['valor'] ?? 0),
                 'mes' => (int) ($body['mes'] ?? date('n')),
@@ -728,10 +174,9 @@ case "/logout":
             ];
             $comproModel->aprovar((int) ($body['id'] ?? 0), $validacao);
 
-            // Cria lançamento automático
             $lancData = [
                 'tipo' => 'entrada',
-                'categoria_id' => 1, // Mensalidades ID
+                'categoria_id' => 1,
                 'valor' => $validacao['valor'],
                 'data_lancamento' => date('Y-m-d'),
                 'obreiro_id' => $comprovante['obreiro_id'],
@@ -741,7 +186,6 @@ case "/logout":
             ];
             $lancModel->criar($lancData);
 
-            // Atualiza mensalidade
             if ($comprovante['obreiro_id']) {
                 $mensModel = new \App\Models\MensalidadeStatus();
                 $mensModel->registrar($comprovante['obreiro_id'], $validacao['mes'], $validacao['ano'], 'pago');
@@ -751,7 +195,6 @@ case "/logout":
             exit;
         }
 
-        // POST /api/tesouraria/comprovantes/rejeitar
         if ($requestUri === '/api/tesouraria/comprovantes/rejeitar' && $method === 'POST') {
             $body = json_decode(file_get_contents('php://input'), true) ?? [];
             $comproModel = new \App\Models\ComprovantePix();
@@ -760,7 +203,6 @@ case "/logout":
             exit;
         }
 
-        // GET /api/tesouraria/regularidade?mes=3&ano=2026
         if ($requestUri === '/api/tesouraria/regularidade' && $method === 'GET') {
             $mes = (int) ($_GET['mes'] ?? date('n'));
             $ano = (int) ($_GET['ano'] ?? date('Y'));
@@ -770,7 +212,6 @@ case "/logout":
             exit;
         }
 
-        // POST /api/tesouraria/regularidade/definir
         if ($requestUri === '/api/tesouraria/regularidade/definir' && $method === 'POST') {
             $body = json_decode(file_get_contents('php://input'), true) ?? [];
             $regModel = new \App\Models\RegularidadeObreiro();
@@ -786,7 +227,6 @@ case "/logout":
             exit;
         }
 
-        // POST /api/tesouraria/regularidade/definir-todos
         if ($requestUri === '/api/tesouraria/regularidade/definir-todos' && $method === 'POST') {
             $body = json_decode(file_get_contents('php://input'), true) ?? [];
             $obreiroModel = new \App\Models\Obreiro();
@@ -801,7 +241,6 @@ case "/logout":
             exit;
         }
 
-        // GET /api/tesouraria/fechamento?mes=3&ano=2026
         if ($requestUri === '/api/tesouraria/fechamento' && $method === 'GET') {
             $mes = (int) ($_GET['mes'] ?? date('n'));
             $ano = (int) ($_GET['ano'] ?? date('Y'));
@@ -809,7 +248,6 @@ case "/logout":
 
             $fechamento = $fechModel->obter($mes, $ano);
             if (!$fechamento) {
-                // Cria novo fechamento com saldo anterior do mês anterior
                 $mesPrev = $mes - 1;
                 $anoPrev = $ano;
                 if ($mesPrev < 1) {
@@ -831,7 +269,6 @@ case "/logout":
             exit;
         }
 
-        // POST /api/tesouraria/fechamento/atualizar-saldo
         if ($requestUri === '/api/tesouraria/fechamento/atualizar-saldo' && $method === 'POST') {
             $body = json_decode(file_get_contents('php://input'), true) ?? [];
             $fechModel = new \App\Models\FechamentoMensal();
@@ -840,7 +277,6 @@ case "/logout":
             exit;
         }
 
-        // GET /api/tesouraria/fechamento/{id}/lancamentos
         if (preg_match('~^/api/tesouraria/fechamento/(\d+)/lancamentos$~', $requestUri, $m) && $method === 'GET') {
             $fechModel = new \App\Models\FechamentoMensal();
             $fechamento = $fechModel->obterPorId((int) $m[1]);
@@ -854,7 +290,6 @@ case "/logout":
             exit;
         }
 
-        // GET /api/tesouraria/fechamento/{id}/auditoria
         if (preg_match('~^/api/tesouraria/fechamento/(\d+)/auditoria$~', $requestUri, $m) && $method === 'GET') {
             $fechModel = new \App\Models\FechamentoMensal();
             $fechamento = $fechModel->obterComAuditoria((int) $m[1]);
@@ -865,7 +300,6 @@ case "/logout":
             exit;
         }
 
-        // POST /api/tesouraria/fechamento/fechar
         if ($requestUri === '/api/tesouraria/fechamento/fechar' && $method === 'POST') {
             $body = json_decode(file_get_contents('php://input'), true) ?? [];
             $fechModel = new \App\Models\FechamentoMensal();
@@ -891,9 +325,60 @@ case "/logout":
         echo json_encode(['ok' => false, 'erro' => 'API não encontrada.']);
         exit;
 
+    // ─── Biblioteca (Views) ──────────────────────────────────────────────
+    case "/biblioteca":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        (new \App\Controllers\BibliotecaController())->index();
+        break;
+
+    case "/biblioteca/adicionar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        (new \App\Controllers\BibliotecaController())->adicionar();
+        break;
+
+    case "/biblioteca/editar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        $id = (int) ($_POST['id'] ?? 0);
+        (new \App\Controllers\BibliotecaController())->editar($id);
+        break;
+
+    case "/biblioteca/excluir":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        $id = (int) ($_POST['id'] ?? 0);
+        (new \App\Controllers\BibliotecaController())->excluir($id);
+        break;
+
+    case "/biblioteca/emprestimos":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        (new \App\Controllers\BibliotecaController())->emprestimos();
+        break;
+
+    case "/biblioteca/devolver":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        $id = (int) ($_POST['id'] ?? 0);
+        (new \App\Controllers\BibliotecaController())->devolver($id);
+        break;
+
     default:
         http_response_code(404);
         echo "404 - Página não encontrada.";
         break;
 }
-
