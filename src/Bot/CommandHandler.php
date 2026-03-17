@@ -129,7 +129,8 @@ class CommandHandler {
     // Consulta Livro-Caixa
     public function handleTesourariaCaixa($chatId) {
         // Usa o Telegram ID do usuário como token
-        $token = $chatId;
+            // Busca token JWT válido para o Telegram ID
+            $token = $this->getTesourariaJwtToken($chatId);
         $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/caixa?mes=' . date('n') . '&ano=' . date('Y');
         $opts = [
             'http' => [
@@ -154,7 +155,7 @@ class CommandHandler {
 
     // Consulta Comprovantes
     public function handleTesourariaComprovantes($chatId) {
-        $token = $chatId;
+        $token = $this->getTesourariaJwtToken($chatId);
         $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/comprovantes';
         $opts = [
             'http' => [
@@ -178,7 +179,7 @@ class CommandHandler {
 
     // Consulta Regularidade
     public function handleTesourariaRegularidade($chatId) {
-        $token = $chatId;
+        $token = $this->getTesourariaJwtToken($chatId);
         $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/regularidade?mes=' . date('n') . '&ano=' . date('Y');
         $opts = [
             'http' => [
@@ -202,7 +203,7 @@ class CommandHandler {
 
     // Consulta Fechamento Mensal
     public function handleTesourariaFechamento($chatId) {
-        $token = $chatId;
+        $token = $this->getTesourariaJwtToken($chatId);
         $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/fechamento?mes=' . date('n') . '&ano=' . date('Y');
         $opts = [
             'http' => [
@@ -222,6 +223,17 @@ class CommandHandler {
         $mensagem .= "Saldo Inicial: {$fechamento['saldo_inicial']}\n";
         $mensagem .= "Saldo Final: {$fechamento['saldo_final']}\n";
         $this->telegram->sendMessage($chatId, $mensagem);
+    }
+
+    // Busca token JWT válido para tesouraria
+    private function getTesourariaJwtToken($telegramId) {
+        $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/token?telegram_id=' . urlencode($telegramId);
+        $response = @file_get_contents($url);
+        $data = json_decode($response, true);
+        if ($data && $data['ok'] && isset($data['token'])) {
+            return $data['token'];
+        }
+        return null;
     }
 
     // Métodos do Chanceler

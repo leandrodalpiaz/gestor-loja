@@ -5,6 +5,7 @@
  * Autoloader PSR-4 Simplificado
  * Usado enquanto o Composer não está disponível ou caso prefira rodar sem dependências.
  */
+require_once __DIR__ . '/Auth/JwtHelper.php';
 spl_autoload_register(function ($class) {
     // prefixo do namespace do projeto
     $prefix = 'App\\';
