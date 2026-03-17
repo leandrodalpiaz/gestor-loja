@@ -377,53 +377,53 @@ switch ($requestUri) {
         (new \App\Controllers\BibliotecaController())->devolver($id);
         break;
 
-        case "/login":
-            if ($openTestAccess) {
+    case "/login":
+        if ($openTestAccess) {
+            header("Location: /dashboard");
+            exit;
+        }
+
+        if ($method === "POST") {
+            $matricula = $_POST["matricula"] ?? "";
+            $password = $_POST["password"] ?? "";
+
+            if ($testLogin !== '' && $testPassword !== '' && hash_equals($testLogin, $matricula) && hash_equals($testPassword, $password)) {
+                $usuarioTeste = $buildTestSessionUser();
+                $_SESSION["usuario_logado"] = $usuarioTeste;
+                $_SESSION["usuario_id"] = $usuarioTeste["id"];
+                $_SESSION["usuario_nome"] = $usuarioTeste["nome_historico"];
+                $_SESSION["usuario_cargo"] = $usuarioTeste["cargo"];
                 header("Location: /dashboard");
                 exit;
             }
 
-            if ($method === "POST") {
-                $matricula = $_POST["matricula"] ?? "";
-                $password = $_POST["password"] ?? "";
+            $obreiroModel = new \App\Models\Obreiro();
+            $usuario = $obreiroModel->autenticar($matricula, $password);
 
-                if ($testLogin !== '' && $testPassword !== '' && hash_equals($testLogin, $matricula) && hash_equals($testPassword, $password)) {
-                    $usuarioTeste = $buildTestSessionUser();
-                    $_SESSION["usuario_logado"] = $usuarioTeste;
-                    $_SESSION["usuario_id"] = $usuarioTeste["id"];
-                    $_SESSION["usuario_nome"] = $usuarioTeste["nome_historico"];
-                    $_SESSION["usuario_cargo"] = $usuarioTeste["cargo"];
+            if ($usuario) {
+                $cargo = $normalizeRole($usuario["cargo"] ?? "");
+
+                if (in_array($cargo, ["veneravel", "secretario", "tesoureiro", "chanceler"], true)) {
+                    $_SESSION["usuario_logado"] = $usuario;
+                    $_SESSION["usuario_id"] = $usuario["id"];
+                    $_SESSION["usuario_nome"] = $usuario["nome_historico"] ?? $usuario["nome_completo"] ?? "Irmão";
+                    $_SESSION["usuario_cargo"] = $cargo;
                     header("Location: /dashboard");
                     exit;
-                }
-
-                $obreiroModel = new \App\Models\Obreiro();
-                $usuario = $obreiroModel->autenticar($matricula, $password);
-
-                if ($usuario) {
-                    $cargo = $normalizeRole($usuario["cargo"] ?? "");
-
-                    if (in_array($cargo, ["veneravel", "secretario", "tesoureiro", "chanceler"], true)) {
-                        $_SESSION["usuario_logado"] = $usuario;
-                        $_SESSION["usuario_id"] = $usuario["id"];
-                        $_SESSION["usuario_nome"] = $usuario["nome_historico"] ?? $usuario["nome_completo"] ?? "Irmão";
-                        $_SESSION["usuario_cargo"] = $cargo;
-                        header("Location: /dashboard");
-                        exit;
-                    } else {
-                        $erroLogin = "Irmão, suas permissões são apenas para o uso do Bot via Telegram.";
-                    }
                 } else {
-                    $erroLogin = "Matrícula ou palavra de passe incorretas.";
+                    $erroLogin = "Irmão, suas permissões são apenas para o uso do Bot via Telegram.";
                 }
+            } else {
+                $erroLogin = "Matrícula ou palavra de passe incorretas.";
             }
-            require_once __DIR__ . "/../src/Views/login.php";
-            break;
+        }
+        require_once __DIR__ . "/../src/Views/login.php";
+        break;
 
-        case "/logout":
-            session_destroy();
-            header("Location: /login");
-            exit;
+    case "/logout":
+        session_destroy();
+        header("Location: /login");
+        exit;
     default:
         http_response_code(404);
         echo "404 - Página não encontrada.";
