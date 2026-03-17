@@ -85,7 +85,7 @@
                     <a href="/tesouraria/regularidade" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Regularidade</a>
                     <a href="/tesouraria/fechamento" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Fechamento Mensal</a>
                 <?php endif; ?>
-                <a href="#" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Sessões</a>
+                <a href="javascript:alert('Módulo de Sessões em desenvolvimento.');" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Sessões</a>
                 <div class="border-t border-blue-800 my-2"></div>
                 <div class="px-3 py-2 text-sm text-blue-300"><?= htmlspecialchars(ucfirst($usuarioCargo)) ?></div>
                 <a href="/logout" class="text-red-400 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Sair</a>
@@ -94,7 +94,7 @@
     </header>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-6">
-        
+
         <!-- Sidebar Desktop -->
         <aside class="w-full md:w-64 flex-shrink-0 hidden md:block">
             <nav class="space-y-2 relative">
@@ -112,7 +112,7 @@
                     Sessão do Chanceler (Efemérides)
                 </a>
                 <?php endif; ?>
-                <a href="#" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
+                <a href="javascript:alert('Módulo de Sessões em desenvolvimento.');" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
                     Sessões (Secretaria)
                 </a>
                 <?php if ($isTesoureiro || $showAllPanels): ?>
@@ -141,7 +141,7 @@
 
             <!-- Cards Resumo -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-                
+
                 <!-- Card 1 -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-100 relative">
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-ouro"></div>
