@@ -36,6 +36,7 @@ class CommandHandler {
         $mensagem .= "<b>Comandos disponíveis:</b>\n";
         $mensagem .= "/start - Inicia a interação e valida seu cadastro\n";
         $mensagem .= "/chancelaria - Painel do Chanceler (cadastro de efemérides)\n";
+        $mensagem .= "/tesouraria - Painel do Tesoureiro\n";
         $mensagem .= "/ajuda - Exibe esta mensagem de ajuda\n\n";
         $mensagem .= "Para outras dúvidas, contate a Secretaria da Loja.";
         $this->telegram->sendMessage($chatId, $mensagem);
@@ -89,7 +90,7 @@ class CommandHandler {
         );
     }
 
-    // Roteamento de callbacks para tesouraria
+    // Roteamento de callbacks
     public function handleCallback($chatId, $callbackData) {
         switch ($callbackData) {
             // Tesouraria
@@ -126,118 +127,138 @@ class CommandHandler {
         }
     }
 
-    // Consulta Livro-Caixa
+    // Consulta Livro-Caixa (Acesso Direto ao Model)
     public function handleTesourariaCaixa($chatId) {
-        // Usa o Telegram ID do usuário como token
-            // Busca token JWT válido para o Telegram ID
-            $token = $this->getTesourariaJwtToken($chatId);
-        $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/caixa?mes=' . date('n') . '&ano=' . date('Y');
-        $opts = [
-            'http' => [
-                'method' => 'GET',
-                'header' => ($token ? "Authorization: Bearer $token\r\n" : '')
-            ]
-        ];
-        $context = stream_context_create($opts);
-        $response = @file_get_contents($url, false, $context);
-        $data = json_decode($response, true);
-        if (!$data || !$data['ok']) {
-            $this->telegram->sendMessage($chatId, '❌ Falha ao consultar o livro-caixa.');
-            return;
+        require_once __DIR__ . '/../Models/LancamentoFinanceiro.php';
+        $model = new \App\Models\LancamentoFinanceiro();
+        $mes = date('n');
+        $ano = date('Y');
+
+        try {
+            // Tenta buscar os lançamentos. Se o nome do método no seu Model for diferente, ajuste aqui.
+            $lancamentos = method_exists($model, 'listarPorMes') ? $model->listarPorMes($mes, $ano) : $model->listar(); 
+
+            $mensagem = "📊 <b>Livro-Caixa (" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "/$ano)</b>\n\n";
+            $saldo = 0;
+
+            if (empty($lancamentos)) {
+                $mensagem .= "Nenhum lançamento encontrado neste mês.";
+            } else {
+                foreach ($lancamentos as $lanc) {
+                    $valor = number_format($lanc['valor'] ?? 0, 2, ',', '.');
+                    $tipo = (isset($lanc['tipo']) && $lanc['tipo'] == 'saida') ? '🔴' : '🟢';
+                    $cat = $lanc['categoria_nome'] ?? 'Sem categoria';
+                    $mensagem .= "{$tipo} {$lanc['data_lancamento']} - R$ {$valor} ({$cat})\n";
+                    $saldo += ($tipo == '🔴') ? -$lanc['valor'] : $lanc['valor'];
+                }
+            }
+
+            $mensagem .= "\n💰 Saldo Calculado: <b>R$ " . number_format($saldo, 2, ',', '.') . "</b>";
+            $this->telegram->sendMessage($chatId, $mensagem);
+
+        } catch (\Exception $e) {
+            $this->telegram->sendMessage($chatId, '❌ Erro interno ao consultar o livro-caixa. Verifique o Model.');
         }
-        $mensagem = "📊 <b>Livro-Caixa</b>\n";
-        foreach ($data['lancamentos'] as $lanc) {
-            $mensagem .= "• {$lanc['data_lancamento']} - {$lanc['valor']} ({$lanc['categoria_nome']})\n";
-        }
-        $mensagem .= "\nSaldo: <b>{$data['totais']['saldo']}</b>";
-        $this->telegram->sendMessage($chatId, $mensagem);
     }
 
-    // Consulta Comprovantes
+    // Consulta Comprovantes (Acesso Direto ao Model)
     public function handleTesourariaComprovantes($chatId) {
-        $token = $this->getTesourariaJwtToken($chatId);
-        $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/comprovantes';
-        $opts = [
-            'http' => [
-                'method' => 'GET',
-                'header' => ($token ? "Authorization: Bearer $token\r\n" : '')
-            ]
-        ];
-        $context = stream_context_create($opts);
-        $response = @file_get_contents($url, false, $context);
-        $data = json_decode($response, true);
-        if (!$data || !$data['ok']) {
-            $this->telegram->sendMessage($chatId, '❌ Falha ao consultar comprovantes.');
-            return;
+        require_once __DIR__ . '/../Models/ComprovantePix.php';
+        $model = new \App\Models\ComprovantePix();
+
+        try {
+            // Tenta buscar comprovantes pendentes. Ajuste o método se necessário.
+            $comprovantes = method_exists($model, 'listarPendentes') ? $model->listarPendentes() : $model->listar();
+
+            $mensagem = "🧾 <b>Comprovantes PIX Pendentes</b>\n\n";
+            $encontrou = false;
+
+            if (!empty($comprovantes)) {
+                foreach ($comprovantes as $comp) {
+                    if (($comp['status'] ?? '') === 'pendente') {
+                        $valor = number_format($comp['valor'] ?? 0, 2, ',', '.');
+                        $nome = $comp['nome_obreiro'] ?? 'Desconhecido';
+                        $mensagem .= "⏳ {$nome} - R$ {$valor}\n";
+                        $encontrou = true;
+                    }
+                }
+            }
+
+            if (!$encontrou) {
+                $mensagem .= "✅ Nenhum comprovante pendente de validação.";
+            } else {
+                $mensagem .= "\n👉 Acesse o Painel Web para aprovar/rejeitar.";
+            }
+
+            $this->telegram->sendMessage($chatId, $mensagem);
+
+        } catch (\Exception $e) {
+            $this->telegram->sendMessage($chatId, '❌ Erro interno ao consultar comprovantes. Verifique o Model.');
         }
-        $mensagem = "🧾 <b>Comprovantes PIX</b>\n";
-        foreach ($data['comprovantes'] as $comp) {
-            $mensagem .= "• {$comp['nome']} - {$comp['valor']} ({$comp['status']})\n";
-        }
-        $this->telegram->sendMessage($chatId, $mensagem);
     }
 
-    // Consulta Regularidade
+    // Consulta Regularidade (Acesso Direto ao Model)
     public function handleTesourariaRegularidade($chatId) {
-        $token = $this->getTesourariaJwtToken($chatId);
-        $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/regularidade?mes=' . date('n') . '&ano=' . date('Y');
-        $opts = [
-            'http' => [
-                'method' => 'GET',
-                'header' => ($token ? "Authorization: Bearer $token\r\n" : '')
-            ]
-        ];
-        $context = stream_context_create($opts);
-        $response = @file_get_contents($url, false, $context);
-        $data = json_decode($response, true);
-        if (!$data || !$data['ok']) {
-            $this->telegram->sendMessage($chatId, '❌ Falha ao consultar regularidade.');
-            return;
+        require_once __DIR__ . '/../Models/RegularidadeObreiro.php';
+        $model = new \App\Models\RegularidadeObreiro();
+        $mes = date('n');
+        $ano = date('Y');
+
+        try {
+            $regularidades = method_exists($model, 'listarPorMes') ? $model->listarPorMes($mes, $ano) : $model->listar();
+
+            $mensagem = "✅ <b>Regularidade dos Obreiros (" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "/$ano)</b>\n\n";
+
+            if (empty($regularidades)) {
+                $mensagem .= "Nenhum dado de regularidade encontrado para este mês.";
+            } else {
+                foreach ($regularidades as $reg) {
+                    $statusStr = strtolower($reg['status'] ?? '');
+                    $statusIcon = ($statusStr == 'regular' || $statusStr == 'pago') ? '🟢' : '🔴';
+                    $nome = $reg['nome_obreiro'] ?? $reg['nome'] ?? 'Desconhecido';
+                    $mensagem .= "{$statusIcon} {$nome}\n";
+                }
+            }
+
+            $this->telegram->sendMessage($chatId, $mensagem);
+
+        } catch (\Exception $e) {
+            $this->telegram->sendMessage($chatId, '❌ Erro interno ao consultar regularidade. Verifique o Model.');
         }
-        $mensagem = "✅ <b>Regularidade dos Obreiros</b>\n";
-        foreach ($data['regularidade'] as $reg) {
-            $mensagem .= "• {$reg['nome']} - {$reg['status']}\n";
-        }
-        $this->telegram->sendMessage($chatId, $mensagem);
     }
 
-    // Consulta Fechamento Mensal
+    // Consulta Fechamento Mensal (Acesso Direto ao Model)
     public function handleTesourariaFechamento($chatId) {
-        $token = $this->getTesourariaJwtToken($chatId);
-        $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/fechamento?mes=' . date('n') . '&ano=' . date('Y');
-        $opts = [
-            'http' => [
-                'method' => 'GET',
-                'header' => ($token ? "Authorization: Bearer $token\r\n" : '')
-            ]
-        ];
-        $context = stream_context_create($opts);
-        $response = @file_get_contents($url, false, $context);
-        $data = json_decode($response, true);
-        if (!$data || !$data['ok']) {
-            $this->telegram->sendMessage($chatId, '❌ Falha ao consultar fechamento mensal.');
-            return;
+        require_once __DIR__ . '/../Models/FechamentoMensal.php';
+        $model = new \App\Models\FechamentoMensal();
+        $mes = date('n');
+        $ano = date('Y');
+
+        try {
+            $fechamento = method_exists($model, 'obterPorMes') ? $model->obterPorMes($mes, $ano) : null;
+
+            $mensagem = "📅 <b>Fechamento Mensal (" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "/$ano)</b>\n\n";
+
+            if (!$fechamento) {
+                $mensagem .= "⚠️ O fechamento deste mês ainda não foi gerado ou iniciado no Painel Web.";
+            } else {
+                $saldoInicial = number_format($fechamento['saldo_inicial'] ?? 0, 2, ',', '.');
+                $saldoFinal = number_format($fechamento['saldo_final'] ?? 0, 2, ',', '.');
+                $status = ucfirst($fechamento['status'] ?? 'Aberto');
+
+                $mensagem .= "Status: <b>{$status}</b>\n";
+                $mensagem .= "Saldo Inicial: R$ {$saldoInicial}\n";
+                $mensagem .= "Saldo Final: R$ {$saldoFinal}\n";
+            }
+
+            $this->telegram->sendMessage($chatId, $mensagem);
+
+        } catch (\Exception $e) {
+            $this->telegram->sendMessage($chatId, '❌ Erro interno ao consultar fechamento. Verifique o Model.');
         }
-        $fechamento = $data['fechamento'];
-        $mensagem = "📅 <b>Fechamento Mensal</b>\n";
-        $mensagem .= "Saldo Inicial: {$fechamento['saldo_inicial']}\n";
-        $mensagem .= "Saldo Final: {$fechamento['saldo_final']}\n";
-        $this->telegram->sendMessage($chatId, $mensagem);
     }
 
-    // Busca token JWT válido para tesouraria
-    private function getTesourariaJwtToken($telegramId) {
-        $url = 'https://gestor-loja-web.onrender.com/api/tesouraria/token?telegram_id=' . urlencode($telegramId);
-        $response = @file_get_contents($url);
-        $data = json_decode($response, true);
-        if ($data && $data['ok'] && isset($data['token'])) {
-            return $data['token'];
-        }
-        return null;
-    }
-
-    // Métodos do Chanceler
-    // Efemérides reais
+    // Métodos do Chanceler (Mantidos intactos)
     public function handleMenuHoje($chatId) {
         require_once __DIR__ . '/../Models/EfemerideRegistro.php';
         require_once __DIR__ . '/../Services/EfemeridesComposer.php';
