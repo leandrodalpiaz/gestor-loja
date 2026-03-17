@@ -75,6 +75,7 @@
             <div class="px-2 pt-2 pb-3 space-y-1">
                 <a href="/dashboard" class="bg-blue-800 text-white block px-3 py-2 rounded-md text-base font-medium">Dashboard</a>
                 <a href="/obreiros" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Obreiros</a>
+                <a href="/biblioteca" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">📚 Biblioteca</a>
                 <?php if ($isChanceler || $showAllPanels): ?>
                     <a href="/chancelaria/efemerides" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Sessão do Chanceler</a>
                 <?php endif; ?>
@@ -102,6 +103,9 @@
                 </a>
                 <a href="/obreiros" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
                     Obreiros (Chancelaria)
+                </a>
+                <a href="/biblioteca" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
+                    📚 Biblioteca
                 </a>
                 <?php if ($isChanceler || $showAllPanels): ?>
                 <a href="/chancelaria/efemerides" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">

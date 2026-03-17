@@ -80,6 +80,31 @@ if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
 // ROTEAMENTO PRINCIPAL
 // ==========================================
 switch ($requestUri) {
+        // ─── Telas Antigas Restauradas ───────────────────────────────────────
+        case "/obreiros":
+            if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+            require_once __DIR__ . "/../src/Views/obreiros.php";
+            break;
+
+        case "/tesouraria/caixa":
+            if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+            require_once __DIR__ . "/../src/Views/tesouraria_caixa.php";
+            break;
+
+        case "/tesouraria/comprovantes":
+            if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+            require_once __DIR__ . "/../src/Views/tesouraria_comprovantes.php";
+            break;
+
+        case "/tesouraria/regularidade":
+            if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+            require_once __DIR__ . "/../src/Views/tesouraria_regularidade.php";
+            break;
+
+        case "/tesouraria/fechamento":
+            if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+            require_once __DIR__ . "/../src/Views/tesouraria_fechamento.php";
+            break;
     case "/health":
         header("Content-Type: application/json; charset=utf-8");
         echo json_encode([
