@@ -19,7 +19,7 @@ class BibliotecaController
     public function index()
     {
         $itens = $this->acervoModel->listarTodos();
-        require_once __DIR__ . '/../Views/biblioteca.php';
+        require_once __DIR__ . '/../Views/biblioteca/index.php';
     }
 
     public function adicionar()
