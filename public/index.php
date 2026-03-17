@@ -1,28 +1,4 @@
-    case '/api/tesouraria/token':
-        header('Content-Type: application/json; charset=utf-8');
-        $telegramId = (int) ($_GET['telegram_id'] ?? 0);
-        if (!$telegramId) {
-            http_response_code(400);
-            echo json_encode(['ok' => false, 'erro' => 'Telegram ID ausente.']);
-            exit;
-        }
-        require_once __DIR__ . '/../src/Auth/JwtHelper.php';
-        $obreiroModel = new \App\Models\Obreiro();
-        $obreiro = $obreiroModel->findByTelegramId($telegramId);
-        if (!$obreiro) {
-            http_response_code(403);
-            echo json_encode(['ok' => false, 'erro' => 'Obreiro não encontrado ou inativo.']);
-            exit;
-        }
-        $payload = [
-            'id' => $obreiro['id'],
-            'nome' => $obreiro['nome_historico'] ?? $obreiro['nome'],
-            'cargo' => $obreiro['cargo'],
-            'telegram_id' => $telegramId
-        ];
-        $token = \JwtHelper::generate($payload, 3600);
-        echo json_encode(['ok' => true, 'token' => $token]);
-        exit;
+
 <?php
 session_start();
 
