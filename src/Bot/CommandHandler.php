@@ -154,28 +154,32 @@ class CommandHandler {
         $this->telegram->sendMessage($chatId, $msg);
     }
 
-    private function handleTesourariaFechamento($chatId) {
-        require_once __DIR__ . '/../Config/Database.php';
-        $db = \App\Config\Database::getConnection();
-        $mes = (int) date('n');
+    public function handleTesourariaFechamento($chatId) {
+        $mes = (int) date('m');
         $ano = (int) date('Y');
 
-        // Consulta direta
-        $stmt = $db->prepare("SELECT status FROM fechamentos_mensais WHERE mes_ref = ? AND ano_ref = ?");
-        $stmt->execute([$mes, $ano]);
-        $status = $stmt->fetchColumn();
+        require_once __DIR__ . '/../Models/FechamentoMensal.php';
+        $fechamentoModel = new \App\Models\FechamentoMensal();
 
-        $msg = "🔒 *Fechamento Mensal (" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "/{$ano})*\n\n";
+        // Usa o seu Model para buscar os dados do mês
+        $fechamento = $fechamentoModel->obter($mes, $ano);
 
-        if ($status === 'concluido') {
-            $msg .= "✅ O fechamento deste mês já foi concluído e o Balaústre gerado.";
-        } elseif ($status === 'em_andamento') {
-            $msg .= "⏳ O fechamento está em andamento. Acesse o painel web para finalizar.";
-        } else {
+        $msg = "📅 *Fechamento Mensal (" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "/$ano)*\n\n";
+
+        if (!$fechamento) {
             $msg .= "⚠️ O fechamento deste mês ainda não foi iniciado no Painel Web.";
+        } else {
+            $status = $fechamento['status'] ?? 'aberto';
+
+            if ($status === 'fechado') {
+                $msg .= "✅ O fechamento deste mês já foi concluído e o Balaústre gerado.\n";
+                $msg .= "💰 Saldo Final: R$ " . number_format((float)($fechamento['saldo_final'] ?? 0), 2, ',', '.');
+            } else {
+                $msg .= "⏳ O fechamento está em andamento. Acesse o painel web para conferir as divergências e finalizar.";
+            }
         }
 
-        $this->telegram->sendMessage($chatId, $msg);
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'Markdown']);
     }
 
     // ==========================================
