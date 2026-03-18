@@ -135,7 +135,7 @@ switch ($requestUri) {
             echo "Acesso restrito ao Chanceler.";
             exit;
         }
-        require_once __DIR__ . "/../src/Views/chancelaria/efemerides.php";
+        require_once __DIR__ . "/../src/Views/efemerides_chanceler.php";
         break;
 
     case "/chancelaria/efemerides/enviar-grupo":
