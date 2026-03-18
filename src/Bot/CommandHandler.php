@@ -279,9 +279,8 @@ class CommandHandler {
         } else {
             $msg = "📚 <b>Acervo da Biblioteca</b>\n\n";
             foreach ($itens as $item) {
-                $msg .= "• <b>{$item['titulo']}</b> ({$item['tipo']})\n";
-                $msg .= "  Autor: {$item['autor']}\n";
-                $msg .= "  Status: " . ($item['disponivel'] ? "Disponível" : "Emprestado") . "\n\n";
+                $msg .= "• <b>{$item['titulo']}</b>\n";
+                $msg .= "  Autor: {$item['autor']}\n\n";
             }
         }
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
