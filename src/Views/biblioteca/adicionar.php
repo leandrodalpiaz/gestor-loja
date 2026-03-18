@@ -60,7 +60,7 @@ $showAllPanels = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VAL
 
             <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
                 <!-- O formulário enviará os dados via POST para uma rota de salvamento -->
-                <form action="/biblioteca/salvar" method="POST" class="space-y-6">
+                <form action="/biblioteca/adicionar" method="POST" class="space-y-6">
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Título -->
