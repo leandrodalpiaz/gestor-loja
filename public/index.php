@@ -135,6 +135,15 @@ switch ($requestUri) {
             echo "Acesso restrito ao Chanceler.";
             exit;
         }
+
+        // --- BUSCANDO OS DADOS NO BANCO ANTES DE ABRIR A TELA ---
+        $dadosEfemerides = $buildEfemeridesPreview();
+        $registrosHoje = $dadosEfemerides['registrosHoje'];
+        $registrosRecentes = $dadosEfemerides['registrosRecentes'];
+        $mensagemBase = $dadosEfemerides['mensagemBase'];
+        $mensagemPreview = $dadosEfemerides['mensagemPreview'];
+        // --------------------------------------------------------
+
         require_once __DIR__ . "/../src/Views/efemerides_chanceler.php";
         break;
 
