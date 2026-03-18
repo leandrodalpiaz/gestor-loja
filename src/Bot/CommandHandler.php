@@ -262,7 +262,11 @@ class CommandHandler {
             'inline_keyboard' => [
                 [
                     ['text' => '📚 Ver Acervo', 'callback_data' => 'biblioteca_acervo'],
-                    ['text' => '📖 Meus Empréstimos', 'callback_data' => 'biblioteca_meus_emprestimos']
+                    ['text' => '📖 Meus Empréstimos', 'callback_data' => 'biblioteca_meus_emprestimos'],
+                    [
+                        'text' => '📷 Cadastrar Livro',
+                        'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/scanner.php']
+                    ]
                 ]
             ]
         ];
