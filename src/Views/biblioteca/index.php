@@ -229,7 +229,7 @@ $podeClassificar = $isVigilante || $showAllPanels; // Botão de Curadoria
                                             <?php endif; ?>
 
                                             <?php if ($podeClassificar): ?>
-                                                <button onclick="alert('A janela de classificação será implementada no próximo passo!');" class="text-purple-600 hover:text-purple-900 font-bold flex items-center justify-end w-full">
+                                                <button onclick="abrirModalClassificacao(<?= $item['id'] ?>, '<?= addslashes($item['titulo']) ?>', '<?= $item['grau_recomendado'] ?? 'Livre' ?>', '<?= addslashes($item['nota_instrucao'] ?? '') ?>')" class="text-purple-600 hover:text-purple-900 font-bold flex items-center justify-end w-full">
                                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
                                                     Classificar
                                                 </button>
@@ -258,4 +258,73 @@ $podeClassificar = $isVigilante || $showAllPanels; // Botão de Curadoria
     </div>
 
 </body>
+    <!-- Modal de Classificação (Curadoria) -->
+    <div id="modalClassificacao" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+
+            <!-- Fundo escuro -->
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="fecharModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <!-- Caixa do Modal -->
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form action="/biblioteca/classificar" method="POST">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <span class="text-purple-600 text-xl">⭐</span>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                    Classificar Obra
+                                </h3>
+                                <p class="text-sm text-gray-500 mb-4" id="modal-livro-titulo">Título do Livro</p>
+
+                                <input type="hidden" name="livro_id" id="modal-livro-id">
+
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Grau Recomendado</label>
+                                        <select name="grau_recomendado" id="modal-grau" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm p-2 border bg-white">
+                                            <option value="Livre">🟢 Livre / Todos os Graus</option>
+                                            <option value="Aprendiz">🔵 Recomendado: Aprendiz</option>
+                                            <option value="Companheiro">🔴 Recomendado: Companheiro</option>
+                                            <option value="Mestre">🟣 Recomendado: Mestre</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Nota de Instrução (Opcional)</label>
+                                        <textarea name="nota_instrucao" id="modal-nota" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm p-2 border" placeholder="Ex: Leitura essencial para a elevação..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Salvar Classificação
+                        </button>
+                        <button type="button" onclick="fecharModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script para controlar o Modal -->
+    <script>
+        function abrirModalClassificacao(id, titulo, grauAtual, notaAtual) {
+            document.getElementById('modal-livro-id').value = id;
+            document.getElementById('modal-livro-titulo').innerText = titulo;
+            document.getElementById('modal-grau').value = grauAtual || 'Livre';
+            document.getElementById('modal-nota').value = notaAtual || '';
+            document.getElementById('modalClassificacao').classList.remove('hidden');
+        }
+
+        function fecharModal() {
+            document.getElementById('modalClassificacao').classList.add('hidden');
+        }
+    </script>
 </html>
