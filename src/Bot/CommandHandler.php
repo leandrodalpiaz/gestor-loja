@@ -275,15 +275,34 @@ class CommandHandler {
         $itens = $acervoModel->listarTodos();
 
         if (empty($itens)) {
-            $msg = "Nenhum item cadastrado no acervo.";
+            $msg = "Nenhum item cadastrado no acervo no momento.";
         } else {
             $msg = "📚 <b>Acervo da Biblioteca</b>\n\n";
+
             foreach ($itens as $item) {
-                $msg .= "• <b>{$item['titulo']}</b>\n";
-                $msg .= "  Autor: {$item['autor']}\n\n";
+                // Lógica de disponibilidade
+                $disponivel = ($item['quantidade_disponivel'] > 0) ? "🟢 Disponível" : "🔴 Indisponível";
+
+                // Lógica do Grau
+                $grau = !empty($item['grau_recomendado']) ? $item['grau_recomendado'] : 'Livre';
+
+                // Link para o sistema web
+                $linkWeb = "https://gestor-loja-web.onrender.com/biblioteca";
+
+                $msg .= "📖 <b>{$item['titulo']}</b>\n";
+                $msg .= "👤 Autor: {$item['autor']}\n";
+                $msg .= "🎓 Grau: {$grau}\n";
+                $msg .= "📊 Status: {$disponivel}\n";
+                $msg .= "🔗 <a href='{$linkWeb}'>Acessar no Sistema</a>\n";
+                $msg .= "──────────────\n";
             }
         }
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+
+        // Enviamos a mensagem desativando o preview de links para não poluir a tela
+        $this->telegram->sendMessage($chatId, $msg, [
+            'parse_mode' => 'HTML',
+            'disable_web_page_preview' => true
+        ]);
     }
 
     public function handleBibliotecaMeusEmprestimos($chatId, $fromId) {
