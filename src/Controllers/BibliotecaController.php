@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Controllers;
 
 use App\Models\Acervo;
@@ -42,6 +41,20 @@ class BibliotecaController
             exit;
         }
         require_once __DIR__ . '/../Views/biblioteca/adicionar.php';
+    }
+
+    public function classificar()
+    {
+        $livroId = $_POST['livro_id'] ?? null;
+        $grau = $_POST['grau_recomendado'] ?? 'Livre';
+        $nota = $_POST['nota_instrucao'] ?? '';
+        $curadorId = $_SESSION['usuario_id'] ?? null;
+
+        if ($livroId && $curadorId) {
+            $this->acervoModel->atualizarClassificacao($livroId, $grau, $nota, $curadorId);
+        }
+        header("Location: /biblioteca");
+        exit;
     }
 
     public function editar($id)

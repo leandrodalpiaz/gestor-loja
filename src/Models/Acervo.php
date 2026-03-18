@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use App\Config\Database;
@@ -84,6 +83,17 @@ class Acervo
             'nota_instrucao' => $dados['nota_instrucao'] ?? null,
             'curador_id' => $dados['curador_id'] ?? null,
             'id' => $id,
+        ]);
+    }
+
+    public function atualizarClassificacao($id, $grau, $nota, $curadorId): bool
+    {
+        $stmt = $this->db->prepare("UPDATE acervo SET grau_recomendado = :grau, nota_instrucao = :nota, curador_id = :curador WHERE id = :id");
+        return $stmt->execute([
+            'grau' => $grau,
+            'nota' => $nota,
+            'curador' => $curadorId,
+            'id' => $id
         ]);
     }
 

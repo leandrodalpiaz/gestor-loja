@@ -107,6 +107,15 @@ switch ($requestUri) {
             if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
             require_once __DIR__ . "/../src/Views/tesouraria_fechamento.php";
             break;
+
+        case "/biblioteca/classificar":
+            if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+                header("Location: /login");
+                exit;
+            }
+            $bibliotecaController = new \App\Controllers\BibliotecaController();
+            $bibliotecaController->classificar();
+            break;
     case "/health":
         header("Content-Type: application/json; charset=utf-8");
         echo json_encode([
