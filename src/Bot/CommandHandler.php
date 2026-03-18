@@ -204,11 +204,16 @@ class CommandHandler {
             return;
         }
 
-        // Mantendo os callbacks da Chancelaria que já funcionavam
-        if (strpos($callbackData, 'chancelaria_') === 0) {
-            // Aqui ficaria a chamada para os métodos da chancelaria que você já tem
-            $this->telegram->sendMessage($chatId, "Função da chancelaria acionada.");
-            return;
+        switch ($callbackData) {
+            case 'chancelaria_aniversarios':
+                $this->handleAniversarios($chatId);
+                return;
+            case 'chancelaria_datas':
+                $this->handleDatasMaconicas($chatId);
+                return;
+            case 'chancelaria_historico':
+                $this->handleFatosHistoricos($chatId);
+                return;
         }
 
         // Biblioteca
@@ -335,6 +340,57 @@ class CommandHandler {
             $msg = "📖 <b>Seus Empréstimos Pendentes</b>\n\n";
             foreach ($emprestimos as $emp) {
                 $msg .= "• <b>{$emp['titulo']}</b> (Devolver até: " . date('d/m/Y', strtotime($emp['data_devolucao'])) . ")\n";
+            }
+        }
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+    }
+
+    private function handleAniversarios($chatId) {
+        require_once __DIR__ . '/../Models/Obreiro.php';
+        $obreiroModel = new \App\Models\Obreiro();
+        $hoje = date('m-d');
+        $aniversariantes = $obreiroModel->buscarPorAniversario($hoje);
+
+        if (empty($aniversariantes)) {
+            $msg = "🎂 Não há aniversariantes de vida hoje.";
+        } else {
+            $msg = "🎂 <b>Aniversariantes de Vida Hoje</b>\n\n";
+            foreach ($aniversariantes as $o) {
+                $msg .= "• {$o['nome']} ({$o['data_nascimento']})\n";
+            }
+        }
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+    }
+
+    private function handleDatasMaconicas($chatId) {
+        require_once __DIR__ . '/../Models/Obreiro.php';
+        $obreiroModel = new \App\Models\Obreiro();
+        $hoje = date('m-d');
+        $maconicos = $obreiroModel->buscarPorDatasMaconicas($hoje);
+
+        if (empty($maconicos)) {
+            $msg = "⚒️ Não há aniversários maçônicos hoje.";
+        } else {
+            $msg = "⚒️ <b>Aniversários Maçônicos Hoje</b>\n\n";
+            foreach ($maconicos as $o) {
+                $msg .= "• {$o['nome']} ({$o['tipo']} em {$o['data']})\n";
+            }
+        }
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+    }
+
+    private function handleFatosHistoricos($chatId) {
+        require_once __DIR__ . '/../Models/EfemerideRegistro.php';
+        $efemerideModel = new \App\Models\EfemerideRegistro();
+        $hoje = date('m-d');
+        $fatos = $efemerideModel->buscarPorData($hoje);
+
+        if (empty($fatos)) {
+            $msg = "📜 Não há fatos históricos cadastrados para hoje. Que tal registrar um novo?";
+        } else {
+            $msg = "📜 <b>Fatos Históricos do Dia</b>\n\n";
+            foreach ($fatos as $f) {
+                $msg .= "• {$f['descricao']} ({$f['ano']})\n";
             }
         }
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);

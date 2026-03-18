@@ -61,6 +61,36 @@ class Obreiro
               AND (
                   (EXTRACT(MONTH FROM data_nascimento_civil) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM data_nascimento_civil) = EXTRACT(DAY FROM CURRENT_DATE))
                   OR 
+    public function buscarPorAniversario($data) {
+        // $data no formato 'm-d'
+        $db = \App\Config\Database::getConnection();
+        $stmt = $db->prepare("SELECT * FROM obreiros WHERE DATE_FORMAT(data_nascimento, '%m-%d') = ?");
+        $stmt->execute([$data]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function buscarPorDatasMaconicas($data) {
+        // $data no formato 'm-d'
+        $db = \App\Config\Database::getConnection();
+        $result = [];
+
+        // Iniciação
+        $stmt = $db->prepare("SELECT *, 'Iniciação' AS tipo, data_iniciacao AS data FROM obreiros WHERE DATE_FORMAT(data_iniciacao, '%m-%d') = ?");
+        $stmt->execute([$data]);
+        $result = array_merge($result, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+
+        // Elevação
+        $stmt = $db->prepare("SELECT *, 'Elevação' AS tipo, data_elevacao AS data FROM obreiros WHERE DATE_FORMAT(data_elevacao, '%m-%d') = ?");
+        $stmt->execute([$data]);
+        $result = array_merge($result, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+
+        // Exaltação
+        $stmt = $db->prepare("SELECT *, 'Exaltação' AS tipo, data_exaltacao AS data FROM obreiros WHERE DATE_FORMAT(data_exaltacao, '%m-%d') = ?");
+        $stmt->execute([$data]);
+        $result = array_merge($result, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+
+        return $result;
+    }
                   (EXTRACT(MONTH FROM data_iniciacao) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM data_iniciacao) = EXTRACT(DAY FROM CURRENT_DATE))
               )
         ";

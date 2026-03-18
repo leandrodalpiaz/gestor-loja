@@ -149,4 +149,12 @@ class EfemerideRegistro
         $stmt->execute(['tipo' => $tipo]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+        public function buscarPorData($data)
+        {
+            // $data no formato 'm-d'
+            $sql = "SELECT * FROM efemerides_registros WHERE TO_CHAR(data_evento, 'MM-DD') = :data";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute(['data' => $data]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
 }
