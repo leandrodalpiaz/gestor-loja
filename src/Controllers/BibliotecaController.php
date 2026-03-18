@@ -32,11 +32,16 @@ class BibliotecaController
                 'grau_restricao' => (int) ($_POST['grau_restricao'] ?? 1),
                 'arquivo_url' => trim($_POST['arquivo_url'] ?? ''),
                 'quantidade_disponivel' => (int) ($_POST['quantidade_disponivel'] ?? 0),
+                'isbn' => trim($_POST['isbn'] ?? ''),
+                'capa_url' => trim($_POST['capa_url'] ?? ''),
+                'grau_recomendado' => trim($_POST['grau_recomendado'] ?? 'Livre'),
+                'nota_instrucao' => trim($_POST['nota_instrucao'] ?? ''),
             ];
             $this->acervoModel->adicionar($dados);
             header('Location: /biblioteca');
             exit;
         }
+        require_once __DIR__ . '/../Views/biblioteca/adicionar.php';
     }
 
     public function editar($id)
