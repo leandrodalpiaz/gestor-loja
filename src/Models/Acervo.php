@@ -32,7 +32,13 @@ class Acervo
 
     public function adicionar(array $dados): bool
     {
-        $sql = "INSERT INTO acervo (titulo, autor, tipo, grau_restricao, arquivo_url, quantidade_disponivel) VALUES (:titulo, :autor, :tipo, :grau_restricao, :arquivo_url, :quantidade_disponivel)";
+        $sql = "INSERT INTO acervo (
+            titulo, autor, tipo, grau_restricao, arquivo_url, quantidade_disponivel,
+            isbn, capa_url, grau_recomendado, nota_instrucao, curador_id
+        ) VALUES (
+            :titulo, :autor, :tipo, :grau_restricao, :arquivo_url, :quantidade_disponivel,
+            :isbn, :capa_url, :grau_recomendado, :nota_instrucao, :curador_id
+        )";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'titulo' => $dados['titulo'],
@@ -41,12 +47,29 @@ class Acervo
             'grau_restricao' => $dados['grau_restricao'],
             'arquivo_url' => $dados['arquivo_url'] ?? null,
             'quantidade_disponivel' => $dados['quantidade_disponivel'],
+            'isbn' => $dados['isbn'] ?? null,
+            'capa_url' => $dados['capa_url'] ?? null,
+            'grau_recomendado' => $dados['grau_recomendado'] ?? 'Livre',
+            'nota_instrucao' => $dados['nota_instrucao'] ?? null,
+            'curador_id' => $dados['curador_id'] ?? null,
         ]);
     }
 
     public function atualizar(int $id, array $dados): bool
     {
-        $sql = "UPDATE acervo SET titulo = :titulo, autor = :autor, tipo = :tipo, grau_restricao = :grau_restricao, arquivo_url = :arquivo_url, quantidade_disponivel = :quantidade_disponivel WHERE id = :id";
+        $sql = "UPDATE acervo SET
+            titulo = :titulo,
+            autor = :autor,
+            tipo = :tipo,
+            grau_restricao = :grau_restricao,
+            arquivo_url = :arquivo_url,
+            quantidade_disponivel = :quantidade_disponivel,
+            isbn = :isbn,
+            capa_url = :capa_url,
+            grau_recomendado = :grau_recomendado,
+            nota_instrucao = :nota_instrucao,
+            curador_id = :curador_id
+            WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'titulo' => $dados['titulo'],
@@ -55,6 +78,11 @@ class Acervo
             'grau_restricao' => $dados['grau_restricao'],
             'arquivo_url' => $dados['arquivo_url'] ?? null,
             'quantidade_disponivel' => $dados['quantidade_disponivel'],
+            'isbn' => $dados['isbn'] ?? null,
+            'capa_url' => $dados['capa_url'] ?? null,
+            'grau_recomendado' => $dados['grau_recomendado'] ?? 'Livre',
+            'nota_instrucao' => $dados['nota_instrucao'] ?? null,
+            'curador_id' => $dados['curador_id'] ?? null,
             'id' => $id,
         ]);
     }
