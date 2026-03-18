@@ -59,8 +59,26 @@
                         // Vibra o celular usando a API do Telegram
                         window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
 
-                        // Mostra o resultado
-                        alert("📚 ISBN Lido com sucesso: " + decodedText);
+                        // Envia o ISBN para o backend
+                        fetch('/api/cadastrar_isbn.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ isbn: decodedText })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                window.Telegram.WebApp.showAlert('Livro cadastrado!');
+                                window.Telegram.WebApp.close();
+                            } else {
+                                window.Telegram.WebApp.showAlert('Erro: ' + (data.error || 'Erro desconhecido'));
+                            }
+                        })
+                        .catch(() => {
+                            window.Telegram.WebApp.showAlert('Erro ao conectar com o backend.');
+                        });
                     });
                 },
                 (errorMessage) => {
