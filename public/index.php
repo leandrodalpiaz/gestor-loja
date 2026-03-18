@@ -83,6 +83,8 @@ switch ($requestUri) {
         // ─── Telas Antigas Restauradas ───────────────────────────────────────
         case "/obreiros":
             if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+            $obreiroModel = new \App\Models\Obreiro();
+            $obreiros = $obreiroModel->getAllAtivos();
             require_once __DIR__ . "/../src/Views/obreiros.php";
             break;
 
