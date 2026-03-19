@@ -79,16 +79,15 @@ class Obreiro
     }
 
     public function buscarPorDatasMaconicas($data) {
-        $sql = "
-            SELECT nome, 'Iniciação' as tipo, data_iniciacao as data FROM obreiros WHERE TO_CHAR(data_iniciacao, 'MM-DD') = ?
-            UNION
-            SELECT nome, 'Elevação' as tipo, data_elevacao as data FROM obreiros WHERE TO_CHAR(data_elevacao, 'MM-DD') = ?
-            UNION
-            SELECT nome, 'Exaltação' as tipo, data_exaltacao as data FROM obreiros WHERE TO_CHAR(data_exaltacao, 'MM-DD') = ?
-        ";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$data, $data, $data]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        require_once __DIR__ . '/../Config/Database.php';
+        $db = \App\Config\Database::getConnection();
+
+        // Buscando apenas a data_iniciacao para evitar o erro de coluna inexistente
+        $sql = "SELECT nome, 'Iniciação' as tipo, data_iniciacao as data FROM obreiros WHERE TO_CHAR(data_iniciacao, 'MM-DD') = ?";
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$data]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     /**

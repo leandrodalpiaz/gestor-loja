@@ -77,6 +77,9 @@ class CommandHandler {
         $teclado = [
             'inline_keyboard' => [
                 [
+                    ['text' => '📅 Neste Dia', 'callback_data' => 'chancelaria_neste_dia']
+                ],
+                [
                     ['text' => '🎂 Aniversários Hoje', 'callback_data' => 'chancelaria_aniversarios'],
                     ['text' => '⚒️ Datas Maçônicas', 'callback_data' => 'chancelaria_datas']
                 ],
@@ -222,6 +225,10 @@ class CommandHandler {
             return;
         }
 
+        if ($callbackData === 'chancelaria_neste_dia') {
+            $this->handleNesteDia($chatId);
+            return;
+        }
         switch ($callbackData) {
             case 'chancelaria_aniversarios':
                 $this->handleAniversarios($chatId);
@@ -398,6 +405,22 @@ class CommandHandler {
                 $msg .= "• {$f['descricao']} ({$f['ano']})\n";
             }
         }
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+    }
+    private function handleNesteDia($chatId) {
+        require_once __DIR__ . '/../Models/EfemeridePreviaDiaria.php';
+        $previaModel = new \App\Models\EfemeridePreviaDiaria();
+
+        // Pega a data de hoje no formato Y-m-d
+        $hoje = date('Y-m-d');
+        $previa = $previaModel->buscarPorData($hoje);
+
+        if ($previa && !empty($previa['mensagem'])) {
+            $msg = "📅 <b>Neste Dia</b>\n\n" . $previa['mensagem'];
+        } else {
+            $msg = "📅 <b>Neste Dia</b>\n\nAinda não há uma prévia gerada para o dia de hoje. O Chanceler pode gerar isso no painel web.";
+        }
+
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 }
