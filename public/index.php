@@ -1,22 +1,3 @@
-    case "/admin/cargos":
-        // Protege para admin
-        if (!isset($_SESSION["usuario_cargo"]) || $_SESSION["usuario_cargo"] !== "admin") {
-            http_response_code(403);
-            echo "Acesso restrito ao Administrador.";
-            exit;
-        }
-        (new \App\Controllers\AdminController())->listarCargos();
-        break;
-
-    case "/admin/cargos/salvar":
-        // Protege para admin
-        if (!isset($_SESSION["usuario_cargo"]) || $_SESSION["usuario_cargo"] !== "admin") {
-            http_response_code(403);
-            echo "Acesso restrito ao Administrador.";
-            exit;
-        }
-        (new \App\Controllers\AdminController())->salvarCargo();
-        break;
 <?php
 session_start();
 
@@ -99,42 +80,65 @@ if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
 // ROTEAMENTO PRINCIPAL
 // ==========================================
 switch ($requestUri) {
-        // ─── Telas Antigas Restauradas ───────────────────────────────────────
-        case "/obreiros":
-            if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-            $obreiroModel = new \App\Models\Obreiro();
-            $obreiros = $obreiroModel->getAllAtivos();
-            require_once __DIR__ . "/../src/Views/obreiros.php";
-            break;
 
-        case "/tesouraria/caixa":
-            if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-            require_once __DIR__ . "/../src/Views/tesouraria_caixa.php";
-            break;
+    // ─── Gestão de Cargos (Admin) ────────────────────────────────────────
+    case "/admin/cargos":
+        // Protege para admin
+        if (!isset($_SESSION["usuario_cargo"]) || $_SESSION["usuario_cargo"] !== "admin") {
+            http_response_code(403);
+            echo "Acesso restrito ao Administrador.";
+            exit;
+        }
+        (new \App\Controllers\AdminController())->listarCargos();
+        break;
 
-        case "/tesouraria/comprovantes":
-            if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-            require_once __DIR__ . "/../src/Views/tesouraria_comprovantes.php";
-            break;
+    case "/admin/cargos/salvar":
+        // Protege para admin
+        if (!isset($_SESSION["usuario_cargo"]) || $_SESSION["usuario_cargo"] !== "admin") {
+            http_response_code(403);
+            echo "Acesso restrito ao Administrador.";
+            exit;
+        }
+        (new \App\Controllers\AdminController())->salvarCargo();
+        break;
 
-        case "/tesouraria/regularidade":
-            if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-            require_once __DIR__ . "/../src/Views/tesouraria_regularidade.php";
-            break;
+    // ─── Telas Antigas Restauradas ───────────────────────────────────────
+    case "/obreiros":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        $obreiroModel = new \App\Models\Obreiro();
+        $obreiros = $obreiroModel->getAllAtivos();
+        require_once __DIR__ . "/../src/Views/obreiros.php";
+        break;
 
-        case "/tesouraria/fechamento":
-            if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-            require_once __DIR__ . "/../src/Views/tesouraria_fechamento.php";
-            break;
+    case "/tesouraria/caixa":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        require_once __DIR__ . "/../src/Views/tesouraria_caixa.php";
+        break;
 
-        case "/biblioteca/classificar":
-            if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
-                header("Location: /login");
-                exit;
-            }
-            $bibliotecaController = new \App\Controllers\BibliotecaController();
-            $bibliotecaController->classificar();
-            break;
+    case "/tesouraria/comprovantes":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        require_once __DIR__ . "/../src/Views/tesouraria_comprovantes.php";
+        break;
+
+    case "/tesouraria/regularidade":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        require_once __DIR__ . "/../src/Views/tesouraria_regularidade.php";
+        break;
+
+    case "/tesouraria/fechamento":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        require_once __DIR__ . "/../src/Views/tesouraria_fechamento.php";
+        break;
+
+    case "/biblioteca/classificar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        $bibliotecaController = new \App\Controllers\BibliotecaController();
+        $bibliotecaController->classificar();
+        break;
+
     case "/health":
         header("Content-Type: application/json; charset=utf-8");
         echo json_encode([
@@ -488,6 +492,7 @@ switch ($requestUri) {
         session_destroy();
         header("Location: /login");
         exit;
+
     default:
         http_response_code(404);
         echo "404 - Página não encontrada.";
