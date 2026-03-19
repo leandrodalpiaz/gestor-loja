@@ -7,6 +7,17 @@ use PDO;
 
 class Obreiro
 {
+    /**
+     * Atualiza apenas o cargo de um obreiro pelo ID
+     */
+    public function atualizarCargo($id, $novoCargo): bool
+    {
+        $stmt = $this->db->prepare("UPDATE obreiros SET cargo = :cargo WHERE id = :id");
+        return $stmt->execute([
+            'cargo' => $novoCargo,
+            'id' => $id
+        ]);
+    }
     private PDO $db;
 
     public function __construct()

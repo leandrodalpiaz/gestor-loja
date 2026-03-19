@@ -1,3 +1,22 @@
+    case "/admin/cargos":
+        // Protege para admin
+        if (!isset($_SESSION["usuario_cargo"]) || $_SESSION["usuario_cargo"] !== "admin") {
+            http_response_code(403);
+            echo "Acesso restrito ao Administrador.";
+            exit;
+        }
+        (new \App\Controllers\AdminController())->listarCargos();
+        break;
+
+    case "/admin/cargos/salvar":
+        // Protege para admin
+        if (!isset($_SESSION["usuario_cargo"]) || $_SESSION["usuario_cargo"] !== "admin") {
+            http_response_code(403);
+            echo "Acesso restrito ao Administrador.";
+            exit;
+        }
+        (new \App\Controllers\AdminController())->salvarCargo();
+        break;
 <?php
 session_start();
 
