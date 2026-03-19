@@ -8,8 +8,8 @@ try {
     $db = \App\Config\Database::getConnection();
 
     // ⚠️ ALTERE ESTAS DUAS LINHAS COM OS SEUS DADOS
-    $meuCim = '123456'; // Coloque o seu CIM real aqui
-    $minhaSenha = '1234'; // Coloque a sua senha de 4 dígitos aqui
+    $meuCim = '23709'; // Coloque o seu CIM real aqui
+    $minhaSenha = '1547'; // Coloque a sua senha de 4 dígitos aqui
 
     $hash = password_hash($minhaSenha, PASSWORD_DEFAULT);
 
