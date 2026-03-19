@@ -1,5 +1,7 @@
 <?php
-// O "../" faz o sistema voltar uma pasta para encontrar a "src" corretamente
+// 1. Carrega o autoloader para o PHP encontrar as classes (como a Env)
+require_once __DIR__ . '/../vendor/autoload.php';
+// 2. Carrega a conexão com o banco
 require_once __DIR__ . '/../src/Config/Database.php';
 
 try {
