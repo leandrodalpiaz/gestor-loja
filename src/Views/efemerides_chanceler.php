@@ -36,12 +36,16 @@
                     $previewRender = strip_tags($previewRaw, '<b><i><u><strong><em>');
                     $previewRender = nl2br($previewRender, false);
                 ?>
-                <div class="mb-2 rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6">
+                <style>
+                    .telegram-format b, .telegram-format strong { font-weight: bold; }
+                    .telegram-format i, .telegram-format em { font-style: italic; }
+                </style>
+                <div class="telegram-format mb-2 rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6">
                     <?= $previewRender ?>
                 </div>
                 <form method="POST" action="/chancelaria/efemerides/salvar-previa">
                     <textarea id="previewMsg" name="mensagem_preview" class="w-full h-72 p-3 text-sm border border-gray-300 rounded bg-white"><?= htmlspecialchars($mensagemPreview ?? '') ?></textarea>
-                    <p class="mt-2 text-xs text-gray-500">Campo de edição mantém o HTML do Telegram (ex.: &lt;b&gt; e &lt;i&gt;).</p>
+                    <p class="mt-2 text-xs text-gray-500">Campo de edição mantém o HTML do Telegram (ex.: <b> e <i>).</p>
                     <div class="mt-3 flex flex-wrap gap-2">
                         <button type="submit" class="px-3 py-2 text-sm rounded bg-gray-800 text-white hover:bg-gray-900">Salvar edição</button>
                         <button type="button" onclick="copiarPreview()" class="px-3 py-2 text-sm rounded bg-blue-700 text-white hover:bg-blue-800">Copiar mensagem</button>
