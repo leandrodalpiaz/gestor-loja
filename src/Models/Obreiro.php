@@ -61,43 +61,33 @@ class Obreiro
               AND (
                   (EXTRACT(MONTH FROM data_nascimento_civil) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM data_nascimento_civil) = EXTRACT(DAY FROM CURRENT_DATE))
                   OR 
-    public function buscarPorAniversario($data) {
-        // $data no formato 'm-d'
-        $db = \App\Config\Database::getConnection();
-        $stmt = $db->prepare("SELECT * FROM obreiros WHERE DATE_FORMAT(data_nascimento, '%m-%d') = ?");
-        $stmt->execute([$data]);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-    public function buscarPorDatasMaconicas($data) {
-        // $data no formato 'm-d'
-        $db = \App\Config\Database::getConnection();
-        $result = [];
-
-        // Iniciação
-        $stmt = $db->prepare("SELECT *, 'Iniciação' AS tipo, data_iniciacao AS data FROM obreiros WHERE DATE_FORMAT(data_iniciacao, '%m-%d') = ?");
-        $stmt->execute([$data]);
-        $result = array_merge($result, $stmt->fetchAll(\PDO::FETCH_ASSOC));
-
-        // Elevação
-        $stmt = $db->prepare("SELECT *, 'Elevação' AS tipo, data_elevacao AS data FROM obreiros WHERE DATE_FORMAT(data_elevacao, '%m-%d') = ?");
-        $stmt->execute([$data]);
-        $result = array_merge($result, $stmt->fetchAll(\PDO::FETCH_ASSOC));
-
-        // Exaltação
-        $stmt = $db->prepare("SELECT *, 'Exaltação' AS tipo, data_exaltacao AS data FROM obreiros WHERE DATE_FORMAT(data_exaltacao, '%m-%d') = ?");
-        $stmt->execute([$data]);
-        $result = array_merge($result, $stmt->fetchAll(\PDO::FETCH_ASSOC));
-
-        return $result;
-    }
                   (EXTRACT(MONTH FROM data_iniciacao) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM data_iniciacao) = EXTRACT(DAY FROM CURRENT_DATE))
               )
         ";
-        
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
-        
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function buscarPorAniversario($data) {
+        $sql = "SELECT * FROM obreiros WHERE TO_CHAR(data_nascimento_civil, 'MM-DD') = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$data]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function buscarPorDatasMaconicas($data) {
+        $sql = "
+            SELECT nome, 'Iniciação' as tipo, data_iniciacao as data FROM obreiros WHERE TO_CHAR(data_iniciacao, 'MM-DD') = ?
+            UNION
+            SELECT nome, 'Elevação' as tipo, data_elevacao as data FROM obreiros WHERE TO_CHAR(data_elevacao, 'MM-DD') = ?
+            UNION
+            SELECT nome, 'Exaltação' as tipo, data_exaltacao as data FROM obreiros WHERE TO_CHAR(data_exaltacao, 'MM-DD') = ?
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$data, $data, $data]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -173,7 +163,7 @@ class Obreiro
 
         $nascimento = !empty($data['data_nascimento_civil']) ? $data['data_nascimento_civil'] : null;
         $iniciacao = !empty($data['data_iniciacao']) ? $data['data_iniciacao'] : null;
-        
+
         // Converte o valor do checkbox de string para boolean do Postgres
         $ativo = (isset($data['ativo']) && $data['ativo'] == '1') ? 'true' : 'false';
 
