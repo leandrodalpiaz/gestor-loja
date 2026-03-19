@@ -23,16 +23,18 @@ $googleUrl = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' . urlencode($
 $response = @file_get_contents($googleUrl);
 $bookData = json_decode($response, true);
 
-if (empty($bookData['items'])) {
-    http_response_code(404);
-    echo json_encode(['error' => 'Livro não encontrado no Google Books']);
-    exit;
-}
+// Valores padrão caso NÃO encontre no Google
+$titulo = 'Título não encontrado (Editar)';
+$autor = 'Autor desconhecido';
+$capa_url = null;
 
-$item = $bookData['items'][0]['volumeInfo'];
-$titulo = $item['title'] ?? 'Título desconhecido';
-$autor = isset($item['authors']) ? implode(', ', $item['authors']) : 'Autor desconhecido';
-$capa_url = $item['imageLinks']['thumbnail'] ?? null;
+// Se encontrou no Google, atualiza os valores com os dados reais
+if (!empty($bookData['items'])) {
+    $item = $bookData['items'][0]['volumeInfo'];
+    $titulo = $item['title'] ?? $titulo;
+    $autor = isset($item['authors']) ? implode(', ', $item['authors']) : $autor;
+    $capa_url = $item['imageLinks']['thumbnail'] ?? null;
+}
 
 // Carrega apenas o autoloader padrão do sistema
 require_once __DIR__ . '/../../vendor/autoload.php';
@@ -44,8 +46,8 @@ try {
     $dados = [
         'titulo' => $titulo,
         'autor' => $autor,
-        'tipo' => 'Livro',
-        'grau_restricao' => 'Livre',
+        'tipo' => 'Livro Físico',
+        'grau_restricao' => 1, // Livre por padrão
         'arquivo_url' => null,
         'quantidade_disponivel' => 1,
         'isbn' => $isbn,
@@ -58,7 +60,12 @@ try {
     $ok = $acervo->adicionar($dados);
 
     if ($ok) {
-        echo json_encode(['success' => true]);
+        // Retorna sucesso sempre, mas manda uma mensagem diferente se foi manual
+        $mensagem = empty($bookData['items']) 
+            ? 'Salvo com sucesso! (Não encontrado no Google, edite o título depois)' 
+            : 'Livro cadastrado com sucesso via Google Books!';
+
+        echo json_encode(['success' => true, 'message' => $mensagem]);
     } else {
         http_response_code(500);
         echo json_encode(['error' => 'Erro ao salvar livro no banco de dados']);
