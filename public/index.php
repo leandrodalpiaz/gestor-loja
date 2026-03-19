@@ -431,38 +431,35 @@ switch ($requestUri) {
         }
 
         if ($method === "POST") {
-            $matricula = $_POST["matricula"] ?? "";
-            $password = $_POST["password"] ?? "";
+            // Tenta pegar os dados independente do nome que o formulário HTML enviou
+            $matricula = $_POST["matricula"] ?? $_POST["cim"] ?? "";
+            $password = $_POST["password"] ?? $_POST["senha"] ?? "";
 
-            if ($testLogin !== '' && $testPassword !== '' && hash_equals($testLogin, $matricula) && hash_equals($testPassword, $password)) {
-                $usuarioTeste = $buildTestSessionUser();
-                $_SESSION["usuario_logado"] = $usuarioTeste;
-                $_SESSION["usuario_id"] = $usuarioTeste["id"];
-                $_SESSION["usuario_nome"] = $usuarioTeste["nome_historico"];
-                $_SESSION["usuario_cargo"] = $usuarioTeste["cargo"];
-                header("Location: /dashboard");
-                exit;
+            // DEBUG 1: Verifica se os dados chegaram
+            if (empty($matricula) || empty($password)) {
+                die("<h1 style='color:red'>Erro 1: Dados Vazios</h1><p>O formulário não enviou a matrícula ou a senha.</p><pre>" . print_r($_POST, true) . "</pre>");
             }
 
             $obreiroModel = new \App\Models\Obreiro();
             $usuario = $obreiroModel->autenticar($matricula, $password);
 
-            if ($usuario) {
-                $cargo = $normalizeRole($usuario["cargo"] ?? "");
+            // DEBUG 2: Verifica se a senha bateu no banco
+            if (!$usuario) {
+                die("<h1 style='color:red'>Erro 2: Falha na Autenticação</h1><p>O CIM {$matricula} não foi encontrado, está inativo, ou a senha está incorreta no banco de dados.</p>");
+            }
 
-                // ADICIONADO 'admin' AQUI NA LISTA DE PERMISSÕES
-                if (in_array($cargo, ["veneravel", "secretario", "tesoureiro", "chanceler", "admin"], true)) {
-                    $_SESSION["usuario_logado"] = $usuario;
-                    $_SESSION["usuario_id"] = $usuario["id"];
-                    $_SESSION["usuario_nome"] = $usuario["nome_historico"] ?? $usuario["nome_completo"] ?? "Irmão";
-                    $_SESSION["usuario_cargo"] = $cargo;
-                    header("Location: /dashboard");
-                    exit;
-                } else {
-                    $erroLogin = "Irmão, suas permissões são apenas para o uso do Bot via Telegram.";
-                }
+            $cargo = $normalizeRole($usuario["cargo"] ?? "");
+
+            // DEBUG 3: Verifica o cargo
+            if (in_array($cargo, ["veneravel", "secretario", "tesoureiro", "chanceler", "admin"], true)) {
+                $_SESSION["usuario_logado"] = $usuario;
+                $_SESSION["usuario_id"] = $usuario["id"];
+                $_SESSION["usuario_nome"] = $usuario["nome_historico"] ?? $usuario["nome_completo"] ?? "Irmão";
+                $_SESSION["usuario_cargo"] = $cargo;
+                header("Location: /dashboard");
+                exit;
             } else {
-                $erroLogin = "Matrícula ou palavra de passe incorretas.";
+                die("<h1 style='color:red'>Erro 3: Sem Permissão</h1><p>Senha correta, mas o cargo '{$cargo}' não tem acesso.</p>");
             }
         }
         require_once __DIR__ . "/../src/Views/login.php";
