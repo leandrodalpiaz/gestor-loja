@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/src/Config/Database.php';
+// O "../" faz o sistema voltar uma pasta para encontrar a "src" corretamente
+require_once __DIR__ . '/../src/Config/Database.php';
 
 try {
     $db = \App\Config\Database::getConnection();
