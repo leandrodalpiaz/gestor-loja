@@ -141,9 +141,10 @@ switch ($requestUri) {
             exit;
         }
         $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
+        // Liberado para chanceler e admin
+        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler' && $cargoUsuario !== 'admin') {
             http_response_code(403);
-            echo "Acesso restrito ao Chanceler.";
+            echo "Acesso restrito ao Chanceler ou Administrador.";
             exit;
         }
 
@@ -164,9 +165,10 @@ switch ($requestUri) {
             exit;
         }
         $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler') {
+        // Liberado para chanceler e admin
+        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler' && $cargoUsuario !== 'admin') {
             http_response_code(403);
-            echo "Acesso restrito ao Chanceler.";
+            echo "Acesso restrito ao Chanceler ou Administrador.";
             exit;
         }
         header("Location: /chancelaria/efemerides?sucesso=enviado");
@@ -448,7 +450,8 @@ switch ($requestUri) {
             if ($usuario) {
                 $cargo = $normalizeRole($usuario["cargo"] ?? "");
 
-                if (in_array($cargo, ["veneravel", "secretario", "tesoureiro", "chanceler"], true)) {
+                // ADICIONADO 'admin' AQUI NA LISTA DE PERMISSÕES
+                if (in_array($cargo, ["veneravel", "secretario", "tesoureiro", "chanceler", "admin"], true)) {
                     $_SESSION["usuario_logado"] = $usuario;
                     $_SESSION["usuario_id"] = $usuario["id"];
                     $_SESSION["usuario_nome"] = $usuario["nome_historico"] ?? $usuario["nome_completo"] ?? "Irmão";
