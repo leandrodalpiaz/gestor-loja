@@ -17,21 +17,20 @@ class CommandHandler {
         $this->presencaModel = $presencaModel;
     }
 
-    /**
-     * Painel do Administrador
-     */
-    public function handlePainelAdmin($chatId, $requesterTelegramId)
-    {
+    public function handlePainelAdmin($chatId, $requesterTelegramId) {
         if (!in_array($requesterTelegramId, $this->devIds)) {
-            $this->telegram->sendMessage($chatId, "⛔ Acesso restrito aos Administradores do sistema.");
+            $this->telegram->sendMessage($chatId, '⛔ Acesso restrito aos Administradores do sistema.');
             return;
         }
-        $mensagem = "👑 Painel do Administrador\n\nSelecione o módulo que deseja acessar:";
+
+        $mensagem = "👑 *Painel do Administrador*\n\nSelecione o módulo que deseja acessar para testes:";
         $teclado = [
             'inline_keyboard' => [
                 [
                     ['text' => '🏛️ Chancelaria', 'callback_data' => 'admin_chancelaria'],
-                    ['text' => '💰 Tesouraria', 'callback_data' => 'admin_tesouraria'],
+                    ['text' => '💰 Tesouraria', 'callback_data' => 'admin_tesouraria']
+                ],
+                [
                     ['text' => '📚 Biblioteca', 'callback_data' => 'admin_biblioteca']
                 ]
             ]
@@ -64,29 +63,7 @@ class CommandHandler {
         $mensagem .= "/tesouraria - Painel do Tesoureiro\n";
         $mensagem .= "/ajuda - Exibe esta mensagem de ajuda\n\n";
         $mensagem .= "Para outras dúvidas, contate a Secretaria da Loja.";
-        $this->telegram->sendMessage($chatId, $mensagem);
-    }
-
-    public function handlePainelAdmin($chatId, $requesterTelegramId) {
-        if (!in_array($requesterTelegramId, $this->devIds)) {
-            $this->telegram->sendMessage($chatId, '⛔ Acesso restrito aos Administradores do sistema.');
-            return;
-        }
-
-        $mensagem = "👑 *Painel do Administrador*\n\nSelecione o módulo que deseja acessar para testes:";
-        $teclado = [
-            'inline_keyboard' => [
-                [
-                    ['text' => '🏛️ Chancelaria', 'callback_data' => 'admin_chancelaria'],
-                    ['text' => '💰 Tesouraria', 'callback_data' => 'admin_tesouraria']
-                ],
-                [
-                    ['text' => '📚 Biblioteca', 'callback_data' => 'admin_biblioteca']
-                ]
-            ]
-        ];
-        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
-    }
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML']);
     }
 
     public function handleChancelaria($chatId, $requesterTelegramId) {
@@ -111,9 +88,6 @@ class CommandHandler {
         $this->telegram->sendMessage($chatId, $mensagem, $teclado);
     }
 
-    // ==========================================
-    // MÓDULO TESOURARIA (CORRIGIDO)
-    // ==========================================
     public function handleTesouraria($chatId, $requesterTelegramId) {
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
         $cargo = strtolower(trim((string) ($obreiro['cargo'] ?? '')));
@@ -145,7 +119,6 @@ class CommandHandler {
         $mes = (int) date('n');
         $ano = (int) date('Y');
 
-        // Usando o método real que descobrimos no seu arquivo
         $totais = $model->obterTotaisMes($mes, $ano);
         $entradas = $totais['entrada'] ?? 0;
         $saidas = $totais['saida'] ?? 0;
@@ -164,7 +137,6 @@ class CommandHandler {
         require_once __DIR__ . '/../Config/Database.php';
         $db = \App\Config\Database::getConnection();
 
-        // Consulta direta para evitar erros de métodos inexistentes
         $stmt = $db->query("SELECT count(*) FROM comprovantes_pix WHERE status = 'pendente'");
         $pendentes = (int) $stmt->fetchColumn();
 
@@ -183,7 +155,6 @@ class CommandHandler {
         $mes = (int) date('n');
         $ano = (int) date('Y');
 
-        // Consulta direta
         $stmt = $db->prepare("SELECT count(*) FROM mensalidades_status WHERE mes_ref = ? AND ano_ref = ? AND status = 'pendente'");
         $stmt->execute([$mes, $ano]);
         $pendentes = (int) $stmt->fetchColumn();
@@ -205,31 +176,22 @@ class CommandHandler {
         require_once __DIR__ . '/../Models/FechamentoMensal.php';
         $fechamentoModel = new \App\Models\FechamentoMensal();
 
-        // Usa o seu Model para buscar os dados do mês
         $fechamento = $fechamentoModel->obter($mes, $ano);
 
         $msg = "📅 *Fechamento Mensal (" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "/$ano)*\n\n";
 
         if (!$fechamento) {
-            $msg .= "⚠️ O fechamento deste mês ainda não foi iniciado no Painel Web.";
+            $msg .= "⚠️ O fechamento deste mês ainda não foi realizado.";
         } else {
-            $status = $fechamento['status'] ?? 'aberto';
-
-            if ($status === 'fechado') {
-                $msg .= "✅ O fechamento deste mês já foi concluído e o Balaústre gerado.\n";
-                $msg .= "💰 Saldo Final: R$ " . number_format((float)($fechamento['saldo_final'] ?? 0), 2, ',', '.');
-            } else {
-                $msg .= "⏳ O fechamento está em andamento. Acesse o painel web para conferir as divergências e finalizar.";
-            }
+            $msg .= "✅ Fechamento concluído.\n";
+            $msg .= "Saldo Final: R$ " . number_format($fechamento['saldo_final'], 2, ',', '.');
         }
 
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'Markdown']);
+        $this->telegram->sendMessage($chatId, $msg);
     }
 
-    // ==========================================
-    // ROTEAMENTO DE CALLBACKS (BOTÕES)
-    // ==========================================
-    public function handleCallback($chatId, $callbackData) {
+    // Adicionado $fromId como parâmetro opcional para resolver o problema de escopo
+    public function handleCallback($chatId, $callbackData, $fromId = null) {
         if (strpos($callbackData, 'tesouraria_') === 0) {
             switch ($callbackData) {
                 case 'tesouraria_caixa':
@@ -250,34 +212,12 @@ class CommandHandler {
 
         // Callbacks do Painel Admin
         if ($callbackData === 'admin_chancelaria') {
-            // fromId pode ser passado via update, então armazene em uma propriedade temporária
-            if (isset($GLOBALS['fromId'])) {
-                $fromId = $GLOBALS['fromId'];
-            } elseif (isset($this->lastFromId)) {
-                $fromId = $this->lastFromId;
-            } else {
-                $fromId = null;
-            }
             $this->handleChancelaria($chatId, $fromId);
             return;
         } elseif ($callbackData === 'admin_tesouraria') {
-            if (isset($GLOBALS['fromId'])) {
-                $fromId = $GLOBALS['fromId'];
-            } elseif (isset($this->lastFromId)) {
-                $fromId = $this->lastFromId;
-            } else {
-                $fromId = null;
-            }
             $this->handleTesouraria($chatId, $fromId);
             return;
         } elseif ($callbackData === 'admin_biblioteca') {
-            if (isset($GLOBALS['fromId'])) {
-                $fromId = $GLOBALS['fromId'];
-            } elseif (isset($this->lastFromId)) {
-                $fromId = $this->lastFromId;
-            } else {
-                $fromId = null;
-            }
             $this->handleBiblioteca($chatId, $fromId);
             return;
         }
@@ -299,38 +239,20 @@ class CommandHandler {
             $this->handleBibliotecaAcervo($chatId);
             return;
         } elseif ($callbackData === 'biblioteca_meus_emprestimos') {
-            // O fromId não está disponível diretamente aqui, então será tratado no método
-            $this->handleBibliotecaMeusEmprestimos($chatId, null);
+            $this->handleBibliotecaMeusEmprestimos($chatId, $fromId);
             return;
         }
     }
 
-    // Processa updates recebidos do Telegram
     public function handle($update) {
         if (isset($update['message'])) {
             $chatId = $update['message']['chat']['id'];
             $text = $update['message']['text'] ?? '';
             $fromId = $update['message']['from']['id'] ?? null;
 
-            // Roteamento de comandos
             if ($text === '/painel') {
                 $this->handlePainelAdmin($chatId, $fromId);
-                return;
-            }
-                    if ($callbackData === 'admin_chancelaria') {
-                        $this->handleChancelaria($chatId, $fromId);
-                        return;
-                    }
-                    if ($callbackData === 'admin_tesouraria') {
-                        $this->handleTesouraria($chatId, $fromId);
-                        return;
-                    }
-                    if ($callbackData === 'admin_biblioteca') {
-                        // Chama a listagem do acervo como ponto de entrada da biblioteca
-                        $this->handleBibliotecaAcervo($chatId);
-                        return;
-                    }
-            if ($text === '/tesouraria') {
+            } elseif ($text === '/tesouraria') {
                 $this->handleTesouraria($chatId, $fromId);
             } elseif ($text === '/ajuda') {
                 $this->handleHelp($chatId);
@@ -338,8 +260,6 @@ class CommandHandler {
                 $this->handleChancelaria($chatId, $fromId);
             } elseif ($text === '/biblioteca') {
                 $this->handleBiblioteca($chatId, $fromId);
-            } elseif ($text === '/painel') {
-                $this->handlePainelAdmin($chatId, $fromId);
             } else {
                 $this->sendMenuPresenca($chatId);
             }
@@ -347,17 +267,12 @@ class CommandHandler {
             $chatId = $update['callback_query']['message']['chat']['id'];
             $callbackData = $update['callback_query']['data'];
             $fromId = $update['callback_query']['from']['id'] ?? null;
-            // Passa o fromId para handleBibliotecaMeusEmprestimos se necessário
-            if ($callbackData === 'biblioteca_meus_emprestimos') {
-                $this->handleBibliotecaMeusEmprestimos($chatId, $fromId);
-            } else {
-                $this->handleCallback($chatId, $callbackData);
-            }
+
+            // Passamos o $fromId para o handleCallback
+            $this->handleCallback($chatId, $callbackData, $fromId);
         }
     }
-    // =========================
-    // MÓDULO BIBLIOTECA
-    // =========================
+
     public function handleBiblioteca($chatId, $fromId) {
         $mensagem = "📚 Bem-vindo à Biblioteca!\n\nEscolha uma opção:";
         $teclado = [
@@ -386,13 +301,8 @@ class CommandHandler {
             $msg = "📚 <b>Acervo da Biblioteca</b>\n\n";
 
             foreach ($itens as $item) {
-                // Lógica de disponibilidade
                 $disponivel = ($item['quantidade_disponivel'] > 0) ? "🟢 Disponível" : "🔴 Indisponível";
-
-                // Lógica do Grau
                 $grau = !empty($item['grau_recomendado']) ? $item['grau_recomendado'] : 'Livre';
-
-                // Link para o sistema web
                 $linkWeb = "https://gestor-loja-web.onrender.com/biblioteca";
 
                 $msg .= "📖 <b>{$item['titulo']}</b>\n";
@@ -404,7 +314,6 @@ class CommandHandler {
             }
         }
 
-        // Enviamos a mensagem desativando o preview de links para não poluir a tela
         $this->telegram->sendMessage($chatId, $msg, [
             'parse_mode' => 'HTML',
             'disable_web_page_preview' => true
@@ -415,7 +324,6 @@ class CommandHandler {
         require_once __DIR__ . '/../Models/Emprestimo.php';
         require_once __DIR__ . '/../Models/Obreiro.php';
 
-        // Buscar o obreiro pelo Telegram ID
         if (!$fromId) {
             $this->telegram->sendMessage($chatId, "Não foi possível identificar seu cadastro.");
             return;
@@ -453,7 +361,7 @@ class CommandHandler {
         } else {
             $msg = "🎂 <b>Aniversariantes de Vida Hoje</b>\n\n";
             foreach ($aniversariantes as $o) {
-                $msg .= "• {$o['nome']} ({$o['data_nascimento']})\n";
+                $msg .= "• {$o['nome']} (" . date('d/m', strtotime('2000-' . $hoje)) . ")\n";
             }
         }
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
@@ -470,7 +378,7 @@ class CommandHandler {
         } else {
             $msg = "⚒️ <b>Aniversários Maçônicos Hoje</b>\n\n";
             foreach ($maconicos as $o) {
-                $msg .= "• {$o['nome']} ({$o['tipo']} em {$o['data']})\n";
+                $msg .= "• {$o['nome']} ({$o['tipo']})\n";
             }
         }
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
