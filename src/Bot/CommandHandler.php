@@ -17,6 +17,28 @@ class CommandHandler {
         $this->presencaModel = $presencaModel;
     }
 
+    /**
+     * Painel do Administrador
+     */
+    public function handlePainelAdmin($chatId, $requesterTelegramId)
+    {
+        if (!in_array($requesterTelegramId, $this->devIds)) {
+            $this->telegram->sendMessage($chatId, "⛔ Acesso restrito aos Administradores do sistema.");
+            return;
+        }
+        $mensagem = "👑 Painel do Administrador\n\nSelecione o módulo que deseja acessar:";
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => '🏛️ Chancelaria', 'callback_data' => 'admin_chancelaria'],
+                    ['text' => '💰 Tesouraria', 'callback_data' => 'admin_tesouraria'],
+                    ['text' => '📚 Biblioteca', 'callback_data' => 'admin_biblioteca']
+                ]
+            ]
+        ];
+        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+    }
+
     public function sendMenuPresenca($chatId) {
         $mensagem = "Bem-vindo ao assistente da Loja.";
         $teclado = [
@@ -43,6 +65,28 @@ class CommandHandler {
         $mensagem .= "/ajuda - Exibe esta mensagem de ajuda\n\n";
         $mensagem .= "Para outras dúvidas, contate a Secretaria da Loja.";
         $this->telegram->sendMessage($chatId, $mensagem);
+    }
+
+    public function handlePainelAdmin($chatId, $requesterTelegramId) {
+        if (!in_array($requesterTelegramId, $this->devIds)) {
+            $this->telegram->sendMessage($chatId, '⛔ Acesso restrito aos Administradores do sistema.');
+            return;
+        }
+
+        $mensagem = "👑 *Painel do Administrador*\n\nSelecione o módulo que deseja acessar para testes:";
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => '🏛️ Chancelaria', 'callback_data' => 'admin_chancelaria'],
+                    ['text' => '💰 Tesouraria', 'callback_data' => 'admin_tesouraria']
+                ],
+                [
+                    ['text' => '📚 Biblioteca', 'callback_data' => 'admin_biblioteca']
+                ]
+            ]
+        ];
+        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+    }
     }
 
     public function handleChancelaria($chatId, $requesterTelegramId) {
@@ -204,6 +248,40 @@ class CommandHandler {
             return;
         }
 
+        // Callbacks do Painel Admin
+        if ($callbackData === 'admin_chancelaria') {
+            // fromId pode ser passado via update, então armazene em uma propriedade temporária
+            if (isset($GLOBALS['fromId'])) {
+                $fromId = $GLOBALS['fromId'];
+            } elseif (isset($this->lastFromId)) {
+                $fromId = $this->lastFromId;
+            } else {
+                $fromId = null;
+            }
+            $this->handleChancelaria($chatId, $fromId);
+            return;
+        } elseif ($callbackData === 'admin_tesouraria') {
+            if (isset($GLOBALS['fromId'])) {
+                $fromId = $GLOBALS['fromId'];
+            } elseif (isset($this->lastFromId)) {
+                $fromId = $this->lastFromId;
+            } else {
+                $fromId = null;
+            }
+            $this->handleTesouraria($chatId, $fromId);
+            return;
+        } elseif ($callbackData === 'admin_biblioteca') {
+            if (isset($GLOBALS['fromId'])) {
+                $fromId = $GLOBALS['fromId'];
+            } elseif (isset($this->lastFromId)) {
+                $fromId = $this->lastFromId;
+            } else {
+                $fromId = null;
+            }
+            $this->handleBiblioteca($chatId, $fromId);
+            return;
+        }
+
         switch ($callbackData) {
             case 'chancelaria_aniversarios':
                 $this->handleAniversarios($chatId);
@@ -235,6 +313,23 @@ class CommandHandler {
             $fromId = $update['message']['from']['id'] ?? null;
 
             // Roteamento de comandos
+            if ($text === '/painel') {
+                $this->handlePainelAdmin($chatId, $fromId);
+                return;
+            }
+                    if ($callbackData === 'admin_chancelaria') {
+                        $this->handleChancelaria($chatId, $fromId);
+                        return;
+                    }
+                    if ($callbackData === 'admin_tesouraria') {
+                        $this->handleTesouraria($chatId, $fromId);
+                        return;
+                    }
+                    if ($callbackData === 'admin_biblioteca') {
+                        // Chama a listagem do acervo como ponto de entrada da biblioteca
+                        $this->handleBibliotecaAcervo($chatId);
+                        return;
+                    }
             if ($text === '/tesouraria') {
                 $this->handleTesouraria($chatId, $fromId);
             } elseif ($text === '/ajuda') {
@@ -243,6 +338,8 @@ class CommandHandler {
                 $this->handleChancelaria($chatId, $fromId);
             } elseif ($text === '/biblioteca') {
                 $this->handleBiblioteca($chatId, $fromId);
+            } elseif ($text === '/painel') {
+                $this->handlePainelAdmin($chatId, $fromId);
             } else {
                 $this->sendMenuPresenca($chatId);
             }
