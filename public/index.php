@@ -114,6 +114,11 @@ if ($requestUri === '/chancelaria/certificado/gerar' && $method === 'POST') {
     }
 }
 
+if ($_SERVER['REQUEST_URI'] === '/chancelaria/certificado' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    require_once __DIR__ . '/../src/Views/chancelaria_certificado.php';
+    exit;
+}
+
 switch ($requestUri) {
     // ─── Gestão de Cargos (Admin) ────────────────────────────────────────
     case "/admin/cargos":

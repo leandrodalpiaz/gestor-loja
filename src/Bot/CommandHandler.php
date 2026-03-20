@@ -77,6 +77,9 @@ class CommandHandler {
         $teclado = [
             'inline_keyboard' => [
                 [
+                    ['text' => '📜 Emitir Certificado', 'web_app' => ['url' => 'https://renascenca.arls.org.br/chancelaria/certificado']]
+                ],
+                [
                     ['text' => '📅 Neste Dia', 'callback_data' => 'chancelaria_neste_dia']
                 ],
                 [
