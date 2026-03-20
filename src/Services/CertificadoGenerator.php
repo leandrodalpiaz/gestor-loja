@@ -36,7 +36,11 @@ class CertificadoGenerator
                 }
             }
 
-        $imagem = imagecreatefromjpeg($baseImagePath);
+        $imagemConteudo = file_get_contents($baseImagePath);
+        $imagem = imagecreatefromstring($imagemConteudo);
+        if (!$imagem) {
+            throw new Exception("Erro: O arquivo de imagem base é inválido ou está corrompido.");
+        }
         $corTexto = imagecolorallocate($imagem, 0, 0, 0);
 
         $texto = "Certificamo-os com grande alegria no coração que o Ir∴ {$nomeVisitante}\n";
