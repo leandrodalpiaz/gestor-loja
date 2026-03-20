@@ -229,6 +229,12 @@ class CommandHandler {
             $this->handleNesteDia($chatId);
             return;
         }
+
+        // ADICIONE ESTAS 4 LINHAS AQUI:
+        if ($callbackData === 'chancelaria_aprovar_efemeride') {
+            $this->handleAprovarEfemeride($chatId);
+            return;
+        }
         switch ($callbackData) {
             case 'chancelaria_aniversarios':
                 $this->handleAniversarios($chatId);
@@ -411,16 +417,56 @@ class CommandHandler {
         require_once __DIR__ . '/../Models/EfemeridePreviaDiaria.php';
         $previaModel = new \App\Models\EfemeridePreviaDiaria();
 
-        // Pega a data de hoje no formato Y-m-d
         $hoje = date('Y-m-d');
         $previa = $previaModel->buscarPorData($hoje);
 
         if ($previa && !empty($previa['mensagem'])) {
-            $msg = "📅 <b>Neste Dia</b>\n\n" . $previa['mensagem'];
+            // Envia a mensagem pura, exatamente como vai pro grupo, para o Chanceler revisar
+            $msg = $previa['mensagem']; 
+
+            $teclado = [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '✅ Aprovar e Enviar p/ Grupo', 'callback_data' => 'chancelaria_aprovar_efemeride']
+                    ],
+                    [
+                        // Abre a tela web de edição dentro do próprio Telegram
+                        ['text' => '✏️ Editar Texto', 'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/chancelaria/efemerides']]
+                    ],
+                    [
+                        ['text' => '🔙 Voltar', 'callback_data' => 'admin_chancelaria']
+                    ]
+                ]
+            ];
+            $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
         } else {
-            $msg = "📅 <b>Neste Dia</b>\n\nAinda não há uma prévia gerada para o dia de hoje. O Chanceler pode gerar isso no painel web.";
+            $msg = "📅 <b>Neste Dia</b>\n\nAinda não há uma prévia gerada para o dia de hoje.";
+            $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+        }
         }
 
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+        private function handleAprovarEfemeride($chatId) {
+            require_once __DIR__ . '/../Models/EfemeridePreviaDiaria.php';
+            $previaModel = new \App\Models\EfemeridePreviaDiaria();
+            $hoje = date('Y-m-d');
+            $previa = $previaModel->buscarPorData($hoje);
+
+            if ($previa && !empty($previa['mensagem'])) {
+                // Puxa o ID do grupo oficial do arquivo .env
+                $grupoId = $_ENV['TELEGRAM_GROUP_ID'] ?? null; 
+
+                if (!$grupoId) {
+                    $this->telegram->sendMessage($chatId, "⚠️ <b>Erro:</b> O ID do grupo oficial não está configurado no arquivo .env (TELEGRAM_GROUP_ID).");
+                    return;
+                }
+
+                // Dispara a mensagem para o grupo oficial
+                $this->telegram->sendMessage($grupoId, $previa['mensagem'], ['parse_mode' => 'HTML']);
+
+                // Avisa o Chanceler no chat privado que deu certo
+                $this->telegram->sendMessage($chatId, "✅ <b>Sucesso!</b>\n\nA mensagem de Efemérides foi enviada para o grupo oficial da Loja.", ['parse_mode' => 'HTML']);
+            } else {
+                $this->telegram->sendMessage($chatId, "⚠️ Erro: Não foi possível encontrar a mensagem de hoje para enviar.");
+            }
+        }
     }
-}
