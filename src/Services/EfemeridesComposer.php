@@ -327,7 +327,13 @@ class EfemeridesComposer
         if ($base === false) {
             return 0;
         }
-        return (int) $this->today()->diff($base)->y;
+        $today = $this->today();
+        $anos = $today->format('Y') - $base->format('Y');
+        // Se ainda não chegou ao aniversário neste ano, subtrai 1
+        if ($today->format('m-d') < $base->format('m-d')) {
+            $anos--;
+        }
+        return $anos;
     }
 
     private function formatarData(string $dataEvento): string
