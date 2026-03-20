@@ -45,30 +45,26 @@ class CertificadoGenerator
 
         // Símbolo maçônico correto
         $pontos = "∴";
-        $texto = "Certificamo-os com grande alegria no coração que o Ir{$pontos} {$nomeVisitante}\n";
-        $texto .= "Obr{$pontos} da {$loja} Or{$pontos} de {$oriente}\n\n";
-        $texto .= "Honrou-nos com sua visita, dando maior brilho, força e beleza aos trabalhos da nossa oficina.\n\n";
-
+        $limite = 50;
+        $texto = wordwrap("Certificamo-os com grande alegria no coração que o Ir{$pontos} {$nomeVisitante}", $limite, "\n");
+        $texto .= "\n" . wordwrap("Obr{$pontos} da {$loja} Or{$pontos} de {$oriente}", $limite, "\n");
+        $texto .= "\n\n" . wordwrap("Honrou-nos com sua visita, dando maior brilho, força e beleza aos trabalhos da nossa oficina.", $limite, "\n");
         $paragrafoLongo = "Na ocasião, realizamos uma Sessão {$tipoSessao} de {$grauSessao}, desta forma emitimos o presente certificado digital e aproveitamos, por seu intermédio, para enviar um T{$pontos}F{$pontos}A{$pontos} ao V{$pontos}M{$pontos} e demais IIr{$pontos} do quadro de sua Loja.";
-        // Limitar texto para não ultrapassar as colunas (aprox. 50 caracteres por linha)
-        $texto .= wordwrap($paragrafoLongo, 50, "\n") . "\n\n\n";
-
-        $texto .= "Data da Sessão: " . date('d/m/Y', strtotime($dataSessao)) . "\n\n\n";
-        $texto .= str_pad("Chan{$pontos}", 30, " ", STR_PAD_RIGHT) . str_pad("Ven{$pontos} Mes{$pontos}", 30, " ", STR_PAD_LEFT);
+        $texto .= "\n\n" . wordwrap($paragrafoLongo, $limite, "\n");
+        $texto .= "\n\n\n" . wordwrap("Data da Sessão: " . date('d/m/Y', strtotime($dataSessao)), $limite, "\n");
+        $texto .= "\n\n\n" . wordwrap(str_pad("Chan{$pontos}", 30, " ", STR_PAD_RIGHT) . str_pad("Ven{$pontos} Mes{$pontos}", 30, " ", STR_PAD_LEFT), $limite, "\n");
 
         // Centralizar texto entre as colunas
         $x = 120; // Ajuste para centralização
-        $y = 350; // Ajuste para altura
+        $y = 320; // Ajuste para altura inicial
         $tamanho = 22;
         $linhas = explode("\n", $texto);
         foreach ($linhas as $i => $linha) {
-            // Calcula largura do texto
             $box = imagettfbbox($tamanho, 0, $fontPath, $linha);
             $largura = $box[2] - $box[0];
             $imgWidth = imagesx($imagem);
-            // Centraliza cada linha
             $xCentral = ($imgWidth - $largura) / 2;
-            imagettftext($imagem, $tamanho, 0, (int)$xCentral, $y + ($i * 32), $corTexto, $fontPath, $linha);
+            imagettftext($imagem, $tamanho, 0, (int)$xCentral, $y + ($i * 28), $corTexto, $fontPath, $linha);
         }
 
         $tempDir = __DIR__ . '/../../public/temp';
