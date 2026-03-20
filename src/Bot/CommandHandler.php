@@ -54,6 +54,37 @@ class CommandHandler {
         $this->telegram->sendMessage($chatId, $mensagem, $teclado);
     }
 
+    public function sendMenuPrincipal($chatId, $fromId) {
+        $obreiro = $this->obreiroModel->findByTelegramId($fromId);
+        $cargo = strtolower(trim((string)($obreiro['cargo'] ?? 'comum')));
+
+        $mensagem = "👋 Bem-vindo ao painel da Loja, meu Irmão!";
+        $teclado = [
+            'inline_keyboard' => []
+        ];
+
+        if (in_array($cargo, ['admin', 'veneravel', 'secretario'])) {
+            $teclado['inline_keyboard'][] = [
+                ['text' => '📅 Efemérides', 'callback_data' => 'chancelaria_neste_dia'],
+                ['text' => '🏛️ Secretaria', 'callback_data' => 'secretaria_menu']
+            ];
+            $teclado['inline_keyboard'][] = [
+                ['text' => '💰 Tesouraria', 'callback_data' => 'tesouraria_menu'],
+                ['text' => '📚 Biblioteca', 'callback_data' => 'biblioteca_menu']
+            ];
+        } else {
+            $teclado['inline_keyboard'][] = [
+                ['text' => '✅ Confirmar Presença', 'callback_data' => 'presenca_confirmar'],
+                ['text' => '❌ Informar Ausência', 'callback_data' => 'presenca_ausencia']
+            ];
+            $teclado['inline_keyboard'][] = [
+                ['text' => '📜 Ver Próxima Sessão', 'callback_data' => 'sessao_info']
+            ];
+        }
+
+        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+    }
+
     public function handleHelp($chatId) {
         $mensagem = "ℹ️ <b>Ajuda do Gestor da Loja</b>\n\n";
         $mensagem .= "Este bot auxilia na gestão da nossa Loja Maçônica.\n\n";
@@ -285,7 +316,7 @@ class CommandHandler {
             } elseif ($text === '/biblioteca') {
                 $this->handleBiblioteca($chatId, $fromId);
             } else {
-                $this->sendMenuPresenca($chatId);
+                $this->sendMenuPrincipal($chatId, $fromId);
             }
         } elseif (isset($update['callback_query'])) {
             $chatId = $update['callback_query']['message']['chat']['id'];
