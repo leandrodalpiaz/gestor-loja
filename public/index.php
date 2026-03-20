@@ -79,8 +79,42 @@ if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
 // ==========================================
 // ROTEAMENTO PRINCIPAL
 // ==========================================
-switch ($requestUri) {
+if ($requestUri === '/chancelaria/certificado/gerar' && $method === 'POST') {
+    require_once __DIR__ . '/../src/Services/CertificadoGenerator.php';
 
+    $nome = $_POST['nome_visitante'] ?? '';
+    $loja = $_POST['loja_visitante'] ?? '';
+    $oriente = $_POST['oriente'] ?? '';
+    $tipoSessao = $_POST['tipo_sessao'] ?? '';
+    $grauSessao = $_POST['grau_sessao'] ?? '';
+    $dataSessao = $_POST['data_sessao'] ?? '';
+    $chatId = $_POST['chat_id'] ?? '';
+
+    try {
+        $generator = new \App\Services\CertificadoGenerator();
+        $caminhoImagem = $generator->gerar($nome, $loja, $oriente, $tipoSessao, $grauSessao, $dataSessao);
+
+        if (!empty($chatId)) {
+            require_once __DIR__ . '/../src/Bot/TelegramClient.php';
+            $telegram = new \App\Bot\TelegramClient($_ENV['TELEGRAM_BOT_TOKEN']); 
+            $telegram->sendPhoto($chatId, $caminhoImagem, "✅ *Certificado gerado com sucesso!*\n\nAgora é só encaminhar para o Ir∴ {$nome}.");
+        }
+
+        echo "<script src='https://telegram.org/js/telegram-web-app.js'></script>
+        <script>
+            window.Telegram.WebApp.showAlert('Certificado gerado e enviado no seu chat!', function() {
+                window.Telegram.WebApp.close();
+            });
+        </script>";
+        exit;
+
+    } catch (Exception $e) {
+        echo "<div style='padding: 20px; color: red; font-family: sans-serif;'>Erro ao gerar certificado: " . $e->getMessage() . "</div>";
+        exit;
+    }
+}
+
+switch ($requestUri) {
     // ─── Gestão de Cargos (Admin) ────────────────────────────────────────
     case "/admin/cargos":
         // Protege para admin

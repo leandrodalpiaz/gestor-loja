@@ -84,4 +84,32 @@ class TelegramClient
         $payload = json_decode((string) $result, true);
         return is_array($payload) && !empty($payload['ok']);
     }
+
+    public function sendPhoto($chatId, $photoPath, $caption = '') {
+        $url = "https://api.telegram.org/bot" . $this->botToken . "/sendPhoto";
+
+        if (!file_exists($photoPath)) {
+            error_log("Erro: Arquivo não encontrado - " . $photoPath);
+            return false;
+        }
+
+        $postFields = [
+            'chat_id' => $chatId,
+            'photo' => new \CURLFile(realpath($photoPath)),
+            'caption' => $caption,
+            'parse_mode' => 'Markdown'
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        return $response;
+    }
 }

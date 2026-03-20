@@ -1,0 +1,11 @@
+[Arquivo de imagem base do certificado]
+
+Este arquivo deve ser colocado em:
+public/assets/certificado_base.jpeg
+
+Observação: O nome do arquivo deve ser exatamente "certificado_base.jpeg" para funcionar com o serviço CertificadoGenerator.php.
+
+Se o arquivo original estiver em outro formato (ex: PNG), converta para JPEG antes de salvar.
+
+---
+[Conteúdo do arquivo não exibido aqui, pois trata-se de uma imagem.]
