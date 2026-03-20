@@ -21,9 +21,20 @@ class CertificadoGenerator
         }
 
         $fontPath = __DIR__ . '/../../public/assets/fonte.ttf';
-        if (!file_exists($fontPath)) {
-            throw new Exception('Arquivo de fonte não encontrado: ' . $fontPath);
-        }
+            if (!file_exists($fontPath)) {
+                // URL direta para uma fonte clássica e elegante (Playfair Display) no repositório oficial do Google
+                $fontUrl = 'https://raw.githubusercontent.com/google/fonts/main/ofl/playfairdisplay/PlayfairDisplay-Regular.ttf';
+
+                // Tenta baixar a fonte
+                $fontData = @file_get_contents($fontUrl);
+
+                if ($fontData !== false) {
+                    // Salva a fonte na pasta assets
+                    file_put_contents($fontPath, $fontData);
+                } else {
+                    throw new Exception("Erro: O arquivo fonte.ttf não existe e o download automático falhou. Por favor, adicione o arquivo manualmente na pasta public/assets/");
+                }
+            }
 
         $imagem = imagecreatefromjpeg($baseImagePath);
         $corTexto = imagecolorallocate($imagem, 0, 0, 0);
