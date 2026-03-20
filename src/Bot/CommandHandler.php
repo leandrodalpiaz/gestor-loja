@@ -31,7 +31,8 @@ class CommandHandler {
                     ['text' => '💰 Tesouraria', 'callback_data' => 'admin_tesouraria']
                 ],
                 [
-                    ['text' => '📚 Biblioteca', 'callback_data' => 'admin_biblioteca']
+                    ['text' => '📚 Biblioteca', 'callback_data' => 'admin_biblioteca'],
+                    ['text' => '🏛️ Secretaria', 'callback_data' => 'admin_secretaria']
                 ]
             ]
         ];
