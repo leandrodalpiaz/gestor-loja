@@ -212,22 +212,17 @@ class CommandHandler {
 
         require_once __DIR__ . '/../Models/FechamentoMensal.php';
         $fechamentoModel = new \App\Models\FechamentoMensal();
-
         $fechamento = $fechamentoModel->obter($mes, $ano);
 
-        $msg = "📅 *Fechamento Mensal (" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "/$ano)*\n\n";
-
-        if (!$fechamento) {
-            $msg .= "⚠️ O fechamento deste mês ainda não foi realizado.";
+        if ($fechamento && isset($fechamento['status']) && $fechamento['status'] === 'fechado') {
+            $msg = "🔒 *Fechamento Mensal*\n\nO mês de " . str_pad($mes, 2, '0', STR_PAD_LEFT) . "/{$ano} já está fechado. Nenhuma alteração pode ser feita.";
         } else {
-            $msg .= "✅ Fechamento concluído.\n";
-            $msg .= "Saldo Final: R$ " . number_format($fechamento['saldo_final'], 2, ',', '.');
+            $msg = "🔓 *Fechamento Mensal*\n\nO mês de " . str_pad($mes, 2, '0', STR_PAD_LEFT) . "/{$ano} está aberto.\n\nAcesse o painel web para realizar o fechamento quando todas as contas estiverem conciliadas.";
         }
 
         $this->telegram->sendMessage($chatId, $msg);
     }
 
-    // Adicionado $fromId como parâmetro opcional para resolver o problema de escopo
     public function handleCallback($chatId, $callbackData, $fromId = null) {
         if (strpos($callbackData, 'tesouraria_') === 0) {
             switch ($callbackData) {
@@ -247,7 +242,6 @@ class CommandHandler {
             return;
         }
 
-        // Callbacks do Painel Admin
         if ($callbackData === 'admin_chancelaria') {
             $this->handleChancelaria($chatId, $fromId);
             return;
@@ -258,27 +252,37 @@ class CommandHandler {
             $this->handleBiblioteca($chatId, $fromId);
             return;
         }
-            // Callback do Menu da Secretaria
-            if ($callbackData === 'secretaria_menu') {
-                $mensagem = "🏛️ *Painel da Secretaria*\nSelecione a rotina desejada:";
-                $teclado = [
-                    'inline_keyboard' => [
-                        [
-                            ['text' => '📅 Agendas e Sessões', 'callback_data' => 'sec_agendas'],
-                            ['text' => '📝 Atas e Votações', 'callback_data' => 'sec_atas']
-                        ],
-                        [
-                            ['text' => '📜 Certificados', 'callback_data' => 'sec_certificados'],
-                            ['text' => '📐 Peças de Arquitetura', 'callback_data' => 'sec_trabalhos']
-                        ],
-                        [
-                            ['text' => '🔙 Voltar ao Menu', 'callback_data' => 'start_menu']
-                        ]
+
+        if ($callbackData === 'secretaria_menu') {
+            $mensagem = "🏛️ *Painel da Secretaria*\nSelecione a rotina desejada:";
+            $teclado = [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '📅 Agendas e Sessões', 'callback_data' => 'sec_agendas'],
+                        ['text' => '📝 Atas e Votações', 'callback_data' => 'sec_atas']
+                    ],
+                    [
+                        ['text' => '📜 Certificados', 'callback_data' => 'sec_certificados'],
+                        ['text' => '📐 Peças de Arquitetura', 'callback_data' => 'sec_trabalhos']
+                    ],
+                    [
+                        ['text' => '🔙 Voltar ao Menu', 'callback_data' => 'start_menu']
                     ]
-                ];
-                $this->telegram->sendMessage($chatId, $mensagem, $teclado);
-                return;
-            }
+                ]
+            ];
+            $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+            return;
+        }
+
+        if ($callbackData === 'sec_agendas') {
+            $this->handleSecAgendas($chatId);
+            return;
+        }
+
+        if ($callbackData === 'start_menu') {
+            $this->sendMenuPrincipal($chatId, $fromId);
+            return;
+        }
 
         if ($callbackData === 'chancelaria_neste_dia') {
             require_once __DIR__ . '/../Models/EfemerideRegistro.php';
@@ -293,11 +297,11 @@ class CommandHandler {
             return;
         }
 
-        // ADICIONE ESTAS 4 LINHAS AQUI:
         if ($callbackData === 'chancelaria_aprovar_efemeride') {
             $this->handleAprovarEfemeride($chatId);
             return;
         }
+
         switch ($callbackData) {
             case 'chancelaria_aniversarios':
                 $this->handleAniversarios($chatId);
@@ -310,7 +314,6 @@ class CommandHandler {
                 return;
         }
 
-        // Biblioteca
         if ($callbackData === 'biblioteca_acervo') {
             $this->handleBibliotecaAcervo($chatId);
             return;
@@ -344,8 +347,52 @@ class CommandHandler {
             $callbackData = $update['callback_query']['data'];
             $fromId = $update['callback_query']['from']['id'] ?? null;
 
-            // Passamos o $fromId para o handleCallback
             $this->handleCallback($chatId, $callbackData, $fromId);
+        }
+    }
+
+    private function handleSecAgendas($chatId) {
+        $sessao = method_exists($this->sessaoModel, 'obterProximaSessao') ? $this->sessaoModel->obterProximaSessao() : null;
+
+        if ($sessao) {
+            $data = date('d/m/Y H:i', strtotime($sessao['data']));
+            $grau = htmlspecialchars($sessao['grau'] ?? 'Indefinido');
+            $tipo = htmlspecialchars($sessao['tipo'] ?? 'Indefinido');
+            $pauta = htmlspecialchars($sessao['pauta'] ?? 'Não definida');
+
+            $msg = "📅 <b>Próxima Sessão</b>\n\n";
+            $msg .= "<b>Data:</b> {$data}\n";
+            $msg .= "<b>Grau:</b> {$grau}\n";
+            $msg .= "<b>Tipo:</b> {$tipo}\n";
+            $msg .= "<b>Pauta:</b> {$pauta}";
+
+            $teclado = [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '📢 Publicar Edital no Grupo', 'callback_data' => 'sec_publicar_edital']
+                    ],
+                    [
+                        ['text' => '✏️ Gerenciar Agendas', 'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/secretaria/agendas']]
+                    ],
+                    [
+                        ['text' => '🔙 Voltar', 'callback_data' => 'secretaria_menu']
+                    ]
+                ]
+            ];
+            $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
+        } else {
+            $msg = "📅 Nenhuma sessão futura agendada no momento.";
+            $teclado = [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '➕ Nova Sessão', 'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/secretaria/agendas']]
+                    ],
+                    [
+                        ['text' => '🔙 Voltar', 'callback_data' => 'secretaria_menu']
+                    ]
+                ]
+            ];
+            $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
         }
     }
 
@@ -476,6 +523,7 @@ class CommandHandler {
         }
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
+
     private function handleNesteDia($chatId) {
         require_once __DIR__ . '/../Models/EfemeridePreviaDiaria.php';
         $previaModel = new \App\Models\EfemeridePreviaDiaria();
@@ -484,7 +532,6 @@ class CommandHandler {
         $previa = $previaModel->buscarPorData($hoje);
 
         if ($previa && !empty($previa['mensagem'])) {
-            // Envia a mensagem pura, exatamente como vai pro grupo, para o Chanceler revisar
             $msg = $previa['mensagem']; 
 
             $teclado = [
@@ -493,7 +540,6 @@ class CommandHandler {
                         ['text' => '✅ Aprovar e Enviar p/ Grupo', 'callback_data' => 'chancelaria_aprovar_efemeride']
                     ],
                     [
-                        // Abre a tela web de edição dentro do próprio Telegram
                         ['text' => '✏️ Editar Texto', 'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/chancelaria/efemerides']]
                     ],
                     [
@@ -506,30 +552,26 @@ class CommandHandler {
             $msg = "📅 <b>Neste Dia</b>\n\nAinda não há uma prévia gerada para o dia de hoje.";
             $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
         }
-        }
+    }
 
-        private function handleAprovarEfemeride($chatId) {
-            require_once __DIR__ . '/../Models/EfemeridePreviaDiaria.php';
-            $previaModel = new \App\Models\EfemeridePreviaDiaria();
-            $hoje = date('Y-m-d');
-            $previa = $previaModel->buscarPorData($hoje);
+    private function handleAprovarEfemeride($chatId) {
+        require_once __DIR__ . '/../Models/EfemeridePreviaDiaria.php';
+        $previaModel = new \App\Models\EfemeridePreviaDiaria();
+        $hoje = date('Y-m-d');
+        $previa = $previaModel->buscarPorData($hoje);
 
-            if ($previa && !empty($previa['mensagem'])) {
-                // Puxa o ID do grupo oficial do arquivo .env
-                $grupoId = $_ENV['TELEGRAM_GROUP_ID'] ?? null; 
+        if ($previa && !empty($previa['mensagem'])) {
+            $grupoId = $_ENV['TELEGRAM_GROUP_ID'] ?? null; 
 
-                if (!$grupoId) {
-                    $this->telegram->sendMessage($chatId, "⚠️ <b>Erro:</b> O ID do grupo oficial não está configurado no arquivo .env (TELEGRAM_GROUP_ID).");
-                    return;
-                }
-
-                // Dispara a mensagem para o grupo oficial
-                $this->telegram->sendMessage($grupoId, $previa['mensagem'], ['parse_mode' => 'HTML']);
-
-                // Avisa o Chanceler no chat privado que deu certo
-                $this->telegram->sendMessage($chatId, "✅ <b>Sucesso!</b>\n\nA mensagem de Efemérides foi enviada para o grupo oficial da Loja.", ['parse_mode' => 'HTML']);
-            } else {
-                $this->telegram->sendMessage($chatId, "⚠️ Erro: Não foi possível encontrar a mensagem de hoje para enviar.");
+            if (!$grupoId) {
+                $this->telegram->sendMessage($chatId, "⚠️ <b>Erro:</b> O ID do grupo oficial não está configurado no arquivo .env (TELEGRAM_GROUP_ID).", ['parse_mode' => 'HTML']);
+                return;
             }
+
+            $this->telegram->sendMessage($grupoId, $previa['mensagem'], ['parse_mode' => 'HTML']);
+            $this->telegram->sendMessage($chatId, "✅ <b>Sucesso!</b>\n\nA mensagem de Efemérides foi enviada para o grupo oficial da Loja.", ['parse_mode' => 'HTML']);
+        } else {
+            $this->telegram->sendMessage($chatId, "⚠️ Erro: Não foi possível encontrar a mensagem de hoje para enviar.");
         }
     }
+}
