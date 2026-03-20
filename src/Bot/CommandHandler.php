@@ -279,6 +279,50 @@ class CommandHandler {
             $this->handleSecAgendas($chatId);
             return;
         }
+    private function handleSecAgendas($chatId) {
+        $sessao = method_exists($this->sessaoModel, 'obterProximaSessao') ? $this->sessaoModel->obterProximaSessao() : null;
+
+        if ($sessao) {
+            $data = date('d/m/Y H:i', strtotime($sessao['data']));
+            $grau = htmlspecialchars($sessao['grau'] ?? 'Indefinido');
+            $tipo = htmlspecialchars($sessao['tipo'] ?? 'Indefinido');
+            $pauta = htmlspecialchars($sessao['pauta'] ?? 'Não definida');
+
+            $msg = "📅 <b>Próxima Sessão</b>\n\n";
+            $msg .= "<b>Data:</b> {$data}\n";
+            $msg .= "<b>Grau:</b> {$grau}\n";
+            $msg .= "<b>Tipo:</b> {$tipo}\n";
+            $msg .= "<b>Pauta:</b> {$pauta}";
+
+            $teclado = [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '📢 Publicar Edital no Grupo', 'callback_data' => 'sec_publicar_edital']
+                    ],
+                    [
+                        ['text' => '✏️ Gerenciar Agendas', 'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/secretaria/agendas']]
+                    ],
+                    [
+                        ['text' => '🔙 Voltar', 'callback_data' => 'secretaria_menu']
+                    ]
+                ]
+            ];
+            $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
+        } else {
+            $msg = "📅 Nenhuma sessão futura agendada no momento.";
+            $teclado = [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '➕ Nova Sessão', 'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/secretaria/agendas']]
+                    ],
+                    [
+                        ['text' => '🔙 Voltar', 'callback_data' => 'secretaria_menu']
+                    ]
+                ]
+            ];
+            $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
+        }
+    }
 
         if ($callbackData === 'start_menu') {
             $this->sendMenuPrincipal($chatId, $fromId);
