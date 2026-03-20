@@ -78,7 +78,7 @@ class CertificadoGenerator
 
         $outputPath = $tempDir . '/certificado_' . time() . '.jpeg';
         imagejpeg($imagem, $outputPath, 90);
-        imagedestroy($imagem);
+        $imagem = null;
 
         return $outputPath;
     }

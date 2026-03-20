@@ -229,7 +229,15 @@ class CommandHandler {
         }
 
         if ($callbackData === 'chancelaria_neste_dia') {
-            $this->handleNesteDia($chatId);
+            require_once __DIR__ . '/../Models/EfemerideRegistro.php';
+            $efemerideModel = new \App\Models\EfemerideRegistro();
+            $registros = $efemerideModel->getRegistrosDoDia(date('Y-m-d'));
+
+            require_once __DIR__ . '/../Services/EfemeridesComposer.php';
+            $composer = new \App\Services\EfemeridesComposer();
+            $mensagem = $composer->composeDailyPreview($registros);
+
+            $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML']);
             return;
         }
 

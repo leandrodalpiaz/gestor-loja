@@ -77,6 +77,36 @@ if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
 }
 
 // ==========================================
+// ─── Endpoint para envio automático de efemérides (Cron Job) ───────────────
+if ($requestUri === '/api/cron/efemerides-diarias' && $method === 'GET') {
+    $token = $_GET['token'] ?? '';
+    $tokenEsperado = $_ENV['CRON_EFEMERIDES_TOKEN'] ?? 'SUA_SENHA_SECRETA';
+    if ($token !== $tokenEsperado) {
+        http_response_code(403);
+        echo json_encode(['status' => 'erro', 'mensagem' => 'Token inválido']);
+        exit;
+    }
+
+    require_once __DIR__ . '/../src/Models/EfemerideRegistro.php';
+    require_once __DIR__ . '/../src/Services/EfemeridesComposer.php';
+    require_once __DIR__ . '/../src/Bot/TelegramClient.php';
+
+    $efemerideModel = new \App\Models\EfemerideRegistro();
+    $registros = $efemerideModel->getRegistrosDoDia(date('Y-m-d'));
+    $composer = new \App\Services\EfemeridesComposer();
+    $mensagem = $composer->composeDailyPreview($registros);
+
+    $telegram = new \App\Bot\TelegramClient($_ENV['TELEGRAM_BOT_TOKEN']);
+    $grupoId = $_ENV['TELEGRAM_GRUPO_ID'] ?? '';
+    if (!$grupoId) {
+        http_response_code(500);
+        echo json_encode(['status' => 'erro', 'mensagem' => 'ID do grupo não configurado']);
+        exit;
+    }
+    $telegram->sendMessage($grupoId, $mensagem, ['parse_mode' => 'HTML']);
+    echo json_encode(['status' => 'ok']);
+    exit;
+}
 // ROTEAMENTO PRINCIPAL
 // ==========================================
 if ($requestUri === '/chancelaria/certificado/gerar' && $method === 'POST') {
