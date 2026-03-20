@@ -50,8 +50,8 @@ class CertificadoGenerator
         $texto .= "Honrou-nos com sua visita, dando maior brilho, força e beleza aos trabalhos da nossa oficina.\n\n";
 
         $paragrafoLongo = "Na ocasião, realizamos uma Sessão {$tipoSessao} de {$grauSessao}, desta forma emitimos o presente certificado digital e aproveitamos, por seu intermédio, para enviar um T{$pontos}F{$pontos}A{$pontos} ao V{$pontos}M{$pontos} e demais IIr{$pontos} do quadro de sua Loja.";
-        // Limitar texto para não ultrapassar as colunas (aprox. 50 caracteres por linha)
-        $texto .= wordwrap($paragrafoLongo, 50, "\n") . "\n\n\n";
+        // Limitar texto para não ultrapassar as colunas (aprox. 65 caracteres por linha)
+        $texto .= wordwrap($paragrafoLongo, 65, "\n") . "\n\n\n";
 
         $texto .= "Data da Sessão: " . date('d/m/Y', strtotime($dataSessao)) . "\n\n\n";
         $texto .= str_pad("Chan{$pontos}", 30, " ", STR_PAD_RIGHT) . str_pad("Ven{$pontos} Mes{$pontos}", 30, " ", STR_PAD_LEFT);
