@@ -258,6 +258,27 @@ class CommandHandler {
             $this->handleBiblioteca($chatId, $fromId);
             return;
         }
+            // Callback do Menu da Secretaria
+            if ($callbackData === 'secretaria_menu') {
+                $mensagem = "🏛️ *Painel da Secretaria*\nSelecione a rotina desejada:";
+                $teclado = [
+                    'inline_keyboard' => [
+                        [
+                            ['text' => '📅 Agendas e Sessões', 'callback_data' => 'sec_agendas'],
+                            ['text' => '📝 Atas e Votações', 'callback_data' => 'sec_atas']
+                        ],
+                        [
+                            ['text' => '📜 Certificados', 'callback_data' => 'sec_certificados'],
+                            ['text' => '📐 Peças de Arquitetura', 'callback_data' => 'sec_trabalhos']
+                        ],
+                        [
+                            ['text' => '🔙 Voltar ao Menu', 'callback_data' => 'start_menu']
+                        ]
+                    ]
+                ];
+                $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+                return;
+            }
 
         if ($callbackData === 'chancelaria_neste_dia') {
             require_once __DIR__ . '/../Models/EfemerideRegistro.php';
