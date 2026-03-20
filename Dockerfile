@@ -3,9 +3,14 @@ FROM php:8.2-apache
 # Habilitar o mod_rewrite do Apache (importante para o nosso .htaccess)
 RUN a2enmod rewrite
 
-# Instalar extensões essenciais para conectar com PostgreSQL (Supabase)
-RUN apt-get update && apt-get install -y libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql
+# Instalar extensões essenciais para PostgreSQL e processamento de Imagens (GD)
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_pgsql gd
 
 # Configurar o Apache para apontar a raiz do site para a pasta /public
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
