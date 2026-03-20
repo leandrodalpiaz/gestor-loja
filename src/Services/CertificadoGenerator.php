@@ -52,7 +52,8 @@ class CertificadoGenerator
         $paragrafoLongo = "Na ocasião, realizamos uma Sessão {$tipoSessao} de {$grauSessao}, desta forma emitimos o presente certificado digital e aproveitamos, por seu intermédio, para enviar um T{$pontos}F{$pontos}A{$pontos} ao V{$pontos}M{$pontos} e demais IIr{$pontos} do quadro de sua Loja.";
         $texto .= "\n\n" . wordwrap($paragrafoLongo, $limite, "\n");
         $texto .= "\n\n\n" . wordwrap("Data da Sessão: " . date('d/m/Y', strtotime($dataSessao)), $limite, "\n");
-        $texto .= "\n\n\n" . wordwrap(str_pad("Chan{$pontos}", 30, " ", STR_PAD_RIGHT) . str_pad("Ven{$pontos} Mes{$pontos}", 30, " ", STR_PAD_LEFT), $limite, "\n");
+        $assinatura = str_pad("Chan{$pontos}", 30, " ", STR_PAD_RIGHT) . str_pad("Ven{$pontos} Mes{$pontos}", 30, " ", STR_PAD_LEFT);
+        $texto .= "\n\n\n" . $assinatura;
 
         // Centralizar texto entre as colunas
         $x = 120; // Ajuste para centralização
