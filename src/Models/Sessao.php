@@ -2,10 +2,6 @@
 
 namespace App\Models;
 
-use App\Config\Database;
-<?php
-namespace App\Models;
-
 use PDO;
 use App\Config\Database;
 
@@ -26,9 +22,5 @@ class Sessao
         $stmt->execute(['hoje' => $hoje]);
         $sessao = $stmt->fetch(PDO::FETCH_ASSOC);
         return $sessao ?: null;
-    }
-}
-        $result = $stmt->fetch();
-        return $result ?: null;
     }
 }
