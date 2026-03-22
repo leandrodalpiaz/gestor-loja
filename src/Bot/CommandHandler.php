@@ -8,7 +8,7 @@ class CommandHandler {
     private $presencaModel;
 
     // IDs de desenvolvedor com acesso total
-    private $devIds = [8062119710]; 
+    private $devIds = [8062119710];
 
     public function __construct($telegram, $obreiroModel, $sessaoModel, $presencaModel) {
         $this->telegram = $telegram;
@@ -129,55 +129,25 @@ class CommandHandler {
     public function handleTesouraria($chatId, $requesterTelegramId) {
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
         $cargo = strtolower(trim((string) ($obreiro['cargo'] ?? '')));
-
         if (!in_array($requesterTelegramId, $this->devIds) && (!$obreiro || $cargo !== 'tesoureiro')) {
             $this->telegram->sendMessage($chatId, '⛔ Acesso restrito ao Tesoureiro da Loja.');
             return;
         }
-
         $mensagem = "💰 *Painel da Tesouraria*\n\nSelecione uma opção:";
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => '📊 Relatório Financeiro', 'callback_data' => 'tesouraria_relatorio'],
-                    ['text' => '📥 Registrar Pagamento', 'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/tesouraria/pagamentos']]
+                    ['text' => '📊 Relatório Financeiro', 'callback_data' => 'tesouraria_relatorio']
                 ],
                 [
-                    ['text' => '📤 Gerar Boleto', 'callback_data' => 'tesouraria_boleto']
+                    ['text' => '💳 Pagamentos Pendentes', 'callback_data' => 'tesouraria_pendentes']
+                ],
+                [
+                    ['text' => '🔙 Voltar', 'callback_data' => 'start_menu']
                 ]
             ]
         ];
         $this->telegram->sendMessage($chatId, $mensagem, $teclado);
-    }
-
-    public function handleBibliotecaAcervo($chatId) {
-        require_once __DIR__ . '/../Models/Acervo.php';
-        $acervoModel = new \App\Models\Acervo();
-        $itens = $acervoModel->listarTodos();
-
-        if (empty($itens)) {
-            $msg = "Nenhum item cadastrado no acervo no momento.";
-        } else {
-            $msg = "📚 <b>Acervo da Biblioteca</b>\n\n";
-
-            foreach ($itens as $item) {
-                $disponivel = ($item['quantidade_disponivel'] > 0) ? "🟢 Disponível" : "🔴 Indisponível";
-                $grau = !empty($item['grau_recomendado']) ? $item['grau_recomendado'] : 'Livre';
-                $linkWeb = "https://gestor-loja-web.onrender.com/biblioteca";
-
-                $msg .= "📖 <b>{$item['titulo']}</b>\n";
-                $msg .= "👤 Autor: {$item['autor']}\n";
-                $msg .= "🎓 Grau: {$grau}\n";
-                $msg .= "📊 Status: {$disponivel}\n";
-                $msg .= "🔗 <a href='{$linkWeb}'>Acessar no Sistema</a>\n";
-                $msg .= "──────────────\n";
-            }
-        }
-
-        $this->telegram->sendMessage($chatId, $msg, [
-            'parse_mode' => 'HTML',
-            'disable_web_page_preview' => true
-        ]);
     }
 
     public function handleBibliotecaMeusEmprestimos($chatId, $fromId) {
@@ -269,7 +239,7 @@ class CommandHandler {
         $previa = $previaModel->buscarPorData($hoje);
 
         if ($previa && !empty($previa['mensagem'])) {
-            $msg = $previa['mensagem']; 
+            $msg = $previa['mensagem'];
 
             $teclado = [
                 'inline_keyboard' => [
@@ -298,7 +268,7 @@ class CommandHandler {
         $previa = $previaModel->buscarPorData($hoje);
 
         if ($previa && !empty($previa['mensagem'])) {
-            $grupoId = $_ENV['TELEGRAM_GROUP_ID'] ?? null; 
+            $grupoId = $_ENV['TELEGRAM_GROUP_ID'] ?? null;
 
             if (!$grupoId) {
                 $this->telegram->sendMessage($chatId, "⚠️ <b>Erro:</b> O ID do grupo oficial não está configurado no arquivo .env (TELEGRAM_GROUP_ID).", ['parse_mode' => 'HTML']);
