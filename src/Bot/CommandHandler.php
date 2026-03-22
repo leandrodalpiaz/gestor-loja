@@ -135,31 +135,15 @@ class CommandHandler {
             return;
         }
 
-        $mensagem = "🏛️ *Painel da Tesouraria*\n\nSelecione uma opção abaixo para consultar os dados em tempo real:";
+        $mensagem = "💰 *Painel da Tesouraria*\n\nSelecione uma opção:";
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => '📊 Resumo do Caixa', 'callback_data' => 'tesouraria_caixa'],
-                    ['text' => '📈 Fechamento Mensal', 'callback_data' => 'tesouraria_fechamento']
+                    ['text' => '📊 Relatório Financeiro', 'callback_data' => 'tesouraria_relatorio'],
+                    ['text' => '📥 Registrar Pagamento', 'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/tesouraria/pagamentos']]
                 ],
                 [
-                    ['text' => '📋 Débitos Pendentes', 'callback_data' => 'tesouraria_debitos']
-                ]
-            ]
-        ];
-        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
-    }
-
-    public function handleBiblioteca($chatId, $fromId) {
-        $mensagem = "📚 Bem-vindo à Biblioteca!\n\nEscolha uma opção:";
-        $teclado = [
-            'inline_keyboard' => [
-                [
-                    ['text' => '📚 Ver Acervo', 'callback_data' => 'biblioteca_acervo'],
-                    ['text' => '📖 Meus Empréstimos', 'callback_data' => 'biblioteca_meus_emprestimos']
-                ],
-                [
-                    ['text' => '📷 Cadastrar Livro', 'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/scanner.php']]
+                    ['text' => '📤 Gerar Boleto', 'callback_data' => 'tesouraria_boleto']
                 ]
             ]
         ];
