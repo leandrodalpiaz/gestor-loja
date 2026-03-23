@@ -360,23 +360,93 @@ class CommandHandler {
                         break;
     // Métodos consolidados da Tesouraria
     private function handleTesourariaCaixa($chatId) {
-        $this->telegram->sendMessage($chatId, "📒 Função Livro Caixa em construção.");
+        require_once __DIR__ . '/../Models/LancamentoFinanceiro.php';
+        $mes = date('n');
+        $ano = date('Y');
+        $lancModel = new \App\Models\LancamentoFinanceiro();
+        $lancamentos = $lancModel->obterPorMes($mes, $ano);
+        $totais = $lancModel->obterTotaisMes($mes, $ano);
+
+        $msg = "📒 <b>Livro Caixa - " . date('m/Y') . "</b>\n\n";
+        $msg .= "<b>Entradas:</b> R$ " . number_format($totais['entrada'], 2, ',', '.') . "\n";
+        $msg .= "<b>Saídas:</b> R$ " . number_format($totais['saida'], 2, ',', '.') . "\n";
+        $msg .= "<b>Saldo:</b> R$ " . number_format($totais['entrada'] - $totais['saida'], 2, ',', '.') . "\n\n";
+        if (empty($lancamentos)) {
+            $msg .= "Nenhum lançamento registrado neste mês.";
+        } else {
+            foreach ($lancamentos as $l) {
+                $tipo = $l['tipo'] === 'entrada' ? '➕' : '➖';
+                $msg .= $tipo . " <b>" . $l['categoria_nome'] . "</b>: R$ " . number_format($l['valor'], 2, ',', '.') . " em " . date('d/m', strtotime($l['data_lancamento'])) . " - " . htmlspecialchars($l['descricao']) . "\n";
+            }
+        }
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
     private function handleTesourariaComprovantes($chatId) {
-        $this->telegram->sendMessage($chatId, "📑 Função Comprovantes em construção.");
+        require_once __DIR__ . '/../Models/ComprovantePix.php';
+        $compModel = new \App\Models\ComprovantePix();
+        $comprovantes = $compModel->obterTodos();
+        if (empty($comprovantes)) {
+            $msg = "📑 Nenhum comprovante encontrado.";
+        } else {
+            $msg = "📑 <b>Comprovantes Recebidos</b>\n\n";
+            foreach ($comprovantes as $c) {
+                $status = $c['status'] === 'aprovado' ? '✅' : ($c['status'] === 'pendente' ? '🕒' : '❌');
+                $msg .= $status . " <b>" . htmlspecialchars($c['obreiro_nome']) . "</b> - R$ " . number_format($c['valor_informado'], 2, ',', '.') . " em " . date('d/m', strtotime($c['criado_em'])) . "\n";
+            }
+        }
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
     private function handleTesourariaRegularidade($chatId) {
-        $this->telegram->sendMessage($chatId, "🟢 Função Regularidade em construção.");
+        require_once __DIR__ . '/../Models/MensalidadeStatus.php';
+        $mes = date('n');
+        $ano = date('Y');
+        $mensModel = new \App\Models\MensalidadeStatus();
+        $inadimplentes = $mensModel->obterInadimplentes($mes, $ano);
+        if (empty($inadimplentes)) {
+            $msg = "🟢 Todos os obreiros estão regulares neste mês.";
+        } else {
+            $msg = "🟢 <b>Obreiros Inadimplentes - " . date('m/Y') . "</b>\n\n";
+            foreach ($inadimplentes as $o) {
+                $nome = htmlspecialchars($o['nome_historico'] ?: $o['nome']);
+                $msg .= "❗ <b>$nome</b> - Status: " . htmlspecialchars($o['status'] ?? 'pendente') . "\n";
+            }
+        }
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
     private function handleTesourariaFechamento($chatId) {
-        $this->telegram->sendMessage($chatId, "📆 Função Fechamento Mensal em construção.");
+        require_once __DIR__ . '/../Models/FechamentoMensal.php';
+        $mes = date('n');
+        $ano = date('Y');
+        $fechModel = new \App\Models\FechamentoMensal();
+        $fechamento = $fechModel->obter($mes, $ano);
+        if (!$fechamento) {
+            $msg = "📆 Nenhum fechamento registrado para este mês.";
+        } else {
+            $msg = "📆 <b>Fechamento Mensal - " . date('m/Y') . "</b>\n\n";
+            $msg .= "<b>Saldo Inicial:</b> R$ " . number_format($fechamento['saldo_inicial'], 2, ',', '.') . "\n";
+            $msg .= "<b>Entradas:</b> R$ " . number_format($fechamento['total_entradas'], 2, ',', '.') . "\n";
+            $msg .= "<b>Saídas:</b> R$ " . number_format($fechamento['total_saidas'], 2, ',', '.') . "\n";
+            $msg .= "<b>Saldo Final:</b> R$ " . number_format($fechamento['saldo_final'], 2, ',', '.') . "\n";
+        }
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
     private function handleTesourariaValidarPix($chatId) {
-        $this->telegram->sendMessage($chatId, "💸 Função Validar Pix em construção.");
+        require_once __DIR__ . '/../Models/ComprovantePix.php';
+        $compModel = new \App\Models\ComprovantePix();
+        $pendentes = $compModel->obterPendentes();
+        if (empty($pendentes)) {
+            $msg = "💸 Nenhum comprovante Pix pendente de validação.";
+        } else {
+            $msg = "💸 <b>Comprovantes Pix Pendentes</b>\n\n";
+            foreach ($pendentes as $c) {
+                $msg .= "🕒 <b>" . htmlspecialchars($c['obreiro_nome']) . "</b> - R$ " . number_format($c['valor_informado'], 2, ',', '.') . " em " . date('d/m', strtotime($c['criado_em'])) . "\n";
+            }
+        }
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
                     // Biblioteca
