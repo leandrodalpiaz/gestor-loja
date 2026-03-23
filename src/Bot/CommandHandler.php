@@ -281,4 +281,87 @@ class CommandHandler {
             $this->telegram->sendMessage($chatId, "⚠️ Erro: Não foi possível encontrar a mensagem de hoje para enviar.");
         }
     }
+    // Método central para processar updates do Telegram
+    public function handle($update) {
+        if (isset($update['message'])) {
+            $message = $update['message'];
+            $chatId = $message['chat']['id'];
+            $fromId = $message['from']['id'];
+            $text = trim($message['text'] ?? '');
+
+            // Roteamento de comandos
+            switch (strtolower($text)) {
+                case '/start':
+                    $this->sendMenuPrincipal($chatId, $fromId);
+                    break;
+                case '/painel':
+                    $this->handlePainelAdmin($chatId, $fromId);
+                    break;
+                case '/ajuda':
+                case '/help':
+                    $this->handleHelp($chatId);
+                    break;
+                case '/chancelaria':
+                    $this->handleChancelaria($chatId, $fromId);
+                    break;
+                // Adicione mais comandos conforme necessário
+                default:
+                    $this->telegram->sendMessage($chatId, "Comando não reconhecido. Use /start para começar.");
+                    break;
+            }
+        } elseif (isset($update['callback_query'])) {
+            $callback = $update['callback_query'];
+            $chatId = $callback['message']['chat']['id'];
+            $fromId = $callback['from']['id'];
+            $data = $callback['data'];
+
+            // Roteamento de callbacks (botões)
+            switch ($data) {
+                case 'admin_chancelaria':
+                    $this->handleChancelaria($chatId, $fromId);
+                    break;
+                case 'chancelaria_neste_dia':
+                    $this->handleNesteDia($chatId);
+                    break;
+                case 'chancelaria_aprovar_efemeride':
+                    $this->handleAprovarEfemeride($chatId);
+                    break;
+                case 'chancelaria_aniversarios':
+                    $this->handleAniversarios($chatId);
+                    break;
+                case 'chancelaria_datas_maconicas':
+                    $this->handleDatasMaconicas($chatId);
+                    break;
+                case 'chancelaria_fatos_historicos':
+                    $this->handleFatosHistoricos($chatId);
+                    break;
+                case 'admin_secretaria':
+                case 'secretaria_menu':
+                    if (method_exists($this, 'handleSecretariaMenu')) {
+                        $this->handleSecretariaMenu($chatId, $fromId);
+                    } else {
+                        $this->telegram->sendMessage($chatId, "Função Secretaria não implementada.");
+                    }
+                    break;
+                case 'sec_agendas':
+                    if (method_exists($this, 'handleSecAgendas')) {
+                        $this->handleSecAgendas($chatId);
+                    } else {
+                        $this->telegram->sendMessage($chatId, "Função Agendas não implementada.");
+                    }
+                    break;
+                // Adicione mais callbacks conforme necessário
+                default:
+                    $this->telegram->sendMessage($chatId, "Ação não reconhecida.");
+                    break;
+            }
+            // Confirma o callback para o Telegram (remove o loading)
+            if (isset($callback['id'])) {
+                $this->telegram->answerCallbackQuery($callback['id']);
+            }
+        } else {
+            // Update desconhecido
+            error_log("[handle] Update não suportado: " . json_encode($update));
+        }
+    }
 }
