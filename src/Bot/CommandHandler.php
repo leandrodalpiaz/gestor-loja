@@ -358,7 +358,49 @@ class CommandHandler {
                     case 'tesouraria_validar_pix':
                         $this->handleTesourariaValidarPix($chatId);
                         break;
-    // Métodos consolidados da Tesouraria
+
+                    // Biblioteca
+                    case 'admin_biblioteca':
+                    case 'biblioteca_menu':
+                        $this->handleBibliotecaMeusEmprestimos($chatId, $fromId);
+                        break;
+
+                    // Secretaria (NOVO)
+                    case 'admin_secretaria':
+                    case 'secretaria_menu':
+                        $this->handleSecretariaMenu($chatId, $fromId);
+                        break;
+                    case 'sec_agendas':
+                        $this->handleSecAgendas($chatId);
+                        break;
+
+                    // Presença
+                    case 'presenca_confirmar':
+                    case 'presenca_ausencia':
+                    case 'sessao_info':
+                        $this->sendMenuPresenca($chatId);
+                        break;
+
+                    // Voltar para o menu principal
+                    case 'start_menu':
+                        $this->sendMenuPrincipal($chatId, $fromId);
+                        break;
+
+                    default:
+                        $this->telegram->sendMessage($chatId, "Ação não reconhecida.");
+                        break;
+                }
+                $this->telegram->answerCallbackQuery($callback['id']);
+            } else {
+                error_log("[handle] Update não suportado: " . json_encode($update));
+            }
+            error_log("[webhook] update processado com sucesso");
+        } catch (\Throwable $e) {
+            error_log("[webhook] erro ao processar update: " . $e->getMessage());
+        }
+    }
+
+    // Métodos consolidados da Tesouraria (corrigidos para fora do método handle)
     private function handleTesourariaCaixa($chatId) {
         require_once __DIR__ . '/../Models/LancamentoFinanceiro.php';
         $mes = date('n');
@@ -447,47 +489,6 @@ class CommandHandler {
             }
         }
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
-    }
-
-                    // Biblioteca
-                    case 'admin_biblioteca':
-                    case 'biblioteca_menu':
-                        $this->handleBibliotecaMeusEmprestimos($chatId, $fromId);
-                        break;
-
-                    // Secretaria (NOVO)
-                    case 'admin_secretaria':
-                    case 'secretaria_menu':
-                        $this->handleSecretariaMenu($chatId, $fromId);
-                        break;
-                    case 'sec_agendas':
-                        $this->handleSecAgendas($chatId);
-                        break;
-
-                    // Presença
-                    case 'presenca_confirmar':
-                    case 'presenca_ausencia':
-                    case 'sessao_info':
-                        $this->sendMenuPresenca($chatId);
-                        break;
-
-                    // Voltar para o menu principal
-                    case 'start_menu':
-                        $this->sendMenuPrincipal($chatId, $fromId);
-                        break;
-
-                    default:
-                        $this->telegram->sendMessage($chatId, "Ação não reconhecida.");
-                        break;
-                }
-                $this->telegram->answerCallbackQuery($callback['id']);
-            } else {
-                error_log("[handle] Update não suportado: " . json_encode($update));
-            }
-            error_log("[webhook] update processado com sucesso");
-        } catch (\Throwable $e) {
-            error_log("[webhook] erro ao processar update: " . $e->getMessage());
-        }
     }
     // Fluxo da Secretaria (NOVO)
     public function handleSecretariaMenu($chatId, $fromId) {
