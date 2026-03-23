@@ -320,20 +320,21 @@ class CommandHandler {
                 case 'admin_chancelaria':
                     $this->handleChancelaria($chatId, $fromId);
                     break;
-                case 'chancelaria_neste_dia':
-                    $this->handleNesteDia($chatId);
+                case 'admin_tesouraria':
+                case 'tesouraria_menu':
+                    if (method_exists($this, 'handleTesouraria')) {
+                        $this->handleTesouraria($chatId, $fromId);
+                    } else {
+                        $this->telegram->sendMessage($chatId, "Função Tesouraria não implementada.");
+                    }
                     break;
-                case 'chancelaria_aprovar_efemeride':
-                    $this->handleAprovarEfemeride($chatId);
-                    break;
-                case 'chancelaria_aniversarios':
-                    $this->handleAniversarios($chatId);
-                    break;
-                case 'chancelaria_datas_maconicas':
-                    $this->handleDatasMaconicas($chatId);
-                    break;
-                case 'chancelaria_fatos_historicos':
-                    $this->handleFatosHistoricos($chatId);
+                case 'admin_biblioteca':
+                case 'biblioteca_menu':
+                    if (method_exists($this, 'handleBibliotecaMenu')) {
+                        $this->handleBibliotecaMenu($chatId, $fromId);
+                    } else {
+                        $this->telegram->sendMessage($chatId, "Função Biblioteca não implementada.");
+                    }
                     break;
                 case 'admin_secretaria':
                 case 'secretaria_menu':
@@ -343,11 +344,37 @@ class CommandHandler {
                         $this->telegram->sendMessage($chatId, "Função Secretaria não implementada.");
                     }
                     break;
+                case 'chancelaria_neste_dia':
+                    $this->handleNesteDia($chatId);
+                    break;
+                case 'chancelaria_aprovar_efemeride':
+                    $this->handleAprovarEfemeride($chatId);
+                    break;
+                case 'chancelaria_aniversarios':
+                    $this->handleAniversarios($chatId);
+                    break;
+                case 'chancelaria_datas':
+                case 'chancelaria_datas_maconicas':
+                    $this->handleDatasMaconicas($chatId);
+                    break;
+                case 'chancelaria_historico':
+                case 'chancelaria_fatos_historicos':
+                    $this->handleFatosHistoricos($chatId);
+                    break;
                 case 'sec_agendas':
                     if (method_exists($this, 'handleSecAgendas')) {
                         $this->handleSecAgendas($chatId);
                     } else {
                         $this->telegram->sendMessage($chatId, "Função Agendas não implementada.");
+                    }
+                    break;
+                case 'presenca_confirmar':
+                case 'presenca_ausencia':
+                case 'sessao_info':
+                    if (method_exists($this, 'sendMenuPresenca')) {
+                        $this->sendMenuPresenca($chatId);
+                    } else {
+                        $this->telegram->sendMessage($chatId, "Função de presença não implementada.");
                     }
                     break;
                 // Adicione mais callbacks conforme necessário
@@ -363,5 +390,16 @@ class CommandHandler {
             // Update desconhecido
             error_log("[handle] Update não suportado: " . json_encode($update));
         }
+    }
+    // Métodos de menu vazios para evitar erros caso não existam
+    // Implemente a lógica real conforme necessário
+    public function handleBibliotecaMenu($chatId, $fromId) {
+        $this->telegram->sendMessage($chatId, "Menu da Biblioteca em construção.");
+    }
+    public function handleSecretariaMenu($chatId, $fromId) {
+        $this->telegram->sendMessage($chatId, "Menu da Secretaria em construção.");
+    }
+    public function handleSecAgendas($chatId) {
+        $this->telegram->sendMessage($chatId, "Agendas e Sessões em construção.");
     }
 }
