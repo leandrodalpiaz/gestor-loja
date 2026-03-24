@@ -162,22 +162,23 @@ class CommandHandler {
         $isDev = in_array($requesterTelegramId, $this->devIds);
 
         $mensagem = "📚 <b>Biblioteca da Loja</b>\n\nSelecione uma opção:";
-        $botoes = [
-            [
+            $botoes = [];
+            // Primeira linha: sempre disponível
+            $botoes[] = [
                 ['text' => '📖 Meus Empréstimos', 'callback_data' => 'biblioteca_meus_emprestimos'],
                 ['text' => '🔍 Ver Acervo', 'callback_data' => 'biblioteca_acervo']
-            ],
-            // Estes só aparecem para admin/bibliotecário/dev
-            ($isBibliotecario || $isDev) ? [
-                ['text' => '➕ Cadastrar Livro', 'callback_data' => 'biblioteca_cadastrar'],
-                ['text' => '📋 Gerenciar Empréstimos', 'callback_data' => 'biblioteca_gerenciar']
-            ] : null,
-            [
+            ];
+            // Segunda linha: apenas para admin/bibliotecário/dev
+            if ($isBibliotecario || $isDev) {
+                $botoes[] = [
+                    ['text' => '➕ Cadastrar Livro', 'callback_data' => 'biblioteca_cadastrar'],
+                    ['text' => '📋 Gerenciar Empréstimos', 'callback_data' => 'biblioteca_gerenciar']
+                ];
+            }
+            // Última linha: voltar
+            $botoes[] = [
                 ['text' => '🔙 Voltar', 'callback_data' => 'start_menu']
-            ]
-        ];
-        // Remove linhas nulas (caso não seja admin/bibliotecário/dev)
-        $botoes = array_values(array_filter($botoes));
+            ];
         $teclado = ['inline_keyboard' => $botoes];
         $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
     }
