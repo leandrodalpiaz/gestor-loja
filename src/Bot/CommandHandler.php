@@ -180,7 +180,7 @@ class CommandHandler {
             ['text' => '🔙 Voltar', 'callback_data' => 'start_menu']
         ];
         $teclado = ['inline_keyboard' => $botoes];
-        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
+        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
     }
 
     public function handleBibliotecaMeusEmprestimos($chatId, $requesterTelegramId) {
