@@ -162,23 +162,23 @@ class CommandHandler {
         $isDev = in_array($requesterTelegramId, $this->devIds);
 
         $mensagem = "📚 <b>Biblioteca da Loja</b>\n\nSelecione uma opção:";
-            $botoes = [];
-            // Primeira linha: sempre disponível
+        $botoes = [];
+        // Primeira linha: sempre disponível
+        $botoes[] = [
+            ['text' => '📖 Meus Empréstimos', 'callback_data' => 'biblioteca_meus_emprestimos'],
+            ['text' => '🔍 Ver Acervo', 'callback_data' => 'biblioteca_acervo']
+        ];
+        // Segunda linha: apenas para admin/bibliotecário/dev
+        if ($isBibliotecario || $isDev) {
             $botoes[] = [
-                ['text' => '📖 Meus Empréstimos', 'callback_data' => 'biblioteca_meus_emprestimos'],
-                ['text' => '🔍 Ver Acervo', 'callback_data' => 'biblioteca_acervo']
+                ['text' => '➕ Cadastrar Livro', 'callback_data' => 'biblioteca_cadastrar'],
+                ['text' => '📋 Gerenciar Empréstimos', 'callback_data' => 'biblioteca_gerenciar']
             ];
-            // Segunda linha: apenas para admin/bibliotecário/dev
-            if ($isBibliotecario || $isDev) {
-                $botoes[] = [
-                    ['text' => '➕ Cadastrar Livro', 'callback_data' => 'biblioteca_cadastrar'],
-                    ['text' => '📋 Gerenciar Empréstimos', 'callback_data' => 'biblioteca_gerenciar']
-                ];
-            }
-            // Última linha: voltar
-            $botoes[] = [
-                ['text' => '🔙 Voltar', 'callback_data' => 'start_menu']
-            ];
+        }
+        // Última linha: voltar
+        $botoes[] = [
+            ['text' => '🔙 Voltar', 'callback_data' => 'start_menu']
+        ];
         $teclado = ['inline_keyboard' => $botoes];
         $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
     }
@@ -200,7 +200,7 @@ class CommandHandler {
                 $msg .= "• <b>" . htmlspecialchars($emp['titulo']) . "</b> (Devolver até: " . date('d/m/Y', strtotime($emp['data_devolucao'])) . ")\n";
             }
         }
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+        $this->telegram->sendMessage($chatId, $msg);
     }
 
     private function handleBibliotecaAcervo($chatId) {
@@ -218,19 +218,19 @@ class CommandHandler {
                 }
             }
         }
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+        $this->telegram->sendMessage($chatId, $msg);
     }
 
     private function handleBibliotecaCadastrar($chatId, $fromId = null) {
         $url = 'https://gestor-loja-web.onrender.com/biblioteca/adicionar';
         $msg = "Para cadastrar um novo livro, utilize o painel web:\n<a href=\"$url\">Adicionar Livro</a>";
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+        $this->telegram->sendMessage($chatId, $msg);
     }
 
     private function handleBibliotecaGerenciar($chatId, $fromId = null) {
         $url = 'https://gestor-loja-web.onrender.com/biblioteca/emprestimos';
         $msg = "Para gerenciar os empréstimos, utilize o painel web:\n<a href=\"$url\">Gerenciar Empréstimos</a>";
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+        $this->telegram->sendMessage($chatId, $msg);
     }
 
     private function handleAniversarios($chatId) {
