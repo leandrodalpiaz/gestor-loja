@@ -220,13 +220,13 @@ class CommandHandler {
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
-    private function handleBibliotecaCadastrar($chatId) {
+    private function handleBibliotecaCadastrar($chatId, $fromId = null) {
         $url = 'https://gestor-loja-web.onrender.com/biblioteca/adicionar';
         $msg = "Para cadastrar um novo livro, utilize o painel web:\n<a href=\"$url\">Adicionar Livro</a>";
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
-    private function handleBibliotecaGerenciar($chatId) {
+    private function handleBibliotecaGerenciar($chatId, $fromId = null) {
         $url = 'https://gestor-loja-web.onrender.com/biblioteca/emprestimos';
         $msg = "Para gerenciar os empréstimos, utilize o painel web:\n<a href=\"$url\">Gerenciar Empréstimos</a>";
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
