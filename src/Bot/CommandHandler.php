@@ -418,10 +418,10 @@ class CommandHandler {
                         $this->handleBibliotecaAcervo($chatId);
                         break;
                     case 'biblioteca_cadastrar':
-                        $this->handleBibliotecaCadastrar($chatId);
+                        $this->handleBibliotecaCadastrar($chatId, $fromId);
                         break;
                     case 'biblioteca_gerenciar':
-                        $this->handleBibliotecaGerenciar($chatId);
+                        $this->handleBibliotecaGerenciar($chatId, $fromId);
                         break;
 
                     // Secretaria (NOVO)
