@@ -9,6 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Recebe o ISBN
 $data = json_decode(file_get_contents('php://input'), true);
 $isbn = $data['isbn'] ?? null;
 
@@ -36,41 +37,31 @@ if (!empty($bookData['items'])) {
     $capa_url = $item['imageLinks']['thumbnail'] ?? null;
 }
 
-// Carrega apenas o autoloader padrão do sistema
-require_once __DIR__ . '/../../vendor/autoload.php';
+// Preenche todos os campos esperados pelo cadastro manual
+$dados = [
+    'titulo' => $titulo,
+    'autor' => $autor,
+    'isbn' => $isbn,
+    'capa_url' => $capa_url,
+    'tipo' => 'Livro Físico',
+    'quantidade_disponivel' => 1,
+    'grau_recomendado' => 'Livre',
+    'nota_instrucao' => null
+];
 
-use App\Models\Acervo;
+// Envia para o endpoint unificado de cadastro manual
+$ch = curl_init(__DIR__ . '/biblioteca/cadastrar.php');
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($dados));
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$result = curl_exec($ch);
+curl_close($ch);
 
-try {
-    $acervo = new Acervo();
-    $dados = [
-        'titulo' => $titulo,
-        'autor' => $autor,
-        'tipo' => 'Livro Físico',
-        'grau_restricao' => 1, // Livre por padrão
-        'arquivo_url' => null,
-        'quantidade_disponivel' => 1,
-        'isbn' => $isbn,
-        'capa_url' => $capa_url,
-        'grau_recomendado' => 'Livre',
-        'nota_instrucao' => null,
-        'curador_id' => null
-    ];
-
-    $ok = $acervo->adicionar($dados);
-
-    if ($ok) {
-        // Retorna sucesso sempre, mas manda uma mensagem diferente se foi manual
-        $mensagem = empty($bookData['items']) 
-            ? 'Salvo com sucesso! (Não encontrado no Google, edite o título depois)' 
-            : 'Livro cadastrado com sucesso via Google Books!';
-
-        echo json_encode(['success' => true, 'message' => $mensagem]);
-    } else {
-        http_response_code(500);
-        echo json_encode(['error' => 'Erro ao salvar livro no banco de dados']);
-    }
-} catch (Exception $e) {
+$response = json_decode($result, true);
+if (!empty($response['sucesso'])) {
+    echo json_encode(['success' => true, 'message' => 'Livro cadastrado!']);
+} else {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro interno: ' . $e->getMessage()]);
+    echo json_encode(['error' => $response['mensagem'] ?? 'Erro ao salvar livro']);
 }
