@@ -562,7 +562,15 @@ switch ($requestUri) {
         header("Location: /login");
         exit;
 
-    default:
+        // Roteamento amigável para miniapps da biblioteca
+        if ($requestUri === '/biblioteca/novo') {
+            require_once __DIR__ . '/tg/novo.php';
+            break;
+        }
+        if ($requestUri === '/biblioteca/scanner') {
+            require_once __DIR__ . '/tg/scanner.php';
+            break;
+        }
         http_response_code(404);
         echo "404 - Página não encontrada.";
         break;
