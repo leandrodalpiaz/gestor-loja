@@ -207,7 +207,26 @@ public function handleBiblioteca($chatId, $requesterTelegramId) {
 }
 
 public function handleBibliotecaMeusEmprestimos($chatId, $requesterTelegramId) {
-    $mensagem = "📖 <b>Meus Empréstimos</b>\n\nAcompanhe seus empréstimos ativos (exemplo):\n\n• Livro: O Segredo Maçônico\n• Data Empréstimo: 10/03/2026\n• Devolução: 10/04/2026\n\n(Implementar lógica real de consulta ao banco de dados)";
+    require_once __DIR__ . '/../Models/Obreiro.php';
+    require_once __DIR__ . '/../Models/Emprestimo.php';
+    $obreiroModel = new \App\Models\Obreiro();
+    $emprestimoModel = new \App\Models\Emprestimo();
+
+    $obreiro = $obreiroModel->findByTelegramId($requesterTelegramId);
+    if (!$obreiro) {
+        $this->telegram->sendMessage($chatId, "Não foi possível identificar seu cadastro.");
+        return;
+    }
+    $emprestimos = $emprestimoModel->listarPendentesPorObreiro($obreiro['id']);
+
+    if (empty($emprestimos)) {
+        $mensagem = "📖 <b>Meus Empréstimos</b>\n\nVocê não possui empréstimos ativos.";
+    } else {
+        $mensagem = "📖 <b>Meus Empréstimos</b>\n\n";
+        foreach ($emprestimos as $e) {
+            $mensagem .= "• <b>" . htmlspecialchars($e['titulo']) . "</b> — Devolução prevista: " . date('d/m/Y', strtotime($e['data_devolucao_prevista'])) . "\n";
+        }
+    }
     $teclado = [
         'inline_keyboard' => [
             [
@@ -215,11 +234,26 @@ public function handleBibliotecaMeusEmprestimos($chatId, $requesterTelegramId) {
             ]
         ]
     ];
-    $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+    $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
 }
 
 private function handleBibliotecaAcervo($chatId) {
-    $mensagem = "🔍 <b>Acervo da Biblioteca</b>\n\nLista de livros disponíveis (exemplo):\n\n1. O Segredo Maçônico\n2. Maçonaria Revelada\n3. Rituais e Simbolismo\n\n(Implementar lógica real de consulta ao banco de dados)";
+    require_once __DIR__ . '/../Models/Acervo.php';
+    $acervoModel = new \App\Models\Acervo();
+    $livros = $acervoModel->listarTodos();
+
+    if (empty($livros)) {
+        $mensagem = "🔍 <b>Acervo da Biblioteca</b>\n\nNenhum livro cadastrado.";
+    } else {
+        $mensagem = "🔍 <b>Acervo da Biblioteca</b>\n\n";
+        foreach ($livros as $i => $livro) {
+            $mensagem .= ($i+1) . ". <b>" . htmlspecialchars($livro['titulo']) . "</b> — " . htmlspecialchars($livro['autor']);
+            if (!empty($livro['grau_recomendado'])) {
+                $mensagem .= " (Grau: " . htmlspecialchars($livro['grau_recomendado']) . ")";
+            }
+            $mensagem .= "\n";
+        }
+    }
     $teclado = [
         'inline_keyboard' => [
             [
@@ -227,7 +261,7 @@ private function handleBibliotecaAcervo($chatId) {
             ]
         ]
     ];
-    $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+    $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
 }
 
 private function handleBibliotecaCadastrar($chatId, $fromId = null) {
