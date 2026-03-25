@@ -191,7 +191,7 @@ class CommandHandler {
             return;
         }
         $emprestimoModel = new \App\Models\Emprestimo();
-        $emprestimos = $emprestimoModel->obterPorObreiro($obreiro['id']);
+        $emprestimos = $emprestimoModel->listarPorObreiro($obreiro['id']);
         if (empty($emprestimos)) {
             $msg = "📖 Você não possui empréstimos pendentes.";
         } else {
@@ -206,7 +206,7 @@ class CommandHandler {
     private function handleBibliotecaAcervo($chatId) {
         require_once __DIR__ . '/../Models/Acervo.php';
         $acervoModel = new \App\Models\Acervo();
-        $livros = $acervoModel->listarDisponiveis();
+        $livros = $acervoModel->listarTodos();
         if (empty($livros)) {
             $msg = "📚 Nenhum livro disponível no acervo no momento.";
         } else {
