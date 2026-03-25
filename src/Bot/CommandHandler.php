@@ -162,20 +162,18 @@ public function handleBiblioteca($chatId, $requesterTelegramId) {
     $isBibliotecario = in_array($cargo, ['bibliotecario', 'admin', 'veneravel']);
     $isDev = in_array($requesterTelegramId, $this->devIds);
 
-    $baseUrl = 'https://gestor-loja-web.onrender.com';
-
     $mensagem = "📚 <b>Biblioteca da Loja</b>\n\nSelecione uma opção:";
     $botoes = [];
 
-    // Linha 1: sempre disponível para todos
+    // Linha 1: sempre disponível para todos (callback_data)
     $botoes[] = [
         [
             'text' => '📖 Meus Empréstimos',
-            'web_app' => ['url' => $baseUrl . '/biblioteca/meus-emprestimos']
+            'callback_data' => 'biblioteca_meus_emprestimos'
         ],
         [
             'text' => '🔍 Ver Acervo',
-            'web_app' => ['url' => $baseUrl . '/biblioteca/acervo']
+            'callback_data' => 'biblioteca_acervo'
         ]
     ];
 
@@ -184,17 +182,17 @@ public function handleBiblioteca($chatId, $requesterTelegramId) {
         $botoes[] = [
             [
                 'text' => '📷 Cadastrar por ISBN',
-                'web_app' => ['url' => $baseUrl . '/biblioteca/scanner']
+                'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/biblioteca/scanner']
             ],
             [
                 'text' => '✏️ Cadastrar Manual',
-                'web_app' => ['url' => $baseUrl . '/biblioteca/novo']
+                'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/biblioteca/novo']
             ]
         ];
         $botoes[] = [
             [
                 'text' => '📋 Gerenciar Empréstimos',
-                'web_app' => ['url' => $baseUrl . '/biblioteca/emprestimos']
+                'callback_data' => 'biblioteca_gerenciar'
             ]
         ];
     }
@@ -209,16 +207,9 @@ public function handleBiblioteca($chatId, $requesterTelegramId) {
 }
 
 public function handleBibliotecaMeusEmprestimos($chatId, $requesterTelegramId) {
-    $baseUrl = 'https://gestor-loja-web.onrender.com';
-    $mensagem = "📖 <b>Meus Empréstimos</b>\n\nAcompanhe seus empréstimos ativos:";
+    $mensagem = "📖 <b>Meus Empréstimos</b>\n\nAcompanhe seus empréstimos ativos (exemplo):\n\n• Livro: O Segredo Maçônico\n• Data Empréstimo: 10/03/2026\n• Devolução: 10/04/2026\n\n(Implementar lógica real de consulta ao banco de dados)";
     $teclado = [
         'inline_keyboard' => [
-            [
-                [
-                    'text' => '📖 Ver Meus Empréstimos',
-                    'web_app' => ['url' => $baseUrl . '/biblioteca/meus-emprestimos']
-                ]
-            ],
             [
                 ['text' => '🔙 Voltar', 'callback_data' => 'biblioteca_menu']
             ]
@@ -228,16 +219,9 @@ public function handleBibliotecaMeusEmprestimos($chatId, $requesterTelegramId) {
 }
 
 private function handleBibliotecaAcervo($chatId) {
-    $baseUrl = 'https://gestor-loja-web.onrender.com';
-    $mensagem = "🔍 <b>Acervo da Biblioteca</b>\n\nConsulte os livros disponíveis:";
+    $mensagem = "🔍 <b>Acervo da Biblioteca</b>\n\nLista de livros disponíveis (exemplo):\n\n1. O Segredo Maçônico\n2. Maçonaria Revelada\n3. Rituais e Simbolismo\n\n(Implementar lógica real de consulta ao banco de dados)";
     $teclado = [
         'inline_keyboard' => [
-            [
-                [
-                    'text' => '🔍 Consultar Acervo',
-                    'web_app' => ['url' => $baseUrl . '/biblioteca/acervo']
-                ]
-            ],
             [
                 ['text' => '🔙 Voltar', 'callback_data' => 'biblioteca_menu']
             ]
@@ -272,16 +256,9 @@ private function handleBibliotecaCadastrar($chatId, $fromId = null) {
 }
 
 private function handleBibliotecaGerenciar($chatId, $fromId = null) {
-    $baseUrl = 'https://gestor-loja-web.onrender.com';
-    $mensagem = "📋 <b>Gerenciar Empréstimos</b>\n\nAcesse o painel completo de empréstimos:";
+    $mensagem = "📋 <b>Gerenciar Empréstimos</b>\n\nPainel de gerenciamento de empréstimos (exemplo):\n\n• Empréstimo #1: O Segredo Maçônico - Devolução: 10/04/2026\n• Empréstimo #2: Maçonaria Revelada - Devolução: 15/04/2026\n\n(Implementar lógica real de consulta ao banco de dados)";
     $teclado = [
         'inline_keyboard' => [
-            [
-                [
-                    'text' => '📋 Abrir Gerenciador',
-                    'web_app' => ['url' => $baseUrl . '/biblioteca/emprestimos']
-                ]
-            ],
             [
                 ['text' => '🔙 Voltar', 'callback_data' => 'biblioteca_menu']
             ]
