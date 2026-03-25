@@ -155,83 +155,140 @@ class CommandHandler {
         $this->telegram->sendMessage($chatId, $mensagem, $teclado);
     }
 
-    public function handleBiblioteca($chatId, $requesterTelegramId) {
-        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
-        $cargo = strtolower(trim((string)($obreiro['cargo'] ?? '')));
-        $isBibliotecario = in_array($cargo, ['bibliotecario', 'admin', 'veneravel']);
-        $isDev = in_array($requesterTelegramId, $this->devIds);
 
-        $mensagem = "📚 <b>Biblioteca da Loja</b>\n\nSelecione uma opção:";
-        $botoes = [];
-        // Primeira linha: sempre disponível
+public function handleBiblioteca($chatId, $requesterTelegramId) {
+    $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
+    $cargo = strtolower(trim((string)($obreiro['cargo'] ?? '')));
+    $isBibliotecario = in_array($cargo, ['bibliotecario', 'admin', 'veneravel']);
+    $isDev = in_array($requesterTelegramId, $this->devIds);
+
+    $baseUrl = 'https://gestor-loja-web.onrender.com';
+
+    $mensagem = "📚 <b>Biblioteca da Loja</b>\n\nSelecione uma opção:";
+    $botoes = [];
+
+    // Linha 1: sempre disponível para todos
+    $botoes[] = [
+        [
+            'text' => '📖 Meus Empréstimos',
+            'web_app' => ['url' => $baseUrl . '/biblioteca/meus-emprestimos']
+        ],
+        [
+            'text' => '🔍 Ver Acervo',
+            'web_app' => ['url' => $baseUrl . '/biblioteca/acervo']
+        ]
+    ];
+
+    // Linha 2: apenas para admin, bibliotecário ou dev
+    if ($isBibliotecario || $isDev) {
         $botoes[] = [
-            ['text' => '📖 Meus Empréstimos', 'callback_data' => 'biblioteca_meus_emprestimos'],
-            ['text' => '🔍 Ver Acervo', 'callback_data' => 'biblioteca_acervo']
+            [
+                'text' => '📷 Cadastrar por ISBN',
+                'web_app' => ['url' => $baseUrl . '/biblioteca/scanner']
+            ],
+            [
+                'text' => '✏️ Cadastrar Manual',
+                'web_app' => ['url' => $baseUrl . '/biblioteca/novo']
+            ]
         ];
-        // Segunda linha: apenas para admin/bibliotecário/dev
-        if ($isBibliotecario || $isDev) {
-            $botoes[] = [
-                ['text' => '➕ Cadastrar Livro', 'callback_data' => 'biblioteca_cadastrar'],
-                ['text' => '📋 Gerenciar Empréstimos', 'callback_data' => 'biblioteca_gerenciar']
-            ];
-        }
-        // Última linha: voltar
         $botoes[] = [
-            ['text' => '🔙 Voltar', 'callback_data' => 'start_menu']
+            [
+                'text' => '📋 Gerenciar Empréstimos',
+                'web_app' => ['url' => $baseUrl . '/biblioteca/emprestimos']
+            ]
         ];
-        $teclado = ['inline_keyboard' => $botoes];
-        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
     }
 
-    public function handleBibliotecaMeusEmprestimos($chatId, $requesterTelegramId) {
-        require_once __DIR__ . '/../Models/Emprestimo.php';
-        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
-        if (!$obreiro) {
-            $this->telegram->sendMessage($chatId, "⚠️ Você não está cadastrado no sistema.");
-            return;
-        }
-        $emprestimoModel = new \App\Models\Emprestimo();
-        $emprestimos = $emprestimoModel->listarPorObreiro($obreiro['id']);
-        if (empty($emprestimos)) {
-            $msg = "📖 Você não possui empréstimos pendentes.";
-        } else {
-            $msg = "📖 <b>Seus Empréstimos</b>\n\n";
-            foreach ($emprestimos as $emp) {
-                $msg .= "• <b>" . htmlspecialchars($emp['titulo']) . "</b> (Devolver até: " . date('d/m/Y', strtotime($emp['data_devolucao'])) . ")\n";
-            }
-        }
-        $this->telegram->sendMessage($chatId, $msg);
-    }
+    // Última linha: voltar
+    $botoes[] = [
+        ['text' => '🔙 Voltar', 'callback_data' => 'start_menu']
+    ];
 
-    private function handleBibliotecaAcervo($chatId) {
-        require_once __DIR__ . '/../Models/Acervo.php';
-        $acervoModel = new \App\Models\Acervo();
-        $livros = $acervoModel->listarTodos();
-        if (empty($livros)) {
-            $msg = "📚 Nenhum livro disponível no acervo no momento.";
-        } else {
-            $msg = "📚 <b>Acervo Disponível</b>\n\n";
-            foreach ($livros as $livro) {
-                $msg .= "• <b>" . htmlspecialchars($livro['titulo']) . "</b> - " . htmlspecialchars($livro['autor']) . "\n";
-                if (!empty($livro['grau_recomendado'])) {
-                    $msg .= "  🎓 " . htmlspecialchars($livro['grau_recomendado']) . "\n";
-                }
-            }
-        }
-        $this->telegram->sendMessage($chatId, $msg);
-    }
+    $teclado = ['inline_keyboard' => $botoes];
+    $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+}
 
-    private function handleBibliotecaCadastrar($chatId, $fromId = null) {
-        $url = 'https://gestor-loja-web.onrender.com/biblioteca/adicionar';
-        $msg = "Para cadastrar um novo livro, utilize o painel web:\n<a href=\"$url\">Adicionar Livro</a>";
-        $this->telegram->sendMessage($chatId, $msg);
-    }
+public function handleBibliotecaMeusEmprestimos($chatId, $requesterTelegramId) {
+    $baseUrl = 'https://gestor-loja-web.onrender.com';
+    $mensagem = "📖 <b>Meus Empréstimos</b>\n\nAcompanhe seus empréstimos ativos:";
+    $teclado = [
+        'inline_keyboard' => [
+            [
+                [
+                    'text' => '📖 Ver Meus Empréstimos',
+                    'web_app' => ['url' => $baseUrl . '/biblioteca/meus-emprestimos']
+                ]
+            ],
+            [
+                ['text' => '🔙 Voltar', 'callback_data' => 'biblioteca_menu']
+            ]
+        ]
+    ];
+    $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+}
 
-    private function handleBibliotecaGerenciar($chatId, $fromId = null) {
-        $url = 'https://gestor-loja-web.onrender.com/biblioteca/emprestimos';
-        $msg = "Para gerenciar os empréstimos, utilize o painel web:\n<a href=\"$url\">Gerenciar Empréstimos</a>";
-        $this->telegram->sendMessage($chatId, $msg);
-    }
+private function handleBibliotecaAcervo($chatId) {
+    $baseUrl = 'https://gestor-loja-web.onrender.com';
+    $mensagem = "🔍 <b>Acervo da Biblioteca</b>\n\nConsulte os livros disponíveis:";
+    $teclado = [
+        'inline_keyboard' => [
+            [
+                [
+                    'text' => '🔍 Consultar Acervo',
+                    'web_app' => ['url' => $baseUrl . '/biblioteca/acervo']
+                ]
+            ],
+            [
+                ['text' => '🔙 Voltar', 'callback_data' => 'biblioteca_menu']
+            ]
+        ]
+    ];
+    $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+}
+
+private function handleBibliotecaCadastrar($chatId, $fromId = null) {
+    $baseUrl = 'https://gestor-loja-web.onrender.com';
+    $mensagem = "➕ <b>Cadastrar Novo Livro</b>\n\nEscolha o método de cadastro:";
+    $teclado = [
+        'inline_keyboard' => [
+            [
+                [
+                    'text' => '📷 Ler Código de Barras',
+                    'web_app' => ['url' => $baseUrl . '/biblioteca/scanner']
+                ]
+            ],
+            [
+                [
+                    'text' => '✏️ Preencher Manualmente',
+                    'web_app' => ['url' => $baseUrl . '/biblioteca/novo']
+                ]
+            ],
+            [
+                ['text' => '🔙 Voltar', 'callback_data' => 'biblioteca_menu']
+            ]
+        ]
+    ];
+    $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+}
+
+private function handleBibliotecaGerenciar($chatId, $fromId = null) {
+    $baseUrl = 'https://gestor-loja-web.onrender.com';
+    $mensagem = "📋 <b>Gerenciar Empréstimos</b>\n\nAcesse o painel completo de empréstimos:";
+    $teclado = [
+        'inline_keyboard' => [
+            [
+                [
+                    'text' => '📋 Abrir Gerenciador',
+                    'web_app' => ['url' => $baseUrl . '/biblioteca/emprestimos']
+                ]
+            ],
+            [
+                ['text' => '🔙 Voltar', 'callback_data' => 'biblioteca_menu']
+            ]
+        ]
+    ];
+    $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+}
 
     private function handleAniversarios($chatId) {
         require_once __DIR__ . '/../Models/Obreiro.php';
