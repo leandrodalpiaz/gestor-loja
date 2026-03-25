@@ -63,6 +63,19 @@ class EfemerideRegistro
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Busca registros ativos para um dia/mês específico (formato 'd/m').
+     * @param string $diaMes Ex: '25/03'
+     * @return array
+     */
+    public function getRegistrosPorDiaMes(string $diaMes): array
+    {
+        $sql = "SELECT * FROM efemerides_registros WHERE ativo = true AND TO_CHAR(data_evento, 'DD/MM') = :dia_mes ORDER BY tipo, nome";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['dia_mes' => $diaMes]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getRecentes(int $limit = 80): array
     {
         $limit = max(1, min($limit, 300));
@@ -149,14 +162,15 @@ class EfemerideRegistro
         $stmt->execute(['tipo' => $tipo]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-        public function buscarPorData($data) {
-            require_once __DIR__ . '/../Config/Database.php';
-            $db = \App\Config\Database::getConnection();
+    
+    public function buscarPorData($data) {
+        require_once __DIR__ . '/../Config/Database.php';
+        $db = \App\Config\Database::getConnection();
 
-            // Verifique se a coluna de data na sua tabela se chama 'data_evento' ou apenas 'data'
-            $sql = "SELECT * FROM efemerides_registros WHERE TO_CHAR(data_evento, 'MM-DD') = ?";
-            $stmt = $db->prepare($sql);
-            $stmt->execute([$data]);
-            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        }
+        $sql = "SELECT * FROM efemerides_registros WHERE TO_CHAR(data_evento, 'MM-DD') = ?";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$data]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
 }

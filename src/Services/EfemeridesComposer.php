@@ -20,6 +20,30 @@ use App\Models\MensagemComplementar;
  */
 class EfemeridesComposer
 {
+    /**
+     * Gera a mensagem de efemérides do dia atual (ou data informada, formato Y-m-d).
+     * Busca os registros do dia e retorna a mensagem pronta para exibição.
+     * @param string|null $dataYmd Data no formato Y-m-d (opcional, default: hoje)
+     * @return string Mensagem formatada para o dia
+     */
+    public function gerarMensagemParaDia(?string $dataYmd = null): string
+    {
+        // Busca registros do dia
+        require_once __DIR__ . '/../Models/EfemerideRegistro.php';
+        $efemModel = new \App\Models\EfemerideRegistro();
+        if ($dataYmd) {
+            $dt = \DateTimeImmutable::createFromFormat('Y-m-d', $dataYmd);
+            if ($dt !== false) {
+                $diaMes = $dt->format('d/m');
+                $registros = $efemModel->getRegistrosPorDiaMes($diaMes);
+            } else {
+                $registros = [];
+            }
+        } else {
+            $registros = $efemModel->getRegistrosDoDia();
+        }
+        return $this->composeDailyPreview($registros);
+    }
     private MensagemComplementar $comp;
 
     public function __construct()

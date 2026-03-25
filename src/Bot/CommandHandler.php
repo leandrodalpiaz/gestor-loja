@@ -319,33 +319,26 @@ private function handleBibliotecaGerenciar($chatId, $fromId = null) {
     }
 
     private function handleNesteDia($chatId) {
-        require_once __DIR__ . '/../Models/EfemeridePreviaDiaria.php';
-        $previaModel = new \App\Models\EfemeridePreviaDiaria();
-
+        // Usa o composer para gerar a mensagem do dia dinamicamente
+        require_once __DIR__ . '/../Services/EfemeridesComposer.php';
+        $composer = new \App\Services\EfemeridesComposer();
         $hoje = date('Y-m-d');
-        $previa = $previaModel->buscarPorData($hoje);
+        $msg = $composer->gerarMensagemParaDia($hoje);
 
-        if ($previa && !empty($previa['mensagem'])) {
-            $msg = $previa['mensagem'];
-
-            $teclado = [
-                'inline_keyboard' => [
-                    [
-                        ['text' => '✅ Aprovar e Enviar p/ Grupo', 'callback_data' => 'chancelaria_aprovar_efemeride']
-                    ],
-                    [
-                        ['text' => '✏️ Editar Texto', 'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/chancelaria/efemerides']]
-                    ],
-                    [
-                        ['text' => '🔙 Voltar', 'callback_data' => 'admin_chancelaria']
-                    ]
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => '✅ Aprovar e Enviar p/ Grupo', 'callback_data' => 'chancelaria_aprovar_efemeride']
+                ],
+                [
+                    ['text' => '✏️ Editar Texto', 'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/chancelaria/efemerides']]
+                ],
+                [
+                    ['text' => '🔙 Voltar', 'callback_data' => 'admin_chancelaria']
                 ]
-            ];
-            $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
-        } else {
-            $msg = "📅 <b>Neste Dia</b>\n\nAinda não há uma prévia gerada para o dia de hoje.";
-            $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
-        }
+            ]
+        ];
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
     }
 
     private function handleAprovarEfemeride($chatId) {
