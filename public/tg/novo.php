@@ -1,4 +1,10 @@
 <?php
+// Exibe erros para debug
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+?>
+<?php
 // Mini App Telegram — Cadastro manual de livro
 ?>
 <!DOCTYPE html>
