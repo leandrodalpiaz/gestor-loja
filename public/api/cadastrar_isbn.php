@@ -22,7 +22,7 @@ if (!$isbn) {
 // Buscar dados do livro na API Google Books
 $googleUrl = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' . urlencode($isbn);
 $response = @file_get_contents($googleUrl);
-$bookData = json_decode($response, true);
+$bookData = ($response !== false) ? json_decode($response, true) : null;
 
 // Valores padrão caso NÃO encontre no Google
 $titulo = 'Título não encontrado (Editar)';
@@ -30,7 +30,7 @@ $autor = 'Autor desconhecido';
 $capa_url = null;
 
 // Se encontrou no Google, atualiza os valores com os dados reais
-if (!empty($bookData['items'])) {
+if (!empty($bookData['items'][0]['volumeInfo'])) {
     $item = $bookData['items'][0]['volumeInfo'];
     $titulo = $item['title'] ?? $titulo;
     $autor = isset($item['authors']) ? implode(', ', $item['authors']) : $autor;
@@ -50,13 +50,21 @@ $dados = [
 ];
 
 // Envia para o endpoint unificado de cadastro manual
-$ch = curl_init(__DIR__ . '/biblioteca/cadastrar.php');
+$endpoint = __DIR__ . '/biblioteca/cadastrar.php';
+$ch = curl_init($endpoint);
 curl_setopt($ch, CURLOPT_POST, 1);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($dados));
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
 $result = curl_exec($ch);
 curl_close($ch);
+
+if ($result === false) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Erro ao comunicar com o endpoint de cadastro']);
+    exit;
+}
 
 $response = json_decode($result, true);
 if (!empty($response['sucesso'])) {
