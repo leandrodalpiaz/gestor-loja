@@ -182,11 +182,11 @@ public function handleBiblioteca($chatId, $requesterTelegramId) {
         $botoes[] = [
             [
                 'text' => '📷 Cadastrar por ISBN',
-                'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/tg/scanner']
+                'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/tg/scanner.php']
             ],
             [
                 'text' => '✏️ Cadastrar Manual',
-                'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/tg/novo']
+                'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/tg/novo.php']
             ]
         ];
         $botoes[] = [
