@@ -35,104 +35,104 @@
                 font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;
                 text-align:center
             }
-            h1{font-size:1.1rem;margin:16px 0}
-            #reader{width:100%;max-width:320px;margin:0 auto}
-            #info, #erro{margin-top:12px;white-space:pre-wrap}
-            #salvar{
-                display:none;margin-top:16px;padding:10px 20px;
-                background:var(--tg-accent);color:#fff;border:none;border-radius:4px;font-size:1rem
-            }
-            #salvar:active{transform:scale(.96)}
-        </style>
-    </head>
+            <?php
+            // Mini-App Telegram – Cadastro de Livro por ISBN (scanner)
+            // Nenhuma lógica em PHP; tudo acontece no front-end.
+            ?>
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8" />
+                <meta name="viewport"
+                            content="width=device-width,initial-scale=1.0,maximum-scale=1.0" />
+                <title>📚 Ler ISBN</title>
 
-    <body>
-        <h1>📚 Escaneie o código ISBN</h1>
-        <div id="reader"></div>
+                <!-- Telegram Mini-App SDK -->
+                <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-        <div id="info"></div>
-        <?php
-        /* Mini-App Telegram – Cadastro de Livro por ISBN (scanner)
-             Nenhum processamento em PHP aqui, é só para garantir MIME text/html. */
-        ?>
-        <!DOCTYPE html>
-        <html lang="pt-br">
-        <head>
-        <meta charset="UTF-8">
-        <meta name="viewport"
-                    content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-        <title>Scanner ISBN</title>
+                <!-- Leitor de código de barras (EAN-13 / ISBN-13) -->
+                <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
-        <!-- Telegram JS API -->
-        <script src="https://telegram.org/js/telegram-web-app.js"></script>
+                <style>
+                    :root{
+                        --bg:   var(--tg-theme-bg-color,#f5f5f0);
+                        --fg:   var(--tg-theme-text-color,#1a1a1a);
+                        --btn:  var(--tg-theme-button-color,#1d4ed8);
+                        --btnf: var(--tg-theme-button-text-color,#fff);
+                    }
+                    *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif}
+                    body   {background:var(--bg);color:var(--fg);padding:16px;padding-bottom:80px}
+                    h1     {font-size:18px;font-weight:700;margin-bottom:12px}
+                    #reader{width:100%;max-width:480px;margin:0 auto;border-radius:12px;overflow:hidden}
+                    #info  {margin-top:18px;font-size:14px;line-height:1.45}
+                    #erro  {margin-top:12px;color:#e53935;font-size:14px}
+                    #btn-salvar{
+                        margin-top:20px;padding:12px;width:100%;
+                        background:var(--btn);color:var(--btnf);
+                        border:none;border-radius:8px;font-weight:600;font-size:15px;
+                        display:none;cursor:pointer
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>📷 Escaneie o código de barras</h1>
+                <div id="reader"></div>
 
-        <!-- html5-qrcode minificado -->
-        <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+                <div id="info"></div>
+                <div id="erro"></div>
+                <button id="btn-salvar">✅ Salvar livro</button>
 
-        <style>
-        :root{--tg-bg:var(--tg-theme-bg-color,#fff);--tg-txt:var(--tg-theme-text-color,#222);
-         --tg-btn:var(--tg-theme-button-color,#2e77ff);}
-        body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--tg-bg);color:var(--tg-txt);}
-        h1{font-size:18px;margin:16px;text-align:center}
-        #scanner{width:100%;max-width:360px;margin:0 auto}
-        #info{padding:12px;font-size:15px;line-height:1.4}
-        button{display:block;width:90%;max-width:360px;margin:12px auto;padding:12px;
-                        font-size:16px;border:none;border-radius:4px;color:#fff;
-                        background:var(--tg-btn);}
-        #error{color:#d00;text-align:center;margin-top:8px}
-        .hidden{display:none}
-        </style>
-        </head>
+                <script>
+                    Telegram.WebApp.ready();
+                    const info  = document.getElementById('info');
+                    const erro  = document.getElementById('erro');
+                    const salvar= document.getElementById('btn-salvar');
+                    let   ultimoISBN = null;
 
-        <body>
-        <h1>📚 Ler ISBN</h1>
+                    const reader = new Html5Qrcode("reader");
+                    reader.start(
+                        { facingMode:"environment" },            // câmera traseira
+                        { fps:10, qrbox:{ width:250, height:120 } },
+                        onScanSuccess,
+                        () =>{}                                  // onScanFailure (ignorado)
+                    ).catch(()=>erro.textContent="❌ Não foi possível abrir a câmera. Verifique as permissões.");
 
-        <div id="scanner"></div>
+                    async function onScanSuccess(text){
+                        const isbnLimpo = text.replace(/[^0-9X]/gi,'');
+                        if(isbnLimpo === ultimoISBN) return;     // evita múltiplas leituras
+                        ultimoISBN = isbnLimpo;
+                        erro.textContent = "";
+                        info.innerHTML = `🔍 Consultando ISBN <b>${isbnLimpo}</b>…`;
 
-        <div id="info" class="hidden"></div>
+                        try{
+                            const res = await fetch("/api/biblioteca/isbn.php",{
+                                method:"POST",
+                                headers:{ "Content-Type":"application/json" },
+                                body:JSON.stringify({ isbn:isbnLimpo })
+                            });
+                            const d = await res.json();
+                            if(!d.ok) throw new Error(d.error || "Falha no cadastro");
 
-        <button id="btnStartCam">🎥 Ativar câmera</button>
-        <button id="btnSalvar"   class="hidden">✅ Salvar livro</button>
+                            info.innerHTML =
+                                `<b>Título:</b> ${d.titulo}<br>` +
+                                `<b>Autor(es):</b> ${d.autor}<br>`  +
+                                `<b>ISBN:</b> ${isbnLimpo}`;
 
-        <div id="error"></div>
-
-        <script>
-        const apiURL   = "/api/biblioteca/isbn.php";
-        const qrDiv    = document.getElementById("scanner");
-        const btnStart = document.getElementById("btnStartCam");
-        const btnSave  = document.getElementById("btnSalvar");
-        const infoDiv  = document.getElementById("info");
-        const errDiv   = document.getElementById("error");
-
-        let ultimoISBN = null;
-        let qrScanner  = null;
-
-        // 1) Inicia câmera
-        btnStart.onclick = async () => {
-            btnStart.classList.add("hidden");
-            Telegram.WebApp.HapticFeedback.impactOccurred('light');
-            qrScanner = new Html5Qrcode(/* element id */ qrDiv.id);
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-            qrScanner.start({ facingMode: "environment" }, config, onScanSuccess)
-                             .catch(e => showError("Permissão negada ou câmera não disponível"));
-        };
-
-        // 2) Callback de leitura
-        function onScanSuccess(text) {
-            // ISBN-10 ou 13 é só dígito
-            const match = text.match(/(\d{10}|\d{13})/);
-            if (!match) return;
-
-            ultimoISBN = match[0];
-            qrScanner.pause();
-            fetchBook(ultimoISBN);
-        }
-
-        // 3) Consulta a API interna
-        async function fetchBook(isbn){
-            errDiv.textContent = "";
-            infoDiv.textContent = "🔄 consultando Google Books…";
+                            salvar.style.display = "block";
+                            salvar.onclick = ()=>{
+                                Telegram.WebApp.showAlert("✅ Livro cadastrado!");
+                                Telegram.WebApp.close();
+                            };
+                            Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                        }catch(e){
+                            erro.textContent = "❌ " + e.message;
+                            salvar.style.display = "none";
+                            Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                        }
+                    }
+                </script>
+            </body>
+            </html>
             infoDiv.classList.remove("hidden");
 
             try{
