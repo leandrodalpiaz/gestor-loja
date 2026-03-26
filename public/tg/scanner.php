@@ -42,321 +42,82 @@
             align-items: center;
         }
         #scanner-titulo {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--hint);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        #scanner-status { font-size: 12px; color: var(--hint); }
-        #reader { width: 100%; }
-        #reader video { width: 100% !important; }
-        #btn-novo-scan {
-            width: calc(100% - 32px);
-            margin: 0 16px 16px;
-            padding: 10px;
-            border-radius: 8px;
-            background: transparent;
-            border: 1px solid var(--btn);
-            color: var(--btn);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: none;
-        }
-        .campo-preenchido input { border-color: #16a34a; background: #f0fdf4; }
-        h2 { font-size: 17px; font-weight: 700; margin-bottom: 4px; color: var(--btn); }
-        .subtitulo { font-size: 12px; color: var(--hint); margin-bottom: 20px; }
-        .secao {
-            background: var(--bg2);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 14px;
-            border: 1px solid rgba(0,0,0,0.06);
-        }
-        .secao-titulo {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--hint);
-            margin-bottom: 12px;
-        }
-        .campo { margin-bottom: 12px; }
-        .campo:last-child { margin-bottom: 0; }
-        label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
-        label .obrig { color: #e53935; margin-left: 2px; }
-        input, select, textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--text);
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-        input:focus, select:focus, textarea:focus { border-color: var(--btn); }
-        select {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%236b7280' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            padding-right: 36px;
-        }
-        textarea { resize: none; height: 72px; }
-        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .rodape {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            background: var(--bg2);
-            border-top: 1px solid rgba(0,0,0,0.08);
-            padding: 12px 16px;
-            display: flex;
-            gap: 10px;
-        }
-        .btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; }
-        .btn-primary { background: var(--btn); color: var(--btn-text); }
-        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+            <?php
+            /*  public/tg/scanner.php
+                Mini-app Telegram – Cadastro por ISBN                     */
+            ?>
+            <!DOCTYPE html>
+            <html lang="pt-br">
+            <head>
+            <meta charset="UTF-8">
+            <title>Cadastro por ISBN</title>
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <style>
+             body{font-family:system-ui,Arial,sans-serif;margin:0;padding:0;text-align:center}
+             #reader{width:100%;max-width:360px;margin:1rem auto}
+             #info{margin-top:1rem}
+             button{padding:.6rem 1.2rem;font-size:1rem;border:none;border-radius:6px;background:#157efb;color:#fff;cursor:pointer}
+             #salvar{display:none;margin-top:1rem;background:#22bb33}
+             #erro{color:#d33;margin-top:1rem}
+            </style>
+            <script src="https://unpkg.com/html5-qrcode"></script>
+            <script src="https://telegram.org/js/telegram-web-app.js"></script>
+            </head>
+            <body>
+            <h3>📚 Escaneie o código de barras (EAN/ISBN)</h3>
+            <div id="reader"></div>
+
+            <div id="info"></div>
+            <button id="salvar">✅ Salvar</button>
+            <div id="erro"></div>
+
+            <script>
+            Telegram.WebApp.ready();
+
+            const reader = new Html5QrcodeScanner(
+              "reader",
+              { fps: 10, qrbox: 250, formatsToSupport:[ Html5QrcodeSupportedFormats.CODE_128,
+                                                        Html5QrcodeSupportedFormats.EAN_13,
+                                                        Html5QrcodeSupportedFormats.EAN_8 ]},
+              /* verbose */ false);
+
+            let ultimoISBN = null;
+
+            reader.render(onScanSuccess);
+
+            function onScanSuccess(decodedText){
+                // evita leituras duplicadas seguidas
+                if(decodedText === ultimoISBN) return;
+                ultimoISBN = decodedText.replace(/[^0-9X]/gi,''); // limpa ruídos
+
+                document.getElementById("erro").textContent = "";
+                document.getElementById("info").innerHTML = "🔍 Consultando ISBN "+ultimoISBN+" …";
+
+                fetch("/api/biblioteca/isbn.php",{
+                    method:"POST",
+                    headers:{ "Content-Type":"application/json" },
+                    body: JSON.stringify({ isbn: ultimoISBN, tg_id: Telegram.WebApp.initDataUnsafe?.user?.id ?? null })
+                })
+                .then(r=>r.json())
+                .then(d=>{
+                    if(!d.ok){
+                       throw new Error(d.error ?? "Falha no cadastro");
+                    }
+                    // mostra dados e habilita botão Salvar
+                    document.getElementById("info").innerHTML =
+                        `<b>Título:</b> ${d.titulo}<br><b>Autor(es):</b> ${d.autor}<br><b>ISBN:</b> ${ultimoISBN}`;
+                    const btn = document.getElementById("salvar");
+                    btn.style.display="inline-block";
+                    btn.onclick = ()=>{
+                         Telegram.WebApp.close(); // fecha o mini-app
+                    };
+                })
+                .catch(err=>{
+                    document.getElementById("erro").textContent = "❌ "+err.message;
+                    document.getElementById("salvar").style.display="none";
+                });
+            }
+            </script>
+            </body>
+            </html>
         .btn-secondary {
-            background: transparent;
-            color: var(--btn);
-            border: 1px solid var(--btn);
-            flex: 0 0 auto;
-            padding: 12px 20px;
-        }
-        .erro-geral {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: 8px;
-            padding: 10px 12px;
-            font-size: 13px;
-            color: #b91c1c;
-            margin-bottom: 14px;
-            display: none;
-        }
-        #formulario { display: none; }
-    </style>
-</head>
-<body>
-
-<h2>📷 Cadastrar por ISBN</h2>
-<p class="subtitulo">Aponte a câmera para o código de barras do livro.</p>
-
-<!-- Scanner -->
-<div id="scanner-container">
-    <div id="scanner-header">
-        <span id="scanner-titulo">📷 Câmera</span>
-        <span id="scanner-status">Aguardando leitura...</span>
-    </div>
-    <div id="reader"></div>
-    <button id="btn-novo-scan" onclick="reiniciarScanner()">📷 Ler Outro Código</button>
-</div>
-
-<!-- Formulário (aparece após leitura) -->
-<div id="formulario">
-    <div class="erro-geral" id="erro-geral"></div>
-
-    <div class="secao">
-        <div class="secao-titulo">Identificação</div>
-        <div class="campo">
-            <label>Título da Obra <span class="obrig">*</span></label>
-            <input type="text" id="titulo" placeholder="Ex: Morals and Dogma">
-        </div>
-        <div class="campo">
-            <label>Autor <span class="obrig">*</span></label>
-            <input type="text" id="autor" placeholder="Ex: Albert Pike">
-        </div>
-        <div class="grid2">
-            <div class="campo">
-                <label>ISBN</label>
-                <input type="text" id="isbn" readonly>
-            </div>
-            <div class="campo">
-                <label>URL da Capa</label>
-                <input type="url" id="capa_url" placeholder="https://...">
-                <img id="preview-capa" style="max-width:120px; display:none;">
-            </div>
-        </div>
-    </div>
-
-    <div class="secao">
-        <div class="secao-titulo">Catalogação</div>
-        <div class="grid2">
-            <div class="campo">
-                <label>Tipo de Material <span class="obrig">*</span></label>
-                <select id="tipo">
-                    <option value="Livro Físico">Livro Físico</option>
-                    <option value="Digital (PDF)">Digital (PDF)</option>
-                    <option value="Ritual">Ritual</option>
-                </select>
-            </div>
-            <div class="campo">
-                <label>Quantidade <span class="obrig">*</span></label>
-                <input type="number" id="quantidade" value="1" min="1">
-            </div>
-        </div>
-    </div>
-
-    <div class="secao">
-        <div class="secao-titulo">Curadoria (Opcional)</div>
-        <div class="campo">
-            <label>Grau Recomendado</label>
-            <select id="grau_recomendado">
-                <option value="Livre">🟢 Livre / Todos os Graus</option>
-                <option value="Aprendiz">🔵 Recomendado: Aprendiz</option>
-                <option value="Companheiro">🔴 Recomendado: Companheiro</option>
-                <option value="Mestre">🟣 Recomendado: Mestre</option>
-            </select>
-        </div>
-        <div class="campo">
-            <label>Nota de Instrução</label>
-            <textarea id="nota_instrucao" placeholder="Ex: Leitura essencial para a elevação..."></textarea>
-        </div>
-    </div>
-</div>
-
-<div class="rodape">
-    <button class="btn btn-secondary" onclick="tg.close()">Cancelar</button>
-    <button class="btn btn-primary" id="btn-salvar" onclick="salvar()" style="display:none">💾 Salvar Livro</button>
-</div>
-
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.ready();
-
-    let scanner = null;
-
-    function iniciarScanner() {
-        scanner = new Html5Qrcode("reader");
-        scanner.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 260, height: 100 } },
-            (isbn) => {
-                scanner.stop().then(() => {
-                    document.getElementById('isbn').value = isbn;
-                    document.getElementById('scanner-status').textContent = '✅ ' + isbn;
-                    document.getElementById('btn-novo-scan').style.display = 'block';
-                    buscarLivroInterno(isbn);
-                    document.getElementById('formulario').style.display = 'block';
-                    document.getElementById('btn-salvar').style.display = 'block';
-                    document.getElementById('formulario').scrollIntoView({ behavior: 'smooth' });
-                });
-            },
-            () => {}
-        ).catch(() => {
-            // Câmera indisponível — mostra formulário direto para ISBN manual
-            document.getElementById('scanner-container').style.display = 'none';
-            document.getElementById('formulario').style.display = 'block';
-            document.getElementById('btn-salvar').style.display = 'block';
-        });
-    }
-
-
-        async function buscarLivroInterno(isbn) {
-            try {
-                document.getElementById('scanner-status').textContent = '🔍 Buscando dados...';
-                const resp = await fetch('/api/biblioteca/isbn.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ isbn })
-                });
-
-                if (!resp.ok) {
-                    throw new Error('Erro ' + resp.status);
-                }
-
-                const livro = await resp.json();
-
-                document.getElementById('titulo').value = livro.titulo || '';
-                document.getElementById('autor').value  = livro.autor  || '';
-                document.getElementById('capa_url').value = livro.capa_url || '';
-
-                // Mostra a capa, se existir
-                const img = document.getElementById('preview-capa');
-                if (livro.capa_url) {
-                    img.src = livro.capa_url;
-                    img.style.display = 'block';
-                } else {
-                    img.style.display = 'none';
-                }
-
-                document.getElementById('scanner-status').textContent = livro.titulo && livro.titulo !== 'Título não encontrado (editar)'
-                    ? '✅ Dados preenchidos automaticamente'
-                    : '⚠️ ISBN não encontrado — preencha manualmente';
-            } catch (e) {
-                document.getElementById('scanner-status').textContent = '⚠️ Não foi possível localizar o livro. Preencha manualmente.';
-                alert('Não foi possível localizar o livro. Preencha manualmente.');
-                console.error(e);
-            }
-        }
-
-    function reiniciarScanner() {
-        document.getElementById('formulario').style.display = 'none';
-        document.getElementById('btn-salvar').style.display = 'none';
-        document.getElementById('btn-novo-scan').style.display = 'none';
-        document.getElementById('scanner-status').textContent = 'Aguardando leitura...';
-        ['titulo', 'autor', 'isbn', 'capa_url', 'nota_instrucao'].forEach(id => document.getElementById(id).value = '');
-        iniciarScanner();
-    }
-
-    function mostrarErro(msg) {
-        const el = document.getElementById('erro-geral');
-        el.textContent = msg;
-        el.style.display = 'block';
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    function salvar() {
-        document.getElementById('erro-geral').style.display = 'none';
-
-        const titulo    = document.getElementById('titulo').value.trim();
-        const autor     = document.getElementById('autor').value.trim();
-        const quantidade = parseInt(document.getElementById('quantidade').value);
-
-        if (!titulo)   { mostrarErro('O título da obra é obrigatório.'); return; }
-        if (!autor)    { mostrarErro('O autor é obrigatório.'); return; }
-        if (!quantidade || quantidade < 1) { mostrarErro('A quantidade deve ser pelo menos 1.'); return; }
-
-        const btn = document.getElementById('btn-salvar');
-        btn.disabled = true;
-        btn.textContent = 'Salvando...';
-
-        fetch('/api/biblioteca/cadastrar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                titulo,
-                autor,
-                isbn:                  document.getElementById('isbn').value.trim(),
-                capa_url:              document.getElementById('capa_url').value.trim(),
-                tipo:                  document.getElementById('tipo').value,
-                quantidade_disponivel: quantidade,
-                grau_recomendado:      document.getElementById('grau_recomendado').value,
-                nota_instrucao:        document.getElementById('nota_instrucao').value.trim(),
-            })
-        })
-        .then(r => r.json())
-        .then(res => {
-            if (res.sucesso) {
-                tg.showAlert('✅ Livro cadastrado com sucesso!', () => tg.close());
-            } else {
-                mostrarErro(res.mensagem || 'Erro ao cadastrar. Tente novamente.');
-                btn.disabled = false;
-                btn.textContent = '💾 Salvar Livro';
-            }
-        })
-        .catch(() => {
-            mostrarErro('Erro de conexão. Verifique sua internet e tente novamente.');
-            btn.disabled = false;
-            btn.textContent = '💾 Salvar Livro';
-        });
-    }
-
-    iniciarScanner();
-</script>
-</body>
-</html>
