@@ -27,6 +27,7 @@
             color: var(--text);
             padding: 16px;
             padding-bottom: 80px;
+            text-align: center;
         }
         #scanner-container {
             background: var(--bg2);
@@ -35,89 +36,55 @@
             margin-bottom: 14px;
             border: 1px solid rgba(0,0,0,0.06);
         }
-        #scanner-header {
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        #reader{width:100%;max-width:360px;margin:1rem auto}
+        #info{margin-top:1rem}
+        button{padding:.6rem 1.2rem;font-size:1rem;border:none;border-radius:6px;background:var(--btn);color:var(--btn-text);cursor:pointer}
+        #salvar{display:none;margin-top:1rem;background:#22bb33}
+        #erro{color:#d33;margin-top:1rem}
+    </style>
+</head>
+<body>
+    <h3>📚 Escaneie o código de barras (EAN/ISBN)</h3>
+    <div id="reader"></div>
+    <div id="info"></div>
+    <button id="salvar">✅ Salvar</button>
+    <div id="erro"></div>
+    <script>
+        Telegram.WebApp.ready();
+        const reader = new Html5QrcodeScanner(
+            "reader",
+            { fps: 10, qrbox: 250, formatsToSupport:[ Html5QrcodeSupportedFormats.CODE_128,
+                                                      Html5QrcodeSupportedFormats.EAN_13,
+                                                      Html5QrcodeSupportedFormats.EAN_8 ]},
+            false);
+        let ultimoISBN = null;
+        reader.render(onScanSuccess);
+        function onScanSuccess(decodedText){
+            if(decodedText === ultimoISBN) return;
+            ultimoISBN = decodedText.replace(/[^0-9X]/gi,'');
+            document.getElementById("erro").textContent = "";
+            document.getElementById("info").innerHTML = "🔍 Consultando ISBN "+ultimoISBN+" …";
+            fetch("/api/biblioteca/isbn.php",{
+                method:"POST",
+                headers:{ "Content-Type":"application/json" },
+                body: JSON.stringify({ isbn: ultimoISBN, tg_id: Telegram.WebApp.initDataUnsafe?.user?.id ?? null })
+            })
+            .then(r=>r.json())
+            .then(d=>{
+                if(!d.ok){
+                   throw new Error(d.error ?? "Falha no cadastro");
+                }
+                document.getElementById("info").innerHTML =
+                    `<b>Título:</b> ${d.titulo}<br><b>Autor(es):</b> ${d.autor}<br><b>ISBN:</b> ${ultimoISBN}`;
+                const btn = document.getElementById("salvar");
+                btn.style.display="inline-block";
+                btn.onclick = ()=>{ Telegram.WebApp.close(); };
+            })
+            .catch(err=>{
+                document.getElementById("erro").textContent = "❌ "+err.message;
+                document.getElementById("salvar").style.display="none";
+            });
         }
-        #scanner-titulo {
-            <?php
-            /*  public/tg/scanner.php
-                Mini-app Telegram – Cadastro por ISBN                     */
-            ?>
-            <!DOCTYPE html>
-            <html lang="pt-br">
-            <head>
-            <meta charset="UTF-8">
-            <title>Cadastro por ISBN</title>
-            <meta name="viewport" content="width=device-width,initial-scale=1">
-            <style>
-             body{font-family:system-ui,Arial,sans-serif;margin:0;padding:0;text-align:center}
-             #reader{width:100%;max-width:360px;margin:1rem auto}
-             #info{margin-top:1rem}
-             button{padding:.6rem 1.2rem;font-size:1rem;border:none;border-radius:6px;background:#157efb;color:#fff;cursor:pointer}
-             #salvar{display:none;margin-top:1rem;background:#22bb33}
-             #erro{color:#d33;margin-top:1rem}
-            </style>
-            <script src="https://unpkg.com/html5-qrcode"></script>
-            <script src="https://telegram.org/js/telegram-web-app.js"></script>
-            </head>
-            <body>
-            <h3>📚 Escaneie o código de barras (EAN/ISBN)</h3>
-            <div id="reader"></div>
-
-            <div id="info"></div>
-            <button id="salvar">✅ Salvar</button>
-            <div id="erro"></div>
-
-            <script>
-            Telegram.WebApp.ready();
-
-            const reader = new Html5QrcodeScanner(
-              "reader",
-              { fps: 10, qrbox: 250, formatsToSupport:[ Html5QrcodeSupportedFormats.CODE_128,
-                                                        Html5QrcodeSupportedFormats.EAN_13,
-                                                        Html5QrcodeSupportedFormats.EAN_8 ]},
-              /* verbose */ false);
-
-            let ultimoISBN = null;
-
-            reader.render(onScanSuccess);
-
-            function onScanSuccess(decodedText){
-                // evita leituras duplicadas seguidas
-                if(decodedText === ultimoISBN) return;
-                ultimoISBN = decodedText.replace(/[^0-9X]/gi,''); // limpa ruídos
-
-                document.getElementById("erro").textContent = "";
-                document.getElementById("info").innerHTML = "🔍 Consultando ISBN "+ultimoISBN+" …";
-
-                fetch("/api/biblioteca/isbn.php",{
-                    method:"POST",
-                    headers:{ "Content-Type":"application/json" },
-                    body: JSON.stringify({ isbn: ultimoISBN, tg_id: Telegram.WebApp.initDataUnsafe?.user?.id ?? null })
-                })
-                .then(r=>r.json())
-                .then(d=>{
-                    if(!d.ok){
-                       throw new Error(d.error ?? "Falha no cadastro");
-                    }
-                    // mostra dados e habilita botão Salvar
-                    document.getElementById("info").innerHTML =
-                        `<b>Título:</b> ${d.titulo}<br><b>Autor(es):</b> ${d.autor}<br><b>ISBN:</b> ${ultimoISBN}`;
-                    const btn = document.getElementById("salvar");
-                    btn.style.display="inline-block";
-                    btn.onclick = ()=>{
-                         Telegram.WebApp.close(); // fecha o mini-app
-                    };
-                })
-                .catch(err=>{
-                    document.getElementById("erro").textContent = "❌ "+err.message;
-                    document.getElementById("salvar").style.display="none";
-                });
-            }
-            </script>
-            </body>
-            </html>
-        .btn-secondary {
+    </script>
+</body>
+</html>
