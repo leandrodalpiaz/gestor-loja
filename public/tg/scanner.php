@@ -10,96 +10,108 @@
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
     <title>Scanner ISBN</title>
 
-    <!-- SDK do Telegram Web-App -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <?php
+    // Mini-App Telegram – Cadastro de Livro por ISBN (Scanner)
+    // Não há lógica em PHP: tudo acontece no front-end HTML/JS abaixo
+    ?>
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0" />
+        <title>Scanner ISBN</title>
 
-    <!-- Biblioteca de leitura de código de barras / QR -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+        <!-- Telegram Mini-App -->
+        <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <style>
-        :root {
-            --bg:   var(--tg-theme-bg-color,          #F5F5F0);
-            --bg2:  var(--tg-theme-secondary-bg-color,#FFFFFF);
-            --text: var(--tg-theme-text-color,        #1A1A1A);
-            --hint: var(--tg-theme-hint-color,        #6B7280);
-            --btn:  var(--tg-theme-button-color,      #0047AB);
-            --btn-txt: var(--tg-theme-button-text-color,#FFFFFF);
-        }
+        <!-- Biblioteca de leitura de QR-Code / Código de barras -->
+        <script src="https://unpkg.com/html5-qrcode@2.3.9/html5-qrcode.min.js"></script>
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        <style>
+            :root{--tg-bg:#0d1117;--tg-fg:#f0f0f0;--tg-accent:#0088cc;}
+            body{
+                margin:0;padding:0;
+                background:var(--tg-bg);color:var(--tg-fg);
+                font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;
+                text-align:center
+            }
+            h1{font-size:1.1rem;margin:16px 0}
+            #reader{width:100%;max-width:320px;margin:0 auto}
+            #info, #erro{margin-top:12px;white-space:pre-wrap}
+            #salvar{
+                display:none;margin-top:16px;padding:10px 20px;
+                background:var(--tg-accent);color:#fff;border:none;border-radius:4px;font-size:1rem
+            }
+            #salvar:active{transform:scale(.96)}
+        </style>
+    </head>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Inter','Segoe UI',sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 16px 16px 80px;
-            text-align: center;
-        }
+    <body>
+        <h1>📚 Escaneie o código ISBN</h1>
+        <div id="reader"></div>
 
-        #reader        { width: 100%; max-width: 360px; margin: 1rem auto; }
-        #info          { margin-top: 1rem; }
-        #erro          { color: #D33;   margin-top: .8rem; }
-        button         {
-            padding: .6rem 1.4rem; font-size: 1rem; border: none; border-radius: 6px;
-            background: var(--btn); color: var(--btn-txt); cursor: pointer;
-        }
-        #salvar        { display: none; margin-top: 1.2rem; background: #22BB33; }
-    </style>
-</head>
+        <div id="info"></div>
+        <div id="erro" style="color:#ff4d4f"></div>
 
-<body>
-    <h3>📚 Escaneie o código de barras (EAN/ISBN)</h3>
+        <button id="salvar">✅ Salvar</button>
 
-    <div id="reader"></div>
+        <script>
+            Telegram.WebApp.ready();                    // notifica o Telegram que o app carregou
+            Telegram.WebApp.expand();                  // força abrir em tela cheia
 
-    <div id="info"></div>
-    <button id="salvar">✅ Salvar</button>
-    <div id="erro"></div>
+            const reader      = new Html5Qrcode("reader");
+            const salvarBtn   = document.getElementById("salvar");
+            const infoBox     = document.getElementById("info");
+            const erroBox     = document.getElementById("erro");
+            let   ultimoISBN  = null;                  // guarda o ISBN lido
 
-    <script>
-        /* --- Inicialização do Web-App --- */
-        Telegram.WebApp.ready();
+            function startScanner(){
+                reader.start(
+                    { facingMode:"environment" },
+                    { fps:10, qrbox:250, formatsToSupport:["EAN_13"] },
+                    onScanSuccess,
+                    err => { /* ruído do scanner: ignora */ }
+                ).catch(err=>{
+                    erroBox.textContent = "❌ Não foi possível acessar a câmera: "+err;
+                });
+            }
 
-        /* --- Configuração do leitor de código de barras --- */
-        const reader = new Html5QrcodeScanner(
-            "reader",
-            {
-                fps: 10,
-                qrbox: 250,
-                /* Filtros só para formatos de barras comuns de livro */
-                formatsToSupport: [
-                    Html5QrcodeSupportedFormats.EAN_13,
-                    Html5QrcodeSupportedFormats.EAN_8,
-                    Html5QrcodeSupportedFormats.CODE_128
-                ]
-            },
-            /* verbose = false */ false
-        );
+            async function onScanSuccess(decodedText){
+                // Evita disparar N vezes a cada frame
+                if(decodedText===ultimoISBN) return;
+                ultimoISBN = decodedText;
+                Html5QrcodeScanner.clearTimeout();       // trava o scanner
 
-        let ultimoISBN = null;
+                infoBox.textContent = "🔎 Consultando ISBN "+ultimoISBN+"…";
 
-        reader.render(onScanSuccess);
+                try{
+                    const rsp = await fetch("/api/biblioteca/isbn.php",{
+                        method:"POST",
+                        headers:{ "Content-Type":"application/json" },
+                        body:JSON.stringify({ isbn: ultimoISBN })
+                    });
+                    const data = await rsp.json();
+                    if(!rsp.ok) throw new Error(data.error || "Falha no cadastro");
 
-        function onScanSuccess(decodedText) {
-            /* Evita chamadas repetidas para o mesmo código */
-            if (decodedText === ultimoISBN) return;
+                    infoBox.innerHTML =
+                        `<b>Título:</b> ${data.titulo}<br>`+
+                        `<b>Autor(es):</b> ${data.autor}<br>`+
+                        `<b>ISBN:</b> ${ultimoISBN}`;
 
-            /* Limpa, mantém apenas dígitos ou X final (ISBN-10) */
-            ultimoISBN = decodedText.replace(/[^0-9X]/gi, '');
+                    salvarBtn.style.display = "inline-block";
+                }catch(e){
+                    erroBox.textContent = "❌ "+e.message;
+                    salvarBtn.style.display = "none";
+                }
+            }
 
-            /* Feedback na tela */
-            document.getElementById('erro').textContent = '';
-            document.getElementById('info').innerHTML =
-                "🔍 Consultando ISBN " + ultimoISBN + " …";
+            salvarBtn.onclick = ()=>{ Telegram.WebApp.close(); };
 
-            /* Chamada ao endpoint PHP */
-            fetch("/api/biblioteca/isbn.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    isbn:  ultimoISBN,
-                    tg_id: Telegram.WebApp.initDataUnsafe?.user?.id || null
-                })
+            // inicia quando o usuário realmente abre o mini-app
+            startScanner();
+        </script>
+    </body>
+    </html>
             })
             .then(r => r.json())
             .then(d => {
