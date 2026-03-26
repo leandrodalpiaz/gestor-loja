@@ -177,6 +177,7 @@
             <div class="campo">
                 <label>URL da Capa</label>
                 <input type="url" id="capa_url" placeholder="https://...">
+                <img id="preview-capa" style="max-width:120px; display:none;">
             </div>
         </div>
     </div>
@@ -239,7 +240,7 @@
                     document.getElementById('isbn').value = isbn;
                     document.getElementById('scanner-status').textContent = '✅ ' + isbn;
                     document.getElementById('btn-novo-scan').style.display = 'block';
-                    buscarMetadados(isbn);
+                    buscarLivroInterno(isbn);
                     document.getElementById('formulario').style.display = 'block';
                     document.getElementById('btn-salvar').style.display = 'block';
                     document.getElementById('formulario').scrollIntoView({ behavior: 'smooth' });
@@ -254,25 +255,44 @@
         });
     }
 
-    function buscarMetadados(isbn) {
-        document.getElementById('scanner-status').textContent = '🔍 Buscando dados...';
-        fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`)
-            .then(r => r.json())
-            .then(data => {
-                const livro = data[`ISBN:${isbn}`];
-                if (livro) {
-                    if (livro.title)           document.getElementById('titulo').value = livro.title;
-                    if (livro.authors?.length) document.getElementById('autor').value = livro.authors.map(a => a.name).join(', ');
-                    if (livro.cover?.large)    document.getElementById('capa_url').value = livro.cover.large;
-                    document.getElementById('scanner-status').textContent = '✅ Dados preenchidos automaticamente';
-                } else {
-                    document.getElementById('scanner-status').textContent = '⚠️ ISBN não encontrado — preencha manualmente';
+
+        async function buscarLivroInterno(isbn) {
+            try {
+                document.getElementById('scanner-status').textContent = '🔍 Buscando dados...';
+                const resp = await fetch('/api/biblioteca/isbn.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isbn })
+                });
+
+                if (!resp.ok) {
+                    throw new Error('Erro ' + resp.status);
                 }
-            })
-            .catch(() => {
-                document.getElementById('scanner-status').textContent = '⚠️ Sem conexão para buscar dados';
-            });
-    }
+
+                const livro = await resp.json();
+
+                document.getElementById('titulo').value = livro.titulo || '';
+                document.getElementById('autor').value  = livro.autor  || '';
+                document.getElementById('capa_url').value = livro.capa_url || '';
+
+                // Mostra a capa, se existir
+                const img = document.getElementById('preview-capa');
+                if (livro.capa_url) {
+                    img.src = livro.capa_url;
+                    img.style.display = 'block';
+                } else {
+                    img.style.display = 'none';
+                }
+
+                document.getElementById('scanner-status').textContent = livro.titulo && livro.titulo !== 'Título não encontrado (editar)'
+                    ? '✅ Dados preenchidos automaticamente'
+                    : '⚠️ ISBN não encontrado — preencha manualmente';
+            } catch (e) {
+                document.getElementById('scanner-status').textContent = '⚠️ Não foi possível localizar o livro. Preencha manualmente.';
+                alert('Não foi possível localizar o livro. Preencha manualmente.');
+                console.error(e);
+            }
+        }
 
     function reiniciarScanner() {
         document.getElementById('formulario').style.display = 'none';
