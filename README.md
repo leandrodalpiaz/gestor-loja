@@ -191,6 +191,17 @@ Esse modo:
 - inicia `telegram_polling.php` em background
 - roda checklist em `-TelegramMode polling`
 
+Para usar menus do bot em polling e manter Mini Apps abrindo (certificado, scanner, cadastro manual):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -WithPolling -WithTunnel
+```
+
+Nesse caso:
+
+- tunnel fornece `APP_URL` publica HTTPS para os botoes `web_app`
+- bot continua em polling (sem depender de webhook do Render)
+
 ## 6) Encerrar ambiente
 
 ```powershell

@@ -189,10 +189,9 @@ function Start-TelegramPolling {
 
     $tmpDir = Join-Path $ProjectRoot 'scripts\tmp'
     New-Item -ItemType Directory -Force -Path $tmpDir | Out-Null
-    $outFile = Join-Path $tmpDir 'telegram-polling.out.log'
-    $errFile = Join-Path $tmpDir 'telegram-polling.err.log'
-    if (Test-Path $outFile) { Remove-Item $outFile -Force }
-    if (Test-Path $errFile) { Remove-Item $errFile -Force }
+    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+    $outFile = Join-Path $tmpDir "telegram-polling.$stamp.out.log"
+    $errFile = Join-Path $tmpDir "telegram-polling.$stamp.err.log"
 
     $pollScript = Join-Path $ProjectRoot 'scripts/telegram_polling.php'
     $process = Start-Process `
@@ -218,10 +217,6 @@ $envFile = Join-Path $projectRoot '.env'
 if ($OpenAccess) {
     $env:APP_TEST_OPEN_ACCESS = 'true'
     Write-Host "APP_TEST_OPEN_ACCESS=true aplicado nesta sessao." -ForegroundColor Yellow
-}
-
-if ($WithTunnel -and $WithPolling) {
-    throw "Use -WithTunnel (webhook) ou -WithPolling (long polling), nao ambos na mesma execucao."
 }
 
 $server = $null
@@ -267,7 +262,7 @@ try {
                 Write-Host "SKIP update APP_URL (-SkipEnvUpdate)." -ForegroundColor Yellow
             }
 
-            if (-not $SkipTelegram -and -not $SkipWebhookUpdate) {
+            if (-not $WithPolling -and -not $SkipTelegram -and -not $SkipWebhookUpdate) {
                 try {
                     $okWebhook = Set-WebhookWithRetry -ProjectRoot $projectRoot -WebhookUrl "$tunnelUrl/webhook.php"
                     if ($okWebhook) {
@@ -278,6 +273,8 @@ try {
                 } catch {
                     Write-Host "Aviso: erro ao atualizar webhook. $($_.Exception.Message)" -ForegroundColor Yellow
                 }
+            } elseif ($WithPolling -and -not $SkipTelegram) {
+                Write-Host "Modo polling ativo: webhook nao sera atualizado." -ForegroundColor Yellow
             } elseif ($SkipWebhookUpdate) {
                 Write-Host "SKIP update webhook (-SkipWebhookUpdate)." -ForegroundColor Yellow
             }
@@ -352,7 +349,11 @@ try {
     if ($NoHold) {
         Write-Step "Finalizando sem manter processos ativos (-NoHold)"
         if ($WithTunnel -and -not $SkipWebhookUpdate -and -not [string]::IsNullOrWhiteSpace($tunnelUrl)) {
-            Write-Host "Aviso: o tunnel sera encerrado agora; o webhook ficara temporariamente apontando para uma URL inativa." -ForegroundColor Yellow
+            if ($WithPolling -and -not $SkipTelegram) {
+                Write-Host "Aviso: o tunnel sera encerrado agora; os Mini Apps deixarao de abrir fora desta sessao." -ForegroundColor Yellow
+            } else {
+                Write-Host "Aviso: o tunnel sera encerrado agora; o webhook ficara temporariamente apontando para uma URL inativa." -ForegroundColor Yellow
+            }
         }
         if ($WithPolling -and -not $SkipTelegram) {
             Write-Host "Aviso: o processo de polling sera encerrado agora." -ForegroundColor Yellow
