@@ -13,6 +13,8 @@ echo "🚀 EXECUTANDO MIGRATION ALT 003 - Tesoureiro Financeiro\n";
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
 
 try {
+    $appUrl = rtrim(trim((string) Env::get('APP_URL', 'http://localhost:8000')), '/');
+
     // Conecta ao banco
     echo "📥 Conectando ao Supabase...\n";
     $db = Database::getConnection();
@@ -126,7 +128,7 @@ try {
         echo "   • tronco_solidariedade\n\n";
         echo "✨ Sistema Tesouraria PRONTO PARA USAR!\n\n";
         echo "🎯 Próximos passos:\n";
-        echo "   1. Acesse: https://gestor-loja-web.onrender.com/tesouraria/caixa\n";
+        echo "   1. Acesse: {$appUrl}/tesouraria/caixa\n";
         echo "   2. Obreiro envia PIX foto via Telegram Bot\n";
         echo "   3. Tesoureiro valida na aba Comprovantes\n";
         echo "   4. Sistema cria lançamento automaticamente!\n\n";

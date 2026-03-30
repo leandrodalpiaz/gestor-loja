@@ -15,19 +15,24 @@ class TelegramClient
         $this->apiUrl = "https://api.telegram.org/bot{$this->botToken}/";
     }
 
-    public function sendMessage(int|string $chatId, string $text, array $replyMarkup = []): bool
+    public function sendMessage(int|string $chatId, string $text, array $options = []): bool
     {
         $data = [
             'chat_id' => $chatId,
             'text' => $text,
-            'parse_mode' => 'HTML'
+            'parse_mode' => (string) ($options['parse_mode'] ?? 'HTML'),
         ];
 
-        if (!empty($replyMarkup)) {
-            $data['reply_markup'] = json_encode($replyMarkup);
+        // Compatibilidade:
+        // 1) sendMessage($chatId, $text, $keyboard)
+        // 2) sendMessage($chatId, $text, ['parse_mode' => 'HTML', 'reply_markup' => $keyboard])
+        if (isset($options['reply_markup']) && is_array($options['reply_markup'])) {
+            $data['reply_markup'] = json_encode($options['reply_markup']);
+        } elseif (isset($options['inline_keyboard']) || isset($options['keyboard'])) {
+            $data['reply_markup'] = json_encode($options);
         }
 
-        $options = [
+        $requestOptions = [
             'http' => [
                 'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
                 'method'  => 'POST',
@@ -36,7 +41,7 @@ class TelegramClient
             ]
         ];
 
-        $context = stream_context_create($options);
+        $context = stream_context_create($requestOptions);
         $result = @file_get_contents($this->apiUrl . 'sendMessage', false, $context);
 
         if ($result === false) {

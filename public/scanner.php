@@ -86,12 +86,12 @@
                 })
                 .then(r => r.json())
                 .then(data => {
-                    if (data.success) {
+                    if (data.ok) {
                         Telegram.WebApp.showAlert('✅ Livro cadastrado!');
                         Telegram.WebApp.close();
                     } else {
                         Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-                        Telegram.WebApp.showAlert('Erro: ' + (data.error || 'Desconhecido'));
+                        Telegram.WebApp.showAlert('Erro: ' + (data.erro || data.error || 'Desconhecido'));
                     }
                 })
                 .catch(() => {

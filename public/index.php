@@ -17,6 +17,22 @@ $testRole = trim((string) ($_ENV["APP_TEST_DEFAULT_ROLE"] ?? "tesoureiro"));
 $testDisplayName = trim((string) ($_ENV["APP_TEST_DEFAULT_NAME"] ?? "Modo Teste"));
 $isTestSession = isset($_SESSION["usuario_id"]) && (int) $_SESSION["usuario_id"] === 0;
 $bypassRoleChecks = $openTestAccess || $isTestSession || ($allowAllPanels && isset($_SESSION["usuario_logado"]));
+$resolveTelegramGroupId = static function (): string {
+    $candidates = [
+        trim((string) ($_ENV['TELEGRAM_CHAT_ID_GROUP'] ?? '')),
+        trim((string) ($_ENV['TELEGRAM_GRUPO_ID'] ?? '')),
+        trim((string) ($_ENV['TELEGRAM_GROUP_ID'] ?? '')),
+        trim((string) ($_ENV['TELEGRAM_CHAT_ID'] ?? '')),
+    ];
+
+    foreach ($candidates as $candidate) {
+        if ($candidate !== '') {
+            return $candidate;
+        }
+    }
+
+    return '';
+};
 
 $normalizeRole = static function (?string $cargo): string {
     $cargo = strtolower(trim((string) $cargo));
@@ -77,10 +93,13 @@ if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
 }
 
 // ==========================================
-// ─── Endpoint para envio automático de efemérides (Cron Job) ───────────────
+// Endpoint para envio automatico de efemerides (Cron Job)
 if ($requestUri === '/api/cron/efemerides-diarias' && $method === 'GET') {
     $token = $_GET['token'] ?? '';
-    $tokenEsperado = $_ENV['CRON_EFEMERIDES_TOKEN'] ?? 'SUA_SENHA_SECRETA';
+    $tokenEsperado = trim((string) ($_ENV['CRON_EFEMERIDES_TOKEN'] ?? $_ENV['CRON_SECRET_TOKEN'] ?? ''));
+    if ($tokenEsperado === '') {
+        $tokenEsperado = 'SUA_SENHA_SECRETA';
+    }
     if ($token !== $tokenEsperado) {
         http_response_code(403);
         echo json_encode(['status' => 'erro', 'mensagem' => 'Token inválido']);
@@ -96,8 +115,8 @@ if ($requestUri === '/api/cron/efemerides-diarias' && $method === 'GET') {
     $composer = new \App\Services\EfemeridesComposer();
     $mensagem = $composer->composeDailyPreview($registros);
 
-    $telegram = new \App\Bot\TelegramClient($_ENV['TELEGRAM_BOT_TOKEN']);
-    $grupoId = $_ENV['TELEGRAM_GRUPO_ID'] ?? '';
+    $telegram = new \App\Bot\TelegramClient();
+    $grupoId = $resolveTelegramGroupId();
     if (!$grupoId) {
         http_response_code(500);
         echo json_encode(['status' => 'erro', 'mensagem' => 'ID do grupo não configurado']);
@@ -126,8 +145,8 @@ if ($requestUri === '/chancelaria/certificado/gerar' && $method === 'POST') {
 
         if (!empty($chatId)) {
             require_once __DIR__ . '/../src/Bot/TelegramClient.php';
-            $telegram = new \App\Bot\TelegramClient($_ENV['TELEGRAM_BOT_TOKEN']); 
-            $telegram->sendPhoto($chatId, $caminhoImagem, "✅ *Certificado gerado com sucesso!*\n\nAgora é só encaminhar para o Ir∴ {$nome}.");
+            $telegram = new \App\Bot\TelegramClient();
+            $telegram->sendPhoto($chatId, $caminhoImagem, "Certificado gerado com sucesso!\n\nAgora e so encaminhar para o Irmao {$nome}.");
         }
 
         echo "<script src='https://telegram.org/js/telegram-web-app.js'></script>
@@ -150,7 +169,7 @@ if ($_SERVER['REQUEST_URI'] === '/chancelaria/certificado' && $_SERVER['REQUEST_
 }
 
 switch ($requestUri) {
-    // ─── Gestão de Cargos (Admin) ────────────────────────────────────────
+    // Gestao de Cargos (Admin)
     case "/admin/cargos":
         // Protege para admin
         if (!isset($_SESSION["usuario_cargo"]) || $_SESSION["usuario_cargo"] !== "admin") {
@@ -171,7 +190,7 @@ switch ($requestUri) {
         (new \App\Controllers\AdminController())->salvarCargo();
         break;
 
-    // ─── Telas Antigas Restauradas ───────────────────────────────────────
+    // Telas antigas restauradas
     case "/obreiros":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
         $obreiroModel = new \App\Models\Obreiro();
@@ -266,7 +285,7 @@ switch ($requestUri) {
         header("Location: /chancelaria/efemerides?sucesso=enviado");
         exit;
 
-    // ─── Tesouraria API ──────────────────────────────────────────────────
+    // Tesouraria API
     case (preg_match('~^/api/tesouraria~', $requestUri) ? $requestUri : null):
         header('Content-Type: application/json; charset=utf-8');
         $usuarioId = $_SESSION['usuario_id'] ?? 0;
@@ -464,7 +483,7 @@ switch ($requestUri) {
         echo json_encode(['ok' => false, 'erro' => 'API não encontrada.']);
         exit;
 
-    // ─── Biblioteca (Views) ──────────────────────────────────────────────
+    // Biblioteca (Views)
     case "/biblioteca":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
@@ -505,6 +524,14 @@ switch ($requestUri) {
             exit;
         }
         (new \App\Controllers\BibliotecaController())->emprestimos();
+        break;
+
+    case "/biblioteca/novo":
+        require_once __DIR__ . '/tg/novo.php';
+        break;
+
+    case "/biblioteca/scanner":
+        require_once __DIR__ . '/tg/scanner.php';
         break;
 
     case "/biblioteca/devolver":
@@ -561,16 +588,7 @@ switch ($requestUri) {
         session_destroy();
         header("Location: /login");
         exit;
-
-        // Roteamento amigável para miniapps da biblioteca
-        if ($requestUri === '/biblioteca/novo') {
-            require_once __DIR__ . '/tg/novo.php';
-            break;
-        }
-        if ($requestUri === '/biblioteca/scanner') {
-            require_once __DIR__ . '/tg/scanner.php';
-            break;
-        }
+    default:
         http_response_code(404);
         echo "404 - Página não encontrada.";
         break;

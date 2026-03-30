@@ -1,6 +1,8 @@
 <?php
 namespace App\Bot;
 
+use App\Config\Env;
+
 class CommandHandler {
     private $telegram;
     private $obreiroModel;
@@ -15,6 +17,36 @@ class CommandHandler {
         $this->obreiroModel = $obreiroModel;
         $this->sessaoModel = $sessaoModel;
         $this->presencaModel = $presencaModel;
+    }
+
+    private function getAppBaseUrl(): string {
+        $base = trim((string) Env::get('APP_URL', ''));
+        if ($base === '') {
+            $base = 'http://localhost:8000';
+        }
+        return rtrim($base, '/');
+    }
+
+    private function buildAppUrl(string $path): string {
+        $path = '/' . ltrim($path, '/');
+        return $this->getAppBaseUrl() . $path;
+    }
+
+    private function getGroupChatId(): ?string {
+        $candidates = [
+            trim((string) Env::get('TELEGRAM_CHAT_ID_GROUP', '')),
+            trim((string) Env::get('TELEGRAM_GRUPO_ID', '')),
+            trim((string) Env::get('TELEGRAM_GROUP_ID', '')),
+            trim((string) Env::get('TELEGRAM_CHAT_ID', '')),
+        ];
+
+        foreach ($candidates as $chatId) {
+            if ($chatId !== '') {
+                return $chatId;
+            }
+        }
+
+        return null;
     }
 
     public function handlePainelAdmin($chatId, $requesterTelegramId) {
@@ -109,7 +141,7 @@ class CommandHandler {
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => '📜 Emitir Certificado', 'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/chancelaria/certificado']]
+                    ['text' => '📜 Emitir Certificado', 'web_app' => ['url' => $this->buildAppUrl('/chancelaria/certificado')]]
                 ],
                 [
                     ['text' => '📅 Neste Dia', 'callback_data' => 'chancelaria_neste_dia']
@@ -182,11 +214,11 @@ public function handleBiblioteca($chatId, $requesterTelegramId) {
         $botoes[] = [
             [
                 'text' => '📷 Cadastrar por ISBN',
-                'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/tg/scanner.php']
+                'web_app' => ['url' => $this->buildAppUrl('/tg/scanner.php')]
             ],
             [
                 'text' => '✏️ Cadastrar Manual',
-                'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/tg/novo.php']
+                'web_app' => ['url' => $this->buildAppUrl('/tg/novo.php')]
             ]
         ];
         $botoes[] = [
@@ -265,20 +297,19 @@ private function handleBibliotecaAcervo($chatId) {
 }
 
 private function handleBibliotecaCadastrar($chatId, $fromId = null) {
-    $baseUrl = 'https://gestor-loja-web.onrender.com';
     $mensagem = "➕ <b>Cadastrar Novo Livro</b>\n\nEscolha o método de cadastro:";
     $teclado = [
         'inline_keyboard' => [
             [
                 [
                     'text' => '📷 Ler Código de Barras',
-                    'web_app' => ['url' => $baseUrl . '/biblioteca/scanner']
+                    'web_app' => ['url' => $this->buildAppUrl('/biblioteca/scanner')]
                 ]
             ],
             [
                 [
                     'text' => '✏️ Preencher Manualmente',
-                    'web_app' => ['url' => $baseUrl . '/biblioteca/novo']
+                    'web_app' => ['url' => $this->buildAppUrl('/biblioteca/novo')]
                 ]
             ],
             [
@@ -365,7 +396,7 @@ private function handleBibliotecaGerenciar($chatId, $fromId = null) {
                     ['text' => '✅ Aprovar e Enviar p/ Grupo', 'callback_data' => 'chancelaria_aprovar_efemeride']
                 ],
                 [
-                    ['text' => '✏️ Editar Texto', 'web_app' => ['url' => 'https://gestor-loja-web.onrender.com/chancelaria/efemerides']]
+                    ['text' => '✏️ Editar Texto', 'web_app' => ['url' => $this->buildAppUrl('/chancelaria/efemerides')]]
                 ],
                 [
                     ['text' => '🔙 Voltar', 'callback_data' => 'admin_chancelaria']
@@ -382,10 +413,10 @@ private function handleBibliotecaGerenciar($chatId, $fromId = null) {
         $previa = $previaModel->buscarPorData($hoje);
 
         if ($previa && !empty($previa['mensagem'])) {
-            $grupoId = $_ENV['TELEGRAM_GROUP_ID'] ?? null;
+            $grupoId = $this->getGroupChatId();
 
             if (!$grupoId) {
-                $this->telegram->sendMessage($chatId, "⚠️ <b>Erro:</b> O ID do grupo oficial não está configurado no arquivo .env (TELEGRAM_GROUP_ID).", ['parse_mode' => 'HTML']);
+                $this->telegram->sendMessage($chatId, "⚠️ <b>Erro:</b> O ID do grupo oficial nao esta configurado no .env (TELEGRAM_CHAT_ID_GROUP ou TELEGRAM_GRUPO_ID ou TELEGRAM_GROUP_ID).", ['parse_mode' => 'HTML']);
                 return;
             }
 

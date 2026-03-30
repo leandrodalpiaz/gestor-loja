@@ -192,7 +192,7 @@ error_reporting(E_ALL);
         btn.disabled = true;
         btn.textContent = 'Salvando...';
 
-        fetch('/api/biblioteca/cadastrar', {
+        fetch('/api/biblioteca/cadastrar.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

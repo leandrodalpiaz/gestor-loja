@@ -86,7 +86,7 @@ class BibliotecaController
     public function emprestimos()
     {
         $emprestimos = $this->emprestimoModel->listarPendentes();
-        require_once __DIR__ . '/../Views/biblioteca_emprestimos.php';
+        require_once __DIR__ . '/../Views/biblioteca/emprestimos.php';
     }
 
     public function devolver($id)

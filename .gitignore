@@ -3,3 +3,5 @@ telegram_efemerides/credentials.json
 telegram_efemerides/message_history_dev.json
 telegram_efemerides/ultima_mensagem_preview.txt
 telegram_efemerides/__pycache__/
+scripts/bin/
+scripts/tmp/

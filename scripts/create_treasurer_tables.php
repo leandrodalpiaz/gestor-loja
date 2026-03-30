@@ -12,6 +12,8 @@ echo "🛠️  CRIANDO ESTRUTURA COMPLETA - Tesoureiro Financeiro\n";
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
 
 try {
+    $appUrl = rtrim(trim((string) Env::get('APP_URL', 'http://localhost:8000')), '/');
+
     echo "📥 Conectando ao Supabase...\n";
     $db = Database::getConnection();
     echo "✅ Conectado!\n\n";
@@ -240,7 +242,7 @@ try {
     echo "🔍 Índices: 12 criados para performance\n\n";
     echo "✨ SISTEMA TESOURARIA 100% FUNCIONAL!\n\n";
     echo "🎯 Você pode acessar agora:\n";
-    echo "   • Dashboard: https://gestor-loja-web.onrender.com/tesouraria/caixa\n";
+    echo "   • Dashboard: {$appUrl}/tesouraria/caixa\n";
     echo "   • Bot: Obreiros podem enviar PIX para validação\n";
     echo "   • Validação: Tesoureiro aprova comprovantes\n";
     echo "   • Período: Encerramento mensal com auditoria\n\n";

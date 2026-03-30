@@ -1,0 +1,22 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gestor-loja-app
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    env_file:
+      - .env
+    volumes:
+      - ./:/var/www/html
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: gestor-loja-tunnel
+    command: tunnel --no-autoupdate --url http://app:80
+    depends_on:
+      - app
+    profiles:
+      - tunnel
