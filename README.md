@@ -6,6 +6,8 @@ Fluxo recomendado para continuar desenvolvimento local (web + Telegram) sem perd
 
 De um duplo clique no arquivo `iniciar_local.bat` na raiz do projeto.
 
+Importante: a URL publica muda a cada execucao. Depois de iniciar, envie `/painel` novamente no bot para receber botoes com a URL atual.
+
 Ele executa automaticamente:
 
 - servidor web local

@@ -252,14 +252,27 @@ try {
 
         if ([string]::IsNullOrWhiteSpace($tunnelUrl)) {
             Write-Host "Nao foi possivel obter URL publica do tunnel." -ForegroundColor Red
+            throw "Tunnel nao iniciado. Sem URL publica, os botoes Mini App nao irao abrir."
         } else {
             Write-Host "Tunnel URL: $tunnelUrl" -ForegroundColor Green
+            Write-Host "Importante: envie /painel novamente no Telegram para gerar botoes com esta URL." -ForegroundColor Yellow
 
             if (-not $SkipEnvUpdate) {
                 Set-DotEnvValue -Path $envFile -Key 'APP_URL' -Value $tunnelUrl
                 Write-Host "APP_URL atualizado no .env." -ForegroundColor Green
             } else {
                 Write-Host "SKIP update APP_URL (-SkipEnvUpdate)." -ForegroundColor Yellow
+            }
+
+            try {
+                $tunnelHealth = Invoke-WebRequest -Uri "$tunnelUrl/health" -UseBasicParsing -TimeoutSec 20
+                if ($tunnelHealth.StatusCode -eq 200) {
+                    Write-Host "Tunnel externo validado em $tunnelUrl/health." -ForegroundColor Green
+                } else {
+                    Write-Host "Aviso: tunnel respondeu status inesperado ($($tunnelHealth.StatusCode))." -ForegroundColor Yellow
+                }
+            } catch {
+                Write-Host "Aviso: nao foi possivel validar /health via tunnel agora. Tente novamente em alguns segundos." -ForegroundColor Yellow
             }
 
             if (-not $WithPolling -and -not $SkipTelegram -and -not $SkipWebhookUpdate) {
