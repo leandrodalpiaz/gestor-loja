@@ -143,7 +143,7 @@ function Start-LocalhostRunTunnel {
         -ArgumentList @(
             '-o', 'StrictHostKeyChecking=no',
             '-o', 'ServerAliveInterval=30',
-            '-R', "80:localhost:$LocalPort",
+            '-R', "80:127.0.0.1:$LocalPort",
             'nokey@localhost.run'
         ) `
         -WorkingDirectory $ProjectRoot `
