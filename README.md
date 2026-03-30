@@ -10,6 +10,7 @@ Ele executa automaticamente:
 
 - servidor web local
 - bot Telegram em long polling (sem Render, sem webhook publico)
+- tunnel HTTPS para abrir botoes Mini App
 - healthcheck + checklist local
 
 ## 1) Requisitos

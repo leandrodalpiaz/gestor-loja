@@ -1,96 +1,147 @@
 <?php
-// Mini-App Telegram – Cadastro de Livro por ISBN (scanner)
-// Nenhuma lógica em PHP; tudo acontece no front-end.
+declare(strict_types=1);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport"
-                content="width=device-width,initial-scale=1.0,maximum-scale=1.0" />
-    <title>📚 Ler ISBN</title>
-
-    <!-- Telegram Mini-App SDK -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Ler ISBN</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-    <!-- Leitor de código de barras (EAN-13 / ISBN-13) -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
     <style>
-        :root{
-            --bg:   var(--tg-theme-bg-color,#f5f5f0);
-            --fg:   var(--tg-theme-text-color,#1a1a1a);
-            --btn:  var(--tg-theme-button-color,#1d4ed8);
-            --btnf: var(--tg-theme-button-text-color,#fff);
+        :root {
+            --bg: var(--tg-theme-bg-color, #f5f5f0);
+            --fg: var(--tg-theme-text-color, #1a1a1a);
+            --btn: var(--tg-theme-button-color, #1d4ed8);
+            --btnf: var(--tg-theme-button-text-color, #fff);
         }
-        *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif}
-        body   {background:var(--bg);color:var(--fg);padding:16px;padding-bottom:80px}
-        h1     {font-size:18px;font-weight:700;margin-bottom:12px}
-        #reader{width:100%;max-width:480px;margin:0 auto;border-radius:12px;overflow:hidden}
-        #info  {margin-top:18px;font-size:14px;line-height:1.45}
-        #erro  {margin-top:12px;color:#e53935;font-size:14px}
-        #btn-salvar{
-            margin-top:20px;padding:12px;width:100%;
-            background:var(--btn);color:var(--btnf);
-            border:none;border-radius:8px;font-weight:600;font-size:15px;
-            display:none;cursor:pointer
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        body {
+            background: var(--bg);
+            color: var(--fg);
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+        h1 { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+        #reader {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        #info { margin-top: 18px; font-size: 14px; line-height: 1.45; }
+        #erro { margin-top: 12px; color: #e53935; font-size: 14px; }
+        #btn-salvar {
+            margin-top: 20px;
+            padding: 12px;
+            width: 100%;
+            background: var(--btn);
+            color: var(--btnf);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            display: none;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <h1>📷 Escaneie o código de barras</h1>
+    <h1>Escaneie o codigo de barras</h1>
     <div id="reader"></div>
-
     <div id="info"></div>
     <div id="erro"></div>
-    <button id="btn-salvar">✅ Salvar livro</button>
+    <button id="btn-salvar">Salvar livro</button>
 
     <script>
-        Telegram.WebApp.ready();
-        const info  = document.getElementById('info');
-        const erro  = document.getElementById('erro');
-        const salvar= document.getElementById('btn-salvar');
-        let   ultimoISBN = null;
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        function notifySuccess() {
+            if (tg && tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred("success");
+            }
+        }
+
+        function notifyError() {
+            if (tg && tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred("error");
+            }
+        }
+
+        function closeApp() {
+            if (tg && typeof tg.close === "function") {
+                tg.close();
+                return;
+            }
+            window.history.back();
+        }
+
+        function successAlert(message) {
+            if (tg && typeof tg.showAlert === "function") {
+                tg.showAlert(message, () => closeApp());
+                return;
+            }
+            alert(message);
+            closeApp();
+        }
+
+        const info = document.getElementById("info");
+        const erro = document.getElementById("erro");
+        const salvar = document.getElementById("btn-salvar");
+        let ultimoISBN = null;
 
         const reader = new Html5Qrcode("reader");
         reader.start(
-            { facingMode:"environment" },            // câmera traseira
-            { fps:10, qrbox:{ width:250, height:120 } },
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 120 } },
             onScanSuccess,
-            () =>{}                                  // onScanFailure (ignorado)
-        ).catch(()=>erro.textContent="❌ Não foi possível abrir a câmera. Verifique as permissões.");
+            () => {}
+        ).catch(() => {
+            erro.textContent = "Nao foi possivel abrir a camera. Verifique as permissoes.";
+        });
 
-        async function onScanSuccess(text){
-            const isbnLimpo = text.replace(/[^0-9X]/gi,'');
-            if(isbnLimpo === ultimoISBN) return;     // evita múltiplas leituras
+        async function onScanSuccess(text) {
+            const isbnLimpo = text.replace(/[^0-9X]/gi, "");
+            if (isbnLimpo === ultimoISBN) return;
             ultimoISBN = isbnLimpo;
-            erro.textContent = "";
-            info.innerHTML = `🔍 Consultando ISBN <b>${isbnLimpo}</b>…`;
 
-            try{
-                const res = await fetch("/api/biblioteca/isbn.php",{
-                    method:"POST",
-                    headers:{ "Content-Type":"application/json" },
-                    body:JSON.stringify({ isbn:isbnLimpo })
+            erro.textContent = "";
+            info.innerHTML = `Consultando ISBN <b>${isbnLimpo}</b>...`;
+
+            try {
+                const res = await fetch("/api/biblioteca/isbn.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ isbn: isbnLimpo })
                 });
-                const d = await res.json();
-                if(!d.ok) throw new Error(d.error || "Falha no cadastro");
+                const data = await res.json();
+                if (!data.ok) {
+                    throw new Error(data.error || "Falha no cadastro");
+                }
 
                 info.innerHTML =
-                    `<b>Título:</b> ${d.titulo}<br>` +
-                    `<b>Autor(es):</b> ${d.autor}<br>`  +
+                    `<b>Titulo:</b> ${data.titulo}<br>` +
+                    `<b>Autor(es):</b> ${data.autor}<br>` +
                     `<b>ISBN:</b> ${isbnLimpo}`;
 
                 salvar.style.display = "block";
-                salvar.onclick = ()=>{
-                    Telegram.WebApp.showAlert("✅ Livro cadastrado!");
-                    Telegram.WebApp.close();
-                };
-                Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-            }catch(e){
-                erro.textContent = "❌ " + e.message;
+                salvar.onclick = () => successAlert("Livro cadastrado!");
+                notifySuccess();
+            } catch (e) {
+                erro.textContent = e.message ? `Erro: ${e.message}` : "Erro ao consultar ISBN.";
                 salvar.style.display = "none";
-                Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                notifyError();
             }
         }
     </script>

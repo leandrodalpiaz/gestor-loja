@@ -5,13 +5,13 @@ cd /d "%~dp0"
 
 echo ===========================================================
 echo Gestor Loja - Inicio local (1 clique, sem Render)
-echo Modo: Web local + Telegram polling
+echo Modo: Web local + Telegram polling + tunnel HTTPS
 echo URL web: http://127.0.0.1:8000
 echo Pressione Ctrl+C para encerrar quando terminar.
 echo ===========================================================
 echo.
 
-powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File ".\scripts\dev_start.ps1" -Port 8000 -ChecklistPort 8090 -OpenAccess -WithPolling
+powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File ".\scripts\dev_start.ps1" -Port 8000 -ChecklistPort 8090 -OpenAccess -WithPolling -WithTunnel
 set "EXIT_CODE=%ERRORLEVEL%"
 
 echo.

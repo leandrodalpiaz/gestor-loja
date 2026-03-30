@@ -144,6 +144,9 @@ class CommandHandler {
                     ['text' => '📜 Emitir Certificado', 'web_app' => ['url' => $this->buildAppUrl('/chancelaria/certificado')]]
                 ],
                 [
+                    ['text' => '🔗 Certificado (Fallback)', 'url' => $this->buildAppUrl('/chancelaria/certificado')]
+                ],
+                [
                     ['text' => '📅 Neste Dia', 'callback_data' => 'chancelaria_neste_dia']
                 ],
                 [
@@ -214,11 +217,11 @@ public function handleBiblioteca($chatId, $requesterTelegramId) {
         $botoes[] = [
             [
                 'text' => '📷 Cadastrar por ISBN',
-                'web_app' => ['url' => $this->buildAppUrl('/tg/scanner.php')]
+                'url' => $this->buildAppUrl('/tg/scanner.php')
             ],
             [
                 'text' => '✏️ Cadastrar Manual',
-                'web_app' => ['url' => $this->buildAppUrl('/tg/novo.php')]
+                'url' => $this->buildAppUrl('/tg/novo.php')
             ]
         ];
         $botoes[] = [

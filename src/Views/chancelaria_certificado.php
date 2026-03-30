@@ -43,10 +43,13 @@
         </div>
     </form>
     <script>
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
-        if (window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
-            document.getElementById('chat_id').value = window.Telegram.WebApp.initDataUnsafe.user.id;
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                document.getElementById('chat_id').value = tg.initDataUnsafe.user.id;
+            }
         }
     </script>
 </body>

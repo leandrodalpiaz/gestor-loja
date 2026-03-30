@@ -151,9 +151,19 @@ if ($requestUri === '/chancelaria/certificado/gerar' && $method === 'POST') {
 
         echo "<script src='https://telegram.org/js/telegram-web-app.js'></script>
         <script>
-            window.Telegram.WebApp.showAlert('Certificado gerado e enviado no seu chat!', function() {
-                window.Telegram.WebApp.close();
-            });
+            (function () {
+                const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+                if (tg && typeof tg.showAlert === 'function') {
+                    tg.showAlert('Certificado gerado e enviado no seu chat!', function() {
+                        if (typeof tg.close === 'function') {
+                            tg.close();
+                        }
+                    });
+                    return;
+                }
+                alert('Certificado gerado com sucesso!');
+                window.history.back();
+            })();
         </script>";
         exit;
 
