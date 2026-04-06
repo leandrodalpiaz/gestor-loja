@@ -2,6 +2,7 @@
 session_start();
 
 use App\Config\Env;
+use App\Models\Cargo;
 
 require_once __DIR__ . "/../src/autoload.php";
 
@@ -15,7 +16,7 @@ $testLogin = trim((string) ($_ENV["APP_TEST_DEFAULT_LOGIN"] ?? ""));
 $testPassword = (string) ($_ENV["APP_TEST_DEFAULT_PASSWORD"] ?? "");
 $testRole = trim((string) ($_ENV["APP_TEST_DEFAULT_ROLE"] ?? "tesoureiro"));
 $testDisplayName = trim((string) ($_ENV["APP_TEST_DEFAULT_NAME"] ?? "Modo Teste"));
-$isTestSession = isset($_SESSION["usuario_id"]) && (int) $_SESSION["usuario_id"] === 0;
+$isTestSession = isset($_SESSION["usuario_id"]) && (string) $_SESSION["usuario_id"] === '0';
 $bypassRoleChecks = $openTestAccess || $isTestSession || ($allowAllPanels && isset($_SESSION["usuario_logado"]));
 $resolveTelegramGroupId = static function (): string {
     $candidates = [
@@ -36,14 +37,9 @@ $resolveTelegramGroupId = static function (): string {
 
 $normalizeRole = static function (?string $cargo): string {
     $cargo = strtolower(trim((string) $cargo));
-    return strtr($cargo, [
-        "á" => "a", "à" => "a", "â" => "a", "ã" => "a",
-        "é" => "e", "ê" => "e",
-        "í" => "i",
-        "ó" => "o", "ô" => "o", "õ" => "o",
-        "ú" => "u",
-        "ç" => "c",
-    ]);
+    $cargo = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $cargo) ?: $cargo;
+    $cargo = preg_replace('/[^a-z0-9_]+/', '', $cargo) ?? '';
+    return $cargo;
 };
 
 $appToday = static function (): \DateTimeImmutable {
@@ -73,6 +69,17 @@ $buildEfemeridesPreview = static function (): array {
     ];
 };
 
+$redirectEfemerides = static function (array $params = []): void {
+    $params = array_filter(
+        $params,
+        static fn ($value) => $value !== null && $value !== ''
+    );
+    $query = http_build_query($params);
+    $url = '/chancelaria/efemerides' . ($query !== '' ? '?' . $query : '');
+    header('Location: ' . $url);
+    exit;
+};
+
 $buildTestSessionUser = static function () use ($normalizeRole, $testDisplayName, $testRole): array {
     $role = $normalizeRole($testRole);
 
@@ -81,8 +88,138 @@ $buildTestSessionUser = static function () use ($normalizeRole, $testDisplayName
         "nome_historico" => $testDisplayName,
         "nome_completo" => "Acesso temporario para homologacao",
         "cargo" => $role,
+        "cargos" => [$role],
         "ativo" => true,
     ];
+};
+
+$syncSessionRoles = static function (?array $usuario = null) use ($normalizeRole): array {
+    $usuario = $usuario ?? ($_SESSION['usuario_logado'] ?? null);
+    $fallback = $normalizeRole($usuario['cargo'] ?? $_SESSION['usuario_cargo'] ?? '');
+
+    $slugs = [];
+    $codigos = [];
+    $usuarioId = (string) ($usuario['id'] ?? $_SESSION['usuario_id'] ?? '');
+
+    if ($usuarioId !== '' && $usuarioId !== '0') {
+        try {
+            $cargoModel = new Cargo();
+            $codigos = $cargoModel->getCodigosAtivosDoObreiro($usuarioId);
+            $slugs = Cargo::slugsFromCodigos($codigos);
+        } catch (\Throwable $e) {
+            error_log('Falha ao sincronizar cargos da sessao: ' . $e->getMessage());
+        }
+    }
+
+    if ($slugs === [] && $fallback !== '') {
+        $slugs = [$fallback];
+    }
+
+    $principal = Cargo::resolverCargoPrincipal($slugs, $fallback);
+
+    if (isset($_SESSION['usuario_logado']) && is_array($_SESSION['usuario_logado'])) {
+        $_SESSION['usuario_logado']['cargo'] = $principal;
+        $_SESSION['usuario_logado']['cargos'] = $slugs;
+    }
+
+    $_SESSION['usuario_cargo'] = $principal;
+    $_SESSION['usuario_cargos'] = $slugs;
+    $_SESSION['usuario_cargos_codigos'] = $codigos;
+
+    return [$principal, $slugs, $codigos];
+};
+
+$sessionHasRole = static function (string ...$roles) use ($normalizeRole, $bypassRoleChecks): bool {
+    if ($bypassRoleChecks) {
+        return true;
+    }
+
+    $sessionRoles = array_values(array_unique(array_filter(array_map(
+        $normalizeRole,
+        $_SESSION['usuario_cargos'] ?? [$_SESSION['usuario_cargo'] ?? '']
+    ))));
+
+    foreach ($roles as $role) {
+        if (in_array($normalizeRole($role), $sessionRoles, true)) {
+            return true;
+        }
+    }
+
+    return false;
+};
+
+$resolveAuthorizedTelegramObreiro = static function (string ...$roles) use ($normalizeRole): ?array {
+    $initData = trim((string) ($_POST['init_data'] ?? $_GET['init_data'] ?? ''));
+    if ($initData === '') {
+        return null;
+    }
+
+    $botToken = trim((string) ($_ENV['TELEGRAM_BOT_TOKEN'] ?? ''));
+    $telegramUser = \App\Services\TelegramInitDataValidator::validate($initData, $botToken);
+    if ($telegramUser === null || empty($telegramUser['id'])) {
+        return null;
+    }
+
+    try {
+        $obreiro = (new \App\Models\Obreiro())->findByTelegramId((int) $telegramUser['id']);
+    } catch (\Throwable $e) {
+        error_log('Falha ao resolver obreiro por initData: ' . $e->getMessage());
+        return null;
+    }
+
+    if (!$obreiro) {
+        return null;
+    }
+
+    $cargos = array_values(array_unique(array_filter(array_map(
+        $normalizeRole,
+        $obreiro['cargos'] ?? [$obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? '']
+    ))));
+
+    foreach ($roles as $role) {
+        if (in_array($normalizeRole($role), $cargos, true)) {
+            return $obreiro;
+        }
+    }
+
+    return null;
+};
+
+$getJsonBody = static function (): array {
+    static $parsed = null;
+    if ($parsed !== null) {
+        return $parsed;
+    }
+
+    $raw = file_get_contents('php://input');
+    if (!is_string($raw) || trim($raw) === '') {
+        $parsed = [];
+        return $parsed;
+    }
+
+    $decoded = json_decode($raw, true);
+    $parsed = is_array($decoded) ? $decoded : [];
+    return $parsed;
+};
+
+$resolveObreiroByInitData = static function (?string $initData = null): ?array {
+    $initData = trim((string) $initData);
+    if ($initData === '') {
+        return null;
+    }
+
+    $botToken = trim((string) ($_ENV['TELEGRAM_BOT_TOKEN'] ?? ''));
+    $telegramUser = \App\Services\TelegramInitDataValidator::validate($initData, $botToken);
+    if ($telegramUser === null || empty($telegramUser['id'])) {
+        return null;
+    }
+
+    try {
+        return (new \App\Models\Obreiro())->findByTelegramId((int) $telegramUser['id']);
+    } catch (\Throwable $e) {
+        error_log('Falha ao resolver miniapp por initData: ' . $e->getMessage());
+        return null;
+    }
 };
 
 if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
@@ -90,6 +227,12 @@ if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
     $_SESSION["usuario_id"] = 0;
     $_SESSION["usuario_nome"] = $_SESSION["usuario_logado"]["nome_historico"];
     $_SESSION["usuario_cargo"] = $_SESSION["usuario_logado"]["cargo"];
+    $_SESSION["usuario_cargos"] = $_SESSION["usuario_logado"]["cargos"];
+    $_SESSION["usuario_cargos_codigos"] = [];
+}
+
+if (isset($_SESSION['usuario_logado']) && !$openTestAccess && !$isTestSession) {
+    $syncSessionRoles();
 }
 
 // ==========================================
@@ -102,7 +245,7 @@ if ($requestUri === '/api/cron/efemerides-diarias' && $method === 'GET') {
     }
     if ($token !== $tokenEsperado) {
         http_response_code(403);
-        echo json_encode(['status' => 'erro', 'mensagem' => 'Token inválido']);
+        echo json_encode(['status' => 'erro', 'mensagem' => 'Token invalido']);
         exit;
     }
 
@@ -111,7 +254,7 @@ if ($requestUri === '/api/cron/efemerides-diarias' && $method === 'GET') {
     require_once __DIR__ . '/../src/Bot/TelegramClient.php';
 
     $efemerideModel = new \App\Models\EfemerideRegistro();
-    $registros = $efemerideModel->getRegistrosDoDia(date('Y-m-d'));
+    $registros = $efemerideModel->getRegistrosDoDia();
     $composer = new \App\Services\EfemeridesComposer();
     $mensagem = $composer->composeDailyPreview($registros);
 
@@ -119,7 +262,7 @@ if ($requestUri === '/api/cron/efemerides-diarias' && $method === 'GET') {
     $grupoId = $resolveTelegramGroupId();
     if (!$grupoId) {
         http_response_code(500);
-        echo json_encode(['status' => 'erro', 'mensagem' => 'ID do grupo não configurado']);
+        echo json_encode(['status' => 'erro', 'mensagem' => 'ID do grupo nao configurado']);
         exit;
     }
     $telegram->sendMessage($grupoId, $mensagem, ['parse_mode' => 'HTML']);
@@ -129,6 +272,14 @@ if ($requestUri === '/api/cron/efemerides-diarias' && $method === 'GET') {
 // ROTEAMENTO PRINCIPAL
 // ==========================================
 if ($requestUri === '/chancelaria/certificado/gerar' && $method === 'POST') {
+    $sessionAutorizada = isset($_SESSION['usuario_logado']) && $sessionHasRole('chanceler', 'admin');
+    $telegramObreiro = $sessionAutorizada ? null : $resolveAuthorizedTelegramObreiro('chanceler', 'admin');
+    if (!$sessionAutorizada && !$telegramObreiro) {
+        http_response_code(403);
+        echo "<div style='padding: 20px; color: red; font-family: sans-serif;'>Acesso restrito ao Chanceler ou Administrador.</div>";
+        exit;
+    }
+
     require_once __DIR__ . '/../src/Services/CertificadoGenerator.php';
 
     $nome = $_POST['nome_visitante'] ?? '';
@@ -173,7 +324,26 @@ if ($requestUri === '/chancelaria/certificado/gerar' && $method === 'POST') {
     }
 }
 
-if ($_SERVER['REQUEST_URI'] === '/chancelaria/certificado' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+if ($requestUri === '/chancelaria/certificado' && $method === 'GET') {
+    if (!$openTestAccess && !isset($_SESSION['usuario_logado'])) {
+        $initData = trim((string) ($_GET['init_data'] ?? ''));
+        if ($initData === '') {
+            require_once __DIR__ . '/../src/Views/chancelaria_certificado.php';
+            exit;
+        }
+
+        $telegramObreiro = $resolveAuthorizedTelegramObreiro('chanceler', 'admin');
+        if (!$telegramObreiro) {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler ou Administrador.";
+            exit;
+        }
+    } elseif (!$sessionHasRole('chanceler', 'admin')) {
+        http_response_code(403);
+        echo "Acesso restrito ao Chanceler ou Administrador.";
+        exit;
+    }
+
     require_once __DIR__ . '/../src/Views/chancelaria_certificado.php';
     exit;
 }
@@ -181,8 +351,11 @@ if ($_SERVER['REQUEST_URI'] === '/chancelaria/certificado' && $_SERVER['REQUEST_
 switch ($requestUri) {
     // Gestao de Cargos (Admin)
     case "/admin/cargos":
-        // Protege para admin
-        if (!isset($_SESSION["usuario_cargo"]) || $_SESSION["usuario_cargo"] !== "admin") {
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('admin')) {
             http_response_code(403);
             echo "Acesso restrito ao Administrador.";
             exit;
@@ -191,8 +364,11 @@ switch ($requestUri) {
         break;
 
     case "/admin/cargos/salvar":
-        // Protege para admin
-        if (!isset($_SESSION["usuario_cargo"]) || $_SESSION["usuario_cargo"] !== "admin") {
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('admin')) {
             http_response_code(403);
             echo "Acesso restrito ao Administrador.";
             exit;
@@ -203,34 +379,235 @@ switch ($requestUri) {
     // Telas antigas restauradas
     case "/obreiros":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'chanceler', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito a Secretaria, Chancelaria ou Administrador.";
+            exit;
+        }
         $obreiroModel = new \App\Models\Obreiro();
         $obreiros = $obreiroModel->getAllAtivos();
         require_once __DIR__ . "/../src/Views/obreiros.php";
         break;
 
+    case "/obreiros/novo":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        require_once __DIR__ . "/../src/Views/obreiro_form.php";
+        break;
+
+    case "/obreiros/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            header("Location: /obreiros/novo");
+            exit;
+        }
+
+        $obreiroModel = new \App\Models\Obreiro();
+        $ok = $obreiroModel->create($_POST);
+        if ($ok) {
+            header("Location: /obreiros?sucesso=1");
+        } else {
+            header("Location: /obreiros/novo?erro=1");
+        }
+        exit;
+
+    case "/obreiros/editar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        $id = (string) ($_GET['id'] ?? '');
+        if ($id === '') {
+            header("Location: /obreiros");
+            exit;
+        }
+
+        $obreiroModel = new \App\Models\Obreiro();
+        $obreiro = $obreiroModel->findById($id);
+        if (!$obreiro) {
+            http_response_code(404);
+            echo "Obreiro nao encontrado.";
+            exit;
+        }
+        require_once __DIR__ . "/../src/Views/obreiro_editar.php";
+        break;
+
+    case "/obreiros/atualizar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            header("Location: /obreiros");
+            exit;
+        }
+
+        $obreiroId = (string) ($_POST['id'] ?? '');
+        if ($obreiroId === '') {
+            header("Location: /obreiros?erro=1");
+            exit;
+        }
+
+        $obreiroModel = new \App\Models\Obreiro();
+        $ok = $obreiroModel->update($_POST);
+        if ($ok) {
+            header("Location: /obreiros/editar?id=" . urlencode($obreiroId) . "&sucesso=1");
+        } else {
+            header("Location: /obreiros/editar?id=" . urlencode($obreiroId) . "&erro=1");
+        }
+        exit;
+
+    case "/secretaria":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario, Veneravel ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->index();
+        break;
+
+    case "/secretaria/votacao":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        (new \App\Controllers\SecretariaController())->votacao();
+        break;
+
+    case "/secretaria/sessoes/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->salvarSessao();
+        break;
+
+    case "/secretaria/trabalhos/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->salvarTrabalho();
+        break;
+
+    case "/secretaria/publicacoes/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->salvarPublicacao();
+        break;
+
+    case "/secretaria/balaustres/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->salvarBalaustre();
+        break;
+
+    case "/secretaria/balaustres/apto":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->marcarBalaustreApto();
+        break;
+
+    case "/secretaria/balaustres/abrir-votacao":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->abrirVotacaoBalaustre();
+        break;
+
+    case "/secretaria/balaustres/votar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        (new \App\Controllers\SecretariaController())->votarBalaustre();
+        break;
+
+    case "/secretaria/balaustres/encerrar-votacao":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->encerrarVotacaoBalaustre();
+        break;
+
     case "/tesouraria/caixa":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('tesoureiro', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro ou Administrador.";
+            exit;
+        }
         require_once __DIR__ . "/../src/Views/tesouraria_caixa.php";
         break;
 
     case "/tesouraria/comprovantes":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('tesoureiro', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro ou Administrador.";
+            exit;
+        }
         require_once __DIR__ . "/../src/Views/tesouraria_comprovantes.php";
         break;
 
     case "/tesouraria/regularidade":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('tesoureiro', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro ou Administrador.";
+            exit;
+        }
         require_once __DIR__ . "/../src/Views/tesouraria_regularidade.php";
         break;
 
     case "/tesouraria/fechamento":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('tesoureiro', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro ou Administrador.";
+            exit;
+        }
         require_once __DIR__ . "/../src/Views/tesouraria_fechamento.php";
         break;
 
     case "/biblioteca/classificar":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('bibliotecario', 'admin', 'veneravel')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Bibliotecario, Veneravel ou Administrador.";
             exit;
         }
         $bibliotecaController = new \App\Controllers\BibliotecaController();
@@ -256,28 +633,58 @@ switch ($requestUri) {
         require_once __DIR__ . "/../src/Views/dashboard.php";
         break;
 
-    case "/chancelaria/efemerides":
+    case "/chancelaria/efemerides/salvar-previa":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
             exit;
         }
-        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        // Liberado para chanceler e admin
-        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler' && $cargoUsuario !== 'admin') {
+        if (!$sessionHasRole('chanceler', 'admin')) {
             http_response_code(403);
             echo "Acesso restrito ao Chanceler ou Administrador.";
             exit;
         }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
 
-        // --- BUSCANDO OS DADOS NO BANCO ANTES DE ABRIR A TELA ---
+        $mensagemPreview = trim((string) ($_POST['mensagem_preview'] ?? ''));
+        if ($mensagemPreview === '') {
+            $redirectEfemerides(['erro' => 'previa_vazia']);
+        }
+
+        $previaModel = new \App\Models\EfemeridePreviaDiaria();
+        $ok = $previaModel->salvarOuAtualizar(
+            $appToday()->format('Y-m-d'),
+            $mensagemPreview,
+            false
+        );
+
+        $redirectEfemerides($ok ? ['sucesso' => 'previa_salva'] : ['erro' => 'falha_salvar_previa']);
+        break;
+
+    case "/chancelaria/efemerides/enviar-previa":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('chanceler', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler ou Administrador.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+
         $dadosEfemerides = $buildEfemeridesPreview();
-        $registrosHoje = $dadosEfemerides['registrosHoje'];
-        $registrosRecentes = $dadosEfemerides['registrosRecentes'];
-        $mensagemBase = $dadosEfemerides['mensagemBase'];
-        $mensagemPreview = $dadosEfemerides['mensagemPreview'];
-        // --------------------------------------------------------
+        $mensagemPreview = trim((string) ($dadosEfemerides['mensagemPreview'] ?? ''));
+        if ($mensagemPreview === '') {
+            $redirectEfemerides(['erro' => 'previa_vazia']);
+        }
 
-        require_once __DIR__ . "/../src/Views/efemerides_chanceler.php";
+        $telegramService = new \App\Services\TelegramService();
+        $ok = $telegramService->sendMessageToReview($mensagemPreview);
+        $redirectEfemerides($ok ? ['sucesso' => 'previa_enviada'] : ['erro' => 'falha_enviar_previa']);
         break;
 
     case "/chancelaria/efemerides/enviar-grupo":
@@ -285,19 +692,315 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
-        $cargoUsuario = $normalizeRole($_SESSION["usuario_cargo"] ?? "");
-        // Liberado para chanceler e admin
-        if (!$bypassRoleChecks && $cargoUsuario !== 'chanceler' && $cargoUsuario !== 'admin') {
+        if (!$sessionHasRole('chanceler', 'admin')) {
             http_response_code(403);
             echo "Acesso restrito ao Chanceler ou Administrador.";
             exit;
         }
-        header("Location: /chancelaria/efemerides?sucesso=enviado");
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+
+        $dadosEfemerides = $buildEfemeridesPreview();
+        $mensagemPreview = trim((string) ($dadosEfemerides['mensagemPreview'] ?? ''));
+        if ($mensagemPreview === '') {
+            $redirectEfemerides(['erro' => 'previa_vazia']);
+        }
+
+        $telegramService = new \App\Services\TelegramService();
+        $ok = $telegramService->sendMessageToGroup($mensagemPreview);
+        $redirectEfemerides($ok ? ['sucesso' => 'enviado'] : ['erro' => 'falha_enviar_grupo']);
+        break;
+
+    case "/chancelaria/efemerides/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('chanceler', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler ou Administrador.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+
+        $nome = trim((string) ($_POST['nome'] ?? ''));
+        $tipo = trim((string) ($_POST['tipo'] ?? ''));
+        $dataEvento = trim((string) ($_POST['data_evento'] ?? ''));
+        $dataValida = \DateTimeImmutable::createFromFormat('Y-m-d', $dataEvento) !== false;
+        if ($nome === '' || $tipo === '' || $dataEvento === '' || !$dataValida) {
+            $redirectEfemerides(['erro' => 'registro_invalido']);
+        }
+
+        $registroModel = new \App\Models\EfemerideRegistro();
+        $createdBy = isset($_SESSION['usuario_id']) ? (int) $_SESSION['usuario_id'] : null;
+        $ok = $registroModel->create($_POST, $createdBy);
+        $redirectEfemerides($ok ? ['sucesso' => 'registro_salvo'] : ['erro' => 'falha_salvar_registro']);
+        break;
+
+    case "/chancelaria/efemerides/atualizar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('chanceler', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler ou Administrador.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+
+        $registroId = (int) ($_POST['registro_id'] ?? 0);
+        $nome = trim((string) ($_POST['nome'] ?? ''));
+        $tipo = trim((string) ($_POST['tipo'] ?? ''));
+        $dataEvento = trim((string) ($_POST['data_evento'] ?? ''));
+        $dataValida = \DateTimeImmutable::createFromFormat('Y-m-d', $dataEvento) !== false;
+
+        if ($registroId <= 0 || $nome === '' || $tipo === '' || $dataEvento === '' || !$dataValida) {
+            $redirectEfemerides(['erro' => 'registro_invalido']);
+        }
+
+        $registroModel = new \App\Models\EfemerideRegistro();
+        $ok = $registroModel->atualizar($registroId, $_POST);
+        $redirectEfemerides($ok ? ['sucesso' => 'registro_atualizado'] : ['erro' => 'falha_atualizar_registro']);
+        break;
+
+    case "/chancelaria/efemerides/desativar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('chanceler', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler ou Administrador.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+
+        $registroId = (int) ($_POST['id'] ?? 0);
+        if ($registroId <= 0) {
+            $redirectEfemerides(['erro' => 'id_invalido']);
+        }
+
+        $registroModel = new \App\Models\EfemerideRegistro();
+        $ok = $registroModel->desativar($registroId);
+        $redirectEfemerides($ok ? ['sucesso' => 'registro_desativado'] : ['erro' => 'falha_desativar']);
+        break;
+
+    case "/chancelaria/efemerides":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('chanceler', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler ou Administrador.";
+            exit;
+        }
+
+        $sucessoMensagem = match ((string) ($_GET['sucesso'] ?? '')) {
+            'previa_salva' => 'Previa salva com sucesso.',
+            'previa_enviada' => 'Previa enviada no privado do Chanceler.',
+            'enviado' => 'Mensagem enviada ao grupo oficial.',
+            'registro_salvo' => 'Registro salvo com sucesso.',
+            'registro_atualizado' => 'Registro atualizado com sucesso.',
+            'registro_desativado' => 'Registro desativado com sucesso.',
+            default => null,
+        };
+
+        $erroMensagem = match ((string) ($_GET['erro'] ?? '')) {
+            'previa_vazia' => 'A mensagem da previa nao pode ficar vazia.',
+            'falha_salvar_previa' => 'Nao foi possivel salvar a previa.',
+            'falha_enviar_previa' => 'Falha ao enviar a previa no privado. Verifique TELEGRAM_CHAT_ID_CHANCELER.',
+            'falha_enviar_grupo' => 'Falha ao enviar no grupo oficial. Verifique TELEGRAM_CHAT_ID_GROUP.',
+            'registro_invalido' => 'Preencha nome, tipo e data do evento corretamente.',
+            'falha_salvar_registro' => 'Nao foi possivel salvar o registro.',
+            'falha_atualizar_registro' => 'Nao foi possivel atualizar o registro.',
+            'id_invalido' => 'Registro invalido para desativacao.',
+            'falha_desativar' => 'Nao foi possivel desativar o registro.',
+            default => null,
+        };
+
+        $dadosEfemerides = $buildEfemeridesPreview();
+        $registrosHoje = $dadosEfemerides['registrosHoje'];
+        $filtroTermo = trim((string) ($_GET['termo'] ?? ''));
+        $filtroTipo = trim((string) ($_GET['tipo'] ?? ''));
+        $filtroAtivo = trim((string) ($_GET['ativo'] ?? '1'));
+        $filtroDataIni = trim((string) ($_GET['data_ini'] ?? ''));
+        $filtroDataFim = trim((string) ($_GET['data_fim'] ?? ''));
+        $filtrosEfemeride = [
+            'termo' => $filtroTermo,
+            'tipo' => $filtroTipo,
+            'ativo' => $filtroAtivo,
+            'data_ini' => $filtroDataIni,
+            'data_fim' => $filtroDataFim,
+        ];
+        $registroModel = new \App\Models\EfemerideRegistro();
+        $registrosRecentes = $registroModel->buscarComFiltros($filtrosEfemeride, 300);
+        $tiposEfemeride = [
+            'Aniversário',
+            'Iniciação',
+            'Elevação',
+            'Exaltação',
+            'Instalação',
+            'Oriente Eterno',
+            'História',
+            'Posse Grão Mestre',
+            'Concessão de Membro Honorário',
+            'Filiação',
+        ];
+        $mensagemBase = $dadosEfemerides['mensagemBase'];
+        $mensagemPreview = $dadosEfemerides['mensagemPreview'];
+
+        require_once __DIR__ . "/../src/Views/efemerides_chanceler.php";
+        break;
+
+    case "/miniapp/aniversario":
+        require_once __DIR__ . "/../src/Views/miniapp/aniversario.php";
+        break;
+
+    case "/miniapp/data-maconica":
+        require_once __DIR__ . "/../src/Views/miniapp/data-maconica.php";
+        break;
+
+    case "/miniapp/historico":
+        require_once __DIR__ . "/../src/Views/miniapp/historico.php";
+        break;
+
+    case "/miniapp/fallback":
+        require_once __DIR__ . "/../src/Views/miniapp/fallback.php";
+        break;
+
+    case (preg_match('~^/api/miniapp~', $requestUri) ? $requestUri : null):
+        header('Content-Type: application/json; charset=utf-8');
+
+        $body = $getJsonBody();
+        $initData = trim((string) ($body['initData'] ?? $body['init_data'] ?? $_GET['initData'] ?? $_GET['init_data'] ?? ''));
+        $miniappObreiro = null;
+        $authorizedBySession = isset($_SESSION['usuario_logado']) && $sessionHasRole('chanceler', 'admin');
+
+        if ($authorizedBySession) {
+            $miniappObreiro = $_SESSION['usuario_logado'];
+        } else {
+            $miniappObreiro = $resolveObreiroByInitData($initData);
+            if (!$miniappObreiro) {
+                http_response_code(401);
+                echo json_encode(['ok' => false, 'erro' => 'Nao autenticado no miniapp.']);
+                exit;
+            }
+
+            $roles = array_values(array_unique(array_filter(array_map(
+                $normalizeRole,
+                $miniappObreiro['cargos'] ?? [$miniappObreiro['cargo_principal'] ?? $miniappObreiro['cargo'] ?? '']
+            ))));
+            if (!in_array('chanceler', $roles, true) && !in_array('admin', $roles, true)) {
+                http_response_code(403);
+                echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Chanceler ou Administrador.']);
+                exit;
+            }
+        }
+
+        $efemerideModel = new \App\Models\EfemerideRegistro();
+        $mensagensModel = new \App\Models\MensagemComplementar();
+
+        if ($requestUri === '/api/miniapp/efemeride/salvar' && $method === 'POST') {
+            $id = (int) ($body['id'] ?? 0);
+            $nome = trim((string) ($body['nome'] ?? ''));
+            $tipo = trim((string) ($body['tipo'] ?? ''));
+            $dataEvento = trim((string) ($body['data_evento'] ?? ''));
+            $dataValida = \DateTimeImmutable::createFromFormat('Y-m-d', $dataEvento) !== false;
+            if ($nome === '' || $tipo === '' || $dataEvento === '' || !$dataValida) {
+                echo json_encode(['ok' => false, 'erro' => 'Dados invalidos para salvar efemeride.']);
+                exit;
+            }
+
+            if ($id > 0) {
+                $ok = $efemerideModel->atualizar($id, $body);
+            } else {
+                $createdBy = (int) ($miniappObreiro['id'] ?? ($_SESSION['usuario_id'] ?? 0));
+                $ok = $efemerideModel->create($body, $createdBy > 0 ? $createdBy : null);
+            }
+
+            echo json_encode(['ok' => $ok]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/efemeride/desativar' && $method === 'POST') {
+            $id = (int) ($body['id'] ?? 0);
+            $ok = $id > 0 ? $efemerideModel->desativar($id) : false;
+            echo json_encode(['ok' => $ok]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/historico/listar' && $method === 'GET') {
+            $registros = $efemerideModel->buscarComFiltros(['tipo' => 'História', 'ativo' => 'all'], 300);
+            if ($registros === []) {
+                $registros = $efemerideModel->buscarComFiltros(['tipo' => 'Historia', 'ativo' => 'all'], 300);
+            }
+            echo json_encode(['ok' => true, 'registros' => $registros]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/fallback/listar' && $method === 'GET') {
+            $mensagens = $mensagensModel->listarPorTipo('fallback');
+            echo json_encode(['ok' => true, 'mensagens' => $mensagens]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/fallback/salvar' && $method === 'POST') {
+            $id = (int) ($body['id'] ?? 0);
+            $mensagem = trim((string) ($body['mensagem'] ?? ''));
+            if ($mensagem === '') {
+                echo json_encode(['ok' => false, 'erro' => 'Mensagem vazia.']);
+                exit;
+            }
+
+            $ok = $id > 0
+                ? $mensagensModel->atualizar($id, $mensagem)
+                : $mensagensModel->criar('fallback', $mensagem);
+            echo json_encode(['ok' => $ok]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/fallback/toggle' && $method === 'POST') {
+            $id = (int) ($body['id'] ?? 0);
+            $ok = $id > 0 ? $mensagensModel->toggleAtivo($id) : false;
+            echo json_encode(['ok' => $ok]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/fallback/excluir' && $method === 'POST') {
+            $id = (int) ($body['id'] ?? 0);
+            $ok = $id > 0 ? $mensagensModel->excluir($id) : false;
+            echo json_encode(['ok' => $ok]);
+            exit;
+        }
+
+        http_response_code(404);
+        echo json_encode(['ok' => false, 'erro' => 'API miniapp nao encontrada.']);
         exit;
 
     // Tesouraria API
     case (preg_match('~^/api/tesouraria~', $requestUri) ? $requestUri : null):
         header('Content-Type: application/json; charset=utf-8');
+
+        if (!$openTestAccess && !isset($_SESSION['usuario_logado'])) {
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'erro' => 'Nao autenticado.']);
+            exit;
+        }
+        if (!$sessionHasRole('tesoureiro', 'admin')) {
+            http_response_code(403);
+            echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Tesoureiro ou Administrador.']);
+            exit;
+        }
+
         $usuarioId = $_SESSION['usuario_id'] ?? 0;
 
         if (preg_match('~^/api/tesouraria/lancamento/(\d+)$~', $requestUri, $m) && $method === 'DELETE') {
@@ -490,7 +1193,7 @@ switch ($requestUri) {
         }
 
         http_response_code(404);
-        echo json_encode(['ok' => false, 'erro' => 'API não encontrada.']);
+        echo json_encode(['ok' => false, 'erro' => 'API nao encontrada.']);
         exit;
 
     // Biblioteca (Views)
@@ -507,12 +1210,22 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
+        if (!$sessionHasRole('bibliotecario', 'admin', 'veneravel')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Bibliotecario, Veneravel ou Administrador.";
+            exit;
+        }
         (new \App\Controllers\BibliotecaController())->adicionar();
         break;
 
     case "/biblioteca/editar":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('bibliotecario', 'admin', 'veneravel')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Bibliotecario, Veneravel ou Administrador.";
             exit;
         }
         $id = (int) ($_POST['id'] ?? 0);
@@ -522,6 +1235,11 @@ switch ($requestUri) {
     case "/biblioteca/excluir":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('bibliotecario', 'admin', 'veneravel')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Bibliotecario, Veneravel ou Administrador.";
             exit;
         }
         $id = (int) ($_POST['id'] ?? 0);
@@ -559,36 +1277,40 @@ switch ($requestUri) {
             exit;
         }
 
+        $erroLogin = null;
         if ($method === "POST") {
-            // Tenta pegar os dados independente do nome que o formulário HTML enviou
             $matricula = $_POST["matricula"] ?? $_POST["cim"] ?? "";
             $password = $_POST["password"] ?? $_POST["senha"] ?? "";
 
-            // DEBUG 1: Verifica se os dados chegaram
             if (empty($matricula) || empty($password)) {
-                die("<h1 style='color:red'>Erro 1: Dados Vazios</h1><p>O formulário não enviou a matrícula ou a senha.</p><pre>" . print_r($_POST, true) . "</pre>");
-            }
-
-            $obreiroModel = new \App\Models\Obreiro();
-            $usuario = $obreiroModel->autenticar($matricula, $password);
-
-            // DEBUG 2: Verifica se a senha bateu no banco
-            if (!$usuario) {
-                die("<h1 style='color:red'>Erro 2: Falha na Autenticação</h1><p>O CIM {$matricula} não foi encontrado, está inativo, ou a senha está incorreta no banco de dados.</p>");
-            }
-
-            $cargo = $normalizeRole($usuario["cargo"] ?? "");
-
-            // DEBUG 3: Verifica o cargo
-            if (in_array($cargo, ["veneravel", "secretario", "tesoureiro", "chanceler", "admin"], true)) {
-                $_SESSION["usuario_logado"] = $usuario;
-                $_SESSION["usuario_id"] = $usuario["id"];
-                $_SESSION["usuario_nome"] = $usuario["nome_historico"] ?? $usuario["nome_completo"] ?? "Irmão";
-                $_SESSION["usuario_cargo"] = $cargo;
-                header("Location: /dashboard");
-                exit;
+                $erroLogin = "Informe CIM e senha para acessar.";
             } else {
-                die("<h1 style='color:red'>Erro 3: Sem Permissão</h1><p>Senha correta, mas o cargo '{$cargo}' não tem acesso.</p>");
+                $obreiroModel = new \App\Models\Obreiro();
+                $usuario = $obreiroModel->autenticar($matricula, $password);
+
+                if (!$usuario) {
+                    $erroLogin = "Credenciais invalidas ou usuario inativo.";
+                } else {
+                    $cargo = $normalizeRole((string) ($usuario['cargo_principal'] ?? $usuario['cargo'] ?? ''));
+                    $cargosAtivos = array_values(array_unique(array_filter(array_map(
+                        $normalizeRole,
+                        $usuario['cargos'] ?? [$cargo]
+                    ))));
+                    $temAcessoPainel =
+                        count(array_intersect($cargosAtivos, ["veneravel", "tesoureiro", "chanceler", "admin", "bibliotecario", "mestre_banquetes"])) > 0
+                        || in_array($cargo, ["veneravel", "secretario", "tesoureiro", "chanceler", "admin"], true);
+
+                    if ($temAcessoPainel) {
+                        $_SESSION["usuario_logado"] = $usuario;
+                        $_SESSION["usuario_id"] = $usuario["id"];
+                        $_SESSION["usuario_nome"] = $usuario["nome_historico"] ?? $usuario["nome_completo"] ?? "Irmao";
+                        $syncSessionRoles($usuario);
+                        header("Location: /dashboard");
+                        exit;
+                    }
+
+                    $erroLogin = "Seu perfil nao possui permissao para acessar o painel.";
+                }
             }
         }
         require_once __DIR__ . "/../src/Views/login.php";
@@ -600,6 +1322,6 @@ switch ($requestUri) {
         exit;
     default:
         http_response_code(404);
-        echo "404 - Página não encontrada.";
+        echo "404 - Pagina nao encontrada.";
         break;
 }

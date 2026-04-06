@@ -1,38 +1,44 @@
 <?php
+
 namespace App\Bot;
 
 use App\Config\Env;
 
-class CommandHandler {
+class CommandHandler
+{
     private $telegram;
     private $obreiroModel;
     private $sessaoModel;
     private $presencaModel;
 
-    // IDs de desenvolvedor com acesso total
-    private $devIds = [8062119710];
+    private array $devIds = [8062119710];
 
-    public function __construct($telegram, $obreiroModel, $sessaoModel, $presencaModel) {
+    public function __construct($telegram, $obreiroModel, $sessaoModel, $presencaModel)
+    {
         $this->telegram = $telegram;
         $this->obreiroModel = $obreiroModel;
         $this->sessaoModel = $sessaoModel;
         $this->presencaModel = $presencaModel;
     }
 
-    private function getAppBaseUrl(): string {
+    private function getAppBaseUrl(): string
+    {
         $base = trim((string) Env::get('APP_URL', ''));
         if ($base === '') {
             $base = 'http://localhost:8000';
         }
+
         return rtrim($base, '/');
     }
 
-    private function buildAppUrl(string $path): string {
+    private function buildAppUrl(string $path): string
+    {
         $path = '/' . ltrim($path, '/');
         return $this->getAppBaseUrl() . $path;
     }
 
-    private function getGroupChatId(): ?string {
+    private function getGroupChatId(): ?string
+    {
         $candidates = [
             trim((string) Env::get('TELEGRAM_CHAT_ID_GROUP', '')),
             trim((string) Env::get('TELEGRAM_GRUPO_ID', '')),
@@ -49,346 +55,397 @@ class CommandHandler {
         return null;
     }
 
-    public function handlePainelAdmin($chatId, $requesterTelegramId) {
-        if (!in_array($requesterTelegramId, $this->devIds)) {
-            $this->telegram->sendMessage($chatId, '⛔ Acesso restrito aos Administradores do sistema.');
+    private function getObreiroRoles(?array $obreiro): array
+    {
+        if (!$obreiro) {
+            return [];
+        }
+
+        if (!empty($obreiro['cargos']) && is_array($obreiro['cargos'])) {
+            return array_values(array_unique(array_map(
+                static fn ($role) => strtolower((string) $role),
+                $obreiro['cargos']
+            )));
+        }
+
+        $fallback = strtolower(trim((string) ($obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? '')));
+        return $fallback !== '' ? [$fallback] : [];
+    }
+
+    private function obreiroHasRole(?array $obreiro, string ...$roles): bool
+    {
+        $current = $this->getObreiroRoles($obreiro);
+        foreach ($roles as $role) {
+            if (in_array(strtolower($role), $current, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function isDev(int $telegramId): bool
+    {
+        return in_array($telegramId, $this->devIds, true);
+    }
+
+    private function ensureChancelariaAccess($chatId, int $requesterTelegramId): bool
+    {
+        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
+        if (!$this->isDev($requesterTelegramId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'chanceler', 'admin'))) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Chanceler da Loja.');
+            return false;
+        }
+
+        return true;
+    }
+
+    public function handlePainelAdmin($chatId, $requesterTelegramId)
+    {
+        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
+        if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasRole($obreiro, 'admin')) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito aos Administradores do sistema.');
             return;
         }
 
-        $mensagem = "👑 *Painel do Administrador*\n\nSelecione o módulo que deseja acessar para testes:";
+        $mensagem = "*Painel do Administrador*\n\nSelecione o modulo que deseja acessar:";
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => '🏛️ Chancelaria', 'callback_data' => 'admin_chancelaria'],
-                    ['text' => '💰 Tesouraria', 'callback_data' => 'admin_tesouraria']
+                    ['text' => 'Chancelaria', 'callback_data' => 'admin_chancelaria'],
+                    ['text' => 'Tesouraria', 'callback_data' => 'admin_tesouraria'],
                 ],
                 [
-                    ['text' => '📚 Biblioteca', 'callback_data' => 'admin_biblioteca'],
-                    ['text' => '🏛️ Secretaria', 'callback_data' => 'admin_secretaria']
-                ]
-            ]
+                    ['text' => 'Biblioteca', 'callback_data' => 'admin_biblioteca'],
+                    ['text' => 'Secretaria', 'callback_data' => 'admin_secretaria'],
+                ],
+            ],
         ];
-        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);
     }
 
-    public function sendMenuPresenca($chatId) {
+    public function sendMenuPresenca($chatId)
+    {
         $mensagem = "Bem-vindo ao assistente da Loja.";
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => '✅ Confirmar Presença', 'callback_data' => 'presenca_confirmar'],
-                    ['text' => '❌ Informar Ausência', 'callback_data' => 'presenca_ausencia'],
+                    ['text' => 'Confirmar Presenca', 'callback_data' => 'presenca_confirmar'],
+                    ['text' => 'Informar Ausencia', 'callback_data' => 'presenca_ausencia'],
                 ],
                 [
-                    ['text' => '📜 Ver Próxima Sessão', 'callback_data' => 'sessao_info']
-                ]
-            ]
+                    ['text' => 'Ver Proxima Sessao', 'callback_data' => 'sessao_info'],
+                ],
+            ],
         ];
-        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['reply_markup' => $teclado]);
     }
 
-    public function sendMenuPrincipal($chatId, $fromId) {
+    public function sendMenuPrincipal($chatId, $fromId)
+    {
         $obreiro = $this->obreiroModel->findByTelegramId($fromId);
-        $cargo = strtolower(trim((string)($obreiro['cargo'] ?? 'comum')));
+        $mensagem = "Bem-vindo ao painel da Loja, meu Irmao!";
+        $teclado = ['inline_keyboard' => []];
 
-        $mensagem = "👋 Bem-vindo ao painel da Loja, meu Irmão!";
-        $teclado = [
-            'inline_keyboard' => []
-        ];
-
-        if (in_array($cargo, ['admin', 'veneravel', 'secretario'])) {
+        if ($this->obreiroHasRole($obreiro, 'admin', 'veneravel', 'secretario', 'chanceler', 'tesoureiro', 'bibliotecario')) {
             $teclado['inline_keyboard'][] = [
-                ['text' => '📅 Efemérides', 'callback_data' => 'chancelaria_neste_dia'],
-                ['text' => '🏛️ Secretaria', 'callback_data' => 'secretaria_menu']
+                ['text' => 'Chancelaria', 'callback_data' => 'admin_chancelaria'],
+                ['text' => 'Secretaria', 'callback_data' => 'secretaria_menu'],
             ];
             $teclado['inline_keyboard'][] = [
-                ['text' => '💰 Tesouraria', 'callback_data' => 'tesouraria_menu'],
-                ['text' => '📚 Biblioteca', 'callback_data' => 'biblioteca_menu']
+                ['text' => 'Tesouraria', 'callback_data' => 'tesouraria_menu'],
+                ['text' => 'Biblioteca', 'callback_data' => 'biblioteca_menu'],
             ];
         } else {
             $teclado['inline_keyboard'][] = [
-                ['text' => '✅ Confirmar Presença', 'callback_data' => 'presenca_confirmar'],
-                ['text' => '❌ Informar Ausência', 'callback_data' => 'presenca_ausencia']
+                ['text' => 'Confirmar Presenca', 'callback_data' => 'presenca_confirmar'],
+                ['text' => 'Informar Ausencia', 'callback_data' => 'presenca_ausencia'],
             ];
             $teclado['inline_keyboard'][] = [
-                ['text' => '📜 Ver Próxima Sessão', 'callback_data' => 'sessao_info']
+                ['text' => 'Ver Proxima Sessao', 'callback_data' => 'sessao_info'],
             ];
         }
 
-        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+        $this->telegram->sendMessage($chatId, $mensagem, ['reply_markup' => $teclado]);
     }
 
-    public function handleHelp($chatId) {
-        $mensagem = "ℹ️ <b>Ajuda do Gestor da Loja</b>\n\n";
-        $mensagem .= "Este bot auxilia na gestão da nossa Loja Maçônica.\n\n";
-        $mensagem .= "<b>Comandos disponíveis:</b>\n";
-        $mensagem .= "/start - Inicia a interação e valida seu cadastro\n";
-        $mensagem .= "/chancelaria - Painel do Chanceler\n";
-        $mensagem .= "/tesouraria - Painel do Tesoureiro\n";
-        $mensagem .= "/ajuda - Exibe esta mensagem de ajuda\n\n";
-        $mensagem .= "Para outras dúvidas, contate a Secretaria da Loja.";
+    public function handleHelp($chatId)
+    {
+        $mensagem = "<b>Ajuda do Gestor da Loja</b>\n\n";
+        $mensagem .= "Comandos disponiveis:\n";
+        $mensagem .= "/start - abre o menu principal\n";
+        $mensagem .= "/chancelaria - painel da chancelaria\n";
+        $mensagem .= "/tesouraria - painel da tesouraria\n";
+        $mensagem .= "/biblioteca - painel da biblioteca\n";
+        $mensagem .= "/painel - painel administrativo\n";
+
         $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML']);
     }
 
-    public function handleChancelaria($chatId, $requesterTelegramId) {
-        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
-        $cargo = strtolower(trim((string) ($obreiro['cargo'] ?? '')));
-        if (!in_array($requesterTelegramId, $this->devIds) && (!$obreiro || $cargo !== 'chanceler')) {
-            $this->telegram->sendMessage($chatId, '⛔ Acesso restrito ao Chanceler da Loja.');
+    public function handleChancelaria($chatId, $requesterTelegramId)
+    {
+        if (!$this->ensureChancelariaAccess($chatId, (int) $requesterTelegramId)) {
             return;
         }
-        $mensagem = "🏛️ *Painel da Chancelaria*\n\nSelecione uma opção:";
+
+        $mensagem = "*Painel da Chancelaria*\n\nSelecione uma opcao:";
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => '📜 Emitir Certificado', 'web_app' => ['url' => $this->buildAppUrl('/chancelaria/certificado')]]
+                    ['text' => 'Emitir Certificado', 'web_app' => ['url' => $this->buildAppUrl('/chancelaria/certificado')]],
                 ],
                 [
-                    ['text' => '🔗 Certificado (Fallback)', 'url' => $this->buildAppUrl('/chancelaria/certificado')]
+                    ['text' => 'Certificado (Fallback)', 'url' => $this->buildAppUrl('/chancelaria/certificado')],
                 ],
                 [
-                    ['text' => '📅 Neste Dia', 'callback_data' => 'chancelaria_neste_dia']
+                    ['text' => 'Neste Dia', 'callback_data' => 'chancelaria_neste_dia'],
                 ],
                 [
-                    ['text' => '🎂 Aniversários Hoje', 'callback_data' => 'chancelaria_aniversarios'],
-                    ['text' => '⚒️ Datas Maçônicas', 'callback_data' => 'chancelaria_datas']
+                    ['text' => 'Aniversarios Hoje', 'callback_data' => 'chancelaria_aniversarios'],
+                    ['text' => 'Datas Maconicas', 'callback_data' => 'chancelaria_datas'],
                 ],
                 [
-                    ['text' => '📜 Fatos Históricos', 'callback_data' => 'chancelaria_historico']
-                ]
-            ]
-        ];
-        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
-    }
-
-    public function handleTesouraria($chatId, $requesterTelegramId) {
-        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
-        $cargo = strtolower(trim((string) ($obreiro['cargo'] ?? '')));
-        if (!in_array($requesterTelegramId, $this->devIds) && (!$obreiro || $cargo !== 'tesoureiro')) {
-            $this->telegram->sendMessage($chatId, '⛔ Acesso restrito ao Tesoureiro da Loja.');
-            return;
-        }
-        $mensagem = "💰 *Painel da Tesouraria*\n\nSelecione uma opção:";
-        $teclado = [
-            'inline_keyboard' => [
-                [
-                    ['text' => '📒 Livro Caixa', 'callback_data' => 'tesouraria_caixa'],
-                    ['text' => '📑 Comprovantes', 'callback_data' => 'tesouraria_comprovantes']
+                    ['text' => 'Fatos Historicos', 'callback_data' => 'chancelaria_historico'],
                 ],
                 [
-                    ['text' => '🟢 Regularidade', 'callback_data' => 'tesouraria_regularidade'],
-                    ['text' => '📆 Fechamento Mensal', 'callback_data' => 'tesouraria_fechamento']
+                    ['text' => 'Miniapp Historico', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/historico')]],
+                    ['text' => 'Miniapp Fallback', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/fallback')]],
                 ],
                 [
-                    ['text' => '💸 Validar Pix', 'callback_data' => 'tesouraria_validar_pix']
+                    ['text' => 'Miniapp Aniversario', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/aniversario')]],
+                    ['text' => 'Miniapp Data Maconica', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/data-maconica')]],
                 ],
-                [
-                    ['text' => '🔙 Voltar', 'callback_data' => 'start_menu']
-                ]
-            ]
-        ];
-        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
-    }
-
-
-public function handleBiblioteca($chatId, $requesterTelegramId) {
-    $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
-    $cargo = strtolower(trim((string)($obreiro['cargo'] ?? '')));
-    $isBibliotecario = in_array($cargo, ['bibliotecario', 'admin', 'veneravel']);
-    $isDev = in_array($requesterTelegramId, $this->devIds);
-
-    $mensagem = "📚 <b>Biblioteca da Loja</b>\n\nSelecione uma opção:";
-    $botoes = [];
-
-    // Linha 1: sempre disponível para todos (callback_data)
-    $botoes[] = [
-        [
-            'text' => '📖 Meus Empréstimos',
-            'callback_data' => 'biblioteca_meus_emprestimos'
-        ],
-        [
-            'text' => '🔍 Ver Acervo',
-            'callback_data' => 'biblioteca_acervo'
-        ]
-    ];
-
-    // Linha 2: apenas para admin, bibliotecário ou dev
-    if ($isBibliotecario || $isDev) {
-        $botoes[] = [
-            [
-                'text' => '📷 Cadastrar por ISBN',
-                'url' => $this->buildAppUrl('/tg/scanner.php')
             ],
-            [
-                'text' => '✏️ Cadastrar Manual',
-                'url' => $this->buildAppUrl('/tg/novo.php')
-            ]
         ];
-        $botoes[] = [
-            [
-                'text' => '📋 Gerenciar Empréstimos',
-                'callback_data' => 'biblioteca_gerenciar'
-            ]
-        ];
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);
     }
 
-    // Última linha: voltar
-    $botoes[] = [
-        ['text' => '🔙 Voltar', 'callback_data' => 'start_menu']
-    ];
-
-    $teclado = ['inline_keyboard' => $botoes];
-    $this->telegram->sendMessage($chatId, $mensagem, $teclado);
-}
-
-public function handleBibliotecaMeusEmprestimos($chatId, $requesterTelegramId) {
-    require_once __DIR__ . '/../Models/Obreiro.php';
-    require_once __DIR__ . '/../Models/Emprestimo.php';
-    $obreiroModel = new \App\Models\Obreiro();
-    $emprestimoModel = new \App\Models\Emprestimo();
-
-    $obreiro = $obreiroModel->findByTelegramId($requesterTelegramId);
-    if (!$obreiro) {
-        $this->telegram->sendMessage($chatId, "Não foi possível identificar seu cadastro.");
-        return;
-    }
-    $emprestimos = $emprestimoModel->listarPendentesPorObreiro($obreiro['id']);
-
-    if (empty($emprestimos)) {
-        $mensagem = "📖 <b>Meus Empréstimos</b>\n\nVocê não possui empréstimos ativos.";
-    } else {
-        $mensagem = "📖 <b>Meus Empréstimos</b>\n\n";
-        foreach ($emprestimos as $e) {
-            $mensagem .= "• <b>" . htmlspecialchars($e['titulo']) . "</b> — Devolução prevista: " . date('d/m/Y', strtotime($e['data_devolucao_prevista'])) . "\n";
+    public function handleTesouraria($chatId, $requesterTelegramId)
+    {
+        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
+        if (!$this->isDev($requesterTelegramId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'tesoureiro', 'admin'))) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Tesoureiro da Loja.');
+            return;
         }
+
+        $mensagem = "*Painel da Tesouraria*\n\nSelecione uma opcao:";
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Livro Caixa', 'callback_data' => 'tesouraria_caixa'],
+                    ['text' => 'Comprovantes', 'callback_data' => 'tesouraria_comprovantes'],
+                ],
+                [
+                    ['text' => 'Regularidade', 'callback_data' => 'tesouraria_regularidade'],
+                    ['text' => 'Fechamento Mensal', 'callback_data' => 'tesouraria_fechamento'],
+                ],
+                [
+                    ['text' => 'Validar Pix', 'callback_data' => 'tesouraria_validar_pix'],
+                ],
+                [
+                    ['text' => 'Voltar', 'callback_data' => 'start_menu'],
+                ],
+            ],
+        ];
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);
     }
-    $teclado = [
-        'inline_keyboard' => [
-            [
-                ['text' => '🔙 Voltar', 'callback_data' => 'biblioteca_menu']
-            ]
-        ]
-    ];
-    $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
-}
 
-private function handleBibliotecaAcervo($chatId) {
-    require_once __DIR__ . '/../Models/Acervo.php';
-    $acervoModel = new \App\Models\Acervo();
-    $livros = $acervoModel->listarTodos();
+    public function handleBiblioteca($chatId, $requesterTelegramId)
+    {
+        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
+        $isBibliotecario = $this->obreiroHasRole($obreiro, 'bibliotecario', 'admin', 'veneravel');
+        $isDev = $this->isDev($requesterTelegramId);
 
-    if (empty($livros)) {
-        $mensagem = "🔍 <b>Acervo da Biblioteca</b>\n\nNenhum livro cadastrado.";
-    } else {
-        $mensagem = "🔍 <b>Acervo da Biblioteca</b>\n\n";
-        foreach ($livros as $i => $livro) {
-            $mensagem .= ($i+1) . ". <b>" . htmlspecialchars($livro['titulo']) . "</b> — " . htmlspecialchars($livro['autor']);
-            if (!empty($livro['grau_recomendado'])) {
-                $mensagem .= " (Grau: " . htmlspecialchars($livro['grau_recomendado']) . ")";
+        $mensagem = "<b>Biblioteca da Loja</b>\n\nSelecione uma opcao:";
+        $botoes = [];
+
+        $botoes[] = [
+            ['text' => 'Meus Emprestimos', 'callback_data' => 'biblioteca_meus_emprestimos'],
+            ['text' => 'Ver Acervo', 'callback_data' => 'biblioteca_acervo'],
+        ];
+
+        if ($isBibliotecario || $isDev) {
+            $botoes[] = [
+                ['text' => 'Cadastrar por ISBN', 'url' => $this->buildAppUrl('/tg/scanner.php')],
+                ['text' => 'Cadastrar Manual', 'url' => $this->buildAppUrl('/tg/novo.php')],
+            ];
+            $botoes[] = [
+                ['text' => 'Gerenciar Emprestimos', 'callback_data' => 'biblioteca_gerenciar'],
+            ];
+        }
+
+        $botoes[] = [
+            ['text' => 'Voltar', 'callback_data' => 'start_menu'],
+        ];
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML', 'reply_markup' => ['inline_keyboard' => $botoes]]);
+    }
+
+    public function handleBibliotecaMeusEmprestimos($chatId, $requesterTelegramId)
+    {
+        $obreiroModel = new \App\Models\Obreiro();
+        $emprestimoModel = new \App\Models\Emprestimo();
+
+        $obreiro = $obreiroModel->findByTelegramId($requesterTelegramId);
+        if (!$obreiro) {
+            $this->telegram->sendMessage($chatId, "Nao foi possivel identificar seu cadastro.");
+            return;
+        }
+
+        $emprestimos = $emprestimoModel->listarPendentesPorObreiro($obreiro['id']);
+
+        if (empty($emprestimos)) {
+            $mensagem = "<b>Meus Emprestimos</b>\n\nVoce nao possui emprestimos ativos.";
+        } else {
+            $mensagem = "<b>Meus Emprestimos</b>\n\n";
+            foreach ($emprestimos as $e) {
+                $mensagem .= "- <b>" . htmlspecialchars($e['titulo']) . "</b> - Devolucao prevista: " . date('d/m/Y', strtotime($e['data_devolucao_prevista'])) . "\n";
             }
-            $mensagem .= "\n";
         }
+
+        $this->telegram->sendMessage($chatId, $mensagem, [
+            'parse_mode' => 'HTML',
+            'reply_markup' => ['inline_keyboard' => [[['text' => 'Voltar', 'callback_data' => 'biblioteca_menu']]]],
+        ]);
     }
-    $teclado = [
-        'inline_keyboard' => [
-            [
-                ['text' => '🔙 Voltar', 'callback_data' => 'biblioteca_menu']
-            ]
-        ]
-    ];
-    $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
-}
 
-private function handleBibliotecaCadastrar($chatId, $fromId = null) {
-    $mensagem = "➕ <b>Cadastrar Novo Livro</b>\n\nEscolha o método de cadastro:";
-    $teclado = [
-        'inline_keyboard' => [
-            [
+    private function handleBibliotecaAcervo($chatId)
+    {
+        $acervoModel = new \App\Models\Acervo();
+        $livros = $acervoModel->listarTodos();
+
+        if (empty($livros)) {
+            $mensagem = "<b>Acervo da Biblioteca</b>\n\nNenhum livro cadastrado.";
+        } else {
+            $mensagem = "<b>Acervo da Biblioteca</b>\n\n";
+            foreach ($livros as $i => $livro) {
+                $mensagem .= ($i + 1) . ". <b>" . htmlspecialchars($livro['titulo']) . "</b> - " . htmlspecialchars($livro['autor']);
+                if (!empty($livro['grau_recomendado'])) {
+                    $mensagem .= " (Grau: " . htmlspecialchars($livro['grau_recomendado']) . ")";
+                }
+                $mensagem .= "\n";
+            }
+        }
+
+        $this->telegram->sendMessage($chatId, $mensagem, [
+            'parse_mode' => 'HTML',
+            'reply_markup' => ['inline_keyboard' => [[['text' => 'Voltar', 'callback_data' => 'biblioteca_menu']]]],
+        ]);
+    }
+
+    private function handleBibliotecaCadastrar($chatId, $fromId = null)
+    {
+        $mensagem = "<b>Cadastrar Novo Livro</b>\n\nEscolha o metodo de cadastro:";
+        $teclado = [
+            'inline_keyboard' => [
                 [
-                    'text' => '📷 Ler Código de Barras',
-                    'web_app' => ['url' => $this->buildAppUrl('/biblioteca/scanner')]
-                ]
-            ],
-            [
+                    ['text' => 'Ler Codigo de Barras', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca/scanner')]],
+                ],
                 [
-                    'text' => '✏️ Preencher Manualmente',
-                    'web_app' => ['url' => $this->buildAppUrl('/biblioteca/novo')]
-                ]
+                    ['text' => 'Preencher Manualmente', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca/novo')]],
+                ],
+                [
+                    ['text' => 'Voltar', 'callback_data' => 'biblioteca_menu'],
+                ],
             ],
-            [
-                ['text' => '🔙 Voltar', 'callback_data' => 'biblioteca_menu']
-            ]
-        ]
-    ];
-    $this->telegram->sendMessage($chatId, $mensagem, $teclado);
-}
+        ];
 
-private function handleBibliotecaGerenciar($chatId, $fromId = null) {
-    $mensagem = "📋 <b>Gerenciar Empréstimos</b>\n\nPainel de gerenciamento de empréstimos (exemplo):\n\n• Empréstimo #1: O Segredo Maçônico - Devolução: 10/04/2026\n• Empréstimo #2: Maçonaria Revelada - Devolução: 15/04/2026\n\n(Implementar lógica real de consulta ao banco de dados)";
-    $teclado = [
-        'inline_keyboard' => [
-            [
-                ['text' => '🔙 Voltar', 'callback_data' => 'biblioteca_menu']
-            ]
-        ]
-    ];
-    $this->telegram->sendMessage($chatId, $mensagem, $teclado);
-}
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
+    }
 
-    private function handleAniversarios($chatId) {
-        require_once __DIR__ . '/../Models/Obreiro.php';
+    private function handleBibliotecaGerenciar($chatId, $fromId = null)
+    {
+        $mensagem = "<b>Gerenciar Emprestimos</b>\n\nPainel de gerenciamento em construcao.";
+        $this->telegram->sendMessage($chatId, $mensagem, [
+            'parse_mode' => 'HTML',
+            'reply_markup' => ['inline_keyboard' => [[['text' => 'Voltar', 'callback_data' => 'biblioteca_menu']]]],
+        ]);
+    }
+
+    private function handleAniversarios($chatId)
+    {
         $obreiroModel = new \App\Models\Obreiro();
         $hoje = date('m-d');
         $aniversariantes = $obreiroModel->buscarPorAniversario($hoje);
 
         if (empty($aniversariantes)) {
-            $msg = "🎂 Não há aniversariantes de vida hoje.";
+            $msg = "Nao ha aniversariantes de vida hoje.";
         } else {
-            $msg = "🎂 <b>Aniversariantes de Vida Hoje</b>\n\n";
+            $msg = "<b>Aniversariantes de Vida Hoje</b>\n\n";
             foreach ($aniversariantes as $o) {
-                $msg .= "• {$o['nome']} (" . date('d/m', strtotime('2000-' . $hoje)) . ")\n";
+                $msg .= "- {$o['nome']}\n";
             }
         }
+
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
-    private function handleDatasMaconicas($chatId) {
-        require_once __DIR__ . '/../Models/Obreiro.php';
+    private function handleDatasMaconicas($chatId)
+    {
         $obreiroModel = new \App\Models\Obreiro();
         $hoje = date('m-d');
         $maconicos = $obreiroModel->buscarPorDatasMaconicas($hoje);
 
         if (empty($maconicos)) {
-            $msg = "⚒️ Não há aniversários maçônicos hoje.";
+            $msg = "Nao ha aniversarios maconicos hoje.";
         } else {
-            $msg = "⚒️ <b>Aniversários Maçônicos Hoje</b>\n\n";
+            $msg = "<b>Aniversarios Maconicos Hoje</b>\n\n";
             foreach ($maconicos as $o) {
-                $msg .= "• {$o['nome']} ({$o['tipo']})\n";
+                $msg .= "- {$o['nome']} ({$o['tipo']})\n";
             }
         }
+
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
-    private function handleFatosHistoricos($chatId) {
-        require_once __DIR__ . '/../Models/EfemerideRegistro.php';
+    private function handleFatosHistoricos($chatId)
+    {
         $efemerideModel = new \App\Models\EfemerideRegistro();
         $hoje = date('m-d');
         $fatos = $efemerideModel->buscarPorData($hoje);
 
-        if (empty($fatos)) {
-            $msg = "📜 Não há fatos históricos cadastrados para hoje. Que tal registrar um novo?";
+        $fatosHistoricos = array_values(array_filter($fatos, static function (array $item): bool {
+            $tipo = strtolower(trim((string) ($item['tipo'] ?? '')));
+            return $tipo === 'historia' || $tipo === 'história' || $tipo === 'histÃ³ria';
+        }));
+
+        if (empty($fatosHistoricos)) {
+            $msg = "Nao ha fatos historicos cadastrados para hoje.";
         } else {
-            $msg = "📜 <b>Fatos Históricos do Dia</b>\n\n";
-            foreach ($fatos as $f) {
-                $msg .= "• {$f['descricao']} ({$f['ano']})\n";
+            $msg = "<b>Fatos Historicos do Dia</b>\n\n";
+            foreach ($fatosHistoricos as $f) {
+                $texto = trim((string) ($f['mensagem_custom'] ?? ''));
+                if ($texto === '') {
+                    $texto = trim((string) ($f['nome'] ?? ''));
+                }
+
+                $dataEvento = '';
+                if (!empty($f['data_evento'])) {
+                    $timestamp = strtotime((string) $f['data_evento']);
+                    $dataEvento = $timestamp ? date('d/m/Y', $timestamp) : (string) $f['data_evento'];
+                }
+
+                $linha = htmlspecialchars($texto !== '' ? $texto : 'Registro historico sem descricao.');
+                if ($dataEvento !== '') {
+                    $linha .= " ({$dataEvento})";
+                }
+                $msg .= "- {$linha}\n";
             }
         }
+
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
-    private function handleNesteDia($chatId) {
-        // Usa o composer para gerar a mensagem do dia dinamicamente
-        require_once __DIR__ . '/../Services/EfemeridesComposer.php';
+    private function handleNesteDia($chatId, int $requesterTelegramId)
+    {
+        if (!$this->ensureChancelariaAccess($chatId, $requesterTelegramId)) {
+            return;
+        }
+
         $composer = new \App\Services\EfemeridesComposer();
         $hoje = date('Y-m-d');
         $msg = $composer->gerarMensagemParaDia($hoje);
@@ -396,41 +453,56 @@ private function handleBibliotecaGerenciar($chatId, $fromId = null) {
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => '✅ Aprovar e Enviar p/ Grupo', 'callback_data' => 'chancelaria_aprovar_efemeride']
+                    ['text' => 'Aprovar e Enviar p/ Grupo', 'callback_data' => 'chancelaria_aprovar_efemeride'],
                 ],
                 [
-                    ['text' => '✏️ Editar Texto', 'web_app' => ['url' => $this->buildAppUrl('/chancelaria/efemerides')]]
+                    ['text' => 'Editar Texto', 'web_app' => ['url' => $this->buildAppUrl('/chancelaria/efemerides')]],
                 ],
                 [
-                    ['text' => '🔙 Voltar', 'callback_data' => 'admin_chancelaria']
-                ]
-            ]
+                    ['text' => 'Voltar', 'callback_data' => 'admin_chancelaria'],
+                ],
+            ],
         ];
+
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
     }
 
-    private function handleAprovarEfemeride($chatId) {
-        require_once __DIR__ . '/../Models/EfemeridePreviaDiaria.php';
+    private function handleAprovarEfemeride($chatId, int $requesterTelegramId)
+    {
+        if (!$this->ensureChancelariaAccess($chatId, $requesterTelegramId)) {
+            return;
+        }
+
         $previaModel = new \App\Models\EfemeridePreviaDiaria();
         $hoje = date('Y-m-d');
         $previa = $previaModel->buscarPorData($hoje);
 
-        if ($previa && !empty($previa['mensagem'])) {
-            $grupoId = $this->getGroupChatId();
+        $mensagem = trim((string) ($previa['mensagem'] ?? ''));
+        if ($mensagem === '') {
+            $composer = new \App\Services\EfemeridesComposer();
+            $mensagem = trim($composer->gerarMensagemParaDia($hoje));
+            if ($mensagem !== '') {
+                $previaModel->salvarOuAtualizar($hoje, $mensagem, true);
+            }
+        }
 
+        if ($mensagem !== '') {
+            $grupoId = $this->getGroupChatId();
             if (!$grupoId) {
-                $this->telegram->sendMessage($chatId, "⚠️ <b>Erro:</b> O ID do grupo oficial nao esta configurado no .env (TELEGRAM_CHAT_ID_GROUP ou TELEGRAM_GRUPO_ID ou TELEGRAM_GROUP_ID).", ['parse_mode' => 'HTML']);
+                $this->telegram->sendMessage($chatId, "Erro: o ID do grupo oficial nao esta configurado.", ['parse_mode' => 'HTML']);
                 return;
             }
 
-            $this->telegram->sendMessage($grupoId, $previa['mensagem'], ['parse_mode' => 'HTML']);
-            $this->telegram->sendMessage($chatId, "✅ <b>Sucesso!</b>\n\nA mensagem de Efemérides foi enviada para o grupo oficial da Loja.", ['parse_mode' => 'HTML']);
-        } else {
-            $this->telegram->sendMessage($chatId, "⚠️ Erro: Não foi possível encontrar a mensagem de hoje para enviar.");
+            $this->telegram->sendMessage($grupoId, $mensagem, ['parse_mode' => 'HTML']);
+            $this->telegram->sendMessage($chatId, "Sucesso! A mensagem de efemerides foi enviada para o grupo oficial.", ['parse_mode' => 'HTML']);
+            return;
         }
+
+        $this->telegram->sendMessage($chatId, "Erro: nao foi possivel encontrar a mensagem de hoje para enviar.");
     }
-    // Método central para processar updates do Telegram (restaurado consolidado)
-    public function handle($update) {
+
+    public function handle($update)
+    {
         try {
             if (isset($update['message'])) {
                 $message = $update['message'];
@@ -438,7 +510,6 @@ private function handleBibliotecaGerenciar($chatId, $fromId = null) {
                 $text = $message['text'] ?? '';
                 $fromId = $message['from']['id'];
 
-                // Comandos principais
                 if (strpos($text, '/start') === 0) {
                     $this->sendMenuPrincipal($chatId, $fromId);
                 } elseif (strpos($text, '/painel') === 0) {
@@ -450,9 +521,9 @@ private function handleBibliotecaGerenciar($chatId, $fromId = null) {
                 } elseif (strpos($text, '/tesouraria') === 0) {
                     $this->handleTesouraria($chatId, $fromId);
                 } elseif (strpos($text, '/biblioteca') === 0) {
-                    $this->handleBibliotecaMeusEmprestimos($chatId, $fromId);
+                    $this->handleBiblioteca($chatId, $fromId);
                 } else {
-                    $this->telegram->sendMessage($chatId, "Comando não reconhecido. Use /ajuda para ver opções.");
+                    $this->telegram->sendMessage($chatId, "Comando nao reconhecido. Use /ajuda para ver as opcoes.");
                 }
             } elseif (isset($update['callback_query'])) {
                 $callback = $update['callback_query'];
@@ -461,27 +532,28 @@ private function handleBibliotecaGerenciar($chatId, $fromId = null) {
                 $fromId = $callback['from']['id'];
 
                 switch ($data) {
-                    // Chancelaria
                     case 'admin_chancelaria':
                         $this->handleChancelaria($chatId, $fromId);
                         break;
                     case 'chancelaria_neste_dia':
-                        $this->handleNesteDia($chatId);
+                        $this->handleNesteDia($chatId, (int) $fromId);
                         break;
                     case 'chancelaria_aprovar_efemeride':
-                        $this->handleAprovarEfemeride($chatId);
+                        $this->handleAprovarEfemeride($chatId, (int) $fromId);
                         break;
                     case 'chancelaria_aniversarios':
+                        if (!$this->ensureChancelariaAccess($chatId, (int) $fromId)) { break; }
                         $this->handleAniversarios($chatId);
                         break;
                     case 'chancelaria_datas':
+                        if (!$this->ensureChancelariaAccess($chatId, (int) $fromId)) { break; }
                         $this->handleDatasMaconicas($chatId);
                         break;
                     case 'chancelaria_historico':
+                        if (!$this->ensureChancelariaAccess($chatId, (int) $fromId)) { break; }
                         $this->handleFatosHistoricos($chatId);
                         break;
 
-                    // Tesouraria
                     case 'admin_tesouraria':
                     case 'tesouraria_menu':
                         $this->handleTesouraria($chatId, $fromId);
@@ -502,7 +574,6 @@ private function handleBibliotecaGerenciar($chatId, $fromId = null) {
                         $this->handleTesourariaValidarPix($chatId);
                         break;
 
-                    // Biblioteca
                     case 'admin_biblioteca':
                     case 'biblioteca_menu':
                         $this->handleBiblioteca($chatId, $fromId);
@@ -520,7 +591,6 @@ private function handleBibliotecaGerenciar($chatId, $fromId = null) {
                         $this->handleBibliotecaGerenciar($chatId, $fromId);
                         break;
 
-                    // Secretaria (NOVO)
                     case 'admin_secretaria':
                     case 'secretaria_menu':
                         $this->handleSecretariaMenu($chatId, $fromId);
@@ -529,139 +599,160 @@ private function handleBibliotecaGerenciar($chatId, $fromId = null) {
                         $this->handleSecAgendas($chatId);
                         break;
 
-                    // Presença
                     case 'presenca_confirmar':
                     case 'presenca_ausencia':
                     case 'sessao_info':
                         $this->sendMenuPresenca($chatId);
                         break;
 
-                    // Voltar para o menu principal
                     case 'start_menu':
                         $this->sendMenuPrincipal($chatId, $fromId);
                         break;
 
                     default:
-                        $this->telegram->sendMessage($chatId, "Ação não reconhecida.");
+                        $this->telegram->sendMessage($chatId, "Acao nao reconhecida.");
                         break;
                 }
+
                 $this->telegram->answerCallbackQuery($callback['id']);
             } else {
-                error_log("[handle] Update não suportado: " . json_encode($update));
+                error_log('[handle] Update nao suportado: ' . json_encode($update));
             }
-            error_log("[webhook] update processado com sucesso");
+
+            error_log('[webhook] update processado com sucesso');
         } catch (\Throwable $e) {
-            error_log("[webhook] erro ao processar update: " . $e->getMessage());
+            error_log('[webhook] erro ao processar update: ' . $e->getMessage());
         }
     }
 
-    // Métodos consolidados da Tesouraria (corrigidos para fora do método handle)
-    private function handleTesourariaCaixa($chatId) {
-        require_once __DIR__ . '/../Models/LancamentoFinanceiro.php';
+    private function handleTesourariaCaixa($chatId)
+    {
         $mes = date('n');
         $ano = date('Y');
         $lancModel = new \App\Models\LancamentoFinanceiro();
         $lancamentos = $lancModel->obterPorMes($mes, $ano);
         $totais = $lancModel->obterTotaisMes($mes, $ano);
 
-        $msg = "📒 <b>Livro Caixa - " . date('m/Y') . "</b>\n\n";
+        $msg = "<b>Livro Caixa - " . date('m/Y') . "</b>\n\n";
         $msg .= "<b>Entradas:</b> R$ " . number_format($totais['entrada'], 2, ',', '.') . "\n";
-        $msg .= "<b>Saídas:</b> R$ " . number_format($totais['saida'], 2, ',', '.') . "\n";
+        $msg .= "<b>Saidas:</b> R$ " . number_format($totais['saida'], 2, ',', '.') . "\n";
         $msg .= "<b>Saldo:</b> R$ " . number_format($totais['entrada'] - $totais['saida'], 2, ',', '.') . "\n\n";
+
         if (empty($lancamentos)) {
-            $msg .= "Nenhum lançamento registrado neste mês.";
+            $msg .= "Nenhum lancamento registrado neste mes.";
         } else {
             foreach ($lancamentos as $l) {
-                $tipo = $l['tipo'] === 'entrada' ? '➕' : '➖';
+                $tipo = $l['tipo'] === 'entrada' ? '+' : '-';
                 $msg .= $tipo . " <b>" . $l['categoria_nome'] . "</b>: R$ " . number_format($l['valor'], 2, ',', '.') . " em " . date('d/m', strtotime($l['data_lancamento'])) . " - " . htmlspecialchars($l['descricao']) . "\n";
             }
         }
+
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
-    private function handleTesourariaComprovantes($chatId) {
-        require_once __DIR__ . '/../Models/ComprovantePix.php';
+    private function handleTesourariaComprovantes($chatId)
+    {
         $compModel = new \App\Models\ComprovantePix();
         $comprovantes = $compModel->obterTodos();
+
         if (empty($comprovantes)) {
-            $msg = "📑 Nenhum comprovante encontrado.";
+            $msg = "Nenhum comprovante encontrado.";
         } else {
-            $msg = "📑 <b>Comprovantes Recebidos</b>\n\n";
+            $msg = "<b>Comprovantes Recebidos</b>\n\n";
             foreach ($comprovantes as $c) {
-                $status = $c['status'] === 'aprovado' ? '✅' : ($c['status'] === 'pendente' ? '🕒' : '❌');
+                $status = $c['status'] === 'aprovado' ? 'OK' : ($c['status'] === 'pendente' ? 'PENDENTE' : 'REJEITADO');
                 $msg .= $status . " <b>" . htmlspecialchars($c['obreiro_nome']) . "</b> - R$ " . number_format($c['valor_informado'], 2, ',', '.') . " em " . date('d/m', strtotime($c['criado_em'])) . "\n";
             }
         }
+
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
-    private function handleTesourariaRegularidade($chatId) {
-        require_once __DIR__ . '/../Models/MensalidadeStatus.php';
+    private function handleTesourariaRegularidade($chatId)
+    {
         $mes = date('n');
         $ano = date('Y');
         $mensModel = new \App\Models\MensalidadeStatus();
         $inadimplentes = $mensModel->obterInadimplentes($mes, $ano);
+
         if (empty($inadimplentes)) {
-            $msg = "🟢 Todos os obreiros estão regulares neste mês.";
+            $msg = "Todos os obreiros estao regulares neste mes.";
         } else {
-            $msg = "🟢 <b>Obreiros Inadimplentes - " . date('m/Y') . "</b>\n\n";
+            $msg = "<b>Obreiros Inadimplentes - " . date('m/Y') . "</b>\n\n";
             foreach ($inadimplentes as $o) {
                 $nome = htmlspecialchars($o['nome_historico'] ?: $o['nome']);
-                $msg .= "❗ <b>$nome</b> - Status: " . htmlspecialchars($o['status'] ?? 'pendente') . "\n";
+                $msg .= "- <b>$nome</b> - Status: " . htmlspecialchars($o['status'] ?? 'pendente') . "\n";
             }
         }
+
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
-    private function handleTesourariaFechamento($chatId) {
-        require_once __DIR__ . '/../Models/FechamentoMensal.php';
+    private function handleTesourariaFechamento($chatId)
+    {
         $mes = date('n');
         $ano = date('Y');
         $fechModel = new \App\Models\FechamentoMensal();
         $fechamento = $fechModel->obter($mes, $ano);
+
         if (!$fechamento) {
-            $msg = "📆 Nenhum fechamento registrado para este mês.";
+            $msg = "Nenhum fechamento registrado para este mes.";
         } else {
-            $msg = "📆 <b>Fechamento Mensal - " . date('m/Y') . "</b>\n\n";
+            $msg = "<b>Fechamento Mensal - " . date('m/Y') . "</b>\n\n";
             $msg .= "<b>Saldo Inicial:</b> R$ " . number_format($fechamento['saldo_inicial'], 2, ',', '.') . "\n";
             $msg .= "<b>Entradas:</b> R$ " . number_format($fechamento['total_entradas'], 2, ',', '.') . "\n";
-            $msg .= "<b>Saídas:</b> R$ " . number_format($fechamento['total_saidas'], 2, ',', '.') . "\n";
+            $msg .= "<b>Saidas:</b> R$ " . number_format($fechamento['total_saidas'], 2, ',', '.') . "\n";
             $msg .= "<b>Saldo Final:</b> R$ " . number_format($fechamento['saldo_final'], 2, ',', '.') . "\n";
         }
+
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
-    private function handleTesourariaValidarPix($chatId) {
-        require_once __DIR__ . '/../Models/ComprovantePix.php';
+    private function handleTesourariaValidarPix($chatId)
+    {
         $compModel = new \App\Models\ComprovantePix();
         $pendentes = $compModel->obterPendentes();
+
         if (empty($pendentes)) {
-            $msg = "💸 Nenhum comprovante Pix pendente de validação.";
+            $msg = "Nenhum comprovante Pix pendente de validacao.";
         } else {
-            $msg = "💸 <b>Comprovantes Pix Pendentes</b>\n\n";
+            $msg = "<b>Comprovantes Pix Pendentes</b>\n\n";
             foreach ($pendentes as $c) {
-                $msg .= "🕒 <b>" . htmlspecialchars($c['obreiro_nome']) . "</b> - R$ " . number_format($c['valor_informado'], 2, ',', '.') . " em " . date('d/m', strtotime($c['criado_em'])) . "\n";
+                $msg .= "- <b>" . htmlspecialchars($c['obreiro_nome']) . "</b> - R$ " . number_format($c['valor_informado'], 2, ',', '.') . " em " . date('d/m', strtotime($c['criado_em'])) . "\n";
             }
         }
+
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
-    // Fluxo da Secretaria (NOVO)
-    public function handleSecretariaMenu($chatId, $fromId) {
-        $mensagem = "🏛️ *Painel da Secretaria*\n\nSelecione uma opção:";
+
+    public function handleSecretariaMenu($chatId, $fromId)
+    {
+        $obreiro = $this->obreiroModel->findByTelegramId($fromId);
+        if (!$this->isDev($fromId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'secretario', 'admin', 'veneravel'))) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito a Secretaria da Loja.');
+            return;
+        }
+
+        $mensagem = "*Painel da Secretaria*\n\nSelecione uma opcao:";
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => '📅 Agendas e Sessões', 'callback_data' => 'sec_agendas']
+                    ['text' => 'Painel Web da Secretaria', 'web_app' => ['url' => $this->buildAppUrl('/secretaria')]],
                 ],
                 [
-                    ['text' => '🔙 Voltar', 'callback_data' => 'start_menu']
-                ]
-            ]
+                    ['text' => 'Agendas e Sessoes', 'callback_data' => 'sec_agendas'],
+                ],
+                [
+                    ['text' => 'Voltar', 'callback_data' => 'start_menu'],
+                ],
+            ],
         ];
-        $this->telegram->sendMessage($chatId, $mensagem, $teclado);
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);
     }
 
-    public function handleSecAgendas($chatId) {
-        $this->telegram->sendMessage($chatId, "Agendas e Sessões em construção.");
+    public function handleSecAgendas($chatId)
+    {
+        $this->telegram->sendMessage($chatId, "Use o painel web da Secretaria para operar sessoes, publicacoes e trabalhos da ordem do dia.");
     }
 }
