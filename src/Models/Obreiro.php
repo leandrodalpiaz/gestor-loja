@@ -320,6 +320,7 @@ class Obreiro
             'chanceler' => 'chanceler',
             'veneravel', 'veneravel_mestre' => 'veneravel',
             'bibliotecario' => 'bibliotecario',
+            'hospitaleiro', 'mestre_hospitaleiro' => 'hospitaleiro',
             'mestre_banquetes' => 'mestre_banquetes',
             default => $cargo,
         };

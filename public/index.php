@@ -670,6 +670,36 @@ switch ($requestUri) {
         (new \App\Controllers\SecretariaController())->encerrarVotacaoBalaustre();
         break;
 
+    case "/assistencia":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('hospitaleiro', 'secretario', 'tesoureiro', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Mestre Hospitaleiro, Secretario, Tesoureiro, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\HospitaleiroController())->index();
+        break;
+
+    case "/assistencia/ocorrencias/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('hospitaleiro', 'secretario', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Mestre Hospitaleiro, Secretario, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\HospitaleiroController())->salvarOcorrencia();
+        break;
+
+    case "/assistencia/ocorrencias/status":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('hospitaleiro', 'secretario', 'tesoureiro', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Mestre Hospitaleiro, Secretario, Tesoureiro, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\HospitaleiroController())->atualizarStatusOcorrencia();
+        break;
+
     case "/tesouraria/caixa":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
         if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
@@ -1600,8 +1630,8 @@ switch ($requestUri) {
                         $usuario['cargos'] ?? [$cargo]
                     ))));
                     $temAcessoPainel =
-                        count(array_intersect($cargosAtivos, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "tesoureiro", "chanceler", "admin", "bibliotecario", "mestre_banquetes"])) > 0
-                        || in_array($cargo, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "secretario", "tesoureiro", "chanceler", "admin"], true);
+                        count(array_intersect($cargosAtivos, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "tesoureiro", "chanceler", "admin", "bibliotecario", "mestre_banquetes", "hospitaleiro"])) > 0
+                        || in_array($cargo, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "secretario", "tesoureiro", "chanceler", "admin", "hospitaleiro"], true);
 
                     $_SESSION["usuario_logado"] = $usuario;
                     $_SESSION["usuario_id"] = $usuario["id"];

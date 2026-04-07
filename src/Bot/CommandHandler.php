@@ -149,7 +149,7 @@ class CommandHandler
         $mensagem = "Bem-vindo ao painel da Loja, meu Irmao!";
         $teclado = ['inline_keyboard' => []];
 
-        if ($this->obreiroHasRole($obreiro, 'admin', 'veneravel', 'secretario', 'chanceler', 'tesoureiro', 'bibliotecario', 'primeiro_vigilante', 'segundo_vigilante')) {
+        if ($this->obreiroHasRole($obreiro, 'admin', 'veneravel', 'secretario', 'chanceler', 'tesoureiro', 'bibliotecario', 'primeiro_vigilante', 'segundo_vigilante', 'hospitaleiro')) {
             $teclado['inline_keyboard'][] = [
                 ['text' => 'Chancelaria', 'callback_data' => 'admin_chancelaria'],
                 ['text' => 'Secretaria', 'callback_data' => 'secretaria_menu'],
@@ -163,6 +163,11 @@ class CommandHandler
                 ['text' => 'Tesouraria', 'callback_data' => 'tesouraria_menu'],
                 ['text' => 'Biblioteca', 'callback_data' => 'biblioteca_menu'],
             ];
+            if ($this->obreiroHasRole($obreiro, 'hospitaleiro', 'secretario', 'tesoureiro', 'veneravel', 'admin')) {
+                $teclado['inline_keyboard'][] = [
+                    ['text' => 'Hospitalaria', 'callback_data' => 'assistencia_menu'],
+                ];
+            }
         } else {
             $teclado['inline_keyboard'][] = [
                 ['text' => 'Confirmar Presenca', 'callback_data' => 'presenca_confirmar'],
@@ -184,6 +189,7 @@ class CommandHandler
         $mensagem .= "/chancelaria - painel da chancelaria\n";
         $mensagem .= "/tesouraria - painel da tesouraria\n";
         $mensagem .= "/biblioteca - painel da biblioteca\n";
+        $mensagem .= "/assistencia - painel de hospitalaria\n";
         $mensagem .= "/painel - painel administrativo\n";
 
         $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML']);
@@ -561,6 +567,8 @@ class CommandHandler
                     $this->handleTesouraria($chatId, $fromId);
                 } elseif (strpos($text, '/biblioteca') === 0) {
                     $this->handleBiblioteca($chatId, $fromId);
+                } elseif (strpos($text, '/assistencia') === 0) {
+                    $this->handleAssistenciaMenu($chatId, $fromId);
                 } else {
                     $this->telegram->sendMessage($chatId, "Comando nao reconhecido. Use /ajuda para ver as opcoes.");
                 }
@@ -633,6 +641,9 @@ class CommandHandler
                     case 'admin_secretaria':
                     case 'secretaria_menu':
                         $this->handleSecretariaMenu($chatId, $fromId);
+                        break;
+                    case 'assistencia_menu':
+                        $this->handleAssistenciaMenu($chatId, $fromId);
                         break;
                     case 'sec_agendas':
                         $this->handleSecAgendas($chatId);
@@ -794,6 +805,29 @@ class CommandHandler
 
         $teclado = [
             'inline_keyboard' => $botoes,
+        ];
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);
+    }
+
+    public function handleAssistenciaMenu($chatId, $fromId): void
+    {
+        $obreiro = $this->obreiroModel->findByTelegramId($fromId);
+        if (!$this->isDev($fromId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'hospitaleiro', 'secretario', 'tesoureiro', 'veneravel', 'admin'))) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Mestre Hospitaleiro, Secretaria, Tesouraria, Veneravel Mestre ou Administrador.');
+            return;
+        }
+
+        $mensagem = "*Painel de Hospitalaria*\n\nRegistre e acompanhe ocorrencias assistenciais com encaminhamento ao Veneravel e Tesouraria.";
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Abrir painel de Assistencia', 'web_app' => ['url' => $this->buildAppUrl('/assistencia')]],
+                ],
+                [
+                    ['text' => 'Voltar', 'callback_data' => 'start_menu'],
+                ],
+            ],
         ];
 
         $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);

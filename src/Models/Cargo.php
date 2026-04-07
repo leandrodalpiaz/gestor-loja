@@ -122,6 +122,7 @@ class Cargo
         return match (strtoupper(trim($cargoCodigo))) {
             'ADMINISTRADOR' => 'admin',
             'CHANCELER' => 'chanceler',
+            'HOSPITALEIRO', 'MESTRE_HOSPITALEIRO' => 'hospitaleiro',
             'PRIMEIRO_VIGILANTE' => 'primeiro_vigilante',
             'SEGUNDO_VIGILANTE' => 'segundo_vigilante',
             'SECRETARIO' => 'secretario',
@@ -148,7 +149,7 @@ class Cargo
 
     public static function resolverCargoPrincipal(array $slugs, ?string $fallback = null): string
     {
-        $prioridade = ['admin', 'chanceler', 'primeiro_vigilante', 'segundo_vigilante', 'secretario', 'tesoureiro', 'bibliotecario', 'veneravel', 'mestre_banquetes'];
+        $prioridade = ['admin', 'chanceler', 'hospitaleiro', 'primeiro_vigilante', 'segundo_vigilante', 'secretario', 'tesoureiro', 'bibliotecario', 'veneravel', 'mestre_banquetes'];
         foreach ($prioridade as $cargo) {
             if (in_array($cargo, $slugs, true)) {
                 return $cargo;

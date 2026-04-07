@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS public.trilha_companheiro (
       'concluido',
       'apto_para_certificado',
       'certificado_solicitado',
-      'apto_para_elevacao',
-      'elevacao_recomendada'
+      'apto_para_exaltacao',
+      'exaltacao_recomendada'
     )
   )
 );

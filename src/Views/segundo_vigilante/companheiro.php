@@ -43,7 +43,7 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
             <p class="text-xs uppercase tracking-[0.22em] text-amber-200"><?= $somenteProprio ? 'Autoacompanhamento' : 'Acompanhamento formativo' ?></p>
             <h1 class="mt-2 font-display text-4xl font-bold"><?= htmlspecialchars($nomeCompanheiro) ?></h1>
             <p class="mt-2 text-sm text-slate-200">
-                <?= $somenteProprio ? 'Acompanhe sua trilha de estudos e veja qual é o próximo passo da sua jornada de Companheiro.' : 'Linha do tempo individual do Companheiro, com foco em instruções, docência e preparação para elevação.' ?>
+                <?= $somenteProprio ? 'Acompanhe sua trilha de estudos e veja qual é o próximo passo da sua jornada de Companheiro.' : 'Linha do tempo individual do Companheiro, com foco em instruções, docência e preparação para exaltação.' ?>
             </p>
             <div class="mt-5 flex flex-wrap gap-2">
                 <a href="<?= $somenteProprio ? '/dashboard' : '/segundo-vigilante' ?>" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar</a>
@@ -138,7 +138,7 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
                     $status = (string) ($etapa['status'] ?? 'nao_iniciado');
                     $ordem = (int) ($etapa['etapa_ordem'] ?? 0);
                     $ativo = $ordem === $etapaAtualOrdem;
-                    $concluido = in_array($status, ['concluido', 'certificado_solicitado', 'elevacao_recomendada'], true);
+                    $concluido = in_array($status, ['concluido', 'certificado_solicitado', 'exaltacao_recomendada'], true);
                     ?>
                     <article id="etapa-<?= $ordem ?>" class="rounded-2xl border px-5 py-4 <?= $ativo ? 'border-dourado bg-amber-50/60' : ($concluido ? 'border-emerald-200 bg-emerald-50/60' : 'border-slate-200 bg-white') ?>">
                         <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">

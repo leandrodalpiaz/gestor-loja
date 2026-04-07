@@ -66,7 +66,7 @@ class SegundoVigilanteController
             'etapa_inicial' => count(array_filter($companheiros, static fn (array $companheiro): bool => (int) ($companheiro['trilha_etapa_atual'] ?? 0) === 1)),
             'trabalhos_aguardando_recebimento' => $trilhaDisponivel ? $trilhaModel->contarPorStatus($companheiroIds, 'aguardando_entrega') : 0,
             'aptos_docencia' => $trilhaDisponivel ? $trilhaModel->contarPorStatus($companheiroIds, 'apto_para_certificado') : 0,
-            'aptos_elevacao' => $trilhaDisponivel ? $trilhaModel->contarPorStatus($companheiroIds, 'apto_para_elevacao') : 0,
+            'aptos_exaltacao' => $trilhaDisponivel ? $trilhaModel->contarPorStatus($companheiroIds, 'apto_para_exaltacao') : 0,
         ];
 
         $trilhaEstudo = TrilhaCompanheiro::etapas();
@@ -119,8 +119,8 @@ class SegundoVigilanteController
             'concluido' => 'Concluído',
             'apto_para_certificado' => 'Apto para certificado',
             'certificado_solicitado' => 'Certificado solicitado',
-            'apto_para_elevacao' => 'Apto para elevação',
-            'elevacao_recomendada' => 'Elevação recomendada',
+            'apto_para_exaltacao' => 'Apto para exaltação',
+            'exaltacao_recomendada' => 'Exaltação recomendada',
         ];
 
         $acoesRapidasPorEtapa = [];
@@ -280,11 +280,11 @@ class SegundoVigilanteController
             'aguardando_entrega' => 'Receber o trabalho do Companheiro',
             'recebido' => 'Revisar o trabalho recebido',
             'revisado' => 'Concluir a etapa e orientar o próximo passo',
-            'concluido' => $etapa >= 8 ? 'Avaliar recomendação de elevação' : 'Liberar a próxima etapa',
+            'concluido' => $etapa >= 8 ? 'Avaliar recomendação de exaltação' : 'Liberar a próxima etapa',
             'apto_para_certificado' => 'Solicitar o certificado de docência',
             'certificado_solicitado' => 'Aguardar emissão do certificado',
-            'apto_para_elevacao' => 'Avaliar recomendação de elevação',
-            'elevacao_recomendada' => 'Encaminhar ao Venerável Mestre',
+            'apto_para_exaltacao' => 'Avaliar recomendação de exaltação',
+            'exaltacao_recomendada' => 'Encaminhar ao Venerável Mestre',
             default => 'Acompanhar o progresso da etapa',
         };
     }
@@ -314,7 +314,7 @@ class SegundoVigilanteController
                 return [['status' => 'apto_para_certificado', 'label' => 'Marcar apto para certificado']];
             }
             if ($etapa === 8) {
-                return [['status' => 'apto_para_elevacao', 'label' => 'Marcar apto para elevação']];
+                return [['status' => 'apto_para_exaltacao', 'label' => 'Marcar apto para exaltação']];
             }
             return [['status' => 'concluido', 'label' => 'Concluir etapa']];
         }
@@ -323,15 +323,15 @@ class SegundoVigilanteController
                 return [['status' => 'apto_para_certificado', 'label' => 'Marcar apto para certificado']];
             }
             if ($etapa === 8) {
-                return [['status' => 'apto_para_elevacao', 'label' => 'Marcar apto para elevação']];
+                return [['status' => 'apto_para_exaltacao', 'label' => 'Marcar apto para exaltação']];
             }
             return [['status' => 'disponibilizado', 'label' => 'Reabrir etapa']];
         }
         if ($status === 'apto_para_certificado') {
             return [['status' => 'certificado_solicitado', 'label' => 'Solicitar certificado']];
         }
-        if ($status === 'apto_para_elevacao') {
-            return [['status' => 'elevacao_recomendada', 'label' => 'Recomendar elevação']];
+        if ($status === 'apto_para_exaltacao') {
+            return [['status' => 'exaltacao_recomendada', 'label' => 'Recomendar exaltação']];
         }
         return [];
     }

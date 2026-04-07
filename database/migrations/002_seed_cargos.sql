@@ -11,7 +11,8 @@ VALUES
   ('SEGUNDO_VIGILANTE', '2º Vigilante', TRUE),
   ('ADMINISTRADOR', 'Administrador', TRUE),
   ('BIBLIOTECARIO', 'Bibliotecário', TRUE),
-  ('CHANCELER', 'Chanceler', TRUE)
+  ('CHANCELER', 'Chanceler', TRUE),
+  ('HOSPITALEIRO', 'Mestre Hospitaleiro', TRUE)
 ON CONFLICT (codigo) DO UPDATE
 SET
   nome_exibicao = EXCLUDED.nome_exibicao,

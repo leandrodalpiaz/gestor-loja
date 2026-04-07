@@ -71,7 +71,7 @@ async function carregar() {
         timeline.innerHTML = '';
         dados.etapas.forEach(etapa => {
             const ativo = dados.resumo.etapa_atual && etapa.ordem === dados.resumo.etapa_atual.ordem;
-            const concluido = ['concluido', 'certificado_solicitado', 'elevacao_recomendada'].includes(etapa.status);
+            const concluido = ['concluido', 'certificado_solicitado', 'exaltacao_recomendada'].includes(etapa.status);
             const div = document.createElement('div');
             div.className = 'card rounded-2xl p-4 border ' + (ativo ? 'border-amber-300' : (concluido ? 'border-emerald-300' : 'border-gray-200'));
             div.innerHTML = `

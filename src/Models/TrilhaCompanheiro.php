@@ -19,7 +19,7 @@ class TrilhaCompanheiro
         5 => 'Passar e receber o trabalho da 3ª instrução',
         6 => 'Registrar a docência',
         7 => 'Solicitar o certificado de conclusão da docência',
-        8 => 'Indicar para elevação ao grau de Mestre',
+        8 => 'Indicar para exaltação ao grau de Mestre',
     ];
 
     public function __construct()
@@ -126,7 +126,7 @@ class TrilhaCompanheiro
                     companheiro_id,
                     COALESCE(
                         MIN(etapa_ordem) FILTER (
-                            WHERE status NOT IN ('concluido', 'certificado_solicitado', 'elevacao_recomendada')
+                            WHERE status NOT IN ('concluido', 'certificado_solicitado', 'exaltacao_recomendada')
                         ),
                         MAX(etapa_ordem)
                     ) AS etapa_atual
@@ -223,7 +223,7 @@ class TrilhaCompanheiro
 
         $etapaAtual = null;
         foreach ($etapas as $etapa) {
-            if (!in_array((string) ($etapa['status'] ?? ''), ['concluido', 'certificado_solicitado', 'elevacao_recomendada'], true)) {
+            if (!in_array((string) ($etapa['status'] ?? ''), ['concluido', 'certificado_solicitado', 'exaltacao_recomendada'], true)) {
                 $etapaAtual = $etapa;
                 break;
             }
@@ -237,7 +237,7 @@ class TrilhaCompanheiro
 
         $concluidas = count(array_filter(
             $etapas,
-            static fn (array $etapa): bool => in_array((string) ($etapa['status'] ?? ''), ['concluido', 'certificado_solicitado', 'elevacao_recomendada'], true)
+            static fn (array $etapa): bool => in_array((string) ($etapa['status'] ?? ''), ['concluido', 'certificado_solicitado', 'exaltacao_recomendada'], true)
         ));
 
         return [
@@ -277,8 +277,8 @@ class TrilhaCompanheiro
             'concluido',
             'apto_para_certificado',
             'certificado_solicitado',
-            'apto_para_elevacao',
-            'elevacao_recomendada',
+            'apto_para_exaltacao',
+            'exaltacao_recomendada',
         ];
         if (!in_array($status, $statusPermitidos, true)) {
             return false;
@@ -302,7 +302,7 @@ class TrilhaCompanheiro
         if ($status === 'recebido') {
             $campos[] = 'data_entrega = COALESCE(data_entrega, NOW())';
         }
-        if (in_array($status, ['revisado', 'concluido', 'apto_para_certificado', 'certificado_solicitado', 'apto_para_elevacao', 'elevacao_recomendada'], true)) {
+        if (in_array($status, ['revisado', 'concluido', 'apto_para_certificado', 'certificado_solicitado', 'apto_para_exaltacao', 'exaltacao_recomendada'], true)) {
             $campos[] = 'data_revisao = COALESCE(data_revisao, NOW())';
             $campos[] = 'revisado_por = :revisado_por';
             $params['revisado_por'] = $revisadoPor;

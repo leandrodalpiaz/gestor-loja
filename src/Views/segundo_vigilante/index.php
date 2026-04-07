@@ -39,7 +39,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
             <h1 class="mt-2 font-display text-4xl font-bold">Painel do 2º Vigilante</h1>
             <p class="mt-2 max-w-3xl text-sm text-slate-200">
                 Acompanhamento formativo dos Companheiros, com foco em instruções, trabalhos, docência
-                e preparo para recomendação de elevação ao grau de Mestre.
+                e preparo para recomendação de exaltação ao grau de Mestre.
             </p>
             <div class="mt-5 flex flex-wrap gap-2">
                 <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao dashboard</a>
@@ -76,8 +76,8 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                 <div class="mt-2 text-3xl font-bold text-ardosia"><?= (int) ($resumo['aptos_docencia'] ?? 0) ?></div>
             </article>
             <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Aptos para elevação</div>
-                <div class="mt-2 text-3xl font-bold text-ardosia"><?= (int) ($resumo['aptos_elevacao'] ?? 0) ?></div>
+                <div class="text-sm text-slate-500">Aptos para exaltação</div>
+                <div class="mt-2 text-3xl font-bold text-ardosia"><?= (int) ($resumo['aptos_exaltacao'] ?? 0) ?></div>
             </article>
         </section>
 

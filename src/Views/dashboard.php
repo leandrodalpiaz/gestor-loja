@@ -52,6 +52,7 @@ $isSegundoVigilante = in_array('segundo_vigilante', $usuarioCargos, true);
 $isSecretario = in_array('secretario', $usuarioCargos, true);
 $isVeneravel = in_array('veneravel', $usuarioCargos, true);
 $isBibliotecario = in_array('bibliotecario', $usuarioCargos, true);
+$isHospitaleiro = in_array('hospitaleiro', $usuarioCargos, true);
 $adminLivre = $isAdmin || $showAllPanels;
 
 $secaoGeral = [
@@ -80,6 +81,16 @@ if ($isSecretario || $isVeneravel || $adminLivre) {
         'itens' => [
             ['label' => 'Painel da Secretaria', 'href' => '/secretaria'],
             ['label' => 'Votação de balaustre', 'href' => '/secretaria/votacao'],
+        ],
+    ];
+}
+
+if ($isHospitaleiro || $isVeneravel || $isTesoureiro || $adminLivre) {
+    $secoes[] = [
+        'titulo' => 'Hospitalaria',
+        'descricao' => 'Ocorrencias assistenciais, acompanhamento e encaminhamentos ao Veneravel e Tesouraria.',
+        'itens' => [
+            ['label' => 'Painel de Assistencia', 'href' => '/assistencia'],
         ],
     ];
 }
@@ -213,7 +224,7 @@ $cargosGestao = [
     ['label' => 'Guarda do Templo', 'codigo' => 'GUARDA_DO_TEMPLO'],
     ['label' => 'Mestre de Cerimônias', 'codigo' => 'MESTRE_DE_CERIMONIAS'],
     ['label' => 'Chanceler', 'codigo' => 'CHANCELER'],
-    ['label' => 'Hospitaleiro', 'codigo' => 'HOSPITALEIRO'],
+    ['label' => 'Mestre Hospitaleiro', 'codigo' => 'HOSPITALEIRO'],
     ['label' => '1º Diácono', 'codigo' => 'PRIMEIRO_DIACONO'],
 ];
 ?>

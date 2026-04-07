@@ -27,7 +27,7 @@ CROSS JOIN (
     (5, 'Passar e receber o trabalho da 3ª instrução'),
     (6, 'Registrar a docência'),
     (7, 'Solicitar o certificado de conclusão da docência'),
-    (8, 'Indicar para elevação ao grau de Mestre')
+    (8, 'Indicar para exaltação ao grau de Mestre')
 ) AS etapas(etapa_ordem, titulo_etapa)
 WHERE o.ativo = TRUE
   AND LOWER(TRIM(COALESCE(o.grau, ''))) = 'companheiro'
