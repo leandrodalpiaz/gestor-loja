@@ -82,7 +82,10 @@
                 fetch('/api/biblioteca/isbn.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ isbn: decodedText })
+                    body: JSON.stringify({
+                        isbn: decodedText,
+                        init_data: window.Telegram && window.Telegram.WebApp ? (window.Telegram.WebApp.initData || '') : ''
+                    })
                 })
                 .then(r => r.json())
                 .then(data => {

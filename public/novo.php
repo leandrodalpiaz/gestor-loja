@@ -45,7 +45,8 @@
                 tipo: form.tipo.value,
                 quantidade_disponivel: form.quantidade_disponivel.value,
                 grau_recomendado: form.grau_recomendado.value,
-                nota_instrucao: form.nota_instrucao.value
+                nota_instrucao: form.nota_instrucao.value,
+                init_data: window.Telegram && window.Telegram.WebApp ? (window.Telegram.WebApp.initData || '') : ''
             };
             const resp = await fetch('/api/biblioteca/cadastrar.php', {
                 method: 'POST',

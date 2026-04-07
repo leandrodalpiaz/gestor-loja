@@ -92,8 +92,8 @@ class CommandHandler
     private function ensureChancelariaAccess($chatId, int $requesterTelegramId): bool
     {
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
-        if (!$this->isDev($requesterTelegramId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'chanceler', 'admin'))) {
-            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Chanceler da Loja.');
+        if (!$this->isDev($requesterTelegramId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'chanceler', 'veneravel', 'admin'))) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
             return false;
         }
 
@@ -149,11 +149,16 @@ class CommandHandler
         $mensagem = "Bem-vindo ao painel da Loja, meu Irmao!";
         $teclado = ['inline_keyboard' => []];
 
-        if ($this->obreiroHasRole($obreiro, 'admin', 'veneravel', 'secretario', 'chanceler', 'tesoureiro', 'bibliotecario')) {
+        if ($this->obreiroHasRole($obreiro, 'admin', 'veneravel', 'secretario', 'chanceler', 'tesoureiro', 'bibliotecario', 'primeiro_vigilante', 'segundo_vigilante')) {
             $teclado['inline_keyboard'][] = [
                 ['text' => 'Chancelaria', 'callback_data' => 'admin_chancelaria'],
                 ['text' => 'Secretaria', 'callback_data' => 'secretaria_menu'],
             ];
+            if ($this->obreiroHasRole($obreiro, 'admin', 'veneravel')) {
+                $teclado['inline_keyboard'][] = [
+                    ['text' => 'Painel do Veneravel Mestre', 'web_app' => ['url' => $this->buildAppUrl('/veneravel')]],
+                ];
+            }
             $teclado['inline_keyboard'][] = [
                 ['text' => 'Tesouraria', 'callback_data' => 'tesouraria_menu'],
                 ['text' => 'Biblioteca', 'callback_data' => 'biblioteca_menu'],
@@ -226,8 +231,8 @@ class CommandHandler
     public function handleTesouraria($chatId, $requesterTelegramId)
     {
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
-        if (!$this->isDev($requesterTelegramId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'tesoureiro', 'admin'))) {
-            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Tesoureiro da Loja.');
+        if (!$this->isDev($requesterTelegramId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'tesoureiro', 'veneravel', 'admin'))) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.');
             return;
         }
 
@@ -258,6 +263,7 @@ class CommandHandler
     {
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
         $isBibliotecario = $this->obreiroHasRole($obreiro, 'bibliotecario', 'admin', 'veneravel');
+        $canClassificar = $this->obreiroHasRole($obreiro, 'primeiro_vigilante', 'segundo_vigilante', 'bibliotecario', 'admin', 'veneravel');
         $isDev = $this->isDev($requesterTelegramId);
 
         $mensagem = "<b>Biblioteca da Loja</b>\n\nSelecione uma opcao:";
@@ -267,14 +273,22 @@ class CommandHandler
             ['text' => 'Meus Emprestimos', 'callback_data' => 'biblioteca_meus_emprestimos'],
             ['text' => 'Ver Acervo', 'callback_data' => 'biblioteca_acervo'],
         ];
+        $botoes[] = [
+            ['text' => 'Abrir Biblioteca Web', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca')]],
+        ];
 
         if ($isBibliotecario || $isDev) {
             $botoes[] = [
-                ['text' => 'Cadastrar por ISBN', 'url' => $this->buildAppUrl('/tg/scanner.php')],
-                ['text' => 'Cadastrar Manual', 'url' => $this->buildAppUrl('/tg/novo.php')],
+                ['text' => 'Cadastrar por ISBN', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca/scanner')]],
+                ['text' => 'Cadastrar Manual', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca/novo')]],
             ];
             $botoes[] = [
-                ['text' => 'Gerenciar Emprestimos', 'callback_data' => 'biblioteca_gerenciar'],
+                ['text' => 'Gerenciar Emprestimos', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca/emprestimos')]],
+            ];
+        }
+        if ($canClassificar || $isDev) {
+            $botoes[] = [
+                ['text' => 'Classificar Leituras', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca')]],
             ];
         }
 
@@ -359,10 +373,13 @@ class CommandHandler
 
     private function handleBibliotecaGerenciar($chatId, $fromId = null)
     {
-        $mensagem = "<b>Gerenciar Emprestimos</b>\n\nPainel de gerenciamento em construcao.";
+        $mensagem = "<b>Gerenciar Emprestimos</b>\n\nUse o painel web da biblioteca para aprovar devolucoes e acompanhar pendencias.";
         $this->telegram->sendMessage($chatId, $mensagem, [
             'parse_mode' => 'HTML',
-            'reply_markup' => ['inline_keyboard' => [[['text' => 'Voltar', 'callback_data' => 'biblioteca_menu']]]],
+            'reply_markup' => ['inline_keyboard' => [
+                [['text' => 'Abrir painel', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca/emprestimos')]],
+                ['text' => 'Voltar', 'callback_data' => 'biblioteca_menu']]
+            ]],
         ]);
     }
 
@@ -456,7 +473,10 @@ class CommandHandler
                     ['text' => 'Aprovar e Enviar p/ Grupo', 'callback_data' => 'chancelaria_aprovar_efemeride'],
                 ],
                 [
-                    ['text' => 'Editar Texto', 'web_app' => ['url' => $this->buildAppUrl('/chancelaria/efemerides')]],
+                    ['text' => 'Revisar Mensagem', 'web_app' => ['url' => $this->buildAppUrl('/chancelaria/efemerides?foco=mensagem')]],
+                ],
+                [
+                    ['text' => 'Corrigir Dados', 'web_app' => ['url' => $this->buildAppUrl('/chancelaria/efemerides?foco=dados')]],
                 ],
                 [
                     ['text' => 'Voltar', 'callback_data' => 'admin_chancelaria'],
@@ -464,7 +484,26 @@ class CommandHandler
             ],
         ];
 
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
+        $enviadoNoPrivado = $this->telegram->sendMessage(
+            $requesterTelegramId,
+            $msg,
+            ['parse_mode' => 'HTML', 'reply_markup' => $teclado]
+        );
+
+        if ($enviadoNoPrivado) {
+            $this->telegram->sendMessage(
+                $chatId,
+                "A previa de 'Neste Dia' foi enviada no seu privado para revisao.",
+                ['parse_mode' => 'HTML']
+            );
+            return;
+        }
+
+        $this->telegram->sendMessage(
+            $chatId,
+            "Nao consegui entregar a previa no privado. Abra o chat com o bot e tente novamente.",
+            ['parse_mode' => 'HTML']
+        );
     }
 
     private function handleAprovarEfemeride($chatId, int $requesterTelegramId)
@@ -734,18 +773,27 @@ class CommandHandler
         }
 
         $mensagem = "*Painel da Secretaria*\n\nSelecione uma opcao:";
-        $teclado = [
-            'inline_keyboard' => [
-                [
-                    ['text' => 'Painel Web da Secretaria', 'web_app' => ['url' => $this->buildAppUrl('/secretaria')]],
-                ],
-                [
-                    ['text' => 'Agendas e Sessoes', 'callback_data' => 'sec_agendas'],
-                ],
-                [
-                    ['text' => 'Voltar', 'callback_data' => 'start_menu'],
-                ],
+        $botoes = [
+            [
+                ['text' => 'Painel Web da Secretaria', 'web_app' => ['url' => $this->buildAppUrl('/secretaria')]],
             ],
+            [
+                ['text' => 'Agendas e Sessoes', 'callback_data' => 'sec_agendas'],
+            ],
+        ];
+
+        if ($this->isDev($fromId) || $this->obreiroHasRole($obreiro, 'admin', 'veneravel')) {
+            $botoes[] = [
+                ['text' => 'Painel do Veneravel Mestre', 'web_app' => ['url' => $this->buildAppUrl('/veneravel')]],
+            ];
+        }
+
+        $botoes[] = [
+            ['text' => 'Voltar', 'callback_data' => 'start_menu'],
+        ];
+
+        $teclado = [
+            'inline_keyboard' => $botoes,
         ];
 
         $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);

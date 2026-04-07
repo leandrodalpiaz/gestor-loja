@@ -7,6 +7,7 @@ class TelegramService
     private string $botToken;
     private string $groupChatId;
     private string $reviewChatId;
+    private string $lastError = '';
 
     public function __construct()
     {
@@ -34,7 +35,8 @@ class TelegramService
     public function sendMessageToChat(string $chatId, string $message): bool
     {
         if (empty($this->botToken) || empty($chatId)) {
-            error_log("TelegramBot Error: TELEGRAM_BOT_TOKEN or chat_id not configured.");
+            $this->lastError = 'TELEGRAM_BOT_TOKEN ou chat_id nao configurado.';
+            error_log("TelegramBot Error: " . $this->lastError);
             return false;
         }
 
@@ -97,11 +99,28 @@ class TelegramService
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if ($response === false || $httpCode !== 200) {
-            error_log('TelegramBot Error: HTTP ' . $httpCode . ' | Response: ' . (string) $response);
+            $this->lastError = 'HTTP ' . $httpCode . ' | Response: ' . (string) $response;
+            error_log('TelegramBot Error: ' . $this->lastError);
+            curl_close($ch);
+            return false;
+        }
+
+        $payload = json_decode((string) $response, true);
+        if (!is_array($payload) || empty($payload['ok'])) {
+            $descricao = is_array($payload) ? (string) ($payload['description'] ?? 'Resposta invalida da API Telegram.') : 'Resposta invalida da API Telegram.';
+            $this->lastError = $descricao;
+            error_log('TelegramBot Error: ' . $descricao . ' | Response: ' . (string) $response);
+            curl_close($ch);
+            return false;
         }
 
         curl_close($ch);
+        $this->lastError = '';
+        return true;
+    }
 
-        return $httpCode === 200;
+    public function getLastError(): string
+    {
+        return $this->lastError;
     }
 }

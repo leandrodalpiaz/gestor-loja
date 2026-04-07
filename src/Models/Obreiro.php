@@ -7,17 +7,6 @@ use PDO;
 
 class Obreiro
 {
-    /**
-     * Atualiza apenas o cargo de um obreiro pelo ID
-     */
-    public function atualizarCargo($id, $novoCargo): bool
-    {
-        $stmt = $this->db->prepare("UPDATE obreiros SET cargo = :cargo WHERE id = :id");
-        return $stmt->execute([
-            'cargo' => $novoCargo,
-            'id' => $id
-        ]);
-    }
     private PDO $db;
 
     public function __construct()
@@ -26,52 +15,55 @@ class Obreiro
     }
 
     /**
-     * Busca um obreiro pelo ID do Telegram
+     * Atualiza apenas o cargo legado de um obreiro pelo ID.
+     * Mantido por compatibilidade com telas antigas.
      */
-    public function findByTelegramId(int $telegramId): ?array
+    public function atualizarCargo($id, $novoCargo): bool
     {
-        // Garante que o obreiro encontrado não apenas existe, mas está ATIVO no quadro da loja
-        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE telegram_id = :telegram_id AND ativo = true LIMIT 1");
-        $stmt->execute(['telegram_id' => $telegramId]);
-        $result = $stmt->fetch();
-        return $result ?: null;
+        $stmt = $this->db->prepare("UPDATE obreiros SET cargo = :cargo WHERE id = :id");
+        return $stmt->execute([
+            'cargo' => $novoCargo,
+            'id' => $id,
+        ]);
     }
 
-    /**
-     * Busca todos os obreiros ativos
-     */
+    public function findByTelegramId(int $telegramId): ?array
+    {
+        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE telegram_id = :telegram_id AND ativo = true LIMIT 1");
+        $stmt->execute(['telegram_id' => $telegramId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result ? $this->hidratarCargosAtivos($result) : null;
+    }
+
     public function getAllAtivos(): array
     {
         $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE ativo = true ORDER BY nome ASC");
         $stmt->execute();
 
-        return $stmt->fetchAll();
+        return $this->hidratarListaCargosAtivos($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
-    /**
-     * Busca efemérides do dia (aniversário civil ou maçônico)
-     */
     public function getEfemeridesDoDia(): array
     {
-        // PostgreSQL extract function para pegar dia e mês atual
         $sql = "
-            SELECT 
-                nome_historico, 
-                nome, 
+            SELECT
+                nome_historico,
+                nome,
                 grau,
                 data_nascimento_civil,
                 data_iniciacao,
-                CASE WHEN EXTRACT(MONTH FROM data_nascimento_civil) = EXTRACT(MONTH FROM CURRENT_DATE) 
-                      AND EXTRACT(DAY FROM data_nascimento_civil) = EXTRACT(DAY FROM CURRENT_DATE) 
+                CASE WHEN EXTRACT(MONTH FROM data_nascimento_civil) = EXTRACT(MONTH FROM CURRENT_DATE)
+                      AND EXTRACT(DAY FROM data_nascimento_civil) = EXTRACT(DAY FROM CURRENT_DATE)
                      THEN true ELSE false END as is_aniversario_civil,
-                CASE WHEN EXTRACT(MONTH FROM data_iniciacao) = EXTRACT(MONTH FROM CURRENT_DATE) 
-                      AND EXTRACT(DAY FROM data_iniciacao) = EXTRACT(DAY FROM CURRENT_DATE) 
+                CASE WHEN EXTRACT(MONTH FROM data_iniciacao) = EXTRACT(MONTH FROM CURRENT_DATE)
+                      AND EXTRACT(DAY FROM data_iniciacao) = EXTRACT(DAY FROM CURRENT_DATE)
                      THEN true ELSE false END as is_aniversario_maconico
-            FROM obreiros 
+            FROM obreiros
             WHERE ativo = true
               AND (
                   (EXTRACT(MONTH FROM data_nascimento_civil) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM data_nascimento_civil) = EXTRACT(DAY FROM CURRENT_DATE))
-                  OR 
+                  OR
                   (EXTRACT(MONTH FROM data_iniciacao) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM data_iniciacao) = EXTRACT(DAY FROM CURRENT_DATE))
               )
         ";
@@ -82,44 +74,44 @@ class Obreiro
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function buscarPorAniversario($data) {
+    public function buscarPorAniversario($data): array
+    {
         $sql = "SELECT * FROM obreiros WHERE TO_CHAR(data_nascimento_civil, 'MM-DD') = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$data]);
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function buscarPorDatasMaconicas($data) {
-        require_once __DIR__ . '/../Config/Database.php';
-        $db = \App\Config\Database::getConnection();
-
-        // Buscando apenas a data_iniciacao para evitar o erro de coluna inexistente
-        $sql = "SELECT nome, 'Iniciação' as tipo, data_iniciacao as data FROM obreiros WHERE TO_CHAR(data_iniciacao, 'MM-DD') = ?";
-
-        $stmt = $db->prepare($sql);
+    public function buscarPorDatasMaconicas($data): array
+    {
+        $sql = "SELECT nome, 'Iniciacao' as tipo, data_iniciacao as data FROM obreiros WHERE TO_CHAR(data_iniciacao, 'MM-DD') = ?";
+        $stmt = $this->db->prepare($sql);
         $stmt->execute([$data]);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Cria um novo obreiro no banco de dados
-     */
     public function create(array $data): bool
     {
-        // Renomeando de nome_completo para nome provisoriamente pra garantir compatibilidade com o db inicial
         $sql = "INSERT INTO obreiros (
-            cim, nome, nome_historico, cpf, 
-            data_nascimento_civil, data_iniciacao, telefone, 
-            email, profissao, loja_origem, grau, cargo, ativo
+            cim, nome, nome_historico, cpf,
+            data_nascimento_civil, data_iniciacao, telefone,
+            email, profissao, loja_origem, grau, cargo,
+            data_elevacao, data_exaltacao, telegram_id,
+            potencia_login, acesso_potencia_liberado,
+            acesso_potencia_liberado_em, observacao_secretaria, ativo
         ) VALUES (
             :cim, :nome, :nome_historico, :cpf,
             :data_nascimento_civil, :data_iniciacao, :telefone,
-            :email, :profissao, :loja_origem, :grau, :cargo, true
+            :email, :profissao, :loja_origem, :grau, :cargo,
+            :data_elevacao, :data_exaltacao, :telegram_id,
+            :potencia_login, :acesso_potencia_liberado,
+            :acesso_potencia_liberado_em, :observacao_secretaria, true
         )";
 
         $stmt = $this->db->prepare($sql);
 
-        // Trata campos de data vazios para null 
         $nascimento = !empty($data['data_nascimento_civil']) ? $data['data_nascimento_civil'] : null;
         $iniciacao = !empty($data['data_iniciacao']) ? $data['data_iniciacao'] : null;
 
@@ -136,23 +128,27 @@ class Obreiro
             'loja_origem' => $data['loja_origem'] ?? null,
             'grau' => $data['grau'] ?? null,
             'cargo' => $data['cargo'] ?? null,
+            'data_elevacao' => !empty($data['data_elevacao']) ? $data['data_elevacao'] : null,
+            'data_exaltacao' => !empty($data['data_exaltacao']) ? $data['data_exaltacao'] : null,
+            'telegram_id' => !empty($data['telegram_id']) ? (int) $data['telegram_id'] : null,
+            'potencia_login' => $data['potencia_login'] ?? null,
+            'acesso_potencia_liberado' => !empty($data['acesso_potencia_liberado']) ? 'true' : 'false',
+            'acesso_potencia_liberado_em' => !empty($data['acesso_potencia_liberado'])
+                ? (!empty($data['acesso_potencia_liberado_em']) ? $data['acesso_potencia_liberado_em'] : date('c'))
+                : null,
+            'observacao_secretaria' => $data['observacao_secretaria'] ?? null,
         ]);
     }
 
-    /**
-     * Busca um obreiro pelo ID do banco (PK)
-     */
     public function findById(string $id): ?array
     {
         $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE id = :id LIMIT 1");
         $stmt->execute(['id' => $id]);
-        $result = $stmt->fetch();
-        return $result ?: null;
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result ? $this->hidratarCargosAtivos($result) : null;
     }
 
-    /**
-     * Atualiza os dados do obreiro no banco
-     */
     public function update(array $data): bool
     {
         $sql = "UPDATE obreiros SET
@@ -164,8 +160,16 @@ class Obreiro
             loja_origem = :loja_origem,
             data_nascimento_civil = :data_nascimento_civil,
             data_iniciacao = :data_iniciacao,
+            data_elevacao = :data_elevacao,
+            data_exaltacao = :data_exaltacao,
             telefone = :telefone,
             email = :email,
+            profissao = :profissao,
+            telegram_id = :telegram_id,
+            potencia_login = :potencia_login,
+            acesso_potencia_liberado = :acesso_potencia_liberado,
+            acesso_potencia_liberado_em = :acesso_potencia_liberado_em,
+            observacao_secretaria = :observacao_secretaria,
             ativo = :ativo
             WHERE id = :id";
 
@@ -173,8 +177,6 @@ class Obreiro
 
         $nascimento = !empty($data['data_nascimento_civil']) ? $data['data_nascimento_civil'] : null;
         $iniciacao = !empty($data['data_iniciacao']) ? $data['data_iniciacao'] : null;
-
-        // Converte o valor do checkbox de string para boolean do Postgres
         $ativo = (isset($data['ativo']) && $data['ativo'] == '1') ? 'true' : 'false';
 
         return $stmt->execute([
@@ -187,27 +189,139 @@ class Obreiro
             'loja_origem' => $data['loja_origem'],
             'data_nascimento_civil' => $nascimento,
             'data_iniciacao' => $iniciacao,
+            'data_elevacao' => !empty($data['data_elevacao']) ? $data['data_elevacao'] : null,
+            'data_exaltacao' => !empty($data['data_exaltacao']) ? $data['data_exaltacao'] : null,
             'telefone' => $data['telefone'],
             'email' => $data['email'],
-            'ativo' => $ativo
+            'profissao' => $data['profissao'] ?? null,
+            'telegram_id' => !empty($data['telegram_id']) ? (int) $data['telegram_id'] : null,
+            'potencia_login' => $data['potencia_login'] ?? null,
+            'acesso_potencia_liberado' => !empty($data['acesso_potencia_liberado']) ? 'true' : 'false',
+            'acesso_potencia_liberado_em' => !empty($data['acesso_potencia_liberado'])
+                ? (!empty($data['acesso_potencia_liberado_em']) ? $data['acesso_potencia_liberado_em'] : date('c'))
+                : null,
+            'observacao_secretaria' => $data['observacao_secretaria'] ?? null,
+            'ativo' => $ativo,
         ]);
     }
 
-    /**
-     * Autenticação para o painel administrativo via matrícula (cim) e senha
-     */
     public function autenticar(string $matricula, string $senha): ?array
     {
-        // Certifica de puxar apenas se o membro for ativo para login
         $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE cim = :matricula AND ativo = true LIMIT 1");
         $stmt->execute(['matricula' => $matricula]);
-        $usuario = $stmt->fetch();
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // O hash da senha deve estar salvo na coluna "senha_hash" no banco.
         if ($usuario && !empty($usuario['senha_hash']) && password_verify($senha, $usuario['senha_hash'])) {
-            return $usuario;
+            return $this->hidratarCargosAtivos($usuario);
         }
 
         return null;
+    }
+
+    private function hidratarCargosAtivos(array $obreiro): array
+    {
+        $codigosPorObreiro = $this->buscarCodigosAtivosPorObreiroIds([(string) ($obreiro['id'] ?? '')]);
+        $cargosCodigos = $codigosPorObreiro[(string) ($obreiro['id'] ?? '')] ?? [];
+        $cargosSlugs = Cargo::slugsFromCodigos($cargosCodigos);
+
+        $obreiro['cargos_codigos'] = $cargosCodigos;
+        $obreiro['cargos'] = $cargosSlugs;
+        $obreiro['cargo_principal'] = Cargo::resolverCargoPrincipal(
+            $cargosSlugs,
+            $this->normalizarCargoLegado((string) ($obreiro['cargo'] ?? ''))
+        );
+
+        return $obreiro;
+    }
+
+    private function hidratarListaCargosAtivos(array $obreiros): array
+    {
+        if ($obreiros === []) {
+            return [];
+        }
+
+        $ids = array_values(array_filter(array_map(
+            static fn ($row) => (string) ($row['id'] ?? ''),
+            $obreiros
+        )));
+
+        $cargosPorObreiro = $this->buscarCodigosAtivosPorObreiroIds($ids);
+
+        foreach ($obreiros as &$obreiro) {
+            $id = (string) ($obreiro['id'] ?? '');
+            $cargosCodigos = $cargosPorObreiro[$id] ?? [];
+            $cargosSlugs = Cargo::slugsFromCodigos($cargosCodigos);
+
+            $obreiro['cargos_codigos'] = $cargosCodigos;
+            $obreiro['cargos'] = $cargosSlugs;
+            $obreiro['cargo_principal'] = Cargo::resolverCargoPrincipal(
+                $cargosSlugs,
+                $this->normalizarCargoLegado((string) ($obreiro['cargo'] ?? ''))
+            );
+        }
+        unset($obreiro);
+
+        return $obreiros;
+    }
+
+    private function buscarCodigosAtivosPorObreiroIds(array $ids): array
+    {
+        $ids = array_values(array_filter(array_unique(array_map(
+            static fn ($id) => trim((string) $id),
+            $ids
+        ))));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($ids), '?'));
+        $sql = "SELECT ac.obreiro_id, c.codigo
+                FROM public.atribuicoes_cargo ac
+                JOIN public.cargos c ON c.id = ac.cargo_id
+                WHERE ac.fim_em IS NULL
+                  AND c.ativo = TRUE
+                  AND ac.obreiro_id IN ($placeholders)";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($ids);
+
+        $result = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $obreiroId = (string) ($row['obreiro_id'] ?? '');
+            $codigo = strtoupper((string) ($row['codigo'] ?? ''));
+            if ($obreiroId === '' || $codigo === '') {
+                continue;
+            }
+            $result[$obreiroId][] = $codigo;
+        }
+
+        foreach ($result as &$codigos) {
+            $codigos = array_values(array_unique($codigos));
+        }
+        unset($codigos);
+
+        return $result;
+    }
+
+    private function normalizarCargoLegado(string $cargo): string
+    {
+        $cargo = strtolower(trim($cargo));
+        $cargo = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $cargo) ?: $cargo;
+        $cargo = preg_replace('/[^a-z0-9_]+/', '_', $cargo) ?? '';
+        $cargo = trim($cargo, '_');
+
+        return match ($cargo) {
+            'administrador' => 'admin',
+            'secretario' => 'secretario',
+            'primeiro_vigilante', '1_vigilante', 'primeirovigilante' => 'primeiro_vigilante',
+            'segundo_vigilante', '2_vigilante', 'segundovigilante' => 'segundo_vigilante',
+            'tesoureiro' => 'tesoureiro',
+            'chanceler' => 'chanceler',
+            'veneravel', 'veneravel_mestre' => 'veneravel',
+            'bibliotecario' => 'bibliotecario',
+            'mestre_banquetes' => 'mestre_banquetes',
+            default => $cargo,
+        };
     }
 }

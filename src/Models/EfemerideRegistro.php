@@ -8,6 +8,13 @@ use PDO;
 class EfemerideRegistro
 {
     private PDO $db;
+    private const VINCULOS_PADRAO = [
+        ['codigo' => 4, 'nome' => 'filho'],
+        ['codigo' => 3, 'nome' => 'filha'],
+        ['codigo' => 2, 'nome' => 'esposa'],
+        ['codigo' => 6, 'nome' => 'enteado'],
+        ['codigo' => 5, 'nome' => 'enteada'],
+    ];
 
     public function __construct()
     {
@@ -64,7 +71,7 @@ class EfemerideRegistro
     }
 
     /**
-     * Busca registros ativos para um dia/mês específico (formato 'd/m').
+     * Busca registros ativos para um dia/mÃªs especÃ­fico (formato 'd/m').
      * @param string $diaMes Ex: '25/03'
      * @return array
      */
@@ -98,6 +105,7 @@ class EfemerideRegistro
      *
      * Filtros aceitos:
      * - termo: procura em nome, parentesco, vinculo e local
+     * - irmao_ref: procura registros relacionados ao irmao selecionado (nome ou parentesco)
      * - tipo: filtro por tipo de evento
      * - ativo: "1" (ativos), "0" (inativos), "all" (todos)
      * - data_ini / data_fim: intervalo em Y-m-d
@@ -115,10 +123,22 @@ class EfemerideRegistro
             $params['termo'] = '%' . $termo . '%';
         }
 
+        $irmaoRef = trim((string) ($filtros['irmao_ref'] ?? ''));
+        if ($irmaoRef !== '') {
+            $where[] = "(nome ILIKE :irmao_ref OR COALESCE(parentesco, '') ILIKE :irmao_ref)";
+            $params['irmao_ref'] = '%' . $irmaoRef . '%';
+        }
+
         $tipo = trim((string) ($filtros['tipo'] ?? ''));
         if ($tipo !== '') {
             $where[] = "tipo = :tipo";
             $params['tipo'] = $tipo;
+        }
+
+        $vinculo = trim((string) ($filtros['vinculo'] ?? ''));
+        if ($vinculo !== '') {
+            $where[] = "COALESCE(vinculo, '') ILIKE :vinculo";
+            $params['vinculo'] = $vinculo;
         }
 
         $ativo = strtolower(trim((string) ($filtros['ativo'] ?? '1')));
@@ -186,14 +206,15 @@ class EfemerideRegistro
 
         $stmt = $this->db->prepare($sql);
 
-        $codVinculo = isset($data['cod_vinculo']) && $data['cod_vinculo'] !== '' ? (int) $data['cod_vinculo'] : null;
+        $vinculo = trim((string) ($data['vinculo'] ?? ''));
+        $codVinculo = $this->resolverCodVinculo($vinculo, $data['cod_vinculo'] ?? null);
 
         return $stmt->execute([
             'nome' => trim((string) ($data['nome'] ?? '')),
             'tipo' => trim((string) ($data['tipo'] ?? '')),
             'data_evento' => $data['data_evento'] ?? null,
             'cod_vinculo' => $codVinculo,
-            'vinculo' => trim((string) ($data['vinculo'] ?? '')) ?: null,
+            'vinculo' => $vinculo !== '' ? $vinculo : null,
             'parentesco' => trim((string) ($data['parentesco'] ?? '')) ?: null,
             'local' => trim((string) ($data['local'] ?? '')) ?: null,
             'mensagem_custom' => trim((string) ($data['mensagem_custom'] ?? '')) ?: null,
@@ -233,7 +254,8 @@ class EfemerideRegistro
         ";
 
         $stmt = $this->db->prepare($sql);
-        $codVinculo = isset($data['cod_vinculo']) && $data['cod_vinculo'] !== '' ? (int) $data['cod_vinculo'] : null;
+        $vinculo = trim((string) ($data['vinculo'] ?? ''));
+        $codVinculo = $this->resolverCodVinculo($vinculo, $data['cod_vinculo'] ?? null);
 
         return $stmt->execute([
             'id' => $id,
@@ -241,7 +263,7 @@ class EfemerideRegistro
             'tipo' => trim((string) ($data['tipo'] ?? '')),
             'data_evento' => $data['data_evento'] ?? null,
             'cod_vinculo' => $codVinculo,
-            'vinculo' => trim((string) ($data['vinculo'] ?? '')) ?: null,
+            'vinculo' => $vinculo !== '' ? $vinculo : null,
             'parentesco' => trim((string) ($data['parentesco'] ?? '')) ?: null,
             'local' => trim((string) ($data['local'] ?? '')) ?: null,
             'mensagem_custom' => trim((string) ($data['mensagem_custom'] ?? '')) ?: null,
@@ -281,4 +303,52 @@ class EfemerideRegistro
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getVinculosPadrao(): array
+    {
+        return self::VINCULOS_PADRAO;
+    }
+
+    private function resolverCodVinculo(string $vinculo, $codVinculoInformado): ?int
+    {
+        if ($codVinculoInformado !== null && $codVinculoInformado !== '') {
+            return (int) $codVinculoInformado;
+        }
+
+        $normalizado = $this->normalizarTexto($vinculo);
+        if ($normalizado === '') {
+            return null;
+        }
+
+        if ($normalizado === 'honrario') {
+            $normalizado = 'honorario';
+        }
+        if ($normalizado === 'enteeado') {
+            $normalizado = 'enteado';
+        }
+
+        foreach (self::VINCULOS_PADRAO as $item) {
+            $nomeItem = $this->normalizarTexto((string) ($item['nome'] ?? ''));
+            if ($nomeItem === $normalizado) {
+                return (int) $item['codigo'];
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizarTexto(string $texto): string
+    {
+        $texto = trim($texto);
+        if ($texto === '') {
+            return '';
+        }
+
+        $texto = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $texto) ?: $texto;
+        $texto = strtolower($texto);
+        $texto = preg_replace('/[^a-z0-9]+/', '', $texto) ?? '';
+
+        return $texto;
+    }
+
 }
+

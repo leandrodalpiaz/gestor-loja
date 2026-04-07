@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 
+session_start();
+
 use App\Config\Env;
 use App\Models\Acervo;
+use App\Models\Obreiro;
+use App\Services\TelegramInitDataValidator;
 
 require_once __DIR__ . '/../../../src/autoload.php';
 
@@ -18,6 +22,38 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $dados = json_decode(file_get_contents('php://input'), true) ?? [];
+
+$authorized = false;
+if (isset($_SESSION['usuario_logado'])) {
+    $roles = array_values(array_unique(array_filter(array_map(
+        static fn ($role) => strtolower(trim((string) $role)),
+        $_SESSION['usuario_cargos'] ?? [$_SESSION['usuario_cargo'] ?? '']
+    ))));
+    $authorized = count(array_intersect($roles, ['bibliotecario', 'admin', 'veneravel'])) > 0;
+}
+
+if (!$authorized) {
+    $initData = trim((string) ($dados['init_data'] ?? ''));
+    $botToken = trim((string) ($_ENV['TELEGRAM_BOT_TOKEN'] ?? ''));
+    $telegramUser = TelegramInitDataValidator::validate($initData, $botToken);
+
+    if ($telegramUser) {
+        $obreiro = (new Obreiro())->findByTelegramId((int) $telegramUser['id']);
+        if ($obreiro) {
+            $roles = array_values(array_unique(array_filter(array_map(
+                static fn ($role) => strtolower(trim((string) $role)),
+                $obreiro['cargos'] ?? [$obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? '']
+            ))));
+            $authorized = count(array_intersect($roles, ['bibliotecario', 'admin', 'veneravel'])) > 0;
+        }
+    }
+}
+
+if (!$authorized) {
+    http_response_code(403);
+    echo json_encode(['sucesso' => false, 'mensagem' => 'Acesso restrito a Biblioteca, Administrador ou Veneravel Mestre.']);
+    exit;
+}
 
 $titulo = trim((string) ($dados['titulo'] ?? ''));
 $autor = trim((string) ($dados['autor'] ?? ''));
@@ -40,6 +76,7 @@ $qtd = max(1, (int) ($dados['quantidade_disponivel'] ?? 1));
 $payload = [
     'titulo' => $titulo,
     'autor' => $autor,
+    'resumo' => trim((string) ($dados['resumo'] ?? '')) ?: null,
     'tipo' => $tipo,
     'grau_restricao' => (int) ($dados['grau_restricao'] ?? 1),
     'arquivo_url' => trim((string) ($dados['arquivo_url'] ?? '')) ?: null,
@@ -60,7 +97,7 @@ try {
         exit;
     }
 
-    echo json_encode(['sucesso' => true]);
+    echo json_encode(['sucesso' => true], JSON_UNESCAPED_UNICODE);
 } catch (\Throwable $e) {
     error_log('[api/biblioteca/cadastrar] ' . $e->getMessage());
     echo json_encode(['sucesso' => false, 'mensagem' => 'Erro interno ao salvar o livro.']);

@@ -1,55 +1,181 @@
 <?php
+
 namespace App\Models;
 
 use App\Config\Database;
+use App\Services\LivroMetadataService;
 use PDO;
 
 class Acervo
 {
     private PDO $db;
+    private LivroMetadataService $metadataService;
 
     public function __construct()
     {
         $this->db = Database::getConnection();
+        $this->metadataService = new LivroMetadataService();
     }
 
     public function listarTodos(): array
     {
-        $sql = "SELECT * FROM acervo ORDER BY criado_em DESC";
+        $sql = "SELECT
+                    a.*,
+                    COALESCE(c.total_comentarios, 0) AS total_comentarios,
+                    COALESCE(r.total_gostei_sim, 0) AS total_gostei_sim,
+                    COALESCE(r.total_gostei_nao, 0) AS total_gostei_nao,
+                    CASE
+                        WHEN COALESCE(a.quantidade_disponivel, 0) > 0 THEN TRUE
+                        ELSE FALSE
+                    END AS disponivel
+                FROM acervo a
+                LEFT JOIN (
+                    SELECT acervo_id, COUNT(*) AS total_comentarios
+                    FROM biblioteca_comentarios
+                    WHERE ativo = TRUE
+                    GROUP BY acervo_id
+                ) c ON c.acervo_id = a.id
+                LEFT JOIN (
+                    SELECT
+                        acervo_id,
+                        SUM(CASE WHEN gostei = TRUE THEN 1 ELSE 0 END) AS total_gostei_sim,
+                        SUM(CASE WHEN gostei = FALSE THEN 1 ELSE 0 END) AS total_gostei_nao
+                    FROM biblioteca_reacoes
+                    GROUP BY acervo_id
+                ) r ON r.acervo_id = a.id
+                WHERE a.ativo = TRUE
+                ORDER BY a.criado_em DESC, a.id DESC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function buscarPorId(int $id): ?array
     {
-        $sql = "SELECT * FROM acervo WHERE id = :id LIMIT 1";
+        $sql = "SELECT * FROM acervo WHERE id = :id AND ativo = TRUE LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ?: null;
     }
 
+    public function buscarDetalhes(int $id, ?string $obreiroId = null): ?array
+    {
+        $sql = "SELECT
+                    a.*,
+                    COALESCE(c.total_comentarios, 0) AS total_comentarios,
+                    COALESCE(r.total_gostei_sim, 0) AS total_gostei_sim,
+                    COALESCE(r.total_gostei_nao, 0) AS total_gostei_nao,
+                    ru.gostei AS minha_reacao,
+                    CASE
+                        WHEN COALESCE(a.quantidade_disponivel, 0) > 0 THEN TRUE
+                        ELSE FALSE
+                    END AS disponivel
+                FROM acervo a
+                LEFT JOIN (
+                    SELECT acervo_id, COUNT(*) AS total_comentarios
+                    FROM biblioteca_comentarios
+                    WHERE ativo = TRUE
+                    GROUP BY acervo_id
+                ) c ON c.acervo_id = a.id
+                LEFT JOIN (
+                    SELECT
+                        acervo_id,
+                        SUM(CASE WHEN gostei = TRUE THEN 1 ELSE 0 END) AS total_gostei_sim,
+                        SUM(CASE WHEN gostei = FALSE THEN 1 ELSE 0 END) AS total_gostei_nao
+                    FROM biblioteca_reacoes
+                    GROUP BY acervo_id
+                ) r ON r.acervo_id = a.id
+                LEFT JOIN biblioteca_reacoes ru
+                    ON ru.acervo_id = a.id
+                    AND ru.obreiro_id::text = :obreiro_id
+                WHERE a.id = :id
+                  AND a.ativo = TRUE
+                LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'id' => $id,
+            'obreiro_id' => $obreiroId ?? '',
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
+
     public function adicionar(array $dados): bool
     {
+        $isbn = trim((string) ($dados['isbn'] ?? ''));
+        $metadata = $isbn !== '' ? $this->metadataService->buscarPorIsbn($isbn) : null;
+
+        $titulo = trim((string) ($dados['titulo'] ?? ''));
+        $autor = trim((string) ($dados['autor'] ?? ''));
+        $capaUrl = trim((string) ($dados['capa_url'] ?? ''));
+        $resumo = trim((string) ($dados['resumo'] ?? ''));
+
+        if ($titulo === '' && is_array($metadata)) {
+            $titulo = (string) ($metadata['titulo'] ?? '');
+        }
+        if ($autor === '' && is_array($metadata)) {
+            $autor = (string) ($metadata['autor'] ?? '');
+        }
+        if ($capaUrl === '' && is_array($metadata)) {
+            $capaUrl = (string) ($metadata['capa_url'] ?? '');
+        }
+        if ($resumo === '' && is_array($metadata)) {
+            $resumo = (string) ($metadata['resumo'] ?? '');
+        }
+
+        if ($titulo === '' || $autor === '') {
+            return false;
+        }
+
         $sql = "INSERT INTO acervo (
-            titulo, autor, tipo, grau_restricao, arquivo_url, quantidade_disponivel,
-            isbn, capa_url, grau_recomendado, nota_instrucao, curador_id
-        ) VALUES (
-            :titulo, :autor, :tipo, :grau_restricao, :arquivo_url, :quantidade_disponivel,
-            :isbn, :capa_url, :grau_recomendado, :nota_instrucao, :curador_id
-        )";
+                    codigo_acervo,
+                    loja_id,
+                    titulo,
+                    autor,
+                    resumo,
+                    tipo,
+                    grau_restricao,
+                    arquivo_url,
+                    quantidade_disponivel,
+                    isbn,
+                    capa_url,
+                    grau_recomendado,
+                    nota_instrucao,
+                    curador_id,
+                    ativo
+                ) VALUES (
+                    :codigo_acervo,
+                    :loja_id,
+                    :titulo,
+                    :autor,
+                    :resumo,
+                    :tipo,
+                    :grau_restricao,
+                    :arquivo_url,
+                    :quantidade_disponivel,
+                    :isbn,
+                    :capa_url,
+                    :grau_recomendado,
+                    :nota_instrucao,
+                    :curador_id,
+                    TRUE
+                )";
+
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
-            'titulo' => $dados['titulo'],
-            'autor' => $dados['autor'],
-            'tipo' => $dados['tipo'],
-            'grau_restricao' => $dados['grau_restricao'],
-            'arquivo_url' => $dados['arquivo_url'] ?? null,
-            'quantidade_disponivel' => $dados['quantidade_disponivel'],
-            'isbn' => $dados['isbn'] ?? null,
-            'capa_url' => $dados['capa_url'] ?? null,
-            'grau_recomendado' => $dados['grau_recomendado'] ?? 'Livre',
-            'nota_instrucao' => $dados['nota_instrucao'] ?? null,
+            'codigo_acervo' => $dados['codigo_acervo'] ?? $this->gerarCodigoAcervo(),
+            'loja_id' => $dados['loja_id'] ?? $this->buscarLojaAtualId(),
+            'titulo' => $titulo,
+            'autor' => $autor,
+            'resumo' => $resumo !== '' ? $resumo : null,
+            'tipo' => $this->normalizarTipo((string) ($dados['tipo'] ?? 'Livro Fisico')),
+            'grau_restricao' => max(1, (int) ($dados['grau_restricao'] ?? 1)),
+            'arquivo_url' => $this->nuloSeVazio((string) ($dados['arquivo_url'] ?? '')),
+            'quantidade_disponivel' => max(0, (int) ($dados['quantidade_disponivel'] ?? 0)),
+            'isbn' => $isbn !== '' ? $isbn : null,
+            'capa_url' => $capaUrl !== '' ? $capaUrl : null,
+            'grau_recomendado' => $this->normalizarGrau((string) ($dados['grau_recomendado'] ?? 'Livre')),
+            'nota_instrucao' => $this->nuloSeVazio((string) ($dados['nota_instrucao'] ?? '')),
             'curador_id' => $dados['curador_id'] ?? null,
         ]);
     }
@@ -57,30 +183,33 @@ class Acervo
     public function atualizar(int $id, array $dados): bool
     {
         $sql = "UPDATE acervo SET
-            titulo = :titulo,
-            autor = :autor,
-            tipo = :tipo,
-            grau_restricao = :grau_restricao,
-            arquivo_url = :arquivo_url,
-            quantidade_disponivel = :quantidade_disponivel,
-            isbn = :isbn,
-            capa_url = :capa_url,
-            grau_recomendado = :grau_recomendado,
-            nota_instrucao = :nota_instrucao,
-            curador_id = :curador_id
-            WHERE id = :id";
+                    titulo = :titulo,
+                    autor = :autor,
+                    resumo = :resumo,
+                    tipo = :tipo,
+                    grau_restricao = :grau_restricao,
+                    arquivo_url = :arquivo_url,
+                    quantidade_disponivel = :quantidade_disponivel,
+                    isbn = :isbn,
+                    capa_url = :capa_url,
+                    grau_recomendado = :grau_recomendado,
+                    nota_instrucao = :nota_instrucao,
+                    curador_id = :curador_id,
+                    atualizado_em = CURRENT_TIMESTAMP
+                WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
-            'titulo' => $dados['titulo'],
-            'autor' => $dados['autor'],
-            'tipo' => $dados['tipo'],
-            'grau_restricao' => $dados['grau_restricao'],
-            'arquivo_url' => $dados['arquivo_url'] ?? null,
-            'quantidade_disponivel' => $dados['quantidade_disponivel'],
-            'isbn' => $dados['isbn'] ?? null,
-            'capa_url' => $dados['capa_url'] ?? null,
-            'grau_recomendado' => $dados['grau_recomendado'] ?? 'Livre',
-            'nota_instrucao' => $dados['nota_instrucao'] ?? null,
+            'titulo' => trim((string) ($dados['titulo'] ?? '')),
+            'autor' => trim((string) ($dados['autor'] ?? '')),
+            'resumo' => $this->nuloSeVazio((string) ($dados['resumo'] ?? '')),
+            'tipo' => $this->normalizarTipo((string) ($dados['tipo'] ?? 'Livro Fisico')),
+            'grau_restricao' => max(1, (int) ($dados['grau_restricao'] ?? 1)),
+            'arquivo_url' => $this->nuloSeVazio((string) ($dados['arquivo_url'] ?? '')),
+            'quantidade_disponivel' => max(0, (int) ($dados['quantidade_disponivel'] ?? 0)),
+            'isbn' => $this->nuloSeVazio((string) ($dados['isbn'] ?? '')),
+            'capa_url' => $this->nuloSeVazio((string) ($dados['capa_url'] ?? '')),
+            'grau_recomendado' => $this->normalizarGrau((string) ($dados['grau_recomendado'] ?? 'Livre')),
+            'nota_instrucao' => $this->nuloSeVazio((string) ($dados['nota_instrucao'] ?? '')),
             'curador_id' => $dados['curador_id'] ?? null,
             'id' => $id,
         ]);
@@ -88,19 +217,96 @@ class Acervo
 
     public function atualizarClassificacao($id, $grau, $nota, $curadorId): bool
     {
-        $stmt = $this->db->prepare("UPDATE acervo SET grau_recomendado = :grau, nota_instrucao = :nota, curador_id = :curador WHERE id = :id");
+        $stmt = $this->db->prepare(
+            "UPDATE acervo
+             SET grau_recomendado = :grau,
+                 nota_instrucao = :nota,
+                 curador_id = :curador,
+                 atualizado_em = CURRENT_TIMESTAMP
+             WHERE id = :id"
+        );
         return $stmt->execute([
-            'grau' => $grau,
-            'nota' => $nota,
+            'grau' => $this->normalizarGrau((string) $grau),
+            'nota' => $this->nuloSeVazio((string) $nota),
             'curador' => $curadorId,
-            'id' => $id
+            'id' => $id,
         ]);
     }
 
     public function deletar(int $id): bool
     {
-        $sql = "DELETE FROM acervo WHERE id = :id";
+        $sql = "UPDATE acervo SET ativo = FALSE, atualizado_em = CURRENT_TIMESTAMP WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute(['id' => $id]);
+    }
+
+    private function buscarLojaAtualId(): int
+    {
+        $numero = trim((string) ($_ENV['APP_LOJA_NUMERO'] ?? '270'));
+        $stmt = $this->db->prepare("SELECT id FROM lojas WHERE numero_loja = :numero LIMIT 1");
+        $stmt->execute(['numero' => $numero]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row && isset($row['id'])) {
+            return (int) $row['id'];
+        }
+
+        $stmt = $this->db->query("SELECT id FROM lojas ORDER BY id LIMIT 1");
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int) ($row['id'] ?? 1);
+    }
+
+    private function gerarCodigoAcervo(): string
+    {
+        $numero = preg_replace('/\D+/', '', (string) ($_ENV['APP_LOJA_NUMERO'] ?? '270')) ?: '270';
+        $siglaRaw = trim((string) ($_ENV['APP_LOJA_SIGLA'] ?? 'R'));
+        $sigla = strtoupper(substr($siglaRaw !== '' ? $siglaRaw : 'R', 0, 1));
+        $prefixo = $numero . '-' . $sigla . '-';
+
+        $stmt = $this->db->prepare(
+            "SELECT codigo_acervo
+             FROM acervo
+             WHERE codigo_acervo LIKE :prefixo
+             ORDER BY id DESC
+             LIMIT 1"
+        );
+        $stmt->execute(['prefixo' => $prefixo . '%']);
+        $ultimo = (string) ($stmt->fetchColumn() ?: '');
+
+        $sequencial = 0;
+        if ($ultimo !== '' && preg_match('/-(\d+)$/', $ultimo, $m)) {
+            $sequencial = (int) $m[1];
+        }
+        $sequencial++;
+
+        return $prefixo . str_pad((string) $sequencial, 5, '0', STR_PAD_LEFT);
+    }
+
+    private function normalizarTipo(string $tipo): string
+    {
+        $tipo = trim($tipo);
+        $map = [
+            'Livro Fisico' => 'Livro Fisico',
+            'Livro Físico' => 'Livro Fisico',
+            'fisico' => 'Livro Fisico',
+            'Digital (PDF)' => 'Digital (PDF)',
+            'digital' => 'Digital (PDF)',
+            'Ritual' => 'Ritual',
+            'ritual' => 'Ritual',
+        ];
+
+        return $map[$tipo] ?? 'Livro Fisico';
+    }
+
+    private function normalizarGrau(string $grau): string
+    {
+        $grau = trim($grau);
+        $validos = ['Livre', 'Aprendiz', 'Companheiro', 'Mestre'];
+        return in_array($grau, $validos, true) ? $grau : 'Livre';
+    }
+
+    private function nuloSeVazio(string $valor): ?string
+    {
+        $valor = trim($valor);
+        return $valor !== '' ? $valor : null;
     }
 }

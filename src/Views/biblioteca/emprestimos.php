@@ -29,6 +29,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-3 text-left">ID</th>
+                        <th class="px-4 py-3 text-left">Codigo</th>
                         <th class="px-4 py-3 text-left">Livro</th>
                         <th class="px-4 py-3 text-left">Obreiro</th>
                         <th class="px-4 py-3 text-left">Emprestimo</th>
@@ -42,6 +43,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                         <?php foreach ($emprestimos as $emp): ?>
                             <tr>
                                 <td class="px-4 py-3"><?= htmlspecialchars((string) ($emp['id'] ?? '')) ?></td>
+                                <td class="px-4 py-3 font-mono text-xs"><?= htmlspecialchars((string) ($emp['codigo_acervo'] ?? '')) ?></td>
                                 <td class="px-4 py-3"><?= htmlspecialchars((string) ($emp['titulo'] ?? $emp['acervo_id'] ?? '-')) ?></td>
                                 <td class="px-4 py-3"><?= htmlspecialchars((string) ($emp['obreiro_nome'] ?? $emp['obreiro_id'] ?? '-')) ?></td>
                                 <td class="px-4 py-3"><?= htmlspecialchars((string) ($emp['data_emprestimo'] ?? '-')) ?></td>
@@ -63,7 +65,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td class="px-4 py-6 text-center text-gray-500" colspan="7">
+                            <td class="px-4 py-6 text-center text-gray-500" colspan="8">
                                 Nenhum emprestimo pendente ou atrasado.
                             </td>
                         </tr>

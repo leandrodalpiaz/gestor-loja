@@ -55,7 +55,7 @@ $appTitle = "Chancelaria - Obreiros";
             
             <div class="flex items-center space-x-4">
                 <div class="hidden md:block text-sm text-gray-300">
-                    Ir∴ <?= htmlspecialchars($_SESSION['usuario_logado']['nome_historico'] ?? 'Irmão') ?>
+                    Irmao <?= htmlspecialchars($_SESSION['usuario_logado']['nome_historico'] ?? 'Irmao') ?>
                 </div>
                 <div class="h-8 w-8 rounded-full bg-ouro text-cobalto flex items-center justify-center font-bold shadow-sm ring-2 ring-white/20">
                     <?= substr(htmlspecialchars($_SESSION['usuario_logado']['nome_historico'] ?? 'I'), 0, 1) ?>
@@ -77,12 +77,12 @@ $appTitle = "Chancelaria - Obreiros";
             <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
                 <a href="/dashboard" class="flex items-center px-4 py-3 text-gray-700 hover:bg-pedra hover:text-cobalto rounded-lg transition-colors">
                     <i class="fas fa-home w-6 text-center text-gray-500"></i>
-                    <span class="ml-3 font-medium">Início</span>
+                    <span class="ml-3 font-medium">Inicio</span>
                 </a>
                 
                 <div class="pt-4 pb-2">
                     <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        Administração
+                        Administracao
                     </p>
                 </div>
                 
@@ -150,11 +150,11 @@ $appTitle = "Chancelaria - Obreiros";
                                     </h3>
                                     <div class="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                                            <?= htmlspecialchars($obreiro['grau'] ?? 'Não informado') ?>
+                                            <?= htmlspecialchars($obreiro['grau'] ?? 'Nao informado') ?>
                                         </span>
                                         <span class="flex items-center gap-1">
                                             <i class="fas fa-id-card text-gray-400 text-xs"></i> 
-                                            CIM: <?= htmlspecialchars($obreiro['cim'] ?? 'Não informado') ?>
+                                            CIM: <?= htmlspecialchars($obreiro['cim'] ?? 'Nao informado') ?>
                                         </span>
                                     </div>
                                     <div class="mt-2 text-xs text-gray-400 flex items-center gap-1">

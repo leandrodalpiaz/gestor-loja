@@ -272,11 +272,11 @@ if ($requestUri === '/api/cron/efemerides-diarias' && $method === 'GET') {
 // ROTEAMENTO PRINCIPAL
 // ==========================================
 if ($requestUri === '/chancelaria/certificado/gerar' && $method === 'POST') {
-    $sessionAutorizada = isset($_SESSION['usuario_logado']) && $sessionHasRole('chanceler', 'admin');
-    $telegramObreiro = $sessionAutorizada ? null : $resolveAuthorizedTelegramObreiro('chanceler', 'admin');
+    $sessionAutorizada = isset($_SESSION['usuario_logado']) && $sessionHasRole('chanceler', 'veneravel', 'admin');
+    $telegramObreiro = $sessionAutorizada ? null : $resolveAuthorizedTelegramObreiro('chanceler', 'veneravel', 'admin');
     if (!$sessionAutorizada && !$telegramObreiro) {
         http_response_code(403);
-        echo "<div style='padding: 20px; color: red; font-family: sans-serif;'>Acesso restrito ao Chanceler ou Administrador.</div>";
+        echo "<div style='padding: 20px; color: red; font-family: sans-serif;'>Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.</div>";
         exit;
     }
 
@@ -332,15 +332,15 @@ if ($requestUri === '/chancelaria/certificado' && $method === 'GET') {
             exit;
         }
 
-        $telegramObreiro = $resolveAuthorizedTelegramObreiro('chanceler', 'admin');
+        $telegramObreiro = $resolveAuthorizedTelegramObreiro('chanceler', 'veneravel', 'admin');
         if (!$telegramObreiro) {
             http_response_code(403);
-            echo "Acesso restrito ao Chanceler ou Administrador.";
+            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
             exit;
         }
-    } elseif (!$sessionHasRole('chanceler', 'admin')) {
+    } elseif (!$sessionHasRole('chanceler', 'veneravel', 'admin')) {
         http_response_code(403);
-        echo "Acesso restrito ao Chanceler ou Administrador.";
+        echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
         exit;
     }
 
@@ -379,14 +379,124 @@ switch ($requestUri) {
     // Telas antigas restauradas
     case "/obreiros":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-        if (!$sessionHasRole('secretario', 'chanceler', 'admin')) {
+        if (!$sessionHasRole('secretario', 'primeiro_vigilante', 'segundo_vigilante', 'chanceler', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo "Acesso restrito a Secretaria, Chancelaria ou Administrador.";
+            echo "Acesso restrito a Secretaria, 1o Vigilante, 2o Vigilante, Chancelaria, Veneravel Mestre ou Administrador.";
             exit;
         }
         $obreiroModel = new \App\Models\Obreiro();
         $obreiros = $obreiroModel->getAllAtivos();
         require_once __DIR__ . "/../src/Views/obreiros.php";
+        break;
+
+    case "/primeiro-vigilante":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('primeiro_vigilante', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao 1o Vigilante, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\PrimeiroVigilanteController())->index();
+        break;
+
+    case "/primeiro-vigilante/aprendiz":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        $aprendizId = trim((string) ($_GET['id'] ?? ''));
+        $usuarioId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $podeVerQualquerAprendiz = $sessionHasRole('primeiro_vigilante', 'veneravel', 'admin');
+        $podeVerProprio = $usuarioId !== '' && $usuarioId === $aprendizId;
+        if (!$podeVerQualquerAprendiz && !$podeVerProprio) {
+            http_response_code(403);
+            echo "Acesso restrito ao 1o Vigilante, Veneravel Mestre, Administrador ou ao proprio Aprendiz.";
+            exit;
+        }
+        (new \App\Controllers\PrimeiroVigilanteController())->aprendiz($aprendizId, !$podeVerQualquerAprendiz && $podeVerProprio);
+        break;
+
+    case "/primeiro-vigilante/trilha/atualizar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('primeiro_vigilante', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao 1o Vigilante, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\PrimeiroVigilanteController())->atualizarEtapa();
+        break;
+
+    case "/primeiro-vigilante/trilha/acao-rapida":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('primeiro_vigilante', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao 1o Vigilante, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\PrimeiroVigilanteController())->acaoRapidaEtapa();
+        break;
+
+    case "/segundo-vigilante":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('segundo_vigilante', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao 2o Vigilante, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SegundoVigilanteController())->index();
+        break;
+
+    case "/segundo-vigilante/companheiro":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        $companheiroId = trim((string) ($_GET['id'] ?? ''));
+        $usuarioId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $podeVerQualquerCompanheiro = $sessionHasRole('segundo_vigilante', 'veneravel', 'admin');
+        $podeVerProprio = $usuarioId !== '' && $usuarioId === $companheiroId;
+        if (!$podeVerQualquerCompanheiro && !$podeVerProprio) {
+            http_response_code(403);
+            echo "Acesso restrito ao 2o Vigilante, Veneravel Mestre, Administrador ou ao proprio Companheiro.";
+            exit;
+        }
+        (new \App\Controllers\SegundoVigilanteController())->companheiro($companheiroId, !$podeVerQualquerCompanheiro && $podeVerProprio);
+        break;
+
+    case "/segundo-vigilante/trilha/atualizar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('segundo_vigilante', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao 2o Vigilante, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SegundoVigilanteController())->atualizarEtapa();
+        break;
+
+    case "/segundo-vigilante/trilha/acao-rapida":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('segundo_vigilante', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao 2o Vigilante, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SegundoVigilanteController())->acaoRapidaEtapa();
+        break;
+
+    case "/meu-aprendizado":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        $usuarioId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        if ($usuarioId === '') {
+            http_response_code(403);
+            echo "Nao foi possivel identificar o Aprendiz logado.";
+            exit;
+        }
+        (new \App\Controllers\PrimeiroVigilanteController())->aprendiz($usuarioId, true);
+        break;
+
+    case "/meu-companheirismo":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        $usuarioId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        if ($usuarioId === '') {
+            http_response_code(403);
+            echo "Nao foi possivel identificar o Companheiro logado.";
+            exit;
+        }
+        (new \App\Controllers\SegundoVigilanteController())->companheiro($usuarioId, true);
         break;
 
     case "/obreiros/novo":
@@ -474,7 +584,7 @@ switch ($requestUri) {
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
         if (!$sessionHasRole('secretario', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo "Acesso restrito ao Secretario, Veneravel ou Administrador.";
+            echo "Acesso restrito ao Secretario, Veneravel Mestre ou Administrador.";
             exit;
         }
         (new \App\Controllers\SecretariaController())->index();
@@ -562,9 +672,9 @@ switch ($requestUri) {
 
     case "/tesouraria/caixa":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-        if (!$sessionHasRole('tesoureiro', 'admin')) {
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo "Acesso restrito ao Tesoureiro ou Administrador.";
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
             exit;
         }
         require_once __DIR__ . "/../src/Views/tesouraria_caixa.php";
@@ -572,9 +682,9 @@ switch ($requestUri) {
 
     case "/tesouraria/comprovantes":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-        if (!$sessionHasRole('tesoureiro', 'admin')) {
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo "Acesso restrito ao Tesoureiro ou Administrador.";
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
             exit;
         }
         require_once __DIR__ . "/../src/Views/tesouraria_comprovantes.php";
@@ -582,9 +692,9 @@ switch ($requestUri) {
 
     case "/tesouraria/regularidade":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-        if (!$sessionHasRole('tesoureiro', 'admin')) {
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo "Acesso restrito ao Tesoureiro ou Administrador.";
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
             exit;
         }
         require_once __DIR__ . "/../src/Views/tesouraria_regularidade.php";
@@ -592,9 +702,9 @@ switch ($requestUri) {
 
     case "/tesouraria/fechamento":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-        if (!$sessionHasRole('tesoureiro', 'admin')) {
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo "Acesso restrito ao Tesoureiro ou Administrador.";
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
             exit;
         }
         require_once __DIR__ . "/../src/Views/tesouraria_fechamento.php";
@@ -605,9 +715,9 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
-        if (!$sessionHasRole('bibliotecario', 'admin', 'veneravel')) {
+        if (!$sessionHasRole('primeiro_vigilante', 'segundo_vigilante', 'bibliotecario', 'admin', 'veneravel')) {
             http_response_code(403);
-            echo "Acesso restrito ao Bibliotecario, Veneravel ou Administrador.";
+            echo "Acesso restrito para classificar leitura sugerida.";
             exit;
         }
         $bibliotecaController = new \App\Controllers\BibliotecaController();
@@ -633,14 +743,80 @@ switch ($requestUri) {
         require_once __DIR__ . "/../src/Views/dashboard.php";
         break;
 
+    case "/veneravel":
+    case "/veneravel/dashboard":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\VeneravelController())->index();
+        break;
+
+    case "/veneravel/sessoes/publicar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\VeneravelController())->publicarSessao();
+        break;
+
+    case "/veneravel/sessoes/cancelar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\VeneravelController())->cancelarSessao();
+        break;
+
+    case "/veneravel/sessoes/reabrir":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\VeneravelController())->reabrirSessao();
+        break;
+
+    case "/veneravel/sessoes/realizar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\VeneravelController())->realizarSessao();
+        break;
+
     case "/chancelaria/efemerides/salvar-previa":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
             exit;
         }
-        if (!$sessionHasRole('chanceler', 'admin')) {
+        if (!$sessionHasRole('chanceler', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo "Acesso restrito ao Chanceler ou Administrador.";
+            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
             exit;
         }
         if ($method !== 'POST') {
@@ -667,9 +843,9 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
-        if (!$sessionHasRole('chanceler', 'admin')) {
+        if (!$sessionHasRole('chanceler', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo "Acesso restrito ao Chanceler ou Administrador.";
+            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
             exit;
         }
         if ($method !== 'POST') {
@@ -683,8 +859,14 @@ switch ($requestUri) {
         }
 
         $telegramService = new \App\Services\TelegramService();
-        $ok = $telegramService->sendMessageToReview($mensagemPreview);
-        $redirectEfemerides($ok ? ['sucesso' => 'previa_enviada'] : ['erro' => 'falha_enviar_previa']);
+        $chatPrivadoDestino = trim((string) ($_SESSION['usuario_logado']['telegram_id'] ?? ''));
+        if ($chatPrivadoDestino === '') {
+            $chatPrivadoDestino = trim((string) ($_ENV['TELEGRAM_CHAT_ID_CHANCELER'] ?? ''));
+        }
+        $ok = $telegramService->sendMessageToChat($chatPrivadoDestino, $mensagemPreview);
+        $redirectEfemerides($ok
+            ? ['sucesso' => 'previa_enviada']
+            : ['erro' => 'falha_enviar_previa', 'detalhe' => $telegramService->getLastError()]);
         break;
 
     case "/chancelaria/efemerides/enviar-grupo":
@@ -692,9 +874,9 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
-        if (!$sessionHasRole('chanceler', 'admin')) {
+        if (!$sessionHasRole('chanceler', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo "Acesso restrito ao Chanceler ou Administrador.";
+            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
             exit;
         }
         if ($method !== 'POST') {
@@ -709,7 +891,9 @@ switch ($requestUri) {
 
         $telegramService = new \App\Services\TelegramService();
         $ok = $telegramService->sendMessageToGroup($mensagemPreview);
-        $redirectEfemerides($ok ? ['sucesso' => 'enviado'] : ['erro' => 'falha_enviar_grupo']);
+        $redirectEfemerides($ok
+            ? ['sucesso' => 'enviado']
+            : ['erro' => 'falha_enviar_grupo', 'detalhe' => $telegramService->getLastError()]);
         break;
 
     case "/chancelaria/efemerides/salvar":
@@ -717,9 +901,9 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
-        if (!$sessionHasRole('chanceler', 'admin')) {
+        if (!$sessionHasRole('chanceler', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo "Acesso restrito ao Chanceler ou Administrador.";
+            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
             exit;
         }
         if ($method !== 'POST') {
@@ -745,9 +929,9 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
-        if (!$sessionHasRole('chanceler', 'admin')) {
+        if (!$sessionHasRole('chanceler', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo "Acesso restrito ao Chanceler ou Administrador.";
+            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
             exit;
         }
         if ($method !== 'POST') {
@@ -774,9 +958,9 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
-        if (!$sessionHasRole('chanceler', 'admin')) {
+        if (!$sessionHasRole('chanceler', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo "Acesso restrito ao Chanceler ou Administrador.";
+            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
             exit;
         }
         if ($method !== 'POST') {
@@ -798,9 +982,9 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
-        if (!$sessionHasRole('chanceler', 'admin')) {
+        if (!$sessionHasRole('chanceler', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo "Acesso restrito ao Chanceler ou Administrador.";
+            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
             exit;
         }
 
@@ -817,8 +1001,8 @@ switch ($requestUri) {
         $erroMensagem = match ((string) ($_GET['erro'] ?? '')) {
             'previa_vazia' => 'A mensagem da previa nao pode ficar vazia.',
             'falha_salvar_previa' => 'Nao foi possivel salvar a previa.',
-            'falha_enviar_previa' => 'Falha ao enviar a previa no privado. Verifique TELEGRAM_CHAT_ID_CHANCELER.',
-            'falha_enviar_grupo' => 'Falha ao enviar no grupo oficial. Verifique TELEGRAM_CHAT_ID_GROUP.',
+            'falha_enviar_previa' => 'Falha ao enviar a previa no privado.' . (!empty($_GET['detalhe']) ? ' Detalhe: ' . (string) $_GET['detalhe'] : ''),
+            'falha_enviar_grupo' => 'Falha ao enviar no grupo oficial.' . (!empty($_GET['detalhe']) ? ' Detalhe: ' . (string) $_GET['detalhe'] : ''),
             'registro_invalido' => 'Preencha nome, tipo e data do evento corretamente.',
             'falha_salvar_registro' => 'Nao foi possivel salvar o registro.',
             'falha_atualizar_registro' => 'Nao foi possivel atualizar o registro.',
@@ -829,20 +1013,26 @@ switch ($requestUri) {
 
         $dadosEfemerides = $buildEfemeridesPreview();
         $registrosHoje = $dadosEfemerides['registrosHoje'];
+        $filtroIrmaoRef = trim((string) ($_GET['irmao_ref'] ?? ''));
         $filtroTermo = trim((string) ($_GET['termo'] ?? ''));
         $filtroTipo = trim((string) ($_GET['tipo'] ?? ''));
+        $filtroVinculo = trim((string) ($_GET['vinculo'] ?? ''));
         $filtroAtivo = trim((string) ($_GET['ativo'] ?? '1'));
         $filtroDataIni = trim((string) ($_GET['data_ini'] ?? ''));
         $filtroDataFim = trim((string) ($_GET['data_fim'] ?? ''));
+        $focoEfemeride = trim((string) ($_GET['foco'] ?? ''));
         $filtrosEfemeride = [
+            'irmao_ref' => $filtroIrmaoRef,
             'termo' => $filtroTermo,
             'tipo' => $filtroTipo,
+            'vinculo' => $filtroVinculo,
             'ativo' => $filtroAtivo,
             'data_ini' => $filtroDataIni,
             'data_fim' => $filtroDataFim,
         ];
         $registroModel = new \App\Models\EfemerideRegistro();
         $registrosRecentes = $registroModel->buscarComFiltros($filtrosEfemeride, 300);
+        $vinculosPadrao = $registroModel->getVinculosPadrao();
         $tiposEfemeride = [
             'Aniversário',
             'Iniciação',
@@ -857,6 +1047,7 @@ switch ($requestUri) {
         ];
         $mensagemBase = $dadosEfemerides['mensagemBase'];
         $mensagemPreview = $dadosEfemerides['mensagemPreview'];
+        $obreirosFiltro = (new \App\Models\Obreiro())->getAllAtivos();
 
         require_once __DIR__ . "/../src/Views/efemerides_chanceler.php";
         break;
@@ -877,13 +1068,21 @@ switch ($requestUri) {
         require_once __DIR__ . "/../src/Views/miniapp/fallback.php";
         break;
 
+    case "/miniapp/aprendizado":
+        require_once __DIR__ . "/../src/Views/miniapp/aprendizado.php";
+        break;
+
+    case "/miniapp/companheirismo":
+        require_once __DIR__ . "/../src/Views/miniapp/companheirismo.php";
+        break;
+
     case (preg_match('~^/api/miniapp~', $requestUri) ? $requestUri : null):
         header('Content-Type: application/json; charset=utf-8');
 
         $body = $getJsonBody();
         $initData = trim((string) ($body['initData'] ?? $body['init_data'] ?? $_GET['initData'] ?? $_GET['init_data'] ?? ''));
         $miniappObreiro = null;
-        $authorizedBySession = isset($_SESSION['usuario_logado']) && $sessionHasRole('chanceler', 'admin');
+        $authorizedBySession = isset($_SESSION['usuario_logado']) && $sessionHasRole('chanceler', 'veneravel', 'admin');
 
         if ($authorizedBySession) {
             $miniappObreiro = $_SESSION['usuario_logado'];
@@ -899,9 +1098,9 @@ switch ($requestUri) {
                 $normalizeRole,
                 $miniappObreiro['cargos'] ?? [$miniappObreiro['cargo_principal'] ?? $miniappObreiro['cargo'] ?? '']
             ))));
-            if (!in_array('chanceler', $roles, true) && !in_array('admin', $roles, true)) {
+            if (!in_array('chanceler', $roles, true) && !in_array('veneravel', $roles, true) && !in_array('admin', $roles, true)) {
                 http_response_code(403);
-                echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Chanceler ou Administrador.']);
+                echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.']);
                 exit;
             }
         }
@@ -982,6 +1181,50 @@ switch ($requestUri) {
             exit;
         }
 
+        if ($requestUri === '/api/miniapp/aprendizado' && $method === 'GET') {
+            $roles = array_values(array_unique(array_map(
+                static fn ($role) => strtolower((string) $role),
+                $miniappObreiro['cargos'] ?? [$miniappObreiro['cargo_principal'] ?? $miniappObreiro['cargo'] ?? '']
+            )));
+
+            $aprendizId = trim((string) ($_GET['aprendiz_id'] ?? ''));
+            $usuarioIdMiniapp = trim((string) ($miniappObreiro['id'] ?? ''));
+            $podeConsultarOutros = in_array('primeiro_vigilante', $roles, true) || in_array('veneravel', $roles, true) || in_array('admin', $roles, true);
+            $aprendizIdConsulta = $podeConsultarOutros && $aprendizId !== '' ? $aprendizId : $usuarioIdMiniapp;
+
+            $controller = new \App\Controllers\PrimeiroVigilanteController();
+            $payload = $controller->montarPayloadMiniapp($aprendizIdConsulta);
+            if ($payload === null) {
+                echo json_encode(['ok' => false, 'erro' => 'Aprendiz nao encontrado para acompanhamento.']);
+                exit;
+            }
+
+            echo json_encode(['ok' => true, 'dados' => $payload]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/companheirismo' && $method === 'GET') {
+            $roles = array_values(array_unique(array_map(
+                static fn ($role) => strtolower((string) $role),
+                $miniappObreiro['cargos'] ?? [$miniappObreiro['cargo_principal'] ?? $miniappObreiro['cargo'] ?? '']
+            )));
+
+            $companheiroId = trim((string) ($_GET['companheiro_id'] ?? ''));
+            $usuarioIdMiniapp = trim((string) ($miniappObreiro['id'] ?? ''));
+            $podeConsultarOutros = in_array('segundo_vigilante', $roles, true) || in_array('veneravel', $roles, true) || in_array('admin', $roles, true);
+            $companheiroIdConsulta = $podeConsultarOutros && $companheiroId !== '' ? $companheiroId : $usuarioIdMiniapp;
+
+            $controller = new \App\Controllers\SegundoVigilanteController();
+            $payload = $controller->montarPayloadMiniapp($companheiroIdConsulta);
+            if ($payload === null) {
+                echo json_encode(['ok' => false, 'erro' => 'Companheiro nao encontrado para acompanhamento.']);
+                exit;
+            }
+
+            echo json_encode(['ok' => true, 'dados' => $payload]);
+            exit;
+        }
+
         http_response_code(404);
         echo json_encode(['ok' => false, 'erro' => 'API miniapp nao encontrada.']);
         exit;
@@ -995,9 +1238,9 @@ switch ($requestUri) {
             echo json_encode(['ok' => false, 'erro' => 'Nao autenticado.']);
             exit;
         }
-        if (!$sessionHasRole('tesoureiro', 'admin')) {
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
             http_response_code(403);
-            echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Tesoureiro ou Administrador.']);
+            echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.']);
             exit;
         }
 
@@ -1205,6 +1448,54 @@ switch ($requestUri) {
         (new \App\Controllers\BibliotecaController())->index();
         break;
 
+    case "/biblioteca/detalhes":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        $id = (int) ($_GET['id'] ?? 0);
+        (new \App\Controllers\BibliotecaController())->detalhes($id);
+        break;
+
+    case "/biblioteca/meus-emprestimos":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        (new \App\Controllers\BibliotecaController())->meusEmprestimos($obreiroId);
+        break;
+
+    case "/biblioteca/solicitar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        $acervoId = (int) ($_POST['acervo_id'] ?? 0);
+        $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        (new \App\Controllers\BibliotecaController())->solicitar($acervoId, $obreiroId);
+        break;
+
+    case "/biblioteca/comentar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        $acervoId = (int) ($_POST['acervo_id'] ?? 0);
+        $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        (new \App\Controllers\BibliotecaController())->comentar($acervoId, $obreiroId);
+        break;
+
+    case "/biblioteca/reagir":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        $acervoId = (int) ($_POST['acervo_id'] ?? 0);
+        $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        (new \App\Controllers\BibliotecaController())->reagir($acervoId, $obreiroId);
+        break;
+
     case "/biblioteca/adicionar":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
@@ -1212,7 +1503,7 @@ switch ($requestUri) {
         }
         if (!$sessionHasRole('bibliotecario', 'admin', 'veneravel')) {
             http_response_code(403);
-            echo "Acesso restrito ao Bibliotecario, Veneravel ou Administrador.";
+            echo "Acesso restrito ao Bibliotecario, Veneravel Mestre ou Administrador.";
             exit;
         }
         (new \App\Controllers\BibliotecaController())->adicionar();
@@ -1225,10 +1516,12 @@ switch ($requestUri) {
         }
         if (!$sessionHasRole('bibliotecario', 'admin', 'veneravel')) {
             http_response_code(403);
-            echo "Acesso restrito ao Bibliotecario, Veneravel ou Administrador.";
+            echo "Acesso restrito ao Bibliotecario, Veneravel Mestre ou Administrador.";
             exit;
         }
-        $id = (int) ($_POST['id'] ?? 0);
+        $id = $method === 'POST'
+            ? (int) ($_POST['id'] ?? 0)
+            : (int) ($_GET['id'] ?? 0);
         (new \App\Controllers\BibliotecaController())->editar($id);
         break;
 
@@ -1239,7 +1532,7 @@ switch ($requestUri) {
         }
         if (!$sessionHasRole('bibliotecario', 'admin', 'veneravel')) {
             http_response_code(403);
-            echo "Acesso restrito ao Bibliotecario, Veneravel ou Administrador.";
+            echo "Acesso restrito ao Bibliotecario, Veneravel Mestre ou Administrador.";
             exit;
         }
         $id = (int) ($_POST['id'] ?? 0);
@@ -1249,6 +1542,11 @@ switch ($requestUri) {
     case "/biblioteca/emprestimos":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('bibliotecario', 'admin', 'veneravel')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Bibliotecario, Veneravel Mestre ou Administrador.";
             exit;
         }
         (new \App\Controllers\BibliotecaController())->emprestimos();
@@ -1265,6 +1563,11 @@ switch ($requestUri) {
     case "/biblioteca/devolver":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('bibliotecario', 'admin', 'veneravel')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Bibliotecario, Veneravel Mestre ou Administrador.";
             exit;
         }
         $id = (int) ($_POST['id'] ?? 0);
@@ -1297,19 +1600,21 @@ switch ($requestUri) {
                         $usuario['cargos'] ?? [$cargo]
                     ))));
                     $temAcessoPainel =
-                        count(array_intersect($cargosAtivos, ["veneravel", "tesoureiro", "chanceler", "admin", "bibliotecario", "mestre_banquetes"])) > 0
-                        || in_array($cargo, ["veneravel", "secretario", "tesoureiro", "chanceler", "admin"], true);
+                        count(array_intersect($cargosAtivos, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "tesoureiro", "chanceler", "admin", "bibliotecario", "mestre_banquetes"])) > 0
+                        || in_array($cargo, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "secretario", "tesoureiro", "chanceler", "admin"], true);
+
+                    $_SESSION["usuario_logado"] = $usuario;
+                    $_SESSION["usuario_id"] = $usuario["id"];
+                    $_SESSION["usuario_nome"] = $usuario["nome_historico"] ?? $usuario["nome_completo"] ?? "Irmao";
+                    $syncSessionRoles($usuario);
 
                     if ($temAcessoPainel) {
-                        $_SESSION["usuario_logado"] = $usuario;
-                        $_SESSION["usuario_id"] = $usuario["id"];
-                        $_SESSION["usuario_nome"] = $usuario["nome_historico"] ?? $usuario["nome_completo"] ?? "Irmao";
-                        $syncSessionRoles($usuario);
                         header("Location: /dashboard");
                         exit;
                     }
 
-                    $erroLogin = "Seu perfil nao possui permissao para acessar o painel.";
+                    header("Location: /biblioteca");
+                    exit;
                 }
             }
         }

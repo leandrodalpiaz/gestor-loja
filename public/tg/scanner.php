@@ -123,7 +123,10 @@ declare(strict_types=1);
                 const res = await fetch("/api/biblioteca/isbn.php", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ isbn: isbnLimpo })
+                    body: JSON.stringify({
+                        isbn: isbnLimpo,
+                        init_data: tg ? (tg.initData || "") : ""
+                    })
                 });
                 const data = await res.json();
                 if (!data.ok) {
@@ -133,7 +136,9 @@ declare(strict_types=1);
                 info.innerHTML =
                     `<b>Titulo:</b> ${data.titulo}<br>` +
                     `<b>Autor(es):</b> ${data.autor}<br>` +
-                    `<b>ISBN:</b> ${isbnLimpo}`;
+                    `<b>ISBN:</b> ${isbnLimpo}<br>` +
+                    `<b>Codigo:</b> ${data.codigo_acervo || '-'}<br>` +
+                    `<b>Resumo:</b> ${(data.resumo || 'Nao informado').slice(0, 280)}`;
 
                 salvar.style.display = "block";
                 salvar.onclick = () => successAlert("Livro cadastrado!");

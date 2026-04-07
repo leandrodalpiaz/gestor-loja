@@ -15,23 +15,160 @@ class Presenca
     }
 
     /**
-     * Registra ou atualiza a presença do obreiro em uma sessão
+     * Registra ou atualiza a confirmacao do obreiro para uma sessao.
+     * Mantem o nome da classe por compatibilidade com o fluxo ja existente do bot.
      */
-    public function registrar(string $sessaoId, int $obreiroId, string $status): bool
-    {
-        // O "ON CONFLICT" do PostgreSQL é perfeito aqui (Upsert)
-        // Se a pessoa já confirmou antes, mas mudou de ideia pra "Ausente", ele atualiza em vez de dar erro
+    public function registrar(
+        int $sessaoId,
+        string $obreiroId,
+        string $status,
+        bool $participaraAgape = false,
+        ?string $observacao = null
+    ): bool {
+        $statusNormalizado = $this->normalizarStatus($status);
+
         $stmt = $this->db->prepare("
-            INSERT INTO presencas (sessao_id, obreiro_id, status)
-            VALUES (:sessao_id, :obreiro_id, :status)
-            ON CONFLICT (sessao_id, obreiro_id) 
-            DO UPDATE SET status = EXCLUDED.status, registrado_em = NOW()
+            INSERT INTO public.confirmacoes_sessao (
+                sessao_id,
+                obreiro_id,
+                status_confirmacao,
+                participara_agape,
+                observacao,
+                respondido_em,
+                updated_at
+            )
+            VALUES (
+                :sessao_id,
+                :obreiro_id,
+                :status_confirmacao,
+                :participara_agape,
+                :observacao,
+                NOW(),
+                NOW()
+            )
+            ON CONFLICT (sessao_id, obreiro_id)
+            DO UPDATE SET
+                status_confirmacao = EXCLUDED.status_confirmacao,
+                participara_agape = EXCLUDED.participara_agape,
+                observacao = EXCLUDED.observacao,
+                respondido_em = NOW(),
+                updated_at = NOW()
         ");
 
         return $stmt->execute([
             'sessao_id' => $sessaoId,
             'obreiro_id' => $obreiroId,
-            'status' => $status
+            'status_confirmacao' => $statusNormalizado,
+            'participara_agape' => $statusNormalizado === 'confirmado' ? $participaraAgape : false,
+            'observacao' => $observacao,
         ]);
+    }
+
+    public function cancelar(int $sessaoId, string $obreiroId, ?string $observacao = null): bool
+    {
+        return $this->registrar($sessaoId, $obreiroId, 'ausente', false, $observacao);
+    }
+
+    public function obterResposta(int $sessaoId, string $obreiroId): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT *
+            FROM public.confirmacoes_sessao
+            WHERE sessao_id = :sessao_id
+              AND obreiro_id = :obreiro_id
+            LIMIT 1
+        ");
+        $stmt->execute([
+            'sessao_id' => $sessaoId,
+            'obreiro_id' => $obreiroId,
+        ]);
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function listarConfirmadosPorSessao(int $sessaoId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT
+                cs.id,
+                cs.sessao_id,
+                cs.obreiro_id,
+                cs.status_confirmacao,
+                cs.participara_agape,
+                cs.observacao,
+                cs.respondido_em,
+                COALESCE(o.nome_historico, o.nome) AS nome,
+                o.cim
+            FROM public.confirmacoes_sessao cs
+            JOIN public.obreiros o ON o.id = cs.obreiro_id
+            WHERE cs.sessao_id = :sessao_id
+              AND cs.status_confirmacao = 'confirmado'
+            ORDER BY nome ASC
+        ");
+        $stmt->execute(['sessao_id' => $sessaoId]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listarParticipantesAgapePorSessao(int $sessaoId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT
+                cs.id,
+                cs.sessao_id,
+                cs.obreiro_id,
+                cs.observacao,
+                cs.respondido_em,
+                COALESCE(o.nome_historico, o.nome) AS nome,
+                o.cim
+            FROM public.confirmacoes_sessao cs
+            JOIN public.obreiros o ON o.id = cs.obreiro_id
+            WHERE cs.sessao_id = :sessao_id
+              AND cs.status_confirmacao = 'confirmado'
+              AND cs.participara_agape = TRUE
+            ORDER BY nome ASC
+        ");
+        $stmt->execute(['sessao_id' => $sessaoId]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function contarParticipantesAgapePorSessao(int $sessaoId): int
+    {
+        $stmt = $this->db->prepare("
+            SELECT COUNT(*)
+            FROM public.confirmacoes_sessao
+            WHERE sessao_id = :sessao_id
+              AND status_confirmacao = 'confirmado'
+              AND participara_agape = TRUE
+        ");
+        $stmt->execute(['sessao_id' => $sessaoId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function contarConfirmadosPorSessao(int $sessaoId): int
+    {
+        $stmt = $this->db->prepare("
+            SELECT COUNT(*)
+            FROM public.confirmacoes_sessao
+            WHERE sessao_id = :sessao_id
+              AND status_confirmacao = 'confirmado'
+        ");
+        $stmt->execute(['sessao_id' => $sessaoId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    private function normalizarStatus(string $status): string
+    {
+        $status = strtolower(trim($status));
+
+        return match ($status) {
+            'confirmado', 'presente', 'sim' => 'confirmado',
+            'ausente', 'nao', 'não', 'cancelado' => 'ausente',
+            default => 'confirmado',
+        };
     }
 }

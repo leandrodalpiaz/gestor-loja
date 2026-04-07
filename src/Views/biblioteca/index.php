@@ -1,330 +1,163 @@
 <?php
-// Garante que a lista de livros seja lida pelo Controller
-$lista = $itens ?? $acervo ?? $livros ?? [];
+$lista = $itens ?? [];
+$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
+$usuarioCargos = $_SESSION['usuario_cargos'] ?? [$_SESSION['usuario_cargo'] ?? ''];
+$usuarioCargos = array_values(array_unique(array_filter(array_map(
+    static fn ($role) => strtolower(trim((string) $role)),
+    $usuarioCargos
+))));
 
-// Variáveis de sessão para o layout e permissões
-$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
-$usuarioCargo = $_SESSION['usuario_cargo'] ?? '';
 $isTestSession = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id'] === 0;
 $allowAllPanels = filter_var($_ENV['APP_TEST_ALLOW_ALL_PANELS'] ?? 'true', FILTER_VALIDATE_BOOL);
 $showAllPanels = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VALIDATE_BOOL) || $isTestSession || $allowAllPanels;
 
-// Definindo os papéis
-$isChanceler = $usuarioCargo === 'chanceler';
-$isTesoureiro = $usuarioCargo === 'tesoureiro';
-$isBibliotecario = $usuarioCargo === 'bibliotecario';
-$isVigilante = in_array($usuarioCargo, ['vigilante1', 'vigilante2']);
-
-// Permissões de Ação na Biblioteca
-$podeEditarCatalogo = $isBibliotecario || $showAllPanels; // Adicionar/Editar/Excluir
-$podeClassificar = $isVigilante || $showAllPanels; // Botão de Curadoria
+$podeGerenciar = $showAllPanels || count(array_intersect($usuarioCargos, ['bibliotecario', 'veneravel', 'admin'])) > 0;
+$podeClassificar = $showAllPanels || count(array_intersect($usuarioCargos, ['primeiro_vigilante', 'segundo_vigilante', 'bibliotecario', 'veneravel', 'admin'])) > 0;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biblioteca - Gestor de Loja</title>
+    <title>Biblioteca</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        cobalto: '#0047AB',
-                        ouro: '#D4AF37',
-                        pedra: '#F5F5F0',
-                        pedraEscura: '#E8E8E2'
-                    },
-                    fontFamily: {
-                        serif: ['"Playfair Display"', 'Georgia', 'serif'],
-                        sans: ['"Inter"', 'system-ui', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
 </head>
-<body class="bg-pedra min-h-screen font-sans text-gray-800" x-data="{ menuOpen: false }">
-
-    <!-- Navbar Mobile / Topbar Desktop -->
-    <header class="bg-cobalto text-white shadow-md relative z-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <span class="text-2xl text-ouro font-serif mr-3">∴</span>
-                    <span class="font-serif font-bold text-lg tracking-wide hidden sm:block">Loja Maçônica Renascença</span>
-                    <span class="font-serif font-bold text-lg tracking-wide sm:hidden">Renascença</span>
-                </div>
-                <div class="hidden sm:flex sm:items-center space-x-6">
-                    <span class="text-sm border-r border-blue-700 pr-6">Olá, <?= htmlspecialchars($usuarioNome) ?></span>
-                    <a href="/logout" class="text-gray-300 hover:text-white transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                    </a>
-                </div>
-                <div class="flex items-center sm:hidden">
-                    <button @click="menuOpen = !menuOpen" type="button" class="text-gray-300 hover:text-white focus:outline-none">
-                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Menu Mobile Dropdown -->
-        <div x-show="menuOpen" @click.away="menuOpen = false" class="sm:hidden bg-blue-900 border-t border-blue-800" style="display: none;">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                <a href="/dashboard" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Dashboard</a>
-                <a href="/obreiros" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Obreiros</a>
-                <a href="/biblioteca" class="bg-blue-800 text-white block px-3 py-2 rounded-md text-base font-medium">📚 Biblioteca</a>
-                <?php if ($isChanceler || $showAllPanels): ?>
-                    <a href="/chancelaria/efemerides" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Sessão do Chanceler</a>
-                <?php endif; ?>
-                <?php if ($isTesoureiro || $showAllPanels): ?>
-                    <a href="/tesouraria/caixa" class="text-gray-300 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Livro-Caixa</a>
-                <?php endif; ?>
-                <a href="/logout" class="text-red-400 hover:bg-blue-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Sair</a>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+    <header class="bg-blue-900 text-white">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <h1 class="font-semibold">Biblioteca da Loja</h1>
+            <div class="text-sm">
+                <?= htmlspecialchars($usuarioNome) ?> |
+                <a href="/logout" class="underline">Sair</a>
             </div>
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-6">
-
-        <!-- Sidebar Desktop -->
-        <aside class="w-full md:w-64 flex-shrink-0 hidden md:block">
-            <nav class="space-y-2 relative">
-                <a href="/dashboard" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
-                    Dashboard
-                </a>
-                <a href="/obreiros" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
-                    Obreiros (Chancelaria)
-                </a>
-                <a href="/biblioteca" class="bg-white text-cobalto border-l-4 border-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-r-md shadow-sm">
-                    📚 Biblioteca
-                </a>
-                <?php if ($isChanceler || $showAllPanels): ?>
-                <a href="/chancelaria/efemerides" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
-                    Sessão do Chanceler (Efemérides)
-                </a>
-                <?php endif; ?>
-                <a href="javascript:alert('Módulo de Sessões em desenvolvimento.');" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
-                    Sessões (Secretaria)
-                </a>
-                <?php if ($isTesoureiro || $showAllPanels): ?>
-                <a href="/tesouraria/caixa" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
-                    Livro-Caixa
-                </a>
-                <a href="/tesouraria/comprovantes" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
-                    Validação de Comprovantes
-                </a>
-                <a href="/tesouraria/regularidade" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
-                    Regularidade
-                </a>
-                <a href="/tesouraria/fechamento" class="text-gray-600 hover:bg-white hover:text-cobalto group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors">
-                    Fechamento Mensal
-                </a>
-                <?php endif; ?>
-            </nav>
-        </aside>
-
-        <!-- Conteúdo Principal da Biblioteca -->
-        <main class="flex-1">
-            <div class="mb-6 flex justify-between items-end border-b border-gray-200 pb-4">
-                <div>
-                    <h2 class="text-2xl font-serif font-bold text-cobalto">Catálogo da Biblioteca</h2>
-                    <p class="text-sm text-gray-500 mt-1">Gerencie o acervo de livros e empréstimos da Loja.</p>
-                </div>
-
-                <!-- Botão Novo Título (Apenas Bibliotecário/Admin) -->
-                <?php if ($podeEditarCatalogo): ?>
-                <a href="/biblioteca/adicionar" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm">
-                    + Novo Título
-                </a>
+    <main class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="mb-4 flex flex-wrap gap-2 justify-between">
+            <div>
+                <h2 class="text-2xl font-semibold text-blue-900">Catalogo</h2>
+                <p class="text-sm text-slate-500">Web e mobile usam o mesmo fluxo de biblioteca.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="/biblioteca/meus-emprestimos" class="px-3 py-2 rounded bg-slate-200 hover:bg-slate-300 text-sm">Meus emprestimos</a>
+                <?php if ($podeGerenciar): ?>
+                    <a href="/biblioteca/emprestimos" class="px-3 py-2 rounded bg-amber-600 hover:bg-amber-700 text-white text-sm">Gerenciar emprestimos</a>
+                    <a href="/biblioteca/adicionar" class="px-3 py-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-sm">Novo titulo</a>
                 <?php endif; ?>
             </div>
+        </div>
 
-            <!-- Tabela de Livros -->
-            <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capa</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Autor</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recomendação</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <?php if (!empty($lista)): ?>
-                                <?php foreach ($lista as $item): ?>
-                                    <tr class="hover:bg-gray-50">
-
-                                        <!-- Coluna da Capa -->
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <?php if (!empty($item['capa_url'])): ?>
-                                                <img src="<?= htmlspecialchars($item['capa_url']) ?>" alt="Capa" class="h-12 w-8 object-cover rounded shadow-sm border border-gray-200">
-                                            <?php else: ?>
-                                                <div class="h-12 w-8 bg-gray-100 rounded flex items-center justify-center text-gray-400 border border-gray-200">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                                </div>
-                                            <?php endif; ?>
-                                        </td>
-
-                                        <!-- Coluna Título -->
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            <?= htmlspecialchars($item['titulo'] ?? '') ?>
-                                            <div class="text-xs text-gray-400 font-normal">ID: #<?= htmlspecialchars($item['id'] ?? '') ?></div>
-                                        </td>
-
-                                        <!-- Coluna Autor -->
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <?= htmlspecialchars($item['autor'] ?? '') ?>
-                                        </td>
-
-                                        <!-- Coluna Recomendação (Curadoria) -->
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                            <?php
-                                                $grau = $item['grau_recomendado'] ?? 'Livre';
-                                                $badgeClass = 'bg-gray-100 text-gray-800'; // Padrão Livre
-                                                $icon = '🟢';
-
-                                                if ($grau === 'Aprendiz') {
-                                                    $badgeClass = 'bg-blue-100 text-blue-800';
-                                                    $icon = '🔵';
-                                                } elseif ($grau === 'Companheiro') {
-                                                    $badgeClass = 'bg-red-100 text-red-800';
-                                                    $icon = '🔴';
-                                                } elseif ($grau === 'Mestre') {
-                                                    $badgeClass = 'bg-purple-100 text-purple-800';
-                                                    $icon = '🟣';
-                                                }
-                                            ?>
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $badgeClass ?>">
-                                                <span class="mr-1"><?= $icon ?></span> <?= htmlspecialchars($grau) ?>
-                                            </span>
-                                        </td>
-
-                                        <!-- Coluna Status -->
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                            <?php if ($item['disponivel'] ?? true): ?>
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Disponível</span>
-                                            <?php else: ?>
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Emprestado</span>
-                                            <?php endif; ?>
-                                        </td>
-
-                                        <!-- Coluna Ações (Dinâmica por Cargo) -->
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-
-                                            <?php if ($podeEditarCatalogo): ?>
-                                                <a href="/biblioteca/editar?id=<?= $item['id'] ?? '' ?>" class="text-cobalto hover:text-blue-900 mr-3">Editar</a>
-                                            <?php endif; ?>
-
-                                            <?php if ($podeClassificar): ?>
-                                                <button onclick="abrirModalClassificacao(<?= $item['id'] ?>, '<?= addslashes($item['titulo']) ?>', '<?= $item['grau_recomendado'] ?? 'Livre' ?>', '<?= addslashes($item['nota_instrucao'] ?? '') ?>')" class="text-purple-600 hover:text-purple-900 font-bold flex items-center justify-end w-full">
-                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
-                                                    Classificar
-                                                </button>
-                                            <?php endif; ?>
-
-                                            <?php if (!$podeEditarCatalogo && !$podeClassificar): ?>
-                                                <a href="/biblioteca/detalhes?id=<?= $item['id'] ?? '' ?>" class="text-gray-500 hover:text-gray-800">Ver Detalhes</a>
-                                            <?php endif; ?>
-
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                                        Nenhum título cadastrado no acervo ainda.
+        <div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-slate-100">
+                        <tr>
+                            <th class="text-left px-4 py-3">Capa</th>
+                            <th class="text-left px-4 py-3">Codigo</th>
+                            <th class="text-left px-4 py-3">Titulo</th>
+                            <th class="text-left px-4 py-3">Autor</th>
+                            <th class="text-left px-4 py-3">Disponibilidade</th>
+                            <th class="text-left px-4 py-3">Reacao</th>
+                            <th class="text-right px-4 py-3">Acoes</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <?php if ($lista !== []): ?>
+                            <?php foreach ($lista as $item): ?>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-4 py-3">
+                                        <?php if (!empty($item['capa_url'])): ?>
+                                            <img src="<?= htmlspecialchars((string) $item['capa_url']) ?>" alt="Capa" class="h-16 w-12 object-cover rounded border border-slate-200">
+                                        <?php else: ?>
+                                            <div class="h-16 w-12 rounded border border-slate-200 bg-slate-100"></div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="px-4 py-3 font-mono text-xs"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-medium"><?= htmlspecialchars((string) ($item['titulo'] ?? '')) ?></div>
+                                        <div class="text-xs text-slate-500">ISBN: <?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></div>
+                                    </td>
+                                    <td class="px-4 py-3"><?= htmlspecialchars((string) ($item['autor'] ?? '-')) ?></td>
+                                    <td class="px-4 py-3">
+                                        <?php if ((bool) ($item['disponivel'] ?? false)): ?>
+                                            <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs">Disponivel (<?= (int) ($item['quantidade_disponivel'] ?? 0) ?>)</span>
+                                        <?php else: ?>
+                                            <span class="px-2 py-1 rounded-full bg-rose-100 text-rose-800 text-xs">Indisponivel</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="px-4 py-3 text-xs">
+                                        <div>Gostou: <?= (int) ($item['total_gostei_sim'] ?? 0) ?></div>
+                                        <div>Nao gostou: <?= (int) ($item['total_gostei_nao'] ?? 0) ?></div>
+                                        <div>Comentarios: <?= (int) ($item['total_comentarios'] ?? 0) ?></div>
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <a href="/biblioteca/detalhes?id=<?= (int) ($item['id'] ?? 0) ?>" class="text-blue-700 hover:underline mr-3">Detalhes</a>
+                                        <?php if ($podeGerenciar): ?>
+                                            <a href="/biblioteca/editar?id=<?= (int) ($item['id'] ?? 0) ?>" class="text-indigo-700 hover:underline mr-3">Editar</a>
+                                        <?php endif; ?>
+                                        <?php if ($podeClassificar): ?>
+                                            <button onclick="abrirModalClassificacao(<?= (int) ($item['id'] ?? 0) ?>, '<?= addslashes((string) ($item['titulo'] ?? '')) ?>', '<?= addslashes((string) ($item['grau_recomendado'] ?? 'Livre')) ?>', '<?= addslashes((string) ($item['nota_instrucao'] ?? '')) ?>')" class="text-purple-700 hover:underline">Classificar</button>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="7" class="px-4 py-8 text-center text-slate-500">Nenhum titulo cadastrado.</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="modalClassificacao" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg w-full max-w-lg">
+            <form action="/biblioteca/classificar" method="POST">
+                <div class="p-4 border-b border-slate-200">
+                    <h3 class="font-semibold text-lg">Classificar leitura sugerida</h3>
+                    <p id="modal-livro-titulo" class="text-sm text-slate-500 mt-1"></p>
                 </div>
-            </div>
-
-        </main>
-    </div>
-
-</body>
-    <!-- Modal de Classificação (Curadoria) -->
-    <div id="modalClassificacao" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-
-            <!-- Fundo escuro -->
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="fecharModal()"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-            <!-- Caixa do Modal -->
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <form action="/biblioteca/classificar" method="POST">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 sm:mx-0 sm:h-10 sm:w-10">
-                                <span class="text-purple-600 text-xl">⭐</span>
-                            </div>
-                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                    Classificar Obra
-                                </h3>
-                                <p class="text-sm text-gray-500 mb-4" id="modal-livro-titulo">Título do Livro</p>
-
-                                <input type="hidden" name="livro_id" id="modal-livro-id">
-
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Grau Recomendado</label>
-                                        <select name="grau_recomendado" id="modal-grau" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm p-2 border bg-white">
-                                            <option value="Livre">🟢 Livre / Todos os Graus</option>
-                                            <option value="Aprendiz">🔵 Recomendado: Aprendiz</option>
-                                            <option value="Companheiro">🔴 Recomendado: Companheiro</option>
-                                            <option value="Mestre">🟣 Recomendado: Mestre</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Nota de Instrução (Opcional)</label>
-                                        <textarea name="nota_instrucao" id="modal-nota" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm p-2 border" placeholder="Ex: Leitura essencial para a elevação..."></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div class="p-4 space-y-3">
+                    <input type="hidden" name="livro_id" id="modal-livro-id">
+                    <div>
+                        <label class="text-sm font-medium">Grau sugerido</label>
+                        <select name="grau_recomendado" id="modal-grau" class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
+                            <option value="Livre">Livre</option>
+                            <option value="Aprendiz">Aprendiz</option>
+                            <option value="Companheiro">Companheiro</option>
+                            <option value="Mestre">Mestre</option>
+                        </select>
                     </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-3 sm:w-auto sm:text-sm">
-                            Salvar Classificação
-                        </button>
-                        <button type="button" onclick="fecharModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Cancelar
-                        </button>
+                    <div>
+                        <label class="text-sm font-medium">Nota de instrucao</label>
+                        <textarea name="nota_instrucao" id="modal-nota" rows="3" class="mt-1 w-full border border-slate-300 rounded px-3 py-2"></textarea>
                     </div>
-                </form>
-            </div>
+                </div>
+                <div class="p-4 border-t border-slate-200 flex justify-end gap-2">
+                    <button type="button" onclick="fecharModal()" class="px-3 py-2 rounded border border-slate-300">Cancelar</button>
+                    <button type="submit" class="px-3 py-2 rounded bg-purple-700 text-white">Salvar</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Script para controlar o Modal -->
     <script>
+        const modal = document.getElementById('modalClassificacao');
         function abrirModalClassificacao(id, titulo, grauAtual, notaAtual) {
             document.getElementById('modal-livro-id').value = id;
             document.getElementById('modal-livro-titulo').innerText = titulo;
             document.getElementById('modal-grau').value = grauAtual || 'Livre';
             document.getElementById('modal-nota').value = notaAtual || '';
-            document.getElementById('modalClassificacao').classList.remove('hidden');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
-
         function fecharModal() {
-            document.getElementById('modalClassificacao').classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
         }
     </script>
+</body>
 </html>

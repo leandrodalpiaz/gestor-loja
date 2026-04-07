@@ -146,6 +146,10 @@ declare(strict_types=1);
 <div class="secao">
     <div class="secao-titulo">Curadoria (Opcional)</div>
     <div class="campo">
+        <label>Resumo / Sinopse</label>
+        <textarea id="resumo" placeholder="Resumo da obra (automatico pelo ISBN quando possivel)"></textarea>
+    </div>
+    <div class="campo">
         <label>Grau Recomendado</label>
         <select id="grau_recomendado">
             <option value="Livre">Livre / Todos os Graus</option>
@@ -222,8 +226,10 @@ declare(strict_types=1);
                     capa_url: document.getElementById("capa_url").value.trim(),
                     tipo: document.getElementById("tipo").value,
                     quantidade_disponivel: quantidade,
+                    resumo: document.getElementById("resumo").value.trim(),
                     grau_recomendado: document.getElementById("grau_recomendado").value,
-                    nota_instrucao: document.getElementById("nota_instrucao").value.trim()
+                    nota_instrucao: document.getElementById("nota_instrucao").value.trim(),
+                    init_data: tg ? (tg.initData || "") : ""
                 })
             });
 
