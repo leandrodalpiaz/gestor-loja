@@ -100,14 +100,16 @@ class Obreiro
             email, profissao, loja_origem, grau, cargo,
             data_elevacao, data_exaltacao, telegram_id,
             potencia_login, acesso_potencia_liberado,
-            acesso_potencia_liberado_em, observacao_secretaria, ativo
+            acesso_potencia_liberado_em, observacao_secretaria, ativo,
+            created_at, updated_at
         ) VALUES (
             :cim, :nome, :nome_historico, :cpf,
             :data_nascimento_civil, :data_iniciacao, :telefone,
             :email, :profissao, :loja_origem, :grau, :cargo,
             :data_elevacao, :data_exaltacao, :telegram_id,
             :potencia_login, :acesso_potencia_liberado,
-            :acesso_potencia_liberado_em, :observacao_secretaria, true
+            :acesso_potencia_liberado_em, :observacao_secretaria, true,
+            NOW(), NOW()
         )";
 
         $stmt = $this->db->prepare($sql);
@@ -170,7 +172,8 @@ class Obreiro
             acesso_potencia_liberado = :acesso_potencia_liberado,
             acesso_potencia_liberado_em = :acesso_potencia_liberado_em,
             observacao_secretaria = :observacao_secretaria,
-            ativo = :ativo
+            ativo = :ativo,
+            updated_at = NOW()
             WHERE id = :id";
 
         $stmt = $this->db->prepare($sql);

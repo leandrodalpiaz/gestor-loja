@@ -184,11 +184,93 @@ class Balaustre
             ];
         }
 
+        $visitaMembroIds = is_array($data['visita_externa_obreiro_id'] ?? null) ? $data['visita_externa_obreiro_id'] : [];
+        $visitaMembroNomes = is_array($data['visita_externa_obreiro_nome'] ?? null) ? $data['visita_externa_obreiro_nome'] : [];
+        $visitaLojas = is_array($data['visita_externa_loja'] ?? null) ? $data['visita_externa_loja'] : [];
+        $visitaOrientes = is_array($data['visita_externa_oriente'] ?? null) ? $data['visita_externa_oriente'] : [];
+        $visitaObs = is_array($data['visita_externa_observacao'] ?? null) ? $data['visita_externa_observacao'] : [];
+        $totalVisitasExternas = max(
+            count($visitaMembroIds),
+            count($visitaMembroNomes),
+            count($visitaLojas),
+            count($visitaOrientes),
+            count($visitaObs)
+        );
+        $visitasExternas = [];
+        for ($i = 0; $i < $totalVisitasExternas; $i++) {
+            $membroId = trim((string) ($visitaMembroIds[$i] ?? ''));
+            $membroNome = trim((string) ($visitaMembroNomes[$i] ?? ''));
+            $loja = trim((string) ($visitaLojas[$i] ?? ''));
+            $oriente = trim((string) ($visitaOrientes[$i] ?? ''));
+            $observacao = trim((string) ($visitaObs[$i] ?? ''));
+            if ($membroId === '' && $membroNome === '' && $loja === '' && $oriente === '' && $observacao === '') {
+                continue;
+            }
+            $visitasExternas[] = [
+                'obreiro_id' => $membroId !== '' ? $membroId : null,
+                'obreiro_nome' => $membroNome,
+                'loja' => $loja,
+                'oriente' => $oriente,
+                'observacao' => $observacao,
+            ];
+        }
+
+        $congressoTitulos = is_array($data['congresso_titulo'] ?? null) ? $data['congresso_titulo'] : [];
+        $congressoPromotores = is_array($data['congresso_promotor'] ?? null) ? $data['congresso_promotor'] : [];
+        $congressoDatas = is_array($data['congresso_data'] ?? null) ? $data['congresso_data'] : [];
+        $congressoObs = is_array($data['congresso_observacao'] ?? null) ? $data['congresso_observacao'] : [];
+        $totalCongressos = max(count($congressoTitulos), count($congressoPromotores), count($congressoDatas), count($congressoObs));
+        $congressos = [];
+        for ($i = 0; $i < $totalCongressos; $i++) {
+            $titulo = trim((string) ($congressoTitulos[$i] ?? ''));
+            $promotor = trim((string) ($congressoPromotores[$i] ?? ''));
+            $dataEvento = trim((string) ($congressoDatas[$i] ?? ''));
+            $observacao = trim((string) ($congressoObs[$i] ?? ''));
+            if ($titulo === '' && $promotor === '' && $dataEvento === '' && $observacao === '') {
+                continue;
+            }
+            $congressos[] = [
+                'titulo' => $titulo,
+                'promotor' => $promotor,
+                'data' => $dataEvento,
+                'observacao' => $observacao,
+            ];
+        }
+
+        $palestraTitulos = is_array($data['palestra_titulo'] ?? null) ? $data['palestra_titulo'] : [];
+        $palestraPalestrantes = is_array($data['palestra_palestrante'] ?? null) ? $data['palestra_palestrante'] : [];
+        $palestraDatas = is_array($data['palestra_data'] ?? null) ? $data['palestra_data'] : [];
+        $palestraObs = is_array($data['palestra_observacao'] ?? null) ? $data['palestra_observacao'] : [];
+        $totalPalestras = max(count($palestraTitulos), count($palestraPalestrantes), count($palestraDatas), count($palestraObs));
+        $palestras = [];
+        for ($i = 0; $i < $totalPalestras; $i++) {
+            $titulo = trim((string) ($palestraTitulos[$i] ?? ''));
+            $palestrante = trim((string) ($palestraPalestrantes[$i] ?? ''));
+            $dataEvento = trim((string) ($palestraDatas[$i] ?? ''));
+            $observacao = trim((string) ($palestraObs[$i] ?? ''));
+            if ($titulo === '' && $palestrante === '' && $dataEvento === '' && $observacao === '') {
+                continue;
+            }
+            $palestras[] = [
+                'titulo' => $titulo,
+                'palestrante' => $palestrante,
+                'data' => $dataEvento,
+                'observacao' => $observacao,
+            ];
+        }
+
         $dadosJson['palavra_bem_ordem'] = [
             'lojas_frequentes' => array_values(array_unique($lojasFrequentes)),
             'visitantes' => $visitantes,
         ];
         $dadosJson['cargos_sessao'] = $cargosSessao;
+        $dadosJson['saco_propostas'] = [
+            'visitas_externas' => $visitasExternas,
+        ];
+        $dadosJson['eventos_realizados'] = [
+            'congressos' => $congressos,
+            'palestras' => $palestras,
+        ];
         $dadosJson['observacoes_secretaria'] = trim((string) ($data['observacoes_secretaria'] ?? ''));
 
         return $dadosJson;

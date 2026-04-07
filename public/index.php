@@ -185,6 +185,24 @@ $resolveAuthorizedTelegramObreiro = static function (string ...$roles) use ($nor
     return null;
 };
 
+$loginTelegramObreiroInSession = static function (array $obreiro) use ($syncSessionRoles, $normalizeRole): void {
+    $principal = $normalizeRole((string) ($obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? ''));
+    $cargos = array_values(array_unique(array_filter(array_map(
+        $normalizeRole,
+        $obreiro['cargos'] ?? [$principal]
+    ))));
+
+    $usuario = $obreiro;
+    $usuario['cargo'] = $principal;
+    $usuario['cargos'] = $cargos;
+
+    $_SESSION['usuario_logado'] = $usuario;
+    $_SESSION['usuario_id'] = $usuario['id'] ?? null;
+    $_SESSION['usuario_nome'] = $usuario['nome_historico'] ?? $usuario['nome_completo'] ?? 'Irmao';
+
+    $syncSessionRoles($usuario);
+};
+
 $getJsonBody = static function (): array {
     static $parsed = null;
     if ($parsed !== null) {
@@ -595,6 +613,16 @@ switch ($requestUri) {
         (new \App\Controllers\SecretariaController())->votacao();
         break;
 
+    case "/secretaria/relatorio-anual":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->relatorioAnual();
+        break;
+
     case "/secretaria/sessoes/salvar":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
         if (!$sessionHasRole('secretario', 'admin')) {
@@ -705,8 +733,16 @@ switch ($requestUri) {
         (new \App\Controllers\MestreHarmoniaController())->index();
         break;
 
+    case "/miniapp/tesouraria":
+        require_once __DIR__ . "/../src/Views/miniapp/tesouraria.php";
+        break;
+
     case "/tesouraria/caixa":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
         if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
             http_response_code(403);
             echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
@@ -716,7 +752,11 @@ switch ($requestUri) {
         break;
 
     case "/tesouraria/comprovantes":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
         if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
             http_response_code(403);
             echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
@@ -726,7 +766,11 @@ switch ($requestUri) {
         break;
 
     case "/tesouraria/regularidade":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
         if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
             http_response_code(403);
             echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
@@ -736,7 +780,11 @@ switch ($requestUri) {
         break;
 
     case "/tesouraria/fechamento":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
         if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
             http_response_code(403);
             echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
@@ -1298,9 +1346,13 @@ switch ($requestUri) {
         header('Content-Type: application/json; charset=utf-8');
 
         if (!$openTestAccess && !isset($_SESSION['usuario_logado'])) {
-            http_response_code(401);
-            echo json_encode(['ok' => false, 'erro' => 'Nao autenticado.']);
-            exit;
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) {
+                http_response_code(401);
+                echo json_encode(['ok' => false, 'erro' => 'Nao autenticado.']);
+                exit;
+            }
+            $loginTelegramObreiroInSession($telegramObreiro);
         }
         if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
             http_response_code(403);
@@ -1309,6 +1361,52 @@ switch ($requestUri) {
         }
 
         $usuarioId = $_SESSION['usuario_id'] ?? 0;
+
+        if ($requestUri === '/api/tesouraria/categorias' && $method === 'GET') {
+            $tipo = trim((string) ($_GET['tipo'] ?? ''));
+            $categoriaModel = new \App\Models\CategoriaFinanceira();
+            $categorias = $tipo !== ''
+                ? $categoriaModel->obterPorTipo($tipo)
+                : $categoriaModel->obterTodas();
+            echo json_encode(['ok' => true, 'categorias' => $categorias]);
+            exit;
+        }
+
+        if ($requestUri === '/api/tesouraria/caixa' && $method === 'GET') {
+            $mes = (int) ($_GET['mes'] ?? date('n'));
+            $ano = (int) ($_GET['ano'] ?? date('Y'));
+            $lancModel = new \App\Models\LancamentoFinanceiro();
+            $lancamentos = $lancModel->obterPorMes($mes, $ano);
+            $totais = $lancModel->obterTotaisMes($mes, $ano);
+            $porCategoria = $lancModel->obterPorCategoriaMes($mes, $ano);
+
+            echo json_encode([
+                'ok' => true,
+                'lancamentos' => $lancamentos,
+                'totais' => $totais,
+                'categorias' => $porCategoria,
+            ]);
+            exit;
+        }
+
+        if ($requestUri === '/api/tesouraria/lancamento/criar' && $method === 'POST') {
+            $body = json_decode(file_get_contents('php://input'), true) ?? [];
+            $lancModel = new \App\Models\LancamentoFinanceiro();
+            $ok = $lancModel->criar([
+                'tipo' => $body['tipo'] ?? 'entrada',
+                'categoria_id' => (int) ($body['categoria_id'] ?? 0),
+                'valor' => (float) ($body['valor'] ?? 0),
+                'data_lancamento' => $body['data_lancamento'] ?? date('Y-m-d'),
+                'descricao' => trim((string) ($body['descricao'] ?? '')) ?: null,
+                'obreiro_id' => trim((string) ($body['obreiro_id'] ?? '')) ?: null,
+                'mes_ref' => (int) ($body['mes_ref'] ?? date('n')),
+                'ano_ref' => (int) ($body['ano_ref'] ?? date('Y')),
+                'created_by' => $usuarioId,
+            ]);
+
+            echo json_encode(['ok' => $ok]);
+            exit;
+        }
 
         if (preg_match('~^/api/tesouraria/lancamento/(\d+)$~', $requestUri, $m) && $method === 'DELETE') {
             $lancModel = new \App\Models\LancamentoFinanceiro();

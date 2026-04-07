@@ -246,15 +246,18 @@ class CommandHandler
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => 'Livro Caixa', 'callback_data' => 'tesouraria_caixa'],
-                    ['text' => 'Comprovantes', 'callback_data' => 'tesouraria_comprovantes'],
+                    ['text' => 'Abrir Tesouraria Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria')]],
                 ],
                 [
-                    ['text' => 'Regularidade', 'callback_data' => 'tesouraria_regularidade'],
-                    ['text' => 'Fechamento Mensal', 'callback_data' => 'tesouraria_fechamento'],
+                    ['text' => 'Livro Caixa', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fcaixa')]],
+                    ['text' => 'Comprovantes', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fcomprovantes')]],
                 ],
                 [
-                    ['text' => 'Validar Pix', 'callback_data' => 'tesouraria_validar_pix'],
+                    ['text' => 'Regularidade', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fregularidade')]],
+                    ['text' => 'Fechamento Mensal', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Ffechamento')]],
+                ],
+                [
+                    ['text' => 'Validar Pix', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fcomprovantes')]],
                 ],
                 [
                     ['text' => 'Voltar', 'callback_data' => 'start_menu'],
@@ -677,102 +680,92 @@ class CommandHandler
 
     private function handleTesourariaCaixa($chatId)
     {
-        $mes = date('n');
-        $ano = date('Y');
-        $lancModel = new \App\Models\LancamentoFinanceiro();
-        $lancamentos = $lancModel->obterPorMes($mes, $ano);
-        $totais = $lancModel->obterTotaisMes($mes, $ano);
-
-        $msg = "<b>Livro Caixa - " . date('m/Y') . "</b>\n\n";
-        $msg .= "<b>Entradas:</b> R$ " . number_format($totais['entrada'], 2, ',', '.') . "\n";
-        $msg .= "<b>Saidas:</b> R$ " . number_format($totais['saida'], 2, ',', '.') . "\n";
-        $msg .= "<b>Saldo:</b> R$ " . number_format($totais['entrada'] - $totais['saida'], 2, ',', '.') . "\n\n";
-
-        if (empty($lancamentos)) {
-            $msg .= "Nenhum lancamento registrado neste mes.";
-        } else {
-            foreach ($lancamentos as $l) {
-                $tipo = $l['tipo'] === 'entrada' ? '+' : '-';
-                $msg .= $tipo . " <b>" . $l['categoria_nome'] . "</b>: R$ " . number_format($l['valor'], 2, ',', '.') . " em " . date('d/m', strtotime($l['data_lancamento'])) . " - " . htmlspecialchars($l['descricao']) . "\n";
-            }
-        }
-
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+        $msg = "<b>Livro Caixa</b>\n\nAbra o painel operacional para cadastrar entradas, saídas e excluir lançamentos.";
+        $this->telegram->sendMessage($chatId, $msg, [
+            'parse_mode' => 'HTML',
+            'reply_markup' => [
+                'inline_keyboard' => [
+                    [
+                        ['text' => 'Abrir Livro Caixa', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fcaixa')]],
+                    ],
+                    [
+                        ['text' => 'Voltar', 'callback_data' => 'tesouraria_menu'],
+                    ],
+                ],
+            ],
+        ]);
     }
 
     private function handleTesourariaComprovantes($chatId)
     {
-        $compModel = new \App\Models\ComprovantePix();
-        $comprovantes = $compModel->obterTodos();
-
-        if (empty($comprovantes)) {
-            $msg = "Nenhum comprovante encontrado.";
-        } else {
-            $msg = "<b>Comprovantes Recebidos</b>\n\n";
-            foreach ($comprovantes as $c) {
-                $status = $c['status'] === 'aprovado' ? 'OK' : ($c['status'] === 'pendente' ? 'PENDENTE' : 'REJEITADO');
-                $msg .= $status . " <b>" . htmlspecialchars($c['obreiro_nome']) . "</b> - R$ " . number_format($c['valor_informado'], 2, ',', '.') . " em " . date('d/m', strtotime($c['criado_em'])) . "\n";
-            }
-        }
-
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+        $msg = "<b>Comprovantes PIX</b>\n\nAbra o painel operacional para aprovar, rejeitar e revisar comprovantes.";
+        $this->telegram->sendMessage($chatId, $msg, [
+            'parse_mode' => 'HTML',
+            'reply_markup' => [
+                'inline_keyboard' => [
+                    [
+                        ['text' => 'Abrir Comprovantes', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fcomprovantes')]],
+                    ],
+                    [
+                        ['text' => 'Voltar', 'callback_data' => 'tesouraria_menu'],
+                    ],
+                ],
+            ],
+        ]);
     }
 
     private function handleTesourariaRegularidade($chatId)
     {
-        $mes = date('n');
-        $ano = date('Y');
-        $mensModel = new \App\Models\MensalidadeStatus();
-        $inadimplentes = $mensModel->obterInadimplentes($mes, $ano);
-
-        if (empty($inadimplentes)) {
-            $msg = "Todos os obreiros estao regulares neste mes.";
-        } else {
-            $msg = "<b>Obreiros Inadimplentes - " . date('m/Y') . "</b>\n\n";
-            foreach ($inadimplentes as $o) {
-                $nome = htmlspecialchars($o['nome_historico'] ?: $o['nome']);
-                $msg .= "- <b>$nome</b> - Status: " . htmlspecialchars($o['status'] ?? 'pendente') . "\n";
-            }
-        }
-
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+        $msg = "<b>Regularidade</b>\n\nAbra o painel operacional para atualizar status individual ou em lote.";
+        $this->telegram->sendMessage($chatId, $msg, [
+            'parse_mode' => 'HTML',
+            'reply_markup' => [
+                'inline_keyboard' => [
+                    [
+                        ['text' => 'Abrir Regularidade', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fregularidade')]],
+                    ],
+                    [
+                        ['text' => 'Voltar', 'callback_data' => 'tesouraria_menu'],
+                    ],
+                ],
+            ],
+        ]);
     }
 
     private function handleTesourariaFechamento($chatId)
     {
-        $mes = date('n');
-        $ano = date('Y');
-        $fechModel = new \App\Models\FechamentoMensal();
-        $fechamento = $fechModel->obter($mes, $ano);
-
-        if (!$fechamento) {
-            $msg = "Nenhum fechamento registrado para este mes.";
-        } else {
-            $msg = "<b>Fechamento Mensal - " . date('m/Y') . "</b>\n\n";
-            $msg .= "<b>Saldo Inicial:</b> R$ " . number_format($fechamento['saldo_inicial'], 2, ',', '.') . "\n";
-            $msg .= "<b>Entradas:</b> R$ " . number_format($fechamento['total_entradas'], 2, ',', '.') . "\n";
-            $msg .= "<b>Saidas:</b> R$ " . number_format($fechamento['total_saidas'], 2, ',', '.') . "\n";
-            $msg .= "<b>Saldo Final:</b> R$ " . number_format($fechamento['saldo_final'], 2, ',', '.') . "\n";
-        }
-
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+        $msg = "<b>Fechamento Mensal</b>\n\nAbra o painel operacional para revisar lançamentos, ajustar saldo inicial e fechar o período.";
+        $this->telegram->sendMessage($chatId, $msg, [
+            'parse_mode' => 'HTML',
+            'reply_markup' => [
+                'inline_keyboard' => [
+                    [
+                        ['text' => 'Abrir Fechamento', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Ffechamento')]],
+                    ],
+                    [
+                        ['text' => 'Voltar', 'callback_data' => 'tesouraria_menu'],
+                    ],
+                ],
+            ],
+        ]);
     }
 
     private function handleTesourariaValidarPix($chatId)
     {
-        $compModel = new \App\Models\ComprovantePix();
-        $pendentes = $compModel->obterPendentes();
-
-        if (empty($pendentes)) {
-            $msg = "Nenhum comprovante Pix pendente de validacao.";
-        } else {
-            $msg = "<b>Comprovantes Pix Pendentes</b>\n\n";
-            foreach ($pendentes as $c) {
-                $msg .= "- <b>" . htmlspecialchars($c['obreiro_nome']) . "</b> - R$ " . number_format($c['valor_informado'], 2, ',', '.') . " em " . date('d/m', strtotime($c['criado_em'])) . "\n";
-            }
-        }
-
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+        $msg = "<b>Validação de PIX</b>\n\nAbra o painel de comprovantes para validar ou rejeitar os envios pendentes.";
+        $this->telegram->sendMessage($chatId, $msg, [
+            'parse_mode' => 'HTML',
+            'reply_markup' => [
+                'inline_keyboard' => [
+                    [
+                        ['text' => 'Abrir Validação PIX', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fcomprovantes')]],
+                    ],
+                    [
+                        ['text' => 'Voltar', 'callback_data' => 'tesouraria_menu'],
+                    ],
+                ],
+            ],
+        ]);
     }
 
     public function handleSecretariaMenu($chatId, $fromId)

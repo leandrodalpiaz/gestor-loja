@@ -43,6 +43,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
             <div class="flex gap-3">
                 <a href="/obreiros" class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-medium">Cadastros dos membros</a>
                 <a href="/secretaria/votacao" class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-medium">Painel de votacao</a>
+                <a href="/secretaria/relatorio-anual" class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-medium">Relatorio anual</a>
                 <a href="/dashboard" class="px-4 py-2 rounded-lg bg-cobalto text-white text-sm font-medium">Voltar ao painel</a>
             </div>
         </div>
@@ -316,6 +317,81 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Saco de propostas: visitas a outras Lojas</h3>
+                            <p class="text-xs text-slate-500 mb-3">
+                                Registre aqui quando algum membro do quadro da Loja informar visita realizada a outra Loja.
+                            </p>
+                            <div class="space-y-2">
+                                <?php for ($linhaVisita = 0; $linhaVisita < 4; $linhaVisita++): ?>
+                                    <div class="grid gap-2 md:grid-cols-12">
+                                        <div class="md:col-span-4">
+                                            <select name="visita_externa_obreiro_id[]" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                                <option value="">Selecione o membro do quadro</option>
+                                                <?php foreach ($obreiros as $obreiro): ?>
+                                                    <option value="<?= htmlspecialchars((string) $obreiro['id']) ?>"><?= htmlspecialchars($obreiro['nome_historico'] ?: $obreiro['nome']) ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <input type="hidden" name="visita_externa_obreiro_nome[]" value="">
+                                        </div>
+                                        <div class="md:col-span-4">
+                                            <input type="text" name="visita_externa_loja[]" placeholder="Loja visitada" list="lojas-frequentes-sugestoes" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <input type="text" name="visita_externa_oriente[]" placeholder="Oriente" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <input type="text" name="visita_externa_observacao[]" placeholder="Obs." class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                        </div>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Congressos realizados</h3>
+                            <div class="space-y-2">
+                                <?php for ($linhaCongresso = 0; $linhaCongresso < 3; $linhaCongresso++): ?>
+                                    <div class="grid gap-2 md:grid-cols-12">
+                                        <div class="md:col-span-5">
+                                            <input type="text" name="congresso_titulo[]" placeholder="Titulo do congresso" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                        </div>
+                                        <div class="md:col-span-3">
+                                            <input type="text" name="congresso_promotor[]" placeholder="Promotor/organizacao" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <input type="date" name="congresso_data[]" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <input type="text" name="congresso_observacao[]" placeholder="Obs." class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                        </div>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Palestras realizadas</h3>
+                            <div class="space-y-2">
+                                <?php for ($linhaPalestra = 0; $linhaPalestra < 4; $linhaPalestra++): ?>
+                                    <div class="grid gap-2 md:grid-cols-12">
+                                        <div class="md:col-span-5">
+                                            <input type="text" name="palestra_titulo[]" placeholder="Tema ou titulo da palestra" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                        </div>
+                                        <div class="md:col-span-3">
+                                            <input type="text" name="palestra_palestrante[]" placeholder="Palestrante" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <input type="date" name="palestra_data[]" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <input type="text" name="palestra_observacao[]" placeholder="Obs." class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                        </div>
+                                    </div>
+                                <?php endfor; ?>
                             </div>
                         </div>
 

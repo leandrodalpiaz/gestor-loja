@@ -6,6 +6,7 @@ use App\Models\Obreiro;
 use App\Models\Balaustre;
 use App\Models\Cargo;
 use App\Models\PublicacaoSecretaria;
+use App\Models\RelatorioSecretariaAnual;
 use App\Models\Sessao;
 use App\Models\TrabalhoSessao;
 
@@ -184,6 +185,23 @@ class SecretariaController
         );
 
         require_once __DIR__ . '/../Views/secretaria/votacao.php';
+    }
+
+    public function relatorioAnual(): void
+    {
+        $ano = (int) ($_GET['ano'] ?? date('Y'));
+        if ($ano < 2000 || $ano > 2100) {
+            $ano = (int) date('Y');
+        }
+
+        $relatorio = (new RelatorioSecretariaAnual())->montar($ano);
+        $anosDisponiveis = [];
+        $anoAtual = (int) date('Y');
+        for ($i = $anoAtual; $i >= max(2000, $anoAtual - 8); $i--) {
+            $anosDisponiveis[] = $i;
+        }
+
+        require_once __DIR__ . '/../Views/secretaria/relatorio_anual.php';
     }
 
     public function salvarSessao(): void
