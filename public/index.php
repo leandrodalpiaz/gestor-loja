@@ -700,6 +700,11 @@ switch ($requestUri) {
         (new \App\Controllers\HospitaleiroController())->atualizarStatusOcorrencia();
         break;
 
+    case "/mestre-harmonia":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        (new \App\Controllers\MestreHarmoniaController())->index();
+        break;
+
     case "/tesouraria/caixa":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
         if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
@@ -1259,6 +1264,35 @@ switch ($requestUri) {
         echo json_encode(['ok' => false, 'erro' => 'API miniapp nao encontrada.']);
         exit;
 
+    case "/api/mestre-harmonia/scan":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            http_response_code(401);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'erro' => 'Nao autenticado.']);
+            exit;
+        }
+        (new \App\Controllers\MestreHarmoniaController())->scan();
+        exit;
+
+    case "/api/mestre-harmonia/audio":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            http_response_code(401);
+            echo 'Nao autenticado.';
+            exit;
+        }
+        (new \App\Controllers\MestreHarmoniaController())->audio();
+        exit;
+
+    case "/api/mestre-harmonia/operador":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            http_response_code(401);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'erro' => 'Nao autenticado.']);
+            exit;
+        }
+        (new \App\Controllers\MestreHarmoniaController())->salvarOperador();
+        exit;
+
     // Tesouraria API
     case (preg_match('~^/api/tesouraria~', $requestUri) ? $requestUri : null):
         header('Content-Type: application/json; charset=utf-8');
@@ -1630,8 +1664,8 @@ switch ($requestUri) {
                         $usuario['cargos'] ?? [$cargo]
                     ))));
                     $temAcessoPainel =
-                        count(array_intersect($cargosAtivos, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "tesoureiro", "chanceler", "admin", "bibliotecario", "mestre_banquetes", "hospitaleiro"])) > 0
-                        || in_array($cargo, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "secretario", "tesoureiro", "chanceler", "admin", "hospitaleiro"], true);
+                        count(array_intersect($cargosAtivos, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "tesoureiro", "chanceler", "admin", "bibliotecario", "mestre_banquetes", "hospitaleiro", "mestre_de_harmonia"])) > 0
+                        || in_array($cargo, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "secretario", "tesoureiro", "chanceler", "admin", "hospitaleiro", "mestre_de_harmonia"], true);
 
                     $_SESSION["usuario_logado"] = $usuario;
                     $_SESSION["usuario_id"] = $usuario["id"];

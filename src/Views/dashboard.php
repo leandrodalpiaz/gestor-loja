@@ -53,6 +53,7 @@ $isSecretario = in_array('secretario', $usuarioCargos, true);
 $isVeneravel = in_array('veneravel', $usuarioCargos, true);
 $isBibliotecario = in_array('bibliotecario', $usuarioCargos, true);
 $isHospitaleiro = in_array('hospitaleiro', $usuarioCargos, true);
+$isMestreHarmonia = in_array('mestre_de_harmonia', $usuarioCargos, true);
 $adminLivre = $isAdmin || $showAllPanels;
 
 $secaoGeral = [
@@ -94,6 +95,14 @@ if ($isHospitaleiro || $isVeneravel || $isTesoureiro || $adminLivre) {
         ],
     ];
 }
+
+$secoes[] = [
+    'titulo' => 'Mestre de Harmonia',
+    'descricao' => 'Player ritual em tela cheia, com etapas principais, transicoes e extras por sessao.',
+    'itens' => [
+        ['label' => 'Painel do Mestre de Harmonia', 'href' => '/mestre-harmonia'],
+    ],
+];
 
 if ($isPrimeiroVigilante || $isVeneravel || $adminLivre) {
     $secoes[] = [
