@@ -523,7 +523,7 @@ Legenda de status:
 
 | Cargo | Web | Mobile | Regra/Backend | Permissoes | Status geral | O que falta principal |
 |---|---|---|---|---|---|---|
-| Secretaria | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
+| Secretaria | concluido | concluido | concluido | parcial | concluido | web e mobile operacionais, com refinamento documental posterior |
 | Chanceler | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
 | Mestre de Banquetes | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
 | Hospitaleiro | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
@@ -534,27 +534,27 @@ Legenda de status:
 | Mestre de Harmonia | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
 | Tesouraria | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
 | Biblioteca | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
-| Administracao | parcial | nao_iniciado | parcial | parcial | parcial | auditoria critica, ajustes mobile e consolidacao de gestoes |
+| Administracao | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
 
 ### 12.2 Visao por fase
 
 | Fase | Nome | Status | Observacao |
 |---|---|---|---|
-| 1 | Fundacao de paridade | em_andamento | plano criado, falta matriz detalhada de permissao e checklist final por cargo |
+| 1 | Fundacao de paridade | concluido | plano, matriz detalhada e checklist base consolidados |
 | 2 | Cargos operacionais centrais | concluido | Secretaria, Chanceler, Mestre de Banquetes e Veneravel concluidos |
 | 3 | Cargos formativos | concluido | 1o e 2o Vigilantes concluidos |
 | 4 | Apoio ritual e assistencial | concluido | Hospitaleiro, Orador e Mestre de Harmonia concluidos |
-| 5 | Consolidacao administrativa | em_andamento | Tesouraria concluida; proximos focos em Biblioteca, Administracao e auditoria final |
+| 5 | Consolidacao administrativa | concluido | Tesouraria, Biblioteca, Administracao e auditoria final consolidadas |
 
 ### 12.3 Proxima ordem recomendada
 
 | Prioridade | Entrega | Status |
 |---|---|---|
-| 1 | Matriz detalhada cargo x tela x funcao x canal | pendente |
-| 2 | Secretaria mobile | pendente |
-| 3 | Mestre de Banquetes mobile | pendente |
+| 1 | Matriz detalhada cargo x tela x funcao x canal | concluido |
+| 2 | Secretaria mobile | concluido |
+| 3 | Mestre de Banquetes mobile | concluido |
 | 4 | Fechamento funcional do Orador | concluido |
-| 5 | Refinamento de permissao/documentacao dos cargos concluidos | pendente |
+| 5 | Refinamento de permissao/documentacao dos cargos concluidos | em_andamento |
 
 ### 12.4 Regra de manutencao
 
@@ -591,7 +591,7 @@ Status por item:
 |---|---|---|---|---|---|---|
 | Painel principal da Secretaria | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
 | Criar sessao | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
-| Editar sessao | concluido | parcial | parcial | parcial | parcial | web entregue, mobile simplificado por miniapp |
+| Editar sessao | concluido | concluido | parcial | parcial | concluido | web e mobile permitem criacao e edicao no mesmo fluxo |
 | Cancelar sessao | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
 | Reabrir sessao | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
 | Publicar sessao | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
@@ -599,10 +599,10 @@ Status por item:
 | Resumo da proxima sessao | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
 | Confirmados da sessao | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
 | Controle de agape | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
-| Trabalhos da sessao | concluido | nao_iniciado | parcial | parcial | parcial | pendente no mobile |
-| Balaustre | concluido | nao_iniciado | parcial | parcial | parcial | pendente no mobile |
-| Votacao de balaustre | concluido | nao_iniciado | parcial | parcial | parcial | pendente no mobile |
-| Relatorio anual | concluido | nao_iniciado | parcial | parcial | parcial | pendente no mobile |
+| Trabalhos da sessao | concluido | concluido | parcial | parcial | concluido | miniapp registra trabalho e mostra historico recente |
+| Balaustre | concluido | concluido | parcial | parcial | concluido | miniapp salva balaustre por sessao e mostra situacao atual |
+| Votacao de balaustre | concluido | concluido | parcial | parcial | concluido | miniapp marca apto, abre e encerra votacao |
+| Relatorio anual | concluido | concluido | parcial | parcial | concluido | resumo anual operacional consolidado no mobile |
 | Historico operacional da sessao | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
 
 ## 13.2 Chanceler
@@ -713,9 +713,9 @@ Status por item:
 | Item | W | M | B | P | Status | Observacao |
 |---|---|---|---|---|---|---|
 | Livro-caixa | concluido | concluido | parcial | parcial | concluido | painel mobile consolidado com atalho operacional |
-| Comprovantes | concluido | concluido | parcial | parcial | concluido | caixa de pendencias espelhada no mobile |
-| Regularidade | concluido | concluido | parcial | parcial | concluido | leitura operacional disponivel no painel mobile |
-| Fechamento mensal | concluido | concluido | parcial | parcial | concluido | resumo e acesso rapido no mobile |
+| Comprovantes | concluido | concluido | parcial | parcial | concluido | mobile aprova e rejeita pendencias prioritarias |
+| Regularidade | concluido | concluido | parcial | parcial | concluido | mobile permite regularizar alertas principais |
+| Fechamento mensal | concluido | concluido | parcial | parcial | concluido | mobile fecha a competencia atual e acompanha o resumo |
 | Obrigacoes financeiras | concluido | concluido | parcial | parcial | concluido | painel mobile central agora inclui alertas e atalho operacional |
 | Sessao/agape financeiro | concluido | concluido | parcial | parcial | concluido | sessoes com reflexo financeiro expostas no mobile |
 
@@ -725,19 +725,19 @@ Status por item:
 |---|---|---|---|---|---|---|
 | Painel do acervo | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
 | Detalhe do item | concluido | concluido | parcial | parcial | concluido | detalhe rapido no mobile entregue |
-| Solicitar emprestimo | concluido | concluido | parcial | parcial | concluido | fluxo acessivel a partir do detalhe web e do launcher mobile |
+| Solicitar emprestimo | concluido | concluido | parcial | parcial | concluido | fluxo direto no detalhe mobile e no web |
 | Meus emprestimos | concluido | concluido | parcial | parcial | concluido | painel mobile espelha a leitura do obreiro |
-| Comentarios e reacoes | concluido | concluido | parcial | parcial | concluido | leitura consolidada no mobile e interacao principal mantida no web |
+| Comentarios e reacoes | concluido | concluido | parcial | parcial | concluido | mobile publica comentario e registra reacoes |
 | Operacao do bibliotecario | concluido | concluido | parcial | parcial | concluido | pendencias e atalhos operacionais no miniapp |
 
 ## 13.12 Administracao
 
 | Item | W | M | B | P | Status | Observacao |
 |---|---|---|---|---|---|---|
-| Gestao de cargos | concluido | nao_iniciado | parcial | parcial | parcial | web existe |
-| Gestao de gestoes | concluido | nao_iniciado | parcial | parcial | parcial | web existe |
-| Parametros da Loja | concluido | nao_iniciado | parcial | parcial | parcial | web existe |
-| Auditoria critica | nao_iniciado | nao_iniciado | parcial | parcial | nao_iniciado | historicos existem em partes, falta consolidacao |
+| Gestao de cargos | concluido | concluido | parcial | parcial | concluido | miniapp atribui titularidade e consulta a nominata atual |
+| Gestao de gestoes | concluido | concluido | parcial | parcial | concluido | miniapp abre e encerra gestao diretamente |
+| Parametros da Loja | concluido | concluido | parcial | parcial | concluido | miniapp atualiza parametros principais da Loja |
+| Auditoria critica | concluido | concluido | parcial | parcial | concluido | trilha administrativa consolidada em web e mobile |
 
 ## 14. Regra de execucao cargo por cargo
 
@@ -753,7 +753,7 @@ Seguiremos sempre esta ordem para cada cargo:
 
 | Campo | Valor |
 |---|---|
-| Cargo em foco | Administracao |
+| Cargo em foco | Projeto consolidado |
 | Fase | 5 - Consolidacao administrativa |
-| Objetivo atual | concluir a Administracao no web e no mobile |
-| Proximo cargo apos concluir | Auditoria final |
+| Objetivo atual | manter a matriz como fonte viva e seguir para refinamento de frontend/UX |
+| Proximo cargo apos concluir | Refinamento de frontend/UX |

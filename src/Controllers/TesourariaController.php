@@ -98,13 +98,25 @@ class TesourariaController
                 'ultimos_pendentes' => array_map(static function (array $item): array {
                     return [
                         'id' => (int) ($item['id'] ?? 0),
+                        'obreiro_id' => (string) ($item['obreiro_id'] ?? ''),
                         'obreiro_nome' => (string) ($item['obreiro_nome'] ?? ('Telegram ' . ($item['telegram_user_id'] ?? ''))),
                         'valor_informado' => (float) ($item['valor_informado'] ?? 0),
+                        'mes_ref_informado' => (int) ($item['mes_ref_informado'] ?? 0),
+                        'ano_ref_informado' => (int) ($item['ano_ref_informado'] ?? 0),
+                        'rotulo_pagamento' => (string) ($item['rotulo_pagamento'] ?? ($item['descricao_usuario'] ?? '')),
                         'criado_em' => (string) ($item['criado_em'] ?? ''),
                     ];
                 }, array_slice($pendentesPix, 0, 5)),
             ],
             'regularidade' => $resumoRegularidade,
+            'regularidade_alertas' => array_map(static function (array $item): array {
+                return [
+                    'obreiro_id' => (string) ($item['obreiro_id'] ?? ''),
+                    'obreiro_nome' => (string) ($item['obreiro_nome'] ?? ''),
+                    'status' => (string) ($item['status'] ?? 'regular'),
+                    'observacao' => (string) ($item['observacao'] ?? ''),
+                ];
+            }, array_slice(array_values(array_filter($regularidade, static fn (array $item): bool => (string) ($item['status'] ?? '') === 'irregular')), 0, 5)),
             'fechamento' => [
                 'id' => (int) ($fechamento['id'] ?? 0),
                 'status' => (string) ($fechamento['status'] ?? 'aberto'),
@@ -137,6 +149,78 @@ class TesourariaController
                 ['label' => 'Relatorio', 'dest' => '/tesouraria/relatorio-gestao'],
             ],
         ];
+    }
+
+    public function aprovarComprovanteMiniapp(array $input, ?string $usuarioId): array
+    {
+        $comprovanteId = (int) ($input['id'] ?? 0);
+        if ($comprovanteId <= 0) {
+            return ['ok' => false, 'erro' => 'Comprovante invalido.'];
+        }
+
+        $comprovanteModel = new ComprovantePix();
+        $comprovante = $comprovanteModel->obterPorId($comprovanteId);
+        if (!$comprovante) {
+            return ['ok' => false, 'erro' => 'Comprovante nao encontrado.'];
+        }
+
+        $valor = (float) ($input['valor'] ?? ($comprovante['valor_informado'] ?? 0));
+        $mes = (int) ($input['mes'] ?? ($comprovante['mes_ref_informado'] ?? date('n')));
+        $ano = (int) ($input['ano'] ?? ($comprovante['ano_ref_informado'] ?? date('Y')));
+        $rotulo = trim((string) ($input['rotulo_pagamento'] ?? ($comprovante['rotulo_pagamento'] ?? $comprovante['descricao_usuario'] ?? 'Pagamento via PIX')));
+
+        $ok = $comprovanteModel->aprovar($comprovanteId, [
+            'valor' => $valor,
+            'mes' => $mes,
+            'ano' => $ano,
+            'rotulo_pagamento' => $rotulo !== '' ? $rotulo : 'Pagamento via PIX',
+            'categoria_id' => null,
+            'obrigacao_parcela_id' => null,
+            'validado_por' => $usuarioId,
+        ]);
+
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel aprovar o comprovante.'];
+    }
+
+    public function rejeitarComprovanteMiniapp(int $id, string $motivo, ?string $usuarioId): array
+    {
+        $motivo = trim($motivo);
+        if ($id <= 0 || $motivo === '') {
+            return ['ok' => false, 'erro' => 'Informe um motivo para rejeitar o comprovante.'];
+        }
+
+        $ok = (new ComprovantePix())->rejeitar($id, $motivo, $usuarioId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel rejeitar o comprovante.'];
+    }
+
+    public function definirRegularidadeMiniapp(string $obreiroId, int $mes, int $ano, string $status, ?string $usuarioId): array
+    {
+        if ($obreiroId === '' || !in_array($status, ['regular', 'irregular'], true)) {
+            return ['ok' => false, 'erro' => 'Dados invalidos para regularidade.'];
+        }
+
+        $ok = (new RegularidadeObreiro())->definir($obreiroId, $mes, $ano, $status, 'Ajuste realizado no miniapp da Tesouraria.', $usuarioId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel atualizar a regularidade.'];
+    }
+
+    public function fecharCompetenciaMiniapp(int $mes, int $ano, ?string $usuarioId = null): array
+    {
+        if ($mes < 1 || $mes > 12 || $ano < 2000) {
+            return ['ok' => false, 'erro' => 'Competencia invalida para fechamento.'];
+        }
+
+        $fechModel = new FechamentoMensal();
+        $fechamento = $fechModel->obter($mes, $ano);
+        if (!$fechamento) {
+            $fechModel->criar($mes, $ano, 0);
+            $fechamento = $fechModel->obter($mes, $ano);
+        }
+        if (!$fechamento) {
+            return ['ok' => false, 'erro' => 'Nao foi possivel preparar o fechamento da competencia.'];
+        }
+
+        $ok = $fechModel->fechar($mes, $ano, $usuarioId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel fechar a competencia.'];
     }
 
     private function calcularEstimativaArrecadacao(array $sessao, int $totalAgape): float

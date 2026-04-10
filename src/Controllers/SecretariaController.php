@@ -683,10 +683,12 @@ class SecretariaController
         $confirmados = [];
         $participantesAgape = [];
         $historico = [];
+        $balaustreFoco = null;
         if ($sessaoFoco && !empty($sessaoFoco['id'])) {
             $confirmados = $presencaModel->listarConfirmadosPorSessao((int) $sessaoFoco['id']);
             $participantesAgape = $presencaModel->listarParticipantesAgapePorSessao((int) $sessaoFoco['id']);
             $historico = $sessaoModel->listarHistorico((int) $sessaoFoco['id'], 10);
+            $balaustreFoco = $balaustreModel->buscarPorSessao((int) $sessaoFoco['id']);
         }
 
         return [
@@ -712,6 +714,8 @@ class SecretariaController
             }, $participantesAgape),
             'trabalhos_recentes' => array_map(static function (array $item): array {
                 return [
+                    'id' => (int) ($item['id'] ?? 0),
+                    'sessao_id' => (int) ($item['sessao_id'] ?? 0),
                     'titulo' => (string) ($item['titulo'] ?? ''),
                     'sessao_titulo' => (string) ($item['sessao_titulo'] ?? ''),
                     'status_envio_potencia' => (string) ($item['status_envio_potencia'] ?? ''),
@@ -719,11 +723,19 @@ class SecretariaController
             }, $trabalhosRecentes),
             'balaustres_recentes' => array_map(static function (array $item): array {
                 return [
+                    'id' => (int) ($item['id'] ?? 0),
+                    'sessao_id' => (int) ($item['sessao_id'] ?? 0),
                     'numero_balaustre' => (string) ($item['numero_balaustre'] ?? ''),
                     'sessao_titulo' => (string) ($item['sessao_titulo'] ?? ''),
                     'status' => (string) ($item['status'] ?? ''),
                 ];
             }, $balaustresRecentes),
+            'balaustre_foco' => $balaustreFoco ? [
+                'id' => (int) ($balaustreFoco['id'] ?? 0),
+                'sessao_id' => (int) ($balaustreFoco['sessao_id'] ?? 0),
+                'numero_balaustre' => (string) ($balaustreFoco['numero_balaustre'] ?? ''),
+                'status' => (string) ($balaustreFoco['status'] ?? ''),
+            ] : null,
             'relatorio_anual' => [
                 'ano' => (int) ($relatorioAnual['ano'] ?? date('Y')),
                 'visitantes' => (int) ($relatorioAnual['visitantes']['total'] ?? 0),
@@ -800,5 +812,42 @@ class SecretariaController
             'total_ausentes' => (int) ($sessao['total_ausentes'] ?? 0),
             'total_agape' => (int) ($sessao['total_agape'] ?? 0),
         ];
+    }
+
+    public function salvarTrabalhoMiniapp(array $input, ?string $autorId = null): array
+    {
+        $payload = [
+            'sessao_id' => (int) ($input['sessao_id'] ?? 0),
+            'tipo_trabalho' => trim((string) ($input['tipo_trabalho'] ?? 'peca_arquitetura')),
+            'titulo' => trim((string) ($input['titulo'] ?? '')),
+            'autor_nome_livre' => trim((string) ($input['autor_nome_livre'] ?? '')),
+            'status_envio_potencia' => trim((string) ($input['status_envio_potencia'] ?? 'pendente')),
+            'observacao' => trim((string) ($input['observacao'] ?? '')),
+        ];
+
+        if ($payload['sessao_id'] <= 0 || $payload['titulo'] === '') {
+            return ['ok' => false, 'erro' => 'Sessao e titulo sao obrigatorios para registrar o trabalho.'];
+        }
+
+        $ok = (new TrabalhoSessao())->criar($payload, $autorId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar o trabalho.'];
+    }
+
+    public function salvarBalaustreMiniapp(array $input, ?string $autorId = null): array
+    {
+        $sessaoId = (int) ($input['sessao_id'] ?? 0);
+        if ($sessaoId <= 0) {
+            return ['ok' => false, 'erro' => 'Selecione a sessao para registrar o balaustre.'];
+        }
+
+        $payload = [
+            'numero_balaustre' => trim((string) ($input['numero_balaustre'] ?? '')),
+            'texto_final' => trim((string) ($input['texto_final'] ?? '')),
+            'observacoes_secretaria' => trim((string) ($input['observacoes_secretaria'] ?? '')),
+            'dados_capturados' => trim((string) ($input['dados_capturados'] ?? '')),
+        ];
+
+        $ok = (new Balaustre())->salvarPorSessao($sessaoId, $payload, $autorId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel salvar o balaustre.'];
     }
 }

@@ -236,6 +236,7 @@ class BibliotecaController
                 'total_comentarios' => (int) ($itemFoco['total_comentarios'] ?? 0),
                 'total_gostei_sim' => (int) ($itemFoco['total_gostei_sim'] ?? 0),
                 'total_gostei_nao' => (int) ($itemFoco['total_gostei_nao'] ?? 0),
+                'pode_solicitar' => ((int) ($itemFoco['quantidade_disponivel'] ?? 0)) > 0,
             ] : null,
             'comentarios' => array_map(static function (array $comentario): array {
                 return [
@@ -265,5 +266,36 @@ class BibliotecaController
                 ];
             }, $emprestimosPendentes),
         ];
+    }
+
+    public function solicitarMiniapp(int $acervoId, string $obreiroId): array
+    {
+        if ($acervoId <= 0 || trim($obreiroId) === '') {
+            return ['ok' => false, 'erro' => 'Livro ou obreiro invalido para solicitacao.'];
+        }
+
+        $ok = $this->emprestimoModel->solicitar($acervoId, $obreiroId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel solicitar o emprestimo.'];
+    }
+
+    public function comentarMiniapp(int $acervoId, string $obreiroId, string $comentario): array
+    {
+        $comentario = trim($comentario);
+        if ($acervoId <= 0 || trim($obreiroId) === '' || $comentario === '') {
+            return ['ok' => false, 'erro' => 'Comentario invalido para publicacao.'];
+        }
+
+        $ok = $this->comentarioModel->adicionar($acervoId, $obreiroId, $comentario);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel publicar o comentario.'];
+    }
+
+    public function reagirMiniapp(int $acervoId, string $obreiroId, bool $gostei): array
+    {
+        if ($acervoId <= 0 || trim($obreiroId) === '') {
+            return ['ok' => false, 'erro' => 'Reacao invalida para este item.'];
+        }
+
+        $ok = $this->reacaoModel->definir($acervoId, $obreiroId, $gostei);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar a reacao.'];
     }
 }

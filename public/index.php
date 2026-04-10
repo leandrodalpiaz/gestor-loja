@@ -433,6 +433,19 @@ switch ($requestUri) {
         (new \App\Controllers\AdminController())->configuracoesLoja();
         break;
 
+    case "/admin/auditoria":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('admin', 'veneravel')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Administrador ou Veneravel Mestre.";
+            exit;
+        }
+        (new \App\Controllers\AdminController())->auditoriaCritica();
+        break;
+
     case "/admin/loja/salvar":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
@@ -444,6 +457,11 @@ switch ($requestUri) {
             exit;
         }
         (new \App\Controllers\AdminController())->salvarConfiguracoesLoja();
+        break;
+
+    case "/miniapp/admin":
+        requireMiniappAuth(['admin', 'veneravel']);
+        require_once __DIR__ . "/../src/Views/miniapp/admin.php";
         break;
 
     // Telas antigas restauradas
@@ -1759,6 +1777,7 @@ switch ($requestUri) {
             str_starts_with($requestUri, '/api/miniapp/mestre-harmonia') => ['mestre_harmonia', 'veneravel', 'admin'],
             str_starts_with($requestUri, '/api/miniapp/tesouraria') => ['tesoureiro', 'veneravel', 'admin'],
             str_starts_with($requestUri, '/api/miniapp/biblioteca') => ['bibliotecario', 'primeiro_vigilante', 'segundo_vigilante', 'veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/admin') => ['admin', 'veneravel'],
             str_starts_with($requestUri, '/api/miniapp/orador') => ['orador', 'veneravel', 'admin'],
             str_starts_with($requestUri, '/api/miniapp/veneravel') => ['veneravel', 'admin'],
             str_starts_with($requestUri, '/api/miniapp/hospitaleiro') => ['hospitaleiro', 'secretario', 'tesoureiro', 'veneravel', 'admin'],
@@ -2056,6 +2075,43 @@ switch ($requestUri) {
             exit;
         }
 
+        if ($requestUri === '/api/miniapp/secretaria/trabalho/salvar' && $method === 'POST') {
+            $controller = new \App\Controllers\SecretariaController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->salvarTrabalhoMiniapp($body, $autorId !== '' ? $autorId : null));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/secretaria/balaustre/salvar' && $method === 'POST') {
+            $controller = new \App\Controllers\SecretariaController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->salvarBalaustreMiniapp($body, $autorId !== '' ? $autorId : null));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/secretaria/balaustre/apto' && $method === 'POST') {
+            $balaustreId = (int) ($body['balaustre_id'] ?? 0);
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            $ok = $balaustreId > 0 ? (new \App\Models\Balaustre())->marcarAptoVotacao($balaustreId, $autorId !== '' ? $autorId : null) : false;
+            echo json_encode(['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel marcar o balaustre como apto.']);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/secretaria/balaustre/abrir-votacao' && $method === 'POST') {
+            $balaustreId = (int) ($body['balaustre_id'] ?? 0);
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            $resultado = $balaustreId > 0 ? (new \App\Models\Balaustre())->abrirVotacao($balaustreId, $autorId !== '' ? $autorId : null) : ['ok' => false, 'erro' => 'Balaustre invalido.'];
+            echo json_encode($resultado);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/secretaria/balaustre/encerrar-votacao' && $method === 'POST') {
+            $balaustreId = (int) ($body['balaustre_id'] ?? 0);
+            $resultado = $balaustreId > 0 ? (new \App\Models\Balaustre())->encerrarVotacaoPorBalaustre($balaustreId) : ['ok' => false, 'erro' => 'Balaustre invalido.'];
+            echo json_encode($resultado);
+            exit;
+        }
+
         if ($requestUri === '/api/miniapp/chanceler/dashboard' && $method === 'GET') {
             $sessaoId = (int) ($_GET['sessao_id'] ?? 0);
             $controller = new \App\Controllers\ChancelerSessaoController();
@@ -2117,11 +2173,102 @@ switch ($requestUri) {
             exit;
         }
 
+        if ($requestUri === '/api/miniapp/tesouraria/comprovante/aprovar' && $method === 'POST') {
+            $controller = new \App\Controllers\TesourariaController();
+            $usuarioId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->aprovarComprovanteMiniapp($body, $usuarioId !== '' ? $usuarioId : null));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/tesouraria/comprovante/rejeitar' && $method === 'POST') {
+            $controller = new \App\Controllers\TesourariaController();
+            $usuarioId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->rejeitarComprovanteMiniapp((int) ($body['id'] ?? 0), (string) ($body['motivo'] ?? ''), $usuarioId !== '' ? $usuarioId : null));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/tesouraria/regularidade/definir' && $method === 'POST') {
+            $controller = new \App\Controllers\TesourariaController();
+            $usuarioId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->definirRegularidadeMiniapp(
+                (string) ($body['obreiro_id'] ?? ''),
+                (int) ($body['mes'] ?? date('n')),
+                (int) ($body['ano'] ?? date('Y')),
+                (string) ($body['status'] ?? 'regular'),
+                $usuarioId !== '' ? $usuarioId : null
+            ));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/tesouraria/fechamento/fechar' && $method === 'POST') {
+            $controller = new \App\Controllers\TesourariaController();
+            $usuarioId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->fecharCompetenciaMiniapp((int) ($body['mes'] ?? date('n')), (int) ($body['ano'] ?? date('Y')), $usuarioId !== '' ? $usuarioId : null));
+            exit;
+        }
+
         if ($requestUri === '/api/miniapp/biblioteca/dashboard' && $method === 'GET') {
             $controller = new \App\Controllers\BibliotecaController();
             $acervoId = (int) ($_GET['acervo_id'] ?? 0);
             $obreiroId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
             echo json_encode(['ok' => true, 'dados' => $controller->montarPayloadMiniapp($obreiroId !== '' ? $obreiroId : null, $acervoId > 0 ? $acervoId : null)]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/biblioteca/solicitar' && $method === 'POST') {
+            $controller = new \App\Controllers\BibliotecaController();
+            $obreiroId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->solicitarMiniapp((int) ($body['acervo_id'] ?? 0), $obreiroId));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/biblioteca/comentar' && $method === 'POST') {
+            $controller = new \App\Controllers\BibliotecaController();
+            $obreiroId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->comentarMiniapp((int) ($body['acervo_id'] ?? 0), $obreiroId, (string) ($body['comentario'] ?? '')));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/biblioteca/reagir' && $method === 'POST') {
+            $controller = new \App\Controllers\BibliotecaController();
+            $obreiroId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->reagirMiniapp((int) ($body['acervo_id'] ?? 0), $obreiroId, !empty($body['gostei'])));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/admin/dashboard' && $method === 'GET') {
+            $controller = new \App\Controllers\AdminController();
+            echo json_encode(['ok' => true, 'dados' => $controller->montarPayloadMiniapp()]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/admin/gestao/abrir' && $method === 'POST') {
+            $controller = new \App\Controllers\AdminController();
+            echo json_encode($controller->abrirGestaoMiniapp((string) ($body['titulo'] ?? ''), (string) ($body['inicio_em'] ?? ''), (string) ($body['observacao'] ?? '')));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/admin/gestao/encerrar' && $method === 'POST') {
+            $controller = new \App\Controllers\AdminController();
+            echo json_encode($controller->encerrarGestaoMiniapp((int) ($body['gestao_id'] ?? 0), (string) ($body['encerrada_em'] ?? '')));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/admin/cargo/atribuir' && $method === 'POST') {
+            $controller = new \App\Controllers\AdminController();
+            echo json_encode($controller->atribuirCargoMiniapp(
+                (string) ($body['cargo_codigo'] ?? ''),
+                (string) ($body['obreiro_id'] ?? ''),
+                isset($body['gestao_id']) ? (int) $body['gestao_id'] : null,
+                (string) ($body['inicio_em'] ?? ''),
+                (string) ($body['observacao'] ?? '')
+            ));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/admin/configuracao/salvar' && $method === 'POST') {
+            $controller = new \App\Controllers\AdminController();
+            echo json_encode($controller->salvarConfiguracaoMiniapp($body));
             exit;
         }
 

@@ -15,7 +15,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">Tesouraria</h1>
-        <p class="mt-1 text-sm text-gray-500">Painel consolidado com caixa, comprovantes, regularidade, fechamento, obrigacoes e sessoes.</p>
+        <p class="mt-1 text-sm text-gray-500">Caixa, comprovantes, regularidade, fechamento e obrigacoes.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -65,11 +65,13 @@
                     <div id="meta-irregular" class="mt-1 text-lg font-semibold"></div>
                 </div>
             </div>
+            <div id="lista-regularidade-alertas" class="mt-3 space-y-2 text-sm"></div>
         </div>
 
         <div class="card rounded-2xl p-4">
             <div class="text-sm font-semibold">Fechamento mensal</div>
             <div id="fechamento" class="mt-3 rounded-xl bg-white/70 p-3 text-sm"></div>
+            <button id="btn-fechar-competencia" class="mt-3 w-full rounded-xl bg-emerald-700 px-3 py-3 text-sm font-medium text-white">Fechar competencia atual</button>
         </div>
 
         <div class="card rounded-2xl p-4">
@@ -111,6 +113,12 @@ function abrirDestino(dest) {
 async function api(url, options = {}) {
     const finalOptions = { ...options };
     finalOptions.headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+    if (finalOptions.body && typeof finalOptions.body !== 'string') {
+        finalOptions.body = JSON.stringify({
+            ...finalOptions.body,
+            initData: tg.initData
+        });
+    }
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
@@ -158,6 +166,18 @@ function render() {
         <div class="font-medium">${esc(item.obreiro_nome || 'Comprovante')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.criado_em || '')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(moeda(item.valor_informado))}</div>
+        <div class="mt-3 grid grid-cols-2 gap-2">
+            <button class="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-medium text-white" onclick="aprovarComprovante(${Number(item.id || 0)})">Aprovar</button>
+            <button class="rounded-lg bg-rose-700 px-3 py-2 text-xs font-medium text-white" onclick="rejeitarComprovante(${Number(item.id || 0)})">Rejeitar</button>
+        </div>
+    `);
+
+    renderLista('lista-regularidade-alertas', dashboard.regularidade_alertas || [], 'Nenhum alerta de regularidade no periodo.', item => `
+        <div class="font-medium">${esc(item.obreiro_nome || 'Obreiro')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.status || 'irregular')}</div>
+        <div class="mt-3">
+            <button class="rounded-lg bg-blue-700 px-3 py-2 text-xs font-medium text-white" onclick="regularizarObreiro('${esc(item.obreiro_id || '')}')">Marcar regular</button>
+        </div>
     `);
 
     document.getElementById('fechamento').innerHTML = `
@@ -192,6 +212,73 @@ async function carregar() {
         document.getElementById('loading').classList.add('hidden');
     }
 }
+
+async function aprovarComprovante(id) {
+    const item = (dashboard?.comprovantes?.ultimos_pendentes || []).find(row => Number(row.id) === Number(id));
+    if (!item) return;
+    try {
+        await api('/api/miniapp/tesouraria/comprovante/aprovar', {
+            method: 'POST',
+            body: {
+                id: item.id,
+                valor: item.valor_informado,
+                mes: item.mes_ref_informado,
+                ano: item.ano_ref_informado,
+                rotulo_pagamento: item.rotulo_pagamento
+            }
+        });
+        tg.showAlert('Comprovante aprovado.');
+        await carregar();
+    } catch (err) {
+        tg.showAlert(err.message);
+    }
+}
+
+async function rejeitarComprovante(id) {
+    const motivo = window.prompt('Informe o motivo da rejeicao:');
+    if (!motivo) return;
+    try {
+        await api('/api/miniapp/tesouraria/comprovante/rejeitar', {
+            method: 'POST',
+            body: { id, motivo }
+        });
+        tg.showAlert('Comprovante rejeitado.');
+        await carregar();
+    } catch (err) {
+        tg.showAlert(err.message);
+    }
+}
+
+async function regularizarObreiro(obreiroId) {
+    try {
+        await api('/api/miniapp/tesouraria/regularidade/definir', {
+            method: 'POST',
+            body: {
+                obreiro_id: obreiroId,
+                mes: dashboard?.mes_ref,
+                ano: dashboard?.ano_ref,
+                status: 'regular'
+            }
+        });
+        tg.showAlert('Regularidade atualizada.');
+        await carregar();
+    } catch (err) {
+        tg.showAlert(err.message);
+    }
+}
+
+document.getElementById('btn-fechar-competencia').addEventListener('click', async () => {
+    try {
+        await api('/api/miniapp/tesouraria/fechamento/fechar', {
+            method: 'POST',
+            body: { mes: dashboard?.mes_ref, ano: dashboard?.ano_ref }
+        });
+        tg.showAlert('Competencia fechada com sucesso.');
+        await carregar();
+    } catch (err) {
+        tg.showAlert(err.message);
+    }
+});
 
 carregar();
 </script>

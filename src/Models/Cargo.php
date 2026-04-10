@@ -34,10 +34,12 @@ class Cargo
     ];
 
     private PDO $db;
+    private AuditoriaAdministrativa $auditoria;
 
     public function __construct()
     {
         $this->db = Database::getConnection();
+        $this->auditoria = new AuditoriaAdministrativa();
     }
 
     public function getCodigosAtivosDoObreiro(string $obreiroId): array
@@ -172,6 +174,22 @@ class Cargo
             'inicio_em' => $inicioEm !== null && trim($inicioEm) !== '' ? $inicioEm : date('c'),
             'observacao' => $observacao !== null && trim($observacao) !== '' ? trim($observacao) : null,
         ]);
+
+        $this->auditoria->registrar(
+            'admin',
+            'cargo',
+            strtoupper(trim($cargoCodigo)),
+            'atribuicao',
+            'Titularidade de cargo atualizada',
+            [
+                'cargo_codigo' => strtoupper(trim($cargoCodigo)),
+                'obreiro_id' => $obreiroId,
+                'gestao_id' => $gestaoId,
+                'inicio_em' => $inicioEm !== null && trim($inicioEm) !== '' ? $inicioEm : date('c'),
+                'observacao' => $observacao,
+            ],
+            isset($_SESSION['usuario_id']) ? (string) $_SESSION['usuario_id'] : null
+        );
     }
 
     public static function rotuloOficial(string $cargoCodigo, ?string $fallback = null): string

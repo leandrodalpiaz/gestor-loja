@@ -8,10 +8,12 @@ use PDO;
 class Gestao
 {
     private PDO $db;
+    private AuditoriaAdministrativa $auditoria;
 
     public function __construct()
     {
         $this->db = Database::getConnection();
+        $this->auditoria = new AuditoriaAdministrativa();
     }
 
     public function obterAberta(): ?array
@@ -58,6 +60,20 @@ class Gestao
             'inicio_em' => $inicioEm,
             'observacao' => $observacao !== null && trim($observacao) !== '' ? trim($observacao) : null,
         ]);
+
+        $this->auditoria->registrar(
+            'admin',
+            'gestao',
+            null,
+            'abertura',
+            'Gestao aberta',
+            [
+                'titulo' => trim($titulo),
+                'inicio_em' => $inicioEm,
+                'observacao' => $observacao,
+            ],
+            isset($_SESSION['usuario_id']) ? (string) $_SESSION['usuario_id'] : null
+        );
     }
 
     public function encerrar(int $gestaoId, ?string $encerradaEm = null): void
@@ -73,5 +89,18 @@ class Gestao
             'id' => $gestaoId,
             'encerrada_em' => $encerradaEm !== null && trim($encerradaEm) !== '' ? $encerradaEm : null,
         ]);
+
+        $this->auditoria->registrar(
+            'admin',
+            'gestao',
+            (string) $gestaoId,
+            'encerramento',
+            'Gestao encerrada',
+            [
+                'gestao_id' => $gestaoId,
+                'encerrada_em' => $encerradaEm,
+            ],
+            isset($_SESSION['usuario_id']) ? (string) $_SESSION['usuario_id'] : null
+        );
     }
 }

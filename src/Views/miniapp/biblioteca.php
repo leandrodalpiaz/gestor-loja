@@ -15,7 +15,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">Biblioteca</h1>
-        <p class="mt-1 text-sm text-gray-500">Acervo, detalhe de leitura, meus emprestimos e operacao do bibliotecario.</p>
+        <p class="mt-1 text-sm text-gray-500">Acervo, leitura em foco, comentarios e operacao do bibliotecario.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -26,6 +26,13 @@
             <div class="text-sm font-semibold">Livro em foco</div>
             <select id="acervo_id" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"></select>
             <div id="livro-foco" class="rounded-xl bg-white/70 p-3 text-sm"></div>
+            <div class="grid grid-cols-3 gap-2">
+                <button id="btn-solicitar" class="rounded-xl bg-emerald-700 px-3 py-3 text-sm font-medium text-white">Solicitar</button>
+                <button id="btn-gostei" class="rounded-xl bg-blue-700 px-3 py-3 text-sm font-medium text-white">Gostei</button>
+                <button id="btn-nao-gostei" class="rounded-xl bg-rose-700 px-3 py-3 text-sm font-medium text-white">Nao gostei</button>
+            </div>
+            <textarea id="novo-comentario" rows="3" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Compartilhe sua opiniao sobre a leitura..."></textarea>
+            <button id="btn-comentar" class="w-full rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Publicar comentario</button>
         </div>
 
         <div class="card rounded-2xl p-4">
@@ -88,6 +95,12 @@ function abrirDestino(dest) {
 async function api(url, options = {}) {
     const finalOptions = { ...options };
     finalOptions.headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+    if (finalOptions.body && typeof finalOptions.body !== 'string') {
+        finalOptions.body = JSON.stringify({
+            ...finalOptions.body,
+            initData: tg.initData
+        });
+    }
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
@@ -136,7 +149,10 @@ function render() {
         <div class="mt-2 text-xs text-gray-500">Codigo ${esc(foco.codigo_acervo || '-')} · ISBN ${esc(foco.isbn || '-')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(foco.resumo || 'Sem resumo informado.')}</div>
         <div class="mt-2 text-xs text-gray-500">Grau ${esc(foco.grau_recomendado || 'Livre')} · ${esc(foco.quantidade_disponivel || 0)} exemplar(es)</div>
+        <div class="mt-2 text-xs text-gray-500">${esc(foco.total_gostei_sim || 0)} gostei · ${esc(foco.total_gostei_nao || 0)} nao gostei</div>
     `;
+    document.getElementById('btn-solicitar').disabled = !foco.id || !foco.pode_solicitar;
+    document.getElementById('btn-solicitar').classList.toggle('opacity-50', !foco.id || !foco.pode_solicitar);
 
     renderLista('lista-comentarios', dashboard.comentarios, 'Nenhum comentario recente para o livro em foco.', item => `
         <div class="font-medium">${esc(item.obreiro_nome || 'Irmao')}</div>
@@ -171,14 +187,32 @@ async function carregar(acervoId = null) {
     }
 }
 
+async function operarLivro(url, body, sucesso) {
+    if (!dashboard?.item_foco?.id) {
+        tg.showAlert('Selecione um livro para operar.');
+        return;
+    }
+    try {
+        await api(url, { method: 'POST', body });
+        tg.showAlert(sucesso);
+        document.getElementById('novo-comentario').value = '';
+        await carregar(dashboard.item_foco.id);
+    } catch (err) {
+        tg.showAlert(err.message);
+    }
+}
+
 document.getElementById('acervo_id').addEventListener('change', async (event) => {
     await carregar(event.target.value);
 });
-
 document.getElementById('atalho-catalogo').addEventListener('click', () => abrirDestino('/biblioteca'));
 document.getElementById('atalho-gerenciar').addEventListener('click', () => abrirDestino('/biblioteca/emprestimos'));
 document.getElementById('atalho-cadastrar').addEventListener('click', () => abrirDestino('/biblioteca/novo'));
 document.getElementById('atalho-isbn').addEventListener('click', () => abrirDestino('/biblioteca/scanner'));
+document.getElementById('btn-solicitar').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/solicitar', { acervo_id: dashboard?.item_foco?.id || 0 }, 'Emprestimo solicitado com sucesso.'));
+document.getElementById('btn-gostei').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/reagir', { acervo_id: dashboard?.item_foco?.id || 0, gostei: true }, 'Reacao registrada.'));
+document.getElementById('btn-nao-gostei').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/reagir', { acervo_id: dashboard?.item_foco?.id || 0, gostei: false }, 'Reacao registrada.'));
+document.getElementById('btn-comentar').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/comentar', { acervo_id: dashboard?.item_foco?.id || 0, comentario: document.getElementById('novo-comentario').value }, 'Comentario publicado.'));
 
 carregar();
 </script>

@@ -159,6 +159,9 @@ class CommandHandler
                     ['text' => 'Biblioteca', 'callback_data' => 'admin_biblioteca'],
                     ['text' => 'Secretaria', 'callback_data' => 'admin_secretaria'],
                 ],
+                [
+                    ['text' => 'Admin Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/admin')]],
+                ],
             ],
         ];
 

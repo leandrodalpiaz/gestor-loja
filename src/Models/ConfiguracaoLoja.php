@@ -8,10 +8,12 @@ use PDO;
 class ConfiguracaoLoja
 {
     private PDO $db;
+    private AuditoriaAdministrativa $auditoria;
 
     public function __construct()
     {
         $this->db = Database::getConnection();
+        $this->auditoria = new AuditoriaAdministrativa();
     }
 
     public function obter(): array
@@ -71,6 +73,7 @@ class ConfiguracaoLoja
 
     public function salvar(array $dados): bool
     {
+        $anterior = $this->obter();
         $sql = "INSERT INTO public.configuracoes_loja (
                     id, nome_loja, numero_loja, titulo_tratamento, cidade, uf, oriente,
                     potencia_nome, potencia_sigla, grande_secretaria, rito,
@@ -146,7 +149,7 @@ class ConfiguracaoLoja
 
         $stmt = $this->db->prepare($sql);
 
-        return $stmt->execute([
+        $ok = $stmt->execute([
             'nome_loja' => $this->texto($dados['nome_loja'] ?? null),
             'numero_loja' => $this->texto($dados['numero_loja'] ?? null),
             'titulo_tratamento' => $this->texto($dados['titulo_tratamento'] ?? null),
@@ -189,6 +192,43 @@ class ConfiguracaoLoja
             'observacao_relatorios' => $this->texto($dados['observacao_relatorios'] ?? null),
             'historia_loja' => $this->texto($dados['historia_loja'] ?? null),
         ]);
+
+        if ($ok) {
+            $atual = $this->obter();
+            $mudancas = $this->comparar($anterior, $atual);
+            if ($mudancas !== []) {
+                $this->auditoria->registrar(
+                    'admin',
+                    'configuracao_loja',
+                    '1',
+                    'atualizacao',
+                    'Parametros da Loja atualizados',
+                    ['mudancas' => $mudancas],
+                    isset($_SESSION['usuario_id']) ? (string) $_SESSION['usuario_id'] : null
+                );
+            }
+        }
+
+        return $ok;
+    }
+
+    private function comparar(array $anterior, array $atual): array
+    {
+        $ignorados = ['created_at', 'updated_at'];
+        $mudancas = [];
+        foreach ($atual as $campo => $valorAtual) {
+            if (in_array($campo, $ignorados, true)) {
+                continue;
+            }
+            $valorAnterior = $anterior[$campo] ?? null;
+            if ((string) $valorAnterior !== (string) $valorAtual) {
+                $mudancas[$campo] = [
+                    'antes' => $valorAnterior,
+                    'depois' => $valorAtual,
+                ];
+            }
+        }
+        return $mudancas;
     }
 
     private function texto(?string $valor): ?string
