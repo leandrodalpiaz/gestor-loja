@@ -7,6 +7,49 @@ use PDO;
 
 class Obreiro
 {
+    public const ESTADOS_CIVIS = [
+        'solteiro',
+        'casado',
+        'divorciado',
+        'separado',
+        'viuvo',
+        'uniao_estavel',
+        'nao_informado',
+    ];
+
+    public const ESCOLARIDADES = [
+        'fundamental_incompleto',
+        'fundamental_completo',
+        'medio_incompleto',
+        'medio_completo',
+        'tecnico',
+        'superior_incompleto',
+        'superior_completo',
+        'pos_graduacao',
+        'mestrado',
+        'doutorado',
+        'nao_informado',
+    ];
+
+    public const FAIXAS_RENDA = [
+        'ate_1_sm',
+        'de_1_a_3_sm',
+        'de_3_a_5_sm',
+        'de_5_a_10_sm',
+        'acima_10_sm',
+        'nao_informado',
+    ];
+
+    public const SITUACOES_QUADRO = [
+        'ativo',
+        'licenciado',
+        'suspenso',
+        'desligado',
+        'falecido',
+        'oriente_eterno',
+        'inativo',
+    ];
+
     private PDO $db;
 
     public function __construct()
@@ -42,6 +85,114 @@ class Obreiro
         $stmt->execute();
 
         return $this->hidratarListaCargosAtivos($stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    public function listarParaSecretaria(array $filtros = []): array
+    {
+        $sql = "SELECT *
+                FROM public.obreiros
+                WHERE 1 = 1";
+        $params = [];
+
+        $busca = trim((string) ($filtros['busca'] ?? ''));
+        if ($busca !== '') {
+            $sql .= " AND (
+                nome ILIKE :busca
+                OR COALESCE(nome_historico, '') ILIKE :busca
+                OR COALESCE(cim::text, '') ILIKE :busca
+                OR COALESCE(grau, '') ILIKE :busca
+            )";
+            $params['busca'] = '%' . $busca . '%';
+        }
+
+        $situacao = trim((string) ($filtros['situacao'] ?? ''));
+        if ($situacao !== '') {
+            $sql .= " AND COALESCE(situacao_quadro, 'ativo') = :situacao";
+            $params['situacao'] = $situacao;
+        }
+
+        $grau = trim((string) ($filtros['grau'] ?? ''));
+        if ($grau !== '') {
+            $sql .= " AND COALESCE(grau, '') = :grau";
+            $params['grau'] = $grau;
+        }
+
+        $alerta = trim((string) ($filtros['alerta'] ?? $filtros['pendencia'] ?? ''));
+        if ($alerta === 'cadastro') {
+            $sql .= " AND (
+                data_nascimento_civil IS NULL
+                OR COALESCE(escolaridade, '') = ''
+                OR COALESCE(profissao, '') = ''
+                OR COALESCE(situacao_quadro, '') = ''
+                OR (COALESCE(situacao_quadro, 'ativo') = 'ativo' AND data_filiacao IS NULL AND data_iniciacao IS NULL)
+            )";
+        }
+
+        $cargoCodigo = trim((string) ($filtros['cargo_codigo'] ?? ''));
+        if ($cargoCodigo !== '') {
+            $sql .= " AND EXISTS (
+                SELECT 1
+                FROM public.atribuicoes_cargo ac
+                JOIN public.cargos c ON c.id = ac.cargo_id
+                LEFT JOIN public.gestoes g ON g.id = ac.gestao_id
+                WHERE ac.obreiro_id = obreiros.id
+                  AND ac.fim_em IS NULL
+                  AND c.ativo = TRUE
+                  AND c.codigo = :cargo_codigo
+                  AND (g.id IS NULL OR g.status = 'aberta')
+            )";
+            $params['cargo_codigo'] = strtoupper($cargoCodigo);
+        }
+
+        $ordenacao = trim((string) ($filtros['ordenacao'] ?? 'nome'));
+        $sql .= ' ORDER BY ' . $this->resolverOrdenacaoSecretaria($ordenacao);
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $obreiros = $this->hidratarListaCargosAtivos($stmt->fetchAll(PDO::FETCH_ASSOC));
+
+        foreach ($obreiros as &$obreiro) {
+            $obreiro['alertas_cadastro'] = $this->mapearPendenciasCadastro($obreiro);
+        }
+        unset($obreiro);
+
+        if ($ordenacao === 'alerta') {
+            usort($obreiros, function (array $a, array $b): int {
+                return count($b['alertas_cadastro'] ?? []) <=> count($a['alertas_cadastro'] ?? []);
+            });
+        }
+
+        return $obreiros;
+    }
+
+    public function obterResumoSecretaria(array $filtros = []): array
+    {
+        $obreiros = $this->listarParaSecretaria($filtros);
+        $resumo = [
+            'total' => count($obreiros),
+            'ativos' => 0,
+            'com_alerta' => 0,
+            'com_telegram' => 0,
+            'mestres' => 0,
+        ];
+
+        foreach ($obreiros as $obreiro) {
+            $situacao = (string) ($obreiro['situacao_quadro'] ?? 'ativo');
+            if (in_array($situacao, ['ativo', 'licenciado', 'suspenso'], true)) {
+                $resumo['ativos']++;
+            }
+            if (!empty($obreiro['alertas_cadastro'])) {
+                $resumo['com_alerta']++;
+            }
+            if (!empty($obreiro['telegram_id'])) {
+                $resumo['com_telegram']++;
+            }
+            if (in_array((string) ($obreiro['grau'] ?? ''), ['Mestre', 'Mestre Instalado'], true)) {
+                $resumo['mestres']++;
+            }
+        }
+
+        return $resumo;
     }
 
     public function getEfemeridesDoDia(): array
@@ -96,19 +247,27 @@ class Obreiro
     {
         $sql = "INSERT INTO obreiros (
             cim, nome, nome_historico, cpf,
-            data_nascimento_civil, data_iniciacao, telefone,
-            email, profissao, loja_origem, grau, cargo,
+            data_nascimento_civil, estado_civil, data_iniciacao, data_filiacao,
+            data_regularizacao, data_reintegracao, data_quite_placet,
+            data_suspensao, data_desligamento, data_oriente_eterno,
+            telefone, email, profissao, escolaridade, faixa_renda,
+            loja_origem, grau, cargo, situacao_quadro,
             data_elevacao, data_exaltacao, telegram_id,
-            potencia_login, acesso_potencia_liberado,
-            acesso_potencia_liberado_em, observacao_secretaria, ativo,
+            potencia_nome, potencia_sigla, numero_quadro, potencia_login,
+            acesso_potencia_liberado, acesso_potencia_liberado_em,
+            observacao_secretaria, ativo,
             created_at, updated_at
         ) VALUES (
             :cim, :nome, :nome_historico, :cpf,
-            :data_nascimento_civil, :data_iniciacao, :telefone,
-            :email, :profissao, :loja_origem, :grau, :cargo,
+            :data_nascimento_civil, :estado_civil, :data_iniciacao, :data_filiacao,
+            :data_regularizacao, :data_reintegracao, :data_quite_placet,
+            :data_suspensao, :data_desligamento, :data_oriente_eterno,
+            :telefone, :email, :profissao, :escolaridade, :faixa_renda,
+            :loja_origem, :grau, :cargo, :situacao_quadro,
             :data_elevacao, :data_exaltacao, :telegram_id,
-            :potencia_login, :acesso_potencia_liberado,
-            :acesso_potencia_liberado_em, :observacao_secretaria, true,
+            :potencia_nome, :potencia_sigla, :numero_quadro, :potencia_login,
+            :acesso_potencia_liberado, :acesso_potencia_liberado_em,
+            :observacao_secretaria, :ativo,
             NOW(), NOW()
         )";
 
@@ -116,6 +275,8 @@ class Obreiro
 
         $nascimento = !empty($data['data_nascimento_civil']) ? $data['data_nascimento_civil'] : null;
         $iniciacao = !empty($data['data_iniciacao']) ? $data['data_iniciacao'] : null;
+        $situacaoQuadro = $this->normalizarSituacaoQuadro($data['situacao_quadro'] ?? null);
+        $ativo = $this->situacaoMantemCadastroAtivo($situacaoQuadro) ? 'true' : 'false';
 
         return $stmt->execute([
             'cim' => $data['cim'] ?? null,
@@ -123,22 +284,37 @@ class Obreiro
             'nome_historico' => $data['nome_historico'] ?? null,
             'cpf' => $data['cpf'] ?? null,
             'data_nascimento_civil' => $nascimento,
+            'estado_civil' => $this->normalizarValorEnum($data['estado_civil'] ?? null, self::ESTADOS_CIVIS),
             'data_iniciacao' => $iniciacao,
+            'data_filiacao' => $this->normalizarData($data['data_filiacao'] ?? null),
+            'data_regularizacao' => $this->normalizarData($data['data_regularizacao'] ?? null),
+            'data_reintegracao' => $this->normalizarData($data['data_reintegracao'] ?? null),
+            'data_quite_placet' => $this->normalizarData($data['data_quite_placet'] ?? null),
+            'data_suspensao' => $this->normalizarData($data['data_suspensao'] ?? null),
+            'data_desligamento' => $this->normalizarData($data['data_desligamento'] ?? null),
+            'data_oriente_eterno' => $this->normalizarData($data['data_oriente_eterno'] ?? null),
             'telefone' => $data['telefone'] ?? null,
             'email' => $data['email'] ?? null,
             'profissao' => $data['profissao'] ?? null,
+            'escolaridade' => $this->normalizarValorEnum($data['escolaridade'] ?? null, self::ESCOLARIDADES),
+            'faixa_renda' => $this->normalizarValorEnum($data['faixa_renda'] ?? null, self::FAIXAS_RENDA),
             'loja_origem' => $data['loja_origem'] ?? null,
             'grau' => $data['grau'] ?? null,
             'cargo' => $data['cargo'] ?? null,
+            'situacao_quadro' => $situacaoQuadro,
             'data_elevacao' => !empty($data['data_elevacao']) ? $data['data_elevacao'] : null,
             'data_exaltacao' => !empty($data['data_exaltacao']) ? $data['data_exaltacao'] : null,
             'telegram_id' => !empty($data['telegram_id']) ? (int) $data['telegram_id'] : null,
+            'potencia_nome' => $data['potencia_nome'] ?? null,
+            'potencia_sigla' => $data['potencia_sigla'] ?? null,
+            'numero_quadro' => $data['numero_quadro'] ?? null,
             'potencia_login' => $data['potencia_login'] ?? null,
             'acesso_potencia_liberado' => !empty($data['acesso_potencia_liberado']) ? 'true' : 'false',
             'acesso_potencia_liberado_em' => !empty($data['acesso_potencia_liberado'])
                 ? (!empty($data['acesso_potencia_liberado_em']) ? $data['acesso_potencia_liberado_em'] : date('c'))
                 : null,
             'observacao_secretaria' => $data['observacao_secretaria'] ?? null,
+            'ativo' => $ativo,
         ]);
     }
 
@@ -157,17 +333,32 @@ class Obreiro
             cim = :cim,
             nome = :nome,
             nome_historico = :nome_historico,
+            cpf = :cpf,
             grau = :grau,
             cargo = :cargo,
             loja_origem = :loja_origem,
             data_nascimento_civil = :data_nascimento_civil,
+            estado_civil = :estado_civil,
             data_iniciacao = :data_iniciacao,
+            data_filiacao = :data_filiacao,
+            data_regularizacao = :data_regularizacao,
+            data_reintegracao = :data_reintegracao,
+            data_quite_placet = :data_quite_placet,
+            data_suspensao = :data_suspensao,
+            data_desligamento = :data_desligamento,
+            data_oriente_eterno = :data_oriente_eterno,
             data_elevacao = :data_elevacao,
             data_exaltacao = :data_exaltacao,
             telefone = :telefone,
             email = :email,
             profissao = :profissao,
+            escolaridade = :escolaridade,
+            faixa_renda = :faixa_renda,
+            situacao_quadro = :situacao_quadro,
             telegram_id = :telegram_id,
+            potencia_nome = :potencia_nome,
+            potencia_sigla = :potencia_sigla,
+            numero_quadro = :numero_quadro,
             potencia_login = :potencia_login,
             acesso_potencia_liberado = :acesso_potencia_liberado,
             acesso_potencia_liberado_em = :acesso_potencia_liberado_em,
@@ -180,24 +371,41 @@ class Obreiro
 
         $nascimento = !empty($data['data_nascimento_civil']) ? $data['data_nascimento_civil'] : null;
         $iniciacao = !empty($data['data_iniciacao']) ? $data['data_iniciacao'] : null;
-        $ativo = (isset($data['ativo']) && $data['ativo'] == '1') ? 'true' : 'false';
+        $situacaoQuadro = $this->normalizarSituacaoQuadro($data['situacao_quadro'] ?? null);
+        $ativoManual = (isset($data['ativo']) && $data['ativo'] == '1');
+        $ativo = ($ativoManual && $this->situacaoMantemCadastroAtivo($situacaoQuadro)) ? 'true' : 'false';
 
         return $stmt->execute([
             'id' => $data['id'],
             'cim' => $data['cim'],
             'nome' => $data['nome_completo'],
             'nome_historico' => $data['nome_historico'],
+            'cpf' => $data['cpf'] ?? null,
             'grau' => $data['grau'],
             'cargo' => $data['cargo'],
             'loja_origem' => $data['loja_origem'],
             'data_nascimento_civil' => $nascimento,
+            'estado_civil' => $this->normalizarValorEnum($data['estado_civil'] ?? null, self::ESTADOS_CIVIS),
             'data_iniciacao' => $iniciacao,
+            'data_filiacao' => $this->normalizarData($data['data_filiacao'] ?? null),
+            'data_regularizacao' => $this->normalizarData($data['data_regularizacao'] ?? null),
+            'data_reintegracao' => $this->normalizarData($data['data_reintegracao'] ?? null),
+            'data_quite_placet' => $this->normalizarData($data['data_quite_placet'] ?? null),
+            'data_suspensao' => $this->normalizarData($data['data_suspensao'] ?? null),
+            'data_desligamento' => $this->normalizarData($data['data_desligamento'] ?? null),
+            'data_oriente_eterno' => $this->normalizarData($data['data_oriente_eterno'] ?? null),
             'data_elevacao' => !empty($data['data_elevacao']) ? $data['data_elevacao'] : null,
             'data_exaltacao' => !empty($data['data_exaltacao']) ? $data['data_exaltacao'] : null,
             'telefone' => $data['telefone'],
             'email' => $data['email'],
             'profissao' => $data['profissao'] ?? null,
+            'escolaridade' => $this->normalizarValorEnum($data['escolaridade'] ?? null, self::ESCOLARIDADES),
+            'faixa_renda' => $this->normalizarValorEnum($data['faixa_renda'] ?? null, self::FAIXAS_RENDA),
+            'situacao_quadro' => $situacaoQuadro,
             'telegram_id' => !empty($data['telegram_id']) ? (int) $data['telegram_id'] : null,
+            'potencia_nome' => $data['potencia_nome'] ?? null,
+            'potencia_sigla' => $data['potencia_sigla'] ?? null,
+            'numero_quadro' => $data['numero_quadro'] ?? null,
             'potencia_login' => $data['potencia_login'] ?? null,
             'acesso_potencia_liberado' => !empty($data['acesso_potencia_liberado']) ? 'true' : 'false',
             'acesso_potencia_liberado_em' => !empty($data['acesso_potencia_liberado'])
@@ -327,5 +535,73 @@ class Obreiro
             'mestre_banquetes' => 'mestre_banquetes',
             default => $cargo,
         };
+    }
+
+    private function normalizarData(?string $valor): ?string
+    {
+        $valor = trim((string) $valor);
+        return $valor !== '' ? $valor : null;
+    }
+
+    private function normalizarValorEnum(?string $valor, array $permitidos): ?string
+    {
+        $valor = trim((string) $valor);
+        if ($valor === '' || !in_array($valor, $permitidos, true)) {
+            return null;
+        }
+
+        return $valor;
+    }
+
+    private function normalizarSituacaoQuadro(?string $valor): string
+    {
+        $valor = trim((string) $valor);
+        return in_array($valor, self::SITUACOES_QUADRO, true) ? $valor : 'ativo';
+    }
+
+    private function situacaoMantemCadastroAtivo(string $situacao): bool
+    {
+        return in_array($situacao, ['ativo', 'licenciado', 'suspenso'], true);
+    }
+
+    private function resolverOrdenacaoSecretaria(string $ordenacao): string
+    {
+        return match ($ordenacao) {
+            'grau' => "COALESCE(grau, '') ASC, COALESCE(nome_historico, nome) ASC",
+            'situacao' => "COALESCE(situacao_quadro, 'ativo') ASC, COALESCE(nome_historico, nome) ASC",
+            'nome' => "COALESCE(nome_historico, nome) ASC",
+            'alerta' => "COALESCE(nome_historico, nome) ASC",
+            default => "COALESCE(nome_historico, nome) ASC",
+        };
+    }
+
+    private function mapearPendenciasCadastro(array $obreiro): array
+    {
+        $pendencias = [];
+
+        if (empty($obreiro['data_nascimento_civil'])) {
+            $pendencias[] = 'sem_nascimento';
+        }
+        if (empty($obreiro['escolaridade'])) {
+            $pendencias[] = 'sem_escolaridade';
+        }
+        if (empty($obreiro['profissao'])) {
+            $pendencias[] = 'sem_profissao';
+        }
+        if (empty($obreiro['situacao_quadro'])) {
+            $pendencias[] = 'sem_situacao';
+        }
+        if (
+            (($obreiro['situacao_quadro'] ?? 'ativo') === 'ativo')
+            && empty($obreiro['data_filiacao'])
+            && empty($obreiro['data_iniciacao'])
+        ) {
+            $pendencias[] = 'sem_data_ingresso';
+        }
+        if (empty($obreiro['potencia_nome'])) {
+            $pendencias[] = 'sem_potencia';
+        }
+
+        return $pendencias;
     }
 }

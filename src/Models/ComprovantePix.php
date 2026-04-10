@@ -23,12 +23,12 @@ class ComprovantePix
             INSERT INTO comprovantes_pix (
                 obreiro_id, telegram_user_id, nome_telegram, file_id,
                 tipo_arquivo, nome_arquivo, descricao_usuario,
-                valor_informado, mes_ref_informado, ano_ref_informado,
+                valor_informado, mes_ref_informado, ano_ref_informado, rotulo_pagamento,
                 status, criado_em
             ) VALUES (
                 :obreiro_id, :telegram_user_id, :nome_telegram, :file_id,
                 :tipo_arquivo, :nome_arquivo, :descricao_usuario,
-                :valor_informado, :mes_ref_informado, :ano_ref_informado,
+                :valor_informado, :mes_ref_informado, :ano_ref_informado, :rotulo_pagamento,
                 :status, :criado_em
             )
         ";
@@ -45,6 +45,7 @@ class ComprovantePix
             'valor_informado' => $data['valor_informado'] ?? null,
             'mes_ref_informado' => $data['mes_ref_informado'] ?? null,
             'ano_ref_informado' => $data['ano_ref_informado'] ?? null,
+            'rotulo_pagamento' => $data['rotulo_pagamento'] ?? $data['descricao_usuario'] ?? null,
             'status' => $data['status'] ?? 'pendente',
             'criado_em' => $data['data_envio'] ?? date('Y-m-d H:i:s'),
         ]);
@@ -57,9 +58,11 @@ class ComprovantePix
     {
         $sql = "
             SELECT cp.*, 
-                   COALESCE(o.nome_historico, o.nome) as obreiro_nome
+                   COALESCE(o.nome_historico, o.nome) as obreiro_nome,
+                   c.nome as categoria_nome
             FROM comprovantes_pix cp
             LEFT JOIN obreiros o ON cp.obreiro_id = o.id
+            LEFT JOIN categorias_financeiras c ON cp.categoria_id = c.id
         ";
 
         $params = [];
@@ -94,6 +97,9 @@ class ComprovantePix
                 valor_validado = :valor,
                 mes_ref_validado = :mes,
                 ano_ref_validado = :ano,
+                rotulo_pagamento = :rotulo_pagamento,
+                categoria_id = :categoria_id,
+                obrigacao_parcela_id = :obrigacao_parcela_id,
                 validado_por = :validado_por,
                 validado_em = CURRENT_TIMESTAMP
             WHERE id = :id
@@ -105,6 +111,9 @@ class ComprovantePix
             'valor' => $validacao['valor'] ?? 0,
             'mes' => $validacao['mes'] ?? date('n'),
             'ano' => $validacao['ano'] ?? date('Y'),
+            'rotulo_pagamento' => $validacao['rotulo_pagamento'] ?? null,
+            'categoria_id' => $validacao['categoria_id'] ?? null,
+            'obrigacao_parcela_id' => $validacao['obrigacao_parcela_id'] ?? null,
             'validado_por' => $validacao['validado_por'] ?? null,
         ]);
     }
@@ -138,9 +147,11 @@ class ComprovantePix
     {
         $sql = "
             SELECT cp.*, 
-                   COALESCE(o.nome_historico, o.nome) as obreiro_nome
+                   COALESCE(o.nome_historico, o.nome) as obreiro_nome,
+                   c.nome as categoria_nome
             FROM comprovantes_pix cp
             LEFT JOIN obreiros o ON cp.obreiro_id = o.id
+            LEFT JOIN categorias_financeiras c ON cp.categoria_id = c.id
             WHERE cp.id = :id LIMIT 1
         ";
 

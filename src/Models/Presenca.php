@@ -59,14 +59,23 @@ class Presenca
             'sessao_id' => $sessaoId,
             'obreiro_id' => $obreiroId,
             'status_confirmacao' => $statusNormalizado,
-            'participara_agape' => $statusNormalizado === 'confirmado' ? $participaraAgape : false,
+            'participara_agape' => ($statusNormalizado === 'confirmado' ? $participaraAgape : false) ? 'true' : 'false',
             'observacao' => $observacao,
         ]);
     }
 
     public function cancelar(int $sessaoId, string $obreiroId, ?string $observacao = null): bool
     {
-        return $this->registrar($sessaoId, $obreiroId, 'ausente', false, $observacao);
+        $stmt = $this->db->prepare("
+            DELETE FROM public.confirmacoes_sessao
+            WHERE sessao_id = :sessao_id
+              AND obreiro_id = :obreiro_id
+        ");
+
+        return $stmt->execute([
+            'sessao_id' => $sessaoId,
+            'obreiro_id' => $obreiroId,
+        ]);
     }
 
     public function obterResposta(int $sessaoId, string $obreiroId): ?array
@@ -109,6 +118,19 @@ class Presenca
         $stmt->execute(['sessao_id' => $sessaoId]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function contarAusentesPorSessao(int $sessaoId): int
+    {
+        $stmt = $this->db->prepare("
+            SELECT COUNT(*)
+            FROM public.confirmacoes_sessao
+            WHERE sessao_id = :sessao_id
+              AND status_confirmacao = 'ausente'
+        ");
+        $stmt->execute(['sessao_id' => $sessaoId]);
+
+        return (int) $stmt->fetchColumn();
     }
 
     public function listarParticipantesAgapePorSessao(int $sessaoId): array

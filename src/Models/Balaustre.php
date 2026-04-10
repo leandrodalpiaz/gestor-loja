@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Config\Database;
 use PDO;
+use App\Models\EventoSessao;
+use App\Models\VisitaExternaSessao;
 
 class Balaustre
 {
@@ -16,11 +18,17 @@ class Balaustre
 
     public function salvarPorSessao(int $sessaoId, array $data, ?string $autorId = null): bool
     {
-        $atual = $this->buscarPorSessao($sessaoId);
         $dadosJson = $this->montarDadosCapturados($data);
+        $visitasExternas = $dadosJson['saco_propostas']['visitas_externas'] ?? [];
+        $eventosSessao = $this->montarEventosEstruturados($data, $dadosJson);
+        $atual = $this->buscarPorSessao($sessaoId);
 
-        if ($atual) {
-            $stmt = $this->db->prepare("
+        $this->db->beginTransaction();
+        try {
+            $okBalaustre = false;
+
+            if ($atual) {
+                $stmt = $this->db->prepare("
                 UPDATE public.balaustres
                    SET numero_balaustre = :numero_balaustre,
                        template_versao = :template_versao,
@@ -36,17 +44,16 @@ class Balaustre
                  WHERE sessao_id = :sessao_id
             ");
 
-            return $stmt->execute([
-                'sessao_id' => $sessaoId,
-                'numero_balaustre' => trim((string) ($data['numero_balaustre'] ?? '')) ?: null,
-                'template_versao' => trim((string) ($data['template_versao'] ?? 'oficial-v1')) ?: 'oficial-v1',
-                'texto_final' => trim((string) ($data['texto_final'] ?? '')) ?: null,
-                'dados_capturados' => $dadosJson !== null ? json_encode($dadosJson, JSON_UNESCAPED_UNICODE) : null,
-                'preparado_por' => $autorId,
-            ]);
-        }
-
-        $stmt = $this->db->prepare("
+                $okBalaustre = $stmt->execute([
+                    'sessao_id' => $sessaoId,
+                    'numero_balaustre' => trim((string) ($data['numero_balaustre'] ?? '')) ?: null,
+                    'template_versao' => trim((string) ($data['template_versao'] ?? 'oficial-v1')) ?: 'oficial-v1',
+                    'texto_final' => trim((string) ($data['texto_final'] ?? '')) ?: null,
+                    'dados_capturados' => $dadosJson !== null ? json_encode($dadosJson, JSON_UNESCAPED_UNICODE) : null,
+                    'preparado_por' => $autorId,
+                ]);
+            } else {
+                $stmt = $this->db->prepare("
             INSERT INTO public.balaustres (
                 sessao_id,
                 numero_balaustre,
@@ -70,14 +77,41 @@ class Balaustre
             )
         ");
 
-        return $stmt->execute([
-            'sessao_id' => $sessaoId,
-            'numero_balaustre' => trim((string) ($data['numero_balaustre'] ?? '')) ?: null,
-            'template_versao' => trim((string) ($data['template_versao'] ?? 'oficial-v1')) ?: 'oficial-v1',
-            'texto_final' => trim((string) ($data['texto_final'] ?? '')) ?: null,
-            'dados_capturados' => $dadosJson !== null ? json_encode($dadosJson, JSON_UNESCAPED_UNICODE) : null,
-            'preparado_por' => $autorId,
-        ]);
+                $okBalaustre = $stmt->execute([
+                    'sessao_id' => $sessaoId,
+                    'numero_balaustre' => trim((string) ($data['numero_balaustre'] ?? '')) ?: null,
+                    'template_versao' => trim((string) ($data['template_versao'] ?? 'oficial-v1')) ?: 'oficial-v1',
+                    'texto_final' => trim((string) ($data['texto_final'] ?? '')) ?: null,
+                    'dados_capturados' => $dadosJson !== null ? json_encode($dadosJson, JSON_UNESCAPED_UNICODE) : null,
+                    'preparado_por' => $autorId,
+                ]);
+            }
+
+            if (!$okBalaustre) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            $okVisitas = (new VisitaExternaSessao())->substituirPorSessao($sessaoId, is_array($visitasExternas) ? $visitasExternas : [], $autorId);
+            if (!$okVisitas) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            $okEventos = (new EventoSessao())->substituirPorSessao($sessaoId, $eventosSessao, $autorId);
+            if (!$okEventos) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            return false;
+        }
     }
 
     private function normalizarComparacao(?string $valor): string
@@ -187,13 +221,17 @@ class Balaustre
         $visitaMembroIds = is_array($data['visita_externa_obreiro_id'] ?? null) ? $data['visita_externa_obreiro_id'] : [];
         $visitaMembroNomes = is_array($data['visita_externa_obreiro_nome'] ?? null) ? $data['visita_externa_obreiro_nome'] : [];
         $visitaLojas = is_array($data['visita_externa_loja'] ?? null) ? $data['visita_externa_loja'] : [];
+        $visitaPotencias = is_array($data['visita_externa_potencia'] ?? null) ? $data['visita_externa_potencia'] : [];
         $visitaOrientes = is_array($data['visita_externa_oriente'] ?? null) ? $data['visita_externa_oriente'] : [];
+        $visitaDatas = is_array($data['visita_externa_data'] ?? null) ? $data['visita_externa_data'] : [];
         $visitaObs = is_array($data['visita_externa_observacao'] ?? null) ? $data['visita_externa_observacao'] : [];
         $totalVisitasExternas = max(
             count($visitaMembroIds),
             count($visitaMembroNomes),
             count($visitaLojas),
+            count($visitaPotencias),
             count($visitaOrientes),
+            count($visitaDatas),
             count($visitaObs)
         );
         $visitasExternas = [];
@@ -201,16 +239,20 @@ class Balaustre
             $membroId = trim((string) ($visitaMembroIds[$i] ?? ''));
             $membroNome = trim((string) ($visitaMembroNomes[$i] ?? ''));
             $loja = trim((string) ($visitaLojas[$i] ?? ''));
+            $potencia = trim((string) ($visitaPotencias[$i] ?? ''));
             $oriente = trim((string) ($visitaOrientes[$i] ?? ''));
+            $dataVisita = trim((string) ($visitaDatas[$i] ?? ''));
             $observacao = trim((string) ($visitaObs[$i] ?? ''));
-            if ($membroId === '' && $membroNome === '' && $loja === '' && $oriente === '' && $observacao === '') {
+            if ($membroId === '' && $membroNome === '' && $loja === '' && $potencia === '' && $oriente === '' && $dataVisita === '' && $observacao === '') {
                 continue;
             }
             $visitasExternas[] = [
                 'obreiro_id' => $membroId !== '' ? $membroId : null,
                 'obreiro_nome' => $membroNome,
                 'loja' => $loja,
+                'potencia_obediencia' => $potencia,
                 'oriente' => $oriente,
+                'data_visita' => $dataVisita,
                 'observacao' => $observacao,
             ];
         }
@@ -274,6 +316,139 @@ class Balaustre
         $dadosJson['observacoes_secretaria'] = trim((string) ($data['observacoes_secretaria'] ?? ''));
 
         return $dadosJson;
+    }
+
+    private function montarEventosEstruturados(array $data, array $dadosJson): array
+    {
+        $eventos = [];
+
+        $congressos = is_array($dadosJson['eventos_realizados']['congressos'] ?? null)
+            ? $dadosJson['eventos_realizados']['congressos']
+            : [];
+        foreach ($congressos as $item) {
+            $titulo = trim((string) ($item['titulo'] ?? ''));
+            if ($titulo === '') {
+                continue;
+            }
+            $eventos[] = [
+                'tipo_evento' => 'congresso',
+                'titulo' => $titulo,
+                'descricao' => null,
+                'data_evento' => trim((string) ($item['data'] ?? '')),
+                'local' => null,
+                'promotor' => trim((string) ($item['promotor'] ?? '')),
+                'loja_relacionada' => null,
+                'oriente' => null,
+                'observacao' => trim((string) ($item['observacao'] ?? '')),
+            ];
+        }
+
+        $palestras = is_array($dadosJson['eventos_realizados']['palestras'] ?? null)
+            ? $dadosJson['eventos_realizados']['palestras']
+            : [];
+        foreach ($palestras as $item) {
+            $titulo = trim((string) ($item['titulo'] ?? ''));
+            if ($titulo === '') {
+                continue;
+            }
+            $eventos[] = [
+                'tipo_evento' => 'palestra',
+                'titulo' => $titulo,
+                'descricao' => null,
+                'data_evento' => trim((string) ($item['data'] ?? '')),
+                'local' => null,
+                'promotor' => trim((string) ($item['palestrante'] ?? '')),
+                'loja_relacionada' => null,
+                'oriente' => null,
+                'observacao' => trim((string) ($item['observacao'] ?? '')),
+            ];
+        }
+
+        $tiposExtras = [
+            'evento_promovido' => [
+                'titulo' => is_array($data['evento_promovido_titulo'] ?? null) ? $data['evento_promovido_titulo'] : [],
+                'descricao' => is_array($data['evento_promovido_descricao'] ?? null) ? $data['evento_promovido_descricao'] : [],
+                'data' => is_array($data['evento_promovido_data'] ?? null) ? $data['evento_promovido_data'] : [],
+                'local' => is_array($data['evento_promovido_local'] ?? null) ? $data['evento_promovido_local'] : [],
+                'promotor' => is_array($data['evento_promovido_promotor'] ?? null) ? $data['evento_promovido_promotor'] : [],
+                'loja' => is_array($data['evento_promovido_loja'] ?? null) ? $data['evento_promovido_loja'] : [],
+                'oriente' => is_array($data['evento_promovido_oriente'] ?? null) ? $data['evento_promovido_oriente'] : [],
+                'obs' => is_array($data['evento_promovido_observacao'] ?? null) ? $data['evento_promovido_observacao'] : [],
+            ],
+            'evento_participado' => [
+                'titulo' => is_array($data['evento_participado_titulo'] ?? null) ? $data['evento_participado_titulo'] : [],
+                'descricao' => is_array($data['evento_participado_descricao'] ?? null) ? $data['evento_participado_descricao'] : [],
+                'data' => is_array($data['evento_participado_data'] ?? null) ? $data['evento_participado_data'] : [],
+                'local' => is_array($data['evento_participado_local'] ?? null) ? $data['evento_participado_local'] : [],
+                'promotor' => is_array($data['evento_participado_promotor'] ?? null) ? $data['evento_participado_promotor'] : [],
+                'loja' => is_array($data['evento_participado_loja'] ?? null) ? $data['evento_participado_loja'] : [],
+                'oriente' => is_array($data['evento_participado_oriente'] ?? null) ? $data['evento_participado_oriente'] : [],
+                'obs' => is_array($data['evento_participado_observacao'] ?? null) ? $data['evento_participado_observacao'] : [],
+            ],
+            'atividade_social' => [
+                'titulo' => is_array($data['atividade_social_titulo'] ?? null) ? $data['atividade_social_titulo'] : [],
+                'descricao' => is_array($data['atividade_social_descricao'] ?? null) ? $data['atividade_social_descricao'] : [],
+                'data' => is_array($data['atividade_social_data'] ?? null) ? $data['atividade_social_data'] : [],
+                'local' => is_array($data['atividade_social_local'] ?? null) ? $data['atividade_social_local'] : [],
+                'promotor' => is_array($data['atividade_social_promotor'] ?? null) ? $data['atividade_social_promotor'] : [],
+                'loja' => is_array($data['atividade_social_loja'] ?? null) ? $data['atividade_social_loja'] : [],
+                'oriente' => is_array($data['atividade_social_oriente'] ?? null) ? $data['atividade_social_oriente'] : [],
+                'obs' => is_array($data['atividade_social_observacao'] ?? null) ? $data['atividade_social_observacao'] : [],
+            ],
+        ];
+
+        foreach ($tiposExtras as $tipo => $colunas) {
+            $total = max(
+                count($colunas['titulo']),
+                count($colunas['descricao']),
+                count($colunas['data']),
+                count($colunas['local']),
+                count($colunas['promotor']),
+                count($colunas['loja']),
+                count($colunas['oriente']),
+                count($colunas['obs'])
+            );
+            for ($i = 0; $i < $total; $i++) {
+                $titulo = trim((string) ($colunas['titulo'][$i] ?? ''));
+                $descricao = trim((string) ($colunas['descricao'][$i] ?? ''));
+                $dataEvento = trim((string) ($colunas['data'][$i] ?? ''));
+                $local = trim((string) ($colunas['local'][$i] ?? ''));
+                $promotor = trim((string) ($colunas['promotor'][$i] ?? ''));
+                $loja = trim((string) ($colunas['loja'][$i] ?? ''));
+                $oriente = trim((string) ($colunas['oriente'][$i] ?? ''));
+                $obs = trim((string) ($colunas['obs'][$i] ?? ''));
+                if ($titulo === '' && $descricao === '' && $dataEvento === '' && $local === '' && $promotor === '' && $loja === '' && $oriente === '' && $obs === '') {
+                    continue;
+                }
+                $eventos[] = [
+                    'tipo_evento' => $tipo,
+                    'titulo' => $titulo !== '' ? $titulo : 'Evento sem titulo',
+                    'descricao' => $descricao,
+                    'data_evento' => $dataEvento,
+                    'local' => $local,
+                    'promotor' => $promotor,
+                    'loja_relacionada' => $loja,
+                    'oriente' => $oriente,
+                    'observacao' => $obs,
+                ];
+            }
+        }
+
+        if (!empty($data['sessao_branca'])) {
+            $eventos[] = [
+                'tipo_evento' => 'sessao_branca',
+                'titulo' => trim((string) ($data['titulo'] ?? 'Sessao branca')),
+                'descricao' => 'Sessao classificada como branca/festiva.',
+                'data_evento' => null,
+                'local' => trim((string) ($data['templo_local'] ?? '')),
+                'promotor' => null,
+                'loja_relacionada' => null,
+                'oriente' => null,
+                'observacao' => null,
+            ];
+        }
+
+        return $eventos;
     }
 
     public function marcarAptoVotacao(int $balaustreId, ?string $autorId = null): bool
@@ -611,6 +786,58 @@ class Balaustre
         $stmt->execute(['sessao_id' => $sessaoId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
+    }
+
+    public function obterResumoVisitantesPorSessao(int $sessaoId): array
+    {
+        $balaustre = $this->buscarPorSessao($sessaoId);
+        if (!$balaustre) {
+            return [];
+        }
+
+        $dados = $balaustre['dados_capturados'] ?? null;
+        if (is_string($dados)) {
+            $decoded = json_decode($dados, true);
+            $dados = is_array($decoded) ? $decoded : null;
+        }
+        if (!is_array($dados)) {
+            return [];
+        }
+
+        $visitantes = $dados['palavra_bem_ordem']['visitantes'] ?? [];
+        if (!is_array($visitantes)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(
+            static function ($item): ?array {
+                if (!is_array($item)) {
+                    return null;
+                }
+                $nome = trim((string) ($item['nome'] ?? ''));
+                $loja = trim((string) ($item['loja'] ?? ''));
+                $oriente = trim((string) ($item['oriente'] ?? ''));
+                $potencia = trim((string) ($item['potencia'] ?? ''));
+                $grau = trim((string) ($item['grau'] ?? ''));
+                if ($nome === '' && $loja === '') {
+                    return null;
+                }
+
+                return [
+                    'nome' => $nome,
+                    'loja' => $loja,
+                    'oriente' => $oriente,
+                    'potencia' => $potencia,
+                    'grau' => $grau,
+                    'linha_resumida' => trim($nome
+                        . ($grau !== '' ? ' - ' . $grau : '')
+                        . ($loja !== '' ? ' - ' . $loja : '')
+                        . ($oriente !== '' ? ' - ' . $oriente : '')
+                        . ($potencia !== '' ? ' - ' . $potencia : '')),
+                ];
+            },
+            $visitantes
+        )));
     }
 
     public function buscarPorId(int $id): ?array

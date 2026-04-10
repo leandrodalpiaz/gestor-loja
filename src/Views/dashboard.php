@@ -46,10 +46,12 @@ $showAllPanels = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VAL
 
 $isAdmin = in_array('admin', $usuarioCargos, true);
 $isChanceler = in_array('chanceler', $usuarioCargos, true);
+$isMestreBanquetes = in_array('mestre_banquetes', $usuarioCargos, true);
 $isTesoureiro = in_array('tesoureiro', $usuarioCargos, true);
 $isPrimeiroVigilante = in_array('primeiro_vigilante', $usuarioCargos, true);
 $isSegundoVigilante = in_array('segundo_vigilante', $usuarioCargos, true);
 $isSecretario = in_array('secretario', $usuarioCargos, true);
+$isOrador = in_array('orador', $usuarioCargos, true);
 $isVeneravel = in_array('veneravel', $usuarioCargos, true);
 $isBibliotecario = in_array('bibliotecario', $usuarioCargos, true);
 $isHospitaleiro = in_array('hospitaleiro', $usuarioCargos, true);
@@ -71,6 +73,7 @@ if ($isChanceler || $isVeneravel || $adminLivre) {
             ['label' => 'Corrigir dados das efemérides', 'href' => '/chancelaria/efemerides?foco=dados'],
             ['label' => 'Visão completa da Chancelaria', 'href' => '/chancelaria/efemerides'],
             ['label' => 'Emitir certificado', 'href' => '/chancelaria/certificado'],
+            ['label' => 'Sessao e check-in do Chanceler', 'href' => '/chanceler/sessao'],
         ],
     ];
 }
@@ -82,6 +85,26 @@ if ($isSecretario || $isVeneravel || $adminLivre) {
         'itens' => [
             ['label' => 'Painel da Secretaria', 'href' => '/secretaria'],
             ['label' => 'Votação de balaustre', 'href' => '/secretaria/votacao'],
+        ],
+    ];
+}
+
+if ($isOrador || $isVeneravel || $adminLivre) {
+    $secoes[] = [
+        'titulo' => 'Orador',
+        'descricao' => 'Leitura resumida da sessao, apoio ritual e nominata resumida de visitantes para agradecimento em Loja.',
+        'itens' => [
+            ['label' => 'Painel do Orador', 'href' => '/orador'],
+        ],
+    ];
+}
+
+if ($isMestreBanquetes || $isVeneravel || $adminLivre) {
+    $secoes[] = [
+        'titulo' => 'Mestre de Banquetes',
+        'descricao' => 'Leitura operacional dos confirmados com e sem agape para planejamento do banquete.',
+        'itens' => [
+            ['label' => 'Painel do Mestre de Banquetes', 'href' => '/mestre-banquetes'],
         ],
     ];
 }
@@ -144,13 +167,24 @@ if ($isTesoureiro || $isVeneravel || $adminLivre) {
         'titulo' => 'Tesouraria',
         'descricao' => 'Financeiro, comprovantes, regularidade e fechamento mensal.',
         'itens' => [
+            ['label' => 'Sessões e ágape pago', 'href' => '/tesouraria/sessoes'],
             ['label' => 'Livro-caixa', 'href' => '/tesouraria/caixa'],
+            ['label' => 'Obrigacoes financeiras', 'href' => '/tesouraria/obrigacoes'],
             ['label' => 'Validação de comprovantes', 'href' => '/tesouraria/comprovantes'],
             ['label' => 'Regularidade', 'href' => '/tesouraria/regularidade'],
             ['label' => 'Fechamento mensal', 'href' => '/tesouraria/fechamento'],
+            ['label' => 'Relatório da gestão', 'href' => '/tesouraria/relatorio-gestao'],
         ],
     ];
 }
+
+$secoes[] = [
+    'titulo' => 'Meu Financeiro',
+    'descricao' => 'Consulta pessoal de mensalidades, biblioteca, joias e demais obrigacoes cadastradas pela Tesouraria.',
+    'itens' => [
+        ['label' => 'Minhas obrigacoes financeiras', 'href' => '/financeiro/minhas-obrigacoes'],
+    ],
+];
 
 if ($isBibliotecario || $isPrimeiroVigilante || $isSegundoVigilante || $isVeneravel || $adminLivre) {
     $secoes[] = [
@@ -192,6 +226,17 @@ if ($isAdmin || $adminLivre) {
         'descricao' => 'Configurações centrais e liberação ampla para o administrador.',
         'itens' => [
             ['label' => 'Administração de cargos', 'href' => '/admin/cargos'],
+            ['label' => 'Parâmetros da Loja', 'href' => '/admin/loja'],
+        ],
+    ];
+}
+
+if (($isSecretario || $isVeneravel) && !$isAdmin) {
+    $secoes[] = [
+        'titulo' => 'Nominata Oficial',
+        'descricao' => 'Gestão da nominata, abertura de gestões e validação central dos cargos da loja.',
+        'itens' => [
+            ['label' => 'Nominata e gestões', 'href' => '/admin/cargos'],
         ],
     ];
 }

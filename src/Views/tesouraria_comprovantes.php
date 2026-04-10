@@ -4,6 +4,11 @@ if (!isset($_SESSION["usuario_logado"])) {
     header("Location: /login");
     exit;
 }
+$configuracaoLoja = $configuracaoLoja ?? [];
+$categoriasEntrada = $categoriasEntrada ?? [];
+$pixTipo = (string) ($configuracaoLoja['pix_chave_tipo'] ?? 'CNPJ');
+$pixValor = (string) ($configuracaoLoja['pix_chave_valor'] ?? '');
+$pixBeneficiario = (string) ($configuracaoLoja['pix_beneficiario'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -32,6 +37,10 @@ if (!isset($_SESSION["usuario_logado"])) {
             <button type="button" data-status="rejeitado" onclick="filtrarStatus('rejeitado')" class="tab-status px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-800">
                 Rejeitados (<span id="count-rejeitados">0</span>)
             </button>
+        </div>
+
+        <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            PIX da Loja: <strong><?php echo htmlspecialchars($pixTipo); ?> <?php echo htmlspecialchars($pixValor); ?></strong><?php if ($pixBeneficiario !== ''): ?> • <?php echo htmlspecialchars($pixBeneficiario); ?><?php endif; ?>
         </div>
 
         <!-- Lista de Comprovantes -->
@@ -109,6 +118,28 @@ if (!isset($_SESSION["usuario_logado"])) {
                             echo "<option value=\"$a\">$a</option>";
                         }
                         ?>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">Rotulo do pagamento</label>
+                    <input type="text" id="rotulo-pagamento" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Ex.: Mensalidade 05/2026 + Biblioteca">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">Categoria financeira</label>
+                    <select id="categoria-id" class="w-full border border-gray-300 rounded px-3 py-2">
+                        <option value="">Selecionar</option>
+                        <?php foreach ($categoriasEntrada as $categoria): ?>
+                            <option value="<?php echo (int) $categoria['id']; ?>"><?php echo htmlspecialchars((string) $categoria['nome']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">Baixar em obrigação aberta</label>
+                    <select id="obrigacao-parcela-id" class="w-full border border-gray-300 rounded px-3 py-2">
+                        <option value="">Lancar sem vincular parcela especifica</option>
                     </select>
                 </div>
 
@@ -205,6 +236,7 @@ if (!isset($_SESSION["usuario_logado"])) {
                         <div class="flex-1">
                             <h3 class="font-semibold text-gray-900">${c.obreiro_nome || 'ID Telegram: ' + c.telegram_user_id}</h3>
                             <p class="text-sm text-gray-600 mt-1">Valor informado: <strong>${formatarMoeda(c.valor_informado)}</strong></p>
+                            <p class="text-sm text-gray-600">Rotulo informado: <strong>${c.rotulo_pagamento || c.descricao_usuario || '-'}</strong></p>
                             <p class="text-sm text-gray-600">Período: <strong>${c.mes_ref_informado ? String(c.mes_ref_informado).padStart(2, '0') : '?'}/${c.ano_ref_informado || '?'}</strong></p>
                             <p class="text-xs text-gray-500 mt-2">Recebido em: ${new Date(c.criado_em).toLocaleString('pt-BR')}</p>
                             ${c.status === 'aprovado' ? `<p class="text-xs text-green-700 mt-2"><strong>Aprovado:</strong> ${formatarMoeda(c.valor_validado)} em ${String(c.mes_ref_validado || '').padStart(2, '0')}/${c.ano_ref_validado || '?'}</p>` : ''}
@@ -238,10 +270,38 @@ if (!isset($_SESSION["usuario_logado"])) {
                 document.getElementById('valor-validado').value = c.valor_informado || '';
                 document.getElementById('mes-validado').value = c.mes_ref_informado || new Date().getMonth() + 1;
                 document.getElementById('ano-validado').value = c.ano_ref_informado || new Date().getFullYear();
+                document.getElementById('rotulo-pagamento').value = c.rotulo_pagamento || c.descricao_usuario || '';
+                document.getElementById('categoria-id').value = c.categoria_id || '';
+                await carregarObrigacoesAbertas(c.obreiro_id, c.obrigacao_parcela_id || '');
 
                 document.getElementById('modal-validacao').classList.remove('hidden');
             } catch (err) {
                 console.error('Erro:', err);
+            }
+        }
+
+        async function carregarObrigacoesAbertas(obreiroId, selecionada) {
+            const select = document.getElementById('obrigacao-parcela-id');
+            select.innerHTML = '<option value="">Lancar sem vincular parcela especifica</option>';
+            if (!obreiroId) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/tesouraria/obrigacoes-abertas?obreiro_id=${encodeURIComponent(obreiroId)}`);
+                const json = await res.json();
+                const parcelas = json.parcelas || [];
+                parcelas.forEach((parcela) => {
+                    const option = document.createElement('option');
+                    option.value = parcela.id;
+                    option.textContent = `${parcela.titulo} • ${parcela.competencia_label || '-'} • ${formatarMoeda(parcela.valor_previsto)}`;
+                    if (String(selecionada) === String(parcela.id)) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                console.error('Erro ao carregar obrigacoes abertas:', err);
             }
         }
 
@@ -290,7 +350,10 @@ if (!isset($_SESSION["usuario_logado"])) {
                 id: document.getElementById('comprovante-id').value,
                 valor: parseFloat(document.getElementById('valor-validado').value),
                 mes: parseInt(document.getElementById('mes-validado').value),
-                ano: parseInt(document.getElementById('ano-validado').value)
+                ano: parseInt(document.getElementById('ano-validado').value),
+                rotulo_pagamento: document.getElementById('rotulo-pagamento').value,
+                categoria_id: document.getElementById('categoria-id').value ? parseInt(document.getElementById('categoria-id').value) : null,
+                obrigacao_parcela_id: document.getElementById('obrigacao-parcela-id').value ? parseInt(document.getElementById('obrigacao-parcela-id').value) : null
             };
 
             try {

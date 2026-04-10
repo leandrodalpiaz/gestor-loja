@@ -21,6 +21,39 @@
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm mb-6">
+            <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div>
+                    <div class="text-xs uppercase tracking-[0.24em] text-slate-500">Identificacao institucional</div>
+                    <h2 class="mt-2 text-2xl font-semibold text-slate-900">
+                        <?= htmlspecialchars((string) (($relatorio['loja']['nome_loja'] ?? '') !== '' ? $relatorio['loja']['nome_loja'] : 'Loja nao configurada')) ?>
+                    </h2>
+                    <p class="mt-2 text-sm text-slate-600">
+                        Potencia: <?= htmlspecialchars((string) (($relatorio['loja']['potencia_nome'] ?? '') !== '' ? $relatorio['loja']['potencia_nome'] : 'nao informada')) ?>
+                        <?php if (!empty($relatorio['loja']['potencia_sigla'])): ?>
+                            (<?= htmlspecialchars((string) $relatorio['loja']['potencia_sigla']) ?>)
+                        <?php endif; ?>
+                    </p>
+                    <p class="mt-1 text-sm text-slate-600">
+                        Oriente: <?= htmlspecialchars((string) (($relatorio['loja']['oriente'] ?? '') !== '' ? $relatorio['loja']['oriente'] : 'nao informado')) ?>
+                        <?php if (!empty($relatorio['loja']['cidade']) || !empty($relatorio['loja']['uf'])): ?>
+                            | Cidade: <?= htmlspecialchars(trim((string) (($relatorio['loja']['cidade'] ?? '') . ' / ' . ($relatorio['loja']['uf'] ?? '')), ' /')) ?>
+                        <?php endif; ?>
+                    </p>
+                    <p class="mt-1 text-sm text-slate-600">
+                        Rito: <?= htmlspecialchars((string) (($relatorio['loja']['rito'] ?? '') !== '' ? $relatorio['loja']['rito'] : 'nao informado')) ?>
+                        | Fundacao: <?= htmlspecialchars((string) (($relatorio['loja']['data_fundacao'] ?? '') !== '' ? $relatorio['loja']['data_fundacao'] : 'nao informada')) ?>
+                        | Instalacao: <?= htmlspecialchars((string) (($relatorio['loja']['data_instalacao'] ?? '') !== '' ? $relatorio['loja']['data_instalacao'] : 'nao informada')) ?>
+                    </p>
+                </div>
+                <?php if (!empty($relatorio['loja']['observacao_relatorios'])): ?>
+                    <div class="max-w-xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                        <?= htmlspecialchars((string) $relatorio['loja']['observacao_relatorios']) ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm mb-6">
             <form method="GET" action="/secretaria/relatorio-anual" class="flex flex-col gap-3 sm:flex-row sm:items-end">
                 <div>
                     <label class="block text-sm font-medium mb-1">Ano de referencia</label>
@@ -56,6 +89,23 @@
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div class="text-sm text-slate-500">Sessoes no periodo</div>
                 <div class="mt-2 text-3xl font-semibold text-slate-900"><?= (int) ($relatorio['sessoes_por_grau']['total'] ?? 0) ?></div>
+            </div>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-3 mb-8">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="text-sm text-slate-500">Obreiros no quadro</div>
+                <div class="mt-2 text-3xl font-semibold text-slate-900"><?= (int) ($relatorio['perfil_quadro']['total'] ?? 0) ?></div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="text-sm text-slate-500">Idade media</div>
+                <div class="mt-2 text-3xl font-semibold text-slate-900"><?= htmlspecialchars((string) (($relatorio['perfil_quadro']['idade_media'] ?? null) !== null ? $relatorio['perfil_quadro']['idade_media'] : '-')) ?></div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="text-sm text-slate-500">Situacao predominante</div>
+                <div class="mt-2 text-2xl font-semibold text-slate-900">
+                    <?= htmlspecialchars((string) (($relatorio['perfil_quadro']['situacoes'][0]['categoria'] ?? 'nao_informado'))) ?>
+                </div>
             </div>
         </div>
 
@@ -155,6 +205,27 @@
                     <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                         <?= htmlspecialchars((string) ($relatorio['quadro']['observacao'] ?? '')) ?>
                     </div>
+
+                    <?php if (($relatorio['quadro']['movimentacao'] ?? null) !== null): ?>
+                        <div class="mt-5">
+                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Movimentacao do quadro</h3>
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <?php foreach ([
+                                    'filiacoes' => 'Filiacoes',
+                                    'regularizacoes' => 'Regularizacoes',
+                                    'reintegracoes' => 'Reintegracoes',
+                                    'suspensoes' => 'Suspensoes',
+                                    'desligamentos' => 'Desligamentos',
+                                    'oriente_eterno' => 'Oriente Eterno',
+                                ] as $chave => $label): ?>
+                                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm flex items-center justify-between">
+                                        <span><?= htmlspecialchars($label) ?></span>
+                                        <strong><?= (int) ($relatorio['quadro']['movimentacao'][$chave] ?? 0) ?></strong>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -166,6 +237,83 @@
                         <li>Sessoes por grau usam as sessoes do periodo com status diferente de cancelada.</li>
                         <li>O quadro anual depende da trilha cadastral dos obreiros; quanto melhor a disciplina de cadastro, melhor a precisao do indicador.</li>
                     </ul>
+                </div>
+            </section>
+
+            <section class="space-y-6">
+                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h2 class="text-xl font-semibold text-slate-900">Perfil do quadro</h2>
+                    <p class="mt-1 text-sm text-slate-600">Recorte estatistico do cadastro de obreiros utilizado para relatorios da gestao e relatorios por irmao.</p>
+
+                    <div class="mt-5 grid gap-4 md:grid-cols-3">
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Escolaridade</h3>
+                            <div class="space-y-2">
+                                <?php foreach (($relatorio['perfil_quadro']['escolaridade'] ?? []) as $linha): ?>
+                                    <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+                                        <span><?= htmlspecialchars((string) ($linha['categoria'] ?? 'nao_informado')) ?></span>
+                                        <strong><?= (int) ($linha['total'] ?? 0) ?></strong>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Situacao do quadro</h3>
+                            <div class="space-y-2">
+                                <?php foreach (($relatorio['perfil_quadro']['situacoes'] ?? []) as $linha): ?>
+                                    <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+                                        <span><?= htmlspecialchars((string) ($linha['categoria'] ?? 'nao_informado')) ?></span>
+                                        <strong><?= (int) ($linha['total'] ?? 0) ?></strong>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Distribuicao por grau</h3>
+                            <div class="space-y-2">
+                                <?php foreach (($relatorio['perfil_quadro']['graus'] ?? []) as $linha): ?>
+                                    <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+                                        <span><?= htmlspecialchars((string) ($linha['categoria'] ?? 'Nao informado')) ?></span>
+                                        <strong><?= (int) ($linha['total'] ?? 0) ?></strong>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h2 class="text-xl font-semibold text-slate-900">Amostra cadastral</h2>
+                    <p class="mt-1 text-sm text-slate-600">Leitura rapida por irmao para apoio ao saneamento cadastral e conferencias do relatorio.</p>
+
+                    <div class="mt-5 space-y-3">
+                        <?php foreach (($relatorio['perfil_quadro']['amostra_cadastral'] ?? []) as $item): ?>
+                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div class="font-medium text-slate-900"><?= htmlspecialchars((string) ($item['nome_exibicao'] ?? '-')) ?></div>
+                                    <div class="text-xs uppercase tracking-wide text-slate-500"><?= htmlspecialchars((string) ($item['situacao_quadro'] ?? 'nao_informado')) ?></div>
+                                </div>
+                                <div class="mt-2 text-sm text-slate-600">
+                                    Grau: <?= htmlspecialchars((string) ($item['grau'] ?? 'Nao informado')) ?> |
+                                    Escolaridade: <?= htmlspecialchars((string) ($item['escolaridade'] ?? 'nao_informado')) ?> |
+                                    Profissao: <?= htmlspecialchars((string) ($item['profissao'] ?? 'nao_informada')) ?>
+                                </div>
+                                <div class="mt-1 text-xs text-slate-500">
+                                    Filiacao: <?= htmlspecialchars((string) ($item['data_filiacao'] ?? '-')) ?> |
+                                    Regularizacao: <?= htmlspecialchars((string) ($item['data_regularizacao'] ?? '-')) ?> |
+                                    Reintegracao: <?= htmlspecialchars((string) ($item['data_reintegracao'] ?? '-')) ?> |
+                                    Desligamento: <?= htmlspecialchars((string) ($item['data_desligamento'] ?? '-')) ?> |
+                                    Oriente Eterno: <?= htmlspecialchars((string) ($item['data_oriente_eterno'] ?? '-')) ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+
+                        <?php if (($relatorio['perfil_quadro']['amostra_cadastral'] ?? []) === []): ?>
+                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-500">Nao ha obreiros elegiveis no periodo selecionado.</div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </section>
         </div>

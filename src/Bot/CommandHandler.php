@@ -3,6 +3,9 @@
 namespace App\Bot;
 
 use App\Config\Env;
+use App\Models\ComprovantePix;
+use App\Models\ConfiguracaoLoja;
+use App\Models\ObrigacaoFinanceira;
 
 class CommandHandler
 {
@@ -127,20 +130,7 @@ class CommandHandler
 
     public function sendMenuPresenca($chatId)
     {
-        $mensagem = "Bem-vindo ao assistente da Loja.";
-        $teclado = [
-            'inline_keyboard' => [
-                [
-                    ['text' => 'Confirmar Presenca', 'callback_data' => 'presenca_confirmar'],
-                    ['text' => 'Informar Ausencia', 'callback_data' => 'presenca_ausencia'],
-                ],
-                [
-                    ['text' => 'Ver Proxima Sessao', 'callback_data' => 'sessao_info'],
-                ],
-            ],
-        ];
-
-        $this->telegram->sendMessage($chatId, $mensagem, ['reply_markup' => $teclado]);
+        $this->handleSessaoInfo($chatId, null);
     }
 
     public function sendMenuPrincipal($chatId, $fromId)
@@ -163,7 +153,17 @@ class CommandHandler
                 ['text' => 'Tesouraria', 'callback_data' => 'tesouraria_menu'],
                 ['text' => 'Biblioteca', 'callback_data' => 'biblioteca_menu'],
             ];
-            if ($this->obreiroHasRole($obreiro, 'hospitaleiro', 'secretario', 'tesoureiro', 'veneravel', 'admin')) {
+            if ($this->obreiroHasRole($obreiro, 'mestre_banquetes', 'admin', 'veneravel')) {
+                $teclado['inline_keyboard'][] = [
+                    ['text' => 'Mestre de Banquetes', 'web_app' => ['url' => $this->buildAppUrl('/mestre-banquetes')]],
+                ];
+            }
+            if ($this->obreiroHasRole($obreiro, 'orador', 'admin', 'veneravel')) {
+                $teclado['inline_keyboard'][] = [
+                    ['text' => 'Orador', 'web_app' => ['url' => $this->buildAppUrl('/orador')]],
+                ];
+            }
+        if ($this->obreiroHasRole($obreiro, 'hospitaleiro', 'secretario', 'tesoureiro', 'veneravel', 'admin')) {
                 $teclado['inline_keyboard'][] = [
                     ['text' => 'Hospitalaria', 'callback_data' => 'assistencia_menu'],
                 ];
@@ -179,6 +179,145 @@ class CommandHandler
         }
 
         $this->telegram->sendMessage($chatId, $mensagem, ['reply_markup' => $teclado]);
+    }
+
+    private function montarResumoSessaoPublicado(array $sessao): string
+    {
+        $dataHora = (string) ($sessao['data_hora_inicio'] ?? '');
+        $grau = (string) ($sessao['grau_sessao'] ?? '-');
+        $tipo = (string) ($sessao['tipo_sessao'] ?? '-');
+        $traje = (string) (($sessao['traje_tipo'] ?? 'maconico') === 'livre'
+            ? 'Livre'
+            : (($sessao['traje_tipo'] ?? 'maconico') === 'outro'
+                ? ((string) ($sessao['traje_personalizado'] ?? 'Outro'))
+                : 'Maconico'));
+        $agape = match ((string) ($sessao['agape_modalidade'] ?? 'nao_havera')) {
+            'gratuito' => 'Sim (gratuito)',
+            'pago' => 'Sim (pago)',
+            default => 'Nao havera',
+        };
+
+        $config = (new ConfiguracaoLoja())->obter();
+        $nomeLoja = trim((string) ($config['nome_loja'] ?? ''));
+        $numeroLoja = trim((string) ($config['numero_loja'] ?? ''));
+        $linhaLoja = trim($nomeLoja . ($numeroLoja !== '' ? ' nº ' . $numeroLoja : ''));
+        $ordemDia = trim((string) ($sessao['ordem_dia'] ?? $sessao['resumo_publico'] ?? ''));
+
+        return "NOVA SESSAO\n\n"
+            . $dataHora . "\n"
+            . "Grau: {$grau}\n\n"
+            . $linhaLoja . "\n\n"
+            . "Sessao:\n"
+            . "Tipo: {$tipo}\n"
+            . "Traje: {$traje}\n"
+            . "Ordem do dia: " . ($ordemDia !== '' ? $ordemDia : '-') . "\n"
+            . "Agape: {$agape}";
+    }
+
+    private function montarBotoesSessao(array $sessao): array
+    {
+        $modalidade = (string) ($sessao['agape_modalidade'] ?? 'nao_havera');
+        $linhas = [];
+        if ($modalidade === 'gratuito') {
+            $linhas[] = [
+                ['text' => 'Participar com agape (gratuito)', 'callback_data' => 'presenca_agape_gratuito'],
+            ];
+            $linhas[] = [
+                ['text' => 'Participar sem agape', 'callback_data' => 'presenca_sem_agape'],
+            ];
+        } elseif ($modalidade === 'pago') {
+            $linhas[] = [
+                ['text' => 'Participar com agape (pago)', 'callback_data' => 'presenca_agape_pago'],
+            ];
+            $linhas[] = [
+                ['text' => 'Participar sem agape', 'callback_data' => 'presenca_sem_agape'],
+            ];
+        } else {
+            $linhas[] = [
+                ['text' => 'Confirmar presenca', 'callback_data' => 'presenca_confirmar'],
+            ];
+        }
+
+        $linhas[] = [
+            ['text' => 'Cancelar confirmacao', 'callback_data' => 'presenca_cancelar'],
+            ['text' => 'Informar ausencia', 'callback_data' => 'presenca_ausencia'],
+        ];
+        $linhas[] = [
+            ['text' => 'Ver confirmados', 'callback_data' => 'presenca_ver_confirmados'],
+        ];
+
+        return $linhas;
+    }
+
+    private function handleSessaoInfo($chatId, ?int $fromId): void
+    {
+        $sessao = $this->sessaoModel->obterProximaSessao();
+        if (!$sessao) {
+            $this->telegram->sendMessage($chatId, 'Nao ha sessao futura cadastrada no momento.');
+            return;
+        }
+
+        $mensagem = $this->montarResumoSessaoPublicado($sessao);
+        $this->telegram->sendMessage($chatId, $mensagem, [
+            'reply_markup' => ['inline_keyboard' => $this->montarBotoesSessao($sessao)],
+        ]);
+    }
+
+    private function handleConfirmacaoProximaSessao($chatId, int $fromId, string $acao): void
+    {
+        $obreiro = $this->obreiroModel->findByTelegramId($fromId);
+        if (!$obreiro) {
+            $this->telegram->sendMessage($chatId, 'Nao foi possivel identificar seu cadastro.');
+            return;
+        }
+
+        $sessao = $this->sessaoModel->obterProximaSessao();
+        if (!$sessao || empty($sessao['id'])) {
+            $this->telegram->sendMessage($chatId, 'Nao ha sessao disponivel para confirmacao.');
+            return;
+        }
+
+        $sessaoId = (int) $sessao['id'];
+        $obreiroId = (string) ($obreiro['id'] ?? '');
+        $ok = false;
+        $mensagem = 'Nao foi possivel registrar sua resposta.';
+
+        switch ($acao) {
+            case 'confirmar':
+                $ok = $this->presencaModel->registrar($sessaoId, $obreiroId, 'confirmado', false);
+                $mensagem = $ok ? 'Presenca confirmada.' : $mensagem;
+                break;
+            case 'com_agape':
+                $ok = $this->presencaModel->registrar($sessaoId, $obreiroId, 'confirmado', true);
+                $mensagem = $ok ? 'Presenca confirmada com agape.' : $mensagem;
+                break;
+            case 'sem_agape':
+                $ok = $this->presencaModel->registrar($sessaoId, $obreiroId, 'confirmado', false);
+                $mensagem = $ok ? 'Presenca confirmada sem agape.' : $mensagem;
+                break;
+            case 'ausencia':
+                $ok = $this->presencaModel->registrar($sessaoId, $obreiroId, 'ausente', false);
+                $mensagem = $ok ? 'Ausencia registrada.' : $mensagem;
+                break;
+            case 'cancelar':
+                $ok = $this->presencaModel->cancelar($sessaoId, $obreiroId);
+                $mensagem = $ok ? 'Confirmacao cancelada. Sua resposta voltou para pendente.' : $mensagem;
+                break;
+            case 'ver_confirmados':
+                $confirmados = $this->presencaModel->listarConfirmadosPorSessao($sessaoId);
+                if ($confirmados === []) {
+                    $this->telegram->sendMessage($chatId, 'Ainda nao ha confirmados para esta sessao.');
+                    return;
+                }
+                $linhas = ["Confirmados da proxima sessao:\n"];
+                foreach ($confirmados as $item) {
+                    $linhas[] = '- ' . (string) ($item['nome'] ?? 'Obreiro') . (!empty($item['participara_agape']) ? ' (com agape)' : ' (sem agape)');
+                }
+                $this->telegram->sendMessage($chatId, implode("\n", $linhas));
+                return;
+        }
+
+        $this->telegram->sendMessage($chatId, $mensagem);
     }
 
     public function handleHelp($chatId)
@@ -247,6 +386,10 @@ class CommandHandler
             'inline_keyboard' => [
                 [
                     ['text' => 'Abrir Tesouraria Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria')]],
+                ],
+                [
+                    ['text' => 'Minhas Obrigacoes', 'web_app' => ['url' => $this->buildAppUrl('/financeiro/minhas-obrigacoes')]],
+                    ['text' => 'Como pagar via PIX', 'callback_data' => 'tesouraria_orientacao_pix'],
                 ],
                 [
                     ['text' => 'Livro Caixa', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fcaixa')]],
@@ -556,6 +699,7 @@ class CommandHandler
                 $message = $update['message'];
                 $chatId = $message['chat']['id'];
                 $text = $message['text'] ?? '';
+                $caption = $message['caption'] ?? '';
                 $fromId = $message['from']['id'];
 
                 if (strpos($text, '/start') === 0) {
@@ -572,6 +716,12 @@ class CommandHandler
                     $this->handleBiblioteca($chatId, $fromId);
                 } elseif (strpos($text, '/assistencia') === 0) {
                     $this->handleAssistenciaMenu($chatId, $fromId);
+                } elseif (strpos($text, '/pix') === 0 || strpos($text, '/financeiro') === 0) {
+                    $this->handleOrientacaoFinanceira($chatId, (int) $fromId);
+                } elseif (isset($message['photo']) || isset($message['document'])) {
+                    $this->handleComprovantePixRecebido($chatId, (int) $fromId, $message);
+                } elseif (trim((string) $caption) !== '') {
+                    $this->telegram->sendMessage($chatId, 'Se voce for enviar um comprovante PIX, anexe a imagem ou PDF junto com a legenda informando o que esta sendo pago. Ex.: "mensalidade 05/2026 150,00".');
                 } else {
                     $this->telegram->sendMessage($chatId, "Comando nao reconhecido. Use /ajuda para ver as opcoes.");
                 }
@@ -623,6 +773,9 @@ class CommandHandler
                     case 'tesouraria_validar_pix':
                         $this->handleTesourariaValidarPix($chatId);
                         break;
+                    case 'tesouraria_orientacao_pix':
+                        $this->handleOrientacaoFinanceira($chatId, (int) $fromId);
+                        break;
 
                     case 'admin_biblioteca':
                     case 'biblioteca_menu':
@@ -653,9 +806,26 @@ class CommandHandler
                         break;
 
                     case 'presenca_confirmar':
+                        $this->handleConfirmacaoProximaSessao($chatId, (int) $fromId, 'confirmar');
+                        break;
+                    case 'presenca_agape_gratuito':
+                    case 'presenca_agape_pago':
+                        $this->handleConfirmacaoProximaSessao($chatId, (int) $fromId, 'com_agape');
+                        break;
+                    case 'presenca_sem_agape':
+                        $this->handleConfirmacaoProximaSessao($chatId, (int) $fromId, 'sem_agape');
+                        break;
+                    case 'presenca_cancelar':
+                        $this->handleConfirmacaoProximaSessao($chatId, (int) $fromId, 'cancelar');
+                        break;
                     case 'presenca_ausencia':
+                        $this->handleConfirmacaoProximaSessao($chatId, (int) $fromId, 'ausencia');
+                        break;
+                    case 'presenca_ver_confirmados':
+                        $this->handleConfirmacaoProximaSessao($chatId, (int) $fromId, 'ver_confirmados');
+                        break;
                     case 'sessao_info':
-                        $this->sendMenuPresenca($chatId);
+                        $this->handleSessaoInfo($chatId, (int) $fromId);
                         break;
 
                     case 'start_menu':
@@ -766,6 +936,153 @@ class CommandHandler
                 ],
             ],
         ]);
+    }
+
+    private function handleOrientacaoFinanceira($chatId, int $fromId): void
+    {
+        $obreiro = $this->obreiroModel->findByTelegramId($fromId);
+        if (!$obreiro) {
+            $this->telegram->sendMessage($chatId, 'Nao foi possivel identificar seu cadastro para consulta financeira.');
+            return;
+        }
+
+        $config = (new ConfiguracaoLoja())->obter();
+        $pixTipo = trim((string) ($config['pix_chave_tipo'] ?? 'CNPJ'));
+        $pixValor = trim((string) ($config['pix_chave_valor'] ?? ''));
+        $pixBeneficiario = trim((string) ($config['pix_beneficiario'] ?? ''));
+        $mensalidade = number_format((float) ($config['mensalidade_valor_padrao'] ?? 150), 2, ',', '.');
+        $biblioteca = number_format((float) ($config['contribuicao_biblioteca_valor_padrao'] ?? 44), 2, ',', '.');
+
+        $msg = "<b>Orientações financeiras</b>\n\n";
+        $msg .= "Mensalidade padrão: <b>R$ {$mensalidade}</b>\n";
+        $msg .= "Biblioteca por contribuinte designado: <b>R$ {$biblioteca}</b>\n\n";
+        if ($pixValor !== '') {
+            $msg .= "PIX da Loja: <b>{$pixTipo} {$pixValor}</b>";
+            if ($pixBeneficiario !== '') {
+                $msg .= "\nBeneficiário: <b>{$pixBeneficiario}</b>";
+            }
+            $msg .= "\n\nAo enviar comprovante, use legenda com o que está pagando.\n";
+            $msg .= "Ex.: <code>mensalidade 05/2026 150,00</code>";
+        }
+
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Ver minhas obrigacoes', 'web_app' => ['url' => $this->buildAppUrl('/financeiro/minhas-obrigacoes')]],
+                ],
+            ],
+        ];
+
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
+    }
+
+    private function handleComprovantePixRecebido($chatId, int $fromId, array $message): void
+    {
+        $obreiro = $this->obreiroModel->findByTelegramId($fromId);
+        if (!$obreiro) {
+            $this->telegram->sendMessage($chatId, 'Nao foi possivel identificar seu cadastro. Fale com a Secretaria para vincular seu Telegram ao obreiro correto.');
+            return;
+        }
+
+        $caption = trim((string) ($message['caption'] ?? ''));
+        $photo = $message['photo'] ?? null;
+        $document = $message['document'] ?? null;
+        $fileId = '';
+        $tipoArquivo = 'desconhecido';
+        $nomeArquivo = null;
+
+        if (is_array($photo) && $photo !== []) {
+            $ultimaFoto = end($photo);
+            $fileId = (string) ($ultimaFoto['file_id'] ?? '');
+            $tipoArquivo = 'foto';
+        } elseif (is_array($document)) {
+            $fileId = (string) ($document['file_id'] ?? '');
+            $tipoArquivo = 'documento';
+            $nomeArquivo = (string) ($document['file_name'] ?? '');
+        }
+
+        if ($fileId === '') {
+            $this->telegram->sendMessage($chatId, 'Nao consegui identificar o arquivo do comprovante. Tente enviar novamente.');
+            return;
+        }
+
+        $dadosExtraidos = $this->extrairDadosLegendaComprovante($caption);
+        $ok = (new ComprovantePix())->registrar([
+            'obreiro_id' => $obreiro['id'] ?? null,
+            'telegram_id' => $fromId,
+            'nome_telegram' => trim((string) (($message['from']['first_name'] ?? '') . ' ' . ($message['from']['last_name'] ?? ''))),
+            'telegram_file_id' => $fileId,
+            'tipo_arquivo' => $tipoArquivo,
+            'nome_arquivo' => $nomeArquivo,
+            'descricao_usuario' => $caption !== '' ? $caption : 'Comprovante PIX enviado sem legenda',
+            'rotulo_pagamento' => $dadosExtraidos['rotulo_pagamento'] ?? ($caption !== '' ? $caption : 'Comprovante PIX'),
+            'valor_informado' => $dadosExtraidos['valor_informado'] ?? null,
+            'mes_ref_informado' => $dadosExtraidos['mes_ref_informado'] ?? null,
+            'ano_ref_informado' => $dadosExtraidos['ano_ref_informado'] ?? null,
+            'data_envio' => date('Y-m-d H:i:s'),
+        ]);
+
+        if (!$ok) {
+            $this->telegram->sendMessage($chatId, 'Nao foi possivel registrar seu comprovante agora. Tente novamente em instantes.');
+            return;
+        }
+
+        $config = (new ConfiguracaoLoja())->obter();
+        $pixTipo = trim((string) ($config['pix_chave_tipo'] ?? 'CNPJ'));
+        $pixValor = trim((string) ($config['pix_chave_valor'] ?? ''));
+        $parcelas = (new ObrigacaoFinanceira())->listarParcelasEmAbertoObreiro((string) ($obreiro['id'] ?? ''));
+
+        $msg = "Comprovante recebido e encaminhado para validacao da Tesouraria.";
+        if (($dadosExtraidos['rotulo_pagamento'] ?? '') !== '') {
+            $msg .= "\n\nRotulo identificado: <b>" . htmlspecialchars((string) $dadosExtraidos['rotulo_pagamento']) . "</b>";
+        }
+        if ($pixValor !== '') {
+            $msg .= "\nPIX da Loja: <b>{$pixTipo} {$pixValor}</b>";
+        }
+
+        $sugestao = $this->montarSugestaoParcelas($parcelas);
+        if ($sugestao !== '') {
+            $msg .= "\n\nSugestoes em aberto:\n" . $sugestao;
+        }
+
+        $msg .= "\n\nPara facilitar a baixa, envie sempre o comprovante com legenda do pagamento.";
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
+    }
+
+    private function extrairDadosLegendaComprovante(string $caption): array
+    {
+        $caption = trim($caption);
+        if ($caption === '') {
+            return [];
+        }
+
+        $resultado = ['rotulo_pagamento' => $caption];
+
+        if (preg_match('/(\d{1,2})[\/\-](\d{4})/', $caption, $match)) {
+            $resultado['mes_ref_informado'] = (int) $match[1];
+            $resultado['ano_ref_informado'] = (int) $match[2];
+        }
+
+        if (preg_match('/(\d+[.,]\d{2})/', $caption, $matchValor)) {
+            $resultado['valor_informado'] = (float) str_replace(',', '.', $matchValor[1]);
+        }
+
+        return $resultado;
+    }
+
+    private function montarSugestaoParcelas(array $parcelas): string
+    {
+        if ($parcelas === []) {
+            return '';
+        }
+
+        $linhas = [];
+        foreach (array_slice($parcelas, 0, 3) as $parcela) {
+            $valor = number_format((float) ($parcela['valor_previsto'] ?? 0), 2, ',', '.');
+            $linhas[] = '• ' . (string) ($parcela['titulo'] ?? 'Obrigação') . ' - ' . (string) ($parcela['competencia_label'] ?? '-') . ' - R$ ' . $valor;
+        }
+
+        return implode("\n", $linhas);
     }
 
     public function handleSecretariaMenu($chatId, $fromId)

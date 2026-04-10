@@ -402,3 +402,33 @@ O desenho mais correto e:
 - supervisionado pelo Administrador.
 
 Esse enquadramento evita retrabalho e reduz a chance de cada cargo criar seu proprio fluxo paralelo.
+
+## 18. Atualizacao de alinhamento do agape (2026-04-10)
+
+Esta secao consolida o estado atual apos os ajustes de convergencia entre Secretario, Mestre de Banquetes, Chanceler e Tesouraria.
+
+### 18.1 Regras fechadas
+
+- a sessao continua sendo a origem do fluxo operacional;
+- o Secretario define se ha agape e qual o modelo financeiro;
+- o campo de valor do agape e `valor de referencia` e nao e obrigatorio;
+- o Mestre de Banquetes consome os dados da sessao e opera compras/cobrancas no fluxo operacional;
+- a Tesouraria so considera reflexo automatico quando o modelo financeiro for `oficial_loja` ou `misto`;
+- no modelo `particular`, nao ha reflexo automatico no financeiro oficial da Loja.
+
+### 18.2 Contrato funcional da sessao para agape
+
+- `agape_modalidade`: `nao_havera`, `gratuito`, `pago`
+- `agape_modelo_financeiro`: `oficial_loja`, `particular`, `misto`
+- `agape_valor`: opcional (valor de referencia)
+
+### 18.3 Implementacao aplicada
+
+- migration de suporte em [database/migrations/029_agape_modelo_financeiro_sessao.sql](/D:/leandro_pessoal/Renascenca/gestor-loja/database/migrations/029_agape_modelo_financeiro_sessao.sql);
+- runner da migration em [scripts/run_migration_029.php](/D:/leandro_pessoal/Renascenca/gestor-loja/scripts/run_migration_029.php);
+- normalizacao e descricoes no dominio em [src/Models/Sessao.php](/D:/leandro_pessoal/Renascenca/gestor-loja/src/Models/Sessao.php);
+- captura e validacao do novo campo na Secretaria em [src/Controllers/SecretariaController.php](/D:/leandro_pessoal/Renascenca/gestor-loja/src/Controllers/SecretariaController.php);
+- formulario da Secretaria com `modelo financeiro` e `valor de referencia opcional` em [src/Views/secretaria/index.php](/D:/leandro_pessoal/Renascenca/gestor-loja/src/Views/secretaria/index.php);
+- leitura de reflexo oficial na Tesouraria em [src/Controllers/TesourariaSessaoController.php](/D:/leandro_pessoal/Renascenca/gestor-loja/src/Controllers/TesourariaSessaoController.php) e [src/Views/tesouraria_sessao/index.php](/D:/leandro_pessoal/Renascenca/gestor-loja/src/Views/tesouraria_sessao/index.php);
+- consumo pelo Mestre de Banquetes em [src/Controllers/MestreBanquetesController.php](/D:/leandro_pessoal/Renascenca/gestor-loja/src/Controllers/MestreBanquetesController.php) e [src/Views/mestre_banquetes/index.php](/D:/leandro_pessoal/Renascenca/gestor-loja/src/Views/mestre_banquetes/index.php);
+- visibilidade para Chanceler em [src/Views/chanceler_sessao/index.php](/D:/leandro_pessoal/Renascenca/gestor-loja/src/Views/chanceler_sessao/index.php).

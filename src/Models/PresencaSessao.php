@@ -52,7 +52,7 @@ class PresencaSessao
         return $stmt->execute([
             'sessao_id' => $sessaoId,
             'obreiro_id' => $obreiroId,
-            'presente' => $presente,
+            'presente' => $presente ? 'true' : 'false',
             'observacao' => $observacao,
             'registrado_por' => $registradoPor,
         ]);
@@ -74,6 +74,28 @@ class PresencaSessao
             JOIN public.obreiros o ON o.id = ps.obreiro_id
             WHERE ps.sessao_id = :sessao_id
               AND ps.presente = TRUE
+            ORDER BY nome ASC
+        ");
+        $stmt->execute(['sessao_id' => $sessaoId]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listarMapaPorSessao(int $sessaoId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT
+                o.id,
+                COALESCE(o.nome_historico, o.nome) AS nome,
+                o.cim,
+                o.grau,
+                COALESCE(ps.presente, FALSE) AS presente,
+                ps.observacao
+            FROM public.obreiros o
+            LEFT JOIN public.presencas_sessao ps
+              ON ps.sessao_id = :sessao_id
+             AND ps.obreiro_id = o.id
+            WHERE o.ativo = TRUE
             ORDER BY nome ASC
         ");
         $stmt->execute(['sessao_id' => $sessaoId]);

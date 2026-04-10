@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Models\Obreiro;
 use App\Models\Balaustre;
 use App\Models\Cargo;
+use App\Models\ConfiguracaoLoja;
+use App\Models\PublicacaoSessao;
 use App\Models\PublicacaoSecretaria;
 use App\Models\RelatorioSecretariaAnual;
 use App\Models\Sessao;
@@ -118,6 +120,16 @@ class SecretariaController
         $trabalhos = $trabalhoModel->listarRecentes(8);
         $publicacoes = $publicacaoModel->listarRecentes(8);
         $balaustres = $balaustreModel->listarRecentes(8);
+        $configuracaoLoja = (new ConfiguracaoLoja())->obter();
+        $sessaoRascunho = $_SESSION['secretaria_sessao_rascunho'] ?? null;
+        $sessaoDuplicada = null;
+        $resumoRascunhoSessao = null;
+        $acoesConfirmacaoRascunho = [];
+        if (is_array($sessaoRascunho)) {
+            $sessaoDuplicada = $sessaoModel->buscarDuplicidade($sessaoRascunho);
+            $resumoRascunhoSessao = $sessaoModel->comporResumoPublicacao($sessaoRascunho, $configuracaoLoja);
+            $acoesConfirmacaoRascunho = $sessaoModel->obterAcoesConfirmacao($sessaoRascunho);
+        }
         $nominataOficialMap = $this->carregarNominataOficial();
         $cargosSessaoBase = $this->obterCargosSessaoBase($nominataOficialMap);
         $lojasVisitantesFrequentes = self::LOJAS_VISITANTES_FREQUENTES;
@@ -206,29 +218,91 @@ class SecretariaController
 
     public function salvarSessao(): void
     {
+        $this->revisarSessao();
+    }
+
+    public function revisarSessao(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /secretaria');
             exit;
         }
 
         $sessaoModel = new Sessao();
-        $autorId = (string) ($_SESSION['usuario_id'] ?? '');
         $payload = [
             'data_hora_inicio' => trim((string) ($_POST['data_hora_inicio'] ?? '')),
             'data_hora_fim' => trim((string) ($_POST['data_hora_fim'] ?? '')),
-            'tipo_sessao' => trim((string) ($_POST['tipo_sessao'] ?? '')),
             'grau_sessao' => trim((string) ($_POST['grau_sessao'] ?? '')),
+            'grau_personalizado' => trim((string) ($_POST['grau_personalizado'] ?? '')),
+            'tipo_sessao_principal' => trim((string) ($_POST['tipo_sessao_principal'] ?? '')),
+            'tipo_sessao_subtipo' => trim((string) ($_POST['tipo_sessao_subtipo'] ?? '')),
+            'tipo_sessao_personalizado' => trim((string) ($_POST['tipo_sessao_personalizado'] ?? '')),
+            'traje_tipo' => trim((string) ($_POST['traje_tipo'] ?? '')),
+            'traje_personalizado' => trim((string) ($_POST['traje_personalizado'] ?? '')),
+            'agape_modalidade' => trim((string) ($_POST['agape_modalidade'] ?? 'nao_havera')),
+            'agape_modelo_financeiro' => trim((string) ($_POST['agape_modelo_financeiro'] ?? 'oficial_loja')),
+            'agape_valor' => trim((string) ($_POST['agape_valor'] ?? '')),
+            'gestao_referencia' => trim((string) ($_POST['gestao_referencia'] ?? '')),
+            'natureza_sessao' => trim((string) ($_POST['natureza_sessao'] ?? '')),
+            'formato_sessao' => trim((string) ($_POST['formato_sessao'] ?? '')),
+            'finalidade_ritual' => trim((string) ($_POST['finalidade_ritual'] ?? '')),
+            'templo_local' => trim((string) ($_POST['templo_local'] ?? '')),
+            'sessao_a_campo' => isset($_POST['sessao_a_campo']),
+            'conta_relatorio_potencia' => isset($_POST['conta_relatorio_potencia']),
+            'observacao_relatorio' => trim((string) ($_POST['observacao_relatorio'] ?? '')),
             'titulo' => trim((string) ($_POST['titulo'] ?? '')),
-            'resumo_publico' => trim((string) ($_POST['resumo_publico'] ?? '')),
+            'ordem_dia' => trim((string) ($_POST['ordem_dia'] ?? '')),
             'observacao_interna' => trim((string) ($_POST['observacao_interna'] ?? '')),
-            'agape_ativo' => isset($_POST['agape_ativo']),
         ];
+        $payload = $this->normalizarRascunhoSessao($payload);
+        $_SESSION['secretaria_sessao_rascunho'] = $payload;
+        $_SESSION['mensagem_sucesso'] = 'Sessao preparada para revisao final. Confira o resumo antes de publicar.';
 
-        $ok = $sessaoModel->criar($payload, $autorId !== '' ? $autorId : null);
-        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Sessao cadastrada com sucesso.'
-            : 'Nao foi possivel cadastrar a sessao.';
+        header('Location: /secretaria');
+        exit;
+    }
 
+    public function publicarSessaoRascunho(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /secretaria');
+            exit;
+        }
+
+        $rascunho = $_SESSION['secretaria_sessao_rascunho'] ?? null;
+        if (!is_array($rascunho)) {
+            $_SESSION['mensagem_erro'] = 'Nao existe rascunho de sessao aguardando revisao.';
+            header('Location: /secretaria');
+            exit;
+        }
+
+        $sessaoModel = new Sessao();
+        $configuracaoLoja = (new ConfiguracaoLoja())->obter();
+        $autorId = (string) ($_SESSION['usuario_id'] ?? '');
+        $autorId = $autorId !== '' ? $autorId : null;
+        $sessaoId = $sessaoModel->criar($rascunho, $autorId);
+
+        if (!$sessaoId) {
+            $_SESSION['mensagem_erro'] = 'Nao foi possivel persistir a sessao revisada.';
+            header('Location: /secretaria');
+            exit;
+        }
+
+        $sessaoModel->marcarPublicada($sessaoId, $autorId, 'Publicacao confirmada pela Secretaria apos revisao final.');
+        $sessaoCriada = $sessaoModel->findById($sessaoId) ?? $rascunho;
+        $conteudo = $sessaoModel->comporResumoPublicacao($sessaoCriada, $configuracaoLoja);
+        (new PublicacaoSessao())->registrar($sessaoId, 'resumo_proxima_sessao', 'erp', $conteudo, $autorId);
+
+        unset($_SESSION['secretaria_sessao_rascunho']);
+        $_SESSION['mensagem_sucesso'] = 'Sessao publicada com sucesso e pronta para confirmacoes.';
+        header('Location: /secretaria');
+        exit;
+    }
+
+    public function cancelarRascunhoSessao(): void
+    {
+        unset($_SESSION['secretaria_sessao_rascunho']);
+        $_SESSION['mensagem_sucesso'] = 'Rascunho da sessao descartado.';
         header('Location: /secretaria');
         exit;
     }
@@ -408,5 +482,25 @@ class SecretariaController
 
         header('Location: /secretaria');
         exit;
+    }
+
+    private function normalizarRascunhoSessao(array $payload): array
+    {
+        $configLoja = (new ConfiguracaoLoja())->obter();
+        $payload['templo_local'] = trim((string) ($payload['templo_local'] ?? '')) !== ''
+            ? trim((string) $payload['templo_local'])
+            : trim((string) ($configLoja['nome_templo'] ?? ''));
+        $payload['natureza_sessao'] = $payload['natureza_sessao'] !== '' ? $payload['natureza_sessao'] : 'ordinaria';
+        $payload['formato_sessao'] = $payload['formato_sessao'] !== '' ? $payload['formato_sessao'] : 'templo';
+        $payload['finalidade_ritual'] = $payload['finalidade_ritual'] !== '' ? $payload['finalidade_ritual'] : 'economica';
+        $payload['gestao_referencia'] = $payload['gestao_referencia'] !== '' ? $payload['gestao_referencia'] : date('Y');
+        $payload['sessao_branca'] = false;
+        $payload['agape_modelo_financeiro'] = in_array(
+            $payload['agape_modelo_financeiro'] ?? '',
+            Sessao::AGAPE_MODELOS_FINANCEIROS,
+            true
+        ) ? $payload['agape_modelo_financeiro'] : 'oficial_loja';
+        $payload['agape_ativo'] = in_array($payload['agape_modalidade'], ['gratuito', 'pago'], true);
+        return $payload;
     }
 }

@@ -1,10 +1,29 @@
 <?php
-// src/Views/obreiros.php
+use App\Models\Cargo;
+
 if (!isset($_SESSION["usuario_logado"])) {
     header("Location: /login");
     exit;
 }
-$appTitle = "Chancelaria - Obreiros";
+
+$appTitle = "Secretaria - Central de Obreiros";
+$filtrosObreiros = $filtrosObreiros ?? [
+    'busca' => '',
+    'situacao' => '',
+    'grau' => '',
+    'alerta' => '',
+    'cargo_codigo' => '',
+    'ordenacao' => 'nome',
+];
+$resumoObreiros = $resumoObreiros ?? ['total' => 0, 'ativos' => 0, 'com_alerta' => 0, 'com_telegram' => 0, 'mestres' => 0];
+$rotulosAlerta = [
+    'sem_nascimento' => 'Nascimento ausente',
+    'sem_escolaridade' => 'Escolaridade ausente',
+    'sem_profissao' => 'Profissao ausente',
+    'sem_situacao' => 'Situacao do quadro ausente',
+    'sem_data_ingresso' => 'Data de ingresso ausente',
+    'sem_potencia' => 'Potencia ausente',
+];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -12,185 +31,255 @@ $appTitle = "Chancelaria - Obreiros";
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($appTitle) ?></title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'cobalto': '#0a192f',
-                        'ouro': '#cfa935',
-                        'pedra': '#f3f4f6',
-                        'pedra-escura': '#e5e7eb'
+                        cobalto: '#0a192f',
+                        ouro: '#cfa935',
+                        pedra: '#f3f4f6',
+                        areia: '#faf7ef'
                     },
                     fontFamily: {
-                        'serif': ['Merriweather', 'serif'],
-                        'sans': ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                        sans: ['Inter', 'sans-serif']
                     }
                 }
             }
         }
     </script>
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-pedra font-sans text-gray-800 antialiased" x-data="{ sidebarOpen: false }">
-
-    <!-- Header Mobile/Desktop -->
+<body class="bg-pedra font-sans text-gray-800 antialiased">
     <header class="bg-cobalto text-white shadow-md sticky top-0 z-50">
-        <div class="flex items-center justify-between px-4 py-3">
-            <div class="flex items-center pb-2">
-                <button @click="sidebarOpen = !sidebarOpen" class="text-ouro hover:text-white focus:outline-none lg:hidden mr-3">
-                    <i class="fas fa-bars text-xl"></i>
-                </button>
-                <h1 class="font-serif text-lg font-bold tracking-wider relative flex items-center gap-2">
-                    <i class="fas fa-users text-ouro"></i> Chancelaria
-                </h1>
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <div>
+                <div class="text-xs uppercase tracking-[0.22em] text-gray-300">Secretaria</div>
+                <h1 class="font-serif text-xl font-bold tracking-wider">Central de Obreiros</h1>
             </div>
-            
-            <div class="flex items-center space-x-4">
-                <div class="hidden md:block text-sm text-gray-300">
-                    Irmao <?= htmlspecialchars($_SESSION['usuario_logado']['nome_historico'] ?? 'Irmao') ?>
-                </div>
-                <div class="h-8 w-8 rounded-full bg-ouro text-cobalto flex items-center justify-center font-bold shadow-sm ring-2 ring-white/20">
-                    <?= substr(htmlspecialchars($_SESSION['usuario_logado']['nome_historico'] ?? 'I'), 0, 1) ?>
-                </div>
-                <a href="/logout" class="text-gray-300 hover:text-white" title="Sair">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
+            <div class="flex items-center gap-3">
+                <a href="/admin/cargos" class="rounded-lg border border-white/20 px-3 py-2 text-sm text-white hover:bg-white/10">Nominata oficial</a>
+                <a href="/obreiros?alerta=cadastro" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 hover:bg-amber-100">Somente alertas</a>
+                <a href="/obreiros/novo" class="rounded-lg bg-white text-cobalto px-4 py-2 text-sm font-medium hover:bg-amber-50">Adicionar obreiro</a>
             </div>
         </div>
     </header>
 
-    <div class="flex h-[calc(100vh-60px)] overflow-hidden">
-        
-        <!-- Sidebar (Overlay on mobile) -->
-        <div x-show="sidebarOpen" class="fixed inset-0 z-40 bg-black/50 lg:hidden" @click="sidebarOpen = false" x-transition.opacity></div>
-        
-        <aside :class="{'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen}" 
-               class="fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-0 border-r border-gray-200 flex flex-col pt-16 lg:pt-0 h-full">
-            <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-                <a href="/dashboard" class="flex items-center px-4 py-3 text-gray-700 hover:bg-pedra hover:text-cobalto rounded-lg transition-colors">
-                    <i class="fas fa-home w-6 text-center text-gray-500"></i>
-                    <span class="ml-3 font-medium">Inicio</span>
-                </a>
-                
-                <div class="pt-4 pb-2">
-                    <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        Administracao
-                    </p>
-                </div>
-                
-                <a href="/obreiros" class="flex items-center px-4 py-3 text-cobalto bg-blue-50/50 rounded-lg border-l-4 border-ouro transition-colors">
-                    <i class="fas fa-users w-6 text-center text-ouro"></i>
-                    <span class="ml-3 font-medium">Obreiros</span>
-                </a>
-                
-                <a href="#" class="flex items-center px-4 py-3 text-gray-700 hover:bg-pedra hover:text-cobalto rounded-lg transition-colors">
-                    <i class="fas fa-money-check-alt w-6 text-center text-gray-500"></i>
-                    <span class="ml-3 font-medium">Tesouraria</span>
-                </a>
-                
-                <a href="#" class="flex items-center px-4 py-3 text-gray-700 hover:bg-pedra hover:text-cobalto rounded-lg transition-colors">
-                    <i class="fas fa-book w-6 text-center text-gray-500"></i>
-                    <span class="ml-3 font-medium">Biblioteca</span>
-                </a>
-            </nav>
-        </aside>
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        <section class="grid gap-4 md:grid-cols-5">
+            <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div class="text-sm text-gray-500">Total filtrado</div>
+                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) $resumoObreiros['total'] ?></div>
+            </article>
+            <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div class="text-sm text-gray-500">No quadro</div>
+                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) $resumoObreiros['ativos'] ?></div>
+            </article>
+            <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div class="text-sm text-gray-500">Com alerta</div>
+                <div class="mt-2 text-3xl font-semibold text-amber-700"><?= (int) $resumoObreiros['com_alerta'] ?></div>
+            </article>
+            <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div class="text-sm text-gray-500">Bot vinculado</div>
+                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) $resumoObreiros['com_telegram'] ?></div>
+            </article>
+            <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div class="text-sm text-gray-500">Mestres</div>
+                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) $resumoObreiros['mestres'] ?></div>
+            </article>
+        </section>
 
-        <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto bg-pedra p-4 lg:p-8">
-            <div class="max-w-4xl mx-auto">
-                
-                <!-- Action Bar -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                    <div>
-                        <h2 class="text-2xl font-serif font-bold text-cobalto">Lista de Obreiros</h2>
-                        <p class="text-sm text-gray-500 mt-1">Gerencie os membros ativos da Loja.</p>
-                    </div>
-                    <a href="/obreiros/novo" class="w-full sm:w-auto bg-cobalto hover:bg-blue-900 text-white font-medium py-2.5 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2">
-                        <i class="fas fa-user-plus text-ouro"></i> Adicionar Obreiro
-                    </a>
-                </div>
+        <section class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+            Alertas de cadastro servem como lembrete interno para a Secretaria tratar o tema reservadamente com o membro, sem expor o motivo como bloqueio operacional.
+        </section>
 
-                <!-- Search/Filter -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-search text-gray-400"></i>
-                        </div>
-                        <input type="text" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-pedra-escura text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-ouro focus:border-ouro sm:text-sm transition-colors" placeholder="Buscar por nome, grau ou CIM...">
-                    </div>
-                </div>
+        <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div class="flex flex-col gap-2 mb-4">
+                <h2 class="text-xl font-semibold text-cobalto">Filtros administrativos</h2>
+                <p class="text-sm text-gray-500">Use os filtros para saneamento cadastral, conferencia da nominata e preparacao dos relatorios.</p>
+            </div>
 
-                <!-- Obreiros Cards (Mobile First) -->
-                <div class="space-y-4">
-                    
-                    <?php if (empty($obreiros)): ?>
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">
-                            <i class="fas fa-users-slash text-4xl mb-3 text-gray-300"></i>
-                            <p>Nenhum obreiro ativo encontrado.</p>
-                        </div>
-                    <?php else: ?>
-                        <?php foreach ($obreiros as $obreiro): ?>
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:border-blue-200 transition-colors flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center relative">
-                            <!-- Left: Info -->
-                            <div class="flex items-start gap-4 w-full sm:w-auto">
-                                <div class="h-12 w-12 rounded-full bg-pedra-escura flex items-center justify-center text-cobalto text-xl font-bold border border-gray-200 shrink-0">
-                                    <?= substr(htmlspecialchars($obreiro['nome_historico'] ?? $obreiro['nome']), 0, 1) ?>
+            <form method="GET" action="/obreiros" class="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+                <div class="xl:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Busca</label>
+                    <input
+                        type="text"
+                        name="busca"
+                        value="<?= htmlspecialchars((string) ($filtrosObreiros['busca'] ?? '')) ?>"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2"
+                        placeholder="Nome, nome historico, grau ou CIM"
+                    >
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Situacao</label>
+                    <select name="situacao" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                        <option value="">Todas</option>
+                        <?php foreach (\App\Models\Obreiro::SITUACOES_QUADRO as $situacao): ?>
+                            <option value="<?= htmlspecialchars($situacao) ?>" <?= ($filtrosObreiros['situacao'] ?? '') === $situacao ? 'selected' : '' ?>><?= htmlspecialchars($situacao) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Grau</label>
+                    <select name="grau" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                        <option value="">Todos</option>
+                        <?php foreach (['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'] as $grau): ?>
+                            <option value="<?= htmlspecialchars($grau) ?>" <?= ($filtrosObreiros['grau'] ?? '') === $grau ? 'selected' : '' ?>><?= htmlspecialchars($grau) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Cargo oficial</label>
+                    <select name="cargo_codigo" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                        <option value="">Todos</option>
+                        <?php foreach ($cargosFiltros as $cargo): ?>
+                            <option value="<?= htmlspecialchars((string) ($cargo['codigo'] ?? '')) ?>" <?= ($filtrosObreiros['cargo_codigo'] ?? '') === (string) ($cargo['codigo'] ?? '') ? 'selected' : '' ?>>
+                                <?= htmlspecialchars(Cargo::rotuloOficial((string) ($cargo['codigo'] ?? ''), (string) ($cargo['nome_exibicao'] ?? $cargo['codigo'] ?? ''))) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Alerta</label>
+                    <select name="alerta" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                        <option value="">Todos</option>
+                        <option value="cadastro" <?= ($filtrosObreiros['alerta'] ?? '') === 'cadastro' ? 'selected' : '' ?>>Com alerta cadastral</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Ordenar por</label>
+                    <select name="ordenacao" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                        <option value="nome" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'nome' ? 'selected' : '' ?>>Nome</option>
+                        <option value="grau" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'grau' ? 'selected' : '' ?>>Grau</option>
+                        <option value="situacao" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'situacao' ? 'selected' : '' ?>>Situacao</option>
+                        <option value="alerta" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'alerta' ? 'selected' : '' ?>>Quantidade de alerta</option>
+                    </select>
+                </div>
+                <div class="md:col-span-3 xl:col-span-6 flex items-end gap-2">
+                    <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-sm font-medium text-white hover:bg-blue-900">Aplicar</button>
+                    <a href="/obreiros" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 bg-white hover:bg-gray-50">Limpar</a>
+                </div>
+            </form>
+        </section>
+
+        <section class="space-y-4">
+            <?php if (empty($obreiros)): ?>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">
+                    <i class="fas fa-users-slash text-4xl mb-3 text-gray-300"></i>
+                    <p>Nenhum obreiro encontrado com os filtros atuais.</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($obreiros as $obreiro): ?>
+                    <?php
+                    $nomeExibicao = (string) ($obreiro['nome_historico'] ?: $obreiro['nome']);
+                    $situacao = (string) ($obreiro['situacao_quadro'] ?? 'ativo');
+                    $alertas = $obreiro['alertas_cadastro'] ?? [];
+                    $cargosAtuais = $obreiro['cargos_codigos'] ?? [];
+                    ?>
+                    <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div class="flex items-start gap-4 min-w-0">
+                                <div class="h-14 w-14 rounded-full bg-areia border border-amber-200 flex items-center justify-center text-cobalto text-xl font-bold shrink-0">
+                                    <?= htmlspecialchars(substr($nomeExibicao, 0, 1)) ?>
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <h3 class="text-base font-bold text-gray-900 truncate">
-                                        <?= htmlspecialchars($obreiro['nome_historico'] ?? $obreiro['nome']) ?>
-                                    </h3>
-                                    <div class="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                                            <?= htmlspecialchars($obreiro['grau'] ?? 'Nao informado') ?>
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h3 class="text-lg font-bold text-gray-900"><?= htmlspecialchars($nomeExibicao) ?></h3>
+                                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                                            <?= htmlspecialchars((string) ($obreiro['grau'] ?? 'Nao informado')) ?>
                                         </span>
-                                        <span class="flex items-center gap-1">
-                                            <i class="fas fa-id-card text-gray-400 text-xs"></i> 
-                                            CIM: <?= htmlspecialchars($obreiro['cim'] ?? 'Nao informado') ?>
+                                        <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 border border-blue-100">
+                                            <?= htmlspecialchars($situacao) ?>
                                         </span>
+                                        <?php if ($alertas !== []): ?>
+                                            <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 border border-amber-200">
+                                                <?= count($alertas) ?> alerta(s)
+                                            </span>
+                                        <?php endif; ?>
                                     </div>
-                                    <div class="mt-2 text-xs text-gray-400 flex items-center gap-1">
-                                        <i class="fab fa-telegram text-blue-500" <?= empty($obreiro['telegram_id']) ? 'style="opacity:0.3"' : '' ?>></i>
-                                        <?= !empty($obreiro['telegram_id']) ? 'Bot Ativo' : 'Bot Inativo' ?>
+                                    <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
+                                        <span>CIM: <?= htmlspecialchars((string) ($obreiro['cim'] ?? '-')) ?></span>
+                                        <span>Profissao: <?= htmlspecialchars((string) ($obreiro['profissao'] ?? '-')) ?></span>
+                                        <span>Escolaridade: <?= htmlspecialchars((string) ($obreiro['escolaridade'] ?? '-')) ?></span>
+                                        <span>Potencia: <?= htmlspecialchars((string) ($obreiro['potencia_sigla'] ?? $obreiro['potencia_nome'] ?? '-')) ?></span>
+                                    </div>
+                                    <div class="mt-2 flex flex-wrap gap-2 text-xs">
+                                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 border <?= !empty($obreiro['telegram_id']) ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-gray-50 border-gray-200 text-gray-500' ?>">
+                                            <i class="fab fa-telegram"></i>
+                                            <?= !empty($obreiro['telegram_id']) ? 'Bot vinculado' : 'Sem bot' ?>
+                                        </span>
+                                        <span class="inline-flex items-center rounded-full bg-gray-50 border border-gray-200 px-2.5 py-1 text-gray-600">
+                                            Ingresso: <?= htmlspecialchars((string) ($obreiro['data_filiacao'] ?? $obreiro['data_iniciacao'] ?? '-')) ?>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Right: Actions -->
-                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end sm:mt-0 mt-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100">
-                                <a href="/obreiros/editar?id=<?= htmlspecialchars($obreiro['id']) ?>" class="p-2 text-gray-400 hover:text-ouro bg-pedra hover:bg-yellow-50 rounded-lg transition-colors flex items-center justify-center min-w-[40px] min-h-[40px]" title="Editar / Ver Ficha">
-                                    <i class="fas fa-edit"></i>
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>" class="rounded-lg bg-cobalto px-4 py-2 text-sm font-medium text-white hover:bg-blue-900">
+                                    Abrir ficha
+                                </a>
+                                <a href="/admin/cargos" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 bg-white hover:bg-gray-50">
+                                    Ver nominata
                                 </a>
                             </div>
                         </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
 
-                </div>
-                
-                <!-- Pagination (Mock) -->
-                <?php if (!empty($obreiros) && count($obreiros) > 10): ?>
-                <div class="mt-6 flex justify-center">
-                    <nav class="flex items-center gap-1">
-                        <button class="px-3 py-1 rounded bg-white border border-gray-200 text-gray-500 hover:bg-pedra-escura disabled:opacity-50"><i class="fas fa-chevron-left text-xs"></i></button>
-                        <button class="px-3 py-1 rounded bg-cobalto text-white border border-cobalto">1</button>
-                        <button class="px-3 py-1 rounded bg-white border border-gray-200 text-gray-700 hover:bg-pedra-escura">2</button>
-                        <button class="px-3 py-1 rounded bg-white border border-gray-200 text-gray-500 hover:bg-pedra-escura"><i class="fas fa-chevron-right text-xs"></i></button>
-                    </nav>
-                </div>
-                <?php endif; ?>
+                        <div class="mt-4 grid gap-4 lg:grid-cols-[1fr_1fr_0.9fr]">
+                            <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                <div class="text-xs uppercase tracking-wide text-gray-500 mb-2">Cargos ativos</div>
+                                <?php if ($cargosAtuais !== []): ?>
+                                    <div class="flex flex-wrap gap-2">
+                                        <?php foreach ($cargosAtuais as $codigo): ?>
+                                            <span class="inline-flex items-center rounded-full bg-white border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-700">
+                                                <?= htmlspecialchars(Cargo::rotuloOficial((string) $codigo)) ?>
+                                            </span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="text-sm text-gray-500">Sem cargo oficial ativo na nominata.</div>
+                                <?php endif; ?>
+                            </div>
 
-            </div>
-        </main>
-    </div>
+                            <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                <div class="text-xs uppercase tracking-wide text-gray-500 mb-2">Alertas de cadastro</div>
+                                <?php if ($alertas !== []): ?>
+                                    <div class="flex flex-wrap gap-2">
+                                        <?php foreach ($alertas as $alerta): ?>
+                                            <span class="inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-medium text-amber-800">
+                                                <?= htmlspecialchars($rotulosAlerta[$alerta] ?? $alerta) ?>
+                                            </span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="text-sm text-emerald-700">Sem alerta cadastral principal.</div>
+                                <?php endif; ?>
+                            </div>
 
+                            <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                <div class="text-xs uppercase tracking-wide text-gray-500 mb-2">Acoes rapidas</div>
+                                <div class="flex flex-col gap-2">
+                                    <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>" class="rounded-lg bg-white border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        Atualizar cadastro
+                                    </a>
+                                    <a href="/obreiros?busca=<?= urlencode((string) ($obreiro['cim'] ?? '')) ?>" class="rounded-lg bg-white border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        Isolar este obreiro
+                                    </a>
+                                    <?php if ($alertas !== []): ?>
+                                        <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                                            Secretaria: tratar reservadamente com o membro.
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </section>
+    </main>
 </body>
 </html>

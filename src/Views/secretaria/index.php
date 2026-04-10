@@ -2,6 +2,25 @@
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
+$sessaoDraft = is_array($sessaoRascunho ?? null) ? $sessaoRascunho : [];
+$draftInicio = '';
+if (!empty($sessaoDraft['data_hora_inicio'])) {
+    try {
+        $draftInicio = (new DateTimeImmutable((string) $sessaoDraft['data_hora_inicio']))
+            ->setTimezone(new DateTimeZone('America/Sao_Paulo'))
+            ->format('Y-m-d\TH:i');
+    } catch (\Throwable $e) {
+        $draftInicio = '';
+    }
+}
+$historiaLoja = trim((string) ($configuracaoLoja['historia_loja'] ?? ''));
+if ($historiaLoja !== '') {
+    if (function_exists('mb_strimwidth')) {
+        $historiaLoja = mb_strimwidth($historiaLoja, 0, 2200, '...');
+    } else {
+        $historiaLoja = strlen($historiaLoja) > 2200 ? substr($historiaLoja, 0, 2197) . '...' : $historiaLoja;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -78,6 +97,42 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
             </div>
         </div>
 
+        <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] mb-8">
+            <section class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
+                <div class="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
+                    <div>
+                        <div class="text-xs uppercase tracking-[0.24em] text-cobre">Identidade da Loja</div>
+                        <h2 class="font-display text-2xl text-cobalto mt-2">
+                            <?= htmlspecialchars(trim((string) (($configuracaoLoja['nome_loja'] ?? '') . ' Nº ' . ($configuracaoLoja['numero_loja'] ?? '')), " Nº")) ?>
+                        </h2>
+                        <p class="text-sm text-slate-600 mt-2">Base institucional para relatórios, Secretaria e leitura histórica da oficina.</p>
+                    </div>
+                    <?php if (!empty($configuracaoLoja['potencia_sigla']) || !empty($configuracaoLoja['potencia_nome'])): ?>
+                        <div class="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-800">
+                            <?= htmlspecialchars((string) (($configuracaoLoja['potencia_sigla'] ?? '') !== '' ? $configuracaoLoja['potencia_sigla'] : ($configuracaoLoja['potencia_nome'] ?? ''))) ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="mt-5 grid gap-3 md:grid-cols-2">
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">Oriente: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['oriente'] ?? '-')) ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">Rito: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['rito'] ?? '-')) ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">Fundação: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['data_fundacao'] ?? '-')) ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">Instalação: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['data_instalacao'] ?? '-')) ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">Templo: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['nome_templo'] ?? '-')) ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">Reuniões: <strong class="text-slate-800"><?= htmlspecialchars(trim((string) (($configuracaoLoja['dia_semana_reuniao'] ?? '') . ' • ' . ($configuracaoLoja['horario_reuniao'] ?? '') . ' • ' . ($configuracaoLoja['periodicidade_reuniao'] ?? '')), ' •')) ?></strong></div>
+                </div>
+            </section>
+
+            <section class="rounded-2xl bg-[linear-gradient(180deg,#fffdf7,#f4efe4)] border border-amber-200 shadow-sm p-6">
+                <div class="text-xs uppercase tracking-[0.24em] text-cobre">História da Loja</div>
+                <h2 class="font-display text-2xl text-cobalto mt-2">Renascença em perspectiva</h2>
+                <p class="mt-4 text-sm leading-7 text-slate-700 whitespace-pre-line">
+                    <?= htmlspecialchars($historiaLoja) ?>
+                </p>
+            </section>
+        </div>
+
         <div class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
             <section class="space-y-6">
                 <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
@@ -96,46 +151,167 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                         </div>
                     <?php endif; ?>
 
+                    <?php if ($resumoRascunhoSessao): ?>
+                        <div class="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                            <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                <div>
+                                    <div class="text-xs uppercase tracking-[0.24em] text-cobre">Revisao final</div>
+                                    <h3 class="mt-2 font-display text-lg text-cobalto">Resumo pronto para publicacao</h3>
+                                </div>
+                                <?php if ($sessaoDuplicada): ?>
+                                    <div class="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
+                                        Sessao semelhante encontrada no mesmo dia/horario
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <pre class="mt-4 whitespace-pre-wrap rounded-xl bg-white p-4 text-sm leading-6 text-slate-700"><?= htmlspecialchars($resumoRascunhoSessao) ?></pre>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <?php foreach ($acoesConfirmacaoRascunho as $acaoRascunho): ?>
+                                    <span class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600"><?= htmlspecialchars((string) ($acaoRascunho['label'] ?? '')) ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <form method="POST" action="/secretaria/sessoes/publicar-rascunho">
+                                    <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-sm font-medium text-white">Confirmar publicacao</button>
+                                </form>
+                                <form method="POST" action="/secretaria/sessoes/cancelar-rascunho">
+                                    <button type="submit" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Cancelar rascunho</button>
+                                </form>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
                     <form method="POST" action="/secretaria/sessoes/salvar" class="grid gap-4 md:grid-cols-2">
                         <div>
                             <label class="block text-sm font-medium mb-1">Titulo da sessao</label>
-                            <input type="text" name="titulo" required class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                            <input type="text" name="titulo" required value="<?= htmlspecialchars((string) ($sessaoDraft['titulo'] ?? '')) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1">Data e hora de inicio</label>
-                            <input type="datetime-local" name="data_hora_inicio" required class="w-full rounded-lg border border-slate-300 px-3 py-2">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Tipo de sessao</label>
-                            <select name="tipo_sessao" class="w-full rounded-lg border border-slate-300 px-3 py-2">
-                                <option value="Economica">Economica</option>
-                                <option value="Magna">Magna</option>
-                                <option value="Instrucao">Instrucao</option>
-                                <option value="Administrativa">Administrativa</option>
-                            </select>
+                            <label class="block text-sm font-medium mb-1">Data e hora</label>
+                            <input type="datetime-local" name="data_hora_inicio" required value="<?= htmlspecialchars($draftInicio) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Grau da sessao</label>
                             <select name="grau_sessao" class="w-full rounded-lg border border-slate-300 px-3 py-2">
-                                <option value="Aprendiz">Aprendiz</option>
-                                <option value="Companheiro">Companheiro</option>
-                                <option value="Mestre">Mestre</option>
+                                <?php foreach (['Aprendiz', 'Companheiro', 'Mestre', 'Outro'] as $grauOpcao): ?>
+                                    <option value="<?= htmlspecialchars($grauOpcao) ?>" <?= (($sessaoDraft['grau_personalizado'] ?? null) && ($sessaoDraft['grau_sessao'] ?? '') === $sessaoDraft['grau_personalizado'] && $grauOpcao === 'Outro') || (($sessaoDraft['grau_sessao'] ?? '') === $grauOpcao) ? 'selected' : '' ?>><?= htmlspecialchars($grauOpcao) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Grau livre, se necessario</label>
+                            <input type="text" name="grau_personalizado" value="<?= htmlspecialchars((string) ($sessaoDraft['grau_personalizado'] ?? '')) ?>" placeholder="Somente se o grau for Outro" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Tipo principal</label>
+                            <select name="tipo_sessao_principal" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                                <option value="economica" <?= (($sessaoDraft['tipo_sessao_principal'] ?? 'economica') === 'economica') ? 'selected' : '' ?>>Economica</option>
+                                <option value="magna" <?= (($sessaoDraft['tipo_sessao_principal'] ?? '') === 'magna') ? 'selected' : '' ?>>Magna</option>
+                                <option value="outra" <?= (($sessaoDraft['tipo_sessao_principal'] ?? '') === 'outra') ? 'selected' : '' ?>>Outra</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Subtipo</label>
+                            <select name="tipo_sessao_subtipo" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                                <?php
+                                $subtiposSessao = [
+                                    'economica_1' => 'Economica de 1 Grau',
+                                    'economica_2' => 'Economica de 2 Grau',
+                                    'economica_3' => 'Economica de 3 Grau',
+                                    'magna_iniciacao' => 'Magna de Iniciacao',
+                                    'magna_elevacao' => 'Magna de Elevacao',
+                                    'magna_exaltacao' => 'Magna de Exaltacao',
+                                    'magna_instalacao' => 'Magna de Instalacao',
+                                    'outra' => 'Outra',
+                                ];
+                                foreach ($subtiposSessao as $valorSubtipo => $labelSubtipo):
+                                ?>
+                                    <option value="<?= htmlspecialchars($valorSubtipo) ?>" <?= (($sessaoDraft['tipo_sessao_subtipo'] ?? '') === $valorSubtipo) ? 'selected' : '' ?>><?= htmlspecialchars($labelSubtipo) ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium mb-1">Resumo publico</label>
-                            <textarea name="resumo_publico" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2"></textarea>
+                            <label class="block text-sm font-medium mb-1">Tipo livre, se necessario</label>
+                            <input type="text" name="tipo_sessao_personalizado" value="<?= htmlspecialchars((string) ($sessaoDraft['tipo_sessao_personalizado'] ?? '')) ?>" placeholder="Usar quando o tipo ou subtipo nao estiver na lista" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Traje</label>
+                            <select name="traje_tipo" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                                <option value="maconico" <?= (($sessaoDraft['traje_tipo'] ?? 'maconico') === 'maconico') ? 'selected' : '' ?>>Maconico</option>
+                                <option value="livre" <?= (($sessaoDraft['traje_tipo'] ?? '') === 'livre') ? 'selected' : '' ?>>Livre</option>
+                                <option value="outro" <?= (($sessaoDraft['traje_tipo'] ?? '') === 'outro') ? 'selected' : '' ?>>Outro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Traje livre, se necessario</label>
+                            <input type="text" name="traje_personalizado" value="<?= htmlspecialchars((string) ($sessaoDraft['traje_personalizado'] ?? '')) ?>" placeholder="Somente se o traje for Outro" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Agape</label>
+                            <select name="agape_modalidade" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                                <option value="nao_havera" <?= (($sessaoDraft['agape_modalidade'] ?? 'nao_havera') === 'nao_havera') ? 'selected' : '' ?>>Nao havera</option>
+                                <option value="gratuito" <?= (($sessaoDraft['agape_modalidade'] ?? '') === 'gratuito') ? 'selected' : '' ?>>Sim (gratuito)</option>
+                                <option value="pago" <?= (($sessaoDraft['agape_modalidade'] ?? '') === 'pago') ? 'selected' : '' ?>>Sim (pago)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Modelo financeiro do agape</label>
+                            <select name="agape_modelo_financeiro" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                                <option value="oficial_loja" <?= (($sessaoDraft['agape_modelo_financeiro'] ?? 'oficial_loja') === 'oficial_loja') ? 'selected' : '' ?>>Oficial da Loja</option>
+                                <option value="particular" <?= (($sessaoDraft['agape_modelo_financeiro'] ?? '') === 'particular') ? 'selected' : '' ?>>Particular entre participantes</option>
+                                <option value="misto" <?= (($sessaoDraft['agape_modelo_financeiro'] ?? '') === 'misto') ? 'selected' : '' ?>>Misto (Loja + particular)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Valor de referencia do agape (opcional)</label>
+                            <input type="text" name="agape_valor" value="<?= htmlspecialchars((string) ($sessaoDraft['agape_valor'] ?? '')) ?>" placeholder="Pode ficar em branco e ser definido depois pelo Mestre de Banquetes" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Gestao de referencia</label>
+                            <input type="text" name="gestao_referencia" value="<?= htmlspecialchars((string) ($sessaoDraft['gestao_referencia'] ?? '')) ?>" placeholder="Ex.: 2026/2027" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Formato</label>
+                            <select name="formato_sessao" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                                <option value="templo" <?= (($sessaoDraft['formato_sessao'] ?? 'templo') === 'templo') ? 'selected' : '' ?>>Templo</option>
+                                <option value="a_campo" <?= (($sessaoDraft['formato_sessao'] ?? '') === 'a_campo') ? 'selected' : '' ?>>A campo</option>
+                                <option value="publica" <?= (($sessaoDraft['formato_sessao'] ?? '') === 'publica') ? 'selected' : '' ?>>Publica</option>
+                                <option value="branca" <?= (($sessaoDraft['formato_sessao'] ?? '') === 'branca') ? 'selected' : '' ?>>Branca</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Finalidade ritual</label>
+                            <select name="finalidade_ritual" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                                <option value="economica" <?= (($sessaoDraft['finalidade_ritual'] ?? 'economica') === 'economica') ? 'selected' : '' ?>>Economica</option>
+                                <option value="iniciacao" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'iniciacao') ? 'selected' : '' ?>>Iniciacao</option>
+                                <option value="elevacao" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'elevacao') ? 'selected' : '' ?>>Elevacao</option>
+                                <option value="exaltacao" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'exaltacao') ? 'selected' : '' ?>>Exaltacao</option>
+                                <option value="instalacao" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'instalacao') ? 'selected' : '' ?>>Instalacao</option>
+                                <option value="outra" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'outra') ? 'selected' : '' ?>>Outra</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium mb-1">Ordem do dia / observacoes</label>
+                            <textarea name="ordem_dia" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2"><?= htmlspecialchars((string) ($sessaoDraft['ordem_dia'] ?? '')) ?></textarea>
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium mb-1">Observacao interna</label>
-                            <textarea name="observacao_interna" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2"></textarea>
+                            <textarea name="observacao_interna" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2"><?= htmlspecialchars((string) ($sessaoDraft['observacao_interna'] ?? '')) ?></textarea>
                         </div>
                         <label class="md:col-span-2 inline-flex items-center gap-2 text-sm">
-                            <input type="checkbox" name="agape_ativo" value="1">
-                            Sessao com agape
+                            <input type="checkbox" name="sessao_a_campo" value="1" <?= !empty($sessaoDraft['sessao_a_campo']) ? 'checked' : '' ?>>
+                            Sessao a campo
+                        </label>
+                        <label class="md:col-span-2 inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="conta_relatorio_potencia" value="1" <?= !array_key_exists('conta_relatorio_potencia', $sessaoDraft) || !empty($sessaoDraft['conta_relatorio_potencia']) ? 'checked' : '' ?>>
+                            Conta no relatorio oficial da potencia
                         </label>
                         <div class="md:col-span-2">
-                            <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-white font-medium">Cadastrar sessao</button>
+                            <label class="block text-sm font-medium mb-1">Observacao para relatorio</label>
+                            <textarea name="observacao_relatorio" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2"><?= htmlspecialchars((string) ($sessaoDraft['observacao_relatorio'] ?? '')) ?></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-white font-medium">Continuar para revisao</button>
                         </div>
                     </form>
 
@@ -341,7 +517,13 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                             <input type="text" name="visita_externa_loja[]" placeholder="Loja visitada" list="lojas-frequentes-sugestoes" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
                                         </div>
                                         <div class="md:col-span-2">
+                                            <input type="text" name="visita_externa_potencia[]" placeholder="Potencia" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                        </div>
+                                        <div class="md:col-span-2">
                                             <input type="text" name="visita_externa_oriente[]" placeholder="Oriente" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <input type="date" name="visita_externa_data[]" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
                                         </div>
                                         <div class="md:col-span-2">
                                             <input type="text" name="visita_externa_observacao[]" placeholder="Obs." class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
@@ -390,6 +572,60 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                         <div class="md:col-span-2">
                                             <input type="text" name="palestra_observacao[]" placeholder="Obs." class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
                                         </div>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Eventos promovidos pela Loja</h3>
+                            <div class="space-y-2">
+                                <?php for ($i = 0; $i < 3; $i++): ?>
+                                    <div class="grid gap-2 md:grid-cols-12">
+                                        <div class="md:col-span-4"><input type="text" name="evento_promovido_titulo[]" placeholder="Titulo" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-2"><input type="date" name="evento_promovido_data[]" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-2"><input type="text" name="evento_promovido_local[]" placeholder="Local" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-2"><input type="text" name="evento_promovido_loja[]" placeholder="Loja" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-2"><input type="text" name="evento_promovido_oriente[]" placeholder="Oriente" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-3"><input type="text" name="evento_promovido_promotor[]" placeholder="Promotor" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-5"><input type="text" name="evento_promovido_descricao[]" placeholder="Descricao" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-4"><input type="text" name="evento_promovido_observacao[]" placeholder="Obs." class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Eventos em que a Loja participou</h3>
+                            <div class="space-y-2">
+                                <?php for ($i = 0; $i < 3; $i++): ?>
+                                    <div class="grid gap-2 md:grid-cols-12">
+                                        <div class="md:col-span-4"><input type="text" name="evento_participado_titulo[]" placeholder="Titulo" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-2"><input type="date" name="evento_participado_data[]" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-2"><input type="text" name="evento_participado_local[]" placeholder="Local" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-2"><input type="text" name="evento_participado_loja[]" placeholder="Loja" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-2"><input type="text" name="evento_participado_oriente[]" placeholder="Oriente" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-3"><input type="text" name="evento_participado_promotor[]" placeholder="Promotor" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-5"><input type="text" name="evento_participado_descricao[]" placeholder="Descricao" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-4"><input type="text" name="evento_participado_observacao[]" placeholder="Obs." class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                    </div>
+                                <?php endfor; ?>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Atividades sociais</h3>
+                            <div class="space-y-2">
+                                <?php for ($i = 0; $i < 3; $i++): ?>
+                                    <div class="grid gap-2 md:grid-cols-12">
+                                        <div class="md:col-span-4"><input type="text" name="atividade_social_titulo[]" placeholder="Titulo" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-2"><input type="date" name="atividade_social_data[]" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-2"><input type="text" name="atividade_social_local[]" placeholder="Local" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-2"><input type="text" name="atividade_social_loja[]" placeholder="Instituicao/Loja" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-2"><input type="text" name="atividade_social_oriente[]" placeholder="Oriente" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-3"><input type="text" name="atividade_social_promotor[]" placeholder="Responsavel" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-5"><input type="text" name="atividade_social_descricao[]" placeholder="Descricao" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
+                                        <div class="md:col-span-4"><input type="text" name="atividade_social_observacao[]" placeholder="Obs." class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"></div>
                                     </div>
                                 <?php endfor; ?>
                             </div>

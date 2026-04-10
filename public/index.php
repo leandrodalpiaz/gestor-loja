@@ -373,9 +373,9 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
-        if (!$sessionHasRole('admin')) {
+        if (!$sessionHasRole('admin', 'secretario', 'veneravel')) {
             http_response_code(403);
-            echo "Acesso restrito ao Administrador.";
+            echo "Acesso restrito ao Administrador, Secretario ou Veneravel Mestre.";
             exit;
         }
         (new \App\Controllers\AdminController())->listarCargos();
@@ -386,12 +386,64 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
+        if (!$sessionHasRole('admin', 'secretario', 'veneravel')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Administrador, Secretario ou Veneravel Mestre.";
+            exit;
+        }
+        (new \App\Controllers\AdminController())->salvarCargo();
+        break;
+
+    case "/admin/cargos/gestao/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('admin', 'secretario', 'veneravel')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Administrador, Secretario ou Veneravel Mestre.";
+            exit;
+        }
+        (new \App\Controllers\AdminController())->salvarGestao();
+        break;
+
+    case "/admin/cargos/gestao/encerrar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('admin', 'secretario', 'veneravel')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Administrador, Secretario ou Veneravel Mestre.";
+            exit;
+        }
+        (new \App\Controllers\AdminController())->encerrarGestao();
+        break;
+
+    case "/admin/loja":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
         if (!$sessionHasRole('admin')) {
             http_response_code(403);
             echo "Acesso restrito ao Administrador.";
             exit;
         }
-        (new \App\Controllers\AdminController())->salvarCargo();
+        (new \App\Controllers\AdminController())->configuracoesLoja();
+        break;
+
+    case "/admin/loja/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Administrador.";
+            exit;
+        }
+        (new \App\Controllers\AdminController())->salvarConfiguracoesLoja();
         break;
 
     // Telas antigas restauradas
@@ -403,7 +455,17 @@ switch ($requestUri) {
             exit;
         }
         $obreiroModel = new \App\Models\Obreiro();
-        $obreiros = $obreiroModel->getAllAtivos();
+        $filtrosObreiros = [
+            'busca' => trim((string) ($_GET['busca'] ?? '')),
+            'situacao' => trim((string) ($_GET['situacao'] ?? '')),
+            'grau' => trim((string) ($_GET['grau'] ?? '')),
+            'alerta' => trim((string) ($_GET['alerta'] ?? $_GET['pendencia'] ?? '')),
+            'cargo_codigo' => trim((string) ($_GET['cargo_codigo'] ?? '')),
+            'ordenacao' => trim((string) ($_GET['ordenacao'] ?? 'nome')),
+        ];
+        $obreiros = $obreiroModel->listarParaSecretaria($filtrosObreiros);
+        $resumoObreiros = $obreiroModel->obterResumoSecretaria($filtrosObreiros);
+        $cargosFiltros = (new \App\Models\Cargo())->listarResumoCargos();
         require_once __DIR__ . "/../src/Views/obreiros.php";
         break;
 
@@ -633,6 +695,26 @@ switch ($requestUri) {
         (new \App\Controllers\SecretariaController())->salvarSessao();
         break;
 
+    case "/secretaria/sessoes/publicar-rascunho":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->publicarSessaoRascunho();
+        break;
+
+    case "/secretaria/sessoes/cancelar-rascunho":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->cancelarRascunhoSessao();
+        break;
+
     case "/secretaria/trabalhos/salvar":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
         if (!$sessionHasRole('secretario', 'admin')) {
@@ -751,6 +833,20 @@ switch ($requestUri) {
         require_once __DIR__ . "/../src/Views/tesouraria_caixa.php";
         break;
 
+    case "/tesouraria/sessoes":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\TesourariaSessaoController())->index();
+        break;
+
     case "/tesouraria/comprovantes":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
@@ -762,6 +858,8 @@ switch ($requestUri) {
             echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
             exit;
         }
+        $configuracaoLoja = (new \App\Models\ConfiguracaoLoja())->obter();
+        $categoriasEntrada = (new \App\Models\CategoriaFinanceira())->obterPorTipo('entrada');
         require_once __DIR__ . "/../src/Views/tesouraria_comprovantes.php";
         break;
 
@@ -791,6 +889,250 @@ switch ($requestUri) {
             exit;
         }
         require_once __DIR__ . "/../src/Views/tesouraria_fechamento.php";
+        break;
+
+    case "/tesouraria/relatorio-gestao":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito a Tesoureiro, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        $gestaoModel = new \App\Models\Gestao();
+        $gestoes = $gestaoModel->listar();
+        $gestaoAtual = $gestaoModel->obterAberta();
+        $gestaoIdSelecionada = (int) ($_GET['gestao_id'] ?? ($gestaoAtual['id'] ?? ($gestoes[0]['id'] ?? 0)));
+        if ($gestaoIdSelecionada <= 0) {
+            http_response_code(404);
+            echo "Nenhuma gestao cadastrada para consolidar o relatorio financeiro.";
+            exit;
+        }
+        $encerramentoInformado = trim((string) ($_GET['encerramento_em'] ?? ''));
+        $relatorio = (new \App\Models\RelatorioTesourariaGestao())->montar($gestaoIdSelecionada, $encerramentoInformado !== '' ? $encerramentoInformado : null);
+        require_once __DIR__ . "/../src/Views/tesouraria_relatorio_gestao.php";
+        break;
+
+    case "/tesouraria/obrigacoes":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        $obrigacaoModel = new \App\Models\ObrigacaoFinanceira();
+        $categoriaModel = new \App\Models\CategoriaFinanceira();
+        $configuracaoLoja = (new \App\Models\ConfiguracaoLoja())->obter();
+        $obreirosPainel = $obrigacaoModel->listarResumoTesouraria([
+            'busca' => trim((string) ($_GET['busca'] ?? '')),
+            'somente_em_aberto' => !empty($_GET['somente_em_aberto']),
+        ]);
+        $obreirosCadastro = (new \App\Models\Obreiro())->getAllAtivos();
+        $selectedObreiroId = trim((string) ($_GET['obreiro_id'] ?? ($obreirosPainel[0]['id'] ?? '')));
+        $selectedObreiroNome = 'Selecione um obreiro';
+        foreach ($obreirosCadastro as $obreiroCadastro) {
+            if ((string) ($obreiroCadastro['id'] ?? '') === $selectedObreiroId) {
+                $selectedObreiroNome = (string) ($obreiroCadastro['nome_historico'] ?? $obreiroCadastro['nome'] ?? 'Obreiro');
+                break;
+            }
+        }
+        $resumoObreiro = $selectedObreiroId !== '' ? $obrigacaoModel->obterResumoObreiro($selectedObreiroId) : [];
+        $obrigacoesObreiro = $selectedObreiroId !== '' ? $obrigacaoModel->listarPorObreiro($selectedObreiroId) : [];
+        $categoriasEntrada = $categoriaModel->obterPorTipo('entrada');
+        require_once __DIR__ . "/../src/Views/tesouraria_obrigacoes.php";
+        break;
+
+    case "/tesouraria/obrigacoes/criar":
+        if ($method !== 'POST') {
+            http_response_code(405);
+            exit;
+        }
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        $ok = (new \App\Models\ObrigacaoFinanceira())->criar($_POST, $_SESSION['usuario_id'] ?? null);
+        $destinoObreiro = trim((string) ($_POST['obreiro_id'] ?? ''));
+        header("Location: /tesouraria/obrigacoes" . ($destinoObreiro !== '' ? '?obreiro_id=' . urlencode($destinoObreiro) : '') . ($destinoObreiro !== '' ? '&' : '?') . ($ok ? 'sucesso=1' : 'erro=1'));
+        exit;
+
+    case "/tesouraria/obrigacoes/parcela/quitar":
+        if ($method !== 'POST') {
+            http_response_code(405);
+            exit;
+        }
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        $parcelaId = (int) ($_POST['parcela_id'] ?? 0);
+        $obreiroIdRetorno = trim((string) ($_POST['obreiro_id'] ?? ''));
+        $ok = $parcelaId > 0 ? (new \App\Models\ObrigacaoFinanceira())->quitarParcela($parcelaId, $_POST, $_SESSION['usuario_id'] ?? null) : false;
+        header("Location: /tesouraria/obrigacoes" . ($obreiroIdRetorno !== '' ? '?obreiro_id=' . urlencode($obreiroIdRetorno) : '') . ($obreiroIdRetorno !== '' ? '&' : '?') . ($ok ? 'sucesso=1' : 'erro=1'));
+        exit;
+
+    case "/tesouraria/obrigacoes/parcela/atualizar":
+        if ($method !== 'POST') { http_response_code(405); exit; }
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        $parcelaId = (int) ($_POST['parcela_id'] ?? 0);
+        $obreiroIdRetorno = trim((string) ($_POST['obreiro_id'] ?? ''));
+        $ok = $parcelaId > 0 ? (new \App\Models\ObrigacaoFinanceira())->atualizarParcela($parcelaId, $_POST) : false;
+        header("Location: /tesouraria/obrigacoes" . ($obreiroIdRetorno !== '' ? '?obreiro_id=' . urlencode($obreiroIdRetorno) : '') . ($obreiroIdRetorno !== '' ? '&' : '?') . ($ok ? 'sucesso=1' : 'erro=1'));
+        exit;
+
+    case "/tesouraria/obrigacoes/parcela/excluir":
+        if ($method !== 'POST') { http_response_code(405); exit; }
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        $parcelaId = (int) ($_POST['parcela_id'] ?? 0);
+        $obreiroIdRetorno = trim((string) ($_POST['obreiro_id'] ?? ''));
+        $ok = $parcelaId > 0 ? (new \App\Models\ObrigacaoFinanceira())->excluirParcela($parcelaId) : false;
+        header("Location: /tesouraria/obrigacoes" . ($obreiroIdRetorno !== '' ? '?obreiro_id=' . urlencode($obreiroIdRetorno) : '') . ($obreiroIdRetorno !== '' ? '&' : '?') . ($ok ? 'sucesso=1' : 'erro=1'));
+        exit;
+
+    case "/tesouraria/obrigacoes/parcela/recibo":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        $parcelaId = (int) ($_GET['id'] ?? 0);
+        $parcelaRecibo = $parcelaId > 0 ? (new \App\Models\ObrigacaoFinanceira())->obterParcelaPorId($parcelaId) : null;
+        if (!$parcelaRecibo || (string) ($parcelaRecibo['status'] ?? '') !== 'pago') {
+            http_response_code(404);
+            echo "Recibo indisponivel para esta parcela.";
+            exit;
+        }
+        $configuracaoLoja = (new \App\Models\ConfiguracaoLoja())->obter();
+        $tesoureiroNome = (string) ($_SESSION['usuario_nome'] ?? ($_SESSION['usuario_logado']['nome_historico'] ?? 'Tesoureiro'));
+        require_once __DIR__ . "/../src/Views/tesouraria_recibo.php";
+        exit;
+
+    case "/tesouraria/obrigacoes/mensalidades/gerar":
+        if ($method !== 'POST') { http_response_code(405); exit; }
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        $anoGeracao = max(2020, (int) ($_POST['ano_ref'] ?? date('Y')));
+        $resultadoGeracao = (new \App\Models\ObrigacaoFinanceira())->gerarMensalidadesAno($anoGeracao, $_SESSION['usuario_id'] ?? null);
+        $_SESSION['mensagem_sucesso'] = sprintf('Mensalidades %d: %d geradas, %d ignoradas e %d isentas.', $anoGeracao, $resultadoGeracao['geradas'], $resultadoGeracao['ignoradas'], $resultadoGeracao['isentas']);
+        header("Location: /tesouraria/obrigacoes");
+        exit;
+
+    case "/tesouraria/obrigacoes/biblioteca/designar":
+        if ($method !== 'POST') { http_response_code(405); exit; }
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        $obreirosBiblioteca = array_values(array_filter((array) ($_POST['obreiros_biblioteca'] ?? [])));
+        $resultadoBiblioteca = (new \App\Models\ObrigacaoFinanceira())->designarBibliotecaMes(
+            max(1, min(12, (int) ($_POST['mes_ref'] ?? date('n')))),
+            max(2020, (int) ($_POST['ano_ref'] ?? date('Y'))),
+            $obreirosBiblioteca,
+            trim((string) ($_POST['observacao'] ?? '')),
+            $_SESSION['usuario_id'] ?? null
+        );
+        $_SESSION['mensagem_sucesso'] = sprintf('Biblioteca: %d geradas, %d ignoradas e %d isentas.', $resultadoBiblioteca['geradas'], $resultadoBiblioteca['ignoradas'], $resultadoBiblioteca['isentas']);
+        header("Location: /tesouraria/obrigacoes");
+        exit;
+
+    case "/tesouraria/obrigacoes/isencao/criar":
+        if ($method !== 'POST') { http_response_code(405); exit; }
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+            if (!$telegramObreiro) { header("Location: /login"); exit; }
+            $loginTelegramObreiroInSession($telegramObreiro);
+        }
+        if (!$sessionHasRole('tesoureiro', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        $ok = (new \App\Models\ObrigacaoFinanceira())->registrarIsencao($_POST, $_SESSION['usuario_id'] ?? null);
+        $obreiroIdRetorno = trim((string) ($_POST['obreiro_id'] ?? ''));
+        header("Location: /tesouraria/obrigacoes" . ($obreiroIdRetorno !== '' ? '?obreiro_id=' . urlencode($obreiroIdRetorno) : '') . ($obreiroIdRetorno !== '' ? '&' : '?') . ($ok ? 'sucesso=1' : 'erro=1'));
+        exit;
+
+    case "/financeiro/minhas-obrigacoes":
+        $obreiroFinanceiro = $_SESSION['usuario_logado'] ?? null;
+        if (!$openTestAccess && !$obreiroFinanceiro) {
+            $initData = trim((string) ($_GET['init_data'] ?? ''));
+            if ($initData !== '') {
+                $obreiroFinanceiro = $resolveObreiroByInitData($initData);
+                if ($obreiroFinanceiro) {
+                    $loginTelegramObreiroInSession($obreiroFinanceiro);
+                }
+            }
+        }
+        if (!$obreiroFinanceiro) {
+            header("Location: /login");
+            exit;
+        }
+        $obreiroFinanceiroId = trim((string) ($obreiroFinanceiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+        if ($obreiroFinanceiroId === '' || $obreiroFinanceiroId === '0') {
+            http_response_code(403);
+            echo "Nao foi possivel identificar o obreiro para consultar suas obrigacoes.";
+            exit;
+        }
+        $obrigacaoModel = new \App\Models\ObrigacaoFinanceira();
+        $resumoObreiro = $obrigacaoModel->obterResumoObreiro($obreiroFinanceiroId);
+        $obrigacoesObreiro = $obrigacaoModel->listarPorObreiro($obreiroFinanceiroId);
+        require_once __DIR__ . "/../src/Views/minhas_obrigacoes.php";
         break;
 
     case "/biblioteca/classificar":
@@ -838,6 +1180,61 @@ switch ($requestUri) {
             exit;
         }
         (new \App\Controllers\VeneravelController())->index();
+        break;
+
+    case "/orador":
+    case "/orador/dashboard":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('orador', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Orador, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\OradorController())->index();
+        break;
+
+    case "/mestre-banquetes":
+    case "/mestre-banquetes/dashboard":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('mestre_banquetes', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Mestre de Banquetes, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\MestreBanquetesController())->index();
+        break;
+
+    case "/chanceler/sessao":
+    case "/chanceler/sessao/dashboard":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('chanceler', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\ChancelerSessaoController())->index();
+        break;
+
+    case "/chanceler/sessao/presenca":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('chanceler', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\ChancelerSessaoController())->registrarPresenca();
         break;
 
     case "/veneravel/sessoes/publicar":
@@ -1435,6 +1832,7 @@ switch ($requestUri) {
             $body = json_decode(file_get_contents('php://input'), true) ?? [];
             $comproModel = new \App\Models\ComprovantePix();
             $lancModel = new \App\Models\LancamentoFinanceiro();
+            $obrigacaoModel = new \App\Models\ObrigacaoFinanceira();
 
             $comprovante = $comproModel->obterPorId((int) ($body['id'] ?? 0));
             if (!$comprovante) {
@@ -1446,28 +1844,53 @@ switch ($requestUri) {
                 'valor' => (float) ($body['valor'] ?? 0),
                 'mes' => (int) ($body['mes'] ?? date('n')),
                 'ano' => (int) ($body['ano'] ?? date('Y')),
+                'rotulo_pagamento' => trim((string) ($body['rotulo_pagamento'] ?? '')) ?: null,
+                'categoria_id' => (int) ($body['categoria_id'] ?? 0) ?: null,
+                'obrigacao_parcela_id' => (int) ($body['obrigacao_parcela_id'] ?? 0) ?: null,
                 'validado_por' => $usuarioId,
             ];
             $comproModel->aprovar((int) ($body['id'] ?? 0), $validacao);
 
-            $lancData = [
-                'tipo' => 'entrada',
-                'categoria_id' => 1,
-                'valor' => $validacao['valor'],
-                'data_lancamento' => date('Y-m-d'),
-                'obreiro_id' => $comprovante['obreiro_id'],
-                'mes_ref' => $validacao['mes'],
-                'ano_ref' => $validacao['ano'],
-                'created_by' => $usuarioId,
-            ];
-            $lancModel->criar($lancData);
+            if (!empty($validacao['obrigacao_parcela_id'])) {
+                $obrigacaoModel->quitarParcela((int) $validacao['obrigacao_parcela_id'], [
+                    'valor_pago' => $validacao['valor'],
+                    'pago_em' => date('Y-m-d'),
+                    'categoria_id' => $validacao['categoria_id'],
+                    'descricao' => $validacao['rotulo_pagamento'] ?: ('Comprovante PIX #' . (int) $body['id']),
+                    'observacao' => 'Baixa via comprovante PIX validado.',
+                ], $usuarioId);
+            } else {
+                $lancData = [
+                    'tipo' => 'entrada',
+                    'categoria_id' => $validacao['categoria_id'] ?: 1,
+                    'valor' => $validacao['valor'],
+                    'data_lancamento' => date('Y-m-d'),
+                    'descricao' => $validacao['rotulo_pagamento'] ?: 'Comprovante PIX validado',
+                    'obreiro_id' => $comprovante['obreiro_id'],
+                    'mes_ref' => $validacao['mes'],
+                    'ano_ref' => $validacao['ano'],
+                    'created_by' => $usuarioId,
+                ];
+                $lancModel->criar($lancData);
+            }
 
-            if ($comprovante['obreiro_id']) {
+            if ($comprovante['obreiro_id'] && (($validacao['categoria_id'] ?? null) === null || (int) $validacao['categoria_id'] === 1)) {
                 $mensModel = new \App\Models\MensalidadeStatus();
                 $mensModel->registrar($comprovante['obreiro_id'], $validacao['mes'], $validacao['ano'], 'pago');
             }
 
             echo json_encode(['ok' => true]);
+            exit;
+        }
+
+        if ($requestUri === '/api/tesouraria/obrigacoes-abertas' && $method === 'GET') {
+            $obreiroId = trim((string) ($_GET['obreiro_id'] ?? ''));
+            if ($obreiroId === '') {
+                echo json_encode(['ok' => true, 'parcelas' => []]);
+                exit;
+            }
+            $parcelas = (new \App\Models\ObrigacaoFinanceira())->listarParcelasEmAbertoObreiro($obreiroId);
+            echo json_encode(['ok' => true, 'parcelas' => $parcelas]);
             exit;
         }
 
