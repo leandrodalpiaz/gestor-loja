@@ -20,13 +20,22 @@ class ChancelerSessaoController
 
         $proximaSessao = $sessaoModel->obterProximaSessao();
         $sessoes = $sessaoModel->listarFuturas(8);
+        $sessaoSelecionadaId = (int) ($_GET['sessao_id'] ?? 0);
+        $sessaoSelecionada = null;
         $mapaPresencas = [];
         $confirmados = [];
         $visitantesResumo = [];
         $obreiros = $obreiroModel->getAllAtivos();
 
-        if ($proximaSessao && !empty($proximaSessao['id'])) {
-            $sessaoId = (int) $proximaSessao['id'];
+        if ($sessaoSelecionadaId > 0) {
+            $sessaoSelecionada = $sessaoModel->findById($sessaoSelecionadaId);
+        }
+        if (!$sessaoSelecionada && $proximaSessao && !empty($proximaSessao['id'])) {
+            $sessaoSelecionada = $sessaoModel->findById((int) $proximaSessao['id']);
+        }
+
+        if ($sessaoSelecionada && !empty($sessaoSelecionada['id'])) {
+            $sessaoId = (int) $sessaoSelecionada['id'];
             $mapaPresencas = $presencaSessaoModel->listarMapaPorSessao($sessaoId);
             $confirmados = $presencaModel->listarConfirmadosPorSessao($sessaoId);
             $visitantesResumo = $balaustreModel->obterResumoVisitantesPorSessao($sessaoId);
@@ -66,7 +75,96 @@ class ChancelerSessaoController
             ? 'Presenca efetiva atualizada pelo Chanceler.'
             : 'Nao foi possivel atualizar a presenca efetiva.';
 
-        header('Location: /chanceler/sessao');
+        header('Location: /chanceler/sessao?sessao_id=' . urlencode((string) $sessaoId));
         exit;
+    }
+
+    public function montarPayloadMiniapp(?int $sessaoId = null): array
+    {
+        $sessaoModel = new Sessao();
+        $presencaModel = new Presenca();
+        $presencaSessaoModel = new PresencaSessao();
+        $balaustreModel = new Balaustre();
+
+        $sessoes = $sessaoModel->listarFuturas(8);
+        $proximaSessao = $sessaoModel->obterProximaSessao();
+        $sessaoFoco = null;
+
+        if ($sessaoId !== null && $sessaoId > 0) {
+            $sessaoFoco = $sessaoModel->findById($sessaoId);
+        }
+        if (!$sessaoFoco && $proximaSessao && !empty($proximaSessao['id'])) {
+            $sessaoFoco = $sessaoModel->findById((int) $proximaSessao['id']);
+        }
+
+        $mapaPresencas = [];
+        $confirmados = [];
+        $visitantesResumo = [];
+
+        if ($sessaoFoco && !empty($sessaoFoco['id'])) {
+            $sessaoFocoId = (int) $sessaoFoco['id'];
+            $mapaPresencas = $presencaSessaoModel->listarMapaPorSessao($sessaoFocoId);
+            $confirmados = $presencaModel->listarConfirmadosPorSessao($sessaoFocoId);
+            $visitantesResumo = $balaustreModel->obterResumoVisitantesPorSessao($sessaoFocoId);
+        }
+
+        return [
+            'proxima_sessao' => $proximaSessao ? $this->mapearSessao($proximaSessao) : null,
+            'sessao_foco' => $sessaoFoco ? $this->mapearSessao($sessaoFoco) : null,
+            'sessoes' => array_map(fn (array $sessao): array => $this->mapearSessao($sessao), $sessoes),
+            'confirmados' => array_map(static function (array $item): array {
+                return [
+                    'nome' => (string) ($item['nome'] ?? 'Obreiro'),
+                    'cim' => (string) ($item['cim'] ?? ''),
+                    'participara_agape' => (bool) ($item['participara_agape'] ?? false),
+                ];
+            }, $confirmados),
+            'visitantes' => array_map(static function (array $item): array {
+                return [
+                    'nome' => (string) ($item['nome'] ?? 'Visitante'),
+                    'linha_resumida' => (string) ($item['linha_resumida'] ?? ''),
+                ];
+            }, $visitantesResumo),
+            'presencas' => array_map(static function (array $item): array {
+                return [
+                    'id' => (string) ($item['id'] ?? ''),
+                    'nome' => (string) ($item['nome'] ?? 'Obreiro'),
+                    'cim' => (string) ($item['cim'] ?? ''),
+                    'grau' => (string) ($item['grau'] ?? ''),
+                    'presente' => (bool) ($item['presente'] ?? false),
+                ];
+            }, $mapaPresencas),
+        ];
+    }
+
+    public function registrarPresencaMiniapp(int $sessaoId, string $obreiroId, bool $presente, ?string $autorId = null, ?string $observacao = null): array
+    {
+        if ($sessaoId <= 0 || trim($obreiroId) === '') {
+            return ['ok' => false, 'erro' => 'Dados insuficientes para atualizar a presenca.'];
+        }
+
+        $ok = (new PresencaSessao())->registrar(
+            $sessaoId,
+            trim($obreiroId),
+            $presente,
+            $autorId,
+            $observacao
+        );
+
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel atualizar a presenca.'];
+    }
+
+    private function mapearSessao(array $sessao): array
+    {
+        return [
+            'id' => (int) ($sessao['id'] ?? 0),
+            'titulo' => (string) ($sessao['titulo'] ?? ''),
+            'data_hora_inicio' => (string) ($sessao['data_hora_inicio'] ?? ''),
+            'status' => (string) ($sessao['status'] ?? ''),
+            'tipo_sessao' => (string) ($sessao['tipo_sessao'] ?? ''),
+            'grau_sessao' => (string) ($sessao['grau_sessao'] ?? ''),
+            'agape_modalidade' => (string) ($sessao['agape_modalidade'] ?? 'nao_havera'),
+            'agape_modelo_financeiro' => (string) ($sessao['agape_modelo_financeiro'] ?? 'oficial_loja'),
+        ];
     }
 }

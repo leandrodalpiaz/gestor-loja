@@ -513,6 +513,26 @@ class Sessao
         ];
     }
 
+    public function listarHistorico(int $sessaoId, int $limite = 20): array
+    {
+        $limite = max(1, min($limite, 100));
+        $stmt = $this->db->prepare("
+            SELECT
+                h.*,
+                COALESCE(o.nome_historico, o.nome) AS autor_nome
+            FROM public.historico_sessao h
+            LEFT JOIN public.obreiros o ON o.id = h.autor_id
+            WHERE h.sessao_id = :sessao_id
+            ORDER BY h.created_at DESC, h.id DESC
+            LIMIT :limite
+        ");
+        $stmt->bindValue('sessao_id', $sessaoId, PDO::PARAM_INT);
+        $stmt->bindValue('limite', $limite, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function buscarDuplicidade(array $data): ?array
     {
         $payload = $this->normalizarPayload($data);

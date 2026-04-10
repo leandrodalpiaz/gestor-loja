@@ -2,15 +2,18 @@
 
 namespace App\Controllers;
 
+use App\Models\HarmoniaOperacao;
 use App\Services\HarmoniaPlaylistService;
 
 class MestreHarmoniaController
 {
     private HarmoniaPlaylistService $playlistService;
+    private HarmoniaOperacao $operacaoModel;
 
     public function __construct()
     {
         $this->playlistService = new HarmoniaPlaylistService();
+        $this->operacaoModel = new HarmoniaOperacao();
     }
 
     public function index(): void
@@ -75,6 +78,152 @@ class MestreHarmoniaController
         ], JSON_UNESCAPED_UNICODE);
     }
 
+    public function montarPayloadMiniapp(?string $sessaoPath = null): array
+    {
+        $payload = $this->playlistService->scanBase($this->resolveDefaultBasePath(), $sessaoPath);
+        $sessaoSelecionada = $payload['selected_session'] ?? null;
+        $tracks = (array) ($payload['selected_tracks'] ?? []);
+
+        if (!$sessaoSelecionada || $tracks === []) {
+            return [
+                'ok' => false,
+                'erro' => $payload['erro'] ?? 'Nenhuma playlist disponivel para o cargo.',
+                'sessoes' => [],
+            ];
+        }
+
+        $estado = $this->resolverEstadoOperacional($sessaoSelecionada, $tracks);
+        $faixaAtual = $this->encontrarFaixa($tracks, (string) ($estado['faixa_atual_id'] ?? '')) ?? $tracks[0];
+        $indiceAtual = $this->encontrarIndiceFaixa($tracks, (string) ($faixaAtual['id'] ?? ''));
+        $proximaFaixa = $indiceAtual >= 0 ? ($tracks[$indiceAtual + 1] ?? null) : null;
+
+        return [
+            'ok' => true,
+            'base_path' => $payload['base_path'] ?? null,
+            'sessao_foco' => [
+                'nome' => (string) ($sessaoSelecionada['name'] ?? ''),
+                'path' => (string) ($sessaoSelecionada['path'] ?? ''),
+                'total_tracks' => (int) ($sessaoSelecionada['total_tracks'] ?? 0),
+                'summary' => $sessaoSelecionada['summary'] ?? [],
+            ],
+            'sessoes' => array_map(static function (array $sessao): array {
+                return [
+                    'nome' => (string) ($sessao['name'] ?? ''),
+                    'path' => (string) ($sessao['path'] ?? ''),
+                    'total_tracks' => (int) ($sessao['total_tracks'] ?? 0),
+                ];
+            }, (array) ($payload['sessions'] ?? [])),
+            'estado' => [
+                'operador_nome' => (string) ($estado['operador_nome'] ?? ''),
+                'status_player' => (string) ($estado['status_player'] ?? 'parado'),
+                'volume_percent' => (int) ($estado['volume_percent'] ?? 100),
+                'auto_proxima' => !empty($estado['auto_proxima']),
+                'updated_at' => (string) ($estado['updated_at'] ?? ''),
+            ],
+            'faixa_atual' => $this->mapearFaixa($faixaAtual),
+            'proxima_faixa' => $proximaFaixa ? $this->mapearFaixa($proximaFaixa) : null,
+            'alternativas' => array_map(fn (array $faixa): array => $this->mapearFaixa($faixa), $this->listarAlternativas($tracks, $faixaAtual)),
+            'faixas' => array_map(fn (array $faixa): array => $this->mapearFaixa($faixa), $tracks),
+        ];
+    }
+
+    public function salvarOperadorMiniapp(array $dados): array
+    {
+        $sessaoPath = trim((string) ($dados['sessao_path'] ?? ''));
+        $nome = trim((string) ($dados['nome'] ?? ''));
+
+        if ($sessaoPath === '' || $nome === '') {
+            return ['ok' => false, 'erro' => 'Informe sessao e operador para continuar.'];
+        }
+
+        $payload = $this->playlistService->scanBase($this->resolveDefaultBasePath(), $sessaoPath);
+        $sessaoSelecionada = $payload['selected_session'] ?? null;
+        $tracks = (array) ($payload['selected_tracks'] ?? []);
+        if (!$sessaoSelecionada || $tracks === []) {
+            return ['ok' => false, 'erro' => $payload['erro'] ?? 'Sessao musical nao encontrada.'];
+        }
+
+        $estado = $this->resolverEstadoOperacional($sessaoSelecionada, $tracks);
+        $estado['operador_nome'] = $nome;
+        $this->persistirEstado($sessaoSelecionada, $tracks, $estado);
+        $_SESSION['harmonia_operador_nome'] = $nome;
+
+        return ['ok' => true, 'operador' => $nome];
+    }
+
+    public function executarAcaoMiniapp(string $acao, array $dados): array
+    {
+        $sessaoPath = trim((string) ($dados['sessao_path'] ?? ''));
+        $payload = $this->playlistService->scanBase($this->resolveDefaultBasePath(), $sessaoPath !== '' ? $sessaoPath : null);
+        $sessaoSelecionada = $payload['selected_session'] ?? null;
+        $tracks = (array) ($payload['selected_tracks'] ?? []);
+
+        if (!$sessaoSelecionada || $tracks === []) {
+            return ['ok' => false, 'erro' => $payload['erro'] ?? 'Sessao musical nao encontrada.'];
+        }
+
+        $estado = $this->resolverEstadoOperacional($sessaoSelecionada, $tracks);
+        $faixaAtual = $this->encontrarFaixa($tracks, (string) ($estado['faixa_atual_id'] ?? '')) ?? $tracks[0];
+        $indiceAtual = max(0, $this->encontrarIndiceFaixa($tracks, (string) ($faixaAtual['id'] ?? '')));
+
+        switch ($acao) {
+            case 'selecionar_sessao':
+                $estado['status_player'] = 'pronto';
+                break;
+            case 'selecionar_faixa':
+                $faixaId = trim((string) ($dados['faixa_id'] ?? ''));
+                $novaFaixa = $this->encontrarFaixa($tracks, $faixaId);
+                if (!$novaFaixa) {
+                    return ['ok' => false, 'erro' => 'Faixa nao encontrada na sessao selecionada.'];
+                }
+                $faixaAtual = $novaFaixa;
+                $estado['status_player'] = 'pronto';
+                break;
+            case 'anterior':
+                $faixaAtual = $tracks[max(0, $indiceAtual - 1)];
+                $estado['status_player'] = 'pronto';
+                break;
+            case 'proxima':
+                $faixaAtual = $tracks[min(count($tracks) - 1, $indiceAtual + 1)];
+                $estado['status_player'] = 'pronto';
+                break;
+            case 'iniciar':
+                $estado['status_player'] = 'tocando';
+                break;
+            case 'pausar':
+                $estado['status_player'] = 'pausado';
+                break;
+            case 'parar':
+                $estado['status_player'] = 'parado';
+                break;
+            case 'silencio':
+                $estado['status_player'] = 'silencio';
+                $estado['volume_percent'] = 0;
+                break;
+            case 'toggle_auto':
+                $estado['auto_proxima'] = empty($estado['auto_proxima']);
+                break;
+            case 'volume_up':
+                $estado['volume_percent'] = min(100, ((int) ($estado['volume_percent'] ?? 100)) + 10);
+                break;
+            case 'volume_down':
+                $estado['volume_percent'] = max(0, ((int) ($estado['volume_percent'] ?? 100)) - 10);
+                break;
+            default:
+                return ['ok' => false, 'erro' => 'Acao do player nao reconhecida.'];
+        }
+
+        $estado['faixa_atual_id'] = (string) ($faixaAtual['id'] ?? '');
+        $estado['faixa_atual_codigo'] = (string) ($faixaAtual['code'] ?? '');
+        $estado['faixa_atual_titulo'] = (string) ($faixaAtual['title'] ?? $faixaAtual['filename'] ?? '');
+        $this->persistirEstado($sessaoSelecionada, $tracks, $estado);
+
+        return [
+            'ok' => true,
+            'dados' => $this->montarPayloadMiniapp((string) ($sessaoSelecionada['path'] ?? '')),
+        ];
+    }
+
     private function resolveDefaultBasePath(): string
     {
         $candidates = [
@@ -129,5 +278,96 @@ class MestreHarmoniaController
         header('Accept-Ranges: bytes');
 
         readfile($filePath);
+    }
+
+    private function resolverEstadoOperacional(array $sessaoSelecionada, array $tracks): array
+    {
+        $sessaoPath = (string) ($sessaoSelecionada['path'] ?? '');
+        $estado = $sessaoPath !== '' ? $this->operacaoModel->obterPorSessao($sessaoPath) : null;
+        if ($estado) {
+            return $estado;
+        }
+
+        $primeiraFaixa = $tracks[0] ?? [];
+
+        return [
+            'sessao_path' => $sessaoPath,
+            'sessao_nome' => (string) ($sessaoSelecionada['name'] ?? ''),
+            'operador_nome' => (string) ($_SESSION['harmonia_operador_nome'] ?? ''),
+            'faixa_atual_id' => (string) ($primeiraFaixa['id'] ?? ''),
+            'faixa_atual_codigo' => (string) ($primeiraFaixa['code'] ?? ''),
+            'faixa_atual_titulo' => (string) ($primeiraFaixa['title'] ?? ''),
+            'status_player' => 'pronto',
+            'volume_percent' => 100,
+            'auto_proxima' => false,
+            'updated_at' => '',
+        ];
+    }
+
+    private function persistirEstado(array $sessaoSelecionada, array $tracks, array $estado): void
+    {
+        $sessaoPath = (string) ($sessaoSelecionada['path'] ?? '');
+        if ($sessaoPath === '') {
+            return;
+        }
+
+        if (empty($estado['faixa_atual_id']) && $tracks !== []) {
+            $estado['faixa_atual_id'] = (string) ($tracks[0]['id'] ?? '');
+            $estado['faixa_atual_codigo'] = (string) ($tracks[0]['code'] ?? '');
+            $estado['faixa_atual_titulo'] = (string) ($tracks[0]['title'] ?? '');
+        }
+
+        $this->operacaoModel->salvarEstado(
+            $sessaoPath,
+            (string) ($sessaoSelecionada['name'] ?? 'Sessao musical'),
+            $estado
+        );
+    }
+
+    private function encontrarFaixa(array $tracks, string $faixaId): ?array
+    {
+        foreach ($tracks as $track) {
+            if ((string) ($track['id'] ?? '') === $faixaId) {
+                return $track;
+            }
+        }
+
+        return null;
+    }
+
+    private function encontrarIndiceFaixa(array $tracks, string $faixaId): int
+    {
+        foreach ($tracks as $index => $track) {
+            if ((string) ($track['id'] ?? '') === $faixaId) {
+                return $index;
+            }
+        }
+
+        return -1;
+    }
+
+    private function listarAlternativas(array $tracks, array $faixaAtual): array
+    {
+        $stageKey = (string) ($faixaAtual['stage_key'] ?? '');
+        if ($stageKey === '') {
+            return [];
+        }
+
+        return array_values(array_filter($tracks, static function (array $track) use ($stageKey, $faixaAtual): bool {
+            return (string) ($track['stage_key'] ?? '') === $stageKey
+                && (string) ($track['id'] ?? '') !== (string) ($faixaAtual['id'] ?? '');
+        }));
+    }
+
+    private function mapearFaixa(array $faixa): array
+    {
+        return [
+            'id' => (string) ($faixa['id'] ?? ''),
+            'code' => (string) ($faixa['code'] ?? ''),
+            'title' => (string) ($faixa['title'] ?? $faixa['filename'] ?? ''),
+            'type' => (string) ($faixa['type'] ?? 'principal'),
+            'phase' => (string) ($faixa['phase'] ?? ''),
+            'stage_key' => (string) ($faixa['stage_key'] ?? ''),
+        ];
     }
 }

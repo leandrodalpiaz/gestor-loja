@@ -150,6 +150,56 @@ class OcorrenciaAssistencial
         ]);
     }
 
+    public function registrarVisita(int $id, ?string $autorId = null, ?string $observacao = null, ?string $dataProximaAcao = null): bool
+    {
+        if ($id <= 0) {
+            return false;
+        }
+
+        $stmt = $this->db->prepare("
+            UPDATE public.ocorrencias_assistenciais
+               SET status = 'em_acompanhamento',
+                   necessita_visita = FALSE,
+                   observacao_status = CASE
+                       WHEN :observacao IS NULL OR :observacao = '' THEN observacao_status
+                       ELSE :observacao
+                   END,
+                   data_proxima_acao = COALESCE(:data_proxima_acao, data_proxima_acao),
+                   updated_by = :updated_by,
+                   updated_at = NOW()
+             WHERE id = :id
+        ");
+
+        return $stmt->execute([
+            'id' => $id,
+            'observacao' => $this->limparTexto($observacao),
+            'data_proxima_acao' => $this->normalizarData($dataProximaAcao),
+            'updated_by' => $this->limparTexto($autorId),
+        ]);
+    }
+
+    public function listarPendentesVisita(int $limite = 40): array
+    {
+        $limite = max(1, min($limite, 200));
+
+        $stmt = $this->db->prepare("
+            SELECT
+                oa.*,
+                COALESCE(o.nome_historico, o.nome) AS obreiro_nome,
+                o.cim AS obreiro_cim
+            FROM public.ocorrencias_assistenciais oa
+            LEFT JOIN public.obreiros o ON o.id = oa.obreiro_id
+            WHERE oa.necessita_visita = TRUE
+               OR oa.status = 'em_acompanhamento'
+            ORDER BY COALESCE(oa.data_proxima_acao, oa.data_ocorrencia, CURRENT_DATE) ASC, oa.updated_at DESC
+            LIMIT :limite
+        ");
+        $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     private function normalizarTipo(string $tipo): string
     {
         $tipo = strtolower(trim($tipo));

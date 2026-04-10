@@ -5,6 +5,7 @@ namespace App\Bot;
 use App\Config\Env;
 use App\Models\ComprovantePix;
 use App\Models\ConfiguracaoLoja;
+use App\Models\EfemerideRegistro;
 use App\Models\ObrigacaoFinanceira;
 
 class CommandHandler
@@ -103,6 +104,42 @@ class CommandHandler
         return true;
     }
 
+    private function getEfemeridesDoDiaPorTipos(array $tipos): array
+    {
+        $tiposNormalizados = array_values(array_unique(array_filter(array_map(
+            static fn (string $tipo): string => strtolower(trim($tipo)),
+            $tipos
+        ))));
+
+        $registros = (new EfemerideRegistro())->getRegistrosDoDia();
+
+        return array_values(array_filter($registros, static function (array $registro) use ($tiposNormalizados): bool {
+            $tipo = strtolower(trim((string) ($registro['tipo'] ?? '')));
+            return in_array($tipo, $tiposNormalizados, true);
+        }));
+    }
+
+    private function formatarLinhaEfemeride(array $registro): string
+    {
+        $nome = trim((string) ($registro['nome'] ?? '')) ?: 'Registro sem nome';
+        $texto = trim((string) ($registro['mensagem_custom'] ?? ''));
+        $dataEvento = trim((string) ($registro['data_evento'] ?? ''));
+        $tipo = trim((string) ($registro['tipo'] ?? ''));
+
+        if ($texto !== '') {
+            return "- <b>{$nome}</b>: {$texto}";
+        }
+
+        $sufixo = $tipo !== '' ? " ({$tipo})" : '';
+        if ($dataEvento !== '') {
+            $timestamp = strtotime($dataEvento);
+            $dataEvento = $timestamp ? date('d/m/Y', $timestamp) : $dataEvento;
+            $sufixo .= " - {$dataEvento}";
+        }
+
+        return "- <b>{$nome}</b>{$sufixo}";
+    }
+
     public function handlePainelAdmin($chatId, $requesterTelegramId)
     {
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
@@ -139,7 +176,7 @@ class CommandHandler
         $mensagem = "Bem-vindo ao painel da Loja, meu Irmao!";
         $teclado = ['inline_keyboard' => []];
 
-        if ($this->obreiroHasRole($obreiro, 'admin', 'veneravel', 'secretario', 'chanceler', 'tesoureiro', 'bibliotecario', 'primeiro_vigilante', 'segundo_vigilante', 'hospitaleiro')) {
+        if ($this->obreiroHasRole($obreiro, 'admin', 'veneravel', 'secretario', 'chanceler', 'tesoureiro', 'bibliotecario', 'primeiro_vigilante', 'segundo_vigilante', 'hospitaleiro', 'mestre_harmonia')) {
             $teclado['inline_keyboard'][] = [
                 ['text' => 'Chancelaria', 'callback_data' => 'admin_chancelaria'],
                 ['text' => 'Secretaria', 'callback_data' => 'secretaria_menu'],
@@ -147,6 +184,17 @@ class CommandHandler
             if ($this->obreiroHasRole($obreiro, 'admin', 'veneravel')) {
                 $teclado['inline_keyboard'][] = [
                     ['text' => 'Painel do Veneravel Mestre', 'web_app' => ['url' => $this->buildAppUrl('/veneravel')]],
+                    ['text' => 'Veneravel Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
+                ];
+            }
+            if ($this->obreiroHasRole($obreiro, 'primeiro_vigilante', 'admin', 'veneravel')) {
+                $teclado['inline_keyboard'][] = [
+                    ['text' => '1o Vigilante Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/primeiro-vigilante')]],
+                ];
+            }
+            if ($this->obreiroHasRole($obreiro, 'segundo_vigilante', 'admin', 'veneravel')) {
+                $teclado['inline_keyboard'][] = [
+                    ['text' => '2o Vigilante Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/segundo-vigilante')]],
                 ];
             }
             $teclado['inline_keyboard'][] = [
@@ -161,6 +209,13 @@ class CommandHandler
             if ($this->obreiroHasRole($obreiro, 'orador', 'admin', 'veneravel')) {
                 $teclado['inline_keyboard'][] = [
                     ['text' => 'Orador', 'web_app' => ['url' => $this->buildAppUrl('/orador')]],
+                    ['text' => 'Orador Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/orador')]],
+                ];
+            }
+            if ($this->obreiroHasRole($obreiro, 'mestre_harmonia', 'admin', 'veneravel')) {
+                $teclado['inline_keyboard'][] = [
+                    ['text' => 'Mestre de Harmonia', 'web_app' => ['url' => $this->buildAppUrl('/mestre-harmonia')]],
+                    ['text' => 'Harmonia Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/mestre-harmonia')]],
                 ];
             }
         if ($this->obreiroHasRole($obreiro, 'hospitaleiro', 'secretario', 'tesoureiro', 'veneravel', 'admin')) {
@@ -350,6 +405,9 @@ class CommandHandler
                     ['text' => 'Certificado (Fallback)', 'url' => $this->buildAppUrl('/chancelaria/certificado')],
                 ],
                 [
+                    ['text' => 'Miniapp do Chanceler', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/chanceler')]],
+                ],
+                [
                     ['text' => 'Neste Dia', 'callback_data' => 'chancelaria_neste_dia'],
                 ],
                 [
@@ -400,7 +458,12 @@ class CommandHandler
                     ['text' => 'Fechamento Mensal', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Ffechamento')]],
                 ],
                 [
+                    ['text' => 'Obrigacoes', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fobrigacoes')]],
+                    ['text' => 'Sessoes', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fsessoes')]],
+                ],
+                [
                     ['text' => 'Validar Pix', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fcomprovantes')]],
+                    ['text' => 'Relatorio Gestao', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Frelatorio-gestao')]],
                 ],
                 [
                     ['text' => 'Voltar', 'callback_data' => 'start_menu'],
@@ -427,6 +490,7 @@ class CommandHandler
         ];
         $botoes[] = [
             ['text' => 'Abrir Biblioteca Web', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca')]],
+            ['text' => 'Biblioteca Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/biblioteca')]],
         ];
 
         if ($isBibliotecario || $isDev) {
@@ -537,16 +601,14 @@ class CommandHandler
 
     private function handleAniversarios($chatId)
     {
-        $obreiroModel = new \App\Models\Obreiro();
-        $hoje = date('m-d');
-        $aniversariantes = $obreiroModel->buscarPorAniversario($hoje);
+        $aniversariantes = $this->getEfemeridesDoDiaPorTipos(['aniversário', 'aniversario']);
 
         if (empty($aniversariantes)) {
             $msg = "Nao ha aniversariantes de vida hoje.";
         } else {
             $msg = "<b>Aniversariantes de Vida Hoje</b>\n\n";
             foreach ($aniversariantes as $o) {
-                $msg .= "- {$o['nome']}\n";
+                $msg .= $this->formatarLinhaEfemeride($o) . "\n";
             }
         }
 
@@ -555,16 +617,30 @@ class CommandHandler
 
     private function handleDatasMaconicas($chatId)
     {
-        $obreiroModel = new \App\Models\Obreiro();
-        $hoje = date('m-d');
-        $maconicos = $obreiroModel->buscarPorDatasMaconicas($hoje);
+        $maconicos = $this->getEfemeridesDoDiaPorTipos([
+            'iniciação',
+            'iniciacao',
+            'elevação',
+            'elevacao',
+            'exaltação',
+            'exaltacao',
+            'instalação',
+            'instalacao',
+            'filiação',
+            'filiacao',
+            'posse grão mestre',
+            'posse grao mestre',
+            'concessão de membro honorário',
+            'concessao de membro honorario',
+            'oriente eterno',
+        ]);
 
         if (empty($maconicos)) {
             $msg = "Nao ha aniversarios maconicos hoje.";
         } else {
             $msg = "<b>Aniversarios Maconicos Hoje</b>\n\n";
             foreach ($maconicos as $o) {
-                $msg .= "- {$o['nome']} ({$o['tipo']})\n";
+                $msg .= $this->formatarLinhaEfemeride($o) . "\n";
             }
         }
 
@@ -1106,6 +1182,7 @@ class CommandHandler
         if ($this->isDev($fromId) || $this->obreiroHasRole($obreiro, 'admin', 'veneravel')) {
             $botoes[] = [
                 ['text' => 'Painel do Veneravel Mestre', 'web_app' => ['url' => $this->buildAppUrl('/veneravel')]],
+                ['text' => 'Veneravel Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
             ];
         }
 
@@ -1133,6 +1210,7 @@ class CommandHandler
             'inline_keyboard' => [
                 [
                     ['text' => 'Abrir painel de Assistencia', 'web_app' => ['url' => $this->buildAppUrl('/assistencia')]],
+                    ['text' => 'Hospitaleiro Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/hospitaleiro')]],
                 ],
                 [
                     ['text' => 'Voltar', 'callback_data' => 'start_menu'],

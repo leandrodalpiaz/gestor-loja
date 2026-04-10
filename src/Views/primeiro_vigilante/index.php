@@ -8,7 +8,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1º Vigilante - Painel de Instrução</title>
+    <title>1o Vigilante - Painel de Instrucao</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,15 +37,15 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
     <div class="mx-auto max-w-7xl px-4 py-8">
         <header class="overflow-hidden rounded-3xl border border-white/50 bg-[radial-gradient(circle_at_top_left,#d6bb7d,transparent_30%),linear-gradient(135deg,#162131,#203349_55%,#315348)] px-6 py-7 text-white shadow-2xl">
             <p class="text-xs uppercase tracking-[0.22em] text-amber-200">Coluna do Norte</p>
-            <h1 class="mt-2 font-display text-4xl font-bold">Painel do 1º Vigilante</h1>
+            <h1 class="mt-2 font-display text-4xl font-bold">Painel do 1o Vigilante</h1>
             <p class="mt-2 max-w-3xl text-sm text-slate-200">
-                Acompanhamento formativo dos Aprendizes, com foco na trilha de estudos, orientação das instruções,
-                recebimento dos trabalhos e preparo para a conclusão da docência maçônica.
+                Acompanhamento formativo dos Aprendizes com trilha, devolutivas, leitura orientada e preparo para a conclusao da docencia maconica.
             </p>
             <div class="mt-5 flex flex-wrap gap-2">
                 <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao dashboard</a>
                 <a href="/obreiros" class="rounded-md bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-200">Ver Aprendizes</a>
-                <a href="/biblioteca" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Biblioteca e classificação</a>
+                <a href="/biblioteca" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Biblioteca e classificacao</a>
+                <a href="/miniapp/primeiro-vigilante" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Abrir miniapp do cargo</a>
             </div>
         </header>
 
@@ -59,7 +59,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
             <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800"><?= htmlspecialchars((string) $avisoInfra) ?></div>
         <?php endif; ?>
 
-        <section class="mt-6 grid gap-4 md:grid-cols-4">
+        <section class="mt-6 grid gap-4 md:grid-cols-5">
             <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
                 <div class="text-sm text-slate-500">Aprendizes ativos</div>
                 <div class="mt-2 text-3xl font-bold text-ardosia"><?= (int) ($resumo['aprendizes_ativos'] ?? 0) ?></div>
@@ -69,12 +69,16 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                 <div class="mt-2 text-3xl font-bold text-ardosia"><?= (int) ($resumo['etapa_inicial'] ?? 0) ?></div>
             </article>
             <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Trabalhos aguardando recebimento</div>
+                <div class="text-sm text-slate-500">Aguardando recebimento</div>
                 <div class="mt-2 text-3xl font-bold text-ardosia"><?= (int) ($resumo['trabalhos_aguardando_recebimento'] ?? 0) ?></div>
             </article>
             <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
                 <div class="text-sm text-slate-500">Aptos para certificado</div>
                 <div class="mt-2 text-3xl font-bold text-ardosia"><?= (int) ($resumo['aptos_certificado'] ?? 0) ?></div>
+            </article>
+            <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
+                <div class="text-sm text-slate-500">Leituras sugeridas</div>
+                <div class="mt-2 text-3xl font-bold text-ardosia"><?= (int) ($resumo['leituras_sugeridas'] ?? 0) ?></div>
             </article>
         </section>
 
@@ -84,9 +88,9 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                     <div class="flex items-start justify-between gap-4">
                         <div>
                             <h2 class="font-display text-2xl font-semibold">Aprendizes em acompanhamento</h2>
-                            <p class="mt-1 text-sm text-slate-600">Primeira entrega do painel com trilha-base pronta para evolução nas próximas fases.</p>
+                            <p class="mt-1 text-sm text-slate-600">Painel central do cargo com trilha, leitura formativa, devolutivas e preparo do certificado.</p>
                         </div>
-                        <div class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">Fundação inicial</div>
+                        <div class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800">Fluxo operacional</div>
                     </div>
 
                     <div class="mt-4 overflow-x-auto">
@@ -94,10 +98,10 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                             <thead>
                                 <tr>
                                     <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Aprendiz</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Iniciação</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Iniciacao</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Etapa atual</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Status</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Próxima ação</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Proxima acao</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
@@ -108,7 +112,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                             <div class="text-xs text-slate-500">CIM <?= htmlspecialchars((string) ($aprendiz['cim'] ?? '-')) ?></div>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-slate-700">
-                                            <?= !empty($aprendiz['data_iniciacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $aprendiz['data_iniciacao']))) : 'Não informada' ?>
+                                            <?= !empty($aprendiz['data_iniciacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $aprendiz['data_iniciacao']))) : 'Nao informada' ?>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-slate-700">
                                             <div class="font-medium">Etapa <?= (int) ($aprendiz['trilha_etapa_atual'] ?? 1) ?></div>
@@ -148,7 +152,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                         <div class="mt-2 text-lg font-semibold text-ardosia">
                             <?= htmlspecialchars(trim((string) ($titularCargo['titular_nome'] ?? '')) ?: 'A definir') ?>
                         </div>
-                        <div class="mt-1 text-sm text-slate-600">Cargo orientado à instrução, revisão de trabalhos e incentivo ao estudo dos Aprendizes.</div>
+                        <div class="mt-1 text-sm text-slate-600">Cargo orientado a instrucao, revisao de trabalhos e incentivo ao estudo dos Aprendizes.</div>
                     </div>
                 </article>
 
@@ -165,10 +169,9 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                 </article>
 
                 <article class="rounded-3xl border border-white/70 bg-[linear-gradient(180deg,#fff,#f6f1e8)] p-6 shadow-sm">
-                    <h2 class="font-display text-2xl font-semibold">Próximo passo</h2>
+                    <h2 class="font-display text-2xl font-semibold">Status do cargo</h2>
                     <p class="mt-3 text-sm text-slate-700">
-                        A próxima fase vai conectar essa trilha ao banco para salvar progresso real, recebimento de trabalhos,
-                        revisão das instruções, sugestões de leitura e solicitação do certificado final.
+                        O cargo agora cobre o ciclo formativo principal. O proximo trabalho do projeto passa a ser refino visual global e homologacao detalhada.
                     </p>
                 </article>
             </aside>

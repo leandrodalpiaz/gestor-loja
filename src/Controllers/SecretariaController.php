@@ -6,6 +6,7 @@ use App\Models\Obreiro;
 use App\Models\Balaustre;
 use App\Models\Cargo;
 use App\Models\ConfiguracaoLoja;
+use App\Models\Presenca;
 use App\Models\PublicacaoSessao;
 use App\Models\PublicacaoSecretaria;
 use App\Models\RelatorioSecretariaAnual;
@@ -113,15 +114,50 @@ class SecretariaController
         $trabalhoModel = new TrabalhoSessao();
         $publicacaoModel = new PublicacaoSecretaria();
         $balaustreModel = new Balaustre();
+        $presencaModel = new Presenca();
 
         $proximaSessao = $sessaoModel->obterProximaSessao();
         $sessoes = $sessaoModel->listarFuturas(8);
         $obreiros = $obreiroModel->getAllAtivos();
+        $resumoCadastros = $obreiroModel->obterResumoSecretaria();
         $trabalhos = $trabalhoModel->listarRecentes(8);
         $publicacoes = $publicacaoModel->listarRecentes(8);
         $balaustres = $balaustreModel->listarRecentes(8);
         $configuracaoLoja = (new ConfiguracaoLoja())->obter();
         $sessaoRascunho = $_SESSION['secretaria_sessao_rascunho'] ?? null;
+        $sessaoEdicao = null;
+        $sessaoEdicaoId = (int) ($_GET['editar_sessao'] ?? 0);
+        $sessaoHistorico = null;
+        $historicoSessao = [];
+        $sessaoHistoricoId = (int) ($_GET['historico_sessao'] ?? 0);
+        if ($sessaoEdicaoId > 0) {
+            $sessaoEdicao = $sessaoModel->findById($sessaoEdicaoId);
+            if (!$sessaoEdicao) {
+                $_SESSION['mensagem_erro'] = 'Sessao informada para edicao nao foi encontrada.';
+                header('Location: /secretaria');
+                exit;
+            }
+        }
+        if ($sessaoHistoricoId > 0) {
+            $sessaoHistorico = $sessaoModel->findById($sessaoHistoricoId);
+            if ($sessaoHistorico) {
+                $historicoSessao = $sessaoModel->listarHistorico($sessaoHistoricoId, 20);
+            }
+        }
+        $sessaoResumo = null;
+        $confirmadosSessaoResumo = [];
+        $participantesAgapeResumo = [];
+        $sessaoResumoId = (int) ($_GET['sessao_resumo'] ?? 0);
+        if ($sessaoResumoId <= 0 && !empty($proximaSessao['id'])) {
+            $sessaoResumoId = (int) $proximaSessao['id'];
+        }
+        if ($sessaoResumoId > 0) {
+            $sessaoResumo = $sessaoModel->findById($sessaoResumoId);
+            if ($sessaoResumo) {
+                $confirmadosSessaoResumo = $presencaModel->listarConfirmadosPorSessao($sessaoResumoId);
+                $participantesAgapeResumo = $presencaModel->listarParticipantesAgapePorSessao($sessaoResumoId);
+            }
+        }
         $sessaoDuplicada = null;
         $resumoRascunhoSessao = null;
         $acoesConfirmacaoRascunho = [];
@@ -229,6 +265,7 @@ class SecretariaController
         }
 
         $sessaoModel = new Sessao();
+        $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         $payload = [
             'data_hora_inicio' => trim((string) ($_POST['data_hora_inicio'] ?? '')),
             'data_hora_fim' => trim((string) ($_POST['data_hora_fim'] ?? '')),
@@ -247,6 +284,7 @@ class SecretariaController
             'formato_sessao' => trim((string) ($_POST['formato_sessao'] ?? '')),
             'finalidade_ritual' => trim((string) ($_POST['finalidade_ritual'] ?? '')),
             'templo_local' => trim((string) ($_POST['templo_local'] ?? '')),
+            'sessao_branca' => isset($_POST['sessao_branca']),
             'sessao_a_campo' => isset($_POST['sessao_a_campo']),
             'conta_relatorio_potencia' => isset($_POST['conta_relatorio_potencia']),
             'observacao_relatorio' => trim((string) ($_POST['observacao_relatorio'] ?? '')),
@@ -255,8 +293,13 @@ class SecretariaController
             'observacao_interna' => trim((string) ($_POST['observacao_interna'] ?? '')),
         ];
         $payload = $this->normalizarRascunhoSessao($payload);
+        if ($sessaoId > 0) {
+            $payload['id'] = $sessaoId;
+        }
         $_SESSION['secretaria_sessao_rascunho'] = $payload;
-        $_SESSION['mensagem_sucesso'] = 'Sessao preparada para revisao final. Confira o resumo antes de publicar.';
+        $_SESSION['mensagem_sucesso'] = $sessaoId > 0
+            ? 'Sessao preparada para revisao final da edicao. Confira o resumo antes de confirmar a atualizacao.'
+            : 'Sessao preparada para revisao final. Confira o resumo antes de publicar.';
 
         header('Location: /secretaria');
         exit;
@@ -280,21 +323,41 @@ class SecretariaController
         $configuracaoLoja = (new ConfiguracaoLoja())->obter();
         $autorId = (string) ($_SESSION['usuario_id'] ?? '');
         $autorId = $autorId !== '' ? $autorId : null;
-        $sessaoId = $sessaoModel->criar($rascunho, $autorId);
+        $sessaoIdExistente = (int) ($rascunho['id'] ?? 0);
 
-        if (!$sessaoId) {
-            $_SESSION['mensagem_erro'] = 'Nao foi possivel persistir a sessao revisada.';
-            header('Location: /secretaria');
-            exit;
+        if ($sessaoIdExistente > 0) {
+            $ok = $sessaoModel->atualizar(
+                $sessaoIdExistente,
+                $rascunho,
+                $autorId,
+                'Atualizacao confirmada pela Secretaria apos revisao final.'
+            );
+            if (!$ok) {
+                $_SESSION['mensagem_erro'] = 'Nao foi possivel atualizar a sessao revisada.';
+                header('Location: /secretaria');
+                exit;
+            }
+            $sessaoId = $sessaoIdExistente;
+        } else {
+            $sessaoId = $sessaoModel->criar($rascunho, $autorId);
+
+            if (!$sessaoId) {
+                $_SESSION['mensagem_erro'] = 'Nao foi possivel persistir a sessao revisada.';
+                header('Location: /secretaria');
+                exit;
+            }
+
+            $sessaoModel->marcarPublicada($sessaoId, $autorId, 'Publicacao confirmada pela Secretaria apos revisao final.');
         }
 
-        $sessaoModel->marcarPublicada($sessaoId, $autorId, 'Publicacao confirmada pela Secretaria apos revisao final.');
         $sessaoCriada = $sessaoModel->findById($sessaoId) ?? $rascunho;
         $conteudo = $sessaoModel->comporResumoPublicacao($sessaoCriada, $configuracaoLoja);
         (new PublicacaoSessao())->registrar($sessaoId, 'resumo_proxima_sessao', 'erp', $conteudo, $autorId);
 
         unset($_SESSION['secretaria_sessao_rascunho']);
-        $_SESSION['mensagem_sucesso'] = 'Sessao publicada com sucesso e pronta para confirmacoes.';
+        $_SESSION['mensagem_sucesso'] = $sessaoIdExistente > 0
+            ? 'Sessao atualizada com sucesso e historico registrado.'
+            : 'Sessao publicada com sucesso e pronta para confirmacoes.';
         header('Location: /secretaria');
         exit;
     }
@@ -303,6 +366,95 @@ class SecretariaController
     {
         unset($_SESSION['secretaria_sessao_rascunho']);
         $_SESSION['mensagem_sucesso'] = 'Rascunho da sessao descartado.';
+        header('Location: /secretaria');
+        exit;
+    }
+
+    public function cancelarSessao(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /secretaria');
+            exit;
+        }
+
+        $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
+        if ($sessaoId <= 0) {
+            $_SESSION['mensagem_erro'] = 'Sessao invalida para cancelamento.';
+            header('Location: /secretaria');
+            exit;
+        }
+
+        $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $ok = (new Sessao())->cancelar(
+            $sessaoId,
+            $autorId !== '' ? $autorId : null,
+            'Cancelamento operacional realizado pela Secretaria.'
+        );
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Sessao cancelada com sucesso pela Secretaria.'
+            : 'Nao foi possivel cancelar a sessao.';
+
+        header('Location: /secretaria');
+        exit;
+    }
+
+    public function reabrirSessao(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /secretaria');
+            exit;
+        }
+
+        $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
+        if ($sessaoId <= 0) {
+            $_SESSION['mensagem_erro'] = 'Sessao invalida para reabertura.';
+            header('Location: /secretaria');
+            exit;
+        }
+
+        $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $ok = (new Sessao())->reabrir(
+            $sessaoId,
+            $autorId !== '' ? $autorId : null,
+            'Reabertura operacional realizada pela Secretaria.'
+        );
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Sessao reaberta com sucesso pela Secretaria.'
+            : 'Nao foi possivel reabrir a sessao.';
+
+        header('Location: /secretaria');
+        exit;
+    }
+
+    public function publicarSessao(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /secretaria');
+            exit;
+        }
+
+        $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
+        if ($sessaoId <= 0) {
+            $_SESSION['mensagem_erro'] = 'Sessao invalida para publicacao.';
+            header('Location: /secretaria');
+            exit;
+        }
+
+        $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $autorId = $autorId !== '' ? $autorId : null;
+
+        $ok = (new Sessao())->marcarPublicada(
+            $sessaoId,
+            $autorId,
+            'Publicacao operacional realizada pela Secretaria.'
+        );
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Sessao publicada com sucesso pela Secretaria.'
+            : 'Nao foi possivel publicar a sessao.';
+
         header('Location: /secretaria');
         exit;
     }
@@ -494,7 +646,7 @@ class SecretariaController
         $payload['formato_sessao'] = $payload['formato_sessao'] !== '' ? $payload['formato_sessao'] : 'templo';
         $payload['finalidade_ritual'] = $payload['finalidade_ritual'] !== '' ? $payload['finalidade_ritual'] : 'economica';
         $payload['gestao_referencia'] = $payload['gestao_referencia'] !== '' ? $payload['gestao_referencia'] : date('Y');
-        $payload['sessao_branca'] = false;
+        $payload['sessao_branca'] = (bool) ($payload['sessao_branca'] ?? false);
         $payload['agape_modelo_financeiro'] = in_array(
             $payload['agape_modelo_financeiro'] ?? '',
             Sessao::AGAPE_MODELOS_FINANCEIROS,
@@ -502,5 +654,151 @@ class SecretariaController
         ) ? $payload['agape_modelo_financeiro'] : 'oficial_loja';
         $payload['agape_ativo'] = in_array($payload['agape_modalidade'], ['gratuito', 'pago'], true);
         return $payload;
+    }
+
+    public function montarPayloadMiniapp(?int $sessaoId = null): array
+    {
+        $sessaoModel = new Sessao();
+        $presencaModel = new Presenca();
+        $obreiroModel = new Obreiro();
+        $trabalhoModel = new TrabalhoSessao();
+        $balaustreModel = new Balaustre();
+        $configuracaoLoja = (new ConfiguracaoLoja())->obter();
+        $relatorioAnual = (new RelatorioSecretariaAnual())->montar((int) date('Y'));
+
+        $sessoes = $sessaoModel->listarFuturas(8);
+        $resumoCadastros = $obreiroModel->obterResumoSecretaria();
+        $proximaSessao = $sessaoModel->obterProximaSessao();
+        $trabalhosRecentes = $trabalhoModel->listarRecentes(5);
+        $balaustresRecentes = $balaustreModel->listarRecentes(5);
+
+        $sessaoFoco = null;
+        if ($sessaoId !== null && $sessaoId > 0) {
+            $sessaoFoco = $sessaoModel->findById($sessaoId);
+        }
+        if (!$sessaoFoco && $proximaSessao && !empty($proximaSessao['id'])) {
+            $sessaoFoco = $sessaoModel->findById((int) $proximaSessao['id']);
+        }
+
+        $confirmados = [];
+        $participantesAgape = [];
+        $historico = [];
+        if ($sessaoFoco && !empty($sessaoFoco['id'])) {
+            $confirmados = $presencaModel->listarConfirmadosPorSessao((int) $sessaoFoco['id']);
+            $participantesAgape = $presencaModel->listarParticipantesAgapePorSessao((int) $sessaoFoco['id']);
+            $historico = $sessaoModel->listarHistorico((int) $sessaoFoco['id'], 10);
+        }
+
+        return [
+            'loja' => [
+                'nome' => trim((string) ($configuracaoLoja['nome_loja'] ?? 'Loja')),
+                'numero' => trim((string) ($configuracaoLoja['numero_loja'] ?? '')),
+            ],
+            'resumo_cadastros' => $resumoCadastros,
+            'proxima_sessao' => $proximaSessao ? $this->mapearSessaoMiniapp($proximaSessao, $sessaoModel) : null,
+            'sessao_foco' => $sessaoFoco ? $this->mapearSessaoMiniapp($sessaoFoco, $sessaoModel) : null,
+            'sessoes' => array_map(fn (array $sessao): array => $this->mapearSessaoMiniapp($sessao, $sessaoModel), $sessoes),
+            'confirmados' => array_map(static function (array $item): array {
+                return [
+                    'nome' => (string) ($item['nome'] ?? 'Irmao'),
+                    'cim' => (string) ($item['cim'] ?? ''),
+                ];
+            }, $confirmados),
+            'participantes_agape' => array_map(static function (array $item): array {
+                return [
+                    'nome' => (string) ($item['nome'] ?? 'Irmao'),
+                    'cim' => (string) ($item['cim'] ?? ''),
+                ];
+            }, $participantesAgape),
+            'trabalhos_recentes' => array_map(static function (array $item): array {
+                return [
+                    'titulo' => (string) ($item['titulo'] ?? ''),
+                    'sessao_titulo' => (string) ($item['sessao_titulo'] ?? ''),
+                    'status_envio_potencia' => (string) ($item['status_envio_potencia'] ?? ''),
+                ];
+            }, $trabalhosRecentes),
+            'balaustres_recentes' => array_map(static function (array $item): array {
+                return [
+                    'numero_balaustre' => (string) ($item['numero_balaustre'] ?? ''),
+                    'sessao_titulo' => (string) ($item['sessao_titulo'] ?? ''),
+                    'status' => (string) ($item['status'] ?? ''),
+                ];
+            }, $balaustresRecentes),
+            'relatorio_anual' => [
+                'ano' => (int) ($relatorioAnual['ano'] ?? date('Y')),
+                'visitantes' => (int) ($relatorioAnual['visitantes']['total'] ?? 0),
+                'visitas_externas' => (int) ($relatorioAnual['visitas_externas']['total'] ?? 0),
+                'congressos' => (int) ($relatorioAnual['congressos']['total'] ?? 0),
+                'palestras' => (int) ($relatorioAnual['palestras']['total'] ?? 0),
+                'sessoes' => (int) ($relatorioAnual['sessoes_por_grau']['total'] ?? 0),
+            ],
+            'historico' => array_map(static function (array $item): array {
+                return [
+                    'acao' => (string) ($item['acao'] ?? ''),
+                    'autor_nome' => (string) ($item['autor_nome'] ?? 'Sistema'),
+                    'observacao' => (string) ($item['observacao'] ?? ''),
+                    'created_at' => (string) ($item['created_at'] ?? ''),
+                ];
+            }, $historico),
+        ];
+    }
+
+    public function salvarSessaoMiniapp(array $input, ?string $autorId = null): array
+    {
+        $sessaoId = (int) ($input['sessao_id'] ?? 0);
+        $payload = [
+            'data_hora_inicio' => trim((string) ($input['data_hora_inicio'] ?? '')),
+            'data_hora_fim' => trim((string) ($input['data_hora_fim'] ?? '')),
+            'grau_sessao' => trim((string) ($input['grau_sessao'] ?? '')),
+            'tipo_sessao_principal' => trim((string) ($input['tipo_sessao_principal'] ?? 'economica')),
+            'tipo_sessao_subtipo' => trim((string) ($input['tipo_sessao_subtipo'] ?? 'economica_1')),
+            'traje_tipo' => trim((string) ($input['traje_tipo'] ?? 'maconico')),
+            'agape_modalidade' => trim((string) ($input['agape_modalidade'] ?? 'nao_havera')),
+            'agape_modelo_financeiro' => trim((string) ($input['agape_modelo_financeiro'] ?? 'oficial_loja')),
+            'agape_valor' => trim((string) ($input['agape_valor'] ?? '')),
+            'natureza_sessao' => trim((string) ($input['natureza_sessao'] ?? 'ordinaria')),
+            'formato_sessao' => trim((string) ($input['formato_sessao'] ?? 'templo')),
+            'finalidade_ritual' => trim((string) ($input['finalidade_ritual'] ?? 'economica')),
+            'templo_local' => trim((string) ($input['templo_local'] ?? '')),
+            'titulo' => trim((string) ($input['titulo'] ?? '')),
+            'ordem_dia' => trim((string) ($input['ordem_dia'] ?? '')),
+            'observacao_interna' => trim((string) ($input['observacao_interna'] ?? '')),
+            'sessao_branca' => !empty($input['sessao_branca']),
+            'sessao_a_campo' => !empty($input['sessao_a_campo']),
+            'conta_relatorio_potencia' => array_key_exists('conta_relatorio_potencia', $input)
+                ? !empty($input['conta_relatorio_potencia'])
+                : true,
+            'gestao_referencia' => trim((string) ($input['gestao_referencia'] ?? date('Y'))),
+        ];
+
+        if ($payload['titulo'] === '' || $payload['data_hora_inicio'] === '') {
+            return ['ok' => false, 'erro' => 'Titulo e data/hora de inicio sao obrigatorios.'];
+        }
+
+        $payload = $this->normalizarRascunhoSessao($payload);
+        $sessaoModel = new Sessao();
+
+        if ($sessaoId > 0) {
+            $ok = $sessaoModel->atualizar($sessaoId, $payload, $autorId, 'Atualizacao realizada pela Secretaria no miniapp.');
+            return ['ok' => $ok, 'sessao_id' => $sessaoId, 'erro' => $ok ? null : 'Nao foi possivel atualizar a sessao.'];
+        }
+
+        $novoId = $sessaoModel->criar($payload, $autorId);
+        return ['ok' => $novoId !== null, 'sessao_id' => $novoId, 'erro' => $novoId !== null ? null : 'Nao foi possivel criar a sessao.'];
+    }
+
+    private function mapearSessaoMiniapp(array $sessao, Sessao $sessaoModel): array
+    {
+        return [
+            'id' => (int) ($sessao['id'] ?? 0),
+            'titulo' => (string) ($sessao['titulo'] ?? ''),
+            'data_hora_inicio' => (string) ($sessao['data_hora_inicio'] ?? ''),
+            'status' => (string) ($sessao['status'] ?? ''),
+            'tipo_descricao' => $sessaoModel->obterDescricaoTipoSessao($sessao),
+            'agape_descricao' => $sessaoModel->obterDescricaoAgape($sessao),
+            'total_confirmados' => (int) ($sessao['total_confirmados'] ?? 0),
+            'total_ausentes' => (int) ($sessao['total_ausentes'] ?? 0),
+            'total_agape' => (int) ($sessao['total_agape'] ?? 0),
+        ];
     }
 }

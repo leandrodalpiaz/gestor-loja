@@ -78,12 +78,31 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
         <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
             <section class="space-y-6">
                 <article class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
-                    <h2 class="font-display text-2xl font-semibold">Proxima Sessao</h2>
-                    <?php if ($proximaSessao): ?>
+                    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <h2 class="font-display text-2xl font-semibold">Sessao em Foco</h2>
+                            <p class="mt-1 text-sm text-slate-600">O Veneravel pode trocar o contexto da sessao sem sair do painel.</p>
+                        </div>
+                        <form method="GET" action="/veneravel" class="w-full max-w-sm">
+                            <label for="sessao_id" class="mb-1 block text-sm font-medium text-slate-700">Trocar sessao</label>
+                            <select id="sessao_id" name="sessao_id" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                                <?php foreach ($sessoes as $sessaoOpcao): ?>
+                                    <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>" <?= ((int) ($sessaoEmFoco['id'] ?? 0) === (int) ($sessaoOpcao['id'] ?? 0)) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars(($sessaoOpcao['titulo'] ?: (($sessaoOpcao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? ''))) . ' [' . ((string) ($sessaoOpcao['status'] ?? '')) . ']') ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </form>
+                    </div>
+                    <?php if ($sessaoEmFoco): ?>
                         <div class="mt-3 rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,#f9fafb,#f4efe6)] p-4">
-                            <div class="font-semibold"><?= htmlspecialchars($proximaSessao['titulo'] ?: (($proximaSessao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($proximaSessao['grau_sessao'] ?? ''))) ?></div>
-                            <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($proximaSessao['data_hora_inicio'] ?? '')) ?></div>
-                            <div class="mt-1 text-xs text-slate-500">Status: <?= htmlspecialchars((string) ($proximaSessao['status'] ?? '')) ?></div>
+                            <div class="font-semibold"><?= htmlspecialchars($sessaoEmFoco['titulo'] ?: (($sessaoEmFoco['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoEmFoco['grau_sessao'] ?? ''))) ?></div>
+                            <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? '')) ?></div>
+                            <div class="mt-2 flex flex-wrap gap-2 text-xs">
+                                <span class="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Status: <?= htmlspecialchars((string) ($sessaoEmFoco['status'] ?? '')) ?></span>
+                                <span class="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Confirmados: <?= (int) ($sessaoEmFoco['total_confirmados'] ?? 0) ?></span>
+                                <span class="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Agape: <?= (int) ($sessaoEmFoco['total_agape'] ?? 0) ?></span>
+                            </div>
                         </div>
                     <?php else: ?>
                         <p class="mt-3 text-sm text-slate-600">Nenhuma sessao futura cadastrada.</p>
@@ -153,14 +172,14 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
                                 <div class="mt-3 flex flex-wrap gap-2">
                                     <?php if ($status === 'apto_votacao'): ?>
-                                        <form method="POST" action="/secretaria/balaustres/abrir-votacao">
+                                        <form method="POST" action="/veneravel/balaustres/abrir-votacao">
                                             <input type="hidden" name="balaustre_id" value="<?= (int) $balaustre['id'] ?>">
                                             <button type="submit" class="rounded-md bg-onix px-3 py-1.5 text-sm text-white">Abrir votacao</button>
                                         </form>
                                     <?php endif; ?>
 
                                     <?php if ($status === 'em_votacao'): ?>
-                                        <form method="POST" action="/secretaria/balaustres/encerrar-votacao">
+                                        <form method="POST" action="/veneravel/balaustres/encerrar-votacao">
                                             <input type="hidden" name="balaustre_id" value="<?= (int) $balaustre['id'] ?>">
                                             <button type="submit" class="rounded-md bg-bronze px-3 py-1.5 text-sm font-medium text-slate-900">Encerrar votacao</button>
                                         </form>
@@ -216,6 +235,41 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                 <div class="text-sm text-slate-700"><?= htmlspecialchars(trim((string) ($cargo['titular_nome'] ?? '')) ?: 'A definir') ?></div>
                             </div>
                         <?php endforeach; ?>
+                    </div>
+                </article>
+
+                <article class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
+                    <h2 class="font-display text-2xl font-semibold">Pendencias Criticas</h2>
+                    <p class="mt-1 text-sm text-slate-600">Visao executiva das lacunas de nominata e dos cadastros que pedem intervencao.</p>
+
+                    <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <div class="text-sm font-semibold text-slate-800">Cargos sem titular</div>
+                            <div class="mt-1 text-2xl font-bold text-onix"><?= count($cargosCriticosPendentes) ?></div>
+                            <div class="mt-3 space-y-2 text-sm text-slate-600">
+                                <?php foreach (array_slice($cargosCriticosPendentes, 0, 6) as $cargoPendente): ?>
+                                    <div class="rounded-xl border border-slate-200 bg-white px-3 py-2"><?= htmlspecialchars((string) ($cargoPendente['nome_exibicao'] ?? $cargoPendente['codigo'] ?? 'Cargo')) ?></div>
+                                <?php endforeach; ?>
+                                <?php if ($cargosCriticosPendentes === []): ?>
+                                    <div class="rounded-xl border border-slate-200 bg-white px-3 py-2">Nenhum cargo critico sem titular.</div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <div class="text-sm font-semibold text-slate-800">Cadastros com alerta</div>
+                            <div class="mt-1 text-2xl font-bold text-onix"><?= (int) ($resumoCadastros['com_alerta'] ?? 0) ?></div>
+                            <div class="mt-3 space-y-2 text-sm text-slate-600">
+                                <?php foreach ($obreirosPendentesCriticos as $obreiro): ?>
+                                    <div class="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                                        <div class="font-medium text-slate-800"><?= htmlspecialchars((string) ($obreiro['nome'] ?? 'Obreiro')) ?></div>
+                                        <div class="mt-1 text-xs text-slate-500">CIM <?= htmlspecialchars((string) ($obreiro['cim'] ?? '-')) ?> · <?= htmlspecialchars(implode(', ', $obreiro['alertas'] ?? [])) ?></div>
+                                    </div>
+                                <?php endforeach; ?>
+                                <?php if ($obreirosPendentesCriticos === []): ?>
+                                    <div class="rounded-xl border border-slate-200 bg-white px-3 py-2">Nenhum cadastro com alerta critico.</div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     </div>
                 </article>
 

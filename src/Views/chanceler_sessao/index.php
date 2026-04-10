@@ -3,6 +3,12 @@ $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
+$sessaoEmFoco = $sessaoSelecionada ?? $proximaSessao ?? null;
+$presentesEfetivos = array_values(array_filter(
+    $mapaPresencas,
+    static fn (array $registro): bool => !empty($registro['presente'])
+));
+
 $descricaoAgape = static function (array $sessao): string {
     $modalidade = strtolower(trim((string) ($sessao['agape_modalidade'] ?? 'nao_havera')));
     if ($modalidade === 'gratuito') {
@@ -29,6 +35,16 @@ $descricaoModeloFinanceiroAgape = static function (array $sessao): string {
     }
     return 'Oficial da Loja';
 };
+
+$paramsCertificado = [];
+if ($sessaoEmFoco && !empty($sessaoEmFoco['data_hora_inicio'])) {
+    $paramsCertificado = [
+        'data_sessao' => substr((string) $sessaoEmFoco['data_hora_inicio'], 0, 10),
+        'tipo_sessao' => (string) ($sessaoEmFoco['tipo_sessao'] ?? 'Ordinaria'),
+        'grau_sessao' => (string) ($sessaoEmFoco['grau_sessao'] ?? 'Mestre Macom'),
+    ];
+}
+$urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' . http_build_query($paramsCertificado) : '');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -46,10 +62,11 @@ $descricaoModeloFinanceiroAgape = static function (array $sessao): string {
         <header class="mb-8 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d6b672,transparent_28%),linear-gradient(135deg,#162033,#223145)] px-6 py-7 text-white shadow-2xl">
             <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Painel do Chanceler</p>
             <h1 class="mt-2 text-3xl font-semibold">Check-in do quadro e visitantes</h1>
-            <p class="mt-2 max-w-3xl text-sm text-slate-200">Aqui o Chanceler usa a sessao como base de check-in dos presentes do quadro e acompanha a lista resumida de visitantes que sustentara o Secretario e o Orador.</p>
+            <p class="mt-2 max-w-3xl text-sm text-slate-200">Aqui o Chanceler usa a sessao como base de check-in dos presentes do quadro, acompanha a nominata prevista e mantem a leitura rapida dos visitantes para apoiar a Secretaria e o Orador.</p>
             <div class="mt-4 flex flex-wrap gap-2">
                 <a href="/secretaria" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Ir para Secretaria</a>
                 <a href="/dashboard" class="rounded-md bg-amber-400 px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300">Voltar ao dashboard</a>
+                <a href="/miniapp/chanceler" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Abrir miniapp</a>
             </div>
         </header>
 
@@ -63,17 +80,39 @@ $descricaoModeloFinanceiroAgape = static function (array $sessao): string {
         <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
             <section class="space-y-6">
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-2xl font-semibold text-slate-900">Proxima sessao</h2>
-                    <?php if ($proximaSessao): ?>
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                        <div>
+                            <h2 class="text-2xl font-semibold text-slate-900">Sessao em foco</h2>
+                            <p class="mt-2 text-sm text-slate-600">O Chanceler pode trocar a sessao de trabalho sem perder o contexto de confirmados, presenca efetiva e visitantes.</p>
+                        </div>
+                        <form method="GET" action="/chanceler/sessao" class="w-full max-w-md">
+                            <label for="sessao_id" class="mb-1 block text-sm font-medium text-slate-700">Selecionar sessao</label>
+                            <select id="sessao_id" name="sessao_id" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">
+                                <?php foreach ($sessoes as $sessaoOpcao): ?>
+                                    <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>" <?= !empty($sessaoEmFoco['id']) && (int) $sessaoEmFoco['id'] === (int) ($sessaoOpcao['id'] ?? 0) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars((string) (($sessaoOpcao['titulo'] ?? '') !== '' ? $sessaoOpcao['titulo'] : (($sessaoOpcao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </form>
+                    </div>
+
+                    <?php if ($sessaoEmFoco): ?>
                         <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-lg font-semibold text-slate-900"><?= htmlspecialchars($proximaSessao['titulo'] ?: (($proximaSessao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($proximaSessao['grau_sessao'] ?? ''))) ?></div>
-                            <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($proximaSessao['data_hora_inicio'] ?? '')) ?></div>
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <div class="text-lg font-semibold text-slate-900"><?= htmlspecialchars($sessaoEmFoco['titulo'] ?: (($sessaoEmFoco['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoEmFoco['grau_sessao'] ?? ''))) ?></div>
+                                    <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? '')) ?></div>
+                                </div>
+                                <a href="<?= htmlspecialchars($urlCertificado) ?>" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">Emitir certificado</a>
+                            </div>
                             <div class="mt-3 flex flex-wrap gap-2 text-xs">
                                 <span class="rounded-full bg-white px-3 py-1 text-slate-700">Confirmados: <?= count($confirmados) ?></span>
-                                <span class="rounded-full bg-white px-3 py-1 text-slate-700">Presentes efetivos: <?= count(array_filter($mapaPresencas, static fn (array $r): bool => !empty($r['presente']))) ?></span>
+                                <span class="rounded-full bg-sky-50 px-3 py-1 text-sky-700">Nominata prevista: <?= count($mapaPresencas) ?></span>
+                                <span class="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">Presentes efetivos: <?= count($presentesEfetivos) ?></span>
                                 <span class="rounded-full bg-white px-3 py-1 text-slate-700">Visitantes resumidos: <?= count($visitantesResumo) ?></span>
-                                <span class="rounded-full bg-white px-3 py-1 text-slate-700">Agape: <?= htmlspecialchars($descricaoAgape($proximaSessao)) ?></span>
-                                <span class="rounded-full bg-white px-3 py-1 text-slate-700">Modelo financeiro: <?= htmlspecialchars($descricaoModeloFinanceiroAgape($proximaSessao)) ?></span>
+                                <span class="rounded-full bg-white px-3 py-1 text-slate-700">Agape: <?= htmlspecialchars($descricaoAgape($sessaoEmFoco)) ?></span>
+                                <span class="rounded-full bg-white px-3 py-1 text-slate-700">Modelo financeiro: <?= htmlspecialchars($descricaoModeloFinanceiroAgape($sessaoEmFoco)) ?></span>
                             </div>
                         </div>
                     <?php else: ?>
@@ -83,20 +122,46 @@ $descricaoModeloFinanceiroAgape = static function (array $sessao): string {
 
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 class="text-2xl font-semibold text-slate-900">Check-in do quadro da Loja</h2>
-                    <p class="mt-2 text-sm text-slate-600">Somente os presentes efetivos entram na base da votacao do balaustre.</p>
+                    <p class="mt-2 text-sm text-slate-600">Somente os presentes efetivos entram na base da votacao do balaustre e na leitura final da nominata.</p>
                     <div class="mt-4 grid gap-3 md:grid-cols-2">
-                        <?php foreach ($mapaPresencas as $registro): ?>
-                            <form method="POST" action="/chanceler/sessao/presenca" class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <input type="hidden" name="sessao_id" value="<?= (int) ($proximaSessao['id'] ?? 0) ?>">
-                                <input type="hidden" name="obreiro_id" value="<?= htmlspecialchars((string) ($registro['id'] ?? '')) ?>">
-                                <div class="font-medium text-slate-900"><?= htmlspecialchars((string) ($registro['nome'] ?? 'Obreiro')) ?></div>
-                                <div class="mt-1 text-xs text-slate-600">CIM: <?= htmlspecialchars((string) ($registro['cim'] ?? '-')) ?> · Grau: <?= htmlspecialchars((string) ($registro['grau'] ?? '-')) ?></div>
-                                <div class="mt-3 flex flex-wrap gap-2">
-                                    <button type="submit" name="presente" value="1" class="rounded-md px-3 py-1.5 text-sm <?= !empty($registro['presente']) ? 'bg-emerald-600 text-white' : 'border border-emerald-300 text-emerald-700' ?>">Presente</button>
-                                    <button type="submit" name="presente" value="0" class="rounded-md px-3 py-1.5 text-sm <?= empty($registro['presente']) ? 'bg-slate-700 text-white' : 'border border-slate-300 text-slate-700' ?>">Nao presente</button>
+                        <?php if ($mapaPresencas !== []): ?>
+                            <?php foreach ($mapaPresencas as $registro): ?>
+                                <form method="POST" action="/chanceler/sessao/presenca" class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                    <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoEmFoco['id'] ?? 0) ?>">
+                                    <input type="hidden" name="obreiro_id" value="<?= htmlspecialchars((string) ($registro['id'] ?? '')) ?>">
+                                    <div class="font-medium text-slate-900"><?= htmlspecialchars((string) ($registro['nome'] ?? 'Obreiro')) ?></div>
+                                    <div class="mt-1 text-xs text-slate-600">CIM: <?= htmlspecialchars((string) ($registro['cim'] ?? '-')) ?> · Grau: <?= htmlspecialchars((string) ($registro['grau'] ?? '-')) ?></div>
+                                    <div class="mt-3 flex flex-wrap gap-2">
+                                        <button type="submit" name="presente" value="1" class="rounded-md px-3 py-1.5 text-sm <?= !empty($registro['presente']) ? 'bg-emerald-600 text-white' : 'border border-emerald-300 text-emerald-700' ?>">Presente</button>
+                                        <button type="submit" name="presente" value="0" class="rounded-md px-3 py-1.5 text-sm <?= empty($registro['presente']) ? 'bg-slate-700 text-white' : 'border border-slate-300 text-slate-700' ?>">Nao presente</button>
+                                    </div>
+                                </form>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 md:col-span-2">Nenhuma nominata prevista disponivel para esta sessao.</div>
+                        <?php endif; ?>
+                    </div>
+                </article>
+
+                <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-2xl font-semibold text-slate-900">Lista final de presentes</h2>
+                            <p class="mt-2 text-sm text-slate-600">Base de conferencia rapida para fechar a nominata efetiva da sessao.</p>
+                        </div>
+                        <span class="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700"><?= count($presentesEfetivos) ?> presentes</span>
+                    </div>
+                    <div class="mt-4 grid gap-3 md:grid-cols-2">
+                        <?php if ($presentesEfetivos !== []): ?>
+                            <?php foreach ($presentesEfetivos as $presente): ?>
+                                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                                    <div class="font-medium text-slate-900"><?= htmlspecialchars((string) ($presente['nome'] ?? 'Obreiro')) ?></div>
+                                    <div class="mt-1 text-xs text-slate-600">CIM: <?= htmlspecialchars((string) ($presente['cim'] ?? '-')) ?> · Grau: <?= htmlspecialchars((string) ($presente['grau'] ?? '-')) ?></div>
                                 </div>
-                            </form>
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 md:col-span-2">Ainda nao ha presentes efetivos marcados para esta sessao.</div>
+                        <?php endif; ?>
                     </div>
                 </article>
             </section>
@@ -104,7 +169,7 @@ $descricaoModeloFinanceiroAgape = static function (array $sessao): string {
             <aside class="space-y-6">
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 class="text-2xl font-semibold text-slate-900">Visitantes resumidos</h2>
-                    <p class="mt-2 text-sm text-slate-600">Esta lista alimenta o Secretario para o balaustre e o Orador para a leitura nominal.</p>
+                    <p class="mt-2 text-sm text-slate-600">Esta lista alimenta a Secretaria para o balaustre e o Orador para a leitura nominal.</p>
                     <div class="mt-4 space-y-3">
                         <?php if ($visitantesResumo !== []): ?>
                             <?php foreach ($visitantesResumo as $visitante): ?>

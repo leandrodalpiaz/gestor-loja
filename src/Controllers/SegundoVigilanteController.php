@@ -2,8 +2,10 @@
 
 namespace App\Controllers;
 
+use App\Models\Acervo;
 use App\Models\Cargo;
 use App\Models\Obreiro;
+use App\Models\SegundoVigilanteAcompanhamento;
 use App\Models\TrilhaCompanheiro;
 
 class SegundoVigilanteController
@@ -13,6 +15,7 @@ class SegundoVigilanteController
         $obreiroModel = new Obreiro();
         $cargoModel = new Cargo();
         $trilhaModel = new TrilhaCompanheiro();
+        $acompanhamentoModel = new SegundoVigilanteAcompanhamento();
 
         $companheiros = array_values(array_filter(
             $obreiroModel->getAllAtivos(),
@@ -67,6 +70,10 @@ class SegundoVigilanteController
             'trabalhos_aguardando_recebimento' => $trilhaDisponivel ? $trilhaModel->contarPorStatus($companheiroIds, 'aguardando_entrega') : 0,
             'aptos_docencia' => $trilhaDisponivel ? $trilhaModel->contarPorStatus($companheiroIds, 'apto_para_certificado') : 0,
             'aptos_exaltacao' => $trilhaDisponivel ? $trilhaModel->contarPorStatus($companheiroIds, 'apto_para_exaltacao') : 0,
+            'leituras_sugeridas' => count(array_filter($companheiroIds, static function (string $companheiroId) use ($acompanhamentoModel): bool {
+                $acompanhamento = $acompanhamentoModel->obterPorCompanheiro($companheiroId);
+                return !empty($acompanhamento['leitura_acervo_id']) || !empty($acompanhamento['leitura_observacao']);
+            })),
         ];
 
         $trilhaEstudo = TrilhaCompanheiro::etapas();
@@ -85,6 +92,8 @@ class SegundoVigilanteController
 
         $obreiroModel = new Obreiro();
         $trilhaModel = new TrilhaCompanheiro();
+        $acervoModel = new Acervo();
+        $acompanhamentoModel = new SegundoVigilanteAcompanhamento();
 
         $companheiro = $obreiroModel->findById($companheiroId);
         if (!$companheiro || strtolower(trim((string) ($companheiro['grau'] ?? ''))) !== 'companheiro') {
@@ -129,6 +138,12 @@ class SegundoVigilanteController
             $statusEtapa = (string) ($etapaItem['status'] ?? 'nao_iniciado');
             $acoesRapidasPorEtapa[$ordem] = $this->montarAcoesRapidas($statusEtapa, $ordem);
         }
+        $acompanhamento = $acompanhamentoModel->obterPorCompanheiro($companheiroId);
+        $historicoFormativo = $acompanhamentoModel->listarHistoricoFormativo($companheiroId);
+        $leiturasDisponiveis = array_values(array_filter(
+            $acervoModel->listarTodos(),
+            static fn (array $item): bool => in_array((string) ($item['grau_recomendado'] ?? 'Livre'), ['Livre', 'Companheiro', 'Mestre'], true)
+        ));
 
         $tituloPagina = $somenteProprio ? 'Meu acompanhamento' : 'Acompanhamento do Companheiro';
 
@@ -219,10 +234,116 @@ class SegundoVigilanteController
         exit;
     }
 
+    public function salvarLeituraSugerida(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /segundo-vigilante');
+            exit;
+        }
+
+        $companheiroId = trim((string) ($_POST['companheiro_id'] ?? ''));
+        $retorno = '/segundo-vigilante/companheiro?id=' . urlencode($companheiroId);
+        $acervoId = (int) ($_POST['acervo_id'] ?? 0);
+        $observacao = trim((string) ($_POST['observacao_leitura'] ?? ''));
+        $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+
+        if ($companheiroId === '') {
+            $_SESSION['mensagem_erro'] = 'Companheiro invalido para registrar leitura sugerida.';
+            header('Location: /segundo-vigilante');
+            exit;
+        }
+
+        $ok = (new SegundoVigilanteAcompanhamento())->salvarLeituraSugerida(
+            $companheiroId,
+            $acervoId > 0 ? $acervoId : null,
+            $observacao !== '' ? $observacao : null,
+            $autorId !== '' ? $autorId : null
+        );
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Leitura sugerida registrada com sucesso.'
+            : 'Nao foi possivel registrar a leitura sugerida.';
+        header('Location: ' . $retorno . '#leitura-sugerida');
+        exit;
+    }
+
+    public function solicitarCertificado(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /segundo-vigilante');
+            exit;
+        }
+
+        $companheiroId = trim((string) ($_POST['companheiro_id'] ?? ''));
+        $retorno = '/segundo-vigilante/companheiro?id=' . urlencode($companheiroId);
+        $observacao = trim((string) ($_POST['observacao_certificado'] ?? ''));
+        $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+
+        if ($companheiroId === '') {
+            $_SESSION['mensagem_erro'] = 'Companheiro invalido para solicitar certificado.';
+            header('Location: /segundo-vigilante');
+            exit;
+        }
+
+        $trilhaModel = new TrilhaCompanheiro();
+        if ($trilhaModel->trilhaDisponivel()) {
+            $trilhaModel->atualizarEtapa($companheiroId, 7, 'certificado_solicitado', $observacao !== '' ? $observacao : null, $autorId !== '' ? $autorId : null);
+        }
+
+        $ok = (new SegundoVigilanteAcompanhamento())->solicitarCertificado(
+            $companheiroId,
+            $observacao !== '' ? $observacao : null,
+            $autorId !== '' ? $autorId : null
+        );
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Solicitacao formal de certificado registrada.'
+            : 'Nao foi possivel registrar a solicitacao do certificado.';
+        header('Location: ' . $retorno . '#certificado');
+        exit;
+    }
+
+    public function recomendarExaltacao(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /segundo-vigilante');
+            exit;
+        }
+
+        $companheiroId = trim((string) ($_POST['companheiro_id'] ?? ''));
+        $retorno = '/segundo-vigilante/companheiro?id=' . urlencode($companheiroId);
+        $observacao = trim((string) ($_POST['observacao_exaltacao'] ?? ''));
+        $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+
+        if ($companheiroId === '') {
+            $_SESSION['mensagem_erro'] = 'Companheiro invalido para recomendar exaltacao.';
+            header('Location: /segundo-vigilante');
+            exit;
+        }
+
+        $trilhaModel = new TrilhaCompanheiro();
+        if ($trilhaModel->trilhaDisponivel()) {
+            $trilhaModel->atualizarEtapa($companheiroId, 8, 'exaltacao_recomendada', $observacao !== '' ? $observacao : null, $autorId !== '' ? $autorId : null);
+        }
+
+        $ok = (new SegundoVigilanteAcompanhamento())->recomendarExaltacao(
+            $companheiroId,
+            $observacao !== '' ? $observacao : null,
+            $autorId !== '' ? $autorId : null
+        );
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Recomendacao formal de exaltacao registrada.'
+            : 'Nao foi possivel registrar a recomendacao de exaltacao.';
+        header('Location: ' . $retorno . '#exaltacao');
+        exit;
+    }
+
     public function montarPayloadMiniapp(string $companheiroId): ?array
     {
         $obreiroModel = new Obreiro();
         $trilhaModel = new TrilhaCompanheiro();
+        $acompanhamentoModel = new SegundoVigilanteAcompanhamento();
 
         $companheiro = $obreiroModel->findById($companheiroId);
         if (!$companheiro || strtolower(trim((string) ($companheiro['grau'] ?? ''))) !== 'companheiro') {
@@ -240,6 +361,8 @@ class SegundoVigilanteController
         }
 
         $etapaAtual = $resumoTrilha['etapa_atual'] ?? null;
+        $acompanhamento = $acompanhamentoModel->obterPorCompanheiro($companheiroId);
+        $historicoFormativo = $acompanhamentoModel->listarHistoricoFormativo($companheiroId);
 
         return [
             'companheiro' => [
@@ -269,7 +392,129 @@ class SegundoVigilanteController
                     'observacao_vigilante' => (string) ($etapa['observacao_vigilante'] ?? ''),
                 ];
             }, $resumoTrilha['etapas'] ?? []),
+            'leitura_sugerida' => [
+                'acervo_id' => (int) ($acompanhamento['leitura_acervo_id'] ?? 0),
+                'titulo' => (string) ($acompanhamento['leitura_titulo'] ?? $acompanhamento['leitura_titulo_snapshot'] ?? ''),
+                'autor' => (string) ($acompanhamento['leitura_autor'] ?? ''),
+                'observacao' => (string) ($acompanhamento['leitura_observacao'] ?? ''),
+            ],
+            'certificado' => [
+                'status' => (string) ($acompanhamento['certificado_status'] ?? 'nao_solicitado'),
+                'observacao' => (string) ($acompanhamento['certificado_observacao'] ?? ''),
+                'solicitado_em' => (string) ($acompanhamento['certificado_solicitado_em'] ?? ''),
+            ],
+            'exaltacao' => [
+                'status' => (string) ($acompanhamento['exaltacao_status'] ?? 'nao_recomendada'),
+                'observacao' => (string) ($acompanhamento['exaltacao_observacao'] ?? ''),
+                'recomendada_em' => (string) ($acompanhamento['exaltacao_recomendada_em'] ?? ''),
+            ],
+            'historico_formativo' => $historicoFormativo,
         ];
+    }
+
+    public function montarPayloadPainelMiniapp(?string $companheiroId = null): array
+    {
+        $obreiroModel = new Obreiro();
+        $acervoModel = new Acervo();
+
+        $companheiros = array_values(array_filter(
+            $obreiroModel->getAllAtivos(),
+            static fn (array $obreiro): bool => strtolower(trim((string) ($obreiro['grau'] ?? ''))) === 'companheiro'
+        ));
+        usort($companheiros, static function (array $a, array $b): int {
+            return strcasecmp((string) ($a['nome_historico'] ?? $a['nome'] ?? ''), (string) ($b['nome_historico'] ?? $b['nome'] ?? ''));
+        });
+
+        $companheiroFocoId = trim((string) ($companheiroId ?? ''));
+        if ($companheiroFocoId === '' && isset($companheiros[0]['id'])) {
+            $companheiroFocoId = (string) $companheiros[0]['id'];
+        }
+
+        return [
+            'companheiros' => array_map(static function (array $companheiro): array {
+                return [
+                    'id' => (string) ($companheiro['id'] ?? ''),
+                    'nome' => (string) ($companheiro['nome_historico'] ?? $companheiro['nome'] ?? 'Companheiro'),
+                    'cim' => (string) ($companheiro['cim'] ?? ''),
+                ];
+            }, $companheiros),
+            'companheiro_foco' => $this->montarPayloadMiniapp($companheiroFocoId),
+            'leituras_disponiveis' => array_map(static function (array $item): array {
+                return [
+                    'id' => (int) ($item['id'] ?? 0),
+                    'titulo' => (string) ($item['titulo'] ?? ''),
+                    'autor' => (string) ($item['autor'] ?? ''),
+                ];
+            }, array_values(array_filter(
+                $acervoModel->listarTodos(),
+                static fn (array $item): bool => in_array((string) ($item['grau_recomendado'] ?? 'Livre'), ['Livre', 'Companheiro', 'Mestre'], true)
+            ))),
+        ];
+    }
+
+    public function salvarLeituraSugeridaMiniapp(string $companheiroId, ?int $acervoId, ?string $observacao, ?string $autorId = null): array
+    {
+        $companheiroId = trim($companheiroId);
+        if ($companheiroId === '') {
+            return ['ok' => false, 'erro' => 'Companheiro invalido para registrar leitura sugerida.'];
+        }
+
+        $ok = (new SegundoVigilanteAcompanhamento())->salvarLeituraSugerida(
+            $companheiroId,
+            $acervoId !== null && $acervoId > 0 ? $acervoId : null,
+            $observacao,
+            $autorId
+        );
+
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar a leitura sugerida.'];
+    }
+
+    public function solicitarCertificadoMiniapp(string $companheiroId, ?string $observacao, ?string $autorId = null): array
+    {
+        $companheiroId = trim($companheiroId);
+        if ($companheiroId === '') {
+            return ['ok' => false, 'erro' => 'Companheiro invalido para solicitar certificado.'];
+        }
+
+        $trilhaModel = new TrilhaCompanheiro();
+        if ($trilhaModel->trilhaDisponivel()) {
+            $trilhaModel->atualizarEtapa($companheiroId, 7, 'certificado_solicitado', $observacao, $autorId);
+        }
+
+        $ok = (new SegundoVigilanteAcompanhamento())->solicitarCertificado($companheiroId, $observacao, $autorId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar a solicitacao do certificado.'];
+    }
+
+    public function recomendarExaltacaoMiniapp(string $companheiroId, ?string $observacao, ?string $autorId = null): array
+    {
+        $companheiroId = trim($companheiroId);
+        if ($companheiroId === '') {
+            return ['ok' => false, 'erro' => 'Companheiro invalido para recomendar exaltacao.'];
+        }
+
+        $trilhaModel = new TrilhaCompanheiro();
+        if ($trilhaModel->trilhaDisponivel()) {
+            $trilhaModel->atualizarEtapa($companheiroId, 8, 'exaltacao_recomendada', $observacao, $autorId);
+        }
+
+        $ok = (new SegundoVigilanteAcompanhamento())->recomendarExaltacao($companheiroId, $observacao, $autorId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar a recomendacao de exaltacao.'];
+    }
+
+    public function atualizarEtapaMiniapp(string $companheiroId, int $etapaOrdem, string $status, ?string $observacao = null, ?string $autorId = null): array
+    {
+        $companheiroId = trim($companheiroId);
+        if ($companheiroId === '' || $etapaOrdem <= 0 || trim($status) === '') {
+            return ['ok' => false, 'erro' => 'Dados insuficientes para atualizar a trilha.'];
+        }
+
+        $trilhaModel = new TrilhaCompanheiro();
+        if (!$trilhaModel->trilhaDisponivel()) {
+            return ['ok' => false, 'erro' => 'A trilha ainda nao foi criada no banco.'];
+        }
+
+        $ok = $trilhaModel->atualizarEtapa($companheiroId, $etapaOrdem, trim($status), $observacao, $autorId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel atualizar a etapa da trilha.'];
     }
 
     private function resolverProximaAcao(int $etapa, string $status): string

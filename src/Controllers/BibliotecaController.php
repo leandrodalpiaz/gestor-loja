@@ -187,4 +187,83 @@ class BibliotecaController
             exit;
         }
     }
+
+    public function montarPayloadMiniapp(?string $obreiroId, ?int $acervoId = null): array
+    {
+        $itens = $this->acervoModel->listarTodos();
+        $itemFoco = null;
+        if ($acervoId !== null && $acervoId > 0) {
+            $itemFoco = $this->acervoModel->buscarDetalhes($acervoId, $obreiroId);
+        }
+        if (!$itemFoco && $itens !== []) {
+            $primeiroId = (int) ($itens[0]['id'] ?? 0);
+            if ($primeiroId > 0) {
+                $itemFoco = $this->acervoModel->buscarDetalhes($primeiroId, $obreiroId);
+            }
+        }
+
+        $comentarios = $itemFoco ? $this->comentarioModel->listarPorLivro((int) ($itemFoco['id'] ?? 0)) : [];
+        $meusEmprestimos = $obreiroId ? $this->emprestimoModel->listarPorObreiro($obreiroId) : [];
+        $emprestimosPendentes = $this->emprestimoModel->listarPendentes();
+
+        return [
+            'acervo' => array_map(static function (array $item): array {
+                return [
+                    'id' => (int) ($item['id'] ?? 0),
+                    'codigo_acervo' => (string) ($item['codigo_acervo'] ?? ''),
+                    'titulo' => (string) ($item['titulo'] ?? ''),
+                    'autor' => (string) ($item['autor'] ?? ''),
+                    'capa_url' => (string) ($item['capa_url'] ?? ''),
+                    'quantidade_disponivel' => (int) ($item['quantidade_disponivel'] ?? 0),
+                    'disponivel' => !empty($item['disponivel']),
+                    'grau_recomendado' => (string) ($item['grau_recomendado'] ?? 'Livre'),
+                    'total_comentarios' => (int) ($item['total_comentarios'] ?? 0),
+                    'total_gostei_sim' => (int) ($item['total_gostei_sim'] ?? 0),
+                    'total_gostei_nao' => (int) ($item['total_gostei_nao'] ?? 0),
+                ];
+            }, $itens),
+            'item_foco' => $itemFoco ? [
+                'id' => (int) ($itemFoco['id'] ?? 0),
+                'codigo_acervo' => (string) ($itemFoco['codigo_acervo'] ?? ''),
+                'titulo' => (string) ($itemFoco['titulo'] ?? ''),
+                'autor' => (string) ($itemFoco['autor'] ?? ''),
+                'resumo' => (string) ($itemFoco['resumo'] ?? ''),
+                'isbn' => (string) ($itemFoco['isbn'] ?? ''),
+                'capa_url' => (string) ($itemFoco['capa_url'] ?? ''),
+                'quantidade_disponivel' => (int) ($itemFoco['quantidade_disponivel'] ?? 0),
+                'grau_recomendado' => (string) ($itemFoco['grau_recomendado'] ?? 'Livre'),
+                'nota_instrucao' => (string) ($itemFoco['nota_instrucao'] ?? ''),
+                'total_comentarios' => (int) ($itemFoco['total_comentarios'] ?? 0),
+                'total_gostei_sim' => (int) ($itemFoco['total_gostei_sim'] ?? 0),
+                'total_gostei_nao' => (int) ($itemFoco['total_gostei_nao'] ?? 0),
+            ] : null,
+            'comentarios' => array_map(static function (array $comentario): array {
+                return [
+                    'obreiro_nome' => (string) ($comentario['obreiro_nome'] ?? 'Irmao'),
+                    'comentario' => (string) ($comentario['comentario'] ?? ''),
+                    'criado_em' => (string) ($comentario['criado_em'] ?? ''),
+                ];
+            }, $comentarios),
+            'meus_emprestimos' => array_map(static function (array $emp): array {
+                return [
+                    'id' => (int) ($emp['id'] ?? 0),
+                    'codigo_acervo' => (string) ($emp['codigo_acervo'] ?? ''),
+                    'titulo' => (string) ($emp['titulo'] ?? ''),
+                    'data_emprestimo' => (string) ($emp['data_emprestimo'] ?? ''),
+                    'data_devolucao_prevista' => (string) ($emp['data_devolucao_prevista'] ?? ''),
+                    'status' => (string) ($emp['status'] ?? ''),
+                ];
+            }, $meusEmprestimos),
+            'emprestimos_pendentes' => array_map(static function (array $emp): array {
+                return [
+                    'id' => (int) ($emp['id'] ?? 0),
+                    'codigo_acervo' => (string) ($emp['codigo_acervo'] ?? ''),
+                    'titulo' => (string) ($emp['titulo'] ?? ''),
+                    'obreiro_nome' => (string) ($emp['obreiro_nome'] ?? ''),
+                    'data_devolucao_prevista' => (string) ($emp['data_devolucao_prevista'] ?? ''),
+                    'status' => (string) ($emp['status'] ?? ''),
+                ];
+            }, $emprestimosPendentes),
+        ];
+    }
 }

@@ -2,7 +2,15 @@
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
-$sessaoDraft = is_array($sessaoRascunho ?? null) ? $sessaoRascunho : [];
+$sessaoEmFormulario = is_array($sessaoRascunho ?? null)
+    ? $sessaoRascunho
+    : (is_array($sessaoEdicao ?? null) ? $sessaoEdicao : []);
+$sessaoDraft = $sessaoEmFormulario;
+$modoEdicaoSessao = !is_array($sessaoRascunho ?? null) && is_array($sessaoEdicao ?? null);
+$sessaoIdFormulario = (int) ($sessaoDraft['id'] ?? 0);
+$labelFormularioSessao = $modoEdicaoSessao ? 'Editar sessao existente' : 'Nova sessao';
+$acaoPrimariaSessao = $modoEdicaoSessao ? 'Revisar atualizacao da sessao' : 'Continuar para revisao';
+$historicoSessao = is_array($historicoSessao ?? null) ? $historicoSessao : [];
 $draftInicio = '';
 if (!empty($sessaoDraft['data_hora_inicio'])) {
     try {
@@ -11,6 +19,16 @@ if (!empty($sessaoDraft['data_hora_inicio'])) {
             ->format('Y-m-d\TH:i');
     } catch (\Throwable $e) {
         $draftInicio = '';
+    }
+}
+$draftFim = '';
+if (!empty($sessaoDraft['data_hora_fim'])) {
+    try {
+        $draftFim = (new DateTimeImmutable((string) $sessaoDraft['data_hora_fim']))
+            ->setTimezone(new DateTimeZone('America/Sao_Paulo'))
+            ->format('Y-m-d\TH:i');
+    } catch (\Throwable $e) {
+        $draftFim = '';
     }
 }
 $historiaLoja = trim((string) ($configuracaoLoja['historia_loja'] ?? ''));
@@ -99,6 +117,127 @@ if ($historiaLoja !== '') {
 
         <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] mb-8">
             <section class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="text-xs uppercase tracking-[0.24em] text-cobre">Cadastros</div>
+                        <h2 class="font-display text-xl text-cobalto mt-2">Saude cadastral da Secretaria</h2>
+                        <p class="text-sm text-slate-500 mt-2">Resumo rapido para saneamento do quadro e preparo dos relatorios.</p>
+                    </div>
+                    <a href="/obreiros" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50">Abrir central de obreiros</a>
+                </div>
+
+                <div class="mt-5 grid gap-3 md:grid-cols-4">
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <div class="text-xs uppercase tracking-wide text-slate-500">Total</div>
+                        <div class="mt-1 text-2xl font-semibold text-cobalto"><?= (int) ($resumoCadastros['total'] ?? 0) ?></div>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <div class="text-xs uppercase tracking-wide text-slate-500">No quadro</div>
+                        <div class="mt-1 text-2xl font-semibold text-cobalto"><?= (int) ($resumoCadastros['ativos'] ?? 0) ?></div>
+                    </div>
+                    <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                        <div class="text-xs uppercase tracking-wide text-amber-800">Com alerta</div>
+                        <div class="mt-1 text-2xl font-semibold text-amber-900"><?= (int) ($resumoCadastros['com_alerta'] ?? 0) ?></div>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <div class="text-xs uppercase tracking-wide text-slate-500">Com bot</div>
+                        <div class="mt-1 text-2xl font-semibold text-cobalto"><?= (int) ($resumoCadastros['com_telegram'] ?? 0) ?></div>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <a href="/obreiros?alerta=cadastro" class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100">Ver alertas cadastrais</a>
+                    <a href="/obreiros/novo" class="rounded-lg border border-cobalto px-4 py-2 text-sm font-medium text-cobalto hover:bg-cobalto hover:text-white">Novo obreiro</a>
+                </div>
+            </section>
+
+            <section class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="text-xs uppercase tracking-[0.24em] text-cobre">Sessao em foco</div>
+                        <h2 class="font-display text-xl text-cobalto mt-2">Resumo operacional</h2>
+                        <p class="text-sm text-slate-500 mt-2">Confirmados, ausencias e agape consolidados na mesma visao da Secretaria.</p>
+                    </div>
+                </div>
+
+                <form method="GET" action="/secretaria" class="mt-4">
+                    <label class="block text-sm font-medium mb-1">Sessao para acompanhamento</label>
+                    <div class="flex gap-2">
+                        <select name="sessao_resumo" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                            <?php foreach ($sessoes as $sessaoOpcao): ?>
+                                <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>" <?= (int) ($sessaoResumo['id'] ?? 0) === (int) ($sessaoOpcao['id'] ?? 0) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars((string) ($sessaoOpcao['titulo'] ?: (($sessaoOpcao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-sm font-medium text-white">Atualizar</button>
+                    </div>
+                </form>
+
+                <?php if (!empty($sessaoResumo)): ?>
+                    <div class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="font-semibold text-cobalto"><?= htmlspecialchars((string) ($sessaoResumo['titulo'] ?: (($sessaoResumo['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoResumo['grau_sessao'] ?? '')))) ?></div>
+                        <div class="mt-1 text-sm text-slate-600">
+                            <?= htmlspecialchars((string) ($sessaoResumo['data_hora_inicio'] ?? '')) ?>
+                            ·
+                            Status: <?= htmlspecialchars((string) ($sessaoResumo['status'] ?? '')) ?>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid gap-3 md:grid-cols-3">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <div class="text-xs uppercase tracking-wide text-slate-500">Confirmados</div>
+                            <div class="mt-1 text-2xl font-semibold text-cobalto"><?= (int) ($sessaoResumo['total_confirmados'] ?? 0) ?></div>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <div class="text-xs uppercase tracking-wide text-slate-500">Ausentes</div>
+                            <div class="mt-1 text-2xl font-semibold text-cobalto"><?= (int) ($sessaoResumo['total_ausentes'] ?? 0) ?></div>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <div class="text-xs uppercase tracking-wide text-slate-500">Agape</div>
+                            <div class="mt-1 text-2xl font-semibold text-cobalto"><?= (int) ($sessaoResumo['total_agape'] ?? 0) ?></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid gap-4 md:grid-cols-2">
+                        <div class="rounded-xl border border-slate-200 bg-white p-4">
+                            <div class="text-sm font-semibold text-slate-700">Confirmados da sessao</div>
+                            <div class="mt-3 space-y-2">
+                                <?php foreach ($confirmadosSessaoResumo as $confirmado): ?>
+                                    <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+                                        <span><?= htmlspecialchars((string) ($confirmado['nome'] ?? 'Irmao')) ?></span>
+                                        <span class="text-slate-500"><?= htmlspecialchars((string) ($confirmado['cim'] ?? '-')) ?></span>
+                                    </div>
+                                <?php endforeach; ?>
+                                <?php if ($confirmadosSessaoResumo === []): ?>
+                                    <div class="rounded-lg border border-dashed border-slate-300 px-3 py-3 text-sm text-slate-500">Sem confirmados nesta sessao.</div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-slate-200 bg-white p-4">
+                            <div class="text-sm font-semibold text-slate-700">Participantes do agape</div>
+                            <div class="mt-3 space-y-2">
+                                <?php foreach ($participantesAgapeResumo as $participanteAgape): ?>
+                                    <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+                                        <span><?= htmlspecialchars((string) ($participanteAgape['nome'] ?? 'Irmao')) ?></span>
+                                        <span class="text-slate-500"><?= htmlspecialchars((string) ($participanteAgape['cim'] ?? '-')) ?></span>
+                                    </div>
+                                <?php endforeach; ?>
+                                <?php if ($participantesAgapeResumo === []): ?>
+                                    <div class="rounded-lg border border-dashed border-slate-300 px-3 py-3 text-sm text-slate-500">Sem participantes confirmados para o agape.</div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="mt-4 rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-500">Nenhuma sessao disponivel para resumo operacional.</div>
+                <?php endif; ?>
+            </section>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] mb-8">
+            <section class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
                 <div class="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
                     <div>
                         <div class="text-xs uppercase tracking-[0.24em] text-cobre">Identidade da Loja</div>
@@ -182,6 +321,20 @@ if ($historiaLoja !== '') {
                     <?php endif; ?>
 
                     <form method="POST" action="/secretaria/sessoes/salvar" class="grid gap-4 md:grid-cols-2">
+                        <?php if ($sessaoIdFormulario > 0): ?>
+                            <input type="hidden" name="sessao_id" value="<?= $sessaoIdFormulario ?>">
+                        <?php endif; ?>
+                        <div class="md:col-span-2 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <div>
+                                <div class="text-xs uppercase tracking-[0.24em] text-cobre"><?= htmlspecialchars($labelFormularioSessao) ?></div>
+                                <div class="text-sm text-slate-600">
+                                    <?= $modoEdicaoSessao ? 'Os dados abaixo foram carregados de uma sessao existente. Revise e confirme a atualizacao.' : 'Preencha os dados da nova sessao e siga para a revisao final.' ?>
+                                </div>
+                            </div>
+                            <?php if ($modoEdicaoSessao): ?>
+                                <a href="/secretaria" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700">Cancelar edicao</a>
+                            <?php endif; ?>
+                        </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Titulo da sessao</label>
                             <input type="text" name="titulo" required value="<?= htmlspecialchars((string) ($sessaoDraft['titulo'] ?? '')) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2">
@@ -189,6 +342,10 @@ if ($historiaLoja !== '') {
                         <div>
                             <label class="block text-sm font-medium mb-1">Data e hora</label>
                             <input type="datetime-local" name="data_hora_inicio" required value="<?= htmlspecialchars($draftInicio) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Encerramento previsto</label>
+                            <input type="datetime-local" name="data_hora_fim" value="<?= htmlspecialchars($draftFim) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Grau da sessao</label>
@@ -271,6 +428,14 @@ if ($historiaLoja !== '') {
                             <input type="text" name="gestao_referencia" value="<?= htmlspecialchars((string) ($sessaoDraft['gestao_referencia'] ?? '')) ?>" placeholder="Ex.: 2026/2027" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                         </div>
                         <div>
+                            <label class="block text-sm font-medium mb-1">Natureza da sessao</label>
+                            <select name="natureza_sessao" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                                <option value="ordinaria" <?= (($sessaoDraft['natureza_sessao'] ?? 'ordinaria') === 'ordinaria') ? 'selected' : '' ?>>Ordinaria</option>
+                                <option value="extraordinaria" <?= (($sessaoDraft['natureza_sessao'] ?? '') === 'extraordinaria') ? 'selected' : '' ?>>Extraordinaria</option>
+                                <option value="magna" <?= (($sessaoDraft['natureza_sessao'] ?? '') === 'magna') ? 'selected' : '' ?>>Magna</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium mb-1">Formato</label>
                             <select name="formato_sessao" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                                 <option value="templo" <?= (($sessaoDraft['formato_sessao'] ?? 'templo') === 'templo') ? 'selected' : '' ?>>Templo</option>
@@ -291,6 +456,10 @@ if ($historiaLoja !== '') {
                             </select>
                         </div>
                         <div class="md:col-span-2">
+                            <label class="block text-sm font-medium mb-1">Templo ou local</label>
+                            <input type="text" name="templo_local" value="<?= htmlspecialchars((string) ($sessaoDraft['templo_local'] ?? '')) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </div>
+                        <div class="md:col-span-2">
                             <label class="block text-sm font-medium mb-1">Ordem do dia / observacoes</label>
                             <textarea name="ordem_dia" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2"><?= htmlspecialchars((string) ($sessaoDraft['ordem_dia'] ?? '')) ?></textarea>
                         </div>
@@ -298,6 +467,10 @@ if ($historiaLoja !== '') {
                             <label class="block text-sm font-medium mb-1">Observacao interna</label>
                             <textarea name="observacao_interna" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2"><?= htmlspecialchars((string) ($sessaoDraft['observacao_interna'] ?? '')) ?></textarea>
                         </div>
+                        <label class="md:col-span-2 inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" name="sessao_branca" value="1" <?= !empty($sessaoDraft['sessao_branca']) ? 'checked' : '' ?>>
+                            Sessao branca / festiva
+                        </label>
                         <label class="md:col-span-2 inline-flex items-center gap-2 text-sm">
                             <input type="checkbox" name="sessao_a_campo" value="1" <?= !empty($sessaoDraft['sessao_a_campo']) ? 'checked' : '' ?>>
                             Sessao a campo
@@ -311,7 +484,7 @@ if ($historiaLoja !== '') {
                             <textarea name="observacao_relatorio" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2"><?= htmlspecialchars((string) ($sessaoDraft['observacao_relatorio'] ?? '')) ?></textarea>
                         </div>
                         <div class="md:col-span-2">
-                            <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-white font-medium">Continuar para revisao</button>
+                            <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-white font-medium"><?= htmlspecialchars($acaoPrimariaSessao) ?></button>
                         </div>
                     </form>
 
@@ -322,19 +495,89 @@ if ($historiaLoja !== '') {
                                     <th class="py-2">Sessao</th>
                                     <th class="py-2">Data</th>
                                     <th class="py-2">Status</th>
+                                    <th class="py-2">Acoes</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($sessoes as $sessao): ?>
+                                    <?php $statusSessao = (string) ($sessao['status'] ?? ''); ?>
                                     <tr class="border-t border-slate-100">
                                         <td class="py-2"><?= htmlspecialchars($sessao['titulo'] ?: (($sessao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessao['grau_sessao'] ?? ''))) ?></td>
                                         <td class="py-2"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?></td>
-                                        <td class="py-2"><?= htmlspecialchars((string) ($sessao['status'] ?? '')) ?></td>
+                                        <td class="py-2"><?= htmlspecialchars($statusSessao) ?></td>
+                                        <td class="py-2">
+                                            <div class="flex flex-wrap gap-2">
+                                                <a href="/secretaria?editar_sessao=<?= (int) ($sessao['id'] ?? 0) ?>" class="inline-flex rounded-md border border-cobalto px-3 py-1 text-xs font-medium text-cobalto hover:bg-cobalto hover:text-white">
+                                                    Editar
+                                                </a>
+                                                <?php if (in_array($statusSessao, ['planejada', 'alterada'], true)): ?>
+                                                    <form method="POST" action="/secretaria/sessoes/publicar" onsubmit="return confirm('Deseja publicar esta sessao agora?');">
+                                                        <input type="hidden" name="sessao_id" value="<?= (int) ($sessao['id'] ?? 0) ?>">
+                                                        <button type="submit" class="inline-flex rounded-md border border-amber-300 px-3 py-1 text-xs font-medium text-amber-800 hover:bg-amber-50">
+                                                            Publicar
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+                                                <?php if ($statusSessao !== 'cancelada'): ?>
+                                                    <form method="POST" action="/secretaria/sessoes/cancelar" onsubmit="return confirm('Deseja cancelar esta sessao?');">
+                                                        <input type="hidden" name="sessao_id" value="<?= (int) ($sessao['id'] ?? 0) ?>">
+                                                        <button type="submit" class="inline-flex rounded-md border border-rose-300 px-3 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50">
+                                                            Cancelar
+                                                        </button>
+                                                    </form>
+                                                <?php else: ?>
+                                                    <form method="POST" action="/secretaria/sessoes/reabrir" onsubmit="return confirm('Deseja reabrir esta sessao?');">
+                                                        <input type="hidden" name="sessao_id" value="<?= (int) ($sessao['id'] ?? 0) ?>">
+                                                        <button type="submit" class="inline-flex rounded-md border border-emerald-300 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50">
+                                                            Reabrir
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+                                                <a href="/secretaria?historico_sessao=<?= (int) ($sessao['id'] ?? 0) ?>" class="inline-flex rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                                                    Historico
+                                                </a>
+                                            </div>
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
+
+                    <?php if (!empty($sessaoHistorico)): ?>
+                        <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <div class="text-xs uppercase tracking-[0.24em] text-cobre">Historico operacional</div>
+                                    <h3 class="mt-1 text-lg font-semibold text-cobalto">
+                                        <?= htmlspecialchars((string) ($sessaoHistorico['titulo'] ?: (($sessaoHistorico['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoHistorico['grau_sessao'] ?? '')))) ?>
+                                    </h3>
+                                </div>
+                                <a href="/secretaria" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700">Fechar historico</a>
+                            </div>
+
+                            <div class="mt-4 space-y-3">
+                                <?php foreach ($historicoSessao as $itemHistorico): ?>
+                                    <div class="rounded-xl border border-slate-200 bg-white p-4">
+                                        <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                                            <div class="font-medium text-slate-800"><?= htmlspecialchars((string) ($itemHistorico['acao'] ?? 'acao')) ?></div>
+                                            <div class="text-xs text-slate-500">
+                                                <?= htmlspecialchars((string) ($itemHistorico['autor_nome'] ?? 'Sistema')) ?>
+                                                ·
+                                                <?= htmlspecialchars((string) ($itemHistorico['created_at'] ?? '')) ?>
+                                            </div>
+                                        </div>
+                                        <?php if (!empty($itemHistorico['observacao'])): ?>
+                                            <p class="mt-2 text-sm text-slate-600"><?= htmlspecialchars((string) $itemHistorico['observacao']) ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                                <?php if ($historicoSessao === []): ?>
+                                    <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-500">Ainda nao ha historico registrado para esta sessao.</div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">

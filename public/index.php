@@ -513,6 +513,26 @@ switch ($requestUri) {
         (new \App\Controllers\PrimeiroVigilanteController())->acaoRapidaEtapa();
         break;
 
+    case "/primeiro-vigilante/leitura/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('primeiro_vigilante', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao 1o Vigilante, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\PrimeiroVigilanteController())->salvarLeituraSugerida();
+        break;
+
+    case "/primeiro-vigilante/certificado/solicitar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('primeiro_vigilante', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao 1o Vigilante, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\PrimeiroVigilanteController())->solicitarCertificado();
+        break;
+
     case "/segundo-vigilante":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
         if (!$sessionHasRole('segundo_vigilante', 'veneravel', 'admin')) {
@@ -555,6 +575,36 @@ switch ($requestUri) {
             exit;
         }
         (new \App\Controllers\SegundoVigilanteController())->acaoRapidaEtapa();
+        break;
+
+    case "/segundo-vigilante/leitura/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('segundo_vigilante', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao 2o Vigilante, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SegundoVigilanteController())->salvarLeituraSugerida();
+        break;
+
+    case "/segundo-vigilante/certificado/solicitar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('segundo_vigilante', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao 2o Vigilante, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SegundoVigilanteController())->solicitarCertificado();
+        break;
+
+    case "/segundo-vigilante/exaltacao/recomendar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('segundo_vigilante', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao 2o Vigilante, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SegundoVigilanteController())->recomendarExaltacao();
         break;
 
     case "/meu-aprendizado":
@@ -705,6 +755,16 @@ switch ($requestUri) {
         (new \App\Controllers\SecretariaController())->publicarSessaoRascunho();
         break;
 
+    case "/secretaria/sessoes/publicar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->publicarSessao();
+        break;
+
     case "/secretaria/sessoes/cancelar-rascunho":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
         if (!$sessionHasRole('secretario', 'admin')) {
@@ -713,6 +773,26 @@ switch ($requestUri) {
             exit;
         }
         (new \App\Controllers\SecretariaController())->cancelarRascunhoSessao();
+        break;
+
+    case "/secretaria/sessoes/cancelar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->cancelarSessao();
+        break;
+
+    case "/secretaria/sessoes/reabrir":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('secretario', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Secretario ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\SecretariaController())->reabrirSessao();
         break;
 
     case "/secretaria/trabalhos/salvar":
@@ -810,12 +890,33 @@ switch ($requestUri) {
         (new \App\Controllers\HospitaleiroController())->atualizarStatusOcorrencia();
         break;
 
+    case "/assistencia/ocorrencias/visita":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('hospitaleiro', 'secretario', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Mestre Hospitaleiro, Secretario, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\HospitaleiroController())->registrarVisita();
+        break;
+
     case "/mestre-harmonia":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
+        if (!$sessionHasRole('mestre_harmonia', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Mestre de Harmonia, Veneravel Mestre ou Administrador.";
+            exit;
+        }
         (new \App\Controllers\MestreHarmoniaController())->index();
         break;
 
+    case "/miniapp/mestre-harmonia":
+        requireMiniappAuth(['mestre_harmonia', 'veneravel', 'admin']);
+        require_once __DIR__ . "/../src/Views/miniapp/mestre_harmonia.php";
+        break;
+
     case "/miniapp/tesouraria":
+        requireMiniappAuth(['tesoureiro', 'veneravel', 'admin']);
         require_once __DIR__ . "/../src/Views/miniapp/tesouraria.php";
         break;
 
@@ -1196,6 +1297,25 @@ switch ($requestUri) {
         (new \App\Controllers\OradorController())->index();
         break;
 
+    case "/miniapp/orador":
+        requireMiniappAuth(['orador', 'veneravel', 'admin']);
+        require_once __DIR__ . '/../src/Views/miniapp/orador.php';
+        break;
+
+    case "/api/miniapp/orador/dashboard":
+        $miniappUser = requireMiniappAuth(['orador', 'veneravel', 'admin']);
+        $controller = new \App\Controllers\OradorController();
+        $sessaoId = isset($_GET['sessao_id']) ? (int) $_GET['sessao_id'] : null;
+        jsonResponse([
+            'ok' => true,
+            'dados' => $controller->montarPayloadMiniapp($sessaoId),
+            'usuario' => [
+                'id' => $miniappUser['id'] ?? null,
+                'nome' => $miniappUser['nome_completo'] ?? null,
+            ],
+        ]);
+        break;
+
     case "/mestre-banquetes":
     case "/mestre-banquetes/dashboard":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
@@ -1208,6 +1328,19 @@ switch ($requestUri) {
             exit;
         }
         (new \App\Controllers\MestreBanquetesController())->index();
+        break;
+
+    case "/mestre-banquetes/operacao/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('mestre_banquetes', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Mestre de Banquetes, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\MestreBanquetesController())->salvarOperacao();
         break;
 
     case "/chanceler/sessao":
@@ -1287,6 +1420,32 @@ switch ($requestUri) {
             exit;
         }
         (new \App\Controllers\VeneravelController())->realizarSessao();
+        break;
+
+    case "/veneravel/balaustres/abrir-votacao":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\VeneravelController())->abrirVotacaoBalaustre();
+        break;
+
+    case "/veneravel/balaustres/encerrar-votacao":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        (new \App\Controllers\VeneravelController())->encerrarVotacaoBalaustre();
         break;
 
     case "/chancelaria/efemerides/salvar-previa":
@@ -1552,8 +1711,36 @@ switch ($requestUri) {
         require_once __DIR__ . "/../src/Views/miniapp/aprendizado.php";
         break;
 
+    case "/miniapp/primeiro-vigilante":
+        require_once __DIR__ . "/../src/Views/miniapp/primeiro_vigilante.php";
+        break;
+
     case "/miniapp/companheirismo":
         require_once __DIR__ . "/../src/Views/miniapp/companheirismo.php";
+        break;
+
+    case "/miniapp/segundo-vigilante":
+        require_once __DIR__ . "/../src/Views/miniapp/segundo_vigilante.php";
+        break;
+
+    case "/miniapp/secretaria":
+        require_once __DIR__ . "/../src/Views/miniapp/secretaria.php";
+        break;
+
+    case "/miniapp/hospitaleiro":
+        require_once __DIR__ . "/../src/Views/miniapp/hospitaleiro.php";
+        break;
+
+    case "/miniapp/chanceler":
+        require_once __DIR__ . "/../src/Views/miniapp/chanceler.php";
+        break;
+
+    case "/miniapp/mestre-banquetes":
+        require_once __DIR__ . "/../src/Views/miniapp/mestre_banquetes.php";
+        break;
+
+    case "/miniapp/veneravel":
+        require_once __DIR__ . "/../src/Views/miniapp/veneravel.php";
         break;
 
     case (preg_match('~^/api/miniapp~', $requestUri) ? $requestUri : null):
@@ -1562,7 +1749,22 @@ switch ($requestUri) {
         $body = $getJsonBody();
         $initData = trim((string) ($body['initData'] ?? $body['init_data'] ?? $_GET['initData'] ?? $_GET['init_data'] ?? ''));
         $miniappObreiro = null;
-        $authorizedBySession = isset($_SESSION['usuario_logado']) && $sessionHasRole('chanceler', 'veneravel', 'admin');
+        $miniappAllowedRoles = match (true) {
+            str_starts_with($requestUri, '/api/miniapp/secretaria') => ['secretario', 'veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/aprendizado') => ['primeiro_vigilante', 'veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/primeiro-vigilante') => ['primeiro_vigilante', 'veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/companheirismo') => ['segundo_vigilante', 'veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/segundo-vigilante') => ['segundo_vigilante', 'veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/mestre-banquetes') => ['mestre_banquetes', 'veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/mestre-harmonia') => ['mestre_harmonia', 'veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/tesouraria') => ['tesoureiro', 'veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/biblioteca') => ['bibliotecario', 'primeiro_vigilante', 'segundo_vigilante', 'veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/orador') => ['orador', 'veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/veneravel') => ['veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/hospitaleiro') => ['hospitaleiro', 'secretario', 'tesoureiro', 'veneravel', 'admin'],
+            default => ['chanceler', 'veneravel', 'admin'],
+        };
+        $authorizedBySession = isset($_SESSION['usuario_logado']) && $sessionHasRole(...$miniappAllowedRoles);
 
         if ($authorizedBySession) {
             $miniappObreiro = $_SESSION['usuario_logado'];
@@ -1578,9 +1780,16 @@ switch ($requestUri) {
                 $normalizeRole,
                 $miniappObreiro['cargos'] ?? [$miniappObreiro['cargo_principal'] ?? $miniappObreiro['cargo'] ?? '']
             ))));
-            if (!in_array('chanceler', $roles, true) && !in_array('veneravel', $roles, true) && !in_array('admin', $roles, true)) {
+            $temPermissaoMiniapp = false;
+            foreach ($miniappAllowedRoles as $allowedRole) {
+                if (in_array($allowedRole, $roles, true)) {
+                    $temPermissaoMiniapp = true;
+                    break;
+                }
+            }
+            if (!$temPermissaoMiniapp) {
                 http_response_code(403);
-                echo json_encode(['ok' => false, 'erro' => 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.']);
+                echo json_encode(['ok' => false, 'erro' => 'Acesso restrito para este miniapp.']);
                 exit;
             }
         }
@@ -1683,6 +1892,49 @@ switch ($requestUri) {
             exit;
         }
 
+        if ($requestUri === '/api/miniapp/primeiro-vigilante/dashboard' && $method === 'GET') {
+            $aprendizId = trim((string) ($_GET['aprendiz_id'] ?? ''));
+            $controller = new \App\Controllers\PrimeiroVigilanteController();
+            echo json_encode(['ok' => true, 'dados' => $controller->montarPayloadPainelMiniapp($aprendizId !== '' ? $aprendizId : null)]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/primeiro-vigilante/leitura/salvar' && $method === 'POST') {
+            $controller = new \App\Controllers\PrimeiroVigilanteController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->salvarLeituraSugeridaMiniapp(
+                trim((string) ($body['aprendiz_id'] ?? '')),
+                isset($body['acervo_id']) && (int) $body['acervo_id'] > 0 ? (int) $body['acervo_id'] : null,
+                trim((string) ($body['observacao_leitura'] ?? '')) ?: null,
+                $autorId !== '' ? $autorId : null
+            ));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/primeiro-vigilante/trilha/atualizar' && $method === 'POST') {
+            $controller = new \App\Controllers\PrimeiroVigilanteController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->atualizarEtapaMiniapp(
+                trim((string) ($body['aprendiz_id'] ?? '')),
+                (int) ($body['etapa_ordem'] ?? 0),
+                trim((string) ($body['status'] ?? '')),
+                trim((string) ($body['observacao_vigilante'] ?? '')) ?: null,
+                $autorId !== '' ? $autorId : null
+            ));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/primeiro-vigilante/certificado/solicitar' && $method === 'POST') {
+            $controller = new \App\Controllers\PrimeiroVigilanteController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->solicitarCertificadoMiniapp(
+                trim((string) ($body['aprendiz_id'] ?? '')),
+                trim((string) ($body['observacao_certificado'] ?? '')) ?: null,
+                $autorId !== '' ? $autorId : null
+            ));
+            exit;
+        }
+
         if ($requestUri === '/api/miniapp/companheirismo' && $method === 'GET') {
             $roles = array_values(array_unique(array_map(
                 static fn ($role) => strtolower((string) $role),
@@ -1702,6 +1954,242 @@ switch ($requestUri) {
             }
 
             echo json_encode(['ok' => true, 'dados' => $payload]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/segundo-vigilante/dashboard' && $method === 'GET') {
+            $companheiroId = trim((string) ($_GET['companheiro_id'] ?? ''));
+            $controller = new \App\Controllers\SegundoVigilanteController();
+            echo json_encode(['ok' => true, 'dados' => $controller->montarPayloadPainelMiniapp($companheiroId !== '' ? $companheiroId : null)]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/segundo-vigilante/trilha/atualizar' && $method === 'POST') {
+            $controller = new \App\Controllers\SegundoVigilanteController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->atualizarEtapaMiniapp(
+                trim((string) ($body['companheiro_id'] ?? '')),
+                (int) ($body['etapa_ordem'] ?? 0),
+                trim((string) ($body['status'] ?? '')),
+                trim((string) ($body['observacao_vigilante'] ?? '')) ?: null,
+                $autorId !== '' ? $autorId : null
+            ));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/segundo-vigilante/leitura/salvar' && $method === 'POST') {
+            $controller = new \App\Controllers\SegundoVigilanteController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->salvarLeituraSugeridaMiniapp(
+                trim((string) ($body['companheiro_id'] ?? '')),
+                isset($body['acervo_id']) && (int) $body['acervo_id'] > 0 ? (int) $body['acervo_id'] : null,
+                trim((string) ($body['observacao_leitura'] ?? '')) ?: null,
+                $autorId !== '' ? $autorId : null
+            ));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/segundo-vigilante/certificado/solicitar' && $method === 'POST') {
+            $controller = new \App\Controllers\SegundoVigilanteController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->solicitarCertificadoMiniapp(
+                trim((string) ($body['companheiro_id'] ?? '')),
+                trim((string) ($body['observacao_certificado'] ?? '')) ?: null,
+                $autorId !== '' ? $autorId : null
+            ));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/segundo-vigilante/exaltacao/recomendar' && $method === 'POST') {
+            $controller = new \App\Controllers\SegundoVigilanteController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->recomendarExaltacaoMiniapp(
+                trim((string) ($body['companheiro_id'] ?? '')),
+                trim((string) ($body['observacao_exaltacao'] ?? '')) ?: null,
+                $autorId !== '' ? $autorId : null
+            ));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/secretaria/dashboard' && $method === 'GET') {
+            $sessaoId = (int) ($_GET['sessao_id'] ?? 0);
+            $controller = new \App\Controllers\SecretariaController();
+            echo json_encode(['ok' => true, 'dados' => $controller->montarPayloadMiniapp($sessaoId > 0 ? $sessaoId : null)]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/secretaria/sessao/salvar' && $method === 'POST') {
+            $controller = new \App\Controllers\SecretariaController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            $resultado = $controller->salvarSessaoMiniapp($body, $autorId !== '' ? $autorId : null);
+            echo json_encode($resultado);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/secretaria/sessao/publicar' && $method === 'POST') {
+            $sessaoId = (int) ($body['sessao_id'] ?? 0);
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            $ok = $sessaoId > 0
+                ? (new \App\Models\Sessao())->marcarPublicada($sessaoId, $autorId !== '' ? $autorId : null, 'Publicacao realizada pela Secretaria no miniapp.')
+                : false;
+            echo json_encode(['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel publicar a sessao.']);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/secretaria/sessao/cancelar' && $method === 'POST') {
+            $sessaoId = (int) ($body['sessao_id'] ?? 0);
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            $ok = $sessaoId > 0
+                ? (new \App\Models\Sessao())->cancelar($sessaoId, $autorId !== '' ? $autorId : null, 'Cancelamento realizado pela Secretaria no miniapp.')
+                : false;
+            echo json_encode(['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel cancelar a sessao.']);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/secretaria/sessao/reabrir' && $method === 'POST') {
+            $sessaoId = (int) ($body['sessao_id'] ?? 0);
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            $ok = $sessaoId > 0
+                ? (new \App\Models\Sessao())->reabrir($sessaoId, $autorId !== '' ? $autorId : null, 'Reabertura realizada pela Secretaria no miniapp.')
+                : false;
+            echo json_encode(['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel reabrir a sessao.']);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/chanceler/dashboard' && $method === 'GET') {
+            $sessaoId = (int) ($_GET['sessao_id'] ?? 0);
+            $controller = new \App\Controllers\ChancelerSessaoController();
+            echo json_encode(['ok' => true, 'dados' => $controller->montarPayloadMiniapp($sessaoId > 0 ? $sessaoId : null)]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/chanceler/presenca' && $method === 'POST') {
+            $controller = new \App\Controllers\ChancelerSessaoController();
+            $sessaoId = (int) ($body['sessao_id'] ?? 0);
+            $obreiroId = trim((string) ($body['obreiro_id'] ?? ''));
+            $presente = filter_var($body['presente'] ?? false, FILTER_VALIDATE_BOOL);
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->registrarPresencaMiniapp(
+                $sessaoId,
+                $obreiroId,
+                $presente,
+                $autorId !== '' ? $autorId : null
+            ));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/mestre-banquetes/dashboard' && $method === 'GET') {
+            $sessaoId = (int) ($_GET['sessao_id'] ?? 0);
+            $controller = new \App\Controllers\MestreBanquetesController();
+            echo json_encode(['ok' => true, 'dados' => $controller->montarPayloadMiniapp($sessaoId > 0 ? $sessaoId : null)]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/mestre-banquetes/operacao/salvar' && $method === 'POST') {
+            $controller = new \App\Controllers\MestreBanquetesController();
+            $autorId = isset($miniappObreiro['id']) ? (int) $miniappObreiro['id'] : (isset($_SESSION['usuario_id']) ? (int) $_SESSION['usuario_id'] : null);
+            echo json_encode($controller->salvarOperacaoMiniapp($body, $autorId));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/mestre-harmonia/dashboard' && $method === 'GET') {
+            $controller = new \App\Controllers\MestreHarmoniaController();
+            $sessaoPath = trim((string) ($_GET['sessao_path'] ?? ''));
+            echo json_encode(['ok' => true, 'dados' => $controller->montarPayloadMiniapp($sessaoPath !== '' ? $sessaoPath : null)]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/mestre-harmonia/operador' && $method === 'POST') {
+            $controller = new \App\Controllers\MestreHarmoniaController();
+            echo json_encode($controller->salvarOperadorMiniapp($body));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/mestre-harmonia/controle' && $method === 'POST') {
+            $controller = new \App\Controllers\MestreHarmoniaController();
+            echo json_encode($controller->executarAcaoMiniapp(trim((string) ($body['acao'] ?? '')), $body));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/tesouraria/dashboard' && $method === 'GET') {
+            $controller = new \App\Controllers\TesourariaController();
+            echo json_encode(['ok' => true, 'dados' => $controller->montarPayloadMiniapp()]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/biblioteca/dashboard' && $method === 'GET') {
+            $controller = new \App\Controllers\BibliotecaController();
+            $acervoId = (int) ($_GET['acervo_id'] ?? 0);
+            $obreiroId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode(['ok' => true, 'dados' => $controller->montarPayloadMiniapp($obreiroId !== '' ? $obreiroId : null, $acervoId > 0 ? $acervoId : null)]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/orador/dashboard' && $method === 'GET') {
+            $sessaoId = (int) ($_GET['sessao_id'] ?? 0);
+            $controller = new \App\Controllers\OradorController();
+            echo json_encode(['ok' => true, 'dados' => $controller->montarPayloadMiniapp($sessaoId > 0 ? $sessaoId : null)]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/veneravel/dashboard' && $method === 'GET') {
+            $sessaoId = (int) ($_GET['sessao_id'] ?? 0);
+            $controller = new \App\Controllers\VeneravelController();
+            echo json_encode(['ok' => true, 'dados' => $controller->montarPayloadMiniapp($sessaoId > 0 ? $sessaoId : null)]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/hospitaleiro/dashboard' && $method === 'GET') {
+            $controller = new \App\Controllers\HospitaleiroController();
+            echo json_encode(['ok' => true, 'dados' => $controller->montarPayloadMiniapp()]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/hospitaleiro/ocorrencias/salvar' && $method === 'POST') {
+            $controller = new \App\Controllers\HospitaleiroController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->salvarOcorrenciaMiniapp($body, $autorId !== '' ? $autorId : null));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/hospitaleiro/ocorrencias/status' && $method === 'POST') {
+            $controller = new \App\Controllers\HospitaleiroController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->atualizarStatusMiniapp(
+                (int) ($body['ocorrencia_id'] ?? 0),
+                trim((string) ($body['status'] ?? '')),
+                $autorId !== '' ? $autorId : null,
+                trim((string) ($body['observacao_status'] ?? '')) ?: null
+            ));
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/hospitaleiro/visita' && $method === 'POST') {
+            $controller = new \App\Controllers\HospitaleiroController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->registrarVisitaMiniapp(
+                (int) ($body['ocorrencia_id'] ?? 0),
+                $autorId !== '' ? $autorId : null,
+                trim((string) ($body['observacao_visita'] ?? '')) ?: null,
+                trim((string) ($body['data_proxima_acao'] ?? '')) ?: null
+            ));
+            exit;
+        }
+
+        if (preg_match('~^/api/miniapp/veneravel/sessao/(publicar|cancelar|reabrir|realizar)$~', $requestUri, $m) && $method === 'POST') {
+            $controller = new \App\Controllers\VeneravelController();
+            $sessaoId = (int) ($body['sessao_id'] ?? 0);
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            echo json_encode($controller->executarAcaoSessaoMiniapp($m[1], $sessaoId, $autorId !== '' ? $autorId : null));
+            exit;
+        }
+
+        if (preg_match('~^/api/miniapp/veneravel/balaustre/(abrir-votacao|encerrar-votacao)$~', $requestUri, $m) && $method === 'POST') {
+            $controller = new \App\Controllers\VeneravelController();
+            $balaustreId = (int) ($body['balaustre_id'] ?? 0);
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $_SESSION['usuario_id'] ?? ''));
+            $acao = $m[1] === 'abrir-votacao' ? 'abrir' : 'encerrar';
+            echo json_encode($controller->executarAcaoBalaustreMiniapp($acao, $balaustreId, $autorId !== '' ? $autorId : null));
             exit;
         }
 
@@ -2031,6 +2519,11 @@ switch ($requestUri) {
             exit;
         }
         (new \App\Controllers\BibliotecaController())->index();
+        break;
+
+    case "/miniapp/biblioteca":
+        requireMiniappAuth(['bibliotecario', 'primeiro_vigilante', 'segundo_vigilante', 'veneravel', 'admin']);
+        require_once __DIR__ . "/../src/Views/miniapp/biblioteca.php";
         break;
 
     case "/biblioteca/detalhes":

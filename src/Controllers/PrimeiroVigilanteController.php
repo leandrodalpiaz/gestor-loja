@@ -2,8 +2,10 @@
 
 namespace App\Controllers;
 
+use App\Models\Acervo;
 use App\Models\Cargo;
 use App\Models\Obreiro;
+use App\Models\PrimeiroVigilanteAcompanhamento;
 use App\Models\TrilhaAprendiz;
 
 class PrimeiroVigilanteController
@@ -13,6 +15,7 @@ class PrimeiroVigilanteController
         $obreiroModel = new Obreiro();
         $cargoModel = new Cargo();
         $trilhaModel = new TrilhaAprendiz();
+        $acompanhamentoModel = new PrimeiroVigilanteAcompanhamento();
 
         $aprendizes = array_values(array_filter(
             $obreiroModel->getAllAtivos(),
@@ -66,6 +69,10 @@ class PrimeiroVigilanteController
             'etapa_inicial' => count(array_filter($aprendizes, static fn (array $aprendiz): bool => (int) ($aprendiz['trilha_etapa_atual'] ?? 0) === 1)),
             'trabalhos_aguardando_recebimento' => $trilhaDisponivel ? $trilhaModel->contarPorStatus($aprendizIds, 'aguardando_entrega') : 0,
             'aptos_certificado' => $trilhaDisponivel ? $trilhaModel->contarPorStatus($aprendizIds, 'apto_para_certificado') : 0,
+            'leituras_sugeridas' => count(array_filter($aprendizIds, static function (string $aprendizId) use ($acompanhamentoModel): bool {
+                $acompanhamento = $acompanhamentoModel->obterPorAprendiz($aprendizId);
+                return !empty($acompanhamento['leitura_acervo_id']) || !empty($acompanhamento['leitura_observacao']);
+            })),
         ];
 
         $trilhaEstudo = TrilhaAprendiz::etapas();
@@ -84,6 +91,8 @@ class PrimeiroVigilanteController
 
         $obreiroModel = new Obreiro();
         $trilhaModel = new TrilhaAprendiz();
+        $acervoModel = new Acervo();
+        $acompanhamentoModel = new PrimeiroVigilanteAcompanhamento();
 
         $aprendiz = $obreiroModel->findById($aprendizId);
         if (!$aprendiz || strtolower(trim((string) ($aprendiz['grau'] ?? ''))) !== 'aprendiz') {
@@ -125,6 +134,12 @@ class PrimeiroVigilanteController
             $statusEtapa = (string) ($etapaItem['status'] ?? 'nao_iniciado');
             $acoesRapidasPorEtapa[$ordem] = $this->montarAcoesRapidas($statusEtapa, $ordem);
         }
+        $acompanhamento = $acompanhamentoModel->obterPorAprendiz($aprendizId);
+        $historicoFormativo = $acompanhamentoModel->listarHistoricoFormativo($aprendizId);
+        $leiturasDisponiveis = array_values(array_filter(
+            $acervoModel->listarTodos(),
+            static fn (array $item): bool => in_array((string) ($item['grau_recomendado'] ?? 'Livre'), ['Livre', 'Aprendiz'], true)
+        ));
 
         $tituloPagina = $somenteProprio ? 'Meu acompanhamento' : 'Acompanhamento do Aprendiz';
 
@@ -215,6 +230,125 @@ class PrimeiroVigilanteController
         exit;
     }
 
+    public function salvarLeituraSugerida(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /primeiro-vigilante');
+            exit;
+        }
+
+        $aprendizId = trim((string) ($_POST['aprendiz_id'] ?? ''));
+        $retorno = '/primeiro-vigilante/aprendiz?id=' . urlencode($aprendizId);
+        $acervoId = (int) ($_POST['acervo_id'] ?? 0);
+        $observacao = trim((string) ($_POST['observacao_leitura'] ?? ''));
+        $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+
+        if ($aprendizId === '') {
+            $_SESSION['mensagem_erro'] = 'Aprendiz invalido para registrar leitura sugerida.';
+            header('Location: /primeiro-vigilante');
+            exit;
+        }
+
+        $ok = (new PrimeiroVigilanteAcompanhamento())->salvarLeituraSugerida(
+            $aprendizId,
+            $acervoId > 0 ? $acervoId : null,
+            $observacao !== '' ? $observacao : null,
+            $autorId !== '' ? $autorId : null
+        );
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Leitura sugerida registrada com sucesso.'
+            : 'Nao foi possivel registrar a leitura sugerida.';
+        header('Location: ' . $retorno . '#leitura-sugerida');
+        exit;
+    }
+
+    public function solicitarCertificado(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /primeiro-vigilante');
+            exit;
+        }
+
+        $aprendizId = trim((string) ($_POST['aprendiz_id'] ?? ''));
+        $retorno = '/primeiro-vigilante/aprendiz?id=' . urlencode($aprendizId);
+        $observacao = trim((string) ($_POST['observacao_certificado'] ?? ''));
+        $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+
+        if ($aprendizId === '') {
+            $_SESSION['mensagem_erro'] = 'Aprendiz invalido para solicitar certificado.';
+            header('Location: /primeiro-vigilante');
+            exit;
+        }
+
+        $trilhaModel = new TrilhaAprendiz();
+        if ($trilhaModel->trilhaDisponivel()) {
+            $trilhaModel->atualizarEtapa($aprendizId, 8, 'certificado_solicitado', $observacao !== '' ? $observacao : null, $autorId !== '' ? $autorId : null);
+        }
+
+        $ok = (new PrimeiroVigilanteAcompanhamento())->solicitarCertificado(
+            $aprendizId,
+            $observacao !== '' ? $observacao : null,
+            $autorId !== '' ? $autorId : null
+        );
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Solicitacao formal de certificado registrada.'
+            : 'Nao foi possivel registrar a solicitacao do certificado.';
+        header('Location: ' . $retorno . '#certificado');
+        exit;
+    }
+
+    public function salvarLeituraSugeridaMiniapp(string $aprendizId, ?int $acervoId, ?string $observacao, ?string $autorId = null): array
+    {
+        $aprendizId = trim($aprendizId);
+        if ($aprendizId === '') {
+            return ['ok' => false, 'erro' => 'Aprendiz invalido para registrar leitura sugerida.'];
+        }
+
+        $ok = (new PrimeiroVigilanteAcompanhamento())->salvarLeituraSugerida(
+            $aprendizId,
+            $acervoId !== null && $acervoId > 0 ? $acervoId : null,
+            $observacao,
+            $autorId
+        );
+
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar a leitura sugerida.'];
+    }
+
+    public function solicitarCertificadoMiniapp(string $aprendizId, ?string $observacao, ?string $autorId = null): array
+    {
+        $aprendizId = trim($aprendizId);
+        if ($aprendizId === '') {
+            return ['ok' => false, 'erro' => 'Aprendiz invalido para solicitar certificado.'];
+        }
+
+        $trilhaModel = new TrilhaAprendiz();
+        if ($trilhaModel->trilhaDisponivel()) {
+            $trilhaModel->atualizarEtapa($aprendizId, 8, 'certificado_solicitado', $observacao, $autorId);
+        }
+
+        $ok = (new PrimeiroVigilanteAcompanhamento())->solicitarCertificado($aprendizId, $observacao, $autorId);
+
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar a solicitacao do certificado.'];
+    }
+
+    public function atualizarEtapaMiniapp(string $aprendizId, int $etapaOrdem, string $status, ?string $observacao = null, ?string $autorId = null): array
+    {
+        $aprendizId = trim($aprendizId);
+        if ($aprendizId === '' || $etapaOrdem <= 0 || trim($status) === '') {
+            return ['ok' => false, 'erro' => 'Dados insuficientes para atualizar a trilha.'];
+        }
+
+        $trilhaModel = new TrilhaAprendiz();
+        if (!$trilhaModel->trilhaDisponivel()) {
+            return ['ok' => false, 'erro' => 'A trilha ainda nao foi criada no banco.'];
+        }
+
+        $ok = $trilhaModel->atualizarEtapa($aprendizId, $etapaOrdem, trim($status), $observacao, $autorId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel atualizar a etapa da trilha.'];
+    }
+
     private function resolverProximaAcao(int $etapa, string $status): string
     {
         return match ($status) {
@@ -265,6 +399,7 @@ class PrimeiroVigilanteController
     {
         $obreiroModel = new Obreiro();
         $trilhaModel = new TrilhaAprendiz();
+        $acompanhamentoModel = new PrimeiroVigilanteAcompanhamento();
 
         $aprendiz = $obreiroModel->findById($aprendizId);
         if (!$aprendiz || strtolower(trim((string) ($aprendiz['grau'] ?? ''))) !== 'aprendiz') {
@@ -282,6 +417,8 @@ class PrimeiroVigilanteController
         }
 
         $etapaAtual = $resumoTrilha['etapa_atual'] ?? null;
+        $acompanhamento = $acompanhamentoModel->obterPorAprendiz($aprendizId);
+        $historicoFormativo = $acompanhamentoModel->listarHistoricoFormativo($aprendizId);
 
         return [
             'aprendiz' => [
@@ -311,6 +448,58 @@ class PrimeiroVigilanteController
                     'observacao_vigilante' => (string) ($etapa['observacao_vigilante'] ?? ''),
                 ];
             }, $resumoTrilha['etapas'] ?? []),
+            'leitura_sugerida' => [
+                'acervo_id' => (int) ($acompanhamento['leitura_acervo_id'] ?? 0),
+                'titulo' => (string) ($acompanhamento['leitura_titulo'] ?? $acompanhamento['leitura_titulo_snapshot'] ?? ''),
+                'autor' => (string) ($acompanhamento['leitura_autor'] ?? ''),
+                'observacao' => (string) ($acompanhamento['leitura_observacao'] ?? ''),
+            ],
+            'certificado' => [
+                'status' => (string) ($acompanhamento['certificado_status'] ?? 'nao_solicitado'),
+                'observacao' => (string) ($acompanhamento['certificado_observacao'] ?? ''),
+                'solicitado_em' => (string) ($acompanhamento['certificado_solicitado_em'] ?? ''),
+            ],
+            'historico_formativo' => $historicoFormativo,
+        ];
+    }
+
+    public function montarPayloadPainelMiniapp(?string $aprendizId = null): array
+    {
+        $obreiroModel = new Obreiro();
+        $acervoModel = new Acervo();
+
+        $aprendizes = array_values(array_filter(
+            $obreiroModel->getAllAtivos(),
+            static fn (array $obreiro): bool => strtolower(trim((string) ($obreiro['grau'] ?? ''))) === 'aprendiz'
+        ));
+        usort($aprendizes, static function (array $a, array $b): int {
+            return strcasecmp((string) ($a['nome_historico'] ?? $a['nome'] ?? ''), (string) ($b['nome_historico'] ?? $b['nome'] ?? ''));
+        });
+
+        $aprendizFocoId = trim((string) ($aprendizId ?? ''));
+        if ($aprendizFocoId === '' && isset($aprendizes[0]['id'])) {
+            $aprendizFocoId = (string) $aprendizes[0]['id'];
+        }
+
+        return [
+            'aprendizes' => array_map(static function (array $aprendiz): array {
+                return [
+                    'id' => (string) ($aprendiz['id'] ?? ''),
+                    'nome' => (string) ($aprendiz['nome_historico'] ?? $aprendiz['nome'] ?? 'Aprendiz'),
+                    'cim' => (string) ($aprendiz['cim'] ?? ''),
+                ];
+            }, $aprendizes),
+            'aprendiz_foco' => $this->montarPayloadMiniapp($aprendizFocoId),
+            'leituras_disponiveis' => array_map(static function (array $item): array {
+                return [
+                    'id' => (int) ($item['id'] ?? 0),
+                    'titulo' => (string) ($item['titulo'] ?? ''),
+                    'autor' => (string) ($item['autor'] ?? ''),
+                ];
+            }, array_values(array_filter(
+                $acervoModel->listarTodos(),
+                static fn (array $item): bool => in_array((string) ($item['grau_recomendado'] ?? 'Livre'), ['Livre', 'Aprendiz'], true)
+            ))),
         ];
     }
 

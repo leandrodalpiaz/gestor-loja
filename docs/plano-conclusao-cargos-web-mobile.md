@@ -523,17 +523,17 @@ Legenda de status:
 
 | Cargo | Web | Mobile | Regra/Backend | Permissoes | Status geral | O que falta principal |
 |---|---|---|---|---|---|---|
-| Secretaria | parcial | nao_iniciado | parcial | parcial | parcial | agenda oficial completa, historico consolidado e espelhamento mobile |
-| Chanceler | parcial | nao_iniciado | parcial | parcial | parcial | presenca efetiva mobile, nominata mobile e fechamento operacional completo |
-| Mestre de Banquetes | parcial | nao_iniciado | parcial | parcial | parcial | operacao do agape alem de consulta e versao mobile |
-| Hospitaleiro | parcial | nao_iniciado | parcial | parcial | parcial | fluxo mobile de ocorrencias, visitas e encaminhamentos |
-| Primeiro Vigilante | parcial | parcial | parcial | parcial | parcial | leituras, certificado, historico formativo e conclusao do fluxo |
-| Segundo Vigilante | parcial | parcial | parcial | parcial | parcial | docencia, exaltacao, historico e conclusao do fluxo |
-| Orador | parcial | nao_iniciado | parcial | parcial | parcial | painel ritual mais completo e versao mobile |
-| Veneravel | parcial | nao_iniciado | parcial | parcial | parcial | aprovacoes e decisoes rapidas no mobile, consolidacao de governanca |
-| Mestre de Harmonia | parcial | nao_iniciado | parcial | parcial | parcial | controle mobile/remoto e fechamento do fluxo do operador |
-| Tesouraria | parcial | parcial | parcial | parcial | parcial | concluir espelhamento mobile operacional e integrações finais |
-| Biblioteca | parcial | nao_iniciado | parcial | parcial | parcial | espelhamento mobile e refinamento de operacao por cargo |
+| Secretaria | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
+| Chanceler | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
+| Mestre de Banquetes | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
+| Hospitaleiro | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
+| Primeiro Vigilante | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
+| Segundo Vigilante | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
+| Orador | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
+| Veneravel | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
+| Mestre de Harmonia | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
+| Tesouraria | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
+| Biblioteca | concluido | concluido | parcial | parcial | concluido | refinamento final de permissao/documentacao |
 | Administracao | parcial | nao_iniciado | parcial | parcial | parcial | auditoria critica, ajustes mobile e consolidacao de gestoes |
 
 ### 12.2 Visao por fase
@@ -541,10 +541,10 @@ Legenda de status:
 | Fase | Nome | Status | Observacao |
 |---|---|---|---|
 | 1 | Fundacao de paridade | em_andamento | plano criado, falta matriz detalhada de permissao e checklist final por cargo |
-| 2 | Cargos operacionais centrais | nao_iniciado | iniciar por Secretaria, Chanceler, Mestre de Banquetes e Veneravel |
-| 3 | Cargos formativos | nao_iniciado | concluir 1o e 2o Vigilantes no web e mobile |
-| 4 | Apoio ritual e assistencial | nao_iniciado | concluir Hospitaleiro, Orador e Mestre de Harmonia |
-| 5 | Consolidacao administrativa | nao_iniciado | fechar Tesouraria, Biblioteca, Admin e auditoria final |
+| 2 | Cargos operacionais centrais | concluido | Secretaria, Chanceler, Mestre de Banquetes e Veneravel concluidos |
+| 3 | Cargos formativos | concluido | 1o e 2o Vigilantes concluidos |
+| 4 | Apoio ritual e assistencial | concluido | Hospitaleiro, Orador e Mestre de Harmonia concluidos |
+| 5 | Consolidacao administrativa | em_andamento | Tesouraria concluida; proximos focos em Biblioteca, Administracao e auditoria final |
 
 ### 12.3 Proxima ordem recomendada
 
@@ -552,11 +552,9 @@ Legenda de status:
 |---|---|---|
 | 1 | Matriz detalhada cargo x tela x funcao x canal | pendente |
 | 2 | Secretaria mobile | pendente |
-| 3 | Chanceler mobile | pendente |
-| 4 | Mestre de Banquetes mobile | pendente |
-| 5 | Veneravel mobile | pendente |
-| 6 | Fechamento funcional do 1o Vigilante | pendente |
-| 7 | Fechamento funcional do 2o Vigilante | pendente |
+| 3 | Mestre de Banquetes mobile | pendente |
+| 4 | Fechamento funcional do Orador | concluido |
+| 5 | Refinamento de permissao/documentacao dos cargos concluidos | pendente |
 
 ### 12.4 Regra de manutencao
 
@@ -568,3 +566,194 @@ Se uma entrega evoluir, atualizar:
 - status da fase;
 - coluna `o que falta principal`;
 - ordem recomendada, se a prioridade mudar.
+
+## 13. Matriz detalhada por cargo
+
+Esta matriz existe para executarmos um cargo por vez.
+
+Legenda curta:
+
+- `W`: web
+- `M`: mobile
+- `B`: backend/regra
+- `P`: permissao
+
+Status por item:
+
+- `nao_iniciado`
+- `parcial`
+- `concluido`
+- `bloqueado`
+
+## 13.1 Secretaria
+
+| Item | W | M | B | P | Status | Observacao |
+|---|---|---|---|---|---|---|
+| Painel principal da Secretaria | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Criar sessao | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Editar sessao | concluido | parcial | parcial | parcial | parcial | web entregue, mobile simplificado por miniapp |
+| Cancelar sessao | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Reabrir sessao | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Publicar sessao | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Agenda oficial | concluido | concluido | parcial | parcial | concluido | agenda operacional entregue em ambos |
+| Resumo da proxima sessao | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
+| Confirmados da sessao | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
+| Controle de agape | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
+| Trabalhos da sessao | concluido | nao_iniciado | parcial | parcial | parcial | pendente no mobile |
+| Balaustre | concluido | nao_iniciado | parcial | parcial | parcial | pendente no mobile |
+| Votacao de balaustre | concluido | nao_iniciado | parcial | parcial | parcial | pendente no mobile |
+| Relatorio anual | concluido | nao_iniciado | parcial | parcial | parcial | pendente no mobile |
+| Historico operacional da sessao | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
+
+## 13.2 Chanceler
+
+| Item | W | M | B | P | Status | Observacao |
+|---|---|---|---|---|---|---|
+| Painel de sessao do Chanceler | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Consulta de confirmados | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
+| Consulta de nominata prevista | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
+| Registro de presenca efetiva | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
+| Lista final de presentes | concluido | concluido | parcial | parcial | concluido | painel e miniapp com leitura de presentes |
+| Certificado | concluido | concluido | parcial | parcial | concluido | web com prefill e mobile acessivel pelo miniapp do cargo |
+| Gestao de efemerides no web | concluido | nao_iniciado | parcial | parcial | concluido | tela web consolidada no fluxo do cargo |
+| Revisao da mensagem diaria | concluido | concluido | parcial | parcial | concluido | web entregue e bot alinhado ao fluxo atual |
+| Cadastro de aniversarios no mobile | nao_iniciado | concluido | parcial | parcial | concluido | miniapp dedicado acessivel pelo launcher do cargo |
+| Cadastro de datas maconicas no mobile | nao_iniciado | concluido | parcial | parcial | concluido | miniapp dedicado acessivel pelo launcher do cargo |
+| Cadastro de fatos historicos no mobile | nao_iniciado | concluido | parcial | parcial | concluido | miniapp dedicado acessivel pelo launcher do cargo |
+| Gestao de mensagens fallback no mobile | nao_iniciado | concluido | parcial | parcial | concluido | miniapp dedicado acessivel pelo launcher do cargo |
+| Integracao bot x efemerides | concluido | concluido | parcial | parcial | concluido | aniversarios e datas maconicas agora usam a mesma base de efemerides |
+
+## 13.3 Mestre de Banquetes
+
+| Item | W | M | B | P | Status | Observacao |
+|---|---|---|---|---|---|---|
+| Painel do cargo | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Total de confirmados | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
+| Total do agape | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
+| Lista nominal do agape | concluido | concluido | parcial | parcial | concluido | entregue em ambos |
+| Observacoes do agape | concluido | concluido | parcial | parcial | concluido | operacao propria do banquete entregue |
+| Fechamento logistico do banquete | concluido | concluido | parcial | parcial | concluido | status operacional e previsao entregues em web e mobile |
+
+## 13.4 Hospitaleiro
+
+| Item | W | M | B | P | Status | Observacao |
+|---|---|---|---|---|---|---|
+| Painel de assistencia | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Registrar ocorrencia | concluido | concluido | parcial | parcial | concluido | web e mobile entregues |
+| Atualizar status da ocorrencia | concluido | concluido | parcial | parcial | concluido | web e mobile entregues |
+| Encaminhar para Tesouraria/Veneravel | concluido | concluido | parcial | parcial | concluido | fluxo presente no cadastro e no acompanhamento |
+| Registrar visita e retorno | concluido | concluido | parcial | parcial | concluido | fluxo proprio entregue |
+
+## 13.5 Primeiro Vigilante
+
+| Item | W | M | B | P | Status | Observacao |
+|---|---|---|---|---|---|---|
+| Painel do cargo | concluido | concluido | parcial | parcial | concluido | web e miniapp do vigilante entregues |
+| Lista de Aprendizes | concluido | concluido | parcial | parcial | concluido | miniapp com seletor de Aprendizes |
+| Detalhe do Aprendiz | concluido | concluido | parcial | parcial | concluido | web, miniapp do vigilante e miniapp do Aprendiz entregues |
+| Trilha completa | concluido | concluido | parcial | parcial | concluido | fluxo ponta a ponta entregue |
+| Passar etapa | concluido | concluido | parcial | parcial | concluido | web e mobile entregues |
+| Registrar recebimento | concluido | concluido | parcial | parcial | concluido | web e mobile entregues |
+| Revisar trabalho | concluido | concluido | parcial | parcial | concluido | web e mobile entregues |
+| Historico formativo | concluido | concluido | parcial | parcial | concluido | historico consolidado entregue |
+| Sugerir leitura | concluido | concluido | parcial | parcial | concluido | integrado ao acervo |
+| Solicitar certificado | concluido | concluido | parcial | parcial | concluido | solicitacao formal entregue |
+
+## 13.6 Segundo Vigilante
+
+| Item | W | M | B | P | Status | Observacao |
+|---|---|---|---|---|---|---|
+| Painel do cargo | concluido | concluido | parcial | parcial | concluido | web e miniapp do vigilante entregues |
+| Lista de Companheiros | concluido | concluido | parcial | parcial | concluido | miniapp com seletor de Companheiros |
+| Detalhe do Companheiro | concluido | concluido | parcial | parcial | concluido | web, miniapp do vigilante e miniapp do Companheiro entregues |
+| Trilha completa | concluido | concluido | parcial | parcial | concluido | fluxo ponta a ponta entregue |
+| Passar etapa | concluido | concluido | parcial | parcial | concluido | web e mobile entregues |
+| Registrar recebimento | concluido | concluido | parcial | parcial | concluido | web e mobile entregues |
+| Revisar trabalho | concluido | concluido | parcial | parcial | concluido | web e mobile entregues |
+| Recomendar docencia | concluido | concluido | parcial | parcial | concluido | solicitacao formal de certificado entregue |
+| Recomendar exaltacao | concluido | concluido | parcial | parcial | concluido | fluxo formal entregue |
+| Historico formativo | concluido | concluido | parcial | parcial | concluido | historico consolidado entregue |
+
+## 13.7 Orador
+
+| Item | W | M | B | P | Status | Observacao |
+|---|---|---|---|---|---|---|
+| Painel do cargo | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Resumo da proxima sessao | concluido | concluido | parcial | parcial | concluido | painel enriquecido e selecao de sessao em foco |
+| Lista de visitantes | concluido | concluido | parcial | parcial | concluido | leitura ritual entregue em web e mobile |
+| Cargos da sessao | concluido | concluido | parcial | parcial | concluido | composicao ritual exposta em ambos |
+| Eventos registrados | concluido | concluido | parcial | parcial | concluido | congressos e palestras expostos em ambos |
+| Apoio ritual/lembretes | concluido | concluido | parcial | parcial | concluido | roteiro do cargo entregue em web e mobile |
+
+## 13.8 Veneravel
+
+| Item | W | M | B | P | Status | Observacao |
+|---|---|---|---|---|---|---|
+| Painel do Veneravel | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Publicar sessao | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Cancelar sessao | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Reabrir sessao | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Marcar sessao realizada | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Abrir votacao | concluido | concluido | parcial | parcial | concluido | fluxo agora centralizado no proprio cargo |
+| Encerrar votacao | concluido | concluido | parcial | parcial | concluido | fluxo agora centralizado no proprio cargo |
+| Governanca consolidada | concluido | concluido | parcial | parcial | concluido | painel executivo com pendencias criticas e launcher mobile |
+
+## 13.9 Mestre de Harmonia
+
+| Item | W | M | B | P | Status | Observacao |
+|---|---|---|---|---|---|---|
+| Painel do player | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Scan da base musical | concluido | concluido | parcial | parcial | concluido | miniapp espelha sessoes musicais disponiveis |
+| Troca de operador | concluido | concluido | parcial | parcial | concluido | operador em exercicio disponivel em ambos |
+| Controle de execucao por etapa | concluido | concluido | parcial | parcial | concluido | etapa atual, proxima etapa e selecao manual entregues |
+| Controle remoto mobile | concluido | concluido | parcial | parcial | concluido | acoes remotas basicas entregues |
+
+## 13.10 Tesouraria
+
+| Item | W | M | B | P | Status | Observacao |
+|---|---|---|---|---|---|---|
+| Livro-caixa | concluido | concluido | parcial | parcial | concluido | painel mobile consolidado com atalho operacional |
+| Comprovantes | concluido | concluido | parcial | parcial | concluido | caixa de pendencias espelhada no mobile |
+| Regularidade | concluido | concluido | parcial | parcial | concluido | leitura operacional disponivel no painel mobile |
+| Fechamento mensal | concluido | concluido | parcial | parcial | concluido | resumo e acesso rapido no mobile |
+| Obrigacoes financeiras | concluido | concluido | parcial | parcial | concluido | painel mobile central agora inclui alertas e atalho operacional |
+| Sessao/agape financeiro | concluido | concluido | parcial | parcial | concluido | sessoes com reflexo financeiro expostas no mobile |
+
+## 13.11 Biblioteca
+
+| Item | W | M | B | P | Status | Observacao |
+|---|---|---|---|---|---|---|
+| Painel do acervo | concluido | concluido | parcial | parcial | concluido | web e miniapp entregues |
+| Detalhe do item | concluido | concluido | parcial | parcial | concluido | detalhe rapido no mobile entregue |
+| Solicitar emprestimo | concluido | concluido | parcial | parcial | concluido | fluxo acessivel a partir do detalhe web e do launcher mobile |
+| Meus emprestimos | concluido | concluido | parcial | parcial | concluido | painel mobile espelha a leitura do obreiro |
+| Comentarios e reacoes | concluido | concluido | parcial | parcial | concluido | leitura consolidada no mobile e interacao principal mantida no web |
+| Operacao do bibliotecario | concluido | concluido | parcial | parcial | concluido | pendencias e atalhos operacionais no miniapp |
+
+## 13.12 Administracao
+
+| Item | W | M | B | P | Status | Observacao |
+|---|---|---|---|---|---|---|
+| Gestao de cargos | concluido | nao_iniciado | parcial | parcial | parcial | web existe |
+| Gestao de gestoes | concluido | nao_iniciado | parcial | parcial | parcial | web existe |
+| Parametros da Loja | concluido | nao_iniciado | parcial | parcial | parcial | web existe |
+| Auditoria critica | nao_iniciado | nao_iniciado | parcial | parcial | nao_iniciado | historicos existem em partes, falta consolidacao |
+
+## 14. Regra de execucao cargo por cargo
+
+Seguiremos sempre esta ordem para cada cargo:
+
+1. fechar backend e permissao;
+2. fechar web;
+3. fechar mobile;
+4. atualizar esta matriz;
+5. so entao iniciar o cargo seguinte.
+
+## 15. Cargo atual de trabalho
+
+| Campo | Valor |
+|---|---|
+| Cargo em foco | Administracao |
+| Fase | 5 - Consolidacao administrativa |
+| Objetivo atual | concluir a Administracao no web e no mobile |
+| Proximo cargo apos concluir | Auditoria final |

@@ -8,6 +8,13 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 p-4 antialiased">
+    <?php
+    $defaults = [
+        'data_sessao' => trim((string) ($_GET['data_sessao'] ?? '')),
+        'tipo_sessao' => trim((string) ($_GET['tipo_sessao'] ?? '')),
+        'grau_sessao' => trim((string) ($_GET['grau_sessao'] ?? '')),
+    ];
+    ?>
     <div class="max-w-2xl mx-auto">
         <div class="mb-4 flex items-center justify-between gap-3">
             <div>
@@ -40,26 +47,26 @@
 
                     <div>
                         <label for="data_sessao" class="block mb-2 font-semibold">Data da sessao</label>
-                        <input type="date" id="data_sessao" name="data_sessao" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700">
+                        <input type="date" id="data_sessao" name="data_sessao" value="<?= htmlspecialchars($defaults['data_sessao']) ?>" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700">
                     </div>
 
                     <div>
                         <label for="tipo_sessao" class="block mb-2 font-semibold">Tipo de sessao</label>
                         <select id="tipo_sessao" name="tipo_sessao" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700 bg-white">
-                            <option value="Ordinaria">Ordinaria</option>
-                            <option value="Magna">Magna</option>
-                            <option value="Magna de Iniciacao">Magna de Iniciacao</option>
-                            <option value="Magna de Elevacao">Magna de Elevacao</option>
-                            <option value="Magna de Exaltacao">Magna de Exaltacao</option>
+                            <option value="Ordinaria" <?= $defaults['tipo_sessao'] === 'Ordinaria' ? 'selected' : '' ?>>Ordinaria</option>
+                            <option value="Magna" <?= $defaults['tipo_sessao'] === 'Magna' ? 'selected' : '' ?>>Magna</option>
+                            <option value="Magna de Iniciacao" <?= $defaults['tipo_sessao'] === 'Magna de Iniciacao' ? 'selected' : '' ?>>Magna de Iniciacao</option>
+                            <option value="Magna de Elevacao" <?= $defaults['tipo_sessao'] === 'Magna de Elevacao' ? 'selected' : '' ?>>Magna de Elevacao</option>
+                            <option value="Magna de Exaltacao" <?= $defaults['tipo_sessao'] === 'Magna de Exaltacao' ? 'selected' : '' ?>>Magna de Exaltacao</option>
                         </select>
                     </div>
 
                     <div>
                         <label for="grau_sessao" class="block mb-2 font-semibold">Grau da sessao</label>
                         <select id="grau_sessao" name="grau_sessao" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700 bg-white">
-                            <option value="Aprendiz Macom">Aprendiz Macom (Grau 1)</option>
-                            <option value="Companheiro Macom">Companheiro Macom (Grau 2)</option>
-                            <option value="Mestre Macom">Mestre Macom (Grau 3)</option>
+                            <option value="Aprendiz Macom" <?= $defaults['grau_sessao'] === 'Aprendiz Macom' ? 'selected' : '' ?>>Aprendiz Macom (Grau 1)</option>
+                            <option value="Companheiro Macom" <?= $defaults['grau_sessao'] === 'Companheiro Macom' ? 'selected' : '' ?>>Companheiro Macom (Grau 2)</option>
+                            <option value="Mestre Macom" <?= $defaults['grau_sessao'] === 'Mestre Macom' ? 'selected' : '' ?>>Mestre Macom (Grau 3)</option>
                         </select>
                     </div>
                 </div>
