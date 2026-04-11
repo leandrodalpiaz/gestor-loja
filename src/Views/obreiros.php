@@ -55,40 +55,40 @@ $rotulosAlerta = [
 </head>
 <body class="bg-pedra font-sans text-gray-800 antialiased">
     <header class="bg-cobalto text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-start justify-between gap-4">
             <div>
                 <div class="text-xs uppercase tracking-[0.22em] text-gray-300">Secretaria</div>
                 <h1 class="font-serif text-xl font-bold tracking-wider">Central de Obreiros</h1>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="/admin/cargos" class="rounded-lg border border-white/20 px-3 py-2 text-sm text-white hover:bg-white/10">Nominata oficial</a>
-                <a href="/obreiros?alerta=cadastro" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 hover:bg-amber-100">Somente alertas</a>
-                <a href="/obreiros/novo" class="rounded-lg bg-white text-cobalto px-4 py-2 text-sm font-medium hover:bg-amber-50">Adicionar obreiro</a>
+            <div class="flex w-full max-w-[14rem] flex-col gap-2 sm:w-auto sm:max-w-none sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                <a href="/obreiros/novo" class="order-1 rounded-lg bg-white px-4 py-2 text-center text-sm font-medium text-cobalto hover:bg-amber-50 sm:order-3">Adicionar obreiro</a>
+                <a href="/obreiros?alerta=cadastro" class="order-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-sm text-amber-900 hover:bg-amber-100 sm:order-2">Somente alertas</a>
+                <a href="/admin/cargos" class="order-3 rounded-lg border border-white/20 px-3 py-2 text-center text-sm text-white hover:bg-white/10 sm:order-1">Nominata oficial</a>
             </div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        <section class="grid gap-4 md:grid-cols-5">
-            <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-gray-500">Total filtrado</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) $resumoObreiros['total'] ?></div>
+        <section class="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-4">
+            <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
+                <div class="text-xs text-gray-500 md:text-sm">Total filtrado</div>
+                <div class="mt-1 text-2xl font-semibold text-cobalto md:mt-2 md:text-3xl"><?= (int) $resumoObreiros['total'] ?></div>
             </article>
-            <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-gray-500">No quadro</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) $resumoObreiros['ativos'] ?></div>
+            <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
+                <div class="text-xs text-gray-500 md:text-sm">No quadro</div>
+                <div class="mt-1 text-2xl font-semibold text-cobalto md:mt-2 md:text-3xl"><?= (int) $resumoObreiros['ativos'] ?></div>
             </article>
-            <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-gray-500">Com alerta</div>
-                <div class="mt-2 text-3xl font-semibold text-amber-700"><?= (int) $resumoObreiros['com_alerta'] ?></div>
+            <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
+                <div class="text-xs text-gray-500 md:text-sm">Com alerta</div>
+                <div class="mt-1 text-2xl font-semibold text-amber-700 md:mt-2 md:text-3xl"><?= (int) $resumoObreiros['com_alerta'] ?></div>
             </article>
-            <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-gray-500">Bot vinculado</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) $resumoObreiros['com_telegram'] ?></div>
+            <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
+                <div class="text-xs text-gray-500 md:text-sm">Bot vinculado</div>
+                <div class="mt-1 text-2xl font-semibold text-cobalto md:mt-2 md:text-3xl"><?= (int) $resumoObreiros['com_telegram'] ?></div>
             </article>
-            <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-gray-500">Mestres</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) $resumoObreiros['mestres'] ?></div>
+            <article class="col-span-2 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:col-span-1 md:p-5">
+                <div class="text-xs text-gray-500 md:text-sm">Mestres</div>
+                <div class="mt-1 text-2xl font-semibold text-cobalto md:mt-2 md:text-3xl"><?= (int) $resumoObreiros['mestres'] ?></div>
             </article>
         </section>
 
@@ -102,8 +102,9 @@ $rotulosAlerta = [
                 <p class="text-sm text-gray-500">Use os filtros para saneamento cadastral, conferencia da nominata e preparacao dos relatorios.</p>
             </div>
 
-            <form method="GET" action="/obreiros" class="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
-                <div class="xl:col-span-2">
+            <form method="GET" action="/obreiros" class="space-y-4">
+                <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+                    <div class="md:col-span-2 xl:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Busca</label>
                     <input
                         type="text"
@@ -113,55 +114,64 @@ $rotulosAlerta = [
                         placeholder="Nome, nome historico, grau ou CIM"
                     >
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Situacao</label>
-                    <select name="situacao" class="w-full rounded-lg border border-gray-300 px-3 py-2">
-                        <option value="">Todas</option>
-                        <?php foreach (\App\Models\Obreiro::SITUACOES_QUADRO as $situacao): ?>
-                            <option value="<?= htmlspecialchars($situacao) ?>" <?= ($filtrosObreiros['situacao'] ?? '') === $situacao ? 'selected' : '' ?>><?= htmlspecialchars($situacao) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <div class="grid grid-cols-2 gap-2 md:col-span-1 xl:col-span-1">
+                        <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-sm font-medium text-white hover:bg-blue-900">Aplicar</button>
+                        <a href="/obreiros" class="rounded-lg border border-gray-300 px-4 py-2 text-center text-sm text-gray-700 bg-white hover:bg-gray-50">Limpar</a>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Grau</label>
-                    <select name="grau" class="w-full rounded-lg border border-gray-300 px-3 py-2">
-                        <option value="">Todos</option>
-                        <?php foreach (['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'] as $grau): ?>
-                            <option value="<?= htmlspecialchars($grau) ?>" <?= ($filtrosObreiros['grau'] ?? '') === $grau ? 'selected' : '' ?>><?= htmlspecialchars($grau) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Cargo oficial</label>
-                    <select name="cargo_codigo" class="w-full rounded-lg border border-gray-300 px-3 py-2">
-                        <option value="">Todos</option>
-                        <?php foreach ($cargosFiltros as $cargo): ?>
-                            <option value="<?= htmlspecialchars((string) ($cargo['codigo'] ?? '')) ?>" <?= ($filtrosObreiros['cargo_codigo'] ?? '') === (string) ($cargo['codigo'] ?? '') ? 'selected' : '' ?>>
-                                <?= htmlspecialchars(Cargo::rotuloOficial((string) ($cargo['codigo'] ?? ''), (string) ($cargo['nome_exibicao'] ?? $cargo['codigo'] ?? ''))) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Alerta</label>
-                    <select name="alerta" class="w-full rounded-lg border border-gray-300 px-3 py-2">
-                        <option value="">Todos</option>
-                        <option value="cadastro" <?= ($filtrosObreiros['alerta'] ?? '') === 'cadastro' ? 'selected' : '' ?>>Com alerta cadastral</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Ordenar por</label>
-                    <select name="ordenacao" class="w-full rounded-lg border border-gray-300 px-3 py-2">
-                        <option value="nome" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'nome' ? 'selected' : '' ?>>Nome</option>
-                        <option value="grau" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'grau' ? 'selected' : '' ?>>Grau</option>
-                        <option value="situacao" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'situacao' ? 'selected' : '' ?>>Situacao</option>
-                        <option value="alerta" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'alerta' ? 'selected' : '' ?>>Quantidade de alerta</option>
-                    </select>
-                </div>
-                <div class="md:col-span-3 xl:col-span-6 flex items-end gap-2">
-                    <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-sm font-medium text-white hover:bg-blue-900">Aplicar</button>
-                    <a href="/obreiros" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 bg-white hover:bg-gray-50">Limpar</a>
-                </div>
+
+                <details id="obreiros-filtros-avancados" class="group rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 md:border-0 md:bg-transparent md:p-0">
+                    <summary class="cursor-pointer list-none text-sm font-medium text-cobalto md:hidden">
+                        Mais filtros
+                    </summary>
+                    <div class="mt-3 grid gap-3 md:mt-0 md:grid-cols-3 xl:grid-cols-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Situacao</label>
+                            <select name="situacao" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                                <option value="">Todas</option>
+                                <?php foreach (\App\Models\Obreiro::SITUACOES_QUADRO as $situacao): ?>
+                                    <option value="<?= htmlspecialchars($situacao) ?>" <?= ($filtrosObreiros['situacao'] ?? '') === $situacao ? 'selected' : '' ?>><?= htmlspecialchars($situacao) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Grau</label>
+                            <select name="grau" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                                <option value="">Todos</option>
+                                <?php foreach (['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'] as $grau): ?>
+                                    <option value="<?= htmlspecialchars($grau) ?>" <?= ($filtrosObreiros['grau'] ?? '') === $grau ? 'selected' : '' ?>><?= htmlspecialchars($grau) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Cargo oficial</label>
+                            <select name="cargo_codigo" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                                <option value="">Todos</option>
+                                <?php foreach ($cargosFiltros as $cargo): ?>
+                                    <option value="<?= htmlspecialchars((string) ($cargo['codigo'] ?? '')) ?>" <?= ($filtrosObreiros['cargo_codigo'] ?? '') === (string) ($cargo['codigo'] ?? '') ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars(Cargo::rotuloOficial((string) ($cargo['codigo'] ?? ''), (string) ($cargo['nome_exibicao'] ?? $cargo['codigo'] ?? ''))) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Alerta</label>
+                            <select name="alerta" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                                <option value="">Todos</option>
+                                <option value="cadastro" <?= ($filtrosObreiros['alerta'] ?? '') === 'cadastro' ? 'selected' : '' ?>>Com alerta cadastral</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Ordenar por</label>
+                            <select name="ordenacao" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                                <option value="nome" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'nome' ? 'selected' : '' ?>>Nome</option>
+                                <option value="grau" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'grau' ? 'selected' : '' ?>>Grau</option>
+                                <option value="situacao" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'situacao' ? 'selected' : '' ?>>Situacao</option>
+                                <option value="alerta" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'alerta' ? 'selected' : '' ?>>Quantidade de alerta</option>
+                            </select>
+                        </div>
+                    </div>
+                </details>
             </form>
         </section>
 
@@ -281,5 +291,25 @@ $rotulosAlerta = [
             <?php endif; ?>
         </section>
     </main>
+    <script>
+        (function () {
+            const filtrosAvancados = document.getElementById('obreiros-filtros-avancados');
+            if (!filtrosAvancados || !window.matchMedia) {
+                return;
+            }
+
+            const media = window.matchMedia('(min-width: 768px)');
+            const syncFiltros = function (event) {
+                filtrosAvancados.open = event.matches;
+            };
+
+            syncFiltros(media);
+            if (typeof media.addEventListener === 'function') {
+                media.addEventListener('change', syncFiltros);
+            } else if (typeof media.addListener === 'function') {
+                media.addListener(syncFiltros);
+            }
+        })();
+    </script>
 </body>
 </html>
