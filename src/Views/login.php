@@ -26,6 +26,20 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
 </head>
+<?php
+$logoRenascencaLogin = null;
+foreach ([
+    '/assets/logo-renascenca.png',
+    '/assets/logo-renascenca.svg',
+    '/assets/logo-loja-renascenca.png',
+    '/assets/logo-loja-renascenca.svg',
+] as $logoPath) {
+    if (file_exists(__DIR__ . '/../../public' . $logoPath)) {
+        $logoRenascencaLogin = $logoPath;
+        break;
+    }
+}
+?>
 <body class="bg-pedra min-h-screen flex items-center justify-center p-4 font-sans relative overflow-hidden">
     
     <!-- Efeito visual de fundo sutíl -->
@@ -41,8 +55,12 @@
         
         <!-- Header do Card -->
         <div class="pt-8 pb-4 px-8 text-center bg-white">
-            <div class="mx-auto w-16 h-16 bg-pedraEscura rounded-full flex items-center justify-center mb-4 border border-ouro/30 shadow-inner">
-                <span class="text-3xl text-ouro font-serif">∴</span>
+            <div class="mx-auto mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-ouro/30 bg-pedraEscura shadow-inner">
+                <?php if ($logoRenascencaLogin): ?>
+                    <img src="<?= htmlspecialchars($logoRenascencaLogin) ?>" alt="Logotipo da Loja Renascença" class="h-full w-full object-cover">
+                <?php else: ?>
+                    <span class="text-3xl text-ouro font-serif">∴</span>
+                <?php endif; ?>
             </div>
             <h1 class="text-2xl font-serif font-bold text-cobalto">Acesso Restrito</h1>
             <p class="text-sm text-gray-500 mt-2">Painel de Gestão e Chancelaria</p>

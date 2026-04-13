@@ -39,6 +39,30 @@ if ($historiaLoja !== '') {
         $historiaLoja = strlen($historiaLoja) > 2200 ? substr($historiaLoja, 0, 2197) . '...' : $historiaLoja;
     }
 }
+
+$formatarDataAgenda = static function (?string $valor): string {
+    $valor = trim((string) $valor);
+    if ($valor === '') {
+        return 'Data a definir';
+    }
+
+    try {
+        return (new DateTimeImmutable($valor))
+            ->setTimezone(new DateTimeZone('America/Sao_Paulo'))
+            ->format('d/m/Y \à\s H:i');
+    } catch (\Throwable $e) {
+        return $valor;
+    }
+};
+
+$badgeStatusSessao = static function (?string $status): string {
+    return match (strtolower(trim((string) $status))) {
+        'publicada', 'confirmada', 'ativa', 'alterada' => 'border-emerald-200 bg-emerald-50 text-emerald-800',
+        'planejada' => 'border-amber-200 bg-amber-50 text-amber-800',
+        'cancelada' => 'border-rose-200 bg-rose-50 text-rose-800',
+        default => 'border-slate-200 bg-slate-100 text-slate-700',
+    };
+};
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -488,7 +512,82 @@ if ($historiaLoja !== '') {
                         </div>
                     </form>
 
-                    <div class="mt-6 overflow-x-auto">
+                    <div class="mt-6">
+                        <div class="mb-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            <?php foreach ($sessoes as $sessao): ?>
+                                <?php
+                                $statusSessao = (string) ($sessao['status'] ?? '');
+                                $tituloSessao = (string) ($sessao['titulo'] ?: (($sessao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessao['grau_sessao'] ?? '')));
+                                ?>
+                                <article class="rounded-2xl border border-slate-200 bg-[linear-gradient(180deg,#ffffff,#f8fafc)] p-4 shadow-sm">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div>
+                                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-cobre">Sessao oficial</div>
+                                            <h3 class="mt-2 text-base font-semibold text-cobalto"><?= htmlspecialchars($tituloSessao) ?></h3>
+                                        </div>
+                                        <span class="inline-flex rounded-full border px-3 py-1 text-xs font-semibold <?= $badgeStatusSessao($statusSessao) ?>">
+                                            <?= htmlspecialchars($statusSessao !== '' ? $statusSessao : 'planejada') ?>
+                                        </span>
+                                    </div>
+
+                                    <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                                            <div class="text-xs uppercase tracking-wide text-slate-500">Data</div>
+                                            <div class="mt-1 text-sm font-medium text-slate-800"><?= htmlspecialchars($formatarDataAgenda((string) ($sessao['data_hora_inicio'] ?? ''))) ?></div>
+                                        </div>
+                                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                                            <div class="text-xs uppercase tracking-wide text-slate-500">Confirmados</div>
+                                            <div class="mt-1 text-sm font-medium text-slate-800">
+                                                <?= (int) ($sessao['total_confirmados'] ?? 0) ?> irmão(s)
+                                                <?php if ((int) ($sessao['total_agape'] ?? 0) > 0): ?>
+                                                    · <?= (int) ($sessao['total_agape'] ?? 0) ?> com ágape
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 flex flex-wrap gap-2">
+                                        <a href="/secretaria?editar_sessao=<?= (int) ($sessao['id'] ?? 0) ?>" class="inline-flex rounded-lg border border-cobalto px-3 py-2 text-xs font-medium text-cobalto hover:bg-cobalto hover:text-white">
+                                            Editar
+                                        </a>
+                                        <?php if (in_array($statusSessao, ['planejada', 'alterada'], true)): ?>
+                                            <form method="POST" action="/secretaria/sessoes/publicar" onsubmit="return confirm('Deseja publicar esta sessao agora?');">
+                                                <input type="hidden" name="sessao_id" value="<?= (int) ($sessao['id'] ?? 0) ?>">
+                                                <button type="submit" class="inline-flex rounded-lg border border-amber-300 px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-50">
+                                                    Publicar
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+                                        <?php if ($statusSessao !== 'cancelada'): ?>
+                                            <form method="POST" action="/secretaria/sessoes/cancelar" onsubmit="return confirm('Deseja cancelar esta sessao?');">
+                                                <input type="hidden" name="sessao_id" value="<?= (int) ($sessao['id'] ?? 0) ?>">
+                                                <button type="submit" class="inline-flex rounded-lg border border-rose-300 px-3 py-2 text-xs font-medium text-rose-700 hover:bg-rose-50">
+                                                    Cancelar
+                                                </button>
+                                            </form>
+                                        <?php else: ?>
+                                            <form method="POST" action="/secretaria/sessoes/reabrir" onsubmit="return confirm('Deseja reabrir esta sessao?');">
+                                                <input type="hidden" name="sessao_id" value="<?= (int) ($sessao['id'] ?? 0) ?>">
+                                                <button type="submit" class="inline-flex rounded-lg border border-emerald-300 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-50">
+                                                    Reabrir
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+                                        <a href="/secretaria?historico_sessao=<?= (int) ($sessao['id'] ?? 0) ?>" class="inline-flex rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                                            Historico
+                                        </a>
+                                    </div>
+                                </article>
+                            <?php endforeach; ?>
+
+                            <?php if ($sessoes === []): ?>
+                                <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-500 md:col-span-2 xl:col-span-3">
+                                    Nenhuma sessao futura cadastrada. Use o formulario acima para publicar a agenda oficial da Loja.
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="hidden overflow-x-auto xl:block">
                         <table class="w-full text-sm">
                             <thead class="text-left text-slate-500">
                                 <tr>
@@ -542,6 +641,7 @@ if ($historiaLoja !== '') {
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                        </div>
                     </div>
 
                     <?php if (!empty($sessaoHistorico)): ?>

@@ -1284,6 +1284,135 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
+        $dashboardMensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
+        $dashboardMensagemErro = $_SESSION['mensagem_erro'] ?? null;
+        unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
+
+        $dashboardConfiguracaoLoja = (new \App\Models\ConfiguracaoLoja())->obter();
+        $dashboardLogoUrl = null;
+        foreach ([
+            '/assets/logo-renascenca.svg',
+            '/assets/logo-renascenca.png',
+            '/assets/logo-loja-renascenca.svg',
+            '/assets/logo-loja-renascenca.png',
+            '/assets/renascenca-logo.svg',
+            '/assets/renascenca-logo.png',
+        ] as $logoPath) {
+            if (file_exists(__DIR__ . $logoPath)) {
+                $dashboardLogoUrl = $logoPath;
+                break;
+            }
+        }
+
+        $dashboardUsuarioId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $dashboardObreiro = null;
+        if ($dashboardUsuarioId !== '' && $dashboardUsuarioId !== '0') {
+            try {
+                $dashboardObreiro = (new \App\Models\Obreiro())->findById($dashboardUsuarioId);
+            } catch (\Throwable $e) {
+                error_log('Falha ao localizar obreiro do dashboard: ' . $e->getMessage());
+            }
+        }
+
+        if ($method === 'POST' && ($_POST['dashboard_action'] ?? '') === 'sessao_confirmacao') {
+            $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
+            $acao = trim((string) ($_POST['acao'] ?? ''));
+
+            if ($sessaoId <= 0) {
+                $_SESSION['mensagem_erro'] = 'Sessao invalida para atualizar a confirmacao.';
+            } elseif (!$dashboardObreiro || $dashboardUsuarioId === '' || $dashboardUsuarioId === '0') {
+                $_SESSION['mensagem_erro'] = 'A confirmacao direta no dashboard requer um obreiro real autenticado.';
+            } else {
+                try {
+                    $presencaModel = new \App\Models\Presenca();
+                    $ok = $acao === 'cancelar'
+                        ? $presencaModel->cancelar($sessaoId, $dashboardUsuarioId)
+                        : $presencaModel->registrar($sessaoId, $dashboardUsuarioId, 'confirmado', false);
+
+                    if ($ok) {
+                        $_SESSION['mensagem_sucesso'] = $acao === 'cancelar'
+                            ? 'Confirmacao cancelada com sucesso.'
+                            : 'Presenca confirmada com sucesso.';
+                    } else {
+                        $_SESSION['mensagem_erro'] = 'Nao foi possivel atualizar a confirmacao desta sessao.';
+                    }
+                } catch (\Throwable $e) {
+                    $_SESSION['mensagem_erro'] = 'Falha ao atualizar a confirmacao da sessao.';
+                    error_log('Falha no POST do dashboard: ' . $e->getMessage());
+                }
+            }
+
+            header('Location: /dashboard#sessoes-loja');
+            exit;
+        }
+
+        $dashboardSessoes = [];
+        $dashboardOutrasLojas = [];
+        try {
+            $sessaoModel = new \App\Models\Sessao();
+            $presencaModel = new \App\Models\Presenca();
+            $sessoesFuturas = $sessaoModel->listarFuturas(4);
+
+            foreach ($sessoesFuturas as $sessao) {
+                $sessaoId = (int) ($sessao['id'] ?? 0);
+                if ($sessaoId <= 0) {
+                    continue;
+                }
+
+                $respostaUsuario = $dashboardUsuarioId !== '' && $dashboardUsuarioId !== '0'
+                    ? $presencaModel->obterResposta($sessaoId, $dashboardUsuarioId)
+                    : null;
+
+                $rotaDetalheSessao = '/dashboard#sessoes-loja';
+                if ($sessionHasRole('chanceler', 'veneravel', 'admin')) {
+                    $rotaDetalheSessao = '/chanceler/sessao?sessao_id=' . urlencode((string) $sessaoId);
+                } elseif ($sessionHasRole('secretario')) {
+                    $rotaDetalheSessao = '/secretaria?sessao_resumo=' . urlencode((string) $sessaoId);
+                } elseif ($sessionHasRole('tesoureiro')) {
+                    $rotaDetalheSessao = '/tesouraria/sessoes';
+                } elseif ($sessionHasRole('mestre_banquetes')) {
+                    $rotaDetalheSessao = '/mestre-banquetes';
+                }
+
+                $dashboardSessoes[] = [
+                    'id' => $sessaoId,
+                    'titulo' => trim((string) ($sessao['titulo'] ?? '')) !== ''
+                        ? (string) $sessao['titulo']
+                        : trim((string) (($sessao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessao['grau_sessao'] ?? ''))),
+                    'data_hora_inicio' => (string) ($sessao['data_hora_inicio'] ?? ''),
+                    'status' => trim((string) ($sessao['status'] ?? 'programada')) ?: 'programada',
+                    'tipo_sessao' => (string) ($sessao['tipo_sessao'] ?? ''),
+                    'grau_sessao' => (string) ($sessao['grau_sessao'] ?? ''),
+                    'descricao_agape' => $sessaoModel->obterDescricaoAgape($sessao),
+                    'total_confirmados' => $presencaModel->contarConfirmadosPorSessao($sessaoId),
+                    'total_agape' => $presencaModel->contarParticipantesAgapePorSessao($sessaoId),
+                    'resposta_usuario' => is_array($respostaUsuario) ? (string) ($respostaUsuario['status_confirmacao'] ?? '') : '',
+                    'confirmado' => is_array($respostaUsuario) && (string) ($respostaUsuario['status_confirmacao'] ?? '') === 'confirmado',
+                    'detalhe_href' => $rotaDetalheSessao,
+                ];
+            }
+        } catch (\Throwable $e) {
+            error_log('Falha ao montar sessoes do dashboard: ' . $e->getMessage());
+            $dashboardSessoes = [];
+        }
+
+        $dashboardRecados = [];
+        try {
+            $dashboardRecados = (new \App\Models\PublicacaoSecretaria())->listarRecentes(3);
+        } catch (\Throwable $e) {
+            error_log('Falha ao carregar recados do dashboard: ' . $e->getMessage());
+            $dashboardRecados = [];
+        }
+
+        $dashboardPalavraIrmao = '';
+        try {
+            $dashboardEfemerides = $buildEfemeridesPreview();
+            $dashboardPalavraIrmao = trim((string) ($dashboardEfemerides['mensagemPreview'] ?? ''));
+        } catch (\Throwable $e) {
+            error_log('Falha ao carregar palavra do irmao no dashboard: ' . $e->getMessage());
+            $dashboardPalavraIrmao = '';
+        }
+
         require_once __DIR__ . "/../src/Views/dashboard.php";
         break;
 
