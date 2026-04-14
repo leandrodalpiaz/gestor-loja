@@ -62,8 +62,8 @@ foreach ([
                     <span class="text-3xl text-ouro font-serif">∴</span>
                 <?php endif; ?>
             </div>
-            <h1 class="text-2xl font-serif font-bold text-cobalto">Acesso Restrito</h1>
-            <p class="text-sm text-gray-500 mt-2">Painel de Gestão e Chancelaria</p>
+            <h1 class="text-2xl font-serif font-bold text-cobalto">Bem-vindo a Renascenca</h1>
+            <p class="text-sm text-gray-500 mt-2">Entre com seu CIM e sua palavra de passe.</p>
         </div>
 
         <!-- Formulário -->
@@ -80,7 +80,7 @@ foreach ([
                                 <path fill-rule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 6.908V16a2 2 0 002 2h8a2 2 0 002-2V6.908a2.5 2.5 0 00-1.042-2.031L11.542 2.3A2.5 2.5 0 0010 2.062V6.5h2v2h-2v2h2v2h-2v2h-2v-2h-2v-2h2v-2h-2v-2H9.99V2.062a2.5 2.5 0 00-1.542.237L5.042 4.877A2.5 2.5 0 004 6.908l.001.001z" clip-rule="evenodd" />
                             </svg>
                         </div>
-                        <input type="text" name="matricula" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-pedra/30 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-ouro focus:border-ouro sm:text-sm transition-all" placeholder="Digite seu CIM...">
+                        <input type="text" name="matricula" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-pedra/30 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-ouro focus:border-ouro sm:text-sm transition-all" placeholder="Digite seu CIM">
                     </div>
                 </div>
 
@@ -118,7 +118,7 @@ foreach ([
                 <!-- Botão -->
                 <div class="pt-2">
                     <button type="submit" class="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-cobalto hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cobalto transition-colors duration-200">
-                        <span>Adentrar ao Sistema</span>
+                        <span>Entrar no sistema</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
@@ -129,7 +129,7 @@ foreach ([
         
         <!-- Footer do Card -->
         <div class="bg-gray-50 px-8 py-4 border-t border-gray-100 text-center">
-            <span class="text-xs text-gray-500">Acesso restrito à Diretoria. Em caso de dúvidas, contate o Administrador.</span>
+            <span class="text-xs text-gray-500">Em caso de duvidas sobre acesso, procure a administracao da Loja.</span>
         </div>
     </div>
 

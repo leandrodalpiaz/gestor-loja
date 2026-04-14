@@ -39,6 +39,19 @@ if (!headers_sent()) {
 <?php
 $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
 $usuarioCargo = (string) ($_SESSION['usuario_cargo'] ?? '');
+$usuarioLogado = is_array($_SESSION['usuario_logado'] ?? null) ? $_SESSION['usuario_logado'] : [];
+$usuarioNomeCompleto = trim((string) ($usuarioLogado['nome_completo'] ?? ''));
+$usuarioNomeHistorico = trim((string) ($usuarioLogado['nome_historico'] ?? ''));
+$usuarioNomeNormalizado = strtolower(trim((string) $usuarioNome));
+if (in_array($usuarioNomeNormalizado, ['admin', 'administrador'], true)) {
+    if ($usuarioNomeCompleto !== '' && stripos($usuarioNomeCompleto, 'acesso temporario') === false) {
+        $usuarioNome = $usuarioNomeCompleto;
+    } elseif ($usuarioNomeHistorico !== '' && !in_array(strtolower($usuarioNomeHistorico), ['admin', 'administrador'], true)) {
+        $usuarioNome = $usuarioNomeHistorico;
+    } else {
+        $usuarioNome = 'Irmao';
+    }
+}
 $usuarioCargos = $_SESSION['usuario_cargos'] ?? [$usuarioCargo];
 $isTestSession = isset($_SESSION['usuario_id']) && (string) $_SESSION['usuario_id'] === '0';
 $allowAllPanels = filter_var($_ENV['APP_TEST_ALLOW_ALL_PANELS'] ?? 'true', FILTER_VALIDATE_BOOL);
@@ -420,15 +433,15 @@ $cargosGestao = [
             </div>
             <div>
                 <div class="font-serif text-lg font-bold tracking-wide"><?= htmlspecialchars($dashboardNomeLoja) ?></div>
-                <div class="text-xs text-slate-300">Painel operacional por cargos e funções</div>
+                <div class="text-xs text-slate-300">Acesso da Loja por ofícios e responsabilidades</div>
             </div>
         </div>
 
         <div class="hidden items-center gap-4 md:flex">
             <?php if ($isAdmin): ?>
-                <span class="rounded-full bg-ouro px-3 py-1 text-xs font-semibold text-cobalto">Admin com acesso total</span>
+                <span class="hidden rounded-full bg-ouro px-3 py-1 text-xs font-semibold text-cobalto">Admin com acesso total</span>
             <?php elseif ($showAllPanels): ?>
-                <span class="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">Modo liberado para produção</span>
+                <span class="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">Acesso ampliado nesta sessão</span>
             <?php endif; ?>
             <span class="text-sm text-slate-200">Olá, <?= htmlspecialchars($usuarioNome) ?></span>
             <a href="/logout" class="rounded-md border border-white/15 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 hover:text-white">Sair</a>
@@ -510,8 +523,8 @@ $cargosGestao = [
                         </div>
                         <div>
                             <div class="text-xs font-semibold uppercase tracking-[0.24em] text-ouro/90">Centro de comando</div>
-                            <h1 class="mt-3 font-serif text-3xl font-bold leading-tight sm:text-4xl">Abertura útil para sessões, recados e decisões do dia</h1>
-                            <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-200">O dashboard agora prioriza o que precisa de ação imediata: próximas sessões da Loja, comunicação útil e atalhos operacionais por cargo.</p>
+                            <h1 class="mt-3 font-serif text-3xl font-bold leading-tight sm:text-4xl">Abertura da Loja com o que importa hoje</h1>
+                            <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-200">Aqui você encontra as próximas sessões, os recados mais importantes e os atalhos que mais usa no dia a dia.</p>
                         </div>
                     </div>
                 </div>
@@ -544,8 +557,8 @@ $cargosGestao = [
             <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-painel">
                 <div class="border-b border-slate-200 bg-[linear-gradient(135deg,#fffdf7,#f4ede0)] px-6 py-6">
                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Sessões da Loja</div>
-                    <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Próximas sessões com ação direta</h2>
-                    <p class="mt-2 text-sm text-slate-600">Confirme presença, cancele quando necessário e entre no contexto operacional sem sair da abertura do dashboard.</p>
+                    <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Próximas sessões da Loja</h2>
+                    <p class="mt-2 text-sm text-slate-600">Confirme sua presença, ajuste quando precisar e abra a sessão sem sair da página inicial.</p>
                 </div>
 
                 <div class="grid gap-4 px-6 py-6 lg:grid-cols-2">
@@ -615,13 +628,13 @@ $cargosGestao = [
                 <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-painel">
                     <div class="border-b border-slate-200 bg-[linear-gradient(135deg,#ffffff,#f7f3ea)] px-6 py-5">
                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Recado</div>
-                        <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Comunicação da Loja</h2>
+                        <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Recados da Loja</h2>
                     </div>
                     <div class="space-y-4 px-6 py-5">
                         <?php if ($dashboardRecadoPrincipal): ?>
                             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                                 <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"><?= htmlspecialchars((string) (($dashboardRecadoPrincipal['status_publicacao'] ?? '') !== '' ? $dashboardRecadoPrincipal['status_publicacao'] : 'Recado')) ?></div>
-                                <div class="mt-2 text-base font-semibold text-slate-900"><?= htmlspecialchars((string) (($dashboardRecadoPrincipal['titulo'] ?? '') !== '' ? $dashboardRecadoPrincipal['titulo'] : 'Comunicado recente da Secretaria')) ?></div>
+                                <div class="mt-2 text-base font-semibold text-slate-900"><?= htmlspecialchars((string) (($dashboardRecadoPrincipal['titulo'] ?? '') !== '' ? $dashboardRecadoPrincipal['titulo'] : 'Comunicado recente da Loja')) ?></div>
                                 <p class="mt-2 text-sm leading-6 text-slate-600"><?= htmlspecialchars($dashboardResumirTexto((string) ($dashboardRecadoPrincipal['conteudo'] ?? ''), 220)) ?></p>
                             </div>
                         <?php else: ?>
@@ -640,7 +653,7 @@ $cargosGestao = [
                 <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-painel">
                     <div class="border-b border-slate-200 bg-[linear-gradient(135deg,#fffdf7,#f4ede0)] px-6 py-5">
                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Palavra do irmão</div>
-                        <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Mensagem do dia</h2>
+                        <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Palavra do dia</h2>
                     </div>
                     <div class="px-6 py-5">
                         <?php if ($dashboardPalavraIrmao !== ''): ?>
@@ -668,8 +681,8 @@ $cargosGestao = [
         <section class="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-painel">
             <div class="border-b border-slate-200 bg-[linear-gradient(135deg,#ffffff,#f7f3ea)] px-6 py-6">
                 <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Sessões de outras Lojas</div>
-                <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Segunda faixa de agenda</h2>
-                <p class="mt-2 text-sm text-slate-600">Estrutura reservada para compartilhar sessões de outras Lojas sem competir com a agenda principal da Renascença.</p>
+                <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Sessões de outras Lojas</h2>
+                <p class="mt-2 text-sm text-slate-600">Aqui ficam os convites e compromissos de outras Lojas, sem tirar o foco da agenda principal da Renascença.</p>
             </div>
             <div class="grid gap-4 px-6 py-6 md:grid-cols-2 xl:grid-cols-3">
                 <?php if ($dashboardOutrasLojas !== []): ?>
@@ -682,7 +695,7 @@ $cargosGestao = [
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600 md:col-span-2 xl:col-span-3">
-                        A estrutura já está pronta, mas ainda não há fonte consolidada para sessões externas. Quando essa agenda entrar no sistema, ela aparecerá aqui em cards compactos.
+                        Ainda não há sessões externas cadastradas para exibir aqui.
                     </div>
                 <?php endif; ?>
             </div>
@@ -738,9 +751,9 @@ $cargosGestao = [
 
         <section class="mt-8 rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-painel">
             <div>
-                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Atalhos rápidos</div>
-                <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Ações mais usadas</h2>
-                <p class="mt-2 text-sm text-slate-600">Esses atalhos ajudam a entrar direto no fluxo principal sem passar pelos menus laterais.</p>
+                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Acesso rápido</div>
+                <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Atalhos do dia a dia</h2>
+                <p class="mt-2 text-sm text-slate-600">Use estes atalhos para chegar mais rápido ao que você mais consulta.</p>
             </div>
             <div class="mt-5 flex flex-wrap gap-3">
                 <?php foreach ($atalhos as $item): ?>

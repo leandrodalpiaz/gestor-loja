@@ -450,18 +450,18 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
     <header class="panel topbar">
         <div>
             <h1 class="title">MESTRE DE HARMONIA</h1>
-            <p class="subtitle">Operador: <?= htmlspecialchars($usuarioNome) ?> | Painel ritual em tela cheia por etapas</p>
+            <p class="subtitle">Responsavel: <?= htmlspecialchars($usuarioNome) ?> | Conducao musical da sessao em tela cheia</p>
             <div class="operator-line">Irmao em exercicio: <strong id="operatorNameDisplay">Nao informado</strong><button type="button" id="btnChangeOperator">Alterar</button></div>
         </div>
         <div class="status-box">
             <strong id="sessionLabel">Sessao nao carregada</strong>
-            <span id="globalStatus">Aguardando selecao de playlist</span>
+            <span id="globalStatus">Aguardando a escolha da sessao</span>
         </div>
     </header>
 
     <form class="panel" method="get" action="/mestre-harmonia" style="padding: 10px 12px;">
         <div class="config">
-            <input type="text" name="base_path" value="<?= htmlspecialchars($basePathValue) ?>" placeholder="Diretorio base das playlists">
+            <input type="text" name="base_path" value="<?= htmlspecialchars($basePathValue) ?>" placeholder="Pasta base das playlists">
             <select name="sessao_path" id="sessionPicker"></select>
             <button class="ctrl-btn primary" type="submit" style="font-size: 20px; min-height: 0; padding: 10px 16px;">Recarregar</button>
         </div>
@@ -470,7 +470,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
     <section class="layout">
         <aside class="panel playlist-panel">
             <div class="playlist-header">
-                <h2>Roteiro da Sessao</h2>
+                <h2>Roteiro da sessao</h2>
                 <span id="playlistCount" style="color: var(--muted); font-size: 18px;">0 etapas</span>
             </div>
             <div class="playlist-scroll" id="stepsList"></div>
@@ -480,10 +480,10 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
         <div class="focus-panel">
             <article class="panel current">
                 <h2 id="currentStepCode">--</h2>
-                <div class="track-title" id="currentTrackTitle">Selecione uma etapa para iniciar</div>
+                <div class="track-title" id="currentTrackTitle">Selecione uma etapa para comecar</div>
                 <div class="meta-line">
                     <span>Tipo: <strong id="currentType">-</strong></span>
-                    <span>Status: <strong id="playerStatus">Parado</strong></span>
+                    <span>Status: <strong id="playerStatus">Aguardando</strong></span>
                     <span>Fade: <strong id="fadeStatus">Pronto</strong></span>
                     <span>Volume: <strong id="volumeStatus">100%</strong></span>
                 </div>
@@ -495,10 +495,10 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
 
             <section class="mini-grid">
                 <article class="panel mini-box">
-                    <h3>Proxima Etapa</h3>
+                    <h3>Proxima etapa</h3>
                     <div class="mini-primary" id="nextStepCode">--</div>
                     <div id="nextStepTitle" style="font-size: 28px; color: var(--muted);">Sem proxima etapa</div>
-                    <div class="footer">Use "Proxima Etapa" para avancar sem perder o fluxo ritual.</div>
+                    <div class="footer">Use "Proxima etapa" para seguir a sessao com tranquilidade.</div>
                 </article>
 
                 <article class="panel mini-box">
@@ -526,7 +526,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
         <button type="button" class="ctrl-btn" id="btnFadeOut">Fade Out</button>
         <button type="button" class="ctrl-btn" id="btnVolDown">Volume -</button>
         <button type="button" class="ctrl-btn" id="btnVolUp">Volume +</button>
-        <button type="button" class="ctrl-btn" id="btnToggleAuto">Auto Proxima: OFF</button>
+        <button type="button" class="ctrl-btn" id="btnToggleAuto">Proxima automatica: OFF</button>
         <button type="button" class="ctrl-btn" id="btnOpenCurrentAlt">Tocar Alternativa</button>
     </section>
 
@@ -535,11 +535,11 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
 
 <div class="operator-overlay" id="operatorOverlay">
     <div class="operator-modal">
-        <h2>Identificacao da Sessao</h2>
-        <p>Informe o nome do irmao que esta fazendo as vezes de Mestre de Harmonia nesta sessao. Esse dado fica registrado na sessao para apoio no preenchimento do balaustre.</p>
+        <h2>Identificacao da sessao</h2>
+        <p>Informe o nome do irmao que esta exercendo a funcao nesta sessao. Esse dado fica registrado para apoio posterior.</p>
         <input type="text" id="operatorInput" placeholder="Nome do irmao em exercicio">
         <div class="actions">
-            <button type="button" class="primary" id="btnSaveOperator">Confirmar e liberar player</button>
+            <button type="button" class="primary" id="btnSaveOperator">Confirmar e abrir player</button>
         </div>
         <div class="error" id="operatorError"></div>
     </div>
@@ -825,11 +825,11 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
     function updateHeader() {
         if (!currentSession) {
             el.sessionLabel.textContent = 'Sessao nao carregada';
-            el.globalStatus.textContent = payload.erro || 'Sem dados para exibir';
+            el.globalStatus.textContent = payload.erro || 'Nenhuma informacao disponivel no momento';
             return;
         }
         el.sessionLabel.textContent = currentSession.name;
-        el.globalStatus.textContent = `${tracks.length} faixas carregadas | base: ${payload.base_path || '-'}`;
+        el.globalStatus.textContent = `${tracks.length} faixas disponiveis | pasta: ${payload.base_path || '-'}`;
     }
 
     function updateSummary() {
@@ -905,7 +905,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
         });
         el.btnToggleAuto.addEventListener('click', () => {
             autoNext = !autoNext;
-            el.btnToggleAuto.textContent = `Auto Proxima: ${autoNext ? 'ON' : 'OFF'}`;
+            el.btnToggleAuto.textContent = `Proxima automatica: ${autoNext ? 'ON' : 'OFF'}`;
         });
         el.btnOpenCurrentAlt.addEventListener('click', () => {
             const current = tracks[currentIndex];
@@ -955,7 +955,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
         }
 
         if (payload.ok !== true) {
-            el.globalStatus.textContent = payload.erro || 'Falha ao carregar playlist.';
+            el.globalStatus.textContent = payload.erro || 'Nao foi possivel carregar a playlist.';
         }
     }
 

@@ -70,6 +70,24 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
             </div>
         </header>
 
+        <section class="mb-6 grid gap-3 md:grid-cols-3">
+            <article class="rounded-2xl border border-white/60 bg-white/90 px-4 py-4 shadow-sm">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Sessao ativa</p>
+                <p class="mt-2 text-lg font-semibold text-slate-900"><?= htmlspecialchars((string) ($sessaoEmFoco['titulo'] ?? (($sessaoEmFoco['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoEmFoco['grau_sessao'] ?? '')))) ?></p>
+                <p class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? 'Sem data definida')) ?></p>
+            </article>
+            <article class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 shadow-sm">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">Presenca efetiva</p>
+                <p class="mt-2 text-3xl font-semibold text-emerald-800"><?= count($presentesEfetivos) ?></p>
+                <p class="mt-1 text-sm text-emerald-700">Obreiros confirmados no quadro final da sessao.</p>
+            </article>
+            <article class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 shadow-sm">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-800">Visitantes resumidos</p>
+                <p class="mt-2 text-3xl font-semibold text-amber-900"><?= count($visitantesResumo) ?></p>
+                <p class="mt-1 text-sm text-amber-800">Leitura rapida pronta para apoiar Secretaria e Orador.</p>
+            </article>
+        </section>
+
         <?php if ($mensagemSucesso): ?>
             <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700"><?= htmlspecialchars($mensagemSucesso) ?></div>
         <?php endif; ?>
@@ -82,6 +100,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div>
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Contexto da sessao</p>
                             <h2 class="text-2xl font-semibold text-slate-900">Sessao em foco</h2>
                             <p class="mt-2 text-sm text-slate-600">O Chanceler pode trocar a sessao de trabalho sem perder o contexto de confirmados, presenca efetiva e visitantes.</p>
                         </div>
@@ -121,6 +140,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                 </article>
 
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Acao principal</p>
                     <h2 class="text-2xl font-semibold text-slate-900">Check-in do quadro da Loja</h2>
                     <p class="mt-2 text-sm text-slate-600">Somente os presentes efetivos entram na base da votacao do balaustre e na leitura final da nominata.</p>
                     <div class="mt-4 grid gap-3 md:grid-cols-2">
@@ -146,6 +166,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div class="flex items-center justify-between gap-3">
                         <div>
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Fechamento da lista</p>
                             <h2 class="text-2xl font-semibold text-slate-900">Lista final de presentes</h2>
                             <p class="mt-2 text-sm text-slate-600">Base de conferencia rapida para fechar a nominata efetiva da sessao.</p>
                         </div>
@@ -168,6 +189,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
 
             <aside class="space-y-6">
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Visitantes</p>
                     <h2 class="text-2xl font-semibold text-slate-900">Visitantes resumidos</h2>
                     <p class="mt-2 text-sm text-slate-600">Esta lista alimenta a Secretaria para o balaustre e o Orador para a leitura nominal.</p>
                     <div class="mt-4 space-y-3">
@@ -185,6 +207,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                 </article>
 
                 <article class="rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,#fff,#f4efe3)] p-6 shadow-sm">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Base de presenca</p>
                     <h2 class="text-2xl font-semibold text-slate-900">Confirmados da sessao</h2>
                     <div class="mt-4 space-y-3">
                         <?php if ($confirmados !== []): ?>

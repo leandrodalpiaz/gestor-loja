@@ -16,19 +16,36 @@
     ];
     ?>
     <div class="max-w-2xl mx-auto">
-        <div class="mb-4 flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-bold">Emitir certificado</h1>
-                <p class="mt-1 text-sm text-gray-600">Fluxo web da Chancelaria para gerar e enviar certificado de presenca.</p>
+        <div class="mb-6 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d6b672,transparent_30%),linear-gradient(135deg,#162033,#223145)] px-6 py-6 text-white shadow-xl">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Chancelaria</p>
+                    <h1 class="mt-2 text-3xl font-semibold">Emitir certificado</h1>
+                    <p class="mt-1 text-sm text-slate-200">Fluxo web da Chancelaria para gerar e enviar certificado de presenca com os dados oficiais da sessao.</p>
+                </div>
+                <a href="/chancelaria/efemerides" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar para Chancelaria</a>
             </div>
-            <a href="/chancelaria/efemerides" class="text-sm text-blue-700 hover:underline">Voltar para Chancelaria</a>
         </div>
 
         <form method="POST" action="/chancelaria/certificado/gerar">
             <input type="hidden" id="chat_id" name="chat_id">
             <input type="hidden" id="init_data" name="init_data">
 
-            <div class="bg-white rounded-xl shadow-sm p-5">
+            <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="mb-5 grid gap-3 md:grid-cols-3">
+                    <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Data da sessao</p>
+                        <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($defaults['data_sessao'] !== '' ? $defaults['data_sessao'] : 'Definir no formulario') ?></p>
+                    </article>
+                    <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Tipo</p>
+                        <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($defaults['tipo_sessao'] !== '' ? $defaults['tipo_sessao'] : 'Definir no formulario') ?></p>
+                    </article>
+                    <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Grau</p>
+                        <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($defaults['grau_sessao'] !== '' ? $defaults['grau_sessao'] : 'Definir no formulario') ?></p>
+                    </article>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
                         <label for="nome_visitante" class="block mb-2 font-semibold">Nome do visitante</label>

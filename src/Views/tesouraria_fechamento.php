@@ -15,19 +15,24 @@ if (!isset($_SESSION["usuario_logado"])) {
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800">
     <div class="max-w-4xl mx-auto px-4 py-8">
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-3xl font-bold text-gray-900">Fechamento Mensal</h1>
-            <a href="/dashboard" class="text-sm text-blue-700 hover:underline">← Voltar</a>
-        </div>
-
-        <!-- Seleção de Período -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <header class="mb-6 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d6b672,transparent_30%),linear-gradient(135deg,#162033,#223145)] px-6 py-7 text-white shadow-xl">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Mês</label>
-                    <select id="filter-mes" class="w-full border border-gray-300 rounded px-3 py-2" onchange="carregarFechamento()">
+                    <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Tesouraria</p>
+                    <h1 class="mt-2 text-3xl font-semibold">Fechamento Mensal</h1>
+                    <p class="mt-2 max-w-3xl text-sm text-slate-200">Conferencia final do periodo com leitura mais clara para saldo inicial, movimento e saldo final.</p>
+                </div>
+                <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao dashboard</a>
+            </div>
+        </header>
+
+        <div class="mb-6 rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Mes</label>
+                    <select id="filter-mes" class="w-full rounded border border-gray-300 px-3 py-2" onchange="carregarFechamento()">
                         <?php
-                        $mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+                        $mesesPT = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                         $mesAtual = (int) date('n');
                         for ($m = 1; $m <= 12; $m++) {
                             $selected = ($m === $mesAtual) ? 'selected' : '';
@@ -38,8 +43,8 @@ if (!isset($_SESSION["usuario_logado"])) {
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Ano</label>
-                    <select id="filter-ano" class="w-full border border-gray-300 rounded px-3 py-2" onchange="carregarFechamento()">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Ano</label>
+                    <select id="filter-ano" class="w-full rounded border border-gray-300 px-3 py-2" onchange="carregarFechamento()">
                         <?php
                         $anoAtual = (int) date('Y');
                         for ($a = $anoAtual - 1; $a <= $anoAtual; $a++) {
@@ -51,325 +56,168 @@ if (!isset($_SESSION["usuario_logado"])) {
                 </div>
 
                 <div>
-                    <p class="text-sm text-gray-600 mb-2">Status: <span id="status-fechamento" class="font-bold text-blue-700">Aberto</span></p>
+                    <p class="mb-2 text-sm text-gray-600">Status: <span id="status-fechamento" class="font-bold text-blue-700">Aberto</span></p>
                 </div>
             </div>
         </div>
 
-        <!-- Resumo Financeiro -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p class="text-sm text-blue-600 font-medium mb-1">Saldo Inicial</p>
+        <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <p class="mb-1 text-sm font-medium text-blue-600">Saldo Inicial</p>
                 <p class="text-2xl font-bold text-blue-700" id="saldo-inicial">R$ 0,00</p>
-                <button onclick="editarSaldoInicial()" class="text-xs text-blue-600 hover:underline mt-2">Editar</button>
+                <button onclick="editarSaldoInicial()" class="mt-2 text-xs text-blue-600 hover:underline">Editar</button>
             </div>
 
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p class="text-sm text-green-600 font-medium mb-1">Total Entradas</p>
+            <div class="rounded-lg border border-green-200 bg-green-50 p-4">
+                <p class="mb-1 text-sm font-medium text-green-600">Total Entradas</p>
                 <p class="text-2xl font-bold text-green-700" id="total-entradas">R$ 0,00</p>
             </div>
 
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p class="text-sm text-red-600 font-medium mb-1">Total Saídas</p>
+            <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+                <p class="mb-1 text-sm font-medium text-red-600">Total Saidas</p>
                 <p class="text-2xl font-bold text-red-700" id="total-saidas">R$ 0,00</p>
             </div>
 
-            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <p class="text-sm text-purple-600 font-medium mb-1">Saldo Final</p>
+            <div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
+                <p class="mb-1 text-sm font-medium text-purple-600">Saldo Final</p>
                 <p class="text-2xl font-bold text-purple-700" id="saldo-final">R$ 0,00</p>
             </div>
         </div>
 
-        <!-- Abas -->
-        <div class="flex gap-4 mb-6 border-b border-gray-200">
-            <button type="button" data-aba="lancamentos" onclick="mudarAba('lancamentos')" class="tab-fechamento px-4 py-2 border-b-2 border-blue-700 text-blue-700 font-semibold">
-                Lançamentos do Período
-            </button>
-            <button type="button" data-aba="auditoria" onclick="mudarAba('auditoria')" class="tab-fechamento px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-800">
-                Auditoria de Ajustes
-            </button>
-        </div>
-
-        <!-- Aba: Lançamentos -->
-        <div id="aba-lancamentos" class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <h2 class="font-semibold mb-4">Movimentação do Período</h2>
-            <div id="lancamentos-container" class="space-y-2">
-                <p class="text-gray-500">Carregando...</p>
+        <div class="mb-6 rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="text-lg font-semibold">Fechamento do periodo</h2>
+                <button id="btn-fechar-mes" onclick="fecharMes()" class="rounded bg-blue-700 px-4 py-2 text-white hover:bg-blue-800">
+                    Fechar Mes
+                </button>
+            </div>
+            <div id="fechamento-content" class="space-y-4">
+                <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center text-gray-500">
+                    Carregando dados do fechamento...
+                </div>
             </div>
         </div>
-
-        <!-- Aba: Auditoria -->
-        <div id="aba-auditoria" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <h2 class="font-semibold mb-4">Histórico de Ajustes</h2>
-            <div id="auditoria-container" class="space-y-2">
-                <p class="text-gray-500">Carregando...</p>
-            </div>
-        </div>
-
-        <!-- Ações -->
-        <div class="flex gap-2">
-            <button type="button" onclick="sugerirSaldoProximo()" class="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-800">
-                💡 Sugerir Saldo Próximo Mês
-            </button>
-            <button type="button" onclick="fecharMes()" id="btn-fechar" class="px-4 py-2 rounded bg-green-700 text-white hover:bg-green-800">
-                🔒 Fechar Período
-            </button>
-        </div>
-
-        <div id="feedback-fechamento" class="hidden mt-4 rounded-lg border px-4 py-3 text-sm"></div>
     </div>
 
-    <!-- Modal de Edição de Saldo -->
-    <div id="modal-saldo" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
-            <div class="p-6 border-b border-gray-200">
-                <h2 class="text-lg font-bold">Editar Saldo Inicial</h2>
-            </div>
-            <form id="form-saldo" class="p-6 space-y-4">
+    <div id="modal-saldo-inicial" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-40 p-4">
+        <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+            <h2 class="mb-4 text-lg font-bold">Definir Saldo Inicial</h2>
+            <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium mb-1">Saldo Inicial (R$) *</label>
-                    <input type="number" id="novo-saldo" step="0.01" min="0" class="w-full border border-gray-300 rounded px-3 py-2" required>
+                    <label class="mb-1 block text-sm font-medium">Valor</label>
+                    <input type="number" id="saldo-inicial-input" step="0.01" min="0" class="w-full rounded border border-gray-300 px-3 py-2">
                 </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-1">Justificativa da Alteração *</label>
-                    <textarea id="justificativa-saldo" rows="4" class="w-full border border-gray-300 rounded px-3 py-2" required placeholder="Por que o saldo inicial está sendo alterado?"></textarea>
-                </div>
-
                 <div class="flex gap-2">
-                    <button type="button" onclick="fecharModalSaldo()" class="flex-1 px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="flex-1 px-4 py-2 rounded bg-blue-700 text-white hover:bg-blue-800">
-                        Salvar
-                    </button>
+                    <button onclick="fecharModalSaldoInicial()" class="flex-1 rounded bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300">Cancelar</button>
+                    <button onclick="salvarSaldoInicial()" class="flex-1 rounded bg-blue-700 px-4 py-2 text-white hover:bg-blue-800">Salvar</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <script>
-        let fechamentoAtual = null;
-        let abaAtual = 'lancamentos';
-
         function formatarMoeda(valor) {
             return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
 
-        function exibirFeedback(tipo, mensagem) {
-            const box = document.getElementById('feedback-fechamento');
-            box.textContent = mensagem;
-            box.className = 'mt-4 rounded-lg border px-4 py-3 text-sm';
-
-            if (tipo === 'erro') {
-                box.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
-            } else {
-                box.classList.add('bg-green-50', 'border-green-200', 'text-green-700');
-            }
-
-            box.classList.remove('hidden');
-        }
-
-        function atualizarAbas() {
-            document.getElementById('aba-lancamentos').classList.toggle('hidden', abaAtual !== 'lancamentos');
-            document.getElementById('aba-auditoria').classList.toggle('hidden', abaAtual !== 'auditoria');
-            document.querySelectorAll('.tab-fechamento').forEach((botao) => {
-                const ativa = botao.dataset.aba === abaAtual;
-                botao.classList.toggle('border-blue-700', ativa);
-                botao.classList.toggle('text-blue-700', ativa);
-                botao.classList.toggle('font-semibold', ativa);
-                botao.classList.toggle('border-transparent', !ativa);
-                botao.classList.toggle('text-gray-600', !ativa);
-            });
-        }
-
         async function carregarFechamento() {
-            const mes = document.getElementById('filter-mes').value;
-            const ano = document.getElementById('filter-ano').value;
+            const mes = parseInt(document.getElementById('filter-mes').value);
+            const ano = parseInt(document.getElementById('filter-ano').value);
+
             try {
                 const res = await fetch(`/api/tesouraria/fechamento?mes=${mes}&ano=${ano}`);
                 const json = await res.json();
-                if (!json.ok || !json.fechamento) {
-                    exibirFeedback('erro', 'Não foi possível carregar o fechamento do período.');
-                    return;
-                }
-                fechamentoAtual = json.fechamento;
-                atualizarDisplay();
-            } catch (err) {
-                console.error('Erro:', err);
-                exibirFeedback('erro', 'Erro ao carregar fechamento mensal.');
-            }
-        }
+                const fechamento = json.fechamento || {};
+                const totais = json.totais || {};
 
-        function atualizarDisplay() {
-            if (!fechamentoAtual) return;
+                document.getElementById('status-fechamento').textContent = fechamento.status || 'Aberto';
+                document.getElementById('saldo-inicial').textContent = formatarMoeda(fechamento.saldo_inicial || 0);
+                document.getElementById('total-entradas').textContent = formatarMoeda(totais.entrada || 0);
+                document.getElementById('total-saidas').textContent = formatarMoeda(totais.saida || 0);
+                document.getElementById('saldo-final').textContent = formatarMoeda(fechamento.saldo_final || 0);
 
-            document.getElementById('saldo-inicial').textContent = formatarMoeda(fechamentoAtual.saldo_inicial);
-            document.getElementById('total-entradas').textContent = formatarMoeda(fechamentoAtual.total_entradas);
-            document.getElementById('total-saidas').textContent = formatarMoeda(fechamentoAtual.total_saidas);
-            document.getElementById('saldo-final').textContent = formatarMoeda(fechamentoAtual.saldo_final);
-            document.getElementById('status-fechamento').textContent = fechamentoAtual.status === 'fechado' ? '🔒 Fechado' : 'Aberto';
+                const btnFechar = document.getElementById('btn-fechar-mes');
+                btnFechar.disabled = fechamento.status === 'fechado';
+                btnFechar.className = fechamento.status === 'fechado'
+                    ? 'rounded bg-gray-300 px-4 py-2 text-gray-500 cursor-not-allowed'
+                    : 'rounded bg-blue-700 px-4 py-2 text-white hover:bg-blue-800';
+                btnFechar.textContent = fechamento.status === 'fechado' ? 'Mes Fechado' : 'Fechar Mes';
 
-            const botaoFechar = document.getElementById('btn-fechar');
-            botaoFechar.disabled = fechamentoAtual.status === 'fechado';
-            botaoFechar.classList.toggle('opacity-50', fechamentoAtual.status === 'fechado');
-            botaoFechar.classList.toggle('cursor-not-allowed', fechamentoAtual.status === 'fechado');
-
-            atualizarAbas();
-
-            atualizarAbaLancamentos();
-            atualizarAbaAuditoria();
-        }
-
-        async function atualizarAbaLancamentos() {
-            const container = document.getElementById('lancamentos-container');
-            const mes = document.getElementById('filter-mes').value;
-            const ano = document.getElementById('filter-ano').value;
-
-            try {
-                const res = await fetch(`/api/tesouraria/caixa?mes=${mes}&ano=${ano}`);
-                const json = await res.json();
-
-                if (!json.ok || !Array.isArray(json.lancamentos)) {
-                    container.innerHTML = '<p class="text-red-600">Não foi possível carregar os lançamentos deste período.</p>';
-                    return;
-                }
-
-                if (json.lancamentos.length === 0) {
-                    container.innerHTML = '<p class="text-gray-500">Nenhum lançamento neste período</p>';
-                    return;
-                }
-
-                container.innerHTML = json.lancamentos.map(l => `
-                    <div class="flex justify-between items-center p-2 border-b border-gray-200">
-                        <div>
-                            <p class="font-medium">${l.categoria_nome}</p>
-                            <p class="text-xs text-gray-500">${l.descricao || '-'}</p>
+                document.getElementById('fechamento-content').innerHTML = `
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                            <h3 class="mb-2 font-semibold">Resumo do fechamento</h3>
+                            <p><strong>Periodo:</strong> ${String(mes).padStart(2, '0')}/${ano}</p>
+                            <p><strong>Status:</strong> ${fechamento.status || 'Aberto'}</p>
+                            <p><strong>Data de fechamento:</strong> ${fechamento.data_fechamento ? new Date(fechamento.data_fechamento).toLocaleString('pt-BR') : 'Ainda nao fechado'}</p>
                         </div>
-                        <p class="font-semibold ${l.tipo === 'entrada' ? 'text-green-700' : 'text-red-700'}">
-                            ${l.tipo === 'entrada' ? '+' : '-'} ${formatarMoeda(l.valor)}
-                        </p>
+                        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                            <h3 class="mb-2 font-semibold">Observacoes</h3>
+                            <p class="text-sm text-gray-600">Use esta tela para consolidar o periodo apos validar caixa, comprovantes e regularidade.</p>
+                        </div>
                     </div>
-                `).join('');
+                `;
             } catch (err) {
-                console.error('Erro ao carregar lançamentos do fechamento:', err);
-                container.innerHTML = '<p class="text-red-600">Erro ao carregar os lançamentos deste período.</p>';
+                console.error('Erro ao carregar fechamento:', err);
+                document.getElementById('fechamento-content').innerHTML = '<div class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">Erro ao carregar dados do fechamento.</div>';
             }
-        }
-
-        async function atualizarAbaAuditoria() {
-            const container = document.getElementById('auditoria-container');
-
-            if (!fechamentoAtual?.id) {
-                container.innerHTML = '<p class="text-gray-500">Nenhum ajuste registrado</p>';
-                return;
-            }
-
-            try {
-                const res = await fetch(`/api/tesouraria/fechamento/${fechamentoAtual.id}/auditoria`);
-                const json = await res.json();
-
-                if (!json.ok || !Array.isArray(json.auditoria) || json.auditoria.length === 0) {
-                    container.innerHTML = '<p class="text-gray-500">Nenhum ajuste registrado</p>';
-                    return;
-                }
-
-                container.innerHTML = json.auditoria.map(a => `
-                    <div class="p-3 border border-yellow-200 bg-yellow-50 rounded">
-                        <p class="font-medium text-sm">Alteração de ${a.campo_alterado}</p>
-                        <p class="text-xs text-gray-600 mt-1">De ${formatarMoeda(a.valor_anterior)} para ${formatarMoeda(a.valor_novo)}</p>
-                        <p class="text-xs text-gray-500 mt-1"><strong>Justificativa:</strong> ${a.justificativa}</p>
-                        <p class="text-xs text-gray-400 mt-1">Por ${a.alterado_por_nome || 'Sistema'} em ${new Date(a.alterado_em).toLocaleString('pt-BR')}</p>
-                    </div>
-                `).join('');
-            } catch (err) {
-                console.error('Erro ao carregar auditoria:', err);
-                container.innerHTML = '<p class="text-red-600">Erro ao carregar auditoria do período.</p>';
-            }
-        }
-
-        function mudarAba(aba) {
-            abaAtual = aba;
-            atualizarAbas();
         }
 
         function editarSaldoInicial() {
-            if (!fechamentoAtual) {
-                exibirFeedback('erro', 'Fechamento ainda não carregado.');
-                return;
-            }
-            document.getElementById('novo-saldo').value = fechamentoAtual.saldo_inicial;
-            document.getElementById('modal-saldo').classList.remove('hidden');
+            document.getElementById('saldo-inicial-input').value =
+                document.getElementById('saldo-inicial').textContent.replace(/[^\d,]/g, '').replace(',', '.');
+            const modal = document.getElementById('modal-saldo-inicial');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
 
-        function fecharModalSaldo() {
-            document.getElementById('modal-saldo').classList.add('hidden');
+        function fecharModalSaldoInicial() {
+            const modal = document.getElementById('modal-saldo-inicial');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
 
-        document.getElementById('form-saldo').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const data = {
-                fechamento_id: fechamentoAtual.id,
-                novo_saldo: parseFloat(document.getElementById('novo-saldo').value),
-                justificativa: document.getElementById('justificativa-saldo').value
-            };
+        async function salvarSaldoInicial() {
+            const mes = parseInt(document.getElementById('filter-mes').value);
+            const ano = parseInt(document.getElementById('filter-ano').value);
+            const saldoInicial = parseFloat(document.getElementById('saldo-inicial-input').value || '0');
 
             try {
-                const res = await fetch('/api/tesouraria/fechamento/atualizar-saldo', {
+                const res = await fetch('/api/tesouraria/fechamento/saldo-inicial', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify({ mes, ano, saldo_inicial: saldoInicial })
                 });
                 const json = await res.json();
                 if (json.ok) {
-                    fecharModalSaldo();
-                    exibirFeedback('sucesso', 'Saldo inicial atualizado com sucesso.');
+                    fecharModalSaldoInicial();
                     carregarFechamento();
-                } else {
-                    exibirFeedback('erro', 'Não foi possível atualizar o saldo inicial.');
                 }
             } catch (err) {
-                console.error('Erro:', err);
-                exibirFeedback('erro', 'Erro ao atualizar saldo inicial.');
+                console.error('Erro ao salvar saldo inicial:', err);
             }
-        });
-
-        async function sugerirSaldoProximo() {
-            if (!fechamentoAtual) {
-                exibirFeedback('erro', 'Fechamento ainda não carregado.');
-                return;
-            }
-            alert('Sugestão de saldo para próximo período:\n' + formatarMoeda(fechamentoAtual.saldo_final));
         }
 
         async function fecharMes() {
-            if (!fechamentoAtual) {
-                exibirFeedback('erro', 'Fechamento ainda não carregado.');
-                return;
-            }
+            if (!confirm('Confirma o fechamento deste mes? A acao nao deve ser feita sem conferencia final.')) return;
 
-            if (!confirm('Tem certeza que deseja fechar este mês? Esta ação é irreversível.')) return;
+            const mes = parseInt(document.getElementById('filter-mes').value);
+            const ano = parseInt(document.getElementById('filter-ano').value);
 
             try {
                 const res = await fetch('/api/tesouraria/fechamento/fechar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        fechamento_id: fechamentoAtual.id,
-                        mes: parseInt(document.getElementById('filter-mes').value),
-                        ano: parseInt(document.getElementById('filter-ano').value)
-                    })
+                    body: JSON.stringify({ mes, ano })
                 });
                 const json = await res.json();
                 if (json.ok) {
-                    exibirFeedback('sucesso', 'Período fechado com sucesso.');
                     carregarFechamento();
                 } else {
-                    exibirFeedback('erro', 'Não foi possível fechar o período.');
+                    alert(json.erro || 'Nao foi possivel fechar o mes.');
                 }
             } catch (err) {
-                console.error('Erro ao fechar mês:', err);
-                exibirFeedback('erro', 'Erro ao fechar o período.');
+                console.error('Erro ao fechar mes:', err);
             }
         }
 

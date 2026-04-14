@@ -89,7 +89,7 @@ class EfemerideRegistro
         $sql = "
             SELECT *
             FROM efemerides_registros
-            ORDER BY data_evento DESC, id DESC
+            ORDER BY EXTRACT(MONTH FROM data_evento) ASC, EXTRACT(DAY FROM data_evento) ASC, nome ASC, id ASC
             LIMIT :limit
         ";
 
@@ -164,7 +164,7 @@ class EfemerideRegistro
         if ($where !== []) {
             $sql .= " WHERE " . implode(" AND ", $where);
         }
-        $sql .= " ORDER BY data_evento DESC, id DESC LIMIT :limit";
+        $sql .= " ORDER BY EXTRACT(MONTH FROM data_evento) ASC, EXTRACT(DAY FROM data_evento) ASC, nome ASC, id ASC LIMIT :limit";
 
         $stmt = $this->db->prepare($sql);
         foreach ($params as $key => $value) {
@@ -289,7 +289,7 @@ class EfemerideRegistro
             SELECT id, nome, tipo, data_evento, ativo
             FROM efemerides_registros
             WHERE tipo = :tipo
-            ORDER BY data_evento DESC, id DESC
+            ORDER BY EXTRACT(MONTH FROM data_evento) ASC, EXTRACT(DAY FROM data_evento) ASC, nome ASC, id ASC
         ");
         $stmt->execute(['tipo' => $tipo]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -15,19 +15,24 @@ if (!isset($_SESSION["usuario_logado"])) {
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800">
     <div class="max-w-6xl mx-auto px-4 py-8">
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-3xl font-bold text-gray-900">Regularidade de Obreiros</h1>
-            <a href="/dashboard" class="text-sm text-blue-700 hover:underline">← Voltar</a>
-        </div>
-
-        <!-- Filtros -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <header class="mb-6 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d6b672,transparent_30%),linear-gradient(135deg,#162033,#223145)] px-6 py-7 text-white shadow-xl">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Mês</label>
-                    <select id="filter-mes" class="w-full border border-gray-300 rounded px-3 py-2" onchange="filtrarRegularidade()">
+                    <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Tesouraria</p>
+                    <h1 class="mt-2 text-3xl font-semibold">Regularidade de Obreiros</h1>
+                    <p class="mt-2 max-w-3xl text-sm text-slate-200">Leitura clara do periodo e edicao rapida da situacao financeira de cada obreiro.</p>
+                </div>
+                <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao dashboard</a>
+            </div>
+        </header>
+
+        <div class="mb-6 rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:items-end">
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Mes</label>
+                    <select id="filter-mes" class="w-full rounded border border-gray-300 px-3 py-2" onchange="filtrarRegularidade()">
                         <?php
-                        $mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+                        $mesesPT = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                         $mesAtual = (int) date('n');
                         for ($m = 1; $m <= 12; $m++) {
                             $selected = ($m === $mesAtual) ? 'selected' : '';
@@ -38,8 +43,8 @@ if (!isset($_SESSION["usuario_logado"])) {
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Ano</label>
-                    <select id="filter-ano" class="w-full border border-gray-300 rounded px-3 py-2" onchange="filtrarRegularidade()">
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Ano</label>
+                    <select id="filter-ano" class="w-full rounded border border-gray-300 px-3 py-2" onchange="filtrarRegularidade()">
                         <?php
                         $anoAtual = (int) date('Y');
                         for ($a = $anoAtual - 1; $a <= $anoAtual; $a++) {
@@ -50,39 +55,40 @@ if (!isset($_SESSION["usuario_logado"])) {
                     </select>
                 </div>
 
-                <div class="flex gap-2">
-                    <button onclick="definirTodos('regular')" class="w-full px-4 py-2 rounded bg-green-700 text-white hover:bg-green-800 font-medium text-sm">
-                        Marcar Todos como Regular
+                <div class="flex flex-col gap-2 sm:flex-row">
+                    <button onclick="definirTodos('regular')" class="w-full rounded bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800">
+                        Marcar todos como Regular
                     </button>
-                    <button onclick="definirTodos('irregular')" class="w-full px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800 font-medium text-sm">
-                        Marcar Todos como Irregular
+                    <button onclick="definirTodos('irregular')" class="w-full rounded bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800">
+                        Marcar todos como Irregular
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Resumo -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p class="text-sm text-green-600 font-medium">Regulares</p>
+        <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div class="rounded-lg border border-green-200 bg-green-50 p-4">
+                <p class="text-sm font-medium text-green-600">Regulares</p>
                 <p class="text-3xl font-bold text-green-700" id="count-regular">0</p>
             </div>
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p class="text-sm text-red-600 font-medium">Irregulares</p>
+            <div class="rounded-lg border border-red-200 bg-red-50 p-4">
+                <p class="text-sm font-medium text-red-600">Irregulares</p>
                 <p class="text-3xl font-bold text-red-700" id="count-irregular">0</p>
             </div>
         </div>
 
-        <!-- Tabela -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div class="overflow-x-auto">
+        <div class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+            <div id="regularidade-cards" class="space-y-3 p-4 md:hidden">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">Carregando...</div>
+            </div>
+            <div class="hidden overflow-x-auto md:block">
                 <table class="min-w-full text-sm">
-                    <thead class="bg-gray-100 border-b border-gray-200">
+                    <thead class="border-b border-gray-200 bg-gray-100">
                         <tr>
-                            <th class="text-left px-4 py-2">Obreiro</th>
-                            <th class="text-left px-4 py-2">Status Atual</th>
-                            <th class="text-left px-4 py-2">Observação</th>
-                            <th class="text-left px-4 py-2">Ação</th>
+                            <th class="px-4 py-2 text-left">Obreiro</th>
+                            <th class="px-4 py-2 text-left">Status Atual</th>
+                            <th class="px-4 py-2 text-left">Observacao</th>
+                            <th class="px-4 py-2 text-left">Acao</th>
                         </tr>
                     </thead>
                     <tbody id="regularidade-table">
@@ -95,42 +101,37 @@ if (!isset($_SESSION["usuario_logado"])) {
         </div>
     </div>
 
-    <!-- Modal de Edição -->
-    <div id="modal-regularidade" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
-            <div class="p-6 border-b border-gray-200">
+    <div id="modal-regularidade" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-40 p-4">
+        <div class="w-full max-w-md rounded-lg bg-white shadow-lg">
+            <div class="border-b border-gray-200 p-6">
                 <h2 class="text-lg font-bold">Definir Regularidade</h2>
             </div>
-            <form id="form-regularidade" class="p-6 space-y-4">
+            <form id="form-regularidade" class="space-y-4 p-6">
                 <input type="hidden" id="obreiro-id">
                 <p class="text-gray-600" id="obreiro-nome-modal"></p>
 
                 <div>
-                    <label class="block text-sm font-medium mb-2">Status *</label>
+                    <label class="mb-2 block text-sm font-medium">Status *</label>
                     <div class="space-y-2">
                         <label class="flex items-center">
-                            <input type="radio" name="status" value="regular" class="rounded" required> 
-                            <span class="ml-2">Regular ✅</span>
+                            <input type="radio" name="status" value="regular" class="rounded" required>
+                            <span class="ml-2">Regular</span>
                         </label>
                         <label class="flex items-center">
                             <input type="radio" name="status" value="irregular" class="rounded" required>
-                            <span class="ml-2">Irregular ❌</span>
+                            <span class="ml-2">Irregular</span>
                         </label>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Observação</label>
-                    <textarea id="observacao" rows="3" class="w-full border border-gray-300 rounded px-3 py-2"></textarea>
+                    <label class="mb-1 block text-sm font-medium">Observacao</label>
+                    <textarea id="observacao" rows="3" class="w-full rounded border border-gray-300 px-3 py-2"></textarea>
                 </div>
 
                 <div class="flex gap-2">
-                    <button type="button" onclick="fecharModalRegularidade()" class="flex-1 px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="flex-1 px-4 py-2 rounded bg-blue-700 text-white hover:bg-blue-800">
-                        Salvar
-                    </button>
+                    <button type="button" onclick="fecharModalRegularidade()" class="flex-1 rounded bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="flex-1 rounded bg-blue-700 px-4 py-2 text-white hover:bg-blue-800">Salvar</button>
                 </div>
             </form>
         </div>
@@ -147,8 +148,8 @@ if (!isset($_SESSION["usuario_logado"])) {
             try {
                 const res = await fetch(`/api/tesouraria/regularidade?mes=${mes}&ano=${ano}`);
                 const json = await res.json();
-                atualizarTabela(json.regularidade);
-                atualizarResumo(json.regularidade);
+                atualizarTabela(json.regularidade || []);
+                atualizarResumo(json.regularidade || []);
             } catch (err) {
                 console.error('Erro:', err);
             }
@@ -163,8 +164,10 @@ if (!isset($_SESSION["usuario_logado"])) {
 
         function atualizarTabela(lista) {
             const tbody = document.getElementById('regularidade-table');
+            const cards = document.getElementById('regularidade-cards');
             if (lista.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">Nenhum obreiro neste período</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">Nenhum obreiro neste periodo</td></tr>';
+                cards.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">Nenhum obreiro neste periodo.</div>';
                 return;
             }
 
@@ -172,12 +175,12 @@ if (!isset($_SESSION["usuario_logado"])) {
                 <tr class="border-b border-gray-200 hover:bg-gray-50">
                     <td class="px-4 py-2 font-medium">${r.obreiro_nome}</td>
                     <td class="px-4 py-2">
-                        <span class="text-xs font-semibold px-2 py-1 rounded ${
-                            r.status === 'regular' 
-                                ? 'bg-green-100 text-green-700' 
+                        <span class="rounded px-2 py-1 text-xs font-semibold ${
+                            r.status === 'regular'
+                                ? 'bg-green-100 text-green-700'
                                 : 'bg-red-100 text-red-700'
                         }">
-                            ${r.status === 'regular' ? '✅ Regular' : '❌ Irregular'}
+                            ${r.status === 'regular' ? 'Regular' : 'Irregular'}
                         </span>
                     </td>
                     <td class="px-4 py-2 text-gray-600">${r.observacao || '-'}</td>
@@ -188,11 +191,34 @@ if (!isset($_SESSION["usuario_logado"])) {
                                 data-status="${escaparAtributo(r.status)}"
                                 data-observacao="${escaparAtributo(r.observacao || '')}"
                                 onclick="abrirEditarRegularidade(this)" 
-                                class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                                class="text-sm font-medium text-blue-600 hover:text-blue-800">
                             Editar
                         </button>
                     </td>
                 </tr>
+            `).join('');
+
+            cards.innerHTML = lista.map(r => `
+                <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <div class="text-base font-semibold text-slate-900">${r.obreiro_nome}</div>
+                            <div class="mt-1 text-sm text-slate-600">${r.observacao || 'Sem observacao registrada'}</div>
+                        </div>
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold ${r.status === 'regular' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                            ${r.status === 'regular' ? 'Regular' : 'Irregular'}
+                        </span>
+                    </div>
+                    <button 
+                            data-obreiro-id="${escaparAtributo(r.obreiro_id)}"
+                            data-obreiro-nome="${escaparAtributo(r.obreiro_nome)}"
+                            data-status="${escaparAtributo(r.status)}"
+                            data-observacao="${escaparAtributo(r.observacao || '')}"
+                            onclick="abrirEditarRegularidade(this)" 
+                            class="mt-4 w-full rounded bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800">
+                        Editar regularidade
+                    </button>
+                </article>
             `).join('');
         }
 
@@ -206,15 +232,19 @@ if (!isset($_SESSION["usuario_logado"])) {
             document.getElementById('obreiro-nome-modal').textContent = nome;
             document.getElementById('observacao').value = observacao;
             document.querySelector(`input[name="status"][value="${statusAtual}"]`).checked = true;
-            document.getElementById('modal-regularidade').classList.remove('hidden');
+            const modal = document.getElementById('modal-regularidade');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
 
         function fecharModalRegularidade() {
-            document.getElementById('modal-regularidade').classList.add('hidden');
+            const modal = document.getElementById('modal-regularidade');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
 
         async function definirTodos(status) {
-            if (!confirm(`Marcar TODOS como ${status}? Esta ação não pode ser desfeita facilmente.`)) return;
+            if (!confirm(`Marcar TODOS como ${status}? Esta acao nao pode ser desfeita facilmente.`)) return;
 
             const mes = document.getElementById('filter-mes').value;
             const ano = document.getElementById('filter-ano').value;

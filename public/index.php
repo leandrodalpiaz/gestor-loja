@@ -93,6 +93,26 @@ $buildTestSessionUser = static function () use ($normalizeRole, $testDisplayName
     ];
 };
 
+$resolvePublicUserName = static function (array $usuario = []) use ($testDisplayName): string {
+    $nomeHistorico = trim((string) ($usuario['nome_historico'] ?? ''));
+    $nomeCompleto = trim((string) ($usuario['nome_completo'] ?? ''));
+    $nomeHistoricoNormalizado = strtolower($nomeHistorico);
+
+    if ($nomeHistorico !== '' && !in_array($nomeHistoricoNormalizado, ['admin', 'administrador'], true)) {
+        return $nomeHistorico;
+    }
+
+    if ($nomeCompleto !== '' && stripos($nomeCompleto, 'acesso temporario') === false) {
+        return $nomeCompleto;
+    }
+
+    if ($nomeHistorico !== '') {
+        return $nomeHistorico;
+    }
+
+    return $testDisplayName !== '' ? $testDisplayName : 'Irmao';
+};
+
 $syncSessionRoles = static function (?array $usuario = null) use ($normalizeRole): array {
     $usuario = $usuario ?? ($_SESSION['usuario_logado'] ?? null);
     $fallback = $normalizeRole($usuario['cargo'] ?? $_SESSION['usuario_cargo'] ?? '');
@@ -185,7 +205,7 @@ $resolveAuthorizedTelegramObreiro = static function (string ...$roles) use ($nor
     return null;
 };
 
-$loginTelegramObreiroInSession = static function (array $obreiro) use ($syncSessionRoles, $normalizeRole): void {
+$loginTelegramObreiroInSession = static function (array $obreiro) use ($syncSessionRoles, $normalizeRole, $resolvePublicUserName): void {
     $principal = $normalizeRole((string) ($obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? ''));
     $cargos = array_values(array_unique(array_filter(array_map(
         $normalizeRole,
@@ -198,7 +218,7 @@ $loginTelegramObreiroInSession = static function (array $obreiro) use ($syncSess
 
     $_SESSION['usuario_logado'] = $usuario;
     $_SESSION['usuario_id'] = $usuario['id'] ?? null;
-    $_SESSION['usuario_nome'] = $usuario['nome_historico'] ?? $usuario['nome_completo'] ?? 'Irmao';
+    $_SESSION['usuario_nome'] = $resolvePublicUserName($usuario);
 
     $syncSessionRoles($usuario);
 };
@@ -243,7 +263,7 @@ $resolveObreiroByInitData = static function (?string $initData = null): ?array {
 if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
     $_SESSION["usuario_logado"] = $buildTestSessionUser();
     $_SESSION["usuario_id"] = 0;
-    $_SESSION["usuario_nome"] = $_SESSION["usuario_logado"]["nome_historico"];
+    $_SESSION["usuario_nome"] = $resolvePublicUserName($_SESSION["usuario_logado"]);
     $_SESSION["usuario_cargo"] = $_SESSION["usuario_logado"]["cargo"];
     $_SESSION["usuario_cargos"] = $_SESSION["usuario_logado"]["cargos"];
     $_SESSION["usuario_cargos_codigos"] = [];
@@ -2959,7 +2979,7 @@ switch ($requestUri) {
 
                     $_SESSION["usuario_logado"] = $usuario;
                     $_SESSION["usuario_id"] = $usuario["id"];
-                    $_SESSION["usuario_nome"] = $usuario["nome_historico"] ?? $usuario["nome_completo"] ?? "Irmao";
+                    $_SESSION["usuario_nome"] = $resolvePublicUserName($usuario);
                     $syncSessionRoles($usuario);
 
                     if ($temAcessoPainel) {
