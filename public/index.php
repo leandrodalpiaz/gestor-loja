@@ -69,6 +69,89 @@ $buildEfemeridesPreview = static function (): array {
     ];
 };
 
+$mergeHistoricosFixos = static function (array $registros, array $filtros): array {
+    $normalizarBusca = static function (string $texto): string {
+        $texto = trim($texto);
+        if ($texto === '') {
+            return '';
+        }
+
+        $texto = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $texto) ?: $texto;
+        $texto = strtolower($texto);
+
+        return $texto;
+    };
+
+    $tipo = trim((string) ($filtros['tipo'] ?? ''));
+    $termo = $normalizarBusca((string) ($filtros['termo'] ?? ''));
+    $ativo = strtolower(trim((string) ($filtros['ativo'] ?? '1')));
+    $dataIni = trim((string) ($filtros['data_ini'] ?? ''));
+    $dataFim = trim((string) ($filtros['data_fim'] ?? ''));
+    $vinculo = trim((string) ($filtros['vinculo'] ?? ''));
+    $irmaoRef = trim((string) ($filtros['irmao_ref'] ?? ''));
+
+    if ($tipo !== '' && $tipo !== 'História') {
+        return $registros;
+    }
+
+    if ($ativo === '0' || $ativo === 'false' || $ativo === 'inativos') {
+        return $registros;
+    }
+
+    if ($vinculo !== '' || $irmaoRef !== '') {
+        return $registros;
+    }
+
+    $historicosFixos = \App\Services\HistoricoEventos::getFixosComoRegistros();
+    $historicosFixos = array_values(array_filter($historicosFixos, static function (array $item) use ($termo, $dataIni, $dataFim, $normalizarBusca): bool {
+        if ($termo !== '') {
+            $alvo = $normalizarBusca(
+                trim((string) ($item['nome'] ?? '')) . ' ' . trim((string) ($item['mensagem_custom'] ?? ''))
+            );
+
+            if (strpos($alvo, $termo) === false) {
+                return false;
+            }
+        }
+
+        $dataEvento = trim((string) ($item['data_evento'] ?? ''));
+        if ($dataIni !== '' && $dataEvento < $dataIni) {
+            return false;
+        }
+
+        if ($dataFim !== '' && $dataEvento > $dataFim) {
+            return false;
+        }
+
+        return true;
+    }));
+
+    $registros = array_merge($registros, $historicosFixos);
+
+    usort($registros, static function (array $a, array $b): int {
+        $dataA = (string) ($a['data_evento'] ?? '');
+        $dataB = (string) ($b['data_evento'] ?? '');
+        $nomeA = (string) ($a['nome'] ?? '');
+        $nomeB = (string) ($b['nome'] ?? '');
+        $idA = (int) ($a['id'] ?? 0);
+        $idB = (int) ($b['id'] ?? 0);
+
+        $ordemData = strcmp(substr($dataA, 5, 5), substr($dataB, 5, 5));
+        if ($ordemData !== 0) {
+            return $ordemData;
+        }
+
+        $ordemNome = strcmp($nomeA, $nomeB);
+        if ($ordemNome !== 0) {
+            return $ordemNome;
+        }
+
+        return $idA <=> $idB;
+    });
+
+    return $registros;
+};
+
 $redirectEfemerides = static function (array $params = []): void {
     $params = array_filter(
         $params,
@@ -1838,6 +1921,7 @@ switch ($requestUri) {
         ];
         $registroModel = new \App\Models\EfemerideRegistro();
         $registrosRecentes = $registroModel->buscarComFiltros($filtrosEfemeride, 300);
+        $registrosRecentes = $mergeHistoricosFixos($registrosRecentes, $filtrosEfemeride);
         $vinculosPadrao = $registroModel->getVinculosPadrao();
         $tiposEfemeride = [
             'Aniversário',

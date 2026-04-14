@@ -133,4 +133,48 @@ class HistoricoEventos
     {
         return self::$fixos;
     }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public static function getFixosComoRegistros(): array
+    {
+        $registros = [];
+
+        foreach (self::$fixos as $diaMes => $evento) {
+            [$mes, $dia] = array_map('intval', explode('-', $diaMes));
+            $anoRef = $evento['ano_ref'] !== null ? (int) $evento['ano_ref'] : 2000;
+            $dataEvento = sprintf('%04d-%02d-%02d', $anoRef, $mes, $dia);
+
+            $registros[] = [
+                'id' => null,
+                'nome' => (string) ($evento['titulo'] ?? 'Evento histórico'),
+                'tipo' => 'História',
+                'data_evento' => $dataEvento,
+                'cod_vinculo' => null,
+                'vinculo' => null,
+                'parentesco' => null,
+                'local' => 'Histórico fixo',
+                'mensagem_custom' => (string) ($evento['texto'] ?? ''),
+                'ativo' => true,
+                'origem_fixa' => true,
+            ];
+        }
+
+        usort($registros, static function (array $a, array $b): int {
+            $dataA = (string) ($a['data_evento'] ?? '');
+            $dataB = (string) ($b['data_evento'] ?? '');
+            $nomeA = (string) ($a['nome'] ?? '');
+            $nomeB = (string) ($b['nome'] ?? '');
+
+            $ordemData = strcmp(substr($dataA, 5, 5), substr($dataB, 5, 5));
+            if ($ordemData !== 0) {
+                return $ordemData;
+            }
+
+            return strcmp($nomeA, $nomeB);
+        });
+
+        return $registros;
+    }
 }

@@ -280,6 +280,7 @@
 
             <div class="space-y-3 md:hidden">
                 <?php foreach (($registrosRecentes ?? []) as $r): ?>
+                    <?php $somenteLeitura = !empty($r['origem_fixa']); ?>
                     <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                         <div class="flex items-start justify-between gap-3">
                             <div>
@@ -294,7 +295,9 @@
                             <div>Vinculo: <?= htmlspecialchars((string) ($r['vinculo'] ?? '-')) ?></div>
                             <div>Parentesco: <?= htmlspecialchars((string) ($r['parentesco'] ?? '-')) ?></div>
                         </div>
-                        <?php if (!empty($r['ativo'])): ?>
+                        <?php if ($somenteLeitura): ?>
+                            <div class="mt-4 text-sm text-slate-500">Registro fixo do sistema. Para alterar, edite o arquivo de históricos.</div>
+                        <?php elseif (!empty($r['ativo'])): ?>
                             <details class="mt-4 rounded-2xl border border-slate-200 bg-white p-3">
                                 <summary class="cursor-pointer text-sm font-medium text-blue-700">Editar registro</summary>
                                 <form method="POST" action="/chancelaria/efemerides/atualizar" class="mt-3 space-y-2">
@@ -334,6 +337,7 @@
                     </thead>
                     <tbody>
                     <?php foreach (($registrosRecentes ?? []) as $r): ?>
+                        <?php $somenteLeitura = !empty($r['origem_fixa']); ?>
                         <tr class="border-t align-top">
                             <td class="px-3 py-2"><?= htmlspecialchars($formatarDataVisual((string) ($r['data_evento'] ?? ''))) ?></td>
                             <td class="px-3 py-2"><?= htmlspecialchars((string) ($r['nome'] ?? '')) ?></td>
@@ -344,7 +348,9 @@
                             </td>
                             <td class="px-3 py-2"><?= !empty($r['ativo']) ? 'Ativo' : 'Inativo' ?></td>
                             <td class="px-3 py-2">
-                                <?php if (!empty($r['ativo'])): ?>
+                                <?php if ($somenteLeitura): ?>
+                                    <span class="text-gray-500">Registro fixo</span>
+                                <?php elseif (!empty($r['ativo'])): ?>
                                     <details class="rounded-xl border border-gray-200 bg-gray-50 p-3">
                                         <summary class="cursor-pointer text-sm font-medium text-blue-700">Editar</summary>
                                         <form method="POST" action="/chancelaria/efemerides/atualizar" class="mt-3 space-y-2">
