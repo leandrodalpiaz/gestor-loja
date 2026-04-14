@@ -251,6 +251,29 @@ $sessionHasRole = static function (string ...$roles) use ($normalizeRole, $bypas
     return false;
 };
 
+$getSessionRoles = static function () use ($normalizeRole): array {
+    return array_values(array_unique(array_filter(array_map(
+        $normalizeRole,
+        $_SESSION['usuario_cargos'] ?? [$_SESSION['usuario_cargo'] ?? '']
+    ))));
+};
+
+$contentPermissionService = static function (): \App\Services\ConteudoPermissaoService {
+    static $service = null;
+    if ($service === null) {
+        $service = new \App\Services\ConteudoPermissaoService();
+    }
+    return $service;
+};
+
+$canManageContentCategory = static function (string $categoria) use ($bypassRoleChecks, $getSessionRoles, $contentPermissionService): bool {
+    if ($bypassRoleChecks) {
+        return true;
+    }
+
+    return $contentPermissionService()->canManage($categoria, $getSessionRoles());
+};
+
 $resolveAuthorizedTelegramObreiro = static function (string ...$roles) use ($normalizeRole): ?array {
     $initData = trim((string) ($_POST['init_data'] ?? $_GET['init_data'] ?? ''));
     if ($initData === '') {
@@ -1599,9 +1622,13 @@ switch ($requestUri) {
             header("Location: /login");
             exit;
         }
-        if (!$sessionHasRole('chanceler', 'veneravel', 'admin')) {
+        if (
+            !$canManageContentCategory('efemerides')
+            && !$canManageContentCategory('historia')
+            && !$canManageContentCategory('palavra_dia')
+        ) {
             http_response_code(403);
-            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
+            echo "Acesso restrito aos responsáveis pelos conteúdos da Chancelaria.";
             exit;
         }
         (new \App\Controllers\ChancelerSessaoController())->index();
@@ -1866,6 +1893,212 @@ switch ($requestUri) {
         $redirectEfemerides($ok ? ['sucesso' => 'registro_desativado'] : ['erro' => 'falha_desativar']);
         break;
 
+    case "/chancelaria/efemerides/excluir":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$canManageContentCategory('efemerides')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+
+        $registroId = (int) ($_POST['id'] ?? 0);
+        if ($registroId <= 0) {
+            $redirectEfemerides(['erro' => 'id_invalido']);
+        }
+
+        $registroModel = new \App\Models\EfemerideRegistro();
+        $ok = $registroModel->excluir($registroId);
+        $redirectEfemerides($ok ? ['sucesso' => 'registro_desativado'] : ['erro' => 'falha_desativar']);
+        break;
+
+    case "/chancelaria/historias/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$canManageContentCategory('historia')) {
+            http_response_code(403);
+            echo "Acesso restrito aos responsáveis por História Maçônica.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+        $titulo = trim((string) ($_POST['titulo'] ?? ''));
+        $texto = trim((string) ($_POST['texto'] ?? ''));
+        $dia = (int) ($_POST['dia'] ?? 0);
+        $mes = (int) ($_POST['mes'] ?? 0);
+        if ($titulo === '' || $texto === '' || $dia <= 0 || $mes <= 0) {
+            $redirectEfemerides(['erro' => 'historia_invalida']);
+        }
+        $ok = (new \App\Models\HistoriaMaconica())->create($_POST, isset($_SESSION['usuario_id']) ? (int) $_SESSION['usuario_id'] : null);
+        $redirectEfemerides($ok ? ['sucesso' => 'historia_salva'] : ['erro' => 'falha_salvar_historia']);
+        break;
+
+    case "/chancelaria/historias/atualizar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$canManageContentCategory('historia')) {
+            http_response_code(403);
+            echo "Acesso restrito aos responsáveis por História Maçônica.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+        $historiaId = (int) ($_POST['historia_id'] ?? 0);
+        $titulo = trim((string) ($_POST['titulo'] ?? ''));
+        $texto = trim((string) ($_POST['texto'] ?? ''));
+        $dia = (int) ($_POST['dia'] ?? 0);
+        $mes = (int) ($_POST['mes'] ?? 0);
+        if ($historiaId <= 0 || $titulo === '' || $texto === '' || $dia <= 0 || $mes <= 0) {
+            $redirectEfemerides(['erro' => 'historia_invalida']);
+        }
+        $ok = (new \App\Models\HistoriaMaconica())->atualizar($historiaId, $_POST);
+        $redirectEfemerides($ok ? ['sucesso' => 'historia_atualizada'] : ['erro' => 'falha_atualizar_historia']);
+        break;
+
+    case "/chancelaria/historias/toggle":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$canManageContentCategory('historia')) {
+            http_response_code(403);
+            echo "Acesso restrito aos responsáveis por História Maçônica.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+        $historiaId = (int) ($_POST['id'] ?? 0);
+        $ok = $historiaId > 0 ? (new \App\Models\HistoriaMaconica())->toggleAtivo($historiaId) : false;
+        $redirectEfemerides($ok ? ['sucesso' => 'historia_status'] : ['erro' => 'falha_status_historia']);
+        break;
+
+    case "/chancelaria/historias/excluir":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$canManageContentCategory('historia')) {
+            http_response_code(403);
+            echo "Acesso restrito aos responsáveis por História Maçônica.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+        $historiaId = (int) ($_POST['id'] ?? 0);
+        $ok = $historiaId > 0 ? (new \App\Models\HistoriaMaconica())->excluir($historiaId) : false;
+        $redirectEfemerides($ok ? ['sucesso' => 'historia_excluida'] : ['erro' => 'falha_excluir_historia']);
+        break;
+
+    case "/chancelaria/palavra-dia/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$canManageContentCategory('palavra_dia')) {
+            http_response_code(403);
+            echo "Acesso restrito aos responsáveis por Palavra do Dia.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+        $mensagem = trim((string) ($_POST['mensagem'] ?? ''));
+        if ($mensagem === '') {
+            $redirectEfemerides(['erro' => 'palavra_invalida']);
+        }
+        $ok = (new \App\Models\PalavraDia())->create($_POST, isset($_SESSION['usuario_id']) ? (int) $_SESSION['usuario_id'] : null);
+        $redirectEfemerides($ok ? ['sucesso' => 'palavra_salva'] : ['erro' => 'falha_salvar_palavra']);
+        break;
+
+    case "/chancelaria/palavra-dia/atualizar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$canManageContentCategory('palavra_dia')) {
+            http_response_code(403);
+            echo "Acesso restrito aos responsáveis por Palavra do Dia.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+        $palavraId = (int) ($_POST['palavra_id'] ?? 0);
+        $mensagem = trim((string) ($_POST['mensagem'] ?? ''));
+        if ($palavraId <= 0 || $mensagem === '') {
+            $redirectEfemerides(['erro' => 'palavra_invalida']);
+        }
+        $ok = (new \App\Models\PalavraDia())->atualizar($palavraId, $_POST);
+        $redirectEfemerides($ok ? ['sucesso' => 'palavra_atualizada'] : ['erro' => 'falha_atualizar_palavra']);
+        break;
+
+    case "/chancelaria/palavra-dia/toggle":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$canManageContentCategory('palavra_dia')) {
+            http_response_code(403);
+            echo "Acesso restrito aos responsáveis por Palavra do Dia.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+        $palavraId = (int) ($_POST['id'] ?? 0);
+        $ok = $palavraId > 0 ? (new \App\Models\PalavraDia())->toggleAtivo($palavraId) : false;
+        $redirectEfemerides($ok ? ['sucesso' => 'palavra_status'] : ['erro' => 'falha_status_palavra']);
+        break;
+
+    case "/chancelaria/palavra-dia/excluir":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$canManageContentCategory('palavra_dia')) {
+            http_response_code(403);
+            echo "Acesso restrito aos responsáveis por Palavra do Dia.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+        $palavraId = (int) ($_POST['id'] ?? 0);
+        $ok = $palavraId > 0 ? (new \App\Models\PalavraDia())->excluir($palavraId) : false;
+        $redirectEfemerides($ok ? ['sucesso' => 'palavra_excluida'] : ['erro' => 'falha_excluir_palavra']);
+        break;
+
+    case "/chancelaria/conteudo-permissoes/salvar":
+        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+            header("Location: /login");
+            exit;
+        }
+        if (!$sessionHasRole('chanceler', 'veneravel', 'admin')) {
+            http_response_code(403);
+            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
+            exit;
+        }
+        if ($method !== 'POST') {
+            $redirectEfemerides();
+        }
+        $okHistoria = $contentPermissionService()->salvarDelegacoes('historia', $_POST['delegacoes_historia'] ?? []);
+        $okPalavra = $contentPermissionService()->salvarDelegacoes('palavra_dia', $_POST['delegacoes_palavra_dia'] ?? []);
+        $redirectEfemerides(($okHistoria && $okPalavra) ? ['sucesso' => 'permissoes_salvas'] : ['erro' => 'falha_salvar_permissoes']);
+        break;
+
     case "/chancelaria/efemerides":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
             header("Location: /login");
@@ -1884,6 +2117,15 @@ switch ($requestUri) {
             'registro_salvo' => 'Registro salvo com sucesso.',
             'registro_atualizado' => 'Registro atualizado com sucesso.',
             'registro_desativado' => 'Registro desativado com sucesso.',
+            'historia_salva' => 'História salva com sucesso.',
+            'historia_atualizada' => 'História atualizada com sucesso.',
+            'historia_status' => 'Status da história atualizado com sucesso.',
+            'historia_excluida' => 'História excluída com sucesso.',
+            'palavra_salva' => 'Palavra do Dia salva com sucesso.',
+            'palavra_atualizada' => 'Palavra do Dia atualizada com sucesso.',
+            'palavra_status' => 'Status da Palavra do Dia atualizado com sucesso.',
+            'palavra_excluida' => 'Palavra do Dia excluída com sucesso.',
+            'permissoes_salvas' => 'Permissões por categoria atualizadas com sucesso.',
             default => null,
         };
 
@@ -1897,6 +2139,17 @@ switch ($requestUri) {
             'falha_atualizar_registro' => 'Nao foi possivel atualizar o registro.',
             'id_invalido' => 'Registro invalido para desativacao.',
             'falha_desativar' => 'Nao foi possivel desativar o registro.',
+            'historia_invalida' => 'Preencha os dados da história corretamente.',
+            'falha_salvar_historia' => 'Nao foi possivel salvar a história.',
+            'falha_atualizar_historia' => 'Nao foi possivel atualizar a história.',
+            'falha_status_historia' => 'Nao foi possivel atualizar o status da história.',
+            'falha_excluir_historia' => 'Nao foi possivel excluir a história.',
+            'palavra_invalida' => 'Preencha os dados da Palavra do Dia corretamente.',
+            'falha_salvar_palavra' => 'Nao foi possivel salvar a Palavra do Dia.',
+            'falha_atualizar_palavra' => 'Nao foi possivel atualizar a Palavra do Dia.',
+            'falha_status_palavra' => 'Nao foi possivel atualizar o status da Palavra do Dia.',
+            'falha_excluir_palavra' => 'Nao foi possivel excluir a Palavra do Dia.',
+            'falha_salvar_permissoes' => 'Nao foi possivel salvar as permissões por categoria.',
             default => null,
         };
 
@@ -1921,7 +2174,6 @@ switch ($requestUri) {
         ];
         $registroModel = new \App\Models\EfemerideRegistro();
         $registrosRecentes = $registroModel->buscarComFiltros($filtrosEfemeride, 300);
-        $registrosRecentes = $mergeHistoricosFixos($registrosRecentes, $filtrosEfemeride);
         $vinculosPadrao = $registroModel->getVinculosPadrao();
         $tiposEfemeride = [
             'Aniversário',
@@ -1938,12 +2190,43 @@ switch ($requestUri) {
         $mensagemBase = $dadosEfemerides['mensagemBase'];
         $mensagemPreview = $dadosEfemerides['mensagemPreview'];
         $obreirosFiltro = (new \App\Models\Obreiro())->getAllAtivos();
+        $historiasRecentes = (new \App\Models\HistoriaMaconica())->listar([
+            'termo' => $filtroTermo,
+            'ativo' => $filtroAtivo,
+            'data_ini' => $filtroDataIni,
+            'data_fim' => $filtroDataFim,
+        ], 300);
+        $palavrasDia = (new \App\Models\PalavraDia())->listar([
+            'termo' => $filtroTermo,
+            'ativo' => $filtroAtivo,
+        ], 300);
+        $cargosDisponiveisConteudo = array_values(array_filter(array_map(static function (array $item): ?array {
+            $codigo = strtoupper(trim((string) ($item['codigo'] ?? '')));
+            $slug = \App\Models\Cargo::codigoParaSlug($codigo);
+            if ($slug === null || in_array($slug, ['admin', 'veneravel', 'chanceler'], true)) {
+                return null;
+            }
+
+            return [
+                'slug' => $slug,
+                'label' => (string) ($item['nome_exibicao'] ?? $codigo),
+            ];
+        }, (new \App\Models\Cargo())->listarResumoCargos())));
+        $delegacoesHistoria = $contentPermissionService()->getAllowedRoles('historia');
+        $delegacoesPalavraDia = $contentPermissionService()->getAllowedRoles('palavra_dia');
+        $podeGerirEfemerides = $canManageContentCategory('efemerides');
+        $podeGerirHistoria = $canManageContentCategory('historia');
+        $podeGerirPalavraDia = $canManageContentCategory('palavra_dia');
 
         require_once __DIR__ . "/../src/Views/efemerides_chanceler.php";
         break;
 
     case "/miniapp/aniversario":
         require_once __DIR__ . "/../src/Views/miniapp/aniversario.php";
+        break;
+
+    case "/miniapp/efemerides":
+        require_once __DIR__ . "/../src/Views/miniapp/efemerides.php";
         break;
 
     case "/miniapp/data-maconica":
@@ -1954,8 +2237,12 @@ switch ($requestUri) {
         require_once __DIR__ . "/../src/Views/miniapp/historico.php";
         break;
 
+    case "/miniapp/palavra-dia":
+        require_once __DIR__ . "/../src/Views/miniapp/palavra_dia.php";
+        break;
+
     case "/miniapp/fallback":
-        require_once __DIR__ . "/../src/Views/miniapp/fallback.php";
+        require_once __DIR__ . "/../src/Views/miniapp/palavra_dia.php";
         break;
 
     case "/miniapp/aprendizado":
@@ -2001,6 +2288,9 @@ switch ($requestUri) {
         $initData = trim((string) ($body['initData'] ?? $body['init_data'] ?? $_GET['initData'] ?? $_GET['init_data'] ?? ''));
         $miniappObreiro = null;
         $miniappAllowedRoles = match (true) {
+            str_starts_with($requestUri, '/api/miniapp/historico') => $contentPermissionService()->getAllowedRoles('historia'),
+            str_starts_with($requestUri, '/api/miniapp/palavra-dia') => $contentPermissionService()->getAllowedRoles('palavra_dia'),
+            str_starts_with($requestUri, '/api/miniapp/efemerides') => $contentPermissionService()->getAllowedRoles('efemerides'),
             str_starts_with($requestUri, '/api/miniapp/secretaria') => ['secretario', 'veneravel', 'admin'],
             str_starts_with($requestUri, '/api/miniapp/aprendizado') => ['primeiro_vigilante', 'veneravel', 'admin'],
             str_starts_with($requestUri, '/api/miniapp/primeiro-vigilante') => ['primeiro_vigilante', 'veneravel', 'admin'],
@@ -2047,7 +2337,8 @@ switch ($requestUri) {
         }
 
         $efemerideModel = new \App\Models\EfemerideRegistro();
-        $mensagensModel = new \App\Models\MensagemComplementar();
+        $historiaModel = new \App\Models\HistoriaMaconica();
+        $palavraDiaModel = new \App\Models\PalavraDia();
 
         if ($requestUri === '/api/miniapp/efemeride/salvar' && $method === 'POST') {
             $id = (int) ($body['id'] ?? 0);
@@ -2074,6 +2365,19 @@ switch ($requestUri) {
         if ($requestUri === '/api/miniapp/efemeride/desativar' && $method === 'POST') {
             $id = (int) ($body['id'] ?? 0);
             $ok = $id > 0 ? $efemerideModel->desativar($id) : false;
+            echo json_encode(['ok' => $ok]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/efemerides/listar' && $method === 'GET') {
+            $registros = $efemerideModel->buscarComFiltros(['ativo' => 'all'], 300);
+            echo json_encode(['ok' => true, 'registros' => $registros]);
+            exit;
+        }
+
+        if ($requestUri === '/api/miniapp/efemerides/excluir' && $method === 'POST') {
+            $id = (int) ($body['id'] ?? 0);
+            $ok = $id > 0 ? $efemerideModel->excluir($id) : false;
             echo json_encode(['ok' => $ok]);
             exit;
         }

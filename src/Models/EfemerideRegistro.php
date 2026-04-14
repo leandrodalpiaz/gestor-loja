@@ -176,6 +176,12 @@ class EfemerideRegistro
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function excluir(int $id): bool
+    {
+        $stmt = $this->db->prepare("DELETE FROM efemerides_registros WHERE id = :id");
+        return $stmt->execute(['id' => $id]);
+    }
+
     public function create(array $data, ?int $createdBy): bool
     {
         $sql = "

@@ -8,12 +8,10 @@ use App\Models\MensagemComplementar;
  * Compositor de mensagens diarias de efemerides.
  *
  * Ordem de montagem:
- * 1. Evento historico da Ordem
- * 2. Eventos especiais: Posse GM, Membro Honorario, Filiacao
- * 3. Aniversarios agrupados por tratamento
- * 4. Cerimonias maconicas: Iniciacao, Elevacao, Exaltacao, Instalacao
- * 5. Oriente Eterno
- * Fallback: curiosidade rotativa quando nao ha eventos
+ * 1. Eventos especiais: Posse Grão Mestre, Membro Honorário, Filiação
+ * 2. Aniversários agrupados por tratamento
+ * 3. Cerimônias maçônicas: Iniciação, Elevação, Exaltação, Instalação
+ * 4. Oriente Eterno
  */
 class EfemeridesComposer
 {
@@ -24,9 +22,6 @@ class EfemeridesComposer
         $this->comp = new MensagemComplementar();
     }
 
-    /**
-     * Gera a mensagem do dia atual ou da data informada.
-     */
     public function gerarMensagemParaDia(?string $dataYmd = null): string
     {
         require_once __DIR__ . '/../Models/EfemerideRegistro.php';
@@ -52,8 +47,6 @@ class EfemeridesComposer
      */
     public function composeDailyPreview(array $registros): string
     {
-        $hoje = $this->today();
-
         $porTipo = [];
         foreach ($registros as $r) {
             $tipo = (string) ($r['tipo'] ?? '');
@@ -61,11 +54,6 @@ class EfemeridesComposer
         }
 
         $mensagens = [];
-
-        $historico = HistoricoEventos::getParaHoje($porTipo['História'] ?? [], $hoje);
-        if ($historico !== '') {
-            $mensagens[] = "📜 <b>Memória Maçônica:</b> " . $historico;
-        }
 
         foreach (['Posse Grão Mestre', 'Concessão de Membro Honorário', 'Filiação'] as $tipo) {
             foreach (($porTipo[$tipo] ?? []) as $r) {
@@ -102,7 +90,7 @@ class EfemeridesComposer
         $mensagens = array_values(array_filter(array_map('trim', $mensagens)));
 
         if ($mensagens === []) {
-            return $this->fallbackSemEventos();
+            return 'Nenhuma efeméride para hoje.';
         }
 
         $cabecalho = "🔨 <b>A:.R:.L:.S:. Renascença</b> - Efemérides do dia";
@@ -231,7 +219,7 @@ class EfemeridesComposer
             return $this->formatarCerimonia($eventos[0], $tipo, $complementar);
         }
 
-        $partes = ["Neste dia, registramos com honra marcos fundamentais em nossas colunas:"];
+        $partes = ['Neste dia, registramos com honra marcos fundamentais em nossas colunas:'];
         foreach ($eventos as $r) {
             $nome = trim((string) ($r['nome'] ?? '')) ?: 'Nome não informado';
             $strAnos = $this->textoAnos($this->calcularAnos((string) ($r['data_evento'] ?? '')));
@@ -307,16 +295,6 @@ class EfemeridesComposer
         $data = $this->formatarData((string) ($r['data_evento'] ?? ''));
 
         return "🌿 <i>Com profundo pesar e saudade, lembramos de nosso Irmão <b>{$nome}</b>, que partiu para o Oriente Eterno em {$data}. Que o G:.A:.D:.U:. o tenha em Sua glória.</i>";
-    }
-
-    private function fallbackSemEventos(): string
-    {
-        $curiosidade = $this->comp->sortear('fallback');
-        if ($curiosidade !== '') {
-            return "🔨 <b>Um Toque da Trolha:</b>\n\n{$curiosidade}\n\n<i>Que este toque provoque a busca que suaviza nossas arestas.</i>";
-        }
-
-        return 'Nenhuma efeméride para hoje.';
     }
 
     private function textoAnos(int $anos): string
