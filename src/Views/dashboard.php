@@ -56,6 +56,14 @@ $usuarioCargos = $_SESSION['usuario_cargos'] ?? [$usuarioCargo];
 $isTestSession = isset($_SESSION['usuario_id']) && (string) $_SESSION['usuario_id'] === '0';
 $allowAllPanels = filter_var($_ENV['APP_TEST_ALLOW_ALL_PANELS'] ?? 'true', FILTER_VALIDATE_BOOL);
 $showAllPanels = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VALIDATE_BOOL) || $isTestSession || $allowAllPanels;
+$dashboardPermissions = is_array($dashboardPermissions ?? null) ? $dashboardPermissions : [];
+$dashboardCan = static function (string $permission) use ($dashboardPermissions, $showAllPanels): bool {
+    if ($showAllPanels) {
+        return true;
+    }
+
+    return (bool) ($dashboardPermissions[$permission] ?? false);
+};
 
 $isAdmin = in_array('admin', $usuarioCargos, true);
 $isChanceler = in_array('chanceler', $usuarioCargos, true);
@@ -168,7 +176,7 @@ if ($isChanceler || $isVeneravel || $adminLivre) {
     }
 }
 
-if ($isSecretario || $isVeneravel || $adminLivre) {
+if ($dashboardCan('secretaria.manage') || $isVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Secretaria',
         'descricao' => 'Sessões, votações e acompanhamento administrativo.',
@@ -252,7 +260,7 @@ if ($isVeneravel || $adminLivre) {
     ];
 }
 
-if ($isTesoureiro || $isVeneravel || $adminLivre) {
+if ($dashboardCan('tesouraria.manage') || $isVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Tesouraria',
         'descricao' => 'Financeiro, comprovantes, regularidade e fechamento mensal.',
@@ -288,13 +296,15 @@ if ($isTesoureiro || $isVeneravel || $adminLivre) {
     }
 }
 
-$secoes[] = [
-    'titulo' => 'Meu Financeiro',
-    'descricao' => 'Consulta pessoal de mensalidades, biblioteca, joias e demais obrigacoes cadastradas pela Tesouraria.',
-    'itens' => [
-        ['label' => 'Minhas obrigacoes financeiras', 'href' => '/financeiro/minhas-obrigacoes'],
-    ],
-];
+if ($dashboardCan('financeiro.self') || $adminLivre) {
+    $secoes[] = [
+        'titulo' => 'Meu Financeiro',
+        'descricao' => 'Consulta pessoal de mensalidades, biblioteca, joias e demais obrigacoes cadastradas pela Tesouraria.',
+        'itens' => [
+            ['label' => 'Minhas obrigacoes financeiras', 'href' => '/financeiro/minhas-obrigacoes'],
+        ],
+    ];
+}
 
 if ($isBibliotecario || $isPrimeiroVigilante || $isSegundoVigilante || $isVeneravel || $adminLivre) {
     $secoes[] = [
@@ -349,14 +359,14 @@ if (($isPrimeiroVigilante || $isSegundoVigilante) && !$isSecretario && !$isChanc
     ];
 }
 
-if ($isAdmin || $adminLivre) {
+if ($dashboardCan('admin.cargos.view') || $dashboardCan('admin.loja.view') || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Administração',
         'descricao' => 'Configurações centrais e liberação ampla para o administrador.',
-        'itens' => [
-            ['label' => 'Administração de cargos', 'href' => '/admin/cargos'],
-            ['label' => 'Parâmetros da Loja', 'href' => '/admin/loja'],
-        ],
+        'itens' => array_values(array_filter([
+            ($dashboardCan('admin.cargos.view') || $adminLivre) ? ['label' => 'Administração de cargos', 'href' => '/admin/cargos'] : null,
+            ($dashboardCan('admin.loja.view') || $adminLivre) ? ['label' => 'Parâmetros da Loja', 'href' => '/admin/loja'] : null,
+        ])),
     ];
 }
 

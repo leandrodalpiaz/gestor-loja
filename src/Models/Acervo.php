@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use App\Services\LivroMetadataService;
 use PDO;
 
 class Acervo
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
     private LivroMetadataService $metadataService;
 
@@ -19,6 +22,7 @@ class Acervo
 
     public function listarTodos(): array
     {
+        $lojaId = $this->buscarLojaAtualId();
         $sql = "SELECT
                     a.*,
                     COALESCE(c.total_comentarios, 0) AS total_comentarios,
@@ -44,22 +48,28 @@ class Acervo
                     GROUP BY acervo_id
                 ) r ON r.acervo_id = a.id
                 WHERE a.ativo = TRUE
+                  AND a.loja_id = :loja_id
                 ORDER BY a.criado_em DESC, a.id DESC";
-        $stmt = $this->db->query($sql);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['loja_id' => $lojaId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function buscarPorId(int $id): ?array
     {
-        $sql = "SELECT * FROM acervo WHERE id = :id AND ativo = TRUE LIMIT 1";
+        $sql = "SELECT * FROM acervo WHERE id = :id AND loja_id = :loja_id AND ativo = TRUE LIMIT 1";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['id' => $id]);
+        $stmt->execute([
+            'id' => $id,
+            'loja_id' => $this->buscarLojaAtualId(),
+        ]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ?: null;
     }
 
     public function buscarDetalhes(int $id, ?string $obreiroId = null): ?array
     {
+        $lojaId = $this->buscarLojaAtualId();
         $sql = "SELECT
                     a.*,
                     COALESCE(c.total_comentarios, 0) AS total_comentarios,
@@ -89,11 +99,13 @@ class Acervo
                     ON ru.acervo_id = a.id
                     AND ru.obreiro_id::text = :obreiro_id
                 WHERE a.id = :id
+                  AND a.loja_id = :loja_id
                   AND a.ativo = TRUE
                 LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
             'id' => $id,
+            'loja_id' => $lojaId,
             'obreiro_id' => $obreiroId ?? '',
         ]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -196,7 +208,8 @@ class Acervo
                     nota_instrucao = :nota_instrucao,
                     curador_id = :curador_id,
                     atualizado_em = CURRENT_TIMESTAMP
-                WHERE id = :id";
+                WHERE id = :id
+                  AND loja_id = :loja_id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             'titulo' => trim((string) ($dados['titulo'] ?? '')),
@@ -212,6 +225,7 @@ class Acervo
             'nota_instrucao' => $this->nuloSeVazio((string) ($dados['nota_instrucao'] ?? '')),
             'curador_id' => $dados['curador_id'] ?? null,
             'id' => $id,
+            'loja_id' => $this->buscarLojaAtualId(),
         ]);
     }
 
@@ -223,36 +237,34 @@ class Acervo
                  nota_instrucao = :nota,
                  curador_id = :curador,
                  atualizado_em = CURRENT_TIMESTAMP
-             WHERE id = :id"
+             WHERE id = :id
+               AND loja_id = :loja_id"
         );
         return $stmt->execute([
             'grau' => $this->normalizarGrau((string) $grau),
             'nota' => $this->nuloSeVazio((string) $nota),
             'curador' => $curadorId,
             'id' => $id,
+            'loja_id' => $this->buscarLojaAtualId(),
         ]);
     }
 
     public function deletar(int $id): bool
     {
-        $sql = "UPDATE acervo SET ativo = FALSE, atualizado_em = CURRENT_TIMESTAMP WHERE id = :id";
+        $sql = "UPDATE acervo
+                SET ativo = FALSE, atualizado_em = CURRENT_TIMESTAMP
+                WHERE id = :id
+                  AND loja_id = :loja_id";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute(['id' => $id]);
+        return $stmt->execute([
+            'id' => $id,
+            'loja_id' => $this->buscarLojaAtualId(),
+        ]);
     }
 
     private function buscarLojaAtualId(): int
     {
-        $numero = trim((string) ($_ENV['APP_LOJA_NUMERO'] ?? '270'));
-        $stmt = $this->db->prepare("SELECT id FROM lojas WHERE numero_loja = :numero LIMIT 1");
-        $stmt->execute(['numero' => $numero]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row && isset($row['id'])) {
-            return (int) $row['id'];
-        }
-
-        $stmt = $this->db->query("SELECT id FROM lojas ORDER BY id LIMIT 1");
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return (int) ($row['id'] ?? 1);
+        return $this->resolveCurrentStoreId($this->db);
     }
 
     private function gerarCodigoAcervo(): string
@@ -266,10 +278,14 @@ class Acervo
             "SELECT codigo_acervo
              FROM acervo
              WHERE codigo_acervo LIKE :prefixo
+               AND loja_id = :loja_id
              ORDER BY id DESC
              LIMIT 1"
         );
-        $stmt->execute(['prefixo' => $prefixo . '%']);
+        $stmt->execute([
+            'prefixo' => $prefixo . '%',
+            'loja_id' => $this->buscarLojaAtualId(),
+        ]);
         $ultimo = (string) ($stmt->fetchColumn() ?: '');
 
         $sequencial = 0;

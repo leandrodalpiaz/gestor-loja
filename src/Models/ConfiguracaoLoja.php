@@ -3,30 +3,44 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class ConfiguracaoLoja
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
     private AuditoriaAdministrativa $auditoria;
+    private ?int $lojaId = null;
 
     public function __construct()
     {
         $this->db = Database::getConnection();
         $this->auditoria = new AuditoriaAdministrativa();
+        $this->lojaId = $this->resolveCurrentStoreId($this->db);
     }
 
     public function obter(): array
     {
-        $stmt = $this->db->query("SELECT * FROM public.configuracoes_loja WHERE id = 1 LIMIT 1");
+        $stmt = $this->db->prepare("SELECT * FROM public.configuracoes_loja WHERE loja_id = :loja_id LIMIT 1");
+        $stmt->execute(['loja_id' => $this->obterLojaIdAtual()]);
         $config = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($config !== false) {
             return $config;
         }
 
+        $stmtLegado = $this->db->query("SELECT * FROM public.configuracoes_loja WHERE id = 1 LIMIT 1");
+        $configLegado = $stmtLegado->fetch(PDO::FETCH_ASSOC);
+        if ($configLegado !== false) {
+            $configLegado['loja_id'] = $configLegado['loja_id'] ?? $this->obterLojaIdAtual();
+            return $configLegado;
+        }
+
         return [
             'id' => 1,
+            'loja_id' => $this->obterLojaIdAtual(),
             'nome_loja' => '',
             'numero_loja' => '',
             'titulo_tratamento' => '',
@@ -75,7 +89,7 @@ class ConfiguracaoLoja
     {
         $anterior = $this->obter();
         $sql = "INSERT INTO public.configuracoes_loja (
-                    id, nome_loja, numero_loja, titulo_tratamento, cidade, uf, oriente,
+                    id, loja_id, nome_loja, numero_loja, titulo_tratamento, cidade, uf, oriente,
                     potencia_nome, potencia_sigla, grande_secretaria, rito,
                     data_fundacao, decreto_fundacao, data_reconhecimento, data_instalacao,
                     data_entrega_carta_constitutiva, tipo_loja, regiao_simposios,
@@ -89,7 +103,7 @@ class ConfiguracaoLoja
                     observacao_relatorios, historia_loja,
                     created_at, updated_at
                 ) VALUES (
-                    1, :nome_loja, :numero_loja, :titulo_tratamento, :cidade, :uf, :oriente,
+                    1, :loja_id, :nome_loja, :numero_loja, :titulo_tratamento, :cidade, :uf, :oriente,
                     :potencia_nome, :potencia_sigla, :grande_secretaria, :rito,
                     :data_fundacao, :decreto_fundacao, :data_reconhecimento, :data_instalacao,
                     :data_entrega_carta_constitutiva, :tipo_loja, :regiao_simposios,
@@ -103,7 +117,8 @@ class ConfiguracaoLoja
                     :observacao_relatorios, :historia_loja,
                     NOW(), NOW()
                 )
-                ON CONFLICT (id) DO UPDATE SET
+                ON CONFLICT (loja_id) DO UPDATE SET
+                    id = EXCLUDED.id,
                     nome_loja = EXCLUDED.nome_loja,
                     numero_loja = EXCLUDED.numero_loja,
                     titulo_tratamento = EXCLUDED.titulo_tratamento,
@@ -150,6 +165,7 @@ class ConfiguracaoLoja
         $stmt = $this->db->prepare($sql);
 
         $ok = $stmt->execute([
+            'loja_id' => $this->obterLojaIdAtual(),
             'nome_loja' => $this->texto($dados['nome_loja'] ?? null),
             'numero_loja' => $this->texto($dados['numero_loja'] ?? null),
             'titulo_tratamento' => $this->texto($dados['titulo_tratamento'] ?? null),
@@ -258,5 +274,14 @@ class ConfiguracaoLoja
     {
         $numero = (int) $valor;
         return $numero > 0 ? $numero : $padrao;
+    }
+
+    private function obterLojaIdAtual(): int
+    {
+        if ($this->lojaId === null) {
+            $this->lojaId = $this->resolveCurrentStoreId($this->db);
+        }
+
+        return $this->lojaId;
     }
 }
