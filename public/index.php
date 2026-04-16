@@ -3,9 +3,14 @@ session_start();
 
 use App\Config\Env;
 use App\Core\Auth\CurrentUser;
+use App\Core\Http\AdminRoutes;
+use App\Core\Http\AssistenciaRoutes;
+use App\Core\Http\BibliotecaRoutes;
 use App\Core\Http\JsonResponse;
 use App\Core\Http\ModuleGuards;
+use App\Core\Http\ObreirosRoutes;
 use App\Core\Http\RequestBody;
+use App\Core\Http\SecretariaRoutes;
 use App\Core\Http\WebGuards;
 use App\Core\Authorization\Authorizer;
 use App\Core\Authorization\PermissionMap;
@@ -672,66 +677,33 @@ if ($requestUri === '/chancelaria/certificado' && $method === 'GET') {
     exit;
 }
 
+if (BibliotecaRoutes::dispatch($requestUri, $method, $openTestAccess, $_SESSION, $authorizer)) {
+    return;
+}
+
+if (AdminRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $authorizer)) {
+    return;
+}
+
+if (SecretariaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $authorizer, $sessionHasRole)) {
+    return;
+}
+
+if (ObreirosRoutes::dispatch($requestUri, $method, $openTestAccess, $_SESSION, $authorizer)) {
+    return;
+}
+
+if (AssistenciaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $authorizer)) {
+    return;
+}
+
 switch ($requestUri) {
-    // Gestao de Cargos (Admin)
-    case "/admin/cargos":
-        ModuleGuards::requireAdminCargosView($openTestAccess, $_SESSION, $authorizer);
-        (new \App\Controllers\AdminController())->listarCargos();
-        break;
-
-    case "/admin/cargos/salvar":
-        ModuleGuards::requireAdminCargosManage($openTestAccess, $_SESSION, $authorizer);
-        (new \App\Controllers\AdminController())->salvarCargo();
-        break;
-
-    case "/admin/cargos/gestao/salvar":
-        ModuleGuards::requireAdminCargosManage($openTestAccess, $_SESSION, $authorizer);
-        (new \App\Controllers\AdminController())->salvarGestao();
-        break;
-
-    case "/admin/cargos/gestao/encerrar":
-        ModuleGuards::requireAdminCargosManage($openTestAccess, $_SESSION, $authorizer);
-        (new \App\Controllers\AdminController())->encerrarGestao();
-        break;
-
-    case "/admin/loja":
-        ModuleGuards::requireAdminLojaView($openTestAccess, $_SESSION, $authorizer);
-        (new \App\Controllers\AdminController())->configuracoesLoja();
-        break;
-
-    case "/admin/auditoria":
-        ModuleGuards::requireAdminAuditoriaView($openTestAccess, $_SESSION, $authorizer);
-        (new \App\Controllers\AdminController())->auditoriaCritica();
-        break;
-
-    case "/admin/loja/salvar":
-        ModuleGuards::requireAdminLojaManage($openTestAccess, $_SESSION, $authorizer);
-        (new \App\Controllers\AdminController())->salvarConfiguracoesLoja();
-        break;
-
     case "/miniapp/admin":
         requireMiniappAuth(['admin', 'veneravel'], 'admin.cargos.view');
         require_once __DIR__ . "/../src/Views/miniapp/admin.php";
         break;
 
     // Telas antigas restauradas
-    case "/obreiros":
-        $requireObreirosViewAccess();
-        $obreiroModel = new \App\Models\Obreiro();
-        $filtrosObreiros = [
-            'busca' => trim((string) ($_GET['busca'] ?? '')),
-            'situacao' => trim((string) ($_GET['situacao'] ?? '')),
-            'grau' => trim((string) ($_GET['grau'] ?? '')),
-            'alerta' => trim((string) ($_GET['alerta'] ?? $_GET['pendencia'] ?? '')),
-            'cargo_codigo' => trim((string) ($_GET['cargo_codigo'] ?? '')),
-            'ordenacao' => trim((string) ($_GET['ordenacao'] ?? 'nome')),
-        ];
-        $obreiros = $obreiroModel->listarParaSecretaria($filtrosObreiros);
-        $resumoObreiros = $obreiroModel->obterResumoSecretaria($filtrosObreiros);
-        $cargosFiltros = (new \App\Models\Cargo())->listarResumoCargos();
-        require_once __DIR__ . "/../src/Views/obreiros.php";
-        break;
-
     case "/primeiro-vigilante":
         if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
         if (!$sessionHasRole('primeiro_vigilante', 'veneravel', 'admin')) {
@@ -890,177 +862,6 @@ switch ($requestUri) {
             exit;
         }
         (new \App\Controllers\SegundoVigilanteController())->companheiro($usuarioId, true);
-        break;
-
-    case "/obreiros/novo":
-        $requireObreirosManageAccess();
-        require_once __DIR__ . "/../src/Views/obreiro_form.php";
-        break;
-
-    case "/obreiros/salvar":
-        $requireObreirosManageAccess();
-        if ($method !== 'POST') {
-            header("Location: /obreiros/novo");
-            exit;
-        }
-
-        $obreiroModel = new \App\Models\Obreiro();
-        $ok = $obreiroModel->create($_POST);
-        if ($ok) {
-            header("Location: /obreiros?sucesso=1");
-        } else {
-            header("Location: /obreiros/novo?erro=1");
-        }
-        exit;
-
-    case "/obreiros/editar":
-        $requireObreirosManageAccess();
-        $id = (string) ($_GET['id'] ?? '');
-        if ($id === '') {
-            header("Location: /obreiros");
-            exit;
-        }
-
-        $obreiroModel = new \App\Models\Obreiro();
-        $obreiro = $obreiroModel->findById($id);
-        if (!$obreiro) {
-            http_response_code(404);
-            echo "Obreiro nao encontrado.";
-            exit;
-        }
-        require_once __DIR__ . "/../src/Views/obreiro_editar.php";
-        break;
-
-    case "/obreiros/atualizar":
-        $requireObreirosManageAccess();
-        if ($method !== 'POST') {
-            header("Location: /obreiros");
-            exit;
-        }
-
-        $obreiroId = (string) ($_POST['id'] ?? '');
-        if ($obreiroId === '') {
-            header("Location: /obreiros?erro=1");
-            exit;
-        }
-
-        $obreiroModel = new \App\Models\Obreiro();
-        $ok = $obreiroModel->update($_POST);
-        if ($ok) {
-            header("Location: /obreiros/editar?id=" . urlencode($obreiroId) . "&sucesso=1");
-        } else {
-            header("Location: /obreiros/editar?id=" . urlencode($obreiroId) . "&erro=1");
-        }
-        exit;
-
-    case "/secretaria":
-        $requireSecretariaAccess();
-        (new \App\Controllers\SecretariaController())->index();
-        break;
-
-    case "/secretaria/votacao":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-        (new \App\Controllers\SecretariaController())->votacao();
-        break;
-
-    case "/secretaria/relatorio-anual":
-        $requireSecretariaAccess();
-        (new \App\Controllers\SecretariaController())->relatorioAnual();
-        break;
-
-    case "/secretaria/sessoes/salvar":
-        $requireSecretariaAccess();
-        (new \App\Controllers\SecretariaController())->salvarSessao();
-        break;
-
-    case "/secretaria/sessoes/publicar-rascunho":
-        $requireSecretariaAccess();
-        (new \App\Controllers\SecretariaController())->publicarSessaoRascunho();
-        break;
-
-    case "/secretaria/sessoes/publicar":
-        $requireSecretariaAccess();
-        (new \App\Controllers\SecretariaController())->publicarSessao();
-        break;
-
-    case "/secretaria/sessoes/cancelar-rascunho":
-        $requireSecretariaAccess();
-        (new \App\Controllers\SecretariaController())->cancelarRascunhoSessao();
-        break;
-
-    case "/secretaria/sessoes/cancelar":
-        $requireSecretariaAccess();
-        (new \App\Controllers\SecretariaController())->cancelarSessao();
-        break;
-
-    case "/secretaria/sessoes/reabrir":
-        $requireSecretariaAccess();
-        (new \App\Controllers\SecretariaController())->reabrirSessao();
-        break;
-
-    case "/secretaria/trabalhos/salvar":
-        $requireSecretariaAccess();
-        (new \App\Controllers\SecretariaController())->salvarTrabalho();
-        break;
-
-    case "/secretaria/publicacoes/salvar":
-        $requireSecretariaAccess();
-        (new \App\Controllers\SecretariaController())->salvarPublicacao();
-        break;
-
-    case "/secretaria/balaustres/salvar":
-        $requireSecretariaAccess();
-        (new \App\Controllers\SecretariaController())->salvarBalaustre();
-        break;
-
-    case "/secretaria/balaustres/apto":
-        $requireSecretariaAccess();
-        (new \App\Controllers\SecretariaController())->marcarBalaustreApto();
-        break;
-
-    case "/secretaria/balaustres/abrir-votacao":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-        if (!$sessionHasRole('veneravel', 'admin')) {
-            http_response_code(403);
-            echo "Acesso restrito ao Veneravel Mestre ou Administrador.";
-            exit;
-        }
-        (new \App\Controllers\SecretariaController())->abrirVotacaoBalaustre();
-        break;
-
-    case "/secretaria/balaustres/votar":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-        (new \App\Controllers\SecretariaController())->votarBalaustre();
-        break;
-
-    case "/secretaria/balaustres/encerrar-votacao":
-        if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) { header("Location: /login"); exit; }
-        if (!$sessionHasRole('veneravel', 'admin')) {
-            http_response_code(403);
-            echo "Acesso restrito ao Veneravel Mestre ou Administrador.";
-            exit;
-        }
-        (new \App\Controllers\SecretariaController())->encerrarVotacaoBalaustre();
-        break;
-
-    case "/assistencia":
-        $requireAssistenciaAccess();
-        (new \App\Controllers\HospitaleiroController())->index();
-        break;
-
-    case "/assistencia/ocorrencias/salvar":
-        $requireAssistenciaAccess();
-        (new \App\Controllers\HospitaleiroController())->salvarOcorrencia();
-        break;
-
-    case "/assistencia/ocorrencias/status":
-        $requireAssistenciaAccess();
-        (new \App\Controllers\HospitaleiroController())->atualizarStatusOcorrencia();
-        break;
-
-    case "/assistencia/ocorrencias/visita":
-        $requireAssistenciaAccess();
-        (new \App\Controllers\HospitaleiroController())->registrarVisita();
         break;
 
     case "/mestre-harmonia":
@@ -3079,11 +2880,6 @@ switch ($requestUri) {
         exit;
 
     // Biblioteca (Views)
-    case "/biblioteca":
-        $requireBibliotecaAccess();
-        (new \App\Controllers\BibliotecaController())->index();
-        break;
-
     case "/miniapp/biblioteca":
         requireMiniappAuth(
             ['bibliotecario', 'primeiro_vigilante', 'segundo_vigilante', 'veneravel', 'admin'],
@@ -3092,75 +2888,12 @@ switch ($requestUri) {
         require_once __DIR__ . "/../src/Views/miniapp/biblioteca.php";
         break;
 
-    case "/biblioteca/detalhes":
-        $requireBibliotecaAccess();
-        $id = (int) ($_GET['id'] ?? 0);
-        (new \App\Controllers\BibliotecaController())->detalhes($id);
-        break;
-
-    case "/biblioteca/meus-emprestimos":
-        $requireBibliotecaAccess();
-        $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-        (new \App\Controllers\BibliotecaController())->meusEmprestimos($obreiroId);
-        break;
-
-    case "/biblioteca/solicitar":
-        $requireBibliotecaAccess();
-        $acervoId = (int) ($_POST['acervo_id'] ?? 0);
-        $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-        (new \App\Controllers\BibliotecaController())->solicitar($acervoId, $obreiroId);
-        break;
-
-    case "/biblioteca/comentar":
-        $requireBibliotecaAccess();
-        $acervoId = (int) ($_POST['acervo_id'] ?? 0);
-        $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-        (new \App\Controllers\BibliotecaController())->comentar($acervoId, $obreiroId);
-        break;
-
-    case "/biblioteca/reagir":
-        $requireBibliotecaAccess();
-        $acervoId = (int) ($_POST['acervo_id'] ?? 0);
-        $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-        (new \App\Controllers\BibliotecaController())->reagir($acervoId, $obreiroId);
-        break;
-
-    case "/biblioteca/adicionar":
-        $requireBibliotecaManageAccess();
-        (new \App\Controllers\BibliotecaController())->adicionar();
-        break;
-
-    case "/biblioteca/editar":
-        $requireBibliotecaManageAccess();
-        $id = $method === 'POST'
-            ? (int) ($_POST['id'] ?? 0)
-            : (int) ($_GET['id'] ?? 0);
-        (new \App\Controllers\BibliotecaController())->editar($id);
-        break;
-
-    case "/biblioteca/excluir":
-        $requireBibliotecaManageAccess();
-        $id = (int) ($_POST['id'] ?? 0);
-        (new \App\Controllers\BibliotecaController())->excluir($id);
-        break;
-
-    case "/biblioteca/emprestimos":
-        $requireBibliotecaManageAccess();
-        (new \App\Controllers\BibliotecaController())->emprestimos();
-        break;
-
     case "/biblioteca/novo":
         require_once __DIR__ . '/tg/novo.php';
         break;
 
     case "/biblioteca/scanner":
         require_once __DIR__ . '/tg/scanner.php';
-        break;
-
-    case "/biblioteca/devolver":
-        $requireBibliotecaManageAccess();
-        $id = (int) ($_POST['id'] ?? 0);
-        (new \App\Controllers\BibliotecaController())->devolver($id);
         break;
 
     case "/login":
