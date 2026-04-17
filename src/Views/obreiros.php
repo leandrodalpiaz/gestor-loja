@@ -50,7 +50,7 @@ require __DIR__ . '/partials/erp_head.php';
 <?php require __DIR__ . '/partials/erp_shell_open.php'; ?>
 <?php /* TODO: a view ainda carrega classes locais antigas; consolidar tokens depois sem tocar no controller. */ ?>
 <div class="space-y-7">
-        <section class="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-4">
+        <section class="grid grid-cols-2 gap-3 xl:grid-cols-5 xl:gap-4">
             <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
                 <div class="text-xs text-gray-500 md:text-sm">Total filtrado</div>
                 <div class="mt-1 text-2xl font-semibold text-cobalto md:mt-2 md:text-3xl"><?= (int) $resumoObreiros['total'] ?></div>
@@ -84,7 +84,7 @@ require __DIR__ . '/partials/erp_head.php';
             </div>
 
             <form method="GET" action="/obreiros" class="space-y-4">
-                <div class="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+                <div class="grid gap-4 md:grid-cols-3 2xl:grid-cols-6">
                     <div class="md:col-span-2 xl:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Busca</label>
                     <input
@@ -105,7 +105,7 @@ require __DIR__ . '/partials/erp_head.php';
                     <summary class="cursor-pointer list-none text-sm font-medium text-cobalto md:hidden">
                         Mais filtros
                     </summary>
-                    <div class="mt-3 grid gap-4 md:mt-0 md:grid-cols-3 xl:grid-cols-5">
+                    <div class="mt-3 grid gap-4 md:mt-0 md:grid-cols-3 2xl:grid-cols-5">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Situacao</label>
                             <select name="situacao" class="w-full rounded-lg border border-gray-300 px-3 py-2">

@@ -1,8 +1,11 @@
+services:
   - type: web
     name: gestor-loja-web
     env: docker
     plan: free
     dockerfilePath: ./Dockerfile
+    port: 80
+    healthCheckPath: /health.php
     envVars:
       - key: DB_HOST
         sync: false
@@ -14,7 +17,19 @@
         sync: false
       - key: DB_PASS
         sync: false
-services:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID_GROUP
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: APP_TIMEZONE
+        sync: false
+      - key: APP_LOJA_NUMERO
+        sync: false
+      - key: CRON_EFEMERIDES_TOKEN
+        sync: false
+
   - type: cron
     name: gestor-loja-preparar-efemerides
     runtime: docker
@@ -31,6 +46,10 @@ services:
       - key: DB_USER
         sync: false
       - key: DB_PASS
+        sync: false
+      - key: APP_TIMEZONE
+        sync: false
+      - key: APP_LOJA_NUMERO
         sync: false
 
   - type: cron

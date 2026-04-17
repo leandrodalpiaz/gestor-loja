@@ -8,7 +8,7 @@ $appShellActiveHref = (string) ($appShellActiveHref ?? '');
 $appShellUserLabel = (string) ($appShellUserLabel ?? ($_SESSION['usuario_nome'] ?? 'Operador'));
 ?>
 <body class="min-h-screen bg-erp-app font-sans text-erp-text">
-<div class="min-h-screen lg:grid lg:grid-cols-[320px_minmax(0,1fr)]">
+<div class="min-h-screen lg:grid lg:grid-cols-[296px_minmax(0,1fr)]">
     <aside class="hidden border-r border-erp-border bg-white lg:flex lg:flex-col">
         <div class="border-b border-erp-border px-7 py-7">
             <div class="text-sm font-semibold uppercase tracking-[0.24em] text-erp-gold"><?= htmlspecialchars($appShellEyebrow !== '' ? $appShellEyebrow : 'Gestor-Loja') ?></div>

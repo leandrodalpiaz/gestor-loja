@@ -1,6 +1,6 @@
+RewriteEngine On
 RewriteRule ^health$ health.php [L]
 RewriteRule ^health.php$ health.php [L]
-RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php?path=$1 [QSA,L]

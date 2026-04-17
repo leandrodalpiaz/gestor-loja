@@ -374,7 +374,6 @@ class Obreiro
             :observacao_secretaria, :ativo,
             NOW(), NOW()
         )";
-
             $stmt = $this->db->prepare($sql);
         } else {
             $sql = "INSERT INTO obreiros (

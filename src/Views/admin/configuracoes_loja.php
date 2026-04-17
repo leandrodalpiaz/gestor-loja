@@ -88,14 +88,14 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             </div>
         <?php endif; ?>
 
-        <div class="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(380px,0.85fr)] 2xl:grid-cols-[minmax(0,1.6fr)_minmax(420px,0.8fr)]">
-            <form action="/admin/loja/salvar" method="POST" class="space-y-6">
-                <section class="rounded-[1.75rem] border border-white/60 bg-white/85 p-6 shadow-dignidade backdrop-blur">
+        <div class="mt-8 grid items-start gap-7 xl:grid-cols-12">
+            <form action="/admin/loja/salvar" method="POST" class="min-w-0 space-y-6 xl:col-span-8 2xl:col-span-9">
+                <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
                     <div class="border-b border-slate-200 pb-4">
                         <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Identificação institucional</div>
-                        <h2 class="mt-2 font-display text-4xl leading-none text-marinho">Dados formais da Loja</h2>
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Dados formais da Loja</h2>
                     </div>
-                    <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div class="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                         <div>
                             <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Número</label>
                             <input type="text" name="numero_loja" value="<?= htmlspecialchars((string) ($configuracao['numero_loja'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
@@ -155,12 +155,12 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </div>
                 </section>
 
-                <section class="rounded-[1.75rem] border border-white/60 bg-white/85 p-6 shadow-dignidade backdrop-blur">
+                <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
                     <div class="border-b border-slate-200 pb-4">
                         <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Potência e estrutura</div>
-                        <h2 class="mt-2 font-display text-4xl leading-none text-marinho">Vínculos institucionais</h2>
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Vínculos institucionais</h2>
                     </div>
-                    <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div class="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                         <div class="xl:col-span-2">
                             <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Nome da Potência</label>
                             <input type="text" name="potencia_nome" value="<?= htmlspecialchars((string) ($configuracao['potencia_nome'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
@@ -188,12 +188,12 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </div>
                 </section>
 
-                <section class="rounded-[1.75rem] border border-white/60 bg-white/85 p-6 shadow-dignidade backdrop-blur">
+                <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
                     <div class="border-b border-slate-200 pb-4">
                         <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Templo e reuniões</div>
-                        <h2 class="mt-2 font-display text-4xl leading-none text-marinho">Operação ritual da Loja</h2>
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Operação ritual da Loja</h2>
                     </div>
-                    <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div class="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                         <div class="md:col-span-2 xl:col-span-3">
                             <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Endereço do templo</label>
                             <input type="text" name="templo_endereco" value="<?= htmlspecialchars((string) ($configuracao['templo_endereco'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
@@ -229,10 +229,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </div>
                 </section>
 
-                <section class="rounded-[1.75rem] border border-white/60 bg-white/85 p-6 shadow-dignidade backdrop-blur">
+                <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
                     <div class="border-b border-slate-200 pb-4">
                         <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Contato e memória</div>
-                        <h2 class="mt-2 font-display text-4xl leading-none text-marinho">Uso transversal e história</h2>
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Uso transversal e história</h2>
                     </div>
                     <div class="mt-6 grid gap-4 md:grid-cols-2">
                         <div>
@@ -258,12 +258,12 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </div>
                 </section>
 
-                <section class="rounded-[1.75rem] border border-white/60 bg-white/85 p-6 shadow-dignidade backdrop-blur">
+                <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
                     <div class="border-b border-slate-200 pb-4">
                         <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Tesouraria e parâmetros</div>
-                        <h2 class="mt-2 font-display text-4xl leading-none text-marinho">Mensalidade e regra institucional</h2>
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Mensalidade e regra institucional</h2>
                     </div>
-                    <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div class="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                         <div>
                             <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Mensalidade padrão</label>
                             <input type="number" step="0.01" min="0" name="mensalidade_valor_padrao" value="<?= htmlspecialchars((string) ($configuracao['mensalidade_valor_padrao'] ?? '150.00')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
@@ -315,10 +315,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 </div>
             </form>
 
-            <aside class="space-y-6">
-                <section class="rounded-[1.75rem] border border-white/60 bg-white/85 p-6 shadow-dignidade backdrop-blur">
+            <aside class="space-y-6 xl:sticky xl:top-8 xl:col-span-4 2xl:col-span-3">
+                <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
                     <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Leitura rápida</div>
-                    <h2 class="mt-2 font-display text-4xl leading-none text-marinho">
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">
                         <?= htmlspecialchars(trim((string) (($configuracao['nome_loja'] ?? '') . ' Nº ' . ($configuracao['numero_loja'] ?? '')), " Nº")) ?>
                     </h2>
                     <div class="mt-5 space-y-3 text-sm text-slate-600">
@@ -334,9 +334,9 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </div>
                 </section>
 
-                <section class="rounded-[1.75rem] border border-amber-200/80 bg-[linear-gradient(180deg,_rgba(255,248,230,0.92),_rgba(255,255,255,0.96))] p-6 shadow-dignidade">
+                <section class="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-7 shadow-sm">
                     <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Memória institucional</div>
-                    <h2 class="mt-2 font-display text-4xl leading-none text-marinho">Prévia da história</h2>
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Prévia da história</h2>
                     <p class="mt-4 text-sm leading-7 text-slate-700 whitespace-pre-line">
                         <?php
                         $historiaLojaPreview = (string) ($configuracao['historia_loja'] ?? '');

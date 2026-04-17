@@ -509,10 +509,10 @@ require __DIR__ . '/partials/erp_head.php';
 
 <div class="mx-auto flex max-w-[1600px] gap-6 px-4 py-8 sm:px-6 xl:gap-8 xl:px-8">
     <aside class="hidden w-72 shrink-0 xl:block xl:w-[300px]">
-        <div class="sticky top-24 overflow-hidden rounded-3xl border border-white/60 bg-white/80 shadow-painel backdrop-blur xl:max-h-[calc(100vh-7rem)]">
+                <div class="sticky top-24 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm xl:max-h-[calc(100vh-7rem)]">
             <div class="border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,#f8e8b6,transparent_45%),linear-gradient(135deg,#ffffff,#f6f1e7)] px-6 py-5">
                 <div class="text-xs font-semibold uppercase tracking-[0.22em] text-ardosia">Navegação</div>
-                <div class="mt-2 font-serif text-2xl font-bold text-cobalto">Menus por cargo</div>
+                    <div class="mt-2 text-2xl font-semibold text-erp-navy">Menus por cargo</div>
                 <p class="mt-2 text-sm text-slate-600">Cada área aparece agrupada por responsabilidade. O administrador vê tudo.</p>
             </div>
 
@@ -543,39 +543,78 @@ require __DIR__ . '/partials/erp_head.php';
 
     <main class="min-w-0 flex-1">
 <?php endif; ?>
-        <section class="overflow-hidden rounded-3xl border border-white/70 bg-[radial-gradient(circle_at_top_right,#f7e2a3,transparent_30%),linear-gradient(135deg,#123153,#0f2747)] px-6 py-8 text-white shadow-painel sm:px-8">
-            <div class="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.9fr)] xl:items-end">
-                <div class="max-w-3xl">
-                    <div class="flex items-start gap-4">
-                        <div class="hidden h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/10 sm:flex">
-                            <?php if ($dashboardLogoUrl): ?>
-                                <img src="<?= htmlspecialchars($dashboardLogoUrl) ?>" alt="Logotipo da Loja Renascença" class="h-full w-full object-cover">
-                            <?php else: ?>
-                                <span class="text-2xl text-ouro">∴</span>
-                            <?php endif; ?>
-                        </div>
-                        <div>
-                            <div class="text-xs font-semibold uppercase tracking-[0.24em] text-ouro/90">Centro de comando</div>
-                            <h1 class="mt-3 font-serif text-3xl font-bold leading-tight sm:text-4xl">Abertura da Loja com o que importa hoje</h1>
-                            <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-200">Aqui você encontra as próximas sessões, os recados mais importantes e os atalhos que mais usa no dia a dia.</p>
+        <section class="overflow-hidden rounded-[2rem] border border-erp-border bg-white shadow-sm">
+            <div class="grid gap-6 border-b border-erp-border bg-[linear-gradient(135deg,#ffffff_0%,#f5f7fb_52%,#f9f2dd_100%)] px-6 py-7 xl:grid-cols-12 xl:px-8">
+                <div class="flex min-w-0 gap-5 xl:col-span-8 2xl:col-span-9">
+                    <div class="hidden h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-erp-border bg-white shadow-sm sm:flex sm:items-center sm:justify-center">
+                        <?php if ($dashboardLogoUrl): ?>
+                            <img src="<?= htmlspecialchars((string) $dashboardLogoUrl) ?>" alt="Brasao da Loja" class="h-16 w-16 object-contain">
+                        <?php else: ?>
+                            <div class="text-3xl font-semibold text-erp-gold">&#9651;</div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-sm font-semibold uppercase tracking-[0.24em] text-erp-gold">Centro de comando</div>
+                        <h2 class="mt-3 text-4xl font-semibold leading-tight text-erp-navy 2xl:text-5xl"><?= htmlspecialchars($dashboardNomeLoja) ?></h2>
+                        <p class="mt-4 max-w-4xl text-base leading-7 text-erp-muted">
+                            Abertura administrativa com agenda da Loja, recados prioritarios e acessos operacionais organizados por responsabilidade.
+                        </p>
+                        <div class="mt-5 flex flex-wrap gap-3">
+                            <a href="/secretaria" class="rounded-erp-md border border-erp-border bg-white px-4 py-2.5 text-sm font-semibold text-erp-text hover:border-erp-navy hover:text-erp-navy">Abrir secretaria</a>
+                            <a href="/admin/cargos" class="rounded-erp-md border border-erp-navy bg-erp-navy px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95">Ir para nominata oficial</a>
                         </div>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
-                    <div class="rounded-2xl border border-white/10 bg-white/10 px-4 py-4">
-                        <div class="text-xs uppercase tracking-[0.2em] text-slate-300">Perfil ativo</div>
-                        <div class="mt-2 text-lg font-semibold"><?= htmlspecialchars(ucfirst($usuarioCargo !== '' ? $usuarioCargo : 'diretoria')) ?></div>
-                    </div>
-                    <div class="rounded-2xl border border-white/10 bg-white/10 px-4 py-4">
-                        <div class="text-xs uppercase tracking-[0.2em] text-slate-300">Áreas visíveis</div>
-                        <div class="mt-2 text-lg font-semibold"><?= count($secoes) ?></div>
-                    </div>
-                    <div class="rounded-2xl border border-white/10 bg-white/10 px-4 py-4">
-                        <div class="text-xs uppercase tracking-[0.2em] text-slate-300">Próxima reunião</div>
-                        <div class="mt-2 text-sm font-semibold"><?= htmlspecialchars($dashboardDiaReuniao !== '' ? $dashboardDiaReuniao : 'Agenda variável') ?></div>
-                        <div class="mt-1 text-xs text-slate-300"><?= htmlspecialchars($dashboardHorarioReuniao !== '' ? $dashboardHorarioReuniao : 'Horário a confirmar') ?></div>
-                    </div>
+
+                <div class="grid gap-4 sm:grid-cols-3 xl:col-span-4 xl:grid-cols-1 2xl:col-span-3 2xl:grid-cols-3">
+                    <article class="rounded-2xl border border-erp-border bg-white/90 px-5 py-4 shadow-sm">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Perfil ativo</div>
+                        <div class="mt-2 text-xl font-semibold text-erp-navy"><?= htmlspecialchars($usuarioCargo !== '' ? $usuarioCargo : 'Operacao geral') ?></div>
+                        <p class="mt-1 text-sm leading-6 text-erp-muted">Leitura personalizada conforme as permissoes desta sessao.</p>
+                    </article>
+                    <article class="rounded-2xl border border-erp-border bg-white/90 px-5 py-4 shadow-sm">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Areas visiveis</div>
+                        <div class="mt-2 text-xl font-semibold text-erp-navy"><?= count($secoes) ?></div>
+                        <p class="mt-1 text-sm leading-6 text-erp-muted">Blocos operacionais liberados nesta abertura administrativa.</p>
+                    </article>
+                    <article class="rounded-2xl border border-erp-border bg-white/90 px-5 py-4 shadow-sm">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Proxima reuniao</div>
+                        <div class="mt-2 text-lg font-semibold text-erp-navy">
+                            <?= htmlspecialchars(trim($dashboardDiaReuniao . ($dashboardHorarioReuniao !== '' ? ' · ' . $dashboardHorarioReuniao : '')) ?: 'A definir') ?>
+                        </div>
+                        <p class="mt-1 text-sm leading-6 text-erp-muted">Referencia institucional usada para orientar a agenda da Loja.</p>
+                    </article>
                 </div>
+            </div>
+
+            <div class="grid gap-4 px-6 py-6 md:grid-cols-2 2xl:grid-cols-4 xl:px-8">
+                <article class="rounded-2xl border border-erp-border bg-white px-5 py-4 shadow-sm">
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Total de obreiros</div>
+                    <?php /* TODO: o payload atual do dashboard nao entrega total de obreiros consolidado. */ ?>
+                    <div class="mt-2 text-3xl font-semibold text-erp-navy">N/D</div>
+                    <p class="mt-1 text-sm text-erp-muted">Indicador sera ligado ao payload oficial sem criar query na view.</p>
+                </article>
+                <article class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 shadow-sm">
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Adimplentes</div>
+                    <?php /* TODO: o payload atual do dashboard nao entrega consolidado financeiro. */ ?>
+                    <div class="mt-2 text-3xl font-semibold text-emerald-800">N/D</div>
+                    <p class="mt-1 text-sm text-emerald-700">Resumo financeiro depende de dado que ainda nao chega nesta view.</p>
+                </article>
+                <article class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 shadow-sm">
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Inadimplentes</div>
+                    <?php /* TODO: o payload atual do dashboard nao entrega consolidado financeiro. */ ?>
+                    <div class="mt-2 text-3xl font-semibold text-amber-800">N/D</div>
+                    <p class="mt-1 text-sm text-amber-700">Badge mantido para o desenho ERP sem inventar contagem nova.</p>
+                </article>
+                <article class="rounded-2xl border border-erp-border bg-white px-5 py-4 shadow-sm">
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Proxima sessao</div>
+                    <div class="mt-2 text-xl font-semibold text-erp-navy">
+                        <?= htmlspecialchars(isset($dashboardSessoes[0]['data_hora_inicio']) ? $formatarDataHoraDashboard($dashboardSessoes[0]['data_hora_inicio']) : 'Aguardando publicacao') ?>
+                    </div>
+                    <p class="mt-1 text-sm text-erp-muted">
+                        <?= htmlspecialchars((string) ($dashboardSessoes[0]['titulo'] ?? 'Sem sessao agendada no momento.')) ?>
+                    </p>
+                </article>
             </div>
         </section>
 
@@ -586,21 +625,21 @@ require __DIR__ . '/partials/erp_head.php';
             <div class="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-800"><?= htmlspecialchars((string) $dashboardMensagemErro) ?></div>
         <?php endif; ?>
 
-        <section id="sessoes-loja" class="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(360px,0.85fr)] 2xl:grid-cols-[minmax(0,1.9fr)_minmax(380px,0.8fr)]">
-            <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-painel">
-                <div class="border-b border-slate-200 bg-[linear-gradient(135deg,#fffdf7,#f4ede0)] px-6 py-6">
+        <section id="sessoes-loja" class="mt-8 grid gap-6 xl:grid-cols-12">
+            <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm xl:col-span-8 2xl:col-span-9">
+                <div class="border-b border-slate-200 bg-slate-50 px-6 py-6">
                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Sessões da Loja</div>
-                    <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Próximas sessões da Loja</h2>
+                    <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Próximas sessões da Loja</h2>
                     <p class="mt-2 text-sm text-slate-600">Confirme sua presença, ajuste quando precisar e abra a sessão sem sair da página inicial.</p>
                 </div>
 
-                <div class="grid gap-4 px-6 py-6 lg:grid-cols-2">
+                <div class="grid gap-4 px-6 py-6 xl:grid-cols-2">
                     <?php foreach ($dashboardSessoes as $sessaoCard): ?>
                         <?php $sessaoConfirmada = !empty($sessaoCard['confirmado']); ?>
-                        <article class="rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,#ffffff,#fbfaf7)] p-5 shadow-sm">
+                        <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
-                                    <h3 class="font-serif text-xl font-bold text-cobalto"><?= htmlspecialchars((string) ($sessaoCard['titulo'] ?? 'Sessão')) ?></h3>
+                                    <h3 class="text-xl font-semibold text-erp-navy"><?= htmlspecialchars((string) ($sessaoCard['titulo'] ?? 'Sessão')) ?></h3>
                                     <div class="mt-2 text-sm text-slate-600"><?= htmlspecialchars($formatarDataHoraDashboard($sessaoCard['data_hora_inicio'] ?? null)) ?></div>
                                 </div>
                                 <span class="inline-flex rounded-full border px-3 py-1 text-xs font-semibold <?= $dashboardStatusClasses($sessaoCard['status'] ?? null) ?>">
@@ -657,11 +696,11 @@ require __DIR__ . '/partials/erp_head.php';
                 </div>
             </article>
 
-            <aside class="space-y-5">
-                <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-painel">
-                    <div class="border-b border-slate-200 bg-[linear-gradient(135deg,#ffffff,#f7f3ea)] px-6 py-5">
+            <aside class="space-y-5 xl:col-span-4 2xl:col-span-3">
+                <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                    <div class="border-b border-slate-200 bg-slate-50 px-6 py-5">
                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Recado</div>
-                        <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Recados da Loja</h2>
+                        <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Recados da Loja</h2>
                     </div>
                     <div class="space-y-4 px-6 py-5">
                         <?php if ($dashboardRecadoPrincipal): ?>
@@ -683,10 +722,10 @@ require __DIR__ . '/partials/erp_head.php';
                     </div>
                 </article>
 
-                <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-painel">
-                    <div class="border-b border-slate-200 bg-[linear-gradient(135deg,#fffdf7,#f4ede0)] px-6 py-5">
+                <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                    <div class="border-b border-slate-200 bg-slate-50 px-6 py-5">
                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Palavra do irmão</div>
-                        <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Palavra do dia</h2>
+                        <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Palavra do dia</h2>
                     </div>
                     <div class="px-6 py-5">
                         <?php if ($dashboardPalavraIrmao !== ''): ?>
@@ -698,10 +737,10 @@ require __DIR__ . '/partials/erp_head.php';
                     </div>
                 </article>
 
-                <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-painel">
-                    <div class="border-b border-slate-200 bg-[linear-gradient(135deg,#ffffff,#f7f3ea)] px-6 py-5">
+                <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                    <div class="border-b border-slate-200 bg-slate-50 px-6 py-5">
                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Gestão</div>
-                        <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Nominata oficial</h2>
+                        <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Nominata oficial</h2>
                     </div>
                     <div class="px-6 py-5">
                         <p class="text-sm leading-6 text-slate-600">A nominata continua disponível como área de gestão, sem ocupar o espaço principal da abertura.</p>
@@ -711,10 +750,10 @@ require __DIR__ . '/partials/erp_head.php';
             </aside>
         </section>
 
-        <section class="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-painel">
-            <div class="border-b border-slate-200 bg-[linear-gradient(135deg,#ffffff,#f7f3ea)] px-6 py-6">
+        <section class="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-200 bg-slate-50 px-6 py-6">
                 <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Sessões de outras Lojas</div>
-                <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Sessões de outras Lojas</h2>
+                <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Sessões de outras Lojas</h2>
                 <p class="mt-2 text-sm text-slate-600">Aqui ficam os convites e compromissos de outras Lojas, sem tirar o foco da agenda principal da Renascença.</p>
             </div>
             <div class="grid gap-4 px-6 py-6 md:grid-cols-2 xl:grid-cols-3">
@@ -735,12 +774,12 @@ require __DIR__ . '/partials/erp_head.php';
         </section>
 
         <?php if ($blocosPrioritarios !== []): ?>
-            <section class="mt-8 grid gap-4 xl:grid-cols-2">
+            <section class="mt-8 grid gap-4 xl:grid-cols-12">
                 <?php foreach ($blocosPrioritarios as $bloco): ?>
-                    <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-painel">
-                        <div class="border-b border-slate-100 bg-[linear-gradient(135deg,#ffffff,#f7f3ea)] px-5 py-5 sm:px-6">
+                    <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm xl:col-span-4">
+                        <div class="border-b border-slate-100 bg-slate-50 px-5 py-5 sm:px-6">
                             <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"><?= htmlspecialchars($bloco['perfil']) ?></div>
-                            <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto"><?= htmlspecialchars($bloco['titulo']) ?></h2>
+                            <h2 class="mt-2 text-2xl font-semibold text-erp-navy"><?= htmlspecialchars($bloco['titulo']) ?></h2>
                             <p class="mt-2 text-sm leading-6 text-slate-600"><?= htmlspecialchars($bloco['descricao']) ?></p>
                         </div>
                         <div class="space-y-3 px-5 py-5 sm:px-6">
@@ -762,12 +801,12 @@ require __DIR__ . '/partials/erp_head.php';
             </section>
         <?php endif; ?>
 
-        <section class="mt-8 grid gap-6 lg:grid-cols-2 2xl:grid-cols-3">
+        <section class="mt-8 grid gap-6 xl:grid-cols-12">
             <?php foreach ($secoes as $secao): ?>
-                <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-painel">
-                    <div class="border-b border-slate-100 bg-[linear-gradient(135deg,#ffffff,#f7f3ea)] px-6 py-5">
+                    <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm xl:col-span-6 2xl:col-span-4">
+                        <div class="border-b border-slate-100 bg-slate-50 px-6 py-5">
                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"><?= htmlspecialchars($secao['titulo']) ?></div>
-                        <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto"><?= htmlspecialchars($secao['titulo']) ?></h2>
+                            <h2 class="mt-2 text-2xl font-semibold text-erp-navy"><?= htmlspecialchars($secao['titulo']) ?></h2>
                         <p class="mt-2 text-sm leading-6 text-slate-600"><?= htmlspecialchars($secao['descricao']) ?></p>
                     </div>
                     <div class="space-y-3 px-6 py-5">
@@ -782,10 +821,10 @@ require __DIR__ . '/partials/erp_head.php';
             <?php endforeach; ?>
         </section>
 
-        <section class="mt-8 rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-painel">
+        <section class="mt-8 rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
             <div>
                 <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Acesso rápido</div>
-                <h2 class="mt-2 font-serif text-2xl font-bold text-cobalto">Atalhos do dia a dia</h2>
+                <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Atalhos do dia a dia</h2>
                 <p class="mt-2 text-sm text-slate-600">Use estes atalhos para chegar mais rápido ao que você mais consulta.</p>
             </div>
             <div class="mt-5 flex flex-wrap gap-3">

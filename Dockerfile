@@ -3,6 +3,11 @@ FROM php:8.2-apache
 # Habilitar o mod_rewrite do Apache (importante para o nosso .htaccess)
 RUN a2enmod rewrite
 
+# Permitir que o .htaccess sobrescreva configuracoes do Apache no DocumentRoot
+RUN printf '<Directory /var/www/html/public>\n  AllowOverride All\n</Directory>\n' \
+    > /etc/apache2/conf-available/overrides.conf \
+    && a2enconf overrides
+
 # Instalar extensões essenciais para PostgreSQL e processamento de Imagens (GD)
 RUN apt-get update && apt-get install -y \
     libpq-dev \

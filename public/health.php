@@ -1,4 +1,4 @@
 <?php
 http_response_code(200);
-header('Content-Type: text/plain; charset=utf-8');
-echo "ok";
+header('Content-Type: application/json; charset=utf-8');
+echo json_encode(['status' => 'ok', 'ts' => time()]);
