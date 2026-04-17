@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use DateTimeImmutable;
 use DateTimeZone;
 use PDO;
 
 class RelatorioTesourariaGestao
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -73,8 +76,12 @@ class RelatorioTesourariaGestao
             SELECT COALESCE(SUM(CASE WHEN l.tipo = 'entrada' THEN l.valor ELSE -l.valor END), 0) AS saldo
             FROM public.lancamentos_financeiros l
             WHERE l.data_lancamento < :data_limite
+              AND l.loja_id = :loja_id
         ");
-        $stmt->execute(['data_limite' => $dataLimite]);
+        $stmt->execute([
+            'data_limite' => $dataLimite,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         return (float) $stmt->fetchColumn();
     }
 
@@ -86,8 +93,13 @@ class RelatorioTesourariaGestao
                 COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) AS saidas
             FROM public.lancamentos_financeiros
             WHERE data_lancamento BETWEEN :inicio AND :fim
+              AND loja_id = :loja_id
         ");
-        $stmt->execute(['inicio' => $inicio, 'fim' => $fim]);
+        $stmt->execute([
+            'inicio' => $inicio,
+            'fim' => $fim,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: ['entradas' => 0, 'saidas' => 0];
     }
 
@@ -101,10 +113,15 @@ class RelatorioTesourariaGestao
             FROM public.lancamentos_financeiros l
             JOIN public.categorias_financeiras c ON c.id = l.categoria_id
             WHERE l.data_lancamento BETWEEN :inicio AND :fim
+              AND l.loja_id = :loja_id
             GROUP BY COALESCE(c.bloco_relatorio, 'outros'), l.tipo
             ORDER BY bloco_relatorio ASC, l.tipo ASC
         ");
-        $stmt->execute(['inicio' => $inicio, 'fim' => $fim]);
+        $stmt->execute([
+            'inicio' => $inicio,
+            'fim' => $fim,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
 
         $blocos = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
@@ -137,10 +154,15 @@ class RelatorioTesourariaGestao
             FROM public.lancamentos_financeiros l
             JOIN public.categorias_financeiras c ON c.id = l.categoria_id
             WHERE l.data_lancamento BETWEEN :inicio AND :fim
+              AND l.loja_id = :loja_id
             GROUP BY 1, 2, c.bloco_relatorio, l.tipo
             ORDER BY c.bloco_relatorio ASC, total DESC, 1 ASC
         ");
-        $stmt->execute(['inicio' => $inicio, 'fim' => $fim]);
+        $stmt->execute([
+            'inicio' => $inicio,
+            'fim' => $fim,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -154,11 +176,16 @@ class RelatorioTesourariaGestao
             FROM public.lancamentos_financeiros l
             JOIN public.categorias_financeiras c ON c.id = l.categoria_id
             WHERE l.data_lancamento BETWEEN :inicio AND :fim
+              AND l.loja_id = :loja_id
               AND c.exige_entidade_auxiliada = TRUE
             GROUP BY entidade
             ORDER BY total DESC, entidade ASC
         ");
-        $stmt->execute(['inicio' => $inicio, 'fim' => $fim]);
+        $stmt->execute([
+            'inicio' => $inicio,
+            'fim' => $fim,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -180,10 +207,15 @@ class RelatorioTesourariaGestao
             JOIN public.categorias_financeiras c ON c.id = l.categoria_id
             LEFT JOIN public.obreiros o ON o.id = l.obreiro_id
             WHERE l.data_lancamento BETWEEN :inicio AND :fim
+              AND l.loja_id = :loja_id
             ORDER BY l.data_lancamento DESC, l.id DESC
             LIMIT 120
         ");
-        $stmt->execute(['inicio' => $inicio, 'fim' => $fim]);
+        $stmt->execute([
+            'inicio' => $inicio,
+            'fim' => $fim,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -195,8 +227,18 @@ class RelatorioTesourariaGestao
                 COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) AS saidas
             FROM public.tronco_solidariedade
             WHERE data_mov BETWEEN :inicio AND :fim
+              AND loja_id = :loja_id
         ");
-        $stmt->execute(['inicio' => $inicio, 'fim' => $fim]);
+        $stmt->execute([
+            'inicio' => $inicio,
+            'fim' => $fim,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: ['entradas' => 0, 'saidas' => 0];
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class TrabalhoSessao
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -29,7 +32,7 @@ class TrabalhoSessao
                 criado_por,
                 observacao,
                 updated_at
-            ) VALUES (
+            ) SELECT
                 :sessao_id,
                 :tipo_trabalho,
                 :titulo,
@@ -41,7 +44,9 @@ class TrabalhoSessao
                 :criado_por,
                 :observacao,
                 NOW()
-            )
+            FROM public.sessoes s
+            WHERE s.id = :sessao_id
+              AND s.loja_id = :loja_id
         ");
 
         $status = trim((string) ($data['status_envio_potencia'] ?? 'pendente'));
@@ -58,6 +63,7 @@ class TrabalhoSessao
             'enviado_potencia_em' => $enviadoEm,
             'criado_por' => $autorRegistroId,
             'observacao' => trim((string) ($data['observacao'] ?? '')) ?: null,
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
     }
 
@@ -73,12 +79,19 @@ class TrabalhoSessao
             FROM public.trabalhos_sessao ts
             JOIN public.sessoes s ON s.id = ts.sessao_id
             LEFT JOIN public.obreiros o ON o.id = ts.autor_id
+            WHERE s.loja_id = :loja_id
             ORDER BY ts.created_at DESC, ts.id DESC
             LIMIT :limite
         ");
+        $stmt->bindValue('loja_id', $this->obterLojaAtualId(), PDO::PARAM_INT);
         $stmt->bindValue('limite', $limite, PDO::PARAM_INT);
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

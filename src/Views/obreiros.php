@@ -24,51 +24,32 @@ $rotulosAlerta = [
     'sem_data_ingresso' => 'Data de ingresso ausente',
     'sem_potencia' => 'Potencia ausente',
 ];
+ 
+$erpPageTitle = $appTitle;
+$appShellEyebrow = 'Secretaria';
+$appShellTitle = 'Central de Obreiros';
+$appShellDescription = 'Cadastro administrativo, filtros operacionais e saneamento cadastral da Loja.';
+$appShellActiveHref = '/obreiros';
+$appShellActions = [
+    ['label' => 'Somente alertas', 'href' => '/obreiros?alerta=cadastro'],
+    ['label' => 'Adicionar obreiro', 'href' => '/obreiros/novo', 'primary' => true],
+];
+$appShellSidebarSections = [
+    [
+        'title' => 'Secretaria',
+        'items' => [
+            ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
+            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
+            ['label' => 'Dashboard', 'href' => '/dashboard'],
+        ],
+    ],
+];
+require __DIR__ . '/partials/erp_head.php';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($appTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        cobalto: '#0a192f',
-                        ouro: '#cfa935',
-                        pedra: '#f3f4f6',
-                        areia: '#faf7ef'
-                    },
-                    fontFamily: {
-                        serif: ['Merriweather', 'serif'],
-                        sans: ['Inter', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-</head>
-<body class="bg-pedra font-sans text-gray-800 antialiased">
-    <header class="bg-cobalto text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex items-start justify-between gap-4">
-            <div>
-                <div class="text-xs uppercase tracking-[0.22em] text-gray-300">Secretaria</div>
-                <h1 class="font-serif text-xl font-bold tracking-wider">Central de Obreiros</h1>
-            </div>
-            <div class="flex w-full max-w-[14rem] flex-col gap-2 sm:w-auto sm:max-w-none sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-                <a href="/obreiros/novo" class="order-1 rounded-lg bg-white px-4 py-2 text-center text-sm font-medium text-cobalto hover:bg-amber-50 sm:order-3">Adicionar obreiro</a>
-                <a href="/obreiros?alerta=cadastro" class="order-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-sm text-amber-900 hover:bg-amber-100 sm:order-2">Somente alertas</a>
-                <a href="/admin/cargos" class="order-3 rounded-lg border border-white/20 px-3 py-2 text-center text-sm text-white hover:bg-white/10 sm:order-1">Nominata oficial</a>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<?php require __DIR__ . '/partials/erp_shell_open.php'; ?>
+<?php /* TODO: a view ainda carrega classes locais antigas; consolidar tokens depois sem tocar no controller. */ ?>
+<div class="space-y-7">
         <section class="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-4">
             <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
                 <div class="text-xs text-gray-500 md:text-sm">Total filtrado</div>
@@ -103,7 +84,7 @@ $rotulosAlerta = [
             </div>
 
             <form method="GET" action="/obreiros" class="space-y-4">
-                <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+                <div class="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
                     <div class="md:col-span-2 xl:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Busca</label>
                     <input
@@ -124,7 +105,7 @@ $rotulosAlerta = [
                     <summary class="cursor-pointer list-none text-sm font-medium text-cobalto md:hidden">
                         Mais filtros
                     </summary>
-                    <div class="mt-3 grid gap-3 md:mt-0 md:grid-cols-3 xl:grid-cols-5">
+                    <div class="mt-3 grid gap-4 md:mt-0 md:grid-cols-3 xl:grid-cols-5">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Situacao</label>
                             <select name="situacao" class="w-full rounded-lg border border-gray-300 px-3 py-2">
@@ -182,6 +163,70 @@ $rotulosAlerta = [
                     <p>Nenhum obreiro encontrado com os filtros atuais.</p>
                 </div>
             <?php else: ?>
+                <div class="hidden overflow-hidden rounded-2xl border border-erp-border bg-white shadow-sm lg:block">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-erp-border text-sm">
+                            <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">
+                                <tr>
+                                    <th class="px-5 py-4">Obreiro</th>
+                                    <th class="px-5 py-4">Situacao</th>
+                                    <th class="px-5 py-4">Financeiro</th>
+                                    <th class="px-5 py-4">Cargos</th>
+                                    <th class="px-5 py-4 text-right">Acoes</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-erp-border">
+                                <?php foreach ($obreiros as $obreiro): ?>
+                                    <?php
+                                    $nomeExibicao = (string) ($obreiro['nome_historico'] ?: $obreiro['nome']);
+                                    $situacao = (string) ($obreiro['situacao_quadro'] ?? 'Ativo');
+                                    $cargosAtuais = $obreiro['cargos_codigos'] ?? [];
+                                    ?>
+                                    <tr class="align-top">
+                                        <td class="px-5 py-4">
+                                            <div class="font-semibold text-erp-text"><?= htmlspecialchars($nomeExibicao) ?></div>
+                                            <div class="mt-1 text-xs text-erp-muted">CIM <?= htmlspecialchars((string) ($obreiro['cim'] ?? '-')) ?> · <?= htmlspecialchars((string) ($obreiro['grau'] ?? 'Nao informado')) ?></div>
+                                        </td>
+                                        <td class="px-5 py-4">
+                                            <span class="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                                                <?= htmlspecialchars($situacao) ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-5 py-4">
+                                            <?php /* TODO: a view nao recebe regularidade financeira dos obreiros; aplicar StatusBadge real quando esse dado vier do backend. */ ?>
+                                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                                Nao integrado
+                                            </span>
+                                        </td>
+                                        <td class="px-5 py-4">
+                                            <?php if ($cargosAtuais !== []): ?>
+                                                <div class="flex flex-wrap gap-2">
+                                                    <?php foreach ($cargosAtuais as $codigo): ?>
+                                                        <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700">
+                                                            <?= htmlspecialchars(Cargo::rotuloOficial((string) $codigo)) ?>
+                                                        </span>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            <?php else: ?>
+                                                <span class="text-xs text-erp-muted">Sem cargo oficial ativo</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="px-5 py-4 text-right">
+                                            <div class="flex justify-end gap-2">
+                                                <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>" class="rounded-lg bg-cobalto px-3 py-2 text-xs font-semibold text-white hover:bg-blue-900">
+                                                    Abrir ficha
+                                                </a>
+                                                <a href="/admin/cargos" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                                    Nominata
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
                 <?php foreach ($obreiros as $obreiro): ?>
                     <?php
                     $nomeExibicao = (string) ($obreiro['nome_historico'] ?: $obreiro['nome']);
@@ -189,7 +234,7 @@ $rotulosAlerta = [
                     $alertas = $obreiro['alertas_cadastro'] ?? [];
                     $cargosAtuais = $obreiro['cargos_codigos'] ?? [];
                     ?>
-                    <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm lg:hidden">
                         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                             <div class="flex items-start gap-4 min-w-0">
                                 <div class="h-14 w-14 rounded-full bg-areia border border-amber-200 flex items-center justify-center text-cobalto text-xl font-bold shrink-0">
@@ -220,6 +265,9 @@ $rotulosAlerta = [
                                         <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 border <?= !empty($obreiro['telegram_id']) ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-gray-50 border-gray-200 text-gray-500' ?>">
                                             <i class="fab fa-telegram"></i>
                                             <?= !empty($obreiro['telegram_id']) ? 'Bot vinculado' : 'Sem bot' ?>
+                                        </span>
+                                        <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 font-semibold text-slate-700">
+                                            Financeiro: Nao integrado
                                         </span>
                                         <span class="inline-flex items-center rounded-full bg-gray-50 border border-gray-200 px-2.5 py-1 text-gray-600">
                                             Ingresso: <?= htmlspecialchars((string) ($obreiro['data_filiacao'] ?? $obreiro['data_iniciacao'] ?? '-')) ?>
@@ -290,7 +338,7 @@ $rotulosAlerta = [
                 <?php endforeach; ?>
             <?php endif; ?>
         </section>
-    </main>
+    </div>
     <script>
         (function () {
             const filtrosAvancados = document.getElementById('obreiros-filtros-avancados');
@@ -311,5 +359,4 @@ $rotulosAlerta = [
             }
         })();
     </script>
-</body>
-</html>
+<?php require __DIR__ . '/partials/erp_shell_close.php'; ?>

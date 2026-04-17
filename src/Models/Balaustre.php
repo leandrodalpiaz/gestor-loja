@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 use App\Models\EventoSessao;
 use App\Models\VisitaExternaSessao;
 
 class Balaustre
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -42,6 +45,12 @@ class Balaustre
                        apto_votacao_por = CASE WHEN status = 'em_votacao' THEN apto_votacao_por ELSE NULL END,
                        updated_at = NOW()
                  WHERE sessao_id = :sessao_id
+                   AND EXISTS (
+                       SELECT 1
+                       FROM public.sessoes s
+                       WHERE s.id = :sessao_id
+                         AND s.loja_id = :loja_id
+                   )
             ");
 
                 $okBalaustre = $stmt->execute([
@@ -51,6 +60,7 @@ class Balaustre
                     'texto_final' => trim((string) ($data['texto_final'] ?? '')) ?: null,
                     'dados_capturados' => $dadosJson !== null ? json_encode($dadosJson, JSON_UNESCAPED_UNICODE) : null,
                     'preparado_por' => $autorId,
+                    'loja_id' => $this->obterLojaAtualId(),
                 ]);
             } else {
                 $stmt = $this->db->prepare("
@@ -455,18 +465,26 @@ class Balaustre
     {
         $stmt = $this->db->prepare("
             UPDATE public.balaustres
-               SET apto_votacao = TRUE,
+              SET apto_votacao = TRUE,
                    apto_votacao_em = NOW(),
                    apto_votacao_por = :autor_id,
                    status = 'apto_votacao',
                    updated_at = NOW()
              WHERE id = :id
+               AND EXISTS (
+                   SELECT 1
+                   FROM public.balaustres b
+                   JOIN public.sessoes s ON s.id = b.sessao_id
+                   WHERE b.id = :id
+                     AND s.loja_id = :loja_id
+               )
                AND status <> 'em_votacao'
         ");
 
         return $stmt->execute([
             'id' => $balaustreId,
             'autor_id' => $autorId,
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
     }
 
@@ -507,11 +525,16 @@ class Balaustre
 
             $presentesStmt = $this->db->prepare("
                 SELECT obreiro_id
-                FROM public.presencas_sessao
-                WHERE sessao_id = :sessao_id
+                FROM public.presencas_sessao ps
+                JOIN public.sessoes s ON s.id = ps.sessao_id
+                WHERE ps.sessao_id = :sessao_id
+                  AND s.loja_id = :loja_id
                   AND presente = TRUE
             ");
-            $presentesStmt->execute(['sessao_id' => (int) $balaustre['sessao_id']]);
+            $presentesStmt->execute([
+                'sessao_id' => (int) $balaustre['sessao_id'],
+                'loja_id' => $this->obterLojaAtualId(),
+            ]);
             $presentes = $presentesStmt->fetchAll(PDO::FETCH_COLUMN);
 
             if ($presentes === []) {
@@ -542,7 +565,17 @@ class Balaustre
                    SET status = 'em_votacao',
                        updated_at = NOW()
                  WHERE id = :id
-            ")->execute(['id' => $balaustreId]);
+                   AND EXISTS (
+                       SELECT 1
+                       FROM public.balaustres b
+                       JOIN public.sessoes s ON s.id = b.sessao_id
+                       WHERE b.id = :id
+                         AND s.loja_id = :loja_id
+                   )
+            ")->execute([
+                'id' => $balaustreId,
+                'loja_id' => $this->obterLojaAtualId(),
+            ]);
 
             $this->db->commit();
             return [
@@ -575,9 +608,11 @@ class Balaustre
                 ) AS total_votantes_abertos
             FROM public.balaustres b
             JOIN public.sessoes s ON s.id = b.sessao_id
+            WHERE s.loja_id = :loja_id
             ORDER BY b.updated_at DESC, b.id DESC
             LIMIT :limite
         ");
+        $stmt->bindValue('loja_id', $this->obterLojaAtualId(), PDO::PARAM_INT);
         $stmt->bindValue('limite', $limite, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -596,13 +631,16 @@ class Balaustre
                 v.balaustre_id,
                 bv.elegivel
             FROM public.balaustre_votacoes v
+            JOIN public.balaustres b ON b.id = v.balaustre_id
+            JOIN public.sessoes s ON s.id = b.sessao_id
             JOIN public.balaustre_votantes bv ON bv.votacao_id = v.id
             WHERE v.status = 'aberta'
+              AND s.loja_id = ?
               AND v.balaustre_id IN ({$placeholders})
               AND bv.obreiro_id = ?
         ";
         $stmt = $this->db->prepare($sql);
-        $params = array_merge($balaustreIds, [$obreiroId]);
+        $params = array_merge([$this->obterLojaAtualId()], $balaustreIds, [$obreiroId]);
         $stmt->execute($params);
 
         $mapa = [];
@@ -638,6 +676,7 @@ class Balaustre
             JOIN public.balaustre_votacoes v ON v.balaustre_id = b.id AND v.status = 'aberta'
             LEFT JOIN public.balaustre_votantes bv ON bv.votacao_id = v.id AND bv.obreiro_id = :obreiro_id
             WHERE b.status = 'em_votacao'
+              AND s.loja_id = :loja_id
         ";
 
         if (!$incluirSemElegibilidade) {
@@ -647,7 +686,10 @@ class Balaustre
         $sql .= " ORDER BY s.data_hora_inicio DESC, b.id DESC";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['obreiro_id' => $obreiroId]);
+        $stmt->execute([
+            'obreiro_id' => $obreiroId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -760,9 +802,17 @@ class Balaustre
                    SET status = :status,
                        updated_at = NOW()
                  WHERE id = :id
+                   AND EXISTS (
+                       SELECT 1
+                       FROM public.balaustres b
+                       JOIN public.sessoes s ON s.id = b.sessao_id
+                       WHERE b.id = :id
+                         AND s.loja_id = :loja_id
+                   )
             ")->execute([
                 'status' => $statusBalaustre,
                 'id' => $balaustreId,
+                'loja_id' => $this->obterLojaAtualId(),
             ]);
 
             $this->db->commit();
@@ -781,9 +831,18 @@ class Balaustre
             SELECT *
             FROM public.balaustres
             WHERE sessao_id = :sessao_id
+              AND EXISTS (
+                  SELECT 1
+                  FROM public.sessoes s
+                  WHERE s.id = :sessao_id
+                    AND s.loja_id = :loja_id
+              )
             LIMIT 1
         ");
-        $stmt->execute(['sessao_id' => $sessaoId]);
+        $stmt->execute([
+            'sessao_id' => $sessaoId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
@@ -844,11 +903,16 @@ class Balaustre
     {
         $stmt = $this->db->prepare("
             SELECT *
-            FROM public.balaustres
-            WHERE id = :id
+            FROM public.balaustres b
+            JOIN public.sessoes s ON s.id = b.sessao_id
+            WHERE b.id = :id
+              AND s.loja_id = :loja_id
             LIMIT 1
         ");
-        $stmt->execute(['id' => $id]);
+        $stmt->execute([
+            'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
@@ -857,14 +921,25 @@ class Balaustre
     {
         $stmt = $this->db->prepare("
             SELECT *
-            FROM public.balaustre_votacoes
-            WHERE balaustre_id = :balaustre_id
+            FROM public.balaustre_votacoes v
+            JOIN public.balaustres b ON b.id = v.balaustre_id
+            JOIN public.sessoes s ON s.id = b.sessao_id
+            WHERE v.balaustre_id = :balaustre_id
+              AND s.loja_id = :loja_id
               AND status = 'aberta'
             ORDER BY aberta_em DESC
             LIMIT 1
         ");
-        $stmt->execute(['balaustre_id' => $balaustreId]);
+        $stmt->execute([
+            'balaustre_id' => $balaustreId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

@@ -3,39 +3,6 @@ if (!headers_sent()) {
     header('Content-Type: text/html; charset=UTF-8');
 }
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Gestor de Loja</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        cobalto: '#0f2747',
-                        ouro: '#c8a646',
-                        pergaminho: '#f6f1e7',
-                        marfim: '#fcfbf7',
-                        ardosia: '#475569'
-                    },
-                    fontFamily: {
-                        serif: ['"Playfair Display"', 'Georgia', 'serif'],
-                        sans: ['"Inter"', 'system-ui', 'sans-serif'],
-                    },
-                    boxShadow: {
-                        painel: '0 18px 50px rgba(15,39,71,0.08)'
-                    }
-                }
-            }
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-</head>
-<body class="min-h-screen bg-[linear-gradient(180deg,#f8f4ea_0%,#f3f4f6_45%,#eef2f7_100%)] font-sans text-slate-800" x-data="{ menuOpen: false }">
 <?php
 $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
 $usuarioCargo = (string) ($_SESSION['usuario_cargo'] ?? '');
@@ -65,19 +32,24 @@ $dashboardCan = static function (string $permission) use ($dashboardPermissions,
     return (bool) ($dashboardPermissions[$permission] ?? false);
 };
 
-$isAdmin = in_array('admin', $usuarioCargos, true);
-$isChanceler = in_array('chanceler', $usuarioCargos, true);
-$isMestreBanquetes = in_array('mestre_banquetes', $usuarioCargos, true);
-$isTesoureiro = in_array('tesoureiro', $usuarioCargos, true);
-$isPrimeiroVigilante = in_array('primeiro_vigilante', $usuarioCargos, true);
-$isSegundoVigilante = in_array('segundo_vigilante', $usuarioCargos, true);
-$isSecretario = in_array('secretario', $usuarioCargos, true);
-$isOrador = in_array('orador', $usuarioCargos, true);
-$isVeneravel = in_array('veneravel', $usuarioCargos, true);
-$isBibliotecario = in_array('bibliotecario', $usuarioCargos, true);
-$isHospitaleiro = in_array('hospitaleiro', $usuarioCargos, true);
-$isMestreHarmonia = in_array('mestre_de_harmonia', $usuarioCargos, true);
-$adminLivre = $isAdmin || $showAllPanels;
+$canAdminCargos = $dashboardCan('admin.cargos.view');
+$canAdminLoja = $dashboardCan('admin.loja.view');
+$canChancelaria = $dashboardCan('chancelaria.manage');
+$canSecretaria = $dashboardCan('secretaria.manage');
+$canOrador = $dashboardCan('orador.view');
+$canBanquetes = $dashboardCan('mestre_banquetes.manage');
+$canTesouraria = $dashboardCan('tesouraria.manage');
+$canFinanceiroPessoal = $dashboardCan('financeiro.self');
+$canBibliotecaConsultar = $dashboardCan('biblioteca.self');
+$canBibliotecaGerir = $dashboardCan('biblioteca.manage');
+$canBibliotecaClassificar = $dashboardCan('biblioteca.classificar');
+$canObreirosView = $dashboardCan('obreiros.view');
+$canHospitaleiro = $dashboardCan('hospitaleiro.manage');
+$canMestreHarmonia = $dashboardCan('mestre_harmonia.manage');
+$canPrimeiroVigilante = $dashboardCan('vigilancia.primeiro.manage');
+$canSegundoVigilante = $dashboardCan('vigilancia.segundo.manage');
+$canVeneravel = $dashboardCan('veneravel.manage');
+$adminLivre = $showAllPanels;
 $dashboardMensagemSucesso = $dashboardMensagemSucesso ?? null;
 $dashboardMensagemErro = $dashboardMensagemErro ?? null;
 $dashboardConfiguracaoLoja = is_array($dashboardConfiguracaoLoja ?? null) ? $dashboardConfiguracaoLoja : [];
@@ -142,7 +114,7 @@ $secoes = [];
 $atalhosPrioritarios = [];
 $blocosPrioritarios = [];
 
-if ($isChanceler || $isVeneravel || $adminLivre) {
+if ($canChancelaria || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Chancelaria',
         'descricao' => 'Mensagens do dia, certificados e manutenção de efemérides.',
@@ -155,7 +127,7 @@ if ($isChanceler || $isVeneravel || $adminLivre) {
         ],
     ];
 
-    if ($isChanceler) {
+    if ($canChancelaria && !$canVeneravel) {
         $atalhosPrioritarios = array_merge($atalhosPrioritarios, [
             ['label' => 'Mensagem do dia', 'href' => '/chancelaria/efemerides?foco=mensagem'],
             ['label' => 'Certificado', 'href' => '/chancelaria/certificado'],
@@ -176,7 +148,7 @@ if ($isChanceler || $isVeneravel || $adminLivre) {
     }
 }
 
-if ($dashboardCan('secretaria.manage') || $isVeneravel || $adminLivre) {
+if ($canSecretaria || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Secretaria',
         'descricao' => 'Sessões, votações e acompanhamento administrativo.',
@@ -187,7 +159,7 @@ if ($dashboardCan('secretaria.manage') || $isVeneravel || $adminLivre) {
     ];
 }
 
-if ($isOrador || $isVeneravel || $adminLivre) {
+if ($canOrador || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Orador',
         'descricao' => 'Leitura resumida da sessao, apoio ritual e nominata resumida de visitantes para agradecimento em Loja.',
@@ -197,7 +169,7 @@ if ($isOrador || $isVeneravel || $adminLivre) {
     ];
 }
 
-if ($isMestreBanquetes || $isVeneravel || $adminLivre) {
+if ($canBanquetes || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Mestre de Banquetes',
         'descricao' => 'Leitura operacional dos confirmados com e sem agape para planejamento do banquete.',
@@ -207,7 +179,7 @@ if ($isMestreBanquetes || $isVeneravel || $adminLivre) {
     ];
 }
 
-if ($isHospitaleiro || $isVeneravel || $isTesoureiro || $adminLivre) {
+if ($canHospitaleiro || $canVeneravel || $canTesouraria || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Hospitalaria',
         'descricao' => 'Ocorrencias assistenciais, acompanhamento e encaminhamentos ao Veneravel e Tesouraria.',
@@ -217,15 +189,17 @@ if ($isHospitaleiro || $isVeneravel || $isTesoureiro || $adminLivre) {
     ];
 }
 
-$secoes[] = [
-    'titulo' => 'Mestre de Harmonia',
-    'descricao' => 'Player ritual em tela cheia, com etapas principais, transicoes e extras por sessao.',
-    'itens' => [
-        ['label' => 'Painel do Mestre de Harmonia', 'href' => '/mestre-harmonia'],
-    ],
-];
+if ($canMestreHarmonia || $canVeneravel || $adminLivre) {
+    $secoes[] = [
+        'titulo' => 'Mestre de Harmonia',
+        'descricao' => 'Player ritual em tela cheia, com etapas principais, transicoes e extras por sessao.',
+        'itens' => [
+            ['label' => 'Painel do Mestre de Harmonia', 'href' => '/mestre-harmonia'],
+        ],
+    ];
+}
 
-if ($isPrimeiroVigilante || $isVeneravel || $adminLivre) {
+if ($canPrimeiroVigilante || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => '1º Vigilante',
         'descricao' => 'Acompanhamento formativo dos Aprendizes, trilha de estudos e orientação de instruções.',
@@ -237,7 +211,7 @@ if ($isPrimeiroVigilante || $isVeneravel || $adminLivre) {
     ];
 }
 
-if ($isSegundoVigilante || $isVeneravel || $adminLivre) {
+if ($canSegundoVigilante || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => '2º Vigilante',
         'descricao' => 'Acompanhamento formativo dos Companheiros, trilha de estudos e orientação de instruções.',
@@ -249,7 +223,7 @@ if ($isSegundoVigilante || $isVeneravel || $adminLivre) {
     ];
 }
 
-if ($isVeneravel || $adminLivre) {
+if ($canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Venerável Mestre',
         'descricao' => 'Decisões de votação, acompanhamento de sessão e nominata oficial.',
@@ -260,7 +234,7 @@ if ($isVeneravel || $adminLivre) {
     ];
 }
 
-if ($dashboardCan('tesouraria.manage') || $isVeneravel || $adminLivre) {
+if ($canTesouraria || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Tesouraria',
         'descricao' => 'Financeiro, comprovantes, regularidade e fechamento mensal.',
@@ -275,7 +249,7 @@ if ($dashboardCan('tesouraria.manage') || $isVeneravel || $adminLivre) {
         ],
     ];
 
-    if ($isTesoureiro) {
+    if ($canTesouraria && !$canVeneravel) {
         $atalhosPrioritarios = array_merge($atalhosPrioritarios, [
             ['label' => 'Comprovantes', 'href' => '/tesouraria/comprovantes'],
             ['label' => 'Livro-caixa', 'href' => '/tesouraria/caixa'],
@@ -296,7 +270,7 @@ if ($dashboardCan('tesouraria.manage') || $isVeneravel || $adminLivre) {
     }
 }
 
-if ($dashboardCan('financeiro.self') || $adminLivre) {
+if ($canFinanceiroPessoal || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Meu Financeiro',
         'descricao' => 'Consulta pessoal de mensalidades, biblioteca, joias e demais obrigacoes cadastradas pela Tesouraria.',
@@ -306,7 +280,7 @@ if ($dashboardCan('financeiro.self') || $adminLivre) {
     ];
 }
 
-if ($isBibliotecario || $isPrimeiroVigilante || $isSegundoVigilante || $isVeneravel || $adminLivre) {
+if ($canBibliotecaConsultar || $canBibliotecaGerir || $canBibliotecaClassificar || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Biblioteca',
         'descricao' => 'Acervo, empréstimos, classificação de leituras e curadoria formativa.',
@@ -315,7 +289,7 @@ if ($isBibliotecario || $isPrimeiroVigilante || $isSegundoVigilante || $isVenera
         ],
     ];
 
-    if ($isBibliotecario) {
+    if ($canBibliotecaGerir && !$canPrimeiroVigilante && !$canSegundoVigilante && !$canVeneravel) {
         $atalhosPrioritarios = array_merge($atalhosPrioritarios, [
             ['label' => 'Emprestimos', 'href' => '/biblioteca/emprestimos'],
             ['label' => 'Painel da Biblioteca', 'href' => '/biblioteca'],
@@ -335,7 +309,7 @@ if ($isBibliotecario || $isPrimeiroVigilante || $isSegundoVigilante || $isVenera
     }
 }
 
-if ($isSecretario || $isChanceler || $isVeneravel || $adminLivre) {
+if ($canSecretaria || $canChancelaria || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Cadastro e Obreiros',
         'descricao' => 'Consulta e manutenção dos obreiros ativos da loja.',
@@ -345,12 +319,12 @@ if ($isSecretario || $isChanceler || $isVeneravel || $adminLivre) {
     ];
 }
 
-if (($isPrimeiroVigilante || $isSegundoVigilante) && !$isSecretario && !$isChanceler && !$isVeneravel && !$adminLivre) {
+if (($canPrimeiroVigilante || $canSegundoVigilante) && !$canSecretaria && !$canChancelaria && !$canVeneravel && !$adminLivre) {
     $secoes[] = [
         'titulo' => 'Cadastro e Obreiros',
-        'descricao' => $isPrimeiroVigilante && !$isSegundoVigilante
+        'descricao' => $canPrimeiroVigilante && !$canSegundoVigilante
             ? 'Consulta dos Aprendizes ativos da loja.'
-            : ($isSegundoVigilante && !$isPrimeiroVigilante
+            : ($canSegundoVigilante && !$canPrimeiroVigilante
                 ? 'Consulta dos Companheiros ativos da loja.'
                 : 'Consulta dos Aprendizes e Companheiros ativos da loja.'),
         'itens' => [
@@ -359,7 +333,7 @@ if (($isPrimeiroVigilante || $isSegundoVigilante) && !$isSecretario && !$isChanc
     ];
 }
 
-if ($dashboardCan('admin.cargos.view') || $dashboardCan('admin.loja.view') || $adminLivre) {
+if ($canAdminCargos || $canAdminLoja || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Administração',
         'descricao' => 'Configurações centrais e liberação ampla para o administrador.',
@@ -370,7 +344,7 @@ if ($dashboardCan('admin.cargos.view') || $dashboardCan('admin.loja.view') || $a
     ];
 }
 
-if (($isSecretario || $isVeneravel) && !$isAdmin) {
+if (($canSecretaria || $canVeneravel) && !$canAdminCargos) {
     $secoes[] = [
         'titulo' => 'Nominata Oficial',
         'descricao' => 'Gestão da nominata, abertura de gestões e validação central dos cargos da loja.',
@@ -429,8 +403,56 @@ $cargosGestao = [
     ['label' => 'Mestre Hospitaleiro', 'codigo' => 'HOSPITALEIRO'],
     ['label' => '1º Diácono', 'codigo' => 'PRIMEIRO_DIACONO'],
 ];
+// TODO: ainda existem classes visuais antigas misturadas ao shell ERP neste dashboard; consolidar em um lote visual dedicado depois.
+$erpPageTitle = 'Dashboard - Gestor de Loja';
+$appShellEyebrow = 'Dashboard';
+$appShellTitle = $dashboardNomeLoja;
+$appShellDescription = 'Abertura operacional da Loja com agenda, recados e acessos prioritarios.';
+$appShellActiveHref = '/dashboard';
+$appShellUserLabel = $usuarioNome;
+$appShellActions = [
+    ['label' => 'Sair', 'href' => '/logout'],
+];
+$appShellSidebarSections = array_merge(
+    [['title' => 'Geral', 'items' => $secaoGeral]],
+    array_map(
+        static fn(array $secao): array => [
+            'title' => (string) ($secao['titulo'] ?? 'Secao'),
+            'items' => $secao['itens'] ?? [],
+        ],
+        $secoes
+    )
+);
+$dashboardPrimeiraSessao = $dashboardSessoes[0] ?? null;
+$dashboardStatCards = [
+    ['label' => 'Total de obreiros', 'value' => 'N/D', 'tone' => 'neutral'],
+    ['label' => 'Adimplentes', 'value' => 'N/D', 'tone' => 'success'],
+    ['label' => 'Inadimplentes', 'value' => 'N/D', 'tone' => 'danger'],
+    ['label' => 'Proxima sessao', 'value' => $dashboardPrimeiraSessao ? $formatarDataHoraDashboard($dashboardPrimeiraSessao['data_hora_inicio'] ?? null) : 'Sem agenda', 'tone' => 'warning'],
+];
+// TODO: o dispatcher atual nao entrega total de obreiros e regularidade financeira para os StatCards do dashboard.
+require __DIR__ . '/partials/erp_head.php';
 ?>
+<?php require __DIR__ . '/partials/erp_shell_open.php'; ?>
+<div class="space-y-8">
+    <section class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <?php foreach ($dashboardStatCards as $card): ?>
+            <?php
+            $toneClass = match ($card['tone']) {
+                'success' => 'border-emerald-200 bg-emerald-50 text-emerald-800',
+                'danger' => 'border-rose-200 bg-rose-50 text-rose-800',
+                'warning' => 'border-amber-200 bg-amber-50 text-amber-900',
+                default => 'border-erp-border bg-white text-erp-text',
+            };
+            ?>
+            <article class="rounded-erp-lg border px-5 py-5 shadow-sm <?= $toneClass ?>">
+                <div class="text-xs font-semibold uppercase tracking-[0.22em] opacity-80"><?= htmlspecialchars((string) $card['label']) ?></div>
+                <div class="mt-3 text-2xl font-semibold leading-tight"><?= htmlspecialchars((string) $card['value']) ?></div>
+            </article>
+        <?php endforeach; ?>
+    </section>
 
+<?php if (false): ?>
 <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-cobalto text-white shadow-lg">
     <div class="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-3">
@@ -448,7 +470,7 @@ $cargosGestao = [
         </div>
 
         <div class="hidden items-center gap-4 md:flex">
-            <?php if ($isAdmin): ?>
+            <?php if ($canAdminCargos && $canAdminLoja && $dashboardCan('admin.loja.manage')): ?>
                 <span class="hidden rounded-full bg-ouro px-3 py-1 text-xs font-semibold text-cobalto">Admin com acesso total</span>
             <?php elseif ($showAllPanels): ?>
                 <span class="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">Acesso ampliado nesta sessão</span>
@@ -520,6 +542,7 @@ $cargosGestao = [
     </aside>
 
     <main class="min-w-0 flex-1">
+<?php endif; ?>
         <section class="overflow-hidden rounded-3xl border border-white/70 bg-[radial-gradient(circle_at_top_right,#f7e2a3,transparent_30%),linear-gradient(135deg,#123153,#0f2747)] px-6 py-8 text-white shadow-painel sm:px-8">
             <div class="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.9fr)] xl:items-end">
                 <div class="max-w-3xl">
@@ -563,7 +586,7 @@ $cargosGestao = [
             <div class="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-800"><?= htmlspecialchars((string) $dashboardMensagemErro) ?></div>
         <?php endif; ?>
 
-        <section id="sessoes-loja" class="mt-8 grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.9fr)]">
+        <section id="sessoes-loja" class="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(360px,0.85fr)] 2xl:grid-cols-[minmax(0,1.9fr)_minmax(380px,0.8fr)]">
             <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-painel">
                 <div class="border-b border-slate-200 bg-[linear-gradient(135deg,#fffdf7,#f4ede0)] px-6 py-6">
                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Sessões da Loja</div>
@@ -739,7 +762,7 @@ $cargosGestao = [
             </section>
         <?php endif; ?>
 
-        <section class="mt-8 grid gap-5 sm:grid-cols-2 2xl:grid-cols-3">
+        <section class="mt-8 grid gap-6 lg:grid-cols-2 2xl:grid-cols-3">
             <?php foreach ($secoes as $secao): ?>
                 <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-painel">
                     <div class="border-b border-slate-100 bg-[linear-gradient(135deg,#ffffff,#f7f3ea)] px-6 py-5">
@@ -771,7 +794,8 @@ $cargosGestao = [
                 <?php endforeach; ?>
             </div>
         </section>
+    <?php if (false): ?>
     </main>
+    <?php endif; ?>
 </div>
-</body>
-</html>
+<?php require __DIR__ . '/partials/erp_shell_close.php'; ?>

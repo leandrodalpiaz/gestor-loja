@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class EventoSessao
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -16,8 +19,20 @@ class EventoSessao
 
     public function substituirPorSessao(int $sessaoId, array $eventos, ?string $autorId = null): bool
     {
-        $delete = $this->db->prepare("DELETE FROM public.eventos_sessao WHERE sessao_id = :sessao_id");
-        $okDelete = $delete->execute(['sessao_id' => $sessaoId]);
+        $delete = $this->db->prepare("
+            DELETE FROM public.eventos_sessao
+            WHERE sessao_id = :sessao_id
+              AND EXISTS (
+                  SELECT 1
+                  FROM public.sessoes s
+                  WHERE s.id = :sessao_id
+                    AND s.loja_id = :loja_id
+              )
+        ");
+        $okDelete = $delete->execute([
+            'sessao_id' => $sessaoId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         if (!$okDelete) {
             return false;
         }
@@ -41,7 +56,7 @@ class EventoSessao
                 created_by,
                 updated_by,
                 updated_at
-            ) VALUES (
+            ) SELECT
                 :sessao_id,
                 :tipo_evento,
                 :titulo,
@@ -55,7 +70,9 @@ class EventoSessao
                 :created_by,
                 :updated_by,
                 NOW()
-            )
+            FROM public.sessoes s
+            WHERE s.id = :sessao_id
+              AND s.loja_id = :loja_id
         ");
 
         foreach ($eventos as $evento) {
@@ -78,6 +95,7 @@ class EventoSessao
                 'observacao' => trim((string) ($evento['observacao'] ?? '')) ?: null,
                 'created_by' => $autorId,
                 'updated_by' => $autorId,
+                'loja_id' => $this->obterLojaAtualId(),
             ]);
             if (!$ok) {
                 return false;
@@ -85,5 +103,10 @@ class EventoSessao
         }
 
         return true;
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

@@ -4,28 +4,32 @@ if (!isset($_SESSION["usuario_logado"])) {
     header("Location: /login");
     exit;
 }
-?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Livro-Caixa - Tesouraria</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 min-h-screen text-gray-800">
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <header class="mb-6 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d6b672,transparent_30%),linear-gradient(135deg,#162033,#223145)] px-6 py-7 text-white shadow-xl">
-            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Tesouraria</p>
-                    <h1 class="mt-2 text-3xl font-semibold">Livro-Caixa</h1>
-                    <p class="mt-2 max-w-3xl text-sm text-slate-200">Acompanhe entradas, saidas e saldo do periodo com mais clareza.</p>
-                </div>
-                <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao dashboard</a>
-            </div>
-        </header>
 
+$erpPageTitle = 'Livro-Caixa';
+$appShellEyebrow = 'Tesouraria';
+$appShellTitle = 'Livro-Caixa';
+$appShellDescription = 'Entradas, saidas, saldo do periodo e acoes operacionais da tesouraria em leitura administrativa direta.';
+$appShellActiveHref = '/tesouraria/caixa';
+$appShellActions = [
+    ['label' => 'Voltar ao dashboard', 'href' => '/dashboard'],
+    ['label' => 'Obrigacoes', 'href' => '/tesouraria/obrigacoes', 'primary' => true],
+];
+$appShellSidebarSections = [
+    [
+        'title' => 'Tesouraria',
+        'items' => [
+            ['label' => 'Livro-Caixa', 'href' => '/tesouraria/caixa'],
+            ['label' => 'Obrigacoes', 'href' => '/tesouraria/obrigacoes'],
+            ['label' => 'Comprovantes', 'href' => '/tesouraria/comprovantes'],
+            ['label' => 'Regularidade', 'href' => '/tesouraria/regularidade'],
+            ['label' => 'Dashboard', 'href' => '/dashboard'],
+        ],
+    ],
+];
+
+require __DIR__ . '/partials/erp_head.php';
+require __DIR__ . '/partials/erp_shell_open.php';
+?>
         <section class="mb-6 grid gap-3 md:grid-cols-3">
             <article class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Movimentacao do caixa</p>
@@ -556,5 +560,4 @@ if (!isset($_SESSION["usuario_logado"])) {
             carregarSugestoes();
         });
     </script>
-</body>
-</html>
+<?php require __DIR__ . '/partials/erp_shell_close.php'; ?>

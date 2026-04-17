@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use DateTimeImmutable;
 use PDO;
 use Throwable;
 
 class RegularidadeObreiro
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
     private ?array $parametrosFinanceiros = null;
 
@@ -55,13 +58,24 @@ class RegularidadeObreiro
             FROM regularidade_obreiro ro
             LEFT JOIN obreiros o ON ro.definido_por = o.id
             WHERE ro.obreiro_id = :obreiro_id 
+              AND EXISTS (
+                  SELECT 1
+                  FROM public.obreiros alvo
+                  WHERE alvo.id = ro.obreiro_id
+                    AND alvo.loja_id = :loja_id
+              )
               AND ro.mes_ref = :mes 
               AND ro.ano_ref = :ano
             LIMIT 1
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['obreiro_id' => $obreiroId, 'mes' => $mes, 'ano' => $ano]);
+        $stmt->execute([
+            'obreiro_id' => $obreiroId,
+            'mes' => $mes,
+            'ano' => $ano,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ?: null;
     }
@@ -91,11 +105,16 @@ class RegularidadeObreiro
                AND ms.mes_ref = :mes
                AND ms.ano_ref = :ano
             WHERE o1.ativo = true
+              AND o1.loja_id = :loja_id
             ORDER BY COALESCE(o1.nome_historico, o1.nome) ASC
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['mes' => $mes, 'ano' => $ano]);
+        $stmt->execute([
+            'mes' => $mes,
+            'ano' => $ano,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($registros as &$registro) {
@@ -115,13 +134,23 @@ class RegularidadeObreiro
             SELECT 
                 status,
                 COUNT(*) as quantidade
-            FROM regularidade_obreiro
+            FROM regularidade_obreiro ro
             WHERE mes_ref = :mes AND ano_ref = :ano
+              AND EXISTS (
+                  SELECT 1
+                  FROM public.obreiros o
+                  WHERE o.id = ro.obreiro_id
+                    AND o.loja_id = :loja_id
+              )
             GROUP BY status
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['mes' => $mes, 'ano' => $ano]);
+        $stmt->execute([
+            'mes' => $mes,
+            'ano' => $ano,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         
         $resumo = ['regular' => 0, 'irregular' => 0];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
@@ -202,5 +231,10 @@ class RegularidadeObreiro
         ];
 
         return $this->parametrosFinanceiros;
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

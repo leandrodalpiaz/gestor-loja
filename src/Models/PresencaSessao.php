@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class PresencaSessao
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -31,7 +34,7 @@ class PresencaSessao
                 registrado_em,
                 updated_at
             )
-            VALUES (
+            SELECT
                 :sessao_id,
                 :obreiro_id,
                 :presente,
@@ -39,7 +42,9 @@ class PresencaSessao
                 :registrado_por,
                 NOW(),
                 NOW()
-            )
+            FROM public.sessoes s
+            WHERE s.id = :sessao_id
+              AND s.loja_id = :loja_id
             ON CONFLICT (sessao_id, obreiro_id)
             DO UPDATE SET
                 presente = EXCLUDED.presente,
@@ -55,6 +60,7 @@ class PresencaSessao
             'presente' => $presente ? 'true' : 'false',
             'observacao' => $observacao,
             'registrado_por' => $registradoPor,
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
     }
 
@@ -71,12 +77,17 @@ class PresencaSessao
                 COALESCE(o.nome_historico, o.nome) AS nome,
                 o.cim
             FROM public.presencas_sessao ps
+            JOIN public.sessoes s ON s.id = ps.sessao_id
             JOIN public.obreiros o ON o.id = ps.obreiro_id
             WHERE ps.sessao_id = :sessao_id
+              AND s.loja_id = :loja_id
               AND ps.presente = TRUE
             ORDER BY nome ASC
         ");
-        $stmt->execute(['sessao_id' => $sessaoId]);
+        $stmt->execute([
+            'sessao_id' => $sessaoId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -95,11 +106,23 @@ class PresencaSessao
             LEFT JOIN public.presencas_sessao ps
               ON ps.sessao_id = :sessao_id
              AND ps.obreiro_id = o.id
+            JOIN public.sessoes s
+              ON s.id = :sessao_id
             WHERE o.ativo = TRUE
+              AND o.loja_id = s.loja_id
+              AND s.loja_id = :loja_id
             ORDER BY nome ASC
         ");
-        $stmt->execute(['sessao_id' => $sessaoId]);
+        $stmt->execute([
+            'sessao_id' => $sessaoId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

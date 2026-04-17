@@ -38,7 +38,31 @@ $gruposNominata = [
         'cargos' => $cargosNomeados,
     ],
 ];
+
+$erpPageTitle = 'Nominata Oficial';
+$appShellEyebrow = 'Administracao';
+$appShellTitle = 'Nominata Oficial e Gestoes';
+$appShellDescription = 'Cargos eleitos, nomeados e historico administrativo da gestao em exercicio.';
+$appShellActiveHref = '/admin/cargos';
+$appShellActions = [
+    ['label' => 'Parametros da Loja', 'href' => '/admin/loja'],
+    ['label' => 'Voltar ao painel', 'href' => '/dashboard', 'primary' => true],
+];
+$appShellSidebarSections = [
+    [
+        'title' => 'Administracao',
+        'items' => [
+            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
+            ['label' => 'Parametros da Loja', 'href' => '/admin/loja'],
+            ['label' => 'Dashboard', 'href' => '/dashboard'],
+        ],
+    ],
+];
+require __DIR__ . '/../partials/erp_head.php';
+require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
+<?php /* TODO: a estrutura interna ainda carrega classes visuais legadas; consolidar depois sem mexer no fluxo da nominata. */ ?>
+<?php if (false): ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -109,8 +133,21 @@ $gruposNominata = [
                     <?= htmlspecialchars($mensagemErro) ?>
                 </div>
             <?php endif; ?>
+<?php endif; ?>
 
-            <section class="mt-8 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+            <?php if ($mensagem): ?>
+                <div class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 shadow-sm">
+                    <?= htmlspecialchars($mensagem) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($mensagemErro): ?>
+                <div class="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800 shadow-sm">
+                    <?= htmlspecialchars($mensagemErro) ?>
+                </div>
+            <?php endif; ?>
+
+            <section class="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(420px,0.8fr)] 2xl:grid-cols-[minmax(0,1.55fr)_minmax(460px,0.75fr)]">
                 <article class="overflow-hidden rounded-[1.75rem] border border-white/60 bg-white/85 p-6 shadow-dignidade backdrop-blur">
                     <div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                         <div>
@@ -203,7 +240,7 @@ $gruposNominata = [
                                 </div>
                             </div>
 
-                            <div class="mt-6 grid gap-5 lg:grid-cols-2">
+                            <div class="mt-6 grid gap-6 xl:grid-cols-2">
                                 <?php foreach ($grupo['cargos'] as $cargo): ?>
                                     <article class="group rounded-[1.5rem] border border-white/70 bg-white/82 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl">
                                         <div class="flex flex-col gap-4">
@@ -280,7 +317,7 @@ $gruposNominata = [
                 </div>
             </section>
 
-            <section class="mt-10 grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+            <section class="mt-10 grid gap-6 xl:grid-cols-[minmax(360px,0.9fr)_minmax(0,1.1fr)]">
                 <article class="overflow-hidden rounded-[1.75rem] border border-white/60 bg-white/82 p-6 shadow-dignidade backdrop-blur">
                     <div class="flex items-end justify-between gap-3 border-b border-slate-200 pb-4">
                         <div>
@@ -342,7 +379,10 @@ $gruposNominata = [
                     </div>
                 </article>
             </section>
+<?php if (false): ?>
         </main>
     </div>
 </body>
 </html>
+<?php endif; ?>
+<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>

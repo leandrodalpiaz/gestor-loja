@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class PublicacaoSessao
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -28,13 +31,15 @@ class PublicacaoSessao
                 canal,
                 conteudo,
                 publicado_por
-            ) VALUES (
+            ) SELECT
                 :sessao_id,
                 :tipo_publicacao,
                 :canal,
                 :conteudo,
                 :publicado_por
-            )
+            FROM public.sessoes s
+            WHERE s.id = :sessao_id
+              AND s.loja_id = :loja_id
         ");
 
         return $stmt->execute([
@@ -43,6 +48,7 @@ class PublicacaoSessao
             'canal' => $canal,
             'conteudo' => $conteudo,
             'publicado_por' => $publicadoPor,
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
     }
 
@@ -50,12 +56,22 @@ class PublicacaoSessao
     {
         $stmt = $this->db->prepare("
             SELECT *
-            FROM public.publicacoes_sessao
-            WHERE sessao_id = :sessao_id
+            FROM public.publicacoes_sessao ps
+            JOIN public.sessoes s ON s.id = ps.sessao_id
+            WHERE ps.sessao_id = :sessao_id
+              AND s.loja_id = :loja_id
             ORDER BY publicado_em DESC, id DESC
         ");
-        $stmt->execute(['sessao_id' => $sessaoId]);
+        $stmt->execute([
+            'sessao_id' => $sessaoId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

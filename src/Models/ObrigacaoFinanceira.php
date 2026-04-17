@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use DateInterval;
 use DateTimeImmutable;
 use PDO;
@@ -10,6 +11,8 @@ use Throwable;
 
 class ObrigacaoFinanceira
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
     private ?array $parametrosFinanceiros = null;
 
@@ -52,13 +55,13 @@ class ObrigacaoFinanceira
 
             $stmt = $this->db->prepare("
                 INSERT INTO public.obrigacoes_financeiras (
-                    obreiro_id, categoria_id, titulo, tipo_obrigacao, recorrencia, status,
+                    loja_id, obreiro_id, categoria_id, titulo, tipo_obrigacao, recorrencia, status,
                     valor_base, parcelas_total, permite_parcelamento, forma_cobranca,
                     somar_a_mensalidade, aceita_pagamento_previo, aceita_pagamento_posterior,
                     dia_vencimento, mes_referencia_fixa, inicio_competencia, fim_competencia,
                     instrucoes_pagamento, observacao, criado_por
                 ) VALUES (
-                    :obreiro_id, :categoria_id, :titulo, :tipo_obrigacao, :recorrencia, 'ativa',
+                    :loja_id, :obreiro_id, :categoria_id, :titulo, :tipo_obrigacao, :recorrencia, 'ativa',
                     :valor_base, :parcelas_total, :permite_parcelamento, :forma_cobranca,
                     :somar_a_mensalidade, :aceita_pagamento_previo, :aceita_pagamento_posterior,
                     :dia_vencimento, :mes_referencia_fixa, :inicio_competencia, :fim_competencia,
@@ -67,6 +70,7 @@ class ObrigacaoFinanceira
             ");
 
             $stmt->execute([
+                'loja_id' => $this->obterLojaAtualId(),
                 'obreiro_id' => $obreiroId,
                 'categoria_id' => $categoriaId,
                 'titulo' => $titulo,
@@ -179,6 +183,12 @@ class ObrigacaoFinanceira
                     observacao = :observacao,
                     updated_at = NOW()
                 WHERE id = :id
+                  AND EXISTS (
+                      SELECT 1
+                      FROM public.obrigacoes_financeiras ofi
+                      WHERE ofi.id = public.obrigacao_financeira_parcelas.obrigacao_id
+                        AND ofi.loja_id = :loja_id
+                  )
             ");
             $stmt->execute([
                 'pago_em' => $dataPagamento->format('Y-m-d'),
@@ -186,6 +196,7 @@ class ObrigacaoFinanceira
                 'categoria_id' => $categoriaId,
                 'observacao' => trim((string) ($dados['observacao'] ?? '')) ?: null,
                 'id' => $parcelaId,
+                'loja_id' => $this->obterLojaAtualId(),
             ]);
 
             if (strtoupper((string) ($parcela['categoria_codigo'] ?? '')) === 'MENSALIDADE' && !empty($parcela['obreiro_id']) && !empty($parcela['competencia_mes']) && !empty($parcela['competencia_ano'])) {
@@ -239,6 +250,12 @@ class ObrigacaoFinanceira
                 observacao = :observacao,
                 updated_at = NOW()
             WHERE id = :id
+              AND EXISTS (
+                  SELECT 1
+                  FROM public.obrigacoes_financeiras ofi
+                  WHERE ofi.id = public.obrigacao_financeira_parcelas.obrigacao_id
+                    AND ofi.loja_id = :loja_id
+              )
         ");
 
         return $stmt->execute([
@@ -249,6 +266,7 @@ class ObrigacaoFinanceira
             'valor_previsto' => $valorPrevisto,
             'observacao' => trim((string) ($dados['observacao'] ?? '')) ?: null,
             'id' => $parcelaId,
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
     }
 
@@ -266,16 +284,31 @@ class ObrigacaoFinanceira
                 (new LancamentoFinanceiro())->deletar((int) $parcela['lancamento_id']);
             }
 
-            $stmt = $this->db->prepare("DELETE FROM public.obrigacao_financeira_parcelas WHERE id = :id");
-            $stmt->execute(['id' => $parcelaId]);
+            $stmt = $this->db->prepare("
+                DELETE FROM public.obrigacao_financeira_parcelas
+                WHERE id = :id
+                  AND EXISTS (
+                      SELECT 1
+                      FROM public.obrigacoes_financeiras ofi
+                      WHERE ofi.id = public.obrigacao_financeira_parcelas.obrigacao_id
+                        AND ofi.loja_id = :loja_id
+                  )
+            ");
+            $stmt->execute([
+                'id' => $parcelaId,
+                'loja_id' => $this->obterLojaAtualId(),
+            ]);
 
             $stmtCount = $this->db->prepare("SELECT COUNT(*) FROM public.obrigacao_financeira_parcelas WHERE obrigacao_id = :obrigacao_id");
             $stmtCount->execute(['obrigacao_id' => $parcela['obrigacao_id']]);
             $restantes = (int) $stmtCount->fetchColumn();
 
             if ($restantes === 0) {
-                $stmtDeleteObrigacao = $this->db->prepare("DELETE FROM public.obrigacoes_financeiras WHERE id = :id");
-                $stmtDeleteObrigacao->execute(['id' => $parcela['obrigacao_id']]);
+                $stmtDeleteObrigacao = $this->db->prepare("DELETE FROM public.obrigacoes_financeiras WHERE id = :id AND loja_id = :loja_id");
+                $stmtDeleteObrigacao->execute([
+                    'id' => $parcela['obrigacao_id'],
+                    'loja_id' => $this->obterLojaAtualId(),
+                ]);
             }
 
             $this->db->commit();
@@ -477,15 +510,18 @@ class ObrigacaoFinanceira
             FROM public.obreiros o
             LEFT JOIN public.obrigacoes_financeiras ofi
                 ON ofi.obreiro_id = o.id
+               AND ofi.loja_id = :loja_id
                AND ofi.status = 'ativa'
             LEFT JOIN public.obrigacao_financeira_parcelas ofp
                 ON ofp.obrigacao_id = ofi.id
-            WHERE " . implode(' AND ', $where) . "
+            WHERE o.loja_id = :loja_id
+              AND " . implode(' AND ', $where) . "
             GROUP BY o.id, COALESCE(o.nome_historico, o.nome)
             ORDER BY parcelas_atrasadas DESC, saldo_em_aberto DESC, nome ASC
         ";
 
         $stmt = $this->db->prepare($sql);
+        $params['loja_id'] = $this->obterLojaAtualId();
         $stmt->execute($params);
         $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -525,9 +561,13 @@ class ObrigacaoFinanceira
             FROM public.obrigacoes_financeiras ofi
             LEFT JOIN public.categorias_financeiras c ON c.id = ofi.categoria_id
             WHERE ofi.obreiro_id = :obreiro_id
+              AND ofi.loja_id = :loja_id
             ORDER BY ofi.created_at DESC, ofi.id DESC
         ");
-        $stmt->execute(['obreiro_id' => $obreiroId]);
+        $stmt->execute([
+            'obreiro_id' => $obreiroId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $obrigacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if ($obrigacoes === []) {
@@ -608,9 +648,13 @@ class ObrigacaoFinanceira
             LEFT JOIN public.categorias_financeiras c
                 ON c.id = COALESCE(ofp.categoria_id, ofi.categoria_id)
             WHERE ofp.id = :id
+              AND ofi.loja_id = :loja_id
             LIMIT 1
         ");
-        $stmt->execute(['id' => $parcelaId]);
+        $stmt->execute([
+            'id' => $parcelaId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $parcela = $stmt->fetch(PDO::FETCH_ASSOC);
         return $parcela ?: null;
     }
@@ -634,10 +678,14 @@ class ObrigacaoFinanceira
             JOIN public.obrigacoes_financeiras ofi ON ofi.id = ofp.obrigacao_id
             LEFT JOIN public.categorias_financeiras c ON c.id = COALESCE(ofp.categoria_id, ofi.categoria_id)
             WHERE ofi.obreiro_id = :obreiro_id
+              AND ofi.loja_id = :loja_id
               AND ofp.status <> 'pago'
             ORDER BY ofp.vencimento ASC, ofp.id ASC
         ");
-        $stmt->execute(['obreiro_id' => $obreiroId]);
+        $stmt->execute([
+            'obreiro_id' => $obreiroId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $parcelas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($parcelas as &$parcela) {
             $parcela = $this->aplicarEstadoExibicaoParcela($parcela);
@@ -866,12 +914,22 @@ class ObrigacaoFinanceira
             SELECT 1
             FROM public.obrigacoes_financeiras
             WHERE obreiro_id = :obreiro_id
+              AND loja_id = :loja_id
               AND titulo = :titulo
               AND status = 'ativa'
             LIMIT 1
         ");
-        $stmt->execute(['obreiro_id' => $obreiroId, 'titulo' => $titulo]);
+        $stmt->execute([
+            'obreiro_id' => $obreiroId,
+            'loja_id' => $this->obterLojaAtualId(),
+            'titulo' => $titulo,
+        ]);
         return (bool) $stmt->fetchColumn();
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 
     private function bibliotecaJaDesignada(string $obreiroId, int $mes, int $ano): bool

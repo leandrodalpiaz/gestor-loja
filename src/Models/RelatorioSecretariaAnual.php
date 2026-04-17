@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use DateTimeImmutable;
 use DateTimeZone;
 use PDO;
 
 class RelatorioSecretariaAnual
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -59,11 +62,13 @@ class RelatorioSecretariaAnual
             ) AS visitante ON TRUE
             WHERE s.data_hora_inicio >= :inicio
               AND s.data_hora_inicio < :fim_exclusivo
+              AND s.loja_id = :loja_id
               AND COALESCE(s.status, 'planejada') <> 'cancelada'
         ");
         $stmt->execute([
             'inicio' => $inicio->format('Y-m-d H:i:sP'),
             'fim_exclusivo' => $fimExclusivo->format('Y-m-d H:i:sP'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
         $total = (int) $stmt->fetchColumn();
@@ -79,6 +84,7 @@ class RelatorioSecretariaAnual
             ) AS visitante ON TRUE
             WHERE s.data_hora_inicio >= :inicio
               AND s.data_hora_inicio < :fim_exclusivo
+              AND s.loja_id = :loja_id
               AND COALESCE(s.status, 'planejada') <> 'cancelada'
               AND NULLIF(TRIM(COALESCE(visitante ->> 'loja', '')), '') IS NOT NULL
             GROUP BY loja
@@ -88,6 +94,7 @@ class RelatorioSecretariaAnual
         $stmtLojas->execute([
             'inicio' => $inicio->format('Y-m-d H:i:sP'),
             'fim_exclusivo' => $fimExclusivo->format('Y-m-d H:i:sP'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
         return [
@@ -106,6 +113,7 @@ class RelatorioSecretariaAnual
             FROM public.sessoes
             WHERE data_hora_inicio >= :inicio
               AND data_hora_inicio < :fim_exclusivo
+              AND loja_id = :loja_id
               AND COALESCE(status, 'planejada') <> 'cancelada'
             GROUP BY COALESCE(NULLIF(TRIM(grau_sessao), ''), 'Nao informado')
             ORDER BY total DESC, grau_sessao ASC
@@ -113,6 +121,7 @@ class RelatorioSecretariaAnual
         $stmt->execute([
             'inicio' => $inicio->format('Y-m-d H:i:sP'),
             'fim_exclusivo' => $fimExclusivo->format('Y-m-d H:i:sP'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
         $itens = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -145,11 +154,13 @@ class RelatorioSecretariaAnual
             JOIN public.sessoes s ON s.id = v.sessao_id
             WHERE s.data_hora_inicio >= :inicio
               AND s.data_hora_inicio < :fim_exclusivo
+              AND s.loja_id = :loja_id
               AND COALESCE(s.status, 'planejada') <> 'cancelada'
         ");
         $stmt->execute([
             'inicio' => $inicio->format('Y-m-d H:i:sP'),
             'fim_exclusivo' => $fimExclusivo->format('Y-m-d H:i:sP'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
         $stmtLojas = $this->db->prepare("
@@ -160,6 +171,7 @@ class RelatorioSecretariaAnual
             JOIN public.sessoes s ON s.id = v.sessao_id
             WHERE s.data_hora_inicio >= :inicio
               AND s.data_hora_inicio < :fim_exclusivo
+              AND s.loja_id = :loja_id
               AND COALESCE(s.status, 'planejada') <> 'cancelada'
               AND NULLIF(TRIM(COALESCE(v.loja_visitada, '')), '') IS NOT NULL
             GROUP BY loja
@@ -169,6 +181,7 @@ class RelatorioSecretariaAnual
         $stmtLojas->execute([
             'inicio' => $inicio->format('Y-m-d H:i:sP'),
             'fim_exclusivo' => $fimExclusivo->format('Y-m-d H:i:sP'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
         return [
@@ -189,11 +202,13 @@ class RelatorioSecretariaAnual
             ) AS visita ON TRUE
             WHERE s.data_hora_inicio >= :inicio
               AND s.data_hora_inicio < :fim_exclusivo
+              AND s.loja_id = :loja_id
               AND COALESCE(s.status, 'planejada') <> 'cancelada'
         ");
         $stmt->execute([
             'inicio' => $inicio->format('Y-m-d H:i:sP'),
             'fim_exclusivo' => $fimExclusivo->format('Y-m-d H:i:sP'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
         $stmtLojas = $this->db->prepare("
@@ -207,6 +222,7 @@ class RelatorioSecretariaAnual
             ) AS visita ON TRUE
             WHERE s.data_hora_inicio >= :inicio
               AND s.data_hora_inicio < :fim_exclusivo
+              AND s.loja_id = :loja_id
               AND COALESCE(s.status, 'planejada') <> 'cancelada'
               AND NULLIF(TRIM(COALESCE(visita ->> 'loja', '')), '') IS NOT NULL
             GROUP BY loja
@@ -216,6 +232,7 @@ class RelatorioSecretariaAnual
         $stmtLojas->execute([
             'inicio' => $inicio->format('Y-m-d H:i:sP'),
             'fim_exclusivo' => $fimExclusivo->format('Y-m-d H:i:sP'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
         return [
@@ -245,12 +262,14 @@ class RelatorioSecretariaAnual
             JOIN public.sessoes s ON s.id = e.sessao_id
             WHERE s.data_hora_inicio >= :inicio
               AND s.data_hora_inicio < :fim_exclusivo
+              AND s.loja_id = :loja_id
               AND COALESCE(s.status, 'planejada') <> 'cancelada'
               AND e.tipo_evento = :tipo_evento
         ");
         $stmt->execute([
             'inicio' => $inicio->format('Y-m-d H:i:sP'),
             'fim_exclusivo' => $fimExclusivo->format('Y-m-d H:i:sP'),
+            'loja_id' => $this->obterLojaAtualId(),
             'tipo_evento' => $tipoEvento,
         ]);
 
@@ -271,11 +290,13 @@ class RelatorioSecretariaAnual
             ) AS evento ON TRUE
             WHERE s.data_hora_inicio >= :inicio
               AND s.data_hora_inicio < :fim_exclusivo
+              AND s.loja_id = :loja_id
               AND COALESCE(s.status, 'planejada') <> 'cancelada'
         ");
         $stmt->bindValue('tipo', $tipo);
         $stmt->bindValue('inicio', $inicio->format('Y-m-d H:i:sP'));
         $stmt->bindValue('fim_exclusivo', $fimExclusivo->format('Y-m-d H:i:sP'));
+        $stmt->bindValue('loja_id', $this->obterLojaAtualId(), PDO::PARAM_INT);
         $stmt->execute();
 
         return [
@@ -311,16 +332,23 @@ class RelatorioSecretariaAnual
                     data_iniciacao,
                     created_at::date
                   ) < :limite
+              AND loja_id = :loja_id
               AND (data_desligamento IS NULL OR data_desligamento >= :limite)
               AND (data_oriente_eterno IS NULL OR data_oriente_eterno >= :limite)
         ";
 
         $stmtInicio = $this->db->prepare("SELECT COUNT(*) " . $sqlBase);
-        $stmtInicio->execute(['limite' => $inicio->format('Y-m-d')]);
+        $stmtInicio->execute([
+            'limite' => $inicio->format('Y-m-d'),
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $inicioAno = (int) $stmtInicio->fetchColumn();
 
         $stmtFim = $this->db->prepare("SELECT COUNT(*) " . $sqlBase);
-        $stmtFim->execute(['limite' => $fimExclusivo->format('Y-m-d')]);
+        $stmtFim->execute([
+            'limite' => $fimExclusivo->format('Y-m-d'),
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $fimAno = (int) $stmtFim->fetchColumn();
 
         $movStmt = $this->db->prepare("
@@ -332,10 +360,12 @@ class RelatorioSecretariaAnual
                 COUNT(*) FILTER (WHERE data_desligamento >= :inicio AND data_desligamento < :fim) AS desligamentos,
                 COUNT(*) FILTER (WHERE data_oriente_eterno >= :inicio AND data_oriente_eterno < :fim) AS oriente_eterno
             FROM public.obreiros
+            WHERE loja_id = :loja_id
         ");
         $movStmt->execute([
             'inicio' => $inicio->format('Y-m-d'),
             'fim' => $fimExclusivo->format('Y-m-d'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
         return [
@@ -364,6 +394,7 @@ class RelatorioSecretariaAnual
         $sqlBase = "
             FROM public.obreiros
             WHERE created_at < :limite
+              AND loja_id = :loja_id
               AND (
                     ativo = TRUE
                  OR updated_at >= :referencia
@@ -374,6 +405,7 @@ class RelatorioSecretariaAnual
         $stmtInicio->execute([
             'limite' => $inicio->format('Y-m-d H:i:sP'),
             'referencia' => $inicio->format('Y-m-d H:i:sP'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
         $inicioAno = (int) $stmtInicio->fetchColumn();
 
@@ -381,6 +413,7 @@ class RelatorioSecretariaAnual
         $stmtFim->execute([
             'limite' => $fimExclusivo->format('Y-m-d H:i:sP'),
             'referencia' => $fimExclusivo->format('Y-m-d H:i:sP'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
         $fimAno = (int) $stmtFim->fetchColumn();
 
@@ -403,6 +436,7 @@ class RelatorioSecretariaAnual
                     data_iniciacao,
                     created_at::date
                   ) < :fim
+              AND loja_id = :loja_id
               AND (data_desligamento IS NULL OR data_desligamento >= :inicio)
               AND (data_oriente_eterno IS NULL OR data_oriente_eterno >= :inicio)
         ";
@@ -423,6 +457,7 @@ class RelatorioSecretariaAnual
             'inicio' => $inicio->format('Y-m-d'),
             'fim' => $fimExclusivo->format('Y-m-d'),
             'referencia' => $fimExclusivo->modify('-1 day')->format('Y-m-d'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
         $resumo = $stmtResumo->fetch(PDO::FETCH_ASSOC) ?: [];
 
@@ -437,6 +472,7 @@ class RelatorioSecretariaAnual
         $stmtEscolaridade->execute([
             'inicio' => $inicio->format('Y-m-d'),
             'fim' => $fimExclusivo->format('Y-m-d'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
         $stmtSituacao = $this->db->prepare("
@@ -450,6 +486,7 @@ class RelatorioSecretariaAnual
         $stmtSituacao->execute([
             'inicio' => $inicio->format('Y-m-d'),
             'fim' => $fimExclusivo->format('Y-m-d'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
         $stmtGraus = $this->db->prepare("
@@ -463,6 +500,7 @@ class RelatorioSecretariaAnual
         $stmtGraus->execute([
             'inicio' => $inicio->format('Y-m-d'),
             'fim' => $fimExclusivo->format('Y-m-d'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
         $stmtCadastros = $this->db->prepare("
@@ -485,6 +523,7 @@ class RelatorioSecretariaAnual
         $stmtCadastros->execute([
             'inicio' => $inicio->format('Y-m-d'),
             'fim' => $fimExclusivo->format('Y-m-d'),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
         return [
@@ -529,5 +568,10 @@ class RelatorioSecretariaAnual
         ]);
 
         return (int) $stmt->fetchColumn() > 0;
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

@@ -4,6 +4,13 @@ namespace App\Core\Http;
 
 class WebGuards
 {
+    public static function forbidHtml(string $message = 'Acesso restrito.'): void
+    {
+        http_response_code(403);
+        echo $message;
+        exit;
+    }
+
     public static function requireLogin(bool $openTestAccess, array $session): void
     {
         if (!$openTestAccess && !isset($session['usuario_logado'])) {
@@ -15,9 +22,7 @@ class WebGuards
     public static function requirePermission(bool $allowed, string $message = 'Acesso restrito.'): void
     {
         if (!$allowed) {
-            http_response_code(403);
-            echo $message;
-            exit;
+            self::forbidHtml($message);
         }
     }
 

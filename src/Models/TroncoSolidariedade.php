@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class TroncoSolidariedade
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -20,12 +23,13 @@ class TroncoSolidariedade
     public function registrar(array $data): bool
     {
         $sql = "
-            INSERT INTO tronco_solidariedade (tipo, valor, data_mov, descricao, sessao_ref, created_by)
-            VALUES (:tipo, :valor, :data_mov, :descricao, :sessao_ref, :created_by)
+            INSERT INTO tronco_solidariedade (loja_id, tipo, valor, data_mov, descricao, sessao_ref, created_by)
+            VALUES (:loja_id, :tipo, :valor, :data_mov, :descricao, :sessao_ref, :created_by)
         ";
 
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
             'tipo' => $data['tipo'] ?? 'entrada',
             'valor' => $data['valor'] ?? 0,
             'data_mov' => $data['data_mov'] ?? date('Y-m-d'),
@@ -44,11 +48,16 @@ class TroncoSolidariedade
             SELECT * FROM tronco_solidariedade
             WHERE EXTRACT(MONTH FROM data_mov) = :mes
               AND EXTRACT(YEAR FROM data_mov) = :ano
+              AND loja_id = :loja_id
             ORDER BY data_mov DESC
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['mes' => $mes, 'ano' => $ano]);
+        $stmt->execute([
+            'mes' => $mes,
+            'ano' => $ano,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -66,10 +75,14 @@ class TroncoSolidariedade
                 COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE -valor END), 0) as saldo
             FROM tronco_solidariedade
             WHERE data_mov <= :ate_data
+              AND loja_id = :loja_id
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['ate_data' => $ateData]);
+        $stmt->execute([
+            'ate_data' => $ateData,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return (float) ($result['saldo'] ?? 0);
     }
@@ -86,11 +99,16 @@ class TroncoSolidariedade
             FROM tronco_solidariedade
             WHERE EXTRACT(MONTH FROM data_mov) = :mes
               AND EXTRACT(YEAR FROM data_mov) = :ano
+              AND loja_id = :loja_id
             GROUP BY tipo
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['mes' => $mes, 'ano' => $ano]);
+        $stmt->execute([
+            'mes' => $mes,
+            'ano' => $ano,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         
         $totais = ['entrada' => 0, 'saida' => 0];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
@@ -98,5 +116,10 @@ class TroncoSolidariedade
         }
         
         return $totais;
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

@@ -25,6 +25,7 @@ class BibliotecaController
     public function index(): void
     {
         $itens = $this->acervoModel->listarTodos();
+        $bibliotecaPermissions = $this->resolverPermissoes();
         require_once __DIR__ . '/../Views/biblioteca/index.php';
     }
 
@@ -297,5 +298,25 @@ class BibliotecaController
 
         $ok = $this->reacaoModel->definir($acervoId, $obreiroId, $gostei);
         return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar a reacao.'];
+    }
+
+    private function resolverPermissoes(): array
+    {
+        $permissionMap = $GLOBALS['gestor_loja_permission_map'] ?? null;
+        if (!$permissionMap instanceof \App\Core\Authorization\PermissionMap) {
+            return [];
+        }
+
+        $roles = array_values(array_unique(array_filter(array_map(
+            static fn ($role) => strtolower(trim((string) $role)),
+            $_SESSION['usuario_cargos'] ?? [$_SESSION['usuario_cargo'] ?? '']
+        ))));
+        $permissions = $permissionMap->permissionsForRoles($roles);
+        $all = in_array('*', $permissions, true);
+
+        return [
+            'biblioteca.manage' => $all || in_array('biblioteca.manage', $permissions, true),
+            'biblioteca.classificar' => $all || in_array('biblioteca.classificar', $permissions, true),
+        ];
     }
 }

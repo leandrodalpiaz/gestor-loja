@@ -6,6 +6,9 @@ session_start();
 
 use App\Config\Database;
 use App\Config\Env;
+use App\Core\Auth\CurrentUser;
+use App\Core\Authorization\Authorizer;
+use App\Core\Authorization\PermissionMap;
 use App\Models\Acervo;
 use App\Models\Obreiro;
 use App\Services\TelegramInitDataValidator;
@@ -23,15 +26,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+$normalizeRole = static function (?string $cargo): string {
+    $cargo = strtolower(trim((string) $cargo));
+    $cargo = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $cargo) ?: $cargo;
+    $cargo = preg_replace('/[^a-z0-9_]+/', '', $cargo) ?? '';
+    return $cargo;
+};
+$openTestAccess = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VALIDATE_BOOL);
+$currentUser = new CurrentUser($_SESSION, $normalizeRole);
+$permissionMap = new PermissionMap();
+$authorizer = new Authorizer($currentUser, $permissionMap, $openTestAccess);
 
-$authorized = false;
-if (isset($_SESSION['usuario_logado'])) {
-    $roles = array_values(array_unique(array_filter(array_map(
-        static fn ($role) => strtolower(trim((string) $role)),
-        $_SESSION['usuario_cargos'] ?? [$_SESSION['usuario_cargo'] ?? '']
-    ))));
-    $authorized = count(array_intersect($roles, ['bibliotecario', 'admin', 'veneravel'])) > 0;
-}
+$authorized = isset($_SESSION['usuario_logado']) && $authorizer->hasPermission('biblioteca.manage');
 
 if (!$authorized) {
     $initData = trim((string) ($payload['init_data'] ?? ''));
@@ -42,10 +48,11 @@ if (!$authorized) {
         $obreiro = (new Obreiro())->findByTelegramId((int) $telegramUser['id']);
         if ($obreiro) {
             $roles = array_values(array_unique(array_filter(array_map(
-                static fn ($role) => strtolower(trim((string) $role)),
+                $normalizeRole,
                 $obreiro['cargos'] ?? [$obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? '']
             ))));
-            $authorized = count(array_intersect($roles, ['bibliotecario', 'admin', 'veneravel'])) > 0;
+            $permissions = $permissionMap->permissionsForRoles($roles);
+            $authorized = in_array('*', $permissions, true) || in_array('biblioteca.manage', $permissions, true);
         }
     }
 }

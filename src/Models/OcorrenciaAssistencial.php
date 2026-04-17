@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class OcorrenciaAssistencial
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -18,6 +21,7 @@ class OcorrenciaAssistencial
     {
         $stmt = $this->db->prepare("
             INSERT INTO public.ocorrencias_assistenciais (
+                loja_id,
                 tipo_ocorrencia,
                 status,
                 prioridade,
@@ -36,6 +40,7 @@ class OcorrenciaAssistencial
                 created_by,
                 updated_by
             ) VALUES (
+                :loja_id,
                 :tipo_ocorrencia,
                 :status,
                 :prioridade,
@@ -57,6 +62,7 @@ class OcorrenciaAssistencial
         ");
 
         return $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
             'tipo_ocorrencia' => $this->normalizarTipo((string) ($payload['tipo_ocorrencia'] ?? 'assistencia_geral')),
             'status' => $this->normalizarStatus((string) ($payload['status'] ?? 'aberta')),
             'prioridade' => $this->normalizarPrioridade((string) ($payload['prioridade'] ?? 'media')),
@@ -90,9 +96,11 @@ class OcorrenciaAssistencial
             FROM public.ocorrencias_assistenciais oa
             LEFT JOIN public.obreiros o ON o.id = oa.obreiro_id
             LEFT JOIN public.obreiros criador ON criador.id = oa.created_by
+            WHERE oa.loja_id = :loja_id
             ORDER BY oa.created_at DESC
             LIMIT :limite
         ");
+        $stmt->bindValue(':loja_id', $this->obterLojaAtualId(), PDO::PARAM_INT);
         $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
         $stmt->execute();
 
@@ -101,7 +109,7 @@ class OcorrenciaAssistencial
 
     public function contarResumo(): array
     {
-        $stmt = $this->db->query("
+        $stmt = $this->db->prepare("
             SELECT
                 COUNT(*) AS total,
                 COUNT(*) FILTER (WHERE status = 'aberta') AS abertas,
@@ -109,7 +117,9 @@ class OcorrenciaAssistencial
                 COUNT(*) FILTER (WHERE status = 'concluida') AS concluidas,
                 COUNT(*) FILTER (WHERE necessita_apoio_financeiro = TRUE) AS com_apoio_financeiro
             FROM public.ocorrencias_assistenciais
+            WHERE loja_id = :loja_id
         ");
+        $stmt->execute(['loja_id' => $this->obterLojaAtualId()]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
         return [
@@ -140,6 +150,7 @@ class OcorrenciaAssistencial
                    updated_by = :updated_by,
                    updated_at = NOW()
              WHERE id = :id
+               AND loja_id = :loja_id
         ");
 
         return $stmt->execute([
@@ -147,6 +158,7 @@ class OcorrenciaAssistencial
             'status' => $status,
             'observacao' => $observacao,
             'updated_by' => $this->limparTexto($autorId),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
     }
 
@@ -168,6 +180,7 @@ class OcorrenciaAssistencial
                    updated_by = :updated_by,
                    updated_at = NOW()
              WHERE id = :id
+               AND loja_id = :loja_id
         ");
 
         return $stmt->execute([
@@ -175,6 +188,7 @@ class OcorrenciaAssistencial
             'observacao' => $this->limparTexto($observacao),
             'data_proxima_acao' => $this->normalizarData($dataProximaAcao),
             'updated_by' => $this->limparTexto($autorId),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
     }
 
@@ -189,11 +203,15 @@ class OcorrenciaAssistencial
                 o.cim AS obreiro_cim
             FROM public.ocorrencias_assistenciais oa
             LEFT JOIN public.obreiros o ON o.id = oa.obreiro_id
-            WHERE oa.necessita_visita = TRUE
-               OR oa.status = 'em_acompanhamento'
+            WHERE oa.loja_id = :loja_id
+              AND (
+                  oa.necessita_visita = TRUE
+                  OR oa.status = 'em_acompanhamento'
+              )
             ORDER BY COALESCE(oa.data_proxima_acao, oa.data_ocorrencia, CURRENT_DATE) ASC, oa.updated_at DESC
             LIMIT :limite
         ");
+        $stmt->bindValue(':loja_id', $this->obterLojaAtualId(), PDO::PARAM_INT);
         $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
         $stmt->execute();
 
@@ -264,5 +282,10 @@ class OcorrenciaAssistencial
     {
         $valor = trim((string) $valor);
         return $valor !== '' ? $valor : null;
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

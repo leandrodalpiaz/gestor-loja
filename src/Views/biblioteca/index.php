@@ -1,18 +1,12 @@
 <?php
 $lista = $itens ?? [];
 $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
-$usuarioCargos = $_SESSION['usuario_cargos'] ?? [$_SESSION['usuario_cargo'] ?? ''];
-$usuarioCargos = array_values(array_unique(array_filter(array_map(
-    static fn ($role) => strtolower(trim((string) $role)),
-    $usuarioCargos
-))));
-
 $isTestSession = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id'] === 0;
 $allowAllPanels = filter_var($_ENV['APP_TEST_ALLOW_ALL_PANELS'] ?? 'true', FILTER_VALIDATE_BOOL);
 $showAllPanels = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VALIDATE_BOOL) || $isTestSession || $allowAllPanels;
-
-$podeGerenciar = $showAllPanels || count(array_intersect($usuarioCargos, ['bibliotecario', 'veneravel', 'admin'])) > 0;
-$podeClassificar = $showAllPanels || count(array_intersect($usuarioCargos, ['primeiro_vigilante', 'segundo_vigilante', 'bibliotecario', 'veneravel', 'admin'])) > 0;
+$bibliotecaPermissions = is_array($bibliotecaPermissions ?? null) ? $bibliotecaPermissions : [];
+$podeGerenciar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.manage'] ?? false);
+$podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.classificar'] ?? false);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">

@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class VisitaExternaSessao
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -16,8 +19,20 @@ class VisitaExternaSessao
 
     public function substituirPorSessao(int $sessaoId, array $visitas, ?string $autorId = null): bool
     {
-        $delete = $this->db->prepare("DELETE FROM public.visitas_externas_sessao WHERE sessao_id = :sessao_id");
-        $okDelete = $delete->execute(['sessao_id' => $sessaoId]);
+        $delete = $this->db->prepare("
+            DELETE FROM public.visitas_externas_sessao
+            WHERE sessao_id = :sessao_id
+              AND EXISTS (
+                  SELECT 1
+                  FROM public.sessoes s
+                  WHERE s.id = :sessao_id
+                    AND s.loja_id = :loja_id
+              )
+        ");
+        $okDelete = $delete->execute([
+            'sessao_id' => $sessaoId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         if (!$okDelete) {
             return false;
         }
@@ -40,7 +55,7 @@ class VisitaExternaSessao
                 created_by,
                 updated_by,
                 updated_at
-            ) VALUES (
+            ) SELECT
                 :sessao_id,
                 :obreiro_id,
                 :obreiro_nome_livre,
@@ -53,7 +68,9 @@ class VisitaExternaSessao
                 :created_by,
                 :updated_by,
                 NOW()
-            )
+            FROM public.sessoes s
+            WHERE s.id = :sessao_id
+              AND s.loja_id = :loja_id
         ");
 
         foreach ($visitas as $visita) {
@@ -81,6 +98,7 @@ class VisitaExternaSessao
                 'origem_registro' => 'saco_propostas',
                 'created_by' => $autorId,
                 'updated_by' => $autorId,
+                'loja_id' => $this->obterLojaAtualId(),
             ]);
             if (!$ok) {
                 return false;
@@ -88,5 +106,10 @@ class VisitaExternaSessao
         }
 
         return true;
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class PalavraDia
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -21,6 +24,7 @@ class PalavraDia
         $this->db->exec("
             CREATE TABLE IF NOT EXISTS palavras_dia (
                 id SERIAL PRIMARY KEY,
+                loja_id INTEGER NULL,
                 titulo VARCHAR(255) NULL,
                 mensagem TEXT NOT NULL,
                 observacao TEXT NULL,
@@ -48,17 +52,27 @@ class PalavraDia
                 continue;
             }
 
-            $check = $this->db->prepare("SELECT id FROM palavras_dia WHERE mensagem = :mensagem LIMIT 1");
-            $check->execute(['mensagem' => $mensagem]);
+            $check = $this->db->prepare("
+                SELECT id
+                FROM palavras_dia
+                WHERE loja_id = :loja_id
+                  AND mensagem = :mensagem
+                LIMIT 1
+            ");
+            $check->execute([
+                'loja_id' => $this->obterLojaAtualId(),
+                'mensagem' => $mensagem,
+            ]);
             if ($check->fetch(PDO::FETCH_ASSOC)) {
                 continue;
             }
 
             $insert = $this->db->prepare("
-                INSERT INTO palavras_dia (titulo, mensagem, observacao, ativo, created_by)
-                VALUES (NULL, :mensagem, 'Migrada do legado fallback', :ativo, NULL)
+                INSERT INTO palavras_dia (loja_id, titulo, mensagem, observacao, ativo, created_by)
+                VALUES (:loja_id, NULL, :mensagem, 'Migrada do legado fallback', :ativo, NULL)
             ");
             $insert->execute([
+                'loja_id' => $this->obterLojaAtualId(),
                 'mensagem' => $mensagem,
                 'ativo' => !empty($item['ativo']) ? 'true' : 'false',
             ]);
@@ -68,8 +82,8 @@ class PalavraDia
     public function listar(array $filtros = [], int $limit = 300): array
     {
         $limit = max(1, min($limit, 500));
-        $where = [];
-        $params = [];
+        $where = ["loja_id = :loja_id"];
+        $params = ['loja_id' => $this->obterLojaAtualId()];
 
         $termo = trim((string) ($filtros['termo'] ?? ''));
         if ($termo !== '') {
@@ -84,11 +98,7 @@ class PalavraDia
             $where[] = "ativo = false";
         }
 
-        $sql = "SELECT * FROM palavras_dia";
-        if ($where !== []) {
-            $sql .= " WHERE " . implode(' AND ', $where);
-        }
-        $sql .= " ORDER BY id ASC LIMIT :limit";
+        $sql = "SELECT * FROM palavras_dia WHERE " . implode(' AND ', $where) . " ORDER BY id ASC LIMIT :limit";
 
         $stmt = $this->db->prepare($sql);
         foreach ($params as $key => $value) {
@@ -107,11 +117,12 @@ class PalavraDia
     public function create(array $data, ?int $createdBy): bool
     {
         $stmt = $this->db->prepare("
-            INSERT INTO palavras_dia (titulo, mensagem, observacao, ativo, created_by)
-            VALUES (:titulo, :mensagem, :observacao, :ativo, :created_by)
+            INSERT INTO palavras_dia (loja_id, titulo, mensagem, observacao, ativo, created_by)
+            VALUES (:loja_id, :titulo, :mensagem, :observacao, :ativo, :created_by)
         ");
 
         return $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
             'titulo' => trim((string) ($data['titulo'] ?? '')) ?: null,
             'mensagem' => trim((string) ($data['mensagem'] ?? '')),
             'observacao' => trim((string) ($data['observacao'] ?? '')) ?: null,
@@ -130,10 +141,12 @@ class PalavraDia
                 ativo = :ativo,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = :id
+              AND loja_id = :loja_id
         ");
 
         return $stmt->execute([
             'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
             'titulo' => trim((string) ($data['titulo'] ?? '')) ?: null,
             'mensagem' => trim((string) ($data['mensagem'] ?? '')),
             'observacao' => trim((string) ($data['observacao'] ?? '')) ?: null,
@@ -148,13 +161,25 @@ class PalavraDia
             SET ativo = NOT ativo,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = :id
+              AND loja_id = :loja_id
         ");
-        return $stmt->execute(['id' => $id]);
+        return $stmt->execute([
+            'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
     }
 
     public function excluir(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM palavras_dia WHERE id = :id");
-        return $stmt->execute(['id' => $id]);
+        $stmt = $this->db->prepare("DELETE FROM palavras_dia WHERE id = :id AND loja_id = :loja_id");
+        return $stmt->execute([
+            'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

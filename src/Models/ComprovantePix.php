@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class ComprovantePix
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -63,11 +66,12 @@ class ComprovantePix
             FROM comprovantes_pix cp
             LEFT JOIN obreiros o ON cp.obreiro_id = o.id
             LEFT JOIN categorias_financeiras c ON cp.categoria_id = c.id
+            WHERE (cp.obreiro_id IS NULL OR o.loja_id = :loja_id)
         ";
 
-        $params = [];
+        $params = ['loja_id' => $this->obterLojaAtualId()];
         if ($status !== null && $status !== '') {
-            $sql .= " WHERE cp.status = :status";
+            $sql .= " AND cp.status = :status";
             $params['status'] = $status;
         }
 
@@ -152,12 +156,22 @@ class ComprovantePix
             FROM comprovantes_pix cp
             LEFT JOIN obreiros o ON cp.obreiro_id = o.id
             LEFT JOIN categorias_financeiras c ON cp.categoria_id = c.id
-            WHERE cp.id = :id LIMIT 1
+            WHERE cp.id = :id
+              AND (cp.obreiro_id IS NULL OR o.loja_id = :loja_id)
+            LIMIT 1
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['id' => $id]);
+        $stmt->execute([
+            'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ?: null;
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

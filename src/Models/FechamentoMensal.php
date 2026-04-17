@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class FechamentoMensal
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -22,11 +25,16 @@ class FechamentoMensal
         $sql = "
             SELECT * FROM fechamento_mensal
             WHERE mes_ref = :mes AND ano_ref = :ano
+              AND loja_id = :loja_id
             LIMIT 1
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['mes' => $mes, 'ano' => $ano]);
+        $stmt->execute([
+            'mes' => $mes,
+            'ano' => $ano,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ?: null;
     }
@@ -37,13 +45,13 @@ class FechamentoMensal
     public function criar(int $mes, int $ano, float $saldoInicial, ?string $observacoes = null, ?string $criadoPor = null): bool
     {
         $sql = "
-            INSERT INTO fechamento_mensal (mes_ref, ano_ref, saldo_inicial, saldo_final, criado_em, atualizado_em)
-            VALUES (:mes, :ano, :saldo_inicial, :saldo_final, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            ON CONFLICT (mes_ref, ano_ref) DO NOTHING
+            INSERT INTO fechamento_mensal (loja_id, mes_ref, ano_ref, saldo_inicial, saldo_final, criado_em, atualizado_em)
+            VALUES (:loja_id, :mes, :ano, :saldo_inicial, :saldo_final, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         ";
 
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
             'mes' => $mes,
             'ano' => $ano,
             'saldo_inicial' => $saldoInicial,
@@ -67,9 +75,13 @@ class FechamentoMensal
         $this->db->beginTransaction();
         try {
             // Atualiza saldo
-            $sql = "UPDATE fechamento_mensal SET saldo_inicial = :saldo, saldo_final = (total_entradas - total_saidas + :saldo), atualizado_em = CURRENT_TIMESTAMP WHERE id = :id";
+            $sql = "UPDATE fechamento_mensal SET saldo_inicial = :saldo, saldo_final = (total_entradas - total_saidas + :saldo), atualizado_em = CURRENT_TIMESTAMP WHERE id = :id AND loja_id = :loja_id";
             $stmt = $this->db->prepare($sql);
-            $stmt->execute(['saldo' => $novoSaldo, 'id' => $fechamentoId]);
+            $stmt->execute([
+                'saldo' => $novoSaldo,
+                'id' => $fechamentoId,
+                'loja_id' => $this->obterLojaAtualId(),
+            ]);
 
             // Registra auditoria
             $sqlAudit = "
@@ -118,7 +130,7 @@ class FechamentoMensal
                 total_saidas = :saidas,
                 saldo_final = :saldo_final,
                 atualizado_em = CURRENT_TIMESTAMP
-            WHERE mes_ref = :mes AND ano_ref = :ano
+            WHERE mes_ref = :mes AND ano_ref = :ano AND loja_id = :loja_id
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -128,6 +140,7 @@ class FechamentoMensal
             'saldo_final' => $saldoFinal,
             'mes' => $mes,
             'ano' => $ano,
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
     }
 
@@ -142,11 +155,15 @@ class FechamentoMensal
             FROM fechamento_mensal fm
             LEFT JOIN obreiros o ON fm.fechado_por = o.id
             WHERE fm.id = :id
+              AND fm.loja_id = :loja_id
             LIMIT 1
         ";
 
         $stmt = $this->db->prepare($sqlFechamento);
-        $stmt->execute(['id' => $fechamentoId]);
+        $stmt->execute([
+            'id' => $fechamentoId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $fechamento = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$fechamento) {
@@ -175,9 +192,12 @@ class FechamentoMensal
      */
     public function obterPorId(int $id): ?array
     {
-        $sql = "SELECT * FROM fechamento_mensal WHERE id = :id LIMIT 1";
+        $sql = "SELECT * FROM fechamento_mensal WHERE id = :id AND loja_id = :loja_id LIMIT 1";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['id' => $id]);
+        $stmt->execute([
+            'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ?: null;
     }
@@ -192,7 +212,7 @@ class FechamentoMensal
             SET status = 'fechado',
                 fechado_por = :fechado_por,
                 fechado_em = CURRENT_TIMESTAMP
-            WHERE mes_ref = :mes AND ano_ref = :ano
+            WHERE mes_ref = :mes AND ano_ref = :ano AND loja_id = :loja_id
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -200,6 +220,12 @@ class FechamentoMensal
             'mes' => $mes,
             'ano' => $ano,
             'fechado_por' => $fechadoPor,
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

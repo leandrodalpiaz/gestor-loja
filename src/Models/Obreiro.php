@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class Obreiro
 {
+    use ResolvesStoreTenant;
+
     public const ESTADOS_CIVIS = [
         'solteiro',
         'casado',
@@ -51,10 +54,32 @@ class Obreiro
     ];
 
     private PDO $db;
+    private ?bool $suportaLojaId = null;
 
     public function __construct()
     {
         $this->db = Database::getConnection();
+    }
+
+    private function suportaLojaId(): bool
+    {
+        if ($this->suportaLojaId !== null) {
+            return $this->suportaLojaId;
+        }
+
+        $stmt = $this->db->prepare(
+            "SELECT 1
+             FROM information_schema.columns
+             WHERE table_schema = 'public'
+               AND table_name = 'obreiros'
+               AND column_name = 'loja_id'
+             LIMIT 1"
+        );
+        $stmt->execute();
+
+        $this->suportaLojaId = (bool) $stmt->fetchColumn();
+
+        return $this->suportaLojaId;
     }
 
     /**
@@ -63,6 +88,15 @@ class Obreiro
      */
     public function atualizarCargo($id, $novoCargo): bool
     {
+        if ($this->suportaLojaId()) {
+            $stmt = $this->db->prepare("UPDATE obreiros SET cargo = :cargo WHERE id = :id AND loja_id = :loja_id");
+            return $stmt->execute([
+                'cargo' => $novoCargo,
+                'id' => $id,
+                'loja_id' => $this->obterLojaAtualId(),
+            ]);
+        }
+
         $stmt = $this->db->prepare("UPDATE obreiros SET cargo = :cargo WHERE id = :id");
         return $stmt->execute([
             'cargo' => $novoCargo,
@@ -72,8 +106,30 @@ class Obreiro
 
     public function findByTelegramId(int $telegramId): ?array
     {
-        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE telegram_id = :telegram_id AND ativo = true LIMIT 1");
-        $stmt->execute(['telegram_id' => $telegramId]);
+        if ($this->suportaLojaId() && $this->deveAplicarEscopoTenantNaIdentidade()) {
+            $stmt = $this->db->prepare(
+                "SELECT *
+                 FROM obreiros
+                 WHERE telegram_id = :telegram_id
+                   AND ativo = true
+                   AND loja_id = :loja_id
+                 LIMIT 1"
+            );
+            $stmt->execute([
+                'telegram_id' => $telegramId,
+                'loja_id' => $this->obterLojaAtualId(),
+            ]);
+        } else {
+            $stmt = $this->db->prepare(
+                "SELECT *
+                 FROM obreiros
+                 WHERE telegram_id = :telegram_id
+                   AND ativo = true
+                 ORDER BY nome ASC
+                 LIMIT 1"
+            );
+            $stmt->execute(['telegram_id' => $telegramId]);
+        }
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $result ? $this->hidratarCargosAtivos($result) : null;
@@ -81,18 +137,40 @@ class Obreiro
 
     public function getAllAtivos(): array
     {
-        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE ativo = true ORDER BY nome ASC");
-        $stmt->execute();
+        if ($this->suportaLojaId()) {
+            $stmt = $this->db->prepare(
+                "SELECT *
+                 FROM obreiros
+                 WHERE ativo = true
+                   AND loja_id = :loja_id
+                 ORDER BY nome ASC"
+            );
+            $stmt->execute(['loja_id' => $this->obterLojaAtualId()]);
+        } else {
+            $stmt = $this->db->query(
+                "SELECT *
+                 FROM obreiros
+                 WHERE ativo = true
+                 ORDER BY nome ASC"
+            );
+        }
 
         return $this->hidratarListaCargosAtivos($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function listarParaSecretaria(array $filtros = []): array
     {
-        $sql = "SELECT *
-                FROM public.obreiros
-                WHERE 1 = 1";
-        $params = [];
+        if ($this->suportaLojaId()) {
+            $sql = "SELECT *
+                    FROM public.obreiros
+                    WHERE loja_id = :loja_id";
+            $params = ['loja_id' => $this->obterLojaAtualId()];
+        } else {
+            $sql = "SELECT *
+                    FROM public.obreiros
+                    WHERE 1 = 1";
+            $params = [];
+        }
 
         $busca = trim((string) ($filtros['busca'] ?? ''));
         if ($busca !== '') {
@@ -219,33 +297,87 @@ class Obreiro
               )
         ";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
+        if ($this->suportaLojaId()) {
+            $sql = str_replace(
+                'WHERE ativo = true',
+                'WHERE ativo = true
+              AND loja_id = :loja_id',
+                $sql
+            );
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute(['loja_id' => $this->obterLojaAtualId()]);
+        } else {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+        }
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function buscarPorAniversario($data): array
     {
-        $sql = "SELECT * FROM obreiros WHERE TO_CHAR(data_nascimento_civil, 'MM-DD') = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$data]);
+        if ($this->suportaLojaId()) {
+            $sql = "SELECT * FROM obreiros WHERE loja_id = ? AND TO_CHAR(data_nascimento_civil, 'MM-DD') = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$this->obterLojaAtualId(), $data]);
+        } else {
+            $sql = "SELECT * FROM obreiros WHERE TO_CHAR(data_nascimento_civil, 'MM-DD') = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$data]);
+        }
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function buscarPorDatasMaconicas($data): array
     {
-        $sql = "SELECT nome, 'Iniciacao' as tipo, data_iniciacao as data FROM obreiros WHERE TO_CHAR(data_iniciacao, 'MM-DD') = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$data]);
+        if ($this->suportaLojaId()) {
+            $sql = "SELECT nome, 'Iniciacao' as tipo, data_iniciacao as data FROM obreiros WHERE loja_id = ? AND TO_CHAR(data_iniciacao, 'MM-DD') = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$this->obterLojaAtualId(), $data]);
+        } else {
+            $sql = "SELECT nome, 'Iniciacao' as tipo, data_iniciacao as data FROM obreiros WHERE TO_CHAR(data_iniciacao, 'MM-DD') = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$data]);
+        }
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function create(array $data): bool
     {
-        $sql = "INSERT INTO obreiros (
+        if ($this->suportaLojaId()) {
+            $sql = "INSERT INTO obreiros (
+            loja_id,
+            cim, nome, nome_historico, cpf,
+            data_nascimento_civil, estado_civil, data_iniciacao, data_filiacao,
+            data_regularizacao, data_reintegracao, data_quite_placet,
+            data_suspensao, data_desligamento, data_oriente_eterno,
+            telefone, email, profissao, escolaridade, faixa_renda,
+            loja_origem, grau, cargo, situacao_quadro,
+            data_elevacao, data_exaltacao, telegram_id,
+            potencia_nome, potencia_sigla, numero_quadro, potencia_login,
+            acesso_potencia_liberado, acesso_potencia_liberado_em,
+            observacao_secretaria, ativo,
+            created_at, updated_at
+        ) VALUES (
+            :loja_id,
+            :cim, :nome, :nome_historico, :cpf,
+            :data_nascimento_civil, :estado_civil, :data_iniciacao, :data_filiacao,
+            :data_regularizacao, :data_reintegracao, :data_quite_placet,
+            :data_suspensao, :data_desligamento, :data_oriente_eterno,
+            :telefone, :email, :profissao, :escolaridade, :faixa_renda,
+            :loja_origem, :grau, :cargo, :situacao_quadro,
+            :data_elevacao, :data_exaltacao, :telegram_id,
+            :potencia_nome, :potencia_sigla, :numero_quadro, :potencia_login,
+            :acesso_potencia_liberado, :acesso_potencia_liberado_em,
+            :observacao_secretaria, :ativo,
+            NOW(), NOW()
+        )";
+
+            $stmt = $this->db->prepare($sql);
+        } else {
+            $sql = "INSERT INTO obreiros (
             cim, nome, nome_historico, cpf,
             data_nascimento_civil, estado_civil, data_iniciacao, data_filiacao,
             data_regularizacao, data_reintegracao, data_quite_placet,
@@ -270,15 +402,15 @@ class Obreiro
             :observacao_secretaria, :ativo,
             NOW(), NOW()
         )";
-
-        $stmt = $this->db->prepare($sql);
+            $stmt = $this->db->prepare($sql);
+        }
 
         $nascimento = !empty($data['data_nascimento_civil']) ? $data['data_nascimento_civil'] : null;
         $iniciacao = !empty($data['data_iniciacao']) ? $data['data_iniciacao'] : null;
         $situacaoQuadro = $this->normalizarSituacaoQuadro($data['situacao_quadro'] ?? null);
         $ativo = $this->situacaoMantemCadastroAtivo($situacaoQuadro) ? 'true' : 'false';
 
-        return $stmt->execute([
+        $params = [
             'cim' => $data['cim'] ?? null,
             'nome' => $data['nome_completo'] ?? null,
             'nome_historico' => $data['nome_historico'] ?? null,
@@ -315,13 +447,27 @@ class Obreiro
                 : null,
             'observacao_secretaria' => $data['observacao_secretaria'] ?? null,
             'ativo' => $ativo,
-        ]);
+        ];
+
+        if ($this->suportaLojaId()) {
+            $params['loja_id'] = $this->obterLojaAtualId();
+        }
+
+        return $stmt->execute($params);
     }
 
     public function findById(string $id): ?array
     {
-        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE id = :id LIMIT 1");
-        $stmt->execute(['id' => $id]);
+        if ($this->suportaLojaId()) {
+            $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE id = :id AND loja_id = :loja_id LIMIT 1");
+            $stmt->execute([
+                'id' => $id,
+                'loja_id' => $this->obterLojaAtualId(),
+            ]);
+        } else {
+            $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE id = :id LIMIT 1");
+            $stmt->execute(['id' => $id]);
+        }
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $result ? $this->hidratarCargosAtivos($result) : null;
@@ -367,6 +513,11 @@ class Obreiro
             updated_at = NOW()
             WHERE id = :id";
 
+        if ($this->suportaLojaId()) {
+            $sql .= "
+              AND loja_id = :loja_id";
+        }
+
         $stmt = $this->db->prepare($sql);
 
         $nascimento = !empty($data['data_nascimento_civil']) ? $data['data_nascimento_civil'] : null;
@@ -375,7 +526,7 @@ class Obreiro
         $ativoManual = (isset($data['ativo']) && $data['ativo'] == '1');
         $ativo = ($ativoManual && $this->situacaoMantemCadastroAtivo($situacaoQuadro)) ? 'true' : 'false';
 
-        return $stmt->execute([
+        $params = [
             'id' => $data['id'],
             'cim' => $data['cim'],
             'nome' => $data['nome_completo'],
@@ -413,13 +564,41 @@ class Obreiro
                 : null,
             'observacao_secretaria' => $data['observacao_secretaria'] ?? null,
             'ativo' => $ativo,
-        ]);
+        ];
+
+        if ($this->suportaLojaId()) {
+            $params['loja_id'] = $this->obterLojaAtualId();
+        }
+
+        return $stmt->execute($params);
     }
 
     public function autenticar(string $matricula, string $senha): ?array
     {
-        $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE cim = :matricula AND ativo = true LIMIT 1");
-        $stmt->execute(['matricula' => $matricula]);
+        if ($this->suportaLojaId() && $this->deveAplicarEscopoTenantNaIdentidade()) {
+            $stmt = $this->db->prepare(
+                "SELECT *
+                 FROM obreiros
+                 WHERE cim = :matricula
+                   AND ativo = true
+                   AND loja_id = :loja_id
+                 LIMIT 1"
+            );
+            $stmt->execute([
+                'matricula' => $matricula,
+                'loja_id' => $this->obterLojaAtualId(),
+            ]);
+        } else {
+            $stmt = $this->db->prepare(
+                "SELECT *
+                 FROM obreiros
+                 WHERE cim = :matricula
+                   AND ativo = true
+                 ORDER BY nome ASC
+                 LIMIT 1"
+            );
+            $stmt->execute(['matricula' => $matricula]);
+        }
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($usuario && !empty($usuario['senha_hash']) && password_verify($senha, $usuario['senha_hash'])) {
@@ -427,6 +606,16 @@ class Obreiro
         }
 
         return null;
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
+    }
+
+    private function deveAplicarEscopoTenantNaIdentidade(): bool
+    {
+        return isset($_SESSION['tenant_id']) || isset($_SESSION['tenant_slug']) || isset($_SESSION['tenant_name']);
     }
 
     private function hidratarCargosAtivos(array $obreiro): array

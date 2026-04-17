@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use App\Services\HistoricoEventos;
 use PDO;
 
 class HistoriaMaconica
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -22,6 +25,7 @@ class HistoriaMaconica
         $this->db->exec("
             CREATE TABLE IF NOT EXISTS historias_maconicas (
                 id SERIAL PRIMARY KEY,
+                loja_id INTEGER NULL,
                 titulo VARCHAR(255) NOT NULL,
                 dia SMALLINT NOT NULL,
                 mes SMALLINT NOT NULL,
@@ -37,16 +41,17 @@ class HistoriaMaconica
 
         $this->db->exec("
             CREATE UNIQUE INDEX IF NOT EXISTS idx_historias_maconicas_unico
-            ON historias_maconicas (mes, dia, titulo)
+            ON historias_maconicas (loja_id, mes, dia, titulo)
         ");
     }
 
     private function migrarLegado(): void
     {
+        $lojaId = $this->obterLojaAtualId();
         $fixos = HistoricoEventos::getFixos();
         foreach ($fixos as $diaMes => $evento) {
             [$mes, $dia] = array_map('intval', explode('-', $diaMes));
-            $titulo = trim((string) ($evento['titulo'] ?? 'Evento histórico'));
+            $titulo = trim((string) ($evento['titulo'] ?? 'Evento historico'));
             $texto = trim((string) ($evento['texto'] ?? ''));
             $anoRef = isset($evento['ano_ref']) && $evento['ano_ref'] !== null ? (int) $evento['ano_ref'] : null;
             $fonte = $this->extrairFonte($texto);
@@ -57,15 +62,16 @@ class HistoriaMaconica
             }
 
             $stmt = $this->db->prepare("
-                INSERT INTO historias_maconicas (titulo, dia, mes, ano_ref, texto, fonte, ativo, created_by, updated_at)
-                VALUES (:titulo, :dia, :mes, :ano_ref, :texto, :fonte, true, null, CURRENT_TIMESTAMP)
-                ON CONFLICT (mes, dia, titulo) DO UPDATE SET
+                INSERT INTO historias_maconicas (loja_id, titulo, dia, mes, ano_ref, texto, fonte, ativo, created_by, updated_at)
+                VALUES (:loja_id, :titulo, :dia, :mes, :ano_ref, :texto, :fonte, true, null, CURRENT_TIMESTAMP)
+                ON CONFLICT (loja_id, mes, dia, titulo) DO UPDATE SET
                     ano_ref = EXCLUDED.ano_ref,
                     texto = EXCLUDED.texto,
                     fonte = EXCLUDED.fonte,
                     updated_at = CURRENT_TIMESTAMP
             ");
             $stmt->execute([
+                'loja_id' => $lojaId,
                 'titulo' => $titulo,
                 'dia' => $dia,
                 'mes' => $mes,
@@ -94,19 +100,19 @@ class HistoriaMaconica
                 continue;
             }
 
-            $titulo = trim((string) ($registro['nome'] ?? 'Evento histórico'));
+            $titulo = trim((string) ($registro['nome'] ?? 'Evento historico'));
             $texto = trim((string) ($registro['mensagem_custom'] ?? ''));
             if ($titulo === '') {
-                $titulo = 'Evento histórico';
+                $titulo = 'Evento historico';
             }
             if ($texto === '') {
                 $texto = $titulo;
             }
 
             $stmt = $this->db->prepare("
-                INSERT INTO historias_maconicas (titulo, dia, mes, ano_ref, texto, fonte, ativo, created_by, updated_at)
-                VALUES (:titulo, :dia, :mes, :ano_ref, :texto, :fonte, :ativo, :created_by, CURRENT_TIMESTAMP)
-                ON CONFLICT (mes, dia, titulo) DO UPDATE SET
+                INSERT INTO historias_maconicas (loja_id, titulo, dia, mes, ano_ref, texto, fonte, ativo, created_by, updated_at)
+                VALUES (:loja_id, :titulo, :dia, :mes, :ano_ref, :texto, :fonte, :ativo, :created_by, CURRENT_TIMESTAMP)
+                ON CONFLICT (loja_id, mes, dia, titulo) DO UPDATE SET
                     ano_ref = EXCLUDED.ano_ref,
                     texto = EXCLUDED.texto,
                     fonte = EXCLUDED.fonte,
@@ -114,6 +120,7 @@ class HistoriaMaconica
                     updated_at = CURRENT_TIMESTAMP
             ");
             $stmt->execute([
+                'loja_id' => $lojaId,
                 'titulo' => $titulo,
                 'dia' => (int) $data->format('d'),
                 'mes' => (int) $data->format('m'),
@@ -134,8 +141,8 @@ class HistoriaMaconica
     public function listar(array $filtros = [], int $limit = 300): array
     {
         $limit = max(1, min($limit, 500));
-        $where = [];
-        $params = [];
+        $where = ["loja_id = :loja_id"];
+        $params = ['loja_id' => $this->obterLojaAtualId()];
 
         $termo = trim((string) ($filtros['termo'] ?? ''));
         if ($termo !== '') {
@@ -162,13 +169,11 @@ class HistoriaMaconica
             $params['data_fim'] = $dataFim;
         }
 
-        $sql = "SELECT *,
-                    MAKE_DATE(COALESCE(ano_ref, 2000), mes, dia) AS data_evento
-                FROM historias_maconicas";
-        if ($where !== []) {
-            $sql .= " WHERE " . implode(' AND ', $where);
-        }
-        $sql .= " ORDER BY mes ASC, dia ASC, titulo ASC LIMIT :limit";
+        $sql = "SELECT *, MAKE_DATE(COALESCE(ano_ref, 2000), mes, dia) AS data_evento
+                FROM historias_maconicas
+                WHERE " . implode(' AND ', $where) . "
+                ORDER BY mes ASC, dia ASC, titulo ASC
+                LIMIT :limit";
 
         $stmt = $this->db->prepare($sql);
         foreach ($params as $key => $value) {
@@ -182,22 +187,26 @@ class HistoriaMaconica
 
     public function buscarPorDiaMes(int $dia, int $mes, bool $somenteAtivos = true): array
     {
-        $sql = "SELECT * FROM historias_maconicas WHERE dia = :dia AND mes = :mes";
+        $sql = "SELECT * FROM historias_maconicas WHERE loja_id = :loja_id AND dia = :dia AND mes = :mes";
         if ($somenteAtivos) {
             $sql .= " AND ativo = true";
         }
         $sql .= " ORDER BY titulo ASC";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['dia' => $dia, 'mes' => $mes]);
+        $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
+            'dia' => $dia,
+            'mes' => $mes,
+        ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function create(array $data, ?int $createdBy): bool
     {
         $stmt = $this->db->prepare("
-            INSERT INTO historias_maconicas (titulo, dia, mes, ano_ref, texto, fonte, ativo, created_by)
-            VALUES (:titulo, :dia, :mes, :ano_ref, :texto, :fonte, :ativo, :created_by)
+            INSERT INTO historias_maconicas (loja_id, titulo, dia, mes, ano_ref, texto, fonte, ativo, created_by)
+            VALUES (:loja_id, :titulo, :dia, :mes, :ano_ref, :texto, :fonte, :ativo, :created_by)
         ");
 
         return $stmt->execute($this->normalizarPayload($data, $createdBy));
@@ -216,6 +225,7 @@ class HistoriaMaconica
                 ativo = :ativo,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = :id
+              AND loja_id = :loja_id
         ");
 
         $payload = $this->normalizarPayload($data, null);
@@ -230,14 +240,21 @@ class HistoriaMaconica
             SET ativo = NOT ativo,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = :id
+              AND loja_id = :loja_id
         ");
-        return $stmt->execute(['id' => $id]);
+        return $stmt->execute([
+            'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
     }
 
     public function excluir(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM historias_maconicas WHERE id = :id");
-        return $stmt->execute(['id' => $id]);
+        $stmt = $this->db->prepare("DELETE FROM historias_maconicas WHERE id = :id AND loja_id = :loja_id");
+        return $stmt->execute([
+            'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
     }
 
     private function normalizarPayload(array $data, ?int $createdBy): array
@@ -247,6 +264,7 @@ class HistoriaMaconica
         $anoRef = trim((string) ($data['ano_ref'] ?? ''));
 
         return [
+            'loja_id' => $this->obterLojaAtualId(),
             'titulo' => trim((string) ($data['titulo'] ?? '')),
             'dia' => $dia,
             'mes' => $mes,
@@ -282,6 +300,11 @@ class HistoriaMaconica
 
     private function sqlNormalizarTipo(string $coluna): string
     {
-        return "REGEXP_REPLACE(LOWER(TRANSLATE(COALESCE({$coluna}, ''), 'ÁÀÂÃÄáàâãäÉÈÊËéèêëÍÌÎÏíìîïÓÒÔÕÖóòôõöÚÙÛÜúùûüÇç', 'AAAAAaaaaaEEEEeeeeIIIIiiiiOOOOOoooooUUUUuuuuCc')), '[^a-z0-9]+', '', 'g')";
+        return "REGEXP_REPLACE(LOWER(TRANSLATE(COALESCE({$coluna}, ''), 'AAAAAaaaaaEEEEeeeeIIIIiiiiOOOOOoooooUUUUuuuuCc', 'AAAAAaaaaaEEEEeeeeIIIIiiiiOOOOOoooooUUUUuuuuCc')), '[^a-z0-9]+', '', 'g')";
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

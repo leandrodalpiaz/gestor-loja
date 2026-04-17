@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class Presenca
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public function __construct()
@@ -37,7 +40,7 @@ class Presenca
                 respondido_em,
                 updated_at
             )
-            VALUES (
+            SELECT
                 :sessao_id,
                 :obreiro_id,
                 :status_confirmacao,
@@ -45,7 +48,9 @@ class Presenca
                 :observacao,
                 NOW(),
                 NOW()
-            )
+            FROM public.sessoes s
+            WHERE s.id = :sessao_id
+              AND s.loja_id = :loja_id
             ON CONFLICT (sessao_id, obreiro_id)
             DO UPDATE SET
                 status_confirmacao = EXCLUDED.status_confirmacao,
@@ -61,6 +66,7 @@ class Presenca
             'status_confirmacao' => $statusNormalizado,
             'participara_agape' => ($statusNormalizado === 'confirmado' ? $participaraAgape : false) ? 'true' : 'false',
             'observacao' => $observacao,
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
     }
 
@@ -70,11 +76,18 @@ class Presenca
             DELETE FROM public.confirmacoes_sessao
             WHERE sessao_id = :sessao_id
               AND obreiro_id = :obreiro_id
+              AND EXISTS (
+                  SELECT 1
+                  FROM public.sessoes s
+                  WHERE s.id = :sessao_id
+                    AND s.loja_id = :loja_id
+              )
         ");
 
         return $stmt->execute([
             'sessao_id' => $sessaoId,
             'obreiro_id' => $obreiroId,
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
     }
 
@@ -85,11 +98,18 @@ class Presenca
             FROM public.confirmacoes_sessao
             WHERE sessao_id = :sessao_id
               AND obreiro_id = :obreiro_id
+              AND EXISTS (
+                  SELECT 1
+                  FROM public.sessoes s
+                  WHERE s.id = :sessao_id
+                    AND s.loja_id = :loja_id
+              )
             LIMIT 1
         ");
         $stmt->execute([
             'sessao_id' => $sessaoId,
             'obreiro_id' => $obreiroId,
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -110,12 +130,17 @@ class Presenca
                 COALESCE(o.nome_historico, o.nome) AS nome,
                 o.cim
             FROM public.confirmacoes_sessao cs
+            JOIN public.sessoes s ON s.id = cs.sessao_id
             JOIN public.obreiros o ON o.id = cs.obreiro_id
             WHERE cs.sessao_id = :sessao_id
+              AND s.loja_id = :loja_id
               AND cs.status_confirmacao = 'confirmado'
             ORDER BY nome ASC
         ");
-        $stmt->execute(['sessao_id' => $sessaoId]);
+        $stmt->execute([
+            'sessao_id' => $sessaoId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -124,11 +149,16 @@ class Presenca
     {
         $stmt = $this->db->prepare("
             SELECT COUNT(*)
-            FROM public.confirmacoes_sessao
-            WHERE sessao_id = :sessao_id
+            FROM public.confirmacoes_sessao cs
+            JOIN public.sessoes s ON s.id = cs.sessao_id
+            WHERE cs.sessao_id = :sessao_id
+              AND s.loja_id = :loja_id
               AND status_confirmacao = 'ausente'
         ");
-        $stmt->execute(['sessao_id' => $sessaoId]);
+        $stmt->execute([
+            'sessao_id' => $sessaoId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
 
         return (int) $stmt->fetchColumn();
     }
@@ -145,13 +175,18 @@ class Presenca
                 COALESCE(o.nome_historico, o.nome) AS nome,
                 o.cim
             FROM public.confirmacoes_sessao cs
+            JOIN public.sessoes s ON s.id = cs.sessao_id
             JOIN public.obreiros o ON o.id = cs.obreiro_id
             WHERE cs.sessao_id = :sessao_id
+              AND s.loja_id = :loja_id
               AND cs.status_confirmacao = 'confirmado'
               AND cs.participara_agape = TRUE
             ORDER BY nome ASC
         ");
-        $stmt->execute(['sessao_id' => $sessaoId]);
+        $stmt->execute([
+            'sessao_id' => $sessaoId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -160,12 +195,17 @@ class Presenca
     {
         $stmt = $this->db->prepare("
             SELECT COUNT(*)
-            FROM public.confirmacoes_sessao
-            WHERE sessao_id = :sessao_id
+            FROM public.confirmacoes_sessao cs
+            JOIN public.sessoes s ON s.id = cs.sessao_id
+            WHERE cs.sessao_id = :sessao_id
+              AND s.loja_id = :loja_id
               AND status_confirmacao = 'confirmado'
               AND participara_agape = TRUE
         ");
-        $stmt->execute(['sessao_id' => $sessaoId]);
+        $stmt->execute([
+            'sessao_id' => $sessaoId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
 
         return (int) $stmt->fetchColumn();
     }
@@ -174,13 +214,23 @@ class Presenca
     {
         $stmt = $this->db->prepare("
             SELECT COUNT(*)
-            FROM public.confirmacoes_sessao
-            WHERE sessao_id = :sessao_id
+            FROM public.confirmacoes_sessao cs
+            JOIN public.sessoes s ON s.id = cs.sessao_id
+            WHERE cs.sessao_id = :sessao_id
+              AND s.loja_id = :loja_id
               AND status_confirmacao = 'confirmado'
         ");
-        $stmt->execute(['sessao_id' => $sessaoId]);
+        $stmt->execute([
+            'sessao_id' => $sessaoId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
 
         return (int) $stmt->fetchColumn();
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 
     private function normalizarStatus(string $status): string

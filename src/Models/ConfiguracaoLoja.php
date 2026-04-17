@@ -13,6 +13,7 @@ class ConfiguracaoLoja
     private PDO $db;
     private AuditoriaAdministrativa $auditoria;
     private ?int $lojaId = null;
+    private ?bool $suportaLojaId = null;
 
     public function __construct()
     {
@@ -21,14 +22,37 @@ class ConfiguracaoLoja
         $this->lojaId = $this->resolveCurrentStoreId($this->db);
     }
 
+    private function suportaLojaId(): bool
+    {
+        if ($this->suportaLojaId !== null) {
+            return $this->suportaLojaId;
+        }
+
+        $stmt = $this->db->prepare(
+            "SELECT 1
+             FROM information_schema.columns
+             WHERE table_schema = 'public'
+               AND table_name = 'configuracoes_loja'
+               AND column_name = 'loja_id'
+             LIMIT 1"
+        );
+        $stmt->execute();
+
+        $this->suportaLojaId = (bool) $stmt->fetchColumn();
+
+        return $this->suportaLojaId;
+    }
+
     public function obter(): array
     {
-        $stmt = $this->db->prepare("SELECT * FROM public.configuracoes_loja WHERE loja_id = :loja_id LIMIT 1");
-        $stmt->execute(['loja_id' => $this->obterLojaIdAtual()]);
-        $config = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($this->suportaLojaId()) {
+            $stmt = $this->db->prepare("SELECT * FROM public.configuracoes_loja WHERE loja_id = :loja_id LIMIT 1");
+            $stmt->execute(['loja_id' => $this->obterLojaIdAtual()]);
+            $config = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($config !== false) {
-            return $config;
+            if ($config !== false) {
+                return $config;
+            }
         }
 
         $stmtLegado = $this->db->query("SELECT * FROM public.configuracoes_loja WHERE id = 1 LIMIT 1");
@@ -88,7 +112,8 @@ class ConfiguracaoLoja
     public function salvar(array $dados): bool
     {
         $anterior = $this->obter();
-        $sql = "INSERT INTO public.configuracoes_loja (
+        if ($this->suportaLojaId()) {
+            $sql = "INSERT INTO public.configuracoes_loja (
                     id, loja_id, nome_loja, numero_loja, titulo_tratamento, cidade, uf, oriente,
                     potencia_nome, potencia_sigla, grande_secretaria, rito,
                     data_fundacao, decreto_fundacao, data_reconhecimento, data_instalacao,
@@ -161,11 +186,84 @@ class ConfiguracaoLoja
                     observacao_relatorios = EXCLUDED.observacao_relatorios,
                     historia_loja = EXCLUDED.historia_loja,
                     updated_at = NOW()";
+        } else {
+            $sql = "INSERT INTO public.configuracoes_loja (
+                    id, nome_loja, numero_loja, titulo_tratamento, cidade, uf, oriente,
+                    potencia_nome, potencia_sigla, grande_secretaria, rito,
+                    data_fundacao, decreto_fundacao, data_reconhecimento, data_instalacao,
+                    data_entrega_carta_constitutiva, tipo_loja, regiao_simposios,
+                    obediencia_templo, templo_endereco, proprietario_locatario, nome_templo,
+                    data_sagracao_templo, trabalha_palacio_maconico, dia_semana_reuniao,
+                    horario_reuniao, periodicidade_reuniao, cnpj, email_oficial,
+                    telefone_oficial, endereco, cep, mensalidade_valor_padrao,
+                    mensalidade_dia_sugerido, mensalidade_regra_atraso,
+                    contribuicao_biblioteca_valor_padrao, contribuicao_biblioteca_quantidade_mensal,
+                    pix_chave_tipo, pix_chave_valor, pix_beneficiario,
+                    observacao_relatorios, historia_loja,
+                    created_at, updated_at
+                ) VALUES (
+                    1, :nome_loja, :numero_loja, :titulo_tratamento, :cidade, :uf, :oriente,
+                    :potencia_nome, :potencia_sigla, :grande_secretaria, :rito,
+                    :data_fundacao, :decreto_fundacao, :data_reconhecimento, :data_instalacao,
+                    :data_entrega_carta_constitutiva, :tipo_loja, :regiao_simposios,
+                    :obediencia_templo, :templo_endereco, :proprietario_locatario, :nome_templo,
+                    :data_sagracao_templo, :trabalha_palacio_maconico, :dia_semana_reuniao,
+                    :horario_reuniao, :periodicidade_reuniao, :cnpj, :email_oficial,
+                    :telefone_oficial, :endereco, :cep, :mensalidade_valor_padrao,
+                    :mensalidade_dia_sugerido, :mensalidade_regra_atraso,
+                    :contribuicao_biblioteca_valor_padrao, :contribuicao_biblioteca_quantidade_mensal,
+                    :pix_chave_tipo, :pix_chave_valor, :pix_beneficiario,
+                    :observacao_relatorios, :historia_loja,
+                    NOW(), NOW()
+                )
+                ON CONFLICT (id) DO UPDATE SET
+                    nome_loja = EXCLUDED.nome_loja,
+                    numero_loja = EXCLUDED.numero_loja,
+                    titulo_tratamento = EXCLUDED.titulo_tratamento,
+                    cidade = EXCLUDED.cidade,
+                    uf = EXCLUDED.uf,
+                    oriente = EXCLUDED.oriente,
+                    potencia_nome = EXCLUDED.potencia_nome,
+                    potencia_sigla = EXCLUDED.potencia_sigla,
+                    grande_secretaria = EXCLUDED.grande_secretaria,
+                    rito = EXCLUDED.rito,
+                    data_fundacao = EXCLUDED.data_fundacao,
+                    decreto_fundacao = EXCLUDED.decreto_fundacao,
+                    data_reconhecimento = EXCLUDED.data_reconhecimento,
+                    data_instalacao = EXCLUDED.data_instalacao,
+                    data_entrega_carta_constitutiva = EXCLUDED.data_entrega_carta_constitutiva,
+                    tipo_loja = EXCLUDED.tipo_loja,
+                    regiao_simposios = EXCLUDED.regiao_simposios,
+                    obediencia_templo = EXCLUDED.obediencia_templo,
+                    templo_endereco = EXCLUDED.templo_endereco,
+                    proprietario_locatario = EXCLUDED.proprietario_locatario,
+                    nome_templo = EXCLUDED.nome_templo,
+                    data_sagracao_templo = EXCLUDED.data_sagracao_templo,
+                    trabalha_palacio_maconico = EXCLUDED.trabalha_palacio_maconico,
+                    dia_semana_reuniao = EXCLUDED.dia_semana_reuniao,
+                    horario_reuniao = EXCLUDED.horario_reuniao,
+                    periodicidade_reuniao = EXCLUDED.periodicidade_reuniao,
+                    cnpj = EXCLUDED.cnpj,
+                    email_oficial = EXCLUDED.email_oficial,
+                    telefone_oficial = EXCLUDED.telefone_oficial,
+                    endereco = EXCLUDED.endereco,
+                    cep = EXCLUDED.cep,
+                    mensalidade_valor_padrao = EXCLUDED.mensalidade_valor_padrao,
+                    mensalidade_dia_sugerido = EXCLUDED.mensalidade_dia_sugerido,
+                    mensalidade_regra_atraso = EXCLUDED.mensalidade_regra_atraso,
+                    contribuicao_biblioteca_valor_padrao = EXCLUDED.contribuicao_biblioteca_valor_padrao,
+                    contribuicao_biblioteca_quantidade_mensal = EXCLUDED.contribuicao_biblioteca_quantidade_mensal,
+                    pix_chave_tipo = EXCLUDED.pix_chave_tipo,
+                    pix_chave_valor = EXCLUDED.pix_chave_valor,
+                    pix_beneficiario = EXCLUDED.pix_beneficiario,
+                    observacao_relatorios = EXCLUDED.observacao_relatorios,
+                    historia_loja = EXCLUDED.historia_loja,
+                    updated_at = NOW()";
+        }
 
         $stmt = $this->db->prepare($sql);
 
-        $ok = $stmt->execute([
-            'loja_id' => $this->obterLojaIdAtual(),
+        $params = [
             'nome_loja' => $this->texto($dados['nome_loja'] ?? null),
             'numero_loja' => $this->texto($dados['numero_loja'] ?? null),
             'titulo_tratamento' => $this->texto($dados['titulo_tratamento'] ?? null),
@@ -207,7 +305,13 @@ class ConfiguracaoLoja
             'pix_beneficiario' => $this->texto($dados['pix_beneficiario'] ?? null),
             'observacao_relatorios' => $this->texto($dados['observacao_relatorios'] ?? null),
             'historia_loja' => $this->texto($dados['historia_loja'] ?? null),
-        ]);
+        ];
+
+        if ($this->suportaLojaId()) {
+            $params['loja_id'] = $this->obterLojaIdAtual();
+        }
+
+        $ok = $stmt->execute($params);
 
         if ($ok) {
             $atual = $this->obter();

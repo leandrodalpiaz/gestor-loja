@@ -3,6 +3,7 @@
 namespace App\Bot;
 
 use App\Config\Env;
+use App\Core\Authorization\PermissionMap;
 use App\Models\ComprovantePix;
 use App\Models\ConfiguracaoLoja;
 use App\Models\EfemerideRegistro;
@@ -88,6 +89,16 @@ class CommandHandler
         return false;
     }
 
+    private function obreiroHasPermission(?array $obreiro, string $permission): bool
+    {
+        if (!$obreiro) {
+            return false;
+        }
+
+        $permissions = (new PermissionMap())->permissionsForRoles($this->getObreiroRoles($obreiro));
+        return in_array('*', $permissions, true) || in_array($permission, $permissions, true);
+    }
+
     private function isDev(int $telegramId): bool
     {
         return in_array($telegramId, $this->devIds, true);
@@ -96,7 +107,7 @@ class CommandHandler
     private function ensureChancelariaAccess($chatId, int $requesterTelegramId): bool
     {
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
-        if (!$this->isDev($requesterTelegramId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'chanceler', 'veneravel', 'admin'))) {
+        if (!$this->isDev($requesterTelegramId) && (!$obreiro || !$this->obreiroHasPermission($obreiro, 'chancelaria.manage'))) {
             $this->telegram->sendMessage($chatId, 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
             return false;
         }
@@ -143,7 +154,7 @@ class CommandHandler
     public function handlePainelAdmin($chatId, $requesterTelegramId)
     {
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
-        if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasRole($obreiro, 'admin')) {
+        if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'admin.cargos.view')) {
             $this->telegram->sendMessage($chatId, 'Acesso restrito aos Administradores do sistema.');
             return;
         }
@@ -179,23 +190,36 @@ class CommandHandler
         $mensagem = "Bem-vindo ao painel da Loja, meu Irmao!";
         $teclado = ['inline_keyboard' => []];
 
-        if ($this->obreiroHasRole($obreiro, 'admin', 'veneravel', 'secretario', 'chanceler', 'tesoureiro', 'bibliotecario', 'primeiro_vigilante', 'segundo_vigilante', 'hospitaleiro', 'mestre_harmonia')) {
+        if (
+            $this->obreiroHasPermission($obreiro, 'admin.cargos.view')
+            || $this->obreiroHasPermission($obreiro, 'secretaria.manage')
+            || $this->obreiroHasPermission($obreiro, 'chancelaria.manage')
+            || $this->obreiroHasPermission($obreiro, 'tesouraria.manage')
+            || $this->obreiroHasPermission($obreiro, 'biblioteca.self')
+            || $this->obreiroHasPermission($obreiro, 'vigilancia.primeiro.manage')
+            || $this->obreiroHasPermission($obreiro, 'vigilancia.segundo.manage')
+            || $this->obreiroHasPermission($obreiro, 'hospitaleiro.manage')
+            || $this->obreiroHasPermission($obreiro, 'mestre_harmonia.manage')
+            || $this->obreiroHasPermission($obreiro, 'mestre_banquetes.manage')
+            || $this->obreiroHasPermission($obreiro, 'orador.view')
+            || $this->obreiroHasPermission($obreiro, 'veneravel.manage')
+        ) {
             $teclado['inline_keyboard'][] = [
                 ['text' => 'Chancelaria', 'callback_data' => 'admin_chancelaria'],
                 ['text' => 'Secretaria', 'callback_data' => 'secretaria_menu'],
             ];
-            if ($this->obreiroHasRole($obreiro, 'admin', 'veneravel')) {
+            if ($this->obreiroHasPermission($obreiro, 'veneravel.manage')) {
                 $teclado['inline_keyboard'][] = [
                     ['text' => 'Painel do Veneravel Mestre', 'web_app' => ['url' => $this->buildAppUrl('/veneravel')]],
                     ['text' => 'Veneravel Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
                 ];
             }
-            if ($this->obreiroHasRole($obreiro, 'primeiro_vigilante', 'admin', 'veneravel')) {
+            if ($this->obreiroHasPermission($obreiro, 'vigilancia.primeiro.manage')) {
                 $teclado['inline_keyboard'][] = [
                     ['text' => '1o Vigilante Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/primeiro-vigilante')]],
                 ];
             }
-            if ($this->obreiroHasRole($obreiro, 'segundo_vigilante', 'admin', 'veneravel')) {
+            if ($this->obreiroHasPermission($obreiro, 'vigilancia.segundo.manage')) {
                 $teclado['inline_keyboard'][] = [
                     ['text' => '2o Vigilante Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/segundo-vigilante')]],
                 ];
@@ -204,24 +228,24 @@ class CommandHandler
                 ['text' => 'Tesouraria', 'callback_data' => 'tesouraria_menu'],
                 ['text' => 'Biblioteca', 'callback_data' => 'biblioteca_menu'],
             ];
-            if ($this->obreiroHasRole($obreiro, 'mestre_banquetes', 'admin', 'veneravel')) {
+            if ($this->obreiroHasPermission($obreiro, 'mestre_banquetes.manage')) {
                 $teclado['inline_keyboard'][] = [
                     ['text' => 'Mestre de Banquetes', 'web_app' => ['url' => $this->buildAppUrl('/mestre-banquetes')]],
                 ];
             }
-            if ($this->obreiroHasRole($obreiro, 'orador', 'admin', 'veneravel')) {
+            if ($this->obreiroHasPermission($obreiro, 'orador.view')) {
                 $teclado['inline_keyboard'][] = [
                     ['text' => 'Orador', 'web_app' => ['url' => $this->buildAppUrl('/orador')]],
                     ['text' => 'Orador Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/orador')]],
                 ];
             }
-            if ($this->obreiroHasRole($obreiro, 'mestre_harmonia', 'admin', 'veneravel')) {
+            if ($this->obreiroHasPermission($obreiro, 'mestre_harmonia.manage')) {
                 $teclado['inline_keyboard'][] = [
                     ['text' => 'Mestre de Harmonia', 'web_app' => ['url' => $this->buildAppUrl('/mestre-harmonia')]],
                     ['text' => 'Harmonia Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/mestre-harmonia')]],
                 ];
             }
-        if ($this->obreiroHasRole($obreiro, 'hospitaleiro', 'secretario', 'tesoureiro', 'veneravel', 'admin')) {
+        if ($this->obreiroHasPermission($obreiro, 'hospitaleiro.manage')) {
                 $teclado['inline_keyboard'][] = [
                     ['text' => 'Hospitalaria', 'callback_data' => 'assistencia_menu'],
                 ];

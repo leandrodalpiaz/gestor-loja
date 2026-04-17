@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 use DateTimeImmutable;
 use DateTimeZone;
 
 class Sessao
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
 
     public const GRAUS_PADRAO = ['Aprendiz', 'Companheiro', 'Mestre', 'Outro'];
@@ -62,9 +65,13 @@ class Sessao
                 GROUP BY sessao_id
             ) presentes ON presentes.sessao_id = s.id
             WHERE s.id = :id
+              AND s.loja_id = :loja_id
             LIMIT 1
         ");
-        $stmt->execute(['id' => $id]);
+        $stmt->execute([
+            'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $sessao = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $sessao ?: null;
@@ -101,11 +108,12 @@ class Sessao
                 publicada_em
             FROM public.sessoes
             WHERE data_hora_inicio >= NOW()
+              AND loja_id = :loja_id
               AND status IN ('planejada', 'publicada', 'alterada')
             ORDER BY data_hora_inicio ASC
             LIMIT 1
         ");
-        $stmt->execute();
+        $stmt->execute(['loja_id' => $this->obterLojaAtualId()]);
         $sessao = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $sessao ?: null;
@@ -151,10 +159,12 @@ class Sessao
                 GROUP BY sessao_id
             ) confirmados ON confirmados.sessao_id = s.id
             WHERE s.data_hora_inicio >= NOW()
+              AND s.loja_id = :loja_id
               AND s.status IN ('planejada', 'publicada', 'alterada', 'cancelada')
             ORDER BY s.data_hora_inicio ASC
             LIMIT :limite
         ");
+        $stmt->bindValue('loja_id', $this->obterLojaAtualId(), PDO::PARAM_INT);
         $stmt->bindValue('limite', $limite, PDO::PARAM_INT);
         $stmt->execute();
 
@@ -166,6 +176,7 @@ class Sessao
         $payload = $this->normalizarPayload($data);
         $sql = "
             INSERT INTO public.sessoes (
+                loja_id,
                 data,
                 grau,
                 tipo,
@@ -202,6 +213,7 @@ class Sessao
                 atualizada_por,
                 updated_at
             ) VALUES (
+                :loja_id,
                 :data_legado,
                 :grau_legado,
                 :tipo_legado,
@@ -243,6 +255,7 @@ class Sessao
 
         $stmt = $this->db->prepare($sql);
         $ok = $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
             'data_legado' => $payload['data_hora_inicio'],
             'grau_legado' => $payload['grau_sessao'],
             'tipo_legado' => $payload['tipo_sessao'],
@@ -336,10 +349,12 @@ class Sessao
                    atualizada_por = :atualizada_por,
                    updated_at = NOW()
              WHERE id = :id
+               AND loja_id = :loja_id
         ");
 
         $ok = $stmt->execute([
             'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
             'data_legado' => $payload['data_hora_inicio'],
             'grau_legado' => $payload['grau_sessao'],
             'tipo_legado' => $payload['tipo_sessao'],
@@ -397,9 +412,11 @@ class Sessao
                    atualizada_por = :atualizada_por,
                    updated_at = NOW()
              WHERE id = :id
+               AND loja_id = :loja_id
         ");
         $ok = $stmt->execute([
             'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
             'atualizada_por' => $autorId,
         ]);
 
@@ -425,9 +442,11 @@ class Sessao
                    atualizada_por = :atualizada_por,
                    updated_at = NOW()
              WHERE id = :id
+               AND loja_id = :loja_id
         ");
         $ok = $stmt->execute([
             'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
             'atualizada_por' => $autorId,
         ]);
 
@@ -454,9 +473,11 @@ class Sessao
                    atualizada_por = :atualizada_por,
                    updated_at = NOW()
              WHERE id = :id
+               AND loja_id = :loja_id
         ");
         $ok = $stmt->execute([
             'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
             'publicado_por' => $autorId,
             'atualizada_por' => $autorId,
         ]);
@@ -483,9 +504,11 @@ class Sessao
                    atualizada_por = :atualizada_por,
                    updated_at = NOW()
              WHERE id = :id
+               AND loja_id = :loja_id
         ");
         $ok = $stmt->execute([
             'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
             'atualizada_por' => $autorId,
         ]);
 
@@ -521,12 +544,15 @@ class Sessao
                 h.*,
                 COALESCE(o.nome_historico, o.nome) AS autor_nome
             FROM public.historico_sessao h
+            JOIN public.sessoes s ON s.id = h.sessao_id
             LEFT JOIN public.obreiros o ON o.id = h.autor_id
             WHERE h.sessao_id = :sessao_id
+              AND s.loja_id = :loja_id
             ORDER BY h.created_at DESC, h.id DESC
             LIMIT :limite
         ");
         $stmt->bindValue('sessao_id', $sessaoId, PDO::PARAM_INT);
+        $stmt->bindValue('loja_id', $this->obterLojaAtualId(), PDO::PARAM_INT);
         $stmt->bindValue('limite', $limite, PDO::PARAM_INT);
         $stmt->execute();
 
@@ -548,12 +574,14 @@ class Sessao
             SELECT id, titulo, data_hora_inicio, status
             FROM public.sessoes
             WHERE COALESCE(status, 'planejada') <> 'cancelada'
+              AND loja_id = :loja_id
               AND DATE(data_hora_inicio AT TIME ZONE 'America/Sao_Paulo') = :dia
               AND TO_CHAR(data_hora_inicio AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') = :hora
             ORDER BY id DESC
             LIMIT 1
         ");
         $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
             'dia' => $inicioDia,
             'hora' => $hora,
         ]);
@@ -715,6 +743,11 @@ class Sessao
         } catch (\Throwable $e) {
             error_log('Falha ao registrar historico de sessao: ' . $e->getMessage());
         }
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 
     private function normalizarPayload(array $data, ?array $fallback = null): array

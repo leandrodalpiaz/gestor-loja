@@ -3,11 +3,15 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class EfemerideRegistro
 {
+    use ResolvesStoreTenant;
+
     private PDO $db;
+
     private const VINCULOS_PADRAO = [
         ['codigo' => 4, 'nome' => 'filho'],
         ['codigo' => 3, 'nome' => 'filha'],
@@ -24,9 +28,10 @@ class EfemerideRegistro
 
     private function ensureTable(): void
     {
-        $sql = "
+        $this->db->exec("
             CREATE TABLE IF NOT EXISTS efemerides_registros (
                 id SERIAL PRIMARY KEY,
+                loja_id INTEGER NULL,
                 nome VARCHAR(255) NOT NULL,
                 tipo VARCHAR(100) NOT NULL,
                 data_evento DATE NOT NULL,
@@ -40,9 +45,7 @@ class EfemerideRegistro
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-        ";
-
-        $this->db->exec($sql);
+        ");
     }
 
     public function getRegistrosDoDia(): array
@@ -54,68 +57,61 @@ class EfemerideRegistro
             $hoje = new \DateTimeImmutable('now', new \DateTimeZone('America/Sao_Paulo'));
         }
 
-        $diaMes = $hoje->format('d/m');
-
-        $sql = "
+        $stmt = $this->db->prepare("
             SELECT *
             FROM efemerides_registros
-            WHERE ativo = true
+            WHERE loja_id = :loja_id
+              AND ativo = true
               AND TO_CHAR(data_evento, 'DD/MM') = :dia_mes
             ORDER BY tipo, nome
-        ";
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute(['dia_mes' => $diaMes]);
+        ");
+        $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
+            'dia_mes' => $hoje->format('d/m'),
+        ]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Busca registros ativos para um dia/mÃªs especÃ­fico (formato 'd/m').
-     * @param string $diaMes Ex: '25/03'
-     * @return array
-     */
     public function getRegistrosPorDiaMes(string $diaMes): array
     {
-        $sql = "SELECT * FROM efemerides_registros WHERE ativo = true AND TO_CHAR(data_evento, 'DD/MM') = :dia_mes ORDER BY tipo, nome";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute(['dia_mes' => $diaMes]);
+        $stmt = $this->db->prepare("
+            SELECT *
+            FROM efemerides_registros
+            WHERE loja_id = :loja_id
+              AND ativo = true
+              AND TO_CHAR(data_evento, 'DD/MM') = :dia_mes
+            ORDER BY tipo, nome
+        ");
+        $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
+            'dia_mes' => $diaMes,
+        ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getRecentes(int $limit = 80): array
     {
         $limit = max(1, min($limit, 300));
-        $sql = "
+        $stmt = $this->db->prepare("
             SELECT *
             FROM efemerides_registros
+            WHERE loja_id = :loja_id
             ORDER BY EXTRACT(MONTH FROM data_evento) ASC, EXTRACT(DAY FROM data_evento) ASC, nome ASC, id ASC
             LIMIT :limit
-        ";
-
-        $stmt = $this->db->prepare($sql);
+        ");
+        $stmt->bindValue('loja_id', $this->obterLojaAtualId(), PDO::PARAM_INT);
         $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Busca registros com filtros operacionais para manutencao.
-     *
-     * Filtros aceitos:
-     * - termo: procura em nome, parentesco, vinculo e local
-     * - irmao_ref: procura registros relacionados ao irmao selecionado (nome ou parentesco)
-     * - tipo: filtro por tipo de evento
-     * - ativo: "1" (ativos), "0" (inativos), "all" (todos)
-     * - data_ini / data_fim: intervalo em Y-m-d
-     */
     public function buscarComFiltros(array $filtros, int $limit = 200): array
     {
         $limit = max(1, min($limit, 500));
-
-        $where = [];
-        $params = [];
+        $where = ['loja_id = :loja_id'];
+        $params = ['loja_id' => $this->obterLojaAtualId()];
 
         $termo = trim((string) ($filtros['termo'] ?? ''));
         if ($termo !== '') {
@@ -160,11 +156,9 @@ class EfemerideRegistro
             $params['data_fim'] = $dataFim;
         }
 
-        $sql = "SELECT * FROM efemerides_registros";
-        if ($where !== []) {
-            $sql .= " WHERE " . implode(" AND ", $where);
-        }
-        $sql .= " ORDER BY EXTRACT(MONTH FROM data_evento) ASC, EXTRACT(DAY FROM data_evento) ASC, nome ASC, id ASC LIMIT :limit";
+        $sql = "SELECT * FROM efemerides_registros WHERE " . implode(' AND ', $where) . "
+                ORDER BY EXTRACT(MONTH FROM data_evento) ASC, EXTRACT(DAY FROM data_evento) ASC, nome ASC, id ASC
+                LIMIT :limit";
 
         $stmt = $this->db->prepare($sql);
         foreach ($params as $key => $value) {
@@ -178,14 +172,21 @@ class EfemerideRegistro
 
     public function excluir(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM efemerides_registros WHERE id = :id");
-        return $stmt->execute(['id' => $id]);
+        $stmt = $this->db->prepare("
+            DELETE FROM efemerides_registros
+            WHERE id = :id AND loja_id = :loja_id
+        ");
+        return $stmt->execute([
+            'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
     }
 
     public function create(array $data, ?int $createdBy): bool
     {
-        $sql = "
+        $stmt = $this->db->prepare("
             INSERT INTO efemerides_registros (
+                loja_id,
                 nome,
                 tipo,
                 data_evento,
@@ -197,6 +198,7 @@ class EfemerideRegistro
                 ativo,
                 created_by
             ) VALUES (
+                :loja_id,
                 :nome,
                 :tipo,
                 :data_evento,
@@ -208,14 +210,13 @@ class EfemerideRegistro
                 true,
                 :created_by
             )
-        ";
-
-        $stmt = $this->db->prepare($sql);
+        ");
 
         $vinculo = trim((string) ($data['vinculo'] ?? ''));
         $codVinculo = $this->resolverCodVinculo($vinculo, $data['cod_vinculo'] ?? null);
 
         return $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
             'nome' => trim((string) ($data['nome'] ?? '')),
             'tipo' => trim((string) ($data['tipo'] ?? '')),
             'data_evento' => $data['data_evento'] ?? null,
@@ -230,14 +231,17 @@ class EfemerideRegistro
 
     public function findById(int $id, bool $includeInactive = true): ?array
     {
-        $sql = "SELECT * FROM efemerides_registros WHERE id = :id";
+        $sql = "SELECT * FROM efemerides_registros WHERE id = :id AND loja_id = :loja_id";
         if (!$includeInactive) {
             $sql .= " AND ativo = true";
         }
         $sql .= " LIMIT 1";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['id' => $id]);
+        $stmt->execute([
+            'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $row ?: null;
@@ -245,7 +249,7 @@ class EfemerideRegistro
 
     public function atualizar(int $id, array $data): bool
     {
-        $sql = "
+        $stmt = $this->db->prepare("
             UPDATE efemerides_registros
             SET nome = :nome,
                 tipo = :tipo,
@@ -257,14 +261,15 @@ class EfemerideRegistro
                 mensagem_custom = :mensagem_custom,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = :id
-        ";
+              AND loja_id = :loja_id
+        ");
 
-        $stmt = $this->db->prepare($sql);
         $vinculo = trim((string) ($data['vinculo'] ?? ''));
         $codVinculo = $this->resolverCodVinculo($vinculo, $data['cod_vinculo'] ?? null);
 
         return $stmt->execute([
             'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
             'nome' => trim((string) ($data['nome'] ?? '')),
             'tipo' => trim((string) ($data['tipo'] ?? '')),
             'data_evento' => $data['data_evento'] ?? null,
@@ -278,15 +283,17 @@ class EfemerideRegistro
 
     public function desativar(int $id): bool
     {
-        $sql = "
+        $stmt = $this->db->prepare("
             UPDATE efemerides_registros
             SET ativo = false,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = :id
-        ";
-
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute(['id' => $id]);
+              AND loja_id = :loja_id
+        ");
+        return $stmt->execute([
+            'id' => $id,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
     }
 
     public function listarPorTipo(string $tipo): array
@@ -294,18 +301,30 @@ class EfemerideRegistro
         $stmt = $this->db->prepare("
             SELECT id, nome, tipo, data_evento, ativo
             FROM efemerides_registros
-            WHERE tipo = :tipo
+            WHERE loja_id = :loja_id
+              AND tipo = :tipo
             ORDER BY EXTRACT(MONTH FROM data_evento) ASC, EXTRACT(DAY FROM data_evento) ASC, nome ASC, id ASC
         ");
-        $stmt->execute(['tipo' => $tipo]);
+        $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
+            'tipo' => $tipo,
+        ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function buscarPorData(string $data): array
     {
-        $sql = "SELECT * FROM efemerides_registros WHERE TO_CHAR(data_evento, 'MM-DD') = :data ORDER BY id DESC";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute(['data' => $data]);
+        $stmt = $this->db->prepare("
+            SELECT *
+            FROM efemerides_registros
+            WHERE loja_id = :loja_id
+              AND TO_CHAR(data_evento, 'MM-DD') = :data
+            ORDER BY id DESC
+        ");
+        $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
+            'data' => $data,
+        ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -314,7 +333,7 @@ class EfemerideRegistro
         return self::VINCULOS_PADRAO;
     }
 
-    private function resolverCodVinculo(string $vinculo, $codVinculoInformado): ?int
+    private function resolverCodVinculo(string $vinculo, mixed $codVinculoInformado): ?int
     {
         if ($codVinculoInformado !== null && $codVinculoInformado !== '') {
             return (int) $codVinculoInformado;
@@ -351,10 +370,11 @@ class EfemerideRegistro
 
         $texto = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $texto) ?: $texto;
         $texto = strtolower($texto);
-        $texto = preg_replace('/[^a-z0-9]+/', '', $texto) ?? '';
-
-        return $texto;
+        return preg_replace('/[^a-z0-9]+/', '', $texto) ?? '';
     }
 
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
+    }
 }
-

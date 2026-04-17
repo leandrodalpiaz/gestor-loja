@@ -2,8 +2,31 @@
 $mensagem = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
+ 
+$erpPageTitle = 'Parametros da Loja';
+$appShellEyebrow = 'Administracao';
+$appShellTitle = 'Parametros da Loja';
+$appShellDescription = 'Cadastro oficial, parametros institucionais e memoria administrativa da Loja.';
+$appShellActiveHref = '/admin/loja';
+$appShellActions = [
+    ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
+    ['label' => 'Voltar ao painel', 'href' => '/dashboard', 'primary' => true],
+];
+$appShellSidebarSections = [
+    [
+        'title' => 'Administracao',
+        'items' => [
+            ['label' => 'Parametros da Loja', 'href' => '/admin/loja'],
+            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
+            ['label' => 'Dashboard', 'href' => '/dashboard'],
+        ],
+    ],
+];
+require __DIR__ . '/../partials/erp_head.php';
+require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
-<!DOCTYPE html>
+<?php /* TODO: a estrutura interna ainda carrega classes visuais legadas; consolidar depois sem mexer no formulario. */ ?>
+<?php if (false): ?>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -51,6 +74,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                 </div>
             </div>
         </section>
+<?php endif; ?>
 
         <?php if ($mensagem): ?>
             <div class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 shadow-sm">
@@ -64,7 +88,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
             </div>
         <?php endif; ?>
 
-        <div class="mt-8 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <div class="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(380px,0.85fr)] 2xl:grid-cols-[minmax(0,1.6fr)_minmax(420px,0.8fr)]">
             <form action="/admin/loja/salvar" method="POST" class="space-y-6">
                 <section class="rounded-[1.75rem] border border-white/60 bg-white/85 p-6 shadow-dignidade backdrop-blur">
                     <div class="border-b border-slate-200 pb-4">
@@ -314,11 +338,22 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                     <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Memória institucional</div>
                     <h2 class="mt-2 font-display text-4xl leading-none text-marinho">Prévia da história</h2>
                     <p class="mt-4 text-sm leading-7 text-slate-700 whitespace-pre-line">
-                        <?= htmlspecialchars(mb_strimwidth((string) ($configuracao['historia_loja'] ?? ''), 0, 1500, '...')) ?>
+                        <?php
+                        $historiaLojaPreview = (string) ($configuracao['historia_loja'] ?? '');
+                        if (function_exists('mb_strimwidth')) {
+                            $historiaLojaPreview = mb_strimwidth($historiaLojaPreview, 0, 1500, '...');
+                        } elseif (strlen($historiaLojaPreview) > 1500) {
+                            $historiaLojaPreview = substr($historiaLojaPreview, 0, 1497) . '...';
+                        }
+                        ?>
+                        <?= htmlspecialchars($historiaLojaPreview) ?>
                     </p>
                 </section>
             </aside>
         </div>
+<?php if (false): ?>
     </main>
 </body>
 </html>
+<?php endif; ?>
+<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
