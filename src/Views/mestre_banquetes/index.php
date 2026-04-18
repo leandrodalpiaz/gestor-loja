@@ -61,14 +61,14 @@ $semAgape = array_values(array_filter(
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div>
                             <h2 class="text-2xl font-semibold text-slate-900">Sessao em foco</h2>
-                            <p class="mt-2 text-sm text-slate-700">O Mestre de Banquetes pode alternar a sessao de trabalho para fechar previsao e operacao do agape.</p>
+                            <p class="mt-2 text-sm text-slate-700">O Mestre de Banquetes pode alternar a sessão de trabalho para ajustar previsão e operação do ágape.</p>
                         </div>
                         <form method="GET" action="/mestre-banquetes" class="w-full max-w-md">
                             <label for="sessao_id" class="mb-1 block text-sm font-medium text-slate-700">Selecionar sessao</label>
                             <select id="sessao_id" name="sessao_id" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">
                                 <?php foreach ($sessoes as $sessaoOpcao): ?>
                                     <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>" <?= !empty($sessaoEmFoco['id']) && (int) $sessaoEmFoco['id'] === (int) ($sessaoOpcao['id'] ?? 0) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars((string) (($sessaoOpcao['titulo'] ?? '') !== '' ? $sessaoOpcao['titulo'] : (($sessaoOpcao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
+                                        <?= htmlspecialchars((string) (($sessaoOpcao['titulo'] ?? '') !== '' ? $sessaoOpcao['titulo'] : (($sessaoOpcao['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -97,8 +97,8 @@ $semAgape = array_values(array_filter(
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div class="flex items-center justify-between gap-3">
                         <div>
-                            <h2 class="text-2xl font-semibold text-slate-900">Operacao do banquete</h2>
-                            <p class="mt-2 text-sm text-slate-700">Registre previsao, observacoes e o status logistico do agape.</p>
+                            <h2 class="text-2xl font-semibold text-slate-900">Operação do banquete</h2>
+                            <p class="mt-2 text-sm text-slate-700">Registre previsão, observações e o status logístico do ágape.</p>
                         </div>
                         <a href="/miniapp/mestre-banquetes" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">Abrir mobile</a>
                     </div>
@@ -116,14 +116,14 @@ $semAgape = array_values(array_filter(
                             </select>
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Previsao de participantes</label>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">Previsão de participantes</label>
                             <input type="number" min="0" name="previsao_participantes" value="<?= htmlspecialchars((string) ($operacaoBanquete['previsao_participantes'] ?? '')) ?>" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Observacoes logisticas</label>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">Observações logísticas</label>
                             <textarea name="observacoes" rows="4" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"><?= htmlspecialchars((string) ($operacaoBanquete['observacoes'] ?? '')) ?></textarea>
                         </div>
-                        <button type="submit" class="rounded-xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-500">Salvar operacao</button>
+                        <button type="submit" class="rounded-xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-500">Salvar operação</button>
                     </form>
                 </article>
 
@@ -139,7 +139,7 @@ $semAgape = array_values(array_filter(
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Ainda nao ha participantes confirmados com agape.</div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Ainda não há participantes confirmados com ágape.</div>
                         <?php endif; ?>
                     </div>
                 </article>
@@ -157,7 +157,7 @@ $semAgape = array_values(array_filter(
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Nao ha confirmados sem agape neste momento.</div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Não há confirmados sem ágape neste momento.</div>
                         <?php endif; ?>
                     </div>
                 </article>

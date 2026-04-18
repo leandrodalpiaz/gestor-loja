@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -105,7 +105,7 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Historico formativo</div>
+            <div class="text-sm font-semibold">Histórico formativo</div>
             <div id="lista-historico" class="mt-3 space-y-2 text-sm"></div>
         </div>
     </div>
@@ -132,7 +132,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel concluir esta acao agora. Tente novamente em instantes.');
+    if (!json.ok) throw new Error(json.erro || 'Não foi possível concluir esta ação agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -140,14 +140,14 @@ function renderLista(id, itens, vazio, mapper) {
     const root = document.getElementById(id);
     root.innerHTML = '';
     if (!itens || itens.length === 0) {
-        root.innerHTML = `<div class="rounded-xl border border-dashed border-gray-300 px-3 py-3 text-gray-500">${esc(vazio)}</div>`;
+        root.innerHTML = C<div class="rounded-xl border border-dashed border-gray-300 px-3 py-3 text-gray-500">${esc(vazio)}</div>C;
         return;
     }
     itens.forEach(item => {
         const data = mapper(item);
         const div = document.createElement('div');
         div.className = 'rounded-xl border border-gray-200 bg-white/70 px-3 py-2';
-        div.innerHTML = `<div class="font-medium">${esc(data.nome)}</div>${data.linha ? `<div class="text-xs text-gray-500 mt-1">${esc(data.linha)}</div>` : ''}`;
+        div.innerHTML = C<div class="font-medium">${esc(data.nome)}</div>${data.linha ? C<div class="text-xs text-gray-500 mt-1">${esc(data.linha)}</div>C : ''}C;
         root.appendChild(div);
     });
 }
@@ -155,7 +155,7 @@ function renderLista(id, itens, vazio, mapper) {
 function renderEtapas() {
     const etapas = dashboard?.aprendiz_foco?.etapas || [];
     renderLista('lista-etapas', etapas, 'Sem etapas registradas.', item => ({
-        nome: `Etapa ${item.ordem} Â· ${item.titulo}`,
+        nome: CEtapa ${item.ordem}    ${item.titulo}C,
         linha: item.status
     }));
 }
@@ -167,7 +167,7 @@ function render() {
     const foco = dashboard.aprendiz_foco;
     const aprendiz = foco?.aprendiz;
     document.getElementById('aprendiz-nome').textContent = aprendiz?.nome || 'Sem Aprendiz';
-    document.getElementById('aprendiz-meta').textContent = `CIM ${aprendiz?.cim || '-'} Â· Iniciacao ${aprendiz?.data_iniciacao || '-'}`;
+    document.getElementById('aprendiz-meta').textContent = `CIM ${aprendiz?.cim || '-'} · Iniciação ${aprendiz?.data_iniciacao || '-'}`;
     document.getElementById('meta-etapa').textContent = foco?.resumo?.etapa_atual ? `${foco.resumo.etapa_atual.ordem}` : '-';
     document.getElementById('meta-percentual').textContent = `${foco?.resumo?.percentual_conclusao || 0}%`;
 
@@ -176,7 +176,7 @@ function render() {
     (dashboard.aprendizes || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.nome} Â· CIM ${item.cim || '-'}`;
+        option.textContent = C${item.nome}    CIM ${item.cim || '-'}C;
         if (aprendiz && item.id === aprendiz.id) option.selected = true;
         select.appendChild(option);
     });
@@ -186,20 +186,20 @@ function render() {
     (dashboard.leituras_disponiveis || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.titulo} - ${item.autor || ''}`;
+        option.textContent = C${item.titulo} - ${item.autor || ''}C;
         if ((foco?.leitura_sugerida?.acervo_id || 0) === item.id) option.selected = true;
         acervo.appendChild(option);
     });
 
     document.getElementById('observacao_leitura').value = foco?.leitura_sugerida?.observacao || '';
     document.getElementById('observacao_certificado').value = foco?.certificado?.observacao || '';
-    document.getElementById('certificado-status').textContent = `Status atual: ${foco?.certificado?.status || 'nao_solicitado'}`;
+    document.getElementById('certificado-status').textContent = CStatus atual: ${foco?.certificado?.status || 'nao_solicitado'}C;
     const etapaSelect = document.getElementById('etapa_ordem');
     etapaSelect.innerHTML = '';
     (foco?.etapas || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.ordem;
-        option.textContent = `Etapa ${item.ordem} - ${item.titulo}`;
+        option.textContent = CEtapa ${item.ordem} - ${item.titulo}C;
         if ((foco?.resumo?.etapa_atual?.ordem || 0) === item.ordem) option.selected = true;
         etapaSelect.appendChild(option);
     });
@@ -208,9 +208,9 @@ function render() {
     document.getElementById('observacao_vigilante').value = etapaAtual?.observacao_vigilante || '';
 
     renderEtapas();
-    renderLista('lista-historico', foco?.historico_formativo || [], 'Sem historico formativo registrado.', item => ({
+    renderLista('lista-historico', foco?.historico_formativo || [], 'Sem histórico formativo registrado.', item => ({
         nome: item.titulo || item.tipo,
-        linha: `${item.momento || '-'} Â· ${item.descricao || ''}`
+        linha: C${item.momento || '-'}    ${item.descricao || ''}C
     }));
 }
 
@@ -288,4 +288,5 @@ carregar();
 </script>
 </body>
 </html>
+
 

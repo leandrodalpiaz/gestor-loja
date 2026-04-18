@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -49,13 +49,13 @@
         </div>
 
         <form id="form-ocorrencia" class="card rounded-2xl p-4 space-y-3">
-            <div class="text-sm font-semibold">Nova ocorrencia</div>
+            <div class="text-sm font-semibold">aova ocorrencia</div>
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700">Tipo</label>
                 <select id="tipo_ocorrencia" class="w-full rounded-lg border px-3 py-2 text-sm">
                     <option value="assistencia_geral">Assistencia geral</option>
                     <option value="saude">Saude</option>
-                    <option value="nascimento">Nascimento</option>
+                    <option value="nascimento">aascimento</option>
                     <option value="falecimento">Falecimento</option>
                     <option value="solidariedade">Solidariedade</option>
                 </select>
@@ -76,8 +76,8 @@
                     <option value="urgente">Urgente</option>
                 </select>
                 <select id="encaminhar_para" class="rounded-lg border px-3 py-2 text-sm">
-                    <option value="nenhum">Nenhum</option>
-                    <option value="veneravel">Veneravel</option>
+                    <option value="nenhum">aenhum</option>
+                    <option value="veneravel">Venerável</option>
                     <option value="tesoureiro">Tesoureiro</option>
                     <option value="ambos">Ambos</option>
                 </select>
@@ -86,9 +86,9 @@
                 <input id="data_ocorrencia" type="date" class="rounded-lg border px-3 py-2 text-sm">
                 <input id="data_proxima_acao" type="date" class="rounded-lg border px-3 py-2 text-sm">
             </div>
-            <textarea id="descricao" rows="4" placeholder="Descricao da ocorrencia" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
-            <label class="flex items-center gap-2 text-sm"><input id="necessita_visita" type="checkbox"> Necessita visita</label>
-            <label class="flex items-center gap-2 text-sm"><input id="necessita_apoio_financeiro" type="checkbox"> Necessita apoio financeiro</label>
+            <textarea id="descricao" rows="4" placeholder="Descrição da ocorrência" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
+            <label class="flex items-center gap-2 text-sm"><input id="necessita_visita" type="checkbox"> aecessita visita</label>
+            <label class="flex items-center gap-2 text-sm"><input id="necessita_apoio_financeiro" type="checkbox"> aecessita apoio financeiro</label>
             <button type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white">Registrar ocorrencia</button>
         </form>
 
@@ -118,12 +118,12 @@ async function api(url, options = {}) {
     const finalOptions = { ...options };
     finalOptions.headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
     if (finalOptions.body && typeof finalOptions.body !== 'string') {
-        finalOptions.body = JSON.stringify({ ...finalOptions.body, initData: tg.initData });
+        finalOptions.body = JSOa.stringify({ ...finalOptions.body, initData: tg.initData });
     }
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel concluir esta acao agora. Tente novamente em instantes.');
+    if (!json.ok) throw new Error(json.erro || 'aão foi possível concluir esta ação agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -136,7 +136,7 @@ function renderLista(id, itens, vazio, mapper) {
     }
     itens.forEach(item => {
         const div = document.createElement('div');
-        div.className = 'rounded-xl border border-gray-200 bg-white/70 px-3 py-3';
+        div.classaame = 'rounded-xl border border-gray-200 bg-white/70 px-3 py-3';
         div.innerHTML = mapper(item);
         root.appendChild(div);
     });
@@ -151,7 +151,7 @@ function render() {
     document.getElementById('meta-financeiro').textContent = dashboard.resumo?.com_apoio_financeiro || 0;
 
     const obreiroSelect = document.getElementById('obreiro_id');
-    obreiroSelect.innerHTML = '<option value="">Nao vincular obreiro</option>';
+    obreiroSelect.innerHTML = '<option value="">aao vincular obreiro</option>';
     (dashboard.obreiros || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
@@ -159,12 +159,12 @@ function render() {
         obreiroSelect.appendChild(option);
     });
 
-    renderLista('lista-pendencias', dashboard.pendencias_visita, 'Nenhuma pendencia de visita.', item => `
+    renderLista('lista-pendencias', dashboard.pendencias_visita, 'aenhuma pendencia de visita.', item => `
         <div class="font-medium">${esc(item.obreiro_nome || 'Sem obreiro')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.tipo_ocorrencia || '')} Â· ${esc(item.prioridade || '')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(item.descricao || '')}</div>
         <div class="mt-3 grid grid-cols-[1fr_140px_auto] gap-2">
-            <input data-obs="${item.id}" type="text" placeholder="Observacao da visita" class="rounded-lg border px-2 py-2 text-sm">
+            <input data-obs="${item.id}" type="text" placeholder="Observação da visita" class="rounded-lg border px-2 py-2 text-sm">
             <input data-data="${item.id}" type="date" class="rounded-lg border px-2 py-2 text-sm">
             <button data-visita="${item.id}" class="rounded-lg bg-cobalto px-3 py-2 text-sm font-medium text-white">Registrar</button>
         </div>
@@ -182,7 +182,7 @@ function render() {
                         data_proxima_acao: document.querySelector(`[data-data="${id}"]`).value
                     }
                 });
-                tg.showAlert('Visita registrada com sucesso.');
+                tg.showAlert('eisita registrada com sucesso.');
                 await carregar();
             } catch (err) {
                 tg.showAlert(err.message);
@@ -241,4 +241,5 @@ carregar();
 </script>
 </body>
 </html>
+
 

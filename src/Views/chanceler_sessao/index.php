@@ -100,7 +100,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
             <article class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 shadow-sm">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-800">Visitantes resumidos</p>
                 <p class="mt-2 text-3xl font-semibold text-amber-900"><?= count($visitantesResumo) ?></p>
-                <p class="mt-1 text-sm text-amber-800">Leitura rapida pronta para apoiar Secretaria e Orador.</p>
+                <p class="mt-1 text-sm text-amber-800">Leitura rápida pronta para apoiar Secretaria e Orador.</p>
             </article>
         </section>
 
@@ -125,7 +125,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                             <select id="sessao_id" name="sessao_id" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">
                                 <?php foreach ($sessoes as $sessaoOpcao): ?>
                                     <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>" <?= !empty($sessaoEmFoco['id']) && (int) $sessaoEmFoco['id'] === (int) ($sessaoOpcao['id'] ?? 0) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars((string) (($sessaoOpcao['titulo'] ?? '') !== '' ? $sessaoOpcao['titulo'] : (($sessaoOpcao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
+                                        <?= htmlspecialchars((string) (($sessaoOpcao['titulo'] ?? '') !== '' ? $sessaoOpcao['titulo'] : (($sessaoOpcao['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -158,7 +158,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Acao principal</p>
                     <h2 class="text-2xl font-semibold text-slate-900">Check-in do quadro da Loja</h2>
-                    <p class="mt-2 text-sm text-slate-700">Somente os presentes efetivos entram na base de votacao do balaustre e na leitura final da nominata.</p>
+                    <p class="mt-2 text-sm text-slate-700">Somente os presentes efetivos entram na base de votação do balaustre e na leitura final da nominata.</p>
                     <div class="mt-4 grid gap-3 md:grid-cols-2">
                         <?php if ($mapaPresencas !== []): ?>
                             <?php foreach ($mapaPresencas as $registro): ?>
@@ -184,7 +184,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                         <div>
                             <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Fechamento da lista</p>
                             <h2 class="text-2xl font-semibold text-slate-900">Lista final de presentes</h2>
-                            <p class="mt-2 text-sm text-slate-700">Base de conferencia rapida para fechar a nominata efetiva da sessao.</p>
+                            <p class="mt-2 text-sm text-slate-700">Base de conferência rápida para fechar a nominata efetiva da sessão.</p>
                         </div>
                         <span class="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700"><?= count($presentesEfetivos) ?> presentes</span>
                     </div>
@@ -197,7 +197,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 md:col-span-2">Ainda nao ha presentes efetivos marcados para esta sessao.</div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 md:col-span-2">Ainda não há presentes efetivos marcados para esta sessão.</div>
                         <?php endif; ?>
                     </div>
                 </article>
@@ -217,7 +217,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Ainda nao ha lista resumida de visitantes registrada para esta sessao.</div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Ainda não há lista resumida de visitantes registrada para esta sessão.</div>
                         <?php endif; ?>
                     </div>
                 </article>
@@ -234,7 +234,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Ainda nao ha confirmados registrados.</div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Ainda não há confirmados registrados.</div>
                         <?php endif; ?>
                     </div>
                 </article>

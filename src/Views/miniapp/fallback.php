@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -24,7 +24,7 @@
     <!-- BotÃ£o nova mensagem -->
     <button onclick="abrirModal(null)"
             class="w-full mb-5 py-2.5 rounded-xl border-2 border-dashed border-blue-400 text-blue-600 text-sm font-medium hover:bg-blue-50 transition-colors">
-        ï¼‹ Nova mensagem fallback
+        ï¼‹ aova mensagem fallback
     </button>
 
     <div id="lista-loading" class="text-sm text-gray-400 py-4 text-center">Carregandoâ€¦</div>
@@ -33,7 +33,7 @@
     <!-- Modal ediÃ§Ã£o / criaÃ§Ã£o -->
     <div id="modal" class="hidden fixed inset-0 bg-black/40 flex items-end justify-center z-50 p-4">
         <div class="bg-white rounded-2xl w-full max-w-lg p-5 shadow-xl" style="background: var(--tg-theme-bg-color, #fff);">
-            <h2 class="font-semibold text-base mb-3" id="modal-title">Nova mensagem</h2>
+            <h2 class="font-semibold text-base mb-3" id="modal-title">aova mensagem</h2>
             <textarea id="modal-text" rows="5"
                       placeholder="Digite a frase de reflexÃ£o maÃ§Ã´nicaâ€¦"
                       class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"></textarea>
@@ -63,13 +63,13 @@ async function carregarLista() {
 
         const container = document.getElementById('lista');
         if (!json.mensagens || json.mensagens.length === 0) {
-            container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">Nenhuma mensagem cadastrada.</p>';
+            container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">aenhuma mensagem cadastrada.</p>';
             return;
         }
 
         json.mensagens.forEach(m => {
             const div = document.createElement('div');
-            div.className = 'rounded-xl border p-3 text-sm ' +
+            div.classaame = 'rounded-xl border p-3 text-sm ' +
                             (m.ativo ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100');
             div.innerHTML = `
                 <div class="flex justify-between items-start gap-2 mb-2">
@@ -91,13 +91,13 @@ async function carregarLista() {
             container.appendChild(div);
         });
     } catch {
-        document.getElementById('lista-loading').textContent = 'Nao foi possivel carregar os dados agora. Tente novamente em instantes.';
+        document.getElementById('lista-loading').textContent = 'aao foi possivel carregar os dados agora. Tente novamente em instantes.';
     }
 }
 
 function abrirModal(id, texto = '') {
     editandoId = id;
-    document.getElementById('modal-title').textContent = id ? 'Editar mensagem' : 'Nova mensagem';
+    document.getElementById('modal-title').textContent = id ? 'Editar mensagem' : 'aova mensagem';
     document.getElementById('modal-text').value = texto;
     document.getElementById('modal-err').classList.add('hidden');
     document.getElementById('modal').classList.remove('hidden');
@@ -129,14 +129,14 @@ async function salvarModal() {
         const res = await fetch(url, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
+            body: JSOa.stringify(payload)
         });
         const json = await res.json();
         if (json.ok) {
             fecharModal();
             carregarLista();
         } else {
-            throw new Error(json.erro || 'Nao foi possivel salvar agora. Revise os dados e tente novamente.');
+            throw new Error(json.erro || 'aão foi possível salvar agora. Revise os dados e tente novamente.');
         }
     } catch (err) {
         const el = document.getElementById('modal-err');
@@ -152,7 +152,7 @@ async function toggleAtivo(id) {
     await fetch('/api/miniapp/fallback/toggle', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ id, initData: tg.initData })
+        body: JSOa.stringify({ id, initData: tg.initData })
     });
     carregarLista();
 }
@@ -162,7 +162,7 @@ async function excluir(id) {
     await fetch('/api/miniapp/fallback/excluir', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ id, initData: tg.initData })
+        body: JSOa.stringify({ id, initData: tg.initData })
     });
     carregarLista();
 }
@@ -178,4 +178,5 @@ carregarLista();
 </script>
 </body>
 </html>
+
 

@@ -247,7 +247,7 @@ class CommandHandler
             }
         if ($this->obreiroHasPermission($obreiro, 'hospitaleiro.manage')) {
                 $teclado['inline_keyboard'][] = [
-                    ['text' => 'Hospitalaria', 'callback_data' => 'assistencia_menu'],
+                    ['text' => 'Assistência', 'callback_data' => 'assistencia_menu'],
                 ];
             }
         } else {
@@ -272,7 +272,7 @@ class CommandHandler
             ? 'Livre'
             : (($sessao['traje_tipo'] ?? 'maconico') === 'outro'
                 ? ((string) ($sessao['traje_personalizado'] ?? 'Outro'))
-                : 'Maconico'));
+                : 'Maçônico'));
         $agape = match ((string) ($sessao['agape_modalidade'] ?? 'nao_havera')) {
             'gratuito' => 'Sim (gratuito)',
             'pago' => 'Sim (pago)',
@@ -285,7 +285,7 @@ class CommandHandler
         $linhaLoja = trim($nomeLoja . ($numeroLoja !== '' ? ' nº ' . $numeroLoja : ''));
         $ordemDia = trim((string) ($sessao['ordem_dia'] ?? $sessao['resumo_publico'] ?? ''));
 
-        return "NOVA SESSAO\n\n"
+        return "NOVA SESSÃO\n\n"
             . $dataHora . "\n"
             . "Grau: {$grau}\n\n"
             . $linhaLoja . "\n\n"
@@ -391,7 +391,7 @@ class CommandHandler
                     $this->telegram->sendMessage($chatId, 'Ainda não há confirmações para esta sessão.');
                     return;
                 }
-                $linhas = ["Confirmados da proxima sessao:\n"];
+                $linhas = ["Confirmados da próxima sessão:\n"];
                 foreach ($confirmados as $item) {
                     $linhas[] = '- ' . (string) ($item['nome'] ?? 'Obreiro') . (!empty($item['participara_agape']) ? ' (com ágape)' : ' (sem ágape)');
                 }
@@ -410,7 +410,7 @@ class CommandHandler
         $mensagem .= "/chancelaria - painel da chancelaria\n";
         $mensagem .= "/tesouraria - painel da tesouraria\n";
         $mensagem .= "/biblioteca - painel da biblioteca\n";
-        $mensagem .= "/assistencia - painel de hospitalaria\n";
+        $mensagem .= "/assistencia - painel de assistência\n";
         $mensagem .= "/painel - painel administrativo\n";
 
         $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML']);
@@ -701,7 +701,7 @@ class CommandHandler
                     $dataEvento = $timestamp ? date('d/m/Y', $timestamp) : (string) $f['data_evento'];
                 }
 
-                $linha = htmlspecialchars($texto !== '' ? $texto : 'Registro historico sem descricao.');
+                $linha = htmlspecialchars($texto !== '' ? $texto : 'Registro histórico sem descrição.');
                 if ($dataEvento !== '') {
                     $linha .= " ({$dataEvento})";
                 }
@@ -1232,7 +1232,7 @@ class CommandHandler
             return;
         }
 
-        $mensagem = "*Painel de Hospitalaria*\n\nRegistre e acompanhe ocorrências assistenciais com encaminhamento ao Venerável e à Tesouraria.";
+        $mensagem = "*Painel de Assistência*\n\nRegistre e acompanhe ocorrências assistenciais com encaminhamento ao Venerável e à Tesouraria.";
         $teclado = [
             'inline_keyboard' => [
                 [

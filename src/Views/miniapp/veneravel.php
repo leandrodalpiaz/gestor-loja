@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Veneravel Mobile</title>
+    <title>Venerável Mobile</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -19,8 +19,8 @@
 <body class="min-h-screen p-4">
 <div class="mx-auto max-w-lg space-y-4">
     <div>
-        <h1 class="text-xl font-bold">Veneravel Mestre</h1>
-        <p class="mt-1 text-sm text-gray-500">Decisoes de sessao, votacoes e governanca critica no mobile.</p>
+        <h1 class="text-xl font-bold">Venerável Mestre</h1>
+        <p class="mt-1 text-sm text-gray-500">Decisões de sessão, votações e governança crítica no mobile.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -28,12 +28,12 @@
 
     <div id="conteudo" class="hidden space-y-4">
         <div class="card rounded-2xl p-4">
-            <div class="text-xs uppercase tracking-wide text-gray-400">Sessao em foco</div>
+            <div class="text-xs uppercase tracking-wide text-gray-400">Sessão em foco</div>
             <div id="sessao-titulo" class="mt-1 text-base font-semibold"></div>
             <div id="sessao-meta" class="mt-1 text-sm text-gray-600"></div>
 
             <div class="mt-4">
-                <label class="mb-1 block text-sm font-medium text-gray-700">Trocar sessao</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Trocar sessão</label>
                 <select id="sessao-select" class="w-full rounded-lg border px-3 py-2 text-sm"></select>
             </div>
 
@@ -43,7 +43,7 @@
                     <div id="meta-confirmados" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Agape</div>
+                    <div class="text-gray-500">Ágape</div>
                     <div id="meta-agape" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
@@ -51,8 +51,8 @@
                     <div id="meta-aptos" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Em votacao</div>
-                    <div id="meta-votacao" class="mt-1 text-lg font-semibold"></div>
+                    <div class="text-gray-500">Em votação</div>
+                    <div id="meta-votação" class="mt-1 text-lg font-semibold"></div>
                 </div>
             </div>
 
@@ -67,7 +67,7 @@
         <div class="card rounded-2xl p-4">
             <div class="text-sm font-semibold">Votacoes de balaustre</div>
             <div id="lista-balaustres-aptos" class="mt-3 space-y-2 text-sm"></div>
-            <div id="lista-balaustres-votacao" class="mt-3 space-y-2 text-sm"></div>
+            <div id="lista-balaustres-votação" class="mt-3 space-y-2 text-sm"></div>
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
@@ -104,7 +104,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel concluir esta acao agora. Tente novamente em instantes.');
+    if (!json.ok) throw new Error(json.erro || 'Não foi possível concluir esta ação agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -158,32 +158,32 @@ function render() {
     document.getElementById('conteudo').classList.remove('hidden');
 
     const sessao = dashboard.sessao_foco;
-    document.getElementById('sessao-titulo').textContent = sessao ? (sessao.titulo || 'Sessao') : 'Sem sessao em foco';
-    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} Â· ${sessao.status || ''}` : 'Sem dados';
+    document.getElementById('sessao-titulo').textContent = sessao ? (sessao.titulo || 'Sessão') : 'Sem sessão em foco';
+    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} · ${sessao.status || ''}` : 'Sem dados';
     document.getElementById('meta-confirmados').textContent = sessao ? (sessao.total_confirmados || 0) : 0;
     document.getElementById('meta-agape').textContent = sessao ? (sessao.total_agape || 0) : 0;
     document.getElementById('meta-aptos').textContent = dashboard.balaustres_aptos?.length || 0;
-    document.getElementById('meta-votacao').textContent = dashboard.balaustres_em_votacao?.length || 0;
+    document.getElementById('meta-votação').textContent = dashboard.balaustres_em_votação?.length || 0;
 
     const select = document.getElementById('sessao-select');
     select.innerHTML = '';
     (dashboard.sessoes || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.titulo || 'Sessao'} Â· ${item.status || ''}`;
+        option.textContent = `${item.titulo || 'Sessão'} · ${item.status || ''}`;
         if (sessao && item.id === sessao.id) option.selected = true;
         select.appendChild(option);
     });
 
-    renderBalaustres('lista-balaustres-aptos', dashboard.balaustres_aptos, 'Nenhum balaustre apto para abrir votacao.', 'abrir-votacao', 'Abrir votacao');
-    renderBalaustres('lista-balaustres-votacao', dashboard.balaustres_em_votacao, 'Nenhum balaustre em votacao.', 'encerrar-votacao', 'Encerrar votacao');
+    renderBalaustres('lista-balaustres-aptos', dashboard.balaustres_aptos, 'Nenhum balaustre apto para abrir votação.', 'abrir-votação', 'Abrir votação');
+    renderBalaustres('lista-balaustres-votação', dashboard.balaustres_em_votação, 'Nenhum balaustre em votação.', 'encerrar-votação', 'Encerrar votação');
     renderListaSimples('lista-cargos-pendentes', dashboard.cargos_criticos_pendentes, 'Nenhum cargo critico pendente.', item => ({
         nome: item.nome_exibicao || item.codigo,
         linha: item.codigo || ''
     }));
     renderListaSimples('lista-obreiros-pendentes', dashboard.obreiros_pendentes_criticos, 'Sem pendencias cadastrais criticas.', item => ({
         nome: item.nome,
-        linha: `CIM ${item.cim || '-'} Â· ${Array.isArray(item.alertas) ? item.alertas.join(', ') : ''}`
+        linha: `CIM ${item.cim || '-'} · ${Array.isArray(item.alertas) ? item.alertas.join(', ') : ''}`
     }));
 }
 
@@ -222,4 +222,5 @@ carregar();
 </script>
 </body>
 </html>
+
 

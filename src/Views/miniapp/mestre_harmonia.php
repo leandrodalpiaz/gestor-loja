@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -20,7 +20,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">Mestre de Harmonia</h1>
-        <p class="mt-1 text-sm text-gray-500">Operacao ritual e controle remoto de etapas.</p>
+        <p class="mt-1 text-sm text-gray-500">Operação ritual e controle remoto de etapas.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -28,7 +28,7 @@
 
     <div id="conteudo" class="hidden space-y-4">
         <div class="card rounded-2xl p-4 space-y-3">
-            <div class="text-sm font-semibold">Sessao musical</div>
+            <div class="text-sm font-semibold">Sessão musical</div>
             <select id="sessao_path" class="w-full rounded-lg border px-3 py-2 text-sm"></select>
             <div class="rounded-xl bg-white/70 p-3">
                 <div id="sessao-nome" class="font-semibold"></div>
@@ -88,7 +88,7 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Roteiro da sessao</div>
+            <div class="text-sm font-semibold">Roteiro da sessão</div>
             <div id="lista-faixas" class="mt-3 space-y-2 text-sm"></div>
         </div>
 
@@ -118,7 +118,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel concluir esta acao agora. Tente novamente em instantes.');
+    if (!json.ok) throw new Error(json.erro || 'Não foi possível concluir esta ação agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -146,14 +146,14 @@ function render() {
     (dashboard.sessoes || []).forEach(sessao => {
         const option = document.createElement('option');
         option.value = sessao.path;
-        option.textContent = `${sessao.nome} Â· ${sessao.total_tracks} faixa(s)`;
+        option.textContent = `${sessao.nome} · ${sessao.total_tracks} faixa(s)`;
         if ((dashboard.sessao_foco?.path || '') === sessao.path) option.selected = true;
         select.appendChild(option);
     });
 
-    document.getElementById('sessao-nome').textContent = dashboard.sessao_foco?.nome || 'Sem sessao';
+    document.getElementById('sessao-nome').textContent = dashboard.sessao_foco?.nome || 'Sem sessão';
     const summary = dashboard.sessao_foco?.summary || {};
-    document.getElementById('sessao-resumo').textContent = `Principais ${summary.principal || 0} Â· Transicao ${summary.transicao || 0} Â· Extras ${summary.extra || 0}`;
+    document.getElementById('sessao-resumo').textContent = `Principais ${summary.principal || 0} · Transição ${summary.transicao || 0} · Extras ${summary.extra || 0}`;
     document.getElementById('operador_nome').value = dashboard.estado?.operador_nome || '';
     document.getElementById('estado-status').textContent = dashboard.estado?.status_player || 'parado';
     document.getElementById('estado-volume').textContent = `${dashboard.estado?.volume_percent || 0}%`;
@@ -161,17 +161,17 @@ function render() {
     document.getElementById('estado-atualizado').textContent = dashboard.estado?.updated_at || '-';
 
     document.getElementById('faixa-atual').innerHTML = `
-        <div class="font-medium">${esc(dashboard.faixa_atual?.code || '--')} Â· ${esc(dashboard.faixa_atual?.phase || 'Etapa')}</div>
+        <div class="font-medium">${esc(dashboard.faixa_atual?.code || '--')} · ${esc(dashboard.faixa_atual?.phase || 'Etapa')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(dashboard.faixa_atual?.title || 'Sem faixa atual')}</div>
     `;
     document.getElementById('proxima-faixa').innerHTML = dashboard.proxima_faixa ? `
-        <div class="font-medium">${esc(dashboard.proxima_faixa.code || '--')} Â· ${esc(dashboard.proxima_faixa.phase || 'Etapa')}</div>
+        <div class="font-medium">${esc(dashboard.proxima_faixa.code || '--')} · ${esc(dashboard.proxima_faixa.phase || 'Etapa')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(dashboard.proxima_faixa.title || '')}</div>
     ` : `<div class="text-gray-500">Sem proxima faixa.</div>`;
 
     renderLista('lista-faixas', dashboard.faixas, 'Nenhuma faixa encontrada.', item => `
         <button data-faixa="${esc(item.id)}" class="w-full text-left">
-            <div class="font-medium">${esc(item.code || '--')} Â· ${esc(item.phase || 'Etapa')}</div>
+            <div class="font-medium">${esc(item.code || '--')} · ${esc(item.phase || 'Etapa')}</div>
             <div class="mt-1 text-xs text-gray-500">${esc(item.title || '')}</div>
             <div class="mt-2 text-[11px] uppercase tracking-wide text-gray-400">${esc(item.type || 'principal')}</div>
         </button>
@@ -189,7 +189,7 @@ function render() {
 
     renderLista('lista-alternativas', dashboard.alternativas, 'Nenhuma alternativa nesta etapa.', item => `
         <button data-alternativa="${esc(item.id)}" class="w-full text-left">
-            <div class="font-medium">${esc(item.code || '--')} Â· ${esc(item.phase || 'Etapa')}</div>
+            <div class="font-medium">${esc(item.code || '--')} · ${esc(item.phase || 'Etapa')}</div>
             <div class="mt-1 text-xs text-gray-500">${esc(item.title || '')}</div>
         </button>
     `);
@@ -271,4 +271,5 @@ carregar();
 </script>
 </body>
 </html>
+
 

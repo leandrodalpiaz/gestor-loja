@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -124,7 +124,7 @@ document.getElementById('form').addEventListener('submit', async function(e) {
             this.reset();
             setTimeout(() => tg.close(), 1800);
         } else {
-            throw new Error(json.erro || 'Nao foi possivel salvar agora. Revise os dados e tente novamente.');
+            throw new Error(json.erro || 'Não foi possível salvar agora. Revise os dados e tente novamente.');
         }
     } catch (err) {
         const el = document.getElementById('alert-err');
@@ -138,4 +138,5 @@ document.getElementById('form').addEventListener('submit', async function(e) {
 </script>
 </body>
 </html>
+
 

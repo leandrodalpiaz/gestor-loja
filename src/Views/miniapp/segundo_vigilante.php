@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -20,7 +20,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">2o Vigilante</h1>
-        <p class="mt-1 text-sm text-gray-500">Trilha, docencia e recomendacao de exaltacao dos Companheiros.</p>
+        <p class="mt-1 text-sm text-gray-500">Trilha, docência e recomendação de exaltação dos Companheiros.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -72,7 +72,7 @@
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Observacao do vigilante</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Observação do vigilante</label>
                 <textarea id="observacao_vigilante" rows="4" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
             <button type="submit" class="w-full rounded-xl bg-emerald-700 px-4 py-3 text-sm font-medium text-white">Salvar andamento da trilha</button>
@@ -85,7 +85,7 @@
                 <select id="acervo_id" class="w-full rounded-lg border px-3 py-2 text-sm"></select>
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Orientacao</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Orientação</label>
                 <textarea id="observacao_leitura" rows="4" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
             <button type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white">Salvar leitura sugerida</button>
@@ -95,20 +95,20 @@
             <div class="text-sm font-semibold">Certificado</div>
             <div id="certificado-status" class="rounded-xl bg-white/70 px-3 py-3 text-sm text-slate-700"></div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Observacao do certificado</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Observação do certificado</label>
                 <textarea id="observacao_certificado" rows="4" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
             <button type="submit" class="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-medium text-slate-900">Solicitar certificado</button>
         </form>
 
         <form id="form-exaltacao" class="card rounded-2xl p-4 space-y-3">
-            <div class="text-sm font-semibold">Exaltacao</div>
+            <div class="text-sm font-semibold">Exaltação</div>
             <div id="exaltacao-status" class="rounded-xl bg-white/70 px-3 py-3 text-sm text-slate-700"></div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Observacao da recomendacao</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Observação da recomendação</label>
                 <textarea id="observacao_exaltacao" rows="4" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
-            <button type="submit" class="w-full rounded-xl bg-indigo-700 px-4 py-3 text-sm font-medium text-white">Recomendar exaltacao</button>
+            <button type="submit" class="w-full rounded-xl bg-indigo-700 px-4 py-3 text-sm font-medium text-white">Recomendar exaltação</button>
         </form>
 
         <div class="card rounded-2xl p-4">
@@ -117,7 +117,7 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Historico formativo</div>
+            <div class="text-sm font-semibold">Histórico formativo</div>
             <div id="lista-historico" class="mt-3 space-y-2 text-sm"></div>
         </div>
     </div>
@@ -144,7 +144,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel concluir esta acao agora. Tente novamente em instantes.');
+    if (!json.ok) throw new Error(json.erro || 'Não foi possível concluir esta ação agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -171,7 +171,7 @@ function render() {
     const foco = dashboard.companheiro_foco;
     const companheiro = foco?.companheiro;
     document.getElementById('companheiro-nome').textContent = companheiro?.nome || 'Sem Companheiro';
-    document.getElementById('companheiro-meta').textContent = `CIM ${companheiro?.cim || '-'} Â· Elevacao ${companheiro?.data_elevacao || '-'}`;
+    document.getElementById('companheiro-meta').textContent = `CIM ${companheiro?.cim || '-'} · Elevação ${companheiro?.data_elevacao || '-'}`;
     document.getElementById('meta-etapa').textContent = foco?.resumo?.etapa_atual ? `${foco.resumo.etapa_atual.ordem}` : '-';
     document.getElementById('meta-percentual').textContent = `${foco?.resumo?.percentual_conclusao || 0}%`;
 
@@ -180,13 +180,13 @@ function render() {
     (dashboard.companheiros || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.nome} Â· CIM ${item.cim || '-'}`;
+        option.textContent = `${item.nome} · CIM ${item.cim || '-'}`;
         if (companheiro && item.id === companheiro.id) option.selected = true;
         select.appendChild(option);
     });
 
     const acervo = document.getElementById('acervo_id');
-    acervo.innerHTML = '<option value="">Sem vincular livro especifico</option>';
+    acervo.innerHTML = '<option value="">Sem vincular livro específico</option>';
     (dashboard.leituras_disponiveis || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
@@ -215,12 +215,12 @@ function render() {
     document.getElementById('exaltacao-status').textContent = `Status atual: ${foco?.exaltacao?.status || 'nao_recomendada'}`;
 
     renderLista('lista-etapas', foco?.etapas || [], 'Sem etapas registradas.', item => ({
-        nome: `Etapa ${item.ordem} Â· ${item.titulo}`,
+        nome: `Etapa ${item.ordem} · ${item.titulo}`,
         linha: item.status
     }));
-    renderLista('lista-historico', foco?.historico_formativo || [], 'Sem historico formativo registrado.', item => ({
+    renderLista('lista-historico', foco?.historico_formativo || [], 'Sem histórico formativo registrado.', item => ({
         nome: item.titulo || item.tipo,
-        linha: `${item.momento || '-'} Â· ${item.descricao || ''}`
+        linha: `${item.momento || '-'} · ${item.descricao || ''}`
     }));
 }
 
@@ -304,7 +304,7 @@ document.getElementById('form-exaltacao').addEventListener('submit', async (even
                 observacao_exaltacao: document.getElementById('observacao_exaltacao').value
             }
         });
-        tg.showAlert('Recomendacao de exaltacao registrada.');
+        tg.showAlert('Recomendação de exaltação registrada.');
         await carregar(companheiroAtualId);
     } catch (err) {
         tg.showAlert(err.message);
@@ -315,4 +315,5 @@ carregar();
 </script>
 </body>
 </html>
+
 
