@@ -11,26 +11,57 @@
                 extend: {
                     colors: {
                         erpNavy: '#1E3A5F',
-                        erpNavyDeep: '#17314F',
+                        erpNavyDeep: '#162E4A',
                         erpGold: '#B8960C',
                         erpBg: '#F4F7FB',
                         erpSurface: '#FFFFFF',
                         erpBorder: '#D9E0EA',
-                        erpText: '#243447',
-                        erpMuted: '#5B6B7D',
+                        erpText: '#1F2937',
+                        erpMuted: '#526173',
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
                     },
                     boxShadow: {
-                        shell: '0 24px 60px rgba(30, 58, 95, 0.10)',
-                        panel: '0 24px 80px rgba(23, 49, 79, 0.18)',
+                        shell: '0 28px 70px rgba(22, 46, 74, 0.12)',
                     }
                 }
             }
         }
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-\[0\.68rem\],
+            .erp-readable .text-\[0\.7rem\],
+            .erp-readable .text-\[0\.72rem\] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.04rem !important;
+                line-height: 1.6rem !important;
+            }
+        }
+        @media (min-width: 1800px) {
+            .erp-readable {
+                font-size: 1.14rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-\[0\.68rem\],
+            .erp-readable .text-\[0\.7rem\],
+            .erp-readable .text-\[0\.72rem\] {
+                font-size: 0.98rem !important;
+                line-height: 1.5rem !important;
+            }
+        }
+    </style>
 </head>
 <?php
 $logoRenascencaLogin = null;
@@ -46,63 +77,44 @@ foreach ([
     }
 }
 ?>
-<body class="min-h-screen bg-[linear-gradient(180deg,#f4f7fb_0%,#eef2f7_100%)] font-sans text-erpText">
+<body class="erp-readable min-h-screen bg-[radial-gradient(circle_at_top,#f9fbfd_0%,#eef3f8_55%,#e8edf4_100%)] font-sans text-erpText">
     <div class="min-h-screen px-5 py-6 sm:px-8 xl:px-10 xl:py-8">
-        <div class="mx-auto flex min-h-[calc(100vh-3rem)] max-w-[1700px] flex-col overflow-hidden rounded-[2rem] border border-erpBorder bg-white shadow-shell xl:grid xl:grid-cols-[minmax(720px,1.25fr)_minmax(540px,0.75fr)]">
-            <section class="relative overflow-hidden bg-[linear-gradient(135deg,#17314f_0%,#21466c_44%,#2f5f89_100%)] text-white">
-                <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(184,150,12,0.22),transparent_26%),radial-gradient(circle_at_14%_84%,rgba(255,255,255,0.08),transparent_22%)]"></div>
-                <div class="relative flex h-full flex-col justify-between px-10 py-10 sm:px-12 xl:px-16 xl:py-14">
-                    <div>
-                        <div class="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-white/80">
-                            Gestor de Loja
+        <div class="mx-auto flex min-h-[calc(100vh-3rem)] max-w-[1560px] items-center justify-center">
+            <main class="w-full overflow-hidden rounded-[2rem] border border-erpBorder bg-erpSurface shadow-shell">
+                <section class="border-b border-erpBorder bg-[linear-gradient(135deg,#173452_0%,#21466c_58%,#2d5d87_100%)] px-8 py-8 text-white sm:px-10 xl:px-12 xl:py-10">
+                    <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+                        <div class="max-w-4xl">
+                            <div class="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-white/80">
+                                Gestor de Loja
+                            </div>
+                            <h1 class="mt-6 text-4xl font-semibold leading-tight sm:text-[2.8rem] xl:text-[3.25rem]">
+                                Acesso administrativo da Loja em uma unica entrada operacional.
+                            </h1>
+                            <p class="mt-4 max-w-3xl text-base leading-8 text-white/78 xl:text-lg">
+                                Secretaria, Tesouraria, Chancelaria, nominata e paineis de trabalho em um ambiente web pensado para uso de mesa, com leitura ampla e contexto institucional claro.
+                            </p>
                         </div>
-                        <h1 class="mt-8 max-w-3xl text-4xl font-semibold leading-[1.02] sm:text-5xl xl:text-[3.9rem]">
-                            Operacao administrativa clara, continua e preparada para desktop.
-                        </h1>
-                        <p class="mt-6 max-w-2xl text-base leading-8 text-white/78 xl:text-lg">
-                            O painel web concentra Secretaria, Tesouraria, Chancelaria, nominata e parametros institucionais com leitura ampla, contexto visivel e navegação de trabalho.
-                        </p>
 
-                        <div class="mt-10 grid gap-4 xl:grid-cols-3">
-                            <article class="rounded-[1.5rem] border border-white/15 bg-white/10 p-5">
-                                <div class="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-white/60">Estrutura</div>
-                                <div class="mt-3 text-xl font-semibold">Desktop-first</div>
-                                <p class="mt-2 text-sm leading-7 text-white/72">Sidebar, leitura ampla e superfícies pensadas para gestão contínua.</p>
-                            </article>
-                            <article class="rounded-[1.5rem] border border-white/15 bg-white/10 p-5">
-                                <div class="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-white/60">Fluxo móvel</div>
-                                <div class="mt-3 text-xl font-semibold">Telegram</div>
-                                <p class="mt-2 text-sm leading-7 text-white/72">O bot continua como canal rápido para uso frequente fora da mesa.</p>
-                            </article>
-                            <article class="rounded-[1.5rem] border border-white/15 bg-white/10 p-5">
-                                <div class="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-white/60">Escopo</div>
-                                <div class="mt-3 text-xl font-semibold">ERP interno</div>
-                                <p class="mt-2 text-sm leading-7 text-white/72">Uma unica entrada para modulos administrativos e memoria institucional.</p>
-                            </article>
+                        <div class="grid gap-3 sm:grid-cols-3 xl:min-w-[34rem]">
+                            <div class="rounded-[1.2rem] border border-white/15 bg-white/10 px-4 py-4">
+                                <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/60">Modo</div>
+                                <div class="mt-2 text-lg font-semibold">Desktop-first</div>
+                            </div>
+                            <div class="rounded-[1.2rem] border border-white/15 bg-white/10 px-4 py-4">
+                                <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/60">Canal rapido</div>
+                                <div class="mt-2 text-lg font-semibold">Telegram</div>
+                            </div>
+                            <div class="rounded-[1.2rem] border border-white/15 bg-white/10 px-4 py-4">
+                                <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/60">Escopo</div>
+                                <div class="mt-2 text-lg font-semibold">ERP interno</div>
+                            </div>
                         </div>
                     </div>
+                </section>
 
-                    <div class="mt-10 grid gap-4 border-t border-white/10 pt-8 sm:grid-cols-3">
-                        <div>
-                            <div class="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-white/55">Loja</div>
-                            <div class="mt-2 text-lg font-semibold">Renascenca n 270</div>
-                        </div>
-                        <div>
-                            <div class="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-white/55">Canal</div>
-                            <div class="mt-2 text-lg font-semibold">Web administrativo</div>
-                        </div>
-                        <div>
-                            <div class="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-white/55">Acesso</div>
-                            <div class="mt-2 text-lg font-semibold">Autenticado por CIM</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="flex items-center bg-[#fbfcfe] px-6 py-8 sm:px-10 xl:px-14 xl:py-12">
-                <div class="mx-auto w-full max-w-[560px]">
-                    <div class="overflow-hidden rounded-[1.8rem] border border-erpBorder bg-white shadow-[0_18px_50px_rgba(30,58,95,0.08)]">
-                        <div class="border-b border-erpBorder px-8 py-8">
+                <section class="grid gap-0 xl:grid-cols-[minmax(0,1.25fr)_360px]">
+                    <div class="px-8 py-8 sm:px-10 xl:px-12 xl:py-10">
+                        <div class="max-w-[760px]">
                             <div class="flex items-center gap-4">
                                 <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-erpBorder bg-slate-50">
                                     <?php if ($logoRenascencaLogin): ?>
@@ -111,21 +123,19 @@ foreach ([
                                         <span class="text-2xl font-semibold text-erpGold">&#8756;</span>
                                     <?php endif; ?>
                                 </div>
-                                <div class="min-w-0">
-                                    <div class="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-erpGold">Acesso administrativo</div>
-                                    <h1 class="mt-2 text-[2rem] font-semibold leading-tight text-erpNavy">Entrar no Gestor de Loja</h1>
-                                    <p class="mt-2 text-sm leading-6 text-erpMuted">
-                                        Acesse os modulos de gestão com seu CIM e sua palavra de passe.
+                                <div>
+                                    <div class="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-erpGold">Acesso administrativo</div>
+                                    <h2 class="mt-2 text-[2rem] font-semibold leading-tight text-erpNavy">Entrar no Gestor de Loja</h2>
+                                    <p class="mt-2 text-base leading-7 text-erpMuted">
+                                        Use seu CIM e sua palavra de passe para acessar os modulos administrativos da Loja.
                                     </p>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="px-8 py-8">
-                            <form action="/login" method="POST" class="space-y-6">
-                                <div class="grid gap-5">
-                                    <div>
-                                        <label class="mb-2 block text-sm font-semibold text-erpText">CIM / Matrícula</label>
+                            <form action="/login" method="POST" class="mt-8 space-y-6">
+                                <div class="grid gap-5 xl:grid-cols-2">
+                                    <div class="xl:col-span-2">
+                                        <label class="mb-2 block text-sm font-semibold text-erpText">CIM / Matricula</label>
                                         <div class="relative">
                                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                                                 <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -135,13 +145,13 @@ foreach ([
                                             <input
                                                 type="text"
                                                 name="matricula"
-                                                class="block w-full rounded-xl border border-erpBorder bg-slate-50 py-3.5 pl-12 pr-4 text-base text-erpText placeholder-slate-400 focus:border-erpGold focus:bg-white focus:outline-none"
+                                                class="block w-full rounded-xl border border-erpBorder bg-slate-50 py-4 pl-12 pr-4 text-base text-erpText placeholder-slate-400 focus:border-erpGold focus:bg-white focus:outline-none"
                                                 placeholder="Digite seu CIM"
                                             >
                                         </div>
                                     </div>
 
-                                    <div>
+                                    <div class="xl:col-span-2">
                                         <label class="mb-2 block text-sm font-semibold text-erpText">Palavra de Passe</label>
                                         <div class="relative">
                                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -152,7 +162,7 @@ foreach ([
                                             <input
                                                 type="password"
                                                 name="password"
-                                                class="block w-full rounded-xl border border-erpBorder bg-slate-50 py-3.5 pl-12 pr-4 text-base text-erpText placeholder-slate-400 focus:border-erpGold focus:bg-white focus:outline-none"
+                                                class="block w-full rounded-xl border border-erpBorder bg-slate-50 py-4 pl-12 pr-4 text-base text-erpText placeholder-slate-400 focus:border-erpGold focus:bg-white focus:outline-none"
                                                 placeholder="Digite sua palavra de passe"
                                             >
                                         </div>
@@ -165,22 +175,49 @@ foreach ([
                                     </div>
                                 <?php endif; ?>
 
-                                <div class="grid gap-4 pt-2">
-                                    <button type="submit" class="inline-flex w-full items-center justify-center rounded-xl border border-transparent bg-erpNavyDeep px-5 py-4 text-base font-semibold text-white transition hover:opacity-95">
+                                <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                                    <div class="max-w-xl rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-erpMuted">
+                                        Em caso de duvida sobre acesso, procure a administracao da Loja. O painel web e o ambiente principal para operacao administrativa desktop.
+                                    </div>
+                                    <button type="submit" class="inline-flex min-w-[260px] items-center justify-center rounded-xl border border-transparent bg-erpNavyDeep px-6 py-4 text-base font-semibold text-white transition hover:opacity-95">
                                         <span>Entrar no sistema</span>
                                         <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                         </svg>
                                     </button>
-                                    <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-erpMuted">
-                                        Em caso de dúvida sobre acesso, procure a administração da Loja.
-                                    </div>
                                 </div>
                             </form>
                         </div>
                     </div>
-                </div>
-            </section>
+
+                    <aside class="border-t border-erpBorder bg-slate-50/80 px-8 py-8 xl:border-l xl:border-t-0 xl:px-8 xl:py-10">
+                        <div class="space-y-5">
+                            <div>
+                                <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpGold">Contexto</div>
+                                <div class="mt-2 text-xl font-semibold text-erpNavy">Uso administrativo continuo</div>
+                                <p class="mt-2 text-sm leading-7 text-erpMuted">
+                                    Esta entrada concentra o acesso aos modulos que estruturam a rotina institucional da Loja.
+                                </p>
+                            </div>
+
+                            <div class="space-y-3">
+                                <article class="rounded-[1.2rem] border border-erpBorder bg-white px-4 py-4">
+                                    <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpMuted">Secretaria</div>
+                                    <div class="mt-2 text-sm leading-6 text-erpText">Sessoes, trabalhos, publicacoes e acompanhamento cadastral.</div>
+                                </article>
+                                <article class="rounded-[1.2rem] border border-erpBorder bg-white px-4 py-4">
+                                    <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpMuted">Tesouraria</div>
+                                    <div class="mt-2 text-sm leading-6 text-erpText">Obrigacoes, comprovantes, regularidade e fechamento mensal.</div>
+                                </article>
+                                <article class="rounded-[1.2rem] border border-erpBorder bg-white px-4 py-4">
+                                    <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpMuted">Chancelaria e cargos</div>
+                                    <div class="mt-2 text-sm leading-6 text-erpText">Efemerides, nominata oficial e paineis por responsabilidade.</div>
+                                </article>
+                            </div>
+                        </div>
+                    </aside>
+                </section>
+            </main>
         </div>
     </div>
 </body>

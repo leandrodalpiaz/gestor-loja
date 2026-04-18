@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -83,7 +83,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Falha ao carregar painel.');
+    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel carregar os dados deste painel agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -108,7 +108,7 @@ function preencherSessoes() {
     (dashboard.sessoes || []).forEach(sessao => {
         const option = document.createElement('option');
         option.value = sessao.id;
-        option.textContent = `${sessao.titulo || `${sessao.tipo_sessao || 'Sessao'} - ${sessao.grau_sessao || ''}`} · ${sessao.data_hora_inicio || ''}`;
+        option.textContent = `${sessao.titulo || `${sessao.tipo_sessao || 'Sessao'} - ${sessao.grau_sessao || ''}`} Â· ${sessao.data_hora_inicio || ''}`;
         if (dashboard.sessao_foco && Number(dashboard.sessao_foco.id) === Number(sessao.id)) {
             option.selected = true;
         }
@@ -178,3 +178,4 @@ carregar();
 </script>
 </body>
 </html>
+

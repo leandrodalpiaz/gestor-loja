@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -20,7 +20,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">Mestre de Banquetes</h1>
-        <p class="mt-1 text-sm text-gray-500">Agape, previsao e status logistico por sessao.</p>
+        <p class="mt-1 text-sm text-gray-500">Gestao do agape por sessao, com previsao e acompanhamento logistico.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -110,7 +110,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Falha na operacao.');
+    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel concluir esta acao agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -135,7 +135,7 @@ function render() {
     const sessao = dashboard.sessao_foco;
     const operacao = dashboard.operacao || {};
     document.getElementById('sessao-titulo').textContent = sessao ? (sessao.titulo || 'Sessao') : 'Sem sessao em foco';
-    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} · ${sessao.descricao_agape || ''}` : 'Sem dados';
+    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} Â· ${sessao.descricao_agape || ''}` : 'Sem dados';
     document.getElementById('meta-confirmados').textContent = dashboard.confirmados?.length || 0;
     document.getElementById('meta-agape').textContent = dashboard.participantes_agape?.length || 0;
     document.getElementById('meta-previsao').textContent = operacao.previsao_participantes ?? '-';
@@ -146,7 +146,7 @@ function render() {
     (dashboard.sessoes || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.titulo || 'Sessao'} · ${item.status || ''}`;
+        option.textContent = `${item.titulo || 'Sessao'} Â· ${item.status || ''}`;
         if (sessao && item.id === sessao.id) option.selected = true;
         select.appendChild(option);
     });
@@ -187,7 +187,7 @@ document.getElementById('form-operacao').addEventListener('submit', async (event
                 observacoes: document.getElementById('observacoes').value
             }
         });
-        tg.showAlert('Operacao salva com sucesso.');
+        tg.showAlert('Dados da operacao salvos com sucesso.');
         await carregar(sessaoAtualId);
     } catch (err) {
         tg.showAlert(err.message);
@@ -198,3 +198,4 @@ carregar();
 </script>
 </body>
 </html>
+

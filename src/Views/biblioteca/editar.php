@@ -8,8 +8,24 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar livro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-[11px] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800">
+<body class="erp-readable bg-slate-50 min-h-screen text-slate-800">
     <header class="bg-blue-900 text-white">
         <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
             <h1 class="font-semibold">Biblioteca</h1>
@@ -80,3 +96,4 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
     </main>
 </body>
 </html>
+

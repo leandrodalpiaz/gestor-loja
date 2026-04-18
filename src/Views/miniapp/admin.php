@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -109,7 +109,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Falha ao carregar administracao.');
+    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel carregar os dados administrativos agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -134,12 +134,12 @@ function render() {
 
     document.getElementById('gestao-atual').innerHTML = dashboard.gestao_atual ? `
         <div class="font-medium">${esc(dashboard.gestao_atual.titulo || 'Gestao')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(dashboard.gestao_atual.status || '')} · ${esc(dashboard.gestao_atual.inicio_em || '')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(dashboard.gestao_atual.status || '')} Â· ${esc(dashboard.gestao_atual.inicio_em || '')}</div>
     ` : `<div class="text-gray-500">Nenhuma gestao aberta.</div>`;
 
     document.getElementById('configuracao').innerHTML = `
         <div class="font-medium">${esc(dashboard.configuracao?.nome_loja || 'Loja')} ${esc(dashboard.configuracao?.numero_loja || '')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(dashboard.configuracao?.cidade || '')}/${esc(dashboard.configuracao?.uf || '')} · ${esc(dashboard.configuracao?.rito || '')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(dashboard.configuracao?.cidade || '')}/${esc(dashboard.configuracao?.uf || '')} Â· ${esc(dashboard.configuracao?.rito || '')}</div>
         <div class="mt-2 text-sm text-gray-700">Mensalidade ${esc(Number(dashboard.configuracao?.mensalidade_valor_padrao || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))}</div>
         <div class="mt-1 text-xs text-gray-500">PIX ${esc(dashboard.configuracao?.pix_chave_tipo || '')} ${esc(dashboard.configuracao?.pix_chave_valor || '')}</div>
     `;
@@ -161,23 +161,23 @@ function render() {
     (dashboard.obreiros || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.nome} · CIM ${item.cim || '-'}`;
+        option.textContent = `${item.nome} Â· CIM ${item.cim || '-'}`;
         obreiroSelect.appendChild(option);
     });
 
     renderLista('lista-cargos', dashboard.cargos, 'Nenhum cargo encontrado para a gestao atual.', item => `
         <div class="font-medium">${esc(item.nome_exibicao || item.codigo || 'Cargo')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(item.titular_nome || 'Sem titular')} · CIM ${esc(item.titular_cim || '-')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.titular_nome || 'Sem titular')} Â· CIM ${esc(item.titular_cim || '-')}</div>
     `);
 
     renderLista('lista-gestoes', dashboard.gestoes, 'Nenhuma gestao cadastrada.', item => `
         <div class="font-medium">${esc(item.titulo || 'Gestao')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(item.status || '')} · inicio ${esc(item.inicio_em || '')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.status || '')} Â· inicio ${esc(item.inicio_em || '')}</div>
     `);
 
     renderLista('lista-auditoria', dashboard.auditoria, 'Nenhum registro critico de auditoria.', item => `
         <div class="font-medium">${esc(item.resumo || 'Registro')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(item.entidade || '')} · ${esc(item.acao || '')} · ${esc(item.created_at || '')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.entidade || '')} Â· ${esc(item.acao || '')} Â· ${esc(item.created_at || '')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(item.criado_por_nome || 'Sistema')}</div>
     `);
 }
@@ -275,3 +275,4 @@ carregar();
 </script>
 </body>
 </html>
+

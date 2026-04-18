@@ -8,8 +8,24 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Novo livro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-[11px] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800">
+<body class="erp-readable bg-slate-50 min-h-screen text-slate-800">
     <header class="bg-blue-900 text-white">
         <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
             <h1 class="font-semibold">Biblioteca</h1>
@@ -19,7 +35,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
 
     <main class="max-w-4xl mx-auto p-4 md:p-6">
         <h2 class="text-2xl font-semibold text-blue-900 mb-1">Cadastrar livro</h2>
-        <p class="text-sm text-slate-500 mb-4">Cadastro manual com apoio automatico por ISBN para capa e resumo.</p>
+        <p class="text-sm text-slate-700 mb-4">Cadastro manual com apoio automatico por ISBN para capa e resumo.</p>
 
         <form action="/biblioteca/adicionar" method="POST" class="bg-white border border-slate-200 rounded-lg p-4 md:p-6 space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -78,3 +94,4 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
     </main>
 </body>
 </html>
+

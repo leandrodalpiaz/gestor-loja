@@ -9,8 +9,24 @@ $podeSolicitar = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id']
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalhes do livro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-[11px] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800">
+<body class="erp-readable bg-slate-50 min-h-screen text-slate-800">
     <header class="bg-blue-900 text-white shadow-sm">
         <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4">
             <div>
@@ -42,7 +58,7 @@ $podeSolicitar = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id']
                             <span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">Indisponivel</span>
                         <?php endif; ?>
                     </div>
-                    <p class="mt-1 text-slate-600"><?= htmlspecialchars((string) ($item['autor'] ?? '')) ?></p>
+                    <p class="mt-1 text-slate-700"><?= htmlspecialchars((string) ($item['autor'] ?? '')) ?></p>
                     <div class="mt-3 text-sm space-y-1">
                         <div><span class="font-medium">Codigo:</span> <span class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></span></div>
                         <div><span class="font-medium">ISBN:</span> <?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></div>
@@ -96,15 +112,16 @@ $podeSolicitar = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id']
                     <?php foreach ($comentarios as $comentario): ?>
                         <article class="border border-slate-200 rounded p-3">
                             <div class="text-sm font-medium text-slate-900"><?= htmlspecialchars((string) ($comentario['obreiro_nome'] ?? 'Irmao')) ?></div>
-                            <div class="text-xs text-slate-500 mt-1"><?= htmlspecialchars((string) ($comentario['criado_em'] ?? '')) ?></div>
+                            <div class="text-xs text-slate-700 mt-1"><?= htmlspecialchars((string) ($comentario['criado_em'] ?? '')) ?></div>
                             <p class="text-sm text-slate-700 mt-2 whitespace-pre-wrap"><?= htmlspecialchars((string) ($comentario['comentario'] ?? '')) ?></p>
                         </article>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <p class="text-sm text-slate-500">Ainda nao ha comentarios para este livro.</p>
+                    <p class="text-sm text-slate-700">Ainda nao ha comentarios para este livro.</p>
                 <?php endif; ?>
             </div>
         </section>
     </main>
 </body>
 </html>
+

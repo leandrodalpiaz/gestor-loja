@@ -51,8 +51,24 @@ if ($tipoObrigacao === 'mensalidade') {
             body { background: white !important; }
         }
     </style>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-[11px] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-stone-100 p-6 text-slate-900">
+<body class="erp-readable min-h-screen bg-stone-100 p-6 text-slate-900">
     <div class="no-print mx-auto mb-4 flex max-w-3xl justify-end">
         <button onclick="window.print()" class="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Imprimir recibo</button>
     </div>
@@ -66,7 +82,7 @@ if ($tipoObrigacao === 'mensalidade') {
                 <div class="text-sm"><?php echo htmlspecialchars($oriente); ?></div>
             </div>
             <div class="min-w-[110px] rounded-[1.5rem] border-2 border-stone-700 px-4 py-3 text-center">
-                <div class="text-xs uppercase tracking-[0.18em] text-slate-500">No</div>
+                <div class="text-xs uppercase tracking-[0.18em] text-slate-700">No</div>
                 <div class="mt-1 text-3xl font-bold text-rose-700"><?php echo htmlspecialchars($numeroRecibo); ?></div>
             </div>
         </div>
@@ -103,3 +119,4 @@ if ($tipoObrigacao === 'mensalidade') {
     </main>
 </body>
 </html>
+

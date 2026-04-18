@@ -31,14 +31,30 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-\[11px\] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-marfim text-grafite font-sans">
+<body class="erp-readable min-h-screen bg-marfim text-grafite font-sans">
     <div class="max-w-7xl mx-auto px-4 py-8">
         <div class="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
                 <p class="text-sm uppercase tracking-[0.24em] text-cobre">Hospitalaria</p>
                 <h1 class="font-display text-3xl text-cobalto">Painel do Mestre Hospitaleiro</h1>
-                <p class="mt-2 text-sm text-slate-600">Ocorrencias assistenciais, visitas, retornos e encaminhamentos ao Veneravel e a Tesouraria.</p>
+                <p class="mt-2 text-sm text-slate-700">Ocorrencias assistenciais, visitas, retornos e encaminhamentos ao Veneravel e a Tesouraria.</p>
             </div>
             <div class="flex gap-3">
                 <a href="/dashboard" class="rounded-lg bg-cobalto px-4 py-2 text-sm font-medium text-white">Voltar ao painel</a>
@@ -55,23 +71,23 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
         <div class="mb-8 grid gap-4 md:grid-cols-5">
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Total de ocorrencias</div>
+                <div class="text-sm text-slate-700">Total de ocorrencias</div>
                 <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) ($resumo['total'] ?? 0) ?></div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Abertas</div>
+                <div class="text-sm text-slate-700">Abertas</div>
                 <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) ($resumo['abertas'] ?? 0) ?></div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Em acompanhamento</div>
+                <div class="text-sm text-slate-700">Em acompanhamento</div>
                 <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) ($resumo['em_acompanhamento'] ?? 0) ?></div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Concluidas</div>
+                <div class="text-sm text-slate-700">Concluidas</div>
                 <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) ($resumo['concluidas'] ?? 0) ?></div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Com apoio financeiro</div>
+                <div class="text-sm text-slate-700">Com apoio financeiro</div>
                 <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) ($resumo['com_apoio_financeiro'] ?? 0) ?></div>
             </div>
         </div>
@@ -80,14 +96,14 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
             <section class="space-y-6">
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 class="font-display text-xl text-cobalto">Pendencias de visita e retorno</h2>
-                    <p class="mb-4 text-sm text-slate-500">Ocorrencias que pedem presenca em campo ou acompanhamento ativo.</p>
+                    <p class="mb-4 text-sm text-slate-700">Ocorrencias que pedem presenca em campo ou acompanhamento ativo.</p>
                     <div class="space-y-3">
                         <?php foreach ($pendenciasVisita as $ocorrencia): ?>
                             <article class="rounded-xl border border-slate-200 p-4">
                                 <div class="flex flex-wrap items-start justify-between gap-3">
                                     <div>
                                         <div class="font-semibold text-cobalto"><?= htmlspecialchars((string) ($ocorrencia['obreiro_nome'] ?? 'Sem obreiro vinculado')) ?></div>
-                                        <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($ocorrencia['tipo_ocorrencia'] ?? 'assistencia_geral')) ?> · Prioridade <?= htmlspecialchars((string) ($ocorrencia['prioridade'] ?? 'media')) ?></div>
+                                        <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($ocorrencia['tipo_ocorrencia'] ?? 'assistencia_geral')) ?> · Prioridade <?= htmlspecialchars((string) ($ocorrencia['prioridade'] ?? 'media')) ?></div>
                                     </div>
                                     <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700"><?= htmlspecialchars((string) ($ocorrencia['status'] ?? 'aberta')) ?></span>
                                 </div>
@@ -103,14 +119,14 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                             </article>
                         <?php endforeach; ?>
                         <?php if ($pendenciasVisita === []): ?>
-                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-500">Nenhuma pendencia de visita no momento.</div>
+                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Nenhuma pendencia de visita no momento.</div>
                         <?php endif; ?>
                     </div>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 class="font-display text-xl text-cobalto">Ocorrencias assistenciais recentes</h2>
-                    <p class="mb-4 text-sm text-slate-500">Fluxo assistencial de saude, nascimento, falecimento, solidariedade e apoio geral.</p>
+                    <p class="mb-4 text-sm text-slate-700">Fluxo assistencial de saude, nascimento, falecimento, solidariedade e apoio geral.</p>
 
                     <div class="space-y-3">
                         <?php foreach ($ocorrencias as $ocorrencia): ?>
@@ -119,7 +135,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                 <div class="flex flex-wrap items-start justify-between gap-3">
                                     <div>
                                         <div class="font-semibold text-cobalto"><?= htmlspecialchars((string) ($ocorrencia['tipo_ocorrencia'] ?? 'assistencia_geral')) ?></div>
-                                        <div class="mt-1 text-sm text-slate-600">
+                                        <div class="mt-1 text-sm text-slate-700">
                                             <?= htmlspecialchars((string) ($ocorrencia['obreiro_nome'] ?? 'Sem obreiro vinculado')) ?>
                                             <?php if (!empty($ocorrencia['nome_familiar'])): ?>
                                                 · Familiar: <?= htmlspecialchars((string) $ocorrencia['nome_familiar']) ?>
@@ -129,7 +145,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                     <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700"><?= htmlspecialchars($status) ?></span>
                                 </div>
                                 <p class="mt-3 text-sm text-slate-700"><?= nl2br(htmlspecialchars((string) ($ocorrencia['descricao'] ?? ''))) ?></p>
-                                <div class="mt-3 grid gap-2 text-xs text-slate-500 md:grid-cols-2">
+                                <div class="mt-3 grid gap-2 text-xs text-slate-700 md:grid-cols-2">
                                     <div>Prioridade: <?= htmlspecialchars((string) ($ocorrencia['prioridade'] ?? 'media')) ?></div>
                                     <div>Encaminhar para: <?= htmlspecialchars((string) ($ocorrencia['encaminhar_para'] ?? 'nenhum')) ?></div>
                                     <div>Data da ocorrencia: <?= htmlspecialchars((string) ($ocorrencia['data_ocorrencia'] ?? '-')) ?></div>
@@ -158,7 +174,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
             <section class="space-y-6">
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 class="font-display text-xl text-cobalto">Nova ocorrencia assistencial</h2>
-                    <p class="mb-4 text-sm text-slate-500">Registro de ocorrencia, visita, apoio financeiro e encaminhamento institucional.</p>
+                    <p class="mb-4 text-sm text-slate-700">Registro de ocorrencia, visita, apoio financeiro e encaminhamento institucional.</p>
 
                     <?php if ($podeOperarOcorrencias): ?>
                         <form method="POST" action="/assistencia/ocorrencias/salvar" class="grid gap-4">
@@ -225,7 +241,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 class="font-display text-xl text-cobalto">Funcoes do cargo no painel</h2>
-                    <ul class="mt-4 list-disc space-y-2 pl-5 text-sm text-slate-600">
+                    <ul class="mt-4 list-disc space-y-2 pl-5 text-sm text-slate-700">
                         <li>Registrar ocorrencias assistenciais.</li>
                         <li>Priorizar casos e marcar necessidade de visita.</li>
                         <li>Controlar retorno e proxima acao.</li>

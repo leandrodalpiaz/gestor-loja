@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -20,7 +20,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">Chanceler Mobile</h1>
-        <p class="mt-1 text-sm text-gray-500">Check-in, nominata, visitantes e acesso rapido ao certificado.</p>
+        <p class="mt-1 text-sm text-gray-500">Check-in da sessao, controle da nominata e leitura objetiva de visitantes.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -65,14 +65,14 @@
                 <a class="rounded-xl bg-white/70 px-3 py-3 text-center font-medium text-slate-700" href="/miniapp/aniversario">Aniversarios</a>
                 <a class="rounded-xl bg-white/70 px-3 py-3 text-center font-medium text-slate-700" href="/miniapp/data-maconica">Datas maconicas</a>
                 <a class="rounded-xl bg-white/70 px-3 py-3 text-center font-medium text-slate-700" href="/miniapp/historico">Historico</a>
-                <a class="rounded-xl bg-white/70 px-3 py-3 text-center font-medium text-slate-700" href="/miniapp/fallback">Fallback</a>
+                <a class="rounded-xl bg-white/70 px-3 py-3 text-center font-medium text-slate-700" href="/miniapp/fallback">Conteudo complementar</a>
             </div>
         </div>
 
         <div class="card rounded-2xl p-4">
             <div class="flex items-center justify-between gap-3">
                 <div class="text-sm font-semibold">Check-in da nominata</div>
-                <div class="text-xs text-gray-500">Toque para alternar</div>
+                <div class="text-xs text-gray-500">Toque para alternar o status</div>
             </div>
             <div id="lista-presencas" class="mt-3 space-y-2 text-sm"></div>
         </div>
@@ -118,7 +118,7 @@ async function api(url, options = {}) {
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
     if (!json.ok) {
-        throw new Error(json.erro || 'Falha na operacao.');
+        throw new Error(json.erro || 'Nao foi possivel concluir esta acao agora. Tente novamente em instantes.');
     }
     return json;
 }
@@ -157,7 +157,7 @@ function renderPresencas() {
         button.innerHTML = `<div class="flex items-start justify-between gap-3">
             <div>
                 <div class="font-medium">${esc(item.nome)}</div>
-                <div class="text-xs text-gray-500 mt-1">CIM ${esc(item.cim || '-')} · Grau ${esc(item.grau || '-')}</div>
+                <div class="text-xs text-gray-500 mt-1">CIM ${esc(item.cim || '-')} Â· Grau ${esc(item.grau || '-')}</div>
             </div>
             <div class="rounded-full px-2 py-1 text-xs font-medium ${item.presente ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'}">${item.presente ? 'Presente' : 'Ausente'}</div>
         </div>`;
@@ -187,7 +187,7 @@ function render() {
 
     const sessao = dashboard.sessao_foco;
     document.getElementById('sessao-titulo').textContent = sessao ? (sessao.titulo || 'Sessao') : 'Sem sessao em foco';
-    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} · ${sessao.status || ''}` : 'Sem dados';
+    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} Â· ${sessao.status || ''}` : 'Sem dados';
     document.getElementById('meta-confirmados').textContent = dashboard.confirmados?.length || 0;
     document.getElementById('meta-presentes').textContent = (dashboard.presencas || []).filter(item => item.presente).length;
     document.getElementById('meta-visitantes').textContent = dashboard.visitantes?.length || 0;
@@ -198,7 +198,7 @@ function render() {
     (dashboard.sessoes || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.titulo || 'Sessao'} · ${item.status || ''}`;
+        option.textContent = `${item.titulo || 'Sessao'} Â· ${item.status || ''}`;
         if (sessao && item.id === sessao.id) option.selected = true;
         select.appendChild(option);
     });
@@ -248,3 +248,4 @@ carregar();
 </script>
 </body>
 </html>
+

@@ -407,7 +407,7 @@ $cargosGestao = [
 $erpPageTitle = 'Dashboard - Gestor de Loja';
 $appShellEyebrow = 'Dashboard';
 $appShellTitle = $dashboardNomeLoja;
-$appShellDescription = 'Abertura operacional da Loja com agenda, recados e acessos prioritarios.';
+$appShellDescription = 'Abertura operacional da Loja com agenda, recados e acessos prioritários.';
 $appShellActiveHref = '/dashboard';
 $appShellUserLabel = $usuarioNome;
 $appShellActions = [
@@ -423,35 +423,10 @@ $appShellSidebarSections = array_merge(
         $secoes
     )
 );
-$dashboardPrimeiraSessao = $dashboardSessoes[0] ?? null;
-$dashboardStatCards = [
-    ['label' => 'Total de obreiros', 'value' => 'N/D', 'tone' => 'neutral'],
-    ['label' => 'Adimplentes', 'value' => 'N/D', 'tone' => 'success'],
-    ['label' => 'Inadimplentes', 'value' => 'N/D', 'tone' => 'danger'],
-    ['label' => 'Proxima sessao', 'value' => $dashboardPrimeiraSessao ? $formatarDataHoraDashboard($dashboardPrimeiraSessao['data_hora_inicio'] ?? null) : 'Sem agenda', 'tone' => 'warning'],
-];
-// TODO: o dispatcher atual nao entrega total de obreiros e regularidade financeira para os StatCards do dashboard.
 require __DIR__ . '/partials/erp_head.php';
 ?>
 <?php require __DIR__ . '/partials/erp_shell_open.php'; ?>
 <div class="space-y-8">
-    <section class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <?php foreach ($dashboardStatCards as $card): ?>
-            <?php
-            $toneClass = match ($card['tone']) {
-                'success' => 'border-emerald-200 bg-emerald-50 text-emerald-800',
-                'danger' => 'border-rose-200 bg-rose-50 text-rose-800',
-                'warning' => 'border-amber-200 bg-amber-50 text-amber-900',
-                default => 'border-erp-border bg-white text-erp-text',
-            };
-            ?>
-            <article class="rounded-erp-lg border px-5 py-5 shadow-sm <?= $toneClass ?>">
-                <div class="text-xs font-semibold uppercase tracking-[0.22em] opacity-80"><?= htmlspecialchars((string) $card['label']) ?></div>
-                <div class="mt-3 text-2xl font-semibold leading-tight"><?= htmlspecialchars((string) $card['value']) ?></div>
-            </article>
-        <?php endforeach; ?>
-    </section>
-
 <?php if (false): ?>
 <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-cobalto text-white shadow-lg">
     <div class="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">

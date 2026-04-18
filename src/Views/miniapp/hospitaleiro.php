@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -123,7 +123,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Falha na operacao.');
+    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel concluir esta acao agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -155,13 +155,13 @@ function render() {
     (dashboard.obreiros || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.nome} · CIM ${item.cim || '-'}`;
+        option.textContent = `${item.nome} Â· CIM ${item.cim || '-'}`;
         obreiroSelect.appendChild(option);
     });
 
     renderLista('lista-pendencias', dashboard.pendencias_visita, 'Nenhuma pendencia de visita.', item => `
         <div class="font-medium">${esc(item.obreiro_nome || 'Sem obreiro')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(item.tipo_ocorrencia || '')} · ${esc(item.prioridade || '')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.tipo_ocorrencia || '')} Â· ${esc(item.prioridade || '')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(item.descricao || '')}</div>
         <div class="mt-3 grid grid-cols-[1fr_140px_auto] gap-2">
             <input data-obs="${item.id}" type="text" placeholder="Observacao da visita" class="rounded-lg border px-2 py-2 text-sm">
@@ -192,7 +192,7 @@ function render() {
 
     renderLista('lista-ocorrencias', dashboard.ocorrencias, 'Sem ocorrencias recentes.', item => `
         <div class="font-medium">${esc(item.obreiro_nome || item.nome_familiar || 'Ocorrencia')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(item.tipo_ocorrencia || '')} · ${esc(item.status || '')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.tipo_ocorrencia || '')} Â· ${esc(item.status || '')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(item.descricao || '')}</div>
     `);
 }
@@ -241,3 +241,4 @@ carregar();
 </script>
 </body>
 </html>
+

@@ -103,7 +103,7 @@ declare(strict_types=1);
 <body>
 
 <h2>Cadastro Manual de Livro</h2>
-<p class="subtitulo">Preencha os dados do livro manualmente.</p>
+<p class="subtitulo">Preencha os dados para cadastrar o livro no acervo.</p>
 
 <div id="erro-geral" class="erro-geral"></div>
 
@@ -111,11 +111,11 @@ declare(strict_types=1);
     <div class="secao-titulo">Identificacao</div>
     <div class="campo">
         <label>Titulo da Obra <span class="obrig">*</span></label>
-        <input type="text" id="titulo" placeholder="Ex: Morals and Dogma">
+        <input type="text" id="titulo" placeholder="Ex.: Morals and Dogma">
     </div>
     <div class="campo">
         <label>Autor <span class="obrig">*</span></label>
-        <input type="text" id="autor" placeholder="Ex: Albert Pike">
+        <input type="text" id="autor" placeholder="Ex.: Albert Pike">
     </div>
     <div class="campo">
         <label>ISBN</label>
@@ -147,7 +147,7 @@ declare(strict_types=1);
     <div class="secao-titulo">Curadoria (Opcional)</div>
     <div class="campo">
         <label>Resumo / Sinopse</label>
-        <textarea id="resumo" placeholder="Resumo da obra (automatico pelo ISBN quando possivel)"></textarea>
+        <textarea id="resumo" placeholder="Informe um resumo da obra (preenchido automaticamente quando o ISBN retornar dados)."></textarea>
     </div>
     <div class="campo">
         <label>Grau Recomendado</label>
@@ -160,7 +160,7 @@ declare(strict_types=1);
     </div>
     <div class="campo">
         <label>Nota de Instrucao</label>
-        <textarea id="nota_instrucao" placeholder="Ex: Leitura essencial para a elevacao..."></textarea>
+        <textarea id="nota_instrucao" placeholder="Ex.: Leitura essencial para a elevacao."></textarea>
     </div>
 </div>
 
@@ -207,9 +207,9 @@ declare(strict_types=1);
         const autor = document.getElementById("autor").value.trim();
         const quantidade = parseInt(document.getElementById("quantidade").value, 10);
 
-        if (!titulo) { mostrarErro("O titulo da obra e obrigatorio."); return; }
-        if (!autor) { mostrarErro("O autor e obrigatorio."); return; }
-        if (!quantidade || quantidade < 1) { mostrarErro("A quantidade deve ser pelo menos 1."); return; }
+        if (!titulo) { mostrarErro("Informe o titulo da obra para continuar."); return; }
+        if (!autor) { mostrarErro("Informe o autor para continuar."); return; }
+        if (!quantidade || quantidade < 1) { mostrarErro("Informe uma quantidade valida (minimo 1)."); return; }
 
         const btn = document.getElementById("btn-salvar");
         btn.disabled = true;
@@ -235,12 +235,12 @@ declare(strict_types=1);
 
             const data = await res.json();
             if (!data.sucesso) {
-                throw new Error(data.mensagem || "Erro ao cadastrar.");
+                throw new Error(data.mensagem || "Nao foi possivel concluir o cadastro agora. Tente novamente em instantes.");
             }
 
             notificarSucesso("Livro cadastrado com sucesso.");
         } catch (err) {
-            mostrarErro(err.message || "Erro de conexao. Tente novamente.");
+            mostrarErro(err.message || "Nao foi possivel concluir o cadastro agora. Verifique a conexao e tente novamente.");
             btn.disabled = false;
             btn.textContent = "Salvar Livro";
         }

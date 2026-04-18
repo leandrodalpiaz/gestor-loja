@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -141,7 +141,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Falha na operacao.');
+    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel concluir esta acao agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -155,7 +155,7 @@ function renderLista(id, itens, vazio) {
     itens.forEach(item => {
         const div = document.createElement('div');
         div.className = 'rounded-xl border border-gray-200 bg-white/70 px-3 py-2';
-        div.innerHTML = `<div class="font-medium">${esc(item.nome || item.acao || 'Item')}</div>${item.cim ? `<div class="text-xs text-gray-500">CIM ${esc(item.cim)}</div>` : ''}${item.observacao ? `<div class="text-xs text-gray-500 mt-1">${esc(item.observacao)}</div>` : ''}${item.autor_nome ? `<div class="text-xs text-gray-500 mt-1">${esc(item.autor_nome)} · ${esc(item.created_at || '')}</div>` : ''}`;
+        div.innerHTML = `<div class="font-medium">${esc(item.nome || item.acao || 'Item')}</div>${item.cim ? `<div class="text-xs text-gray-500">CIM ${esc(item.cim)}</div>` : ''}${item.observacao ? `<div class="text-xs text-gray-500 mt-1">${esc(item.observacao)}</div>` : ''}${item.autor_nome ? `<div class="text-xs text-gray-500 mt-1">${esc(item.autor_nome)} Â· ${esc(item.created_at || '')}</div>` : ''}`;
         root.appendChild(div);
     });
 }
@@ -184,7 +184,7 @@ function render() {
 
     const sessao = dashboard.sessao_foco;
     document.getElementById('sessao-titulo').textContent = sessao ? (sessao.titulo || sessao.tipo_descricao || 'Sessao') : 'Sem sessao em foco';
-    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} · ${sessao.status || ''}` : 'Sem dados';
+    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} Â· ${sessao.status || ''}` : 'Sem dados';
     document.getElementById('sessao-confirmados').textContent = sessao ? (sessao.total_confirmados ?? 0) : 0;
     document.getElementById('sessao-ausentes').textContent = sessao ? (sessao.total_ausentes ?? 0) : 0;
     document.getElementById('sessao-agape').textContent = sessao ? (sessao.total_agape ?? 0) : 0;
@@ -194,7 +194,7 @@ function render() {
     dashboard.sessoes.forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.titulo || item.tipo_descricao || 'Sessao'} · ${item.status}`;
+        option.textContent = `${item.titulo || item.tipo_descricao || 'Sessao'} Â· ${item.status}`;
         if (sessao && item.id === sessao.id) option.selected = true;
         select.appendChild(option);
     });
@@ -202,8 +202,8 @@ function render() {
     renderLista('lista-confirmados', dashboard.confirmados, 'Sem confirmados nesta sessao.');
     renderLista('lista-agape', dashboard.participantes_agape, 'Sem participantes confirmados para o agape.');
     renderLista('lista-historico', dashboard.historico, 'Sem historico recente.');
-    renderLista('lista-trabalhos', (dashboard.trabalhos_recentes || []).map(item => ({ nome: item.titulo || 'Trabalho', observacao: `${item.sessao_titulo || 'Sessao'} · ${item.status_envio_potencia || 'pendente'}` })), 'Sem trabalhos recentes.');
-    renderLista('lista-balaustres', (dashboard.balaustres_recentes || []).map(item => ({ nome: item.numero_balaustre || 'Balaustre sem numero', observacao: `${item.sessao_titulo || 'Sessao'} · ${item.status || ''}` })), 'Sem balaustres recentes.');
+    renderLista('lista-trabalhos', (dashboard.trabalhos_recentes || []).map(item => ({ nome: item.titulo || 'Trabalho', observacao: `${item.sessao_titulo || 'Sessao'} Â· ${item.status_envio_potencia || 'pendente'}` })), 'Sem trabalhos recentes.');
+    renderLista('lista-balaustres', (dashboard.balaustres_recentes || []).map(item => ({ nome: item.numero_balaustre || 'Balaustre sem numero', observacao: `${item.sessao_titulo || 'Sessao'} Â· ${item.status || ''}` })), 'Sem balaustres recentes.');
     document.getElementById('rel-sessoes').textContent = dashboard.relatorio_anual?.sessoes ?? 0;
     document.getElementById('rel-visitantes').textContent = dashboard.relatorio_anual?.visitantes ?? 0;
     document.getElementById('rel-visitas').textContent = dashboard.relatorio_anual?.visitas_externas ?? 0;
@@ -285,3 +285,4 @@ carregar();
 </script>
 </body>
 </html>
+

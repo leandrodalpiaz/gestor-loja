@@ -192,8 +192,24 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acompanhamento Financeiro - Tesouraria</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-\[11px\] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-[linear-gradient(180deg,#f7f3ea_0%,#f5f5f4_40%,#ffffff_100%)] text-slate-900">
+<body class="erp-readable min-h-screen bg-[linear-gradient(180deg,#f7f3ea_0%,#f5f5f4_40%,#ffffff_100%)] text-slate-900">
 <div class="mx-auto max-w-7xl px-4 py-8">
     <section class="rounded-[2rem] bg-slate-950 px-6 py-7 text-stone-100 shadow-2xl">
         <p class="text-xs uppercase tracking-[0.28em] text-amber-300">Tesouraria</p>
@@ -214,7 +230,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
         <div class="rounded-[1.5rem] bg-white p-5 shadow-sm">
             <div class="text-xs uppercase tracking-[0.16em] text-slate-400">Resumo do passado</div>
             <div class="mt-2 text-3xl font-semibold"><?php echo $formatCurrency($historicoGeral['total_passado'] ?? 0); ?></div>
-            <div class="mt-2 text-sm text-slate-500">Receitas registradas antes de <?php echo htmlspecialchars($tituloMesAtual); ?>.</div>
+            <div class="mt-2 text-sm text-slate-700">Receitas registradas antes de <?php echo htmlspecialchars($tituloMesAtual); ?>.</div>
         </div>
         <div class="rounded-[1.5rem] bg-emerald-50 p-5 shadow-sm">
             <div class="text-xs uppercase tracking-[0.16em] text-emerald-500">Pago no mes vigente</div>
@@ -269,7 +285,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                             <div class="flex items-start justify-between gap-4">
                                 <div>
                                     <div class="font-semibold <?php echo $classeNome; ?>"><?php echo htmlspecialchars((string) $registro['nome']); ?></div>
-                                    <div class="mt-1 text-xs text-slate-500">
+                                    <div class="mt-1 text-xs text-slate-700">
                                         <?php echo $formatCurrency($registro['pago']); ?> pago • <?php echo $formatCurrency($registro['aberto']); ?> em aberto
                                     </div>
                                 </div>
@@ -288,7 +304,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
 
             <section class="rounded-[2rem] bg-white p-5 shadow-sm">
                 <h2 class="text-lg font-semibold">Parametros da Loja</h2>
-                <div class="mt-4 space-y-3 text-sm text-slate-600">
+                <div class="mt-4 space-y-3 text-sm text-slate-700">
                     <div class="rounded-2xl bg-stone-50 px-4 py-3">Mensalidade: <span class="font-semibold text-slate-900"><?php echo $formatCurrency($mensalidadePadrao); ?></span></div>
                     <div class="rounded-2xl bg-stone-50 px-4 py-3">Biblioteca: <span class="font-semibold text-slate-900"><?php echo $formatCurrency($bibliotecaPadrao); ?></span></div>
                     <div class="rounded-2xl bg-stone-50 px-4 py-3">PIX <?php echo htmlspecialchars($pixTipo); ?>: <span class="font-semibold text-slate-900"><?php echo htmlspecialchars($pixValor ?: 'Nao informado'); ?></span></div>
@@ -302,9 +318,9 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                     <div>
                         <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Mes vigente</p>
                         <h2 class="mt-1 text-2xl font-semibold"><?php echo htmlspecialchars($tituloMesAtual); ?></h2>
-                        <p class="mt-2 text-sm text-slate-500">Panorama do mes atual com foco no que ja entrou e no que ainda falta confirmar.</p>
+                        <p class="mt-2 text-sm text-slate-700">Panorama do mes atual com foco no que ja entrou e no que ainda falta confirmar.</p>
                     </div>
-                    <div class="rounded-[1.3rem] bg-stone-50 px-4 py-3 text-sm text-slate-600">
+                    <div class="rounded-[1.3rem] bg-stone-50 px-4 py-3 text-sm text-slate-700">
                         <?php echo count($painelGeral); ?> obreiros com obrigacoes do mes
                     </div>
                 </div>
@@ -369,7 +385,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                             <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Detalhe individual</p>
                             <h3 class="mt-1 text-2xl font-semibold"><?php echo htmlspecialchars($selectedObreiroNome); ?></h3>
                         </div>
-                        <div class="text-sm text-slate-500">Abrir o detalhe individual e opcional para a operacao do tesoureiro.</div>
+                        <div class="text-sm text-slate-700">Abrir o detalhe individual e opcional para a operacao do tesoureiro.</div>
                     </div>
 
                     <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -395,7 +411,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                         <div class="rounded-[1.3rem] bg-white p-4 shadow-sm">
                             <div class="text-xs uppercase tracking-[0.16em] text-slate-400">PIX</div>
                             <div class="mt-1 text-lg font-semibold text-slate-900"><?php echo htmlspecialchars($pixTipo); ?></div>
-                            <div class="mt-1 text-sm text-slate-500"><?php echo htmlspecialchars($pixValor ?: 'Nao informado'); ?></div>
+                            <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars($pixValor ?: 'Nao informado'); ?></div>
                         </div>
                     </div>
 
@@ -411,11 +427,11 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                                         <div class="flex items-start justify-between gap-4">
                                             <div>
                                                 <div class="font-medium text-slate-900"><?php echo htmlspecialchars((string) ($linha['titulo'] ?? 'Obrigacao')); ?></div>
-                                                <div class="mt-1 text-sm text-slate-500"><?php echo htmlspecialchars($competenciaAtual); ?> • pago em <?php echo !empty($linha['pago_em']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $linha['pago_em']))) : 'data nao informada'; ?></div>
+                                                <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars($competenciaAtual); ?> • pago em <?php echo !empty($linha['pago_em']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $linha['pago_em']))) : 'data nao informada'; ?></div>
                                             </div>
                                             <div class="text-right">
                                                 <div class="font-semibold text-emerald-700"><?php echo $formatCurrency($linha['valor_previsto'] ?? 0); ?></div>
-                                                <a href="/tesouraria/obrigacoes/parcela/recibo?id=<?php echo (int) ($linha['parcela_id'] ?? 0); ?>" target="_blank" class="mt-1 inline-block text-xs font-medium text-slate-600 underline">Emitir recibo</a>
+                                                <a href="/tesouraria/obrigacoes/parcela/recibo?id=<?php echo (int) ($linha['parcela_id'] ?? 0); ?>" target="_blank" class="mt-1 inline-block text-xs font-medium text-slate-700 underline">Emitir recibo</a>
                                             </div>
                                         </div>
                                     </article>
@@ -438,7 +454,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                                         <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                                             <div>
                                                 <div class="font-medium text-slate-900"><?php echo htmlspecialchars((string) ($linha['titulo'] ?? 'Obrigacao')); ?></div>
-                                                <div class="mt-1 text-sm text-slate-500"><?php echo htmlspecialchars($competenciaAtual); ?> • vence em <?php echo !empty($linha['vencimento']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $linha['vencimento']))) : '-'; ?></div>
+                                                <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars($competenciaAtual); ?> • vence em <?php echo !empty($linha['vencimento']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $linha['vencimento']))) : '-'; ?></div>
                                                 <?php if ($linhaAtrasada): ?>
                                                     <div class="mt-2 inline-flex rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-rose-700">Em atraso</div>
                                                 <?php endif; ?>
@@ -483,7 +499,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h3 class="text-lg font-semibold">Nova obrigacao</h3>
-                        <p class="mt-2 text-sm text-slate-500">Lancamento guiado para o tesoureiro registrar mensalidade, contribuicao e joia com o contexto financeiro correto desde a data de inicio.</p>
+                        <p class="mt-2 text-sm text-slate-700">Lancamento guiado para o tesoureiro registrar mensalidade, contribuicao e joia com o contexto financeiro correto desde a data de inicio.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <a href="/tesouraria/obrigacoes" class="rounded-2xl border border-stone-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-stone-50">Cancelar</a>
@@ -550,7 +566,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                         <div class="rounded-[1.35rem] bg-white p-4 shadow-sm">
                             <div class="text-xs uppercase tracking-[0.18em] text-slate-400">Resumo automatico</div>
                             <div id="resumo_obrigacao_principal" class="mt-3 text-lg font-semibold text-slate-900">Mensalidade padrao da Loja</div>
-                            <div id="resumo_obrigacao_secundario" class="mt-2 text-sm text-slate-500">Valor total de <?php echo $formatCurrency($mensalidadePadrao); ?> com vencimento guiado a partir da data informada.</div>
+                            <div id="resumo_obrigacao_secundario" class="mt-2 text-sm text-slate-700">Valor total de <?php echo $formatCurrency($mensalidadePadrao); ?> com vencimento guiado a partir da data informada.</div>
                             <div class="mt-4 grid gap-3 sm:grid-cols-2">
                                 <div class="rounded-2xl bg-stone-50 px-4 py-3">
                                     <div class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Cada parcela</div>

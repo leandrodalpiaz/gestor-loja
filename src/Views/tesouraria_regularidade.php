@@ -12,8 +12,24 @@ if (!isset($_SESSION["usuario_logado"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Regularidade - Tesouraria</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-[11px] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen text-gray-800">
+<body class="erp-readable bg-gray-50 min-h-screen text-gray-800">
     <div class="max-w-6xl mx-auto px-4 py-8">
         <header class="mb-6 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d6b672,transparent_30%),linear-gradient(135deg,#162033,#223145)] px-6 py-7 text-white shadow-xl">
             <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -79,7 +95,7 @@ if (!isset($_SESSION["usuario_logado"])) {
 
         <div class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
             <div id="regularidade-cards" class="space-y-3 p-4 md:hidden">
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">Carregando...</div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">Carregando...</div>
             </div>
             <div class="hidden overflow-x-auto md:block">
                 <table class="min-w-full text-sm">
@@ -167,7 +183,7 @@ if (!isset($_SESSION["usuario_logado"])) {
             const cards = document.getElementById('regularidade-cards');
             if (lista.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">Nenhum obreiro neste periodo</td></tr>';
-                cards.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">Nenhum obreiro neste periodo.</div>';
+                cards.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">Nenhum obreiro neste periodo.</div>';
                 return;
             }
 
@@ -203,7 +219,7 @@ if (!isset($_SESSION["usuario_logado"])) {
                     <div class="flex items-start justify-between gap-3">
                         <div>
                             <div class="text-base font-semibold text-slate-900">${r.obreiro_nome}</div>
-                            <div class="mt-1 text-sm text-slate-600">${r.observacao || 'Sem observacao registrada'}</div>
+                            <div class="mt-1 text-sm text-slate-700">${r.observacao || 'Sem observacao registrada'}</div>
                         </div>
                         <span class="rounded-full px-3 py-1 text-xs font-semibold ${r.status === 'regular' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
                             ${r.status === 'regular' ? 'Regular' : 'Irregular'}
@@ -294,3 +310,4 @@ if (!isset($_SESSION["usuario_logado"])) {
     </script>
 </body>
 </html>
+

@@ -56,13 +56,29 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-\[11px\] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-[linear-gradient(180deg,#f8f4ea_0%,#eef2f7_100%)] font-sans text-slate-900">
+<body class="erp-readable min-h-screen bg-[linear-gradient(180deg,#f8f4ea_0%,#eef2f7_100%)] font-sans text-slate-900">
     <div class="mx-auto max-w-7xl px-4 py-8">
         <header class="mb-8 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d6b672,transparent_28%),linear-gradient(135deg,#162033,#223145)] px-6 py-7 text-white shadow-2xl">
             <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Painel do Chanceler</p>
             <h1 class="mt-2 text-3xl font-semibold">Check-in do quadro e visitantes</h1>
-            <p class="mt-2 max-w-3xl text-sm text-slate-200">Aqui o Chanceler usa a sessao como base de check-in dos presentes do quadro, acompanha a nominata prevista e mantem a leitura rapida dos visitantes para apoiar a Secretaria e o Orador.</p>
+            <p class="mt-2 max-w-3xl text-sm text-slate-200">Use esta tela para fazer o check-in da sessao, acompanhar a nominata prevista e manter a leitura objetiva dos visitantes para apoio da Secretaria e do Orador.</p>
             <div class="mt-4 flex flex-wrap gap-2">
                 <a href="/secretaria" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Ir para Secretaria</a>
                 <a href="/dashboard" class="rounded-md bg-amber-400 px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300">Voltar ao dashboard</a>
@@ -74,7 +90,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
             <article class="rounded-2xl border border-white/60 bg-white/90 px-4 py-4 shadow-sm">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Sessao ativa</p>
                 <p class="mt-2 text-lg font-semibold text-slate-900"><?= htmlspecialchars((string) ($sessaoEmFoco['titulo'] ?? (($sessaoEmFoco['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoEmFoco['grau_sessao'] ?? '')))) ?></p>
-                <p class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? 'Sem data definida')) ?></p>
+                <p class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? 'Sem data definida')) ?></p>
             </article>
             <article class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 shadow-sm">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">Presenca efetiva</p>
@@ -102,7 +118,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                         <div>
                             <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Contexto da sessao</p>
                             <h2 class="text-2xl font-semibold text-slate-900">Sessao em foco</h2>
-                            <p class="mt-2 text-sm text-slate-600">O Chanceler pode trocar a sessao de trabalho sem perder o contexto de confirmados, presenca efetiva e visitantes.</p>
+                            <p class="mt-2 text-sm text-slate-700">Troque a sessao em foco sem perder o contexto de confirmados, presenca efetiva e visitantes.</p>
                         </div>
                         <form method="GET" action="/chanceler/sessao" class="w-full max-w-md">
                             <label for="sessao_id" class="mb-1 block text-sm font-medium text-slate-700">Selecionar sessao</label>
@@ -121,7 +137,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
                                     <div class="text-lg font-semibold text-slate-900"><?= htmlspecialchars($sessaoEmFoco['titulo'] ?: (($sessaoEmFoco['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoEmFoco['grau_sessao'] ?? ''))) ?></div>
-                                    <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? '')) ?></div>
+                                    <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? '')) ?></div>
                                 </div>
                                 <a href="<?= htmlspecialchars($urlCertificado) ?>" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">Emitir certificado</a>
                             </div>
@@ -135,14 +151,14 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                             </div>
                         </div>
                     <?php else: ?>
-                        <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Nenhuma sessao futura cadastrada.</div>
+                        <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Nenhuma sessao futura cadastrada.</div>
                     <?php endif; ?>
                 </article>
 
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Acao principal</p>
                     <h2 class="text-2xl font-semibold text-slate-900">Check-in do quadro da Loja</h2>
-                    <p class="mt-2 text-sm text-slate-600">Somente os presentes efetivos entram na base da votacao do balaustre e na leitura final da nominata.</p>
+                    <p class="mt-2 text-sm text-slate-700">Somente os presentes efetivos entram na base de votacao do balaustre e na leitura final da nominata.</p>
                     <div class="mt-4 grid gap-3 md:grid-cols-2">
                         <?php if ($mapaPresencas !== []): ?>
                             <?php foreach ($mapaPresencas as $registro): ?>
@@ -150,7 +166,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                                     <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoEmFoco['id'] ?? 0) ?>">
                                     <input type="hidden" name="obreiro_id" value="<?= htmlspecialchars((string) ($registro['id'] ?? '')) ?>">
                                     <div class="font-medium text-slate-900"><?= htmlspecialchars((string) ($registro['nome'] ?? 'Obreiro')) ?></div>
-                                    <div class="mt-1 text-xs text-slate-600">CIM: <?= htmlspecialchars((string) ($registro['cim'] ?? '-')) ?> · Grau: <?= htmlspecialchars((string) ($registro['grau'] ?? '-')) ?></div>
+                                    <div class="mt-1 text-xs text-slate-700">CIM: <?= htmlspecialchars((string) ($registro['cim'] ?? '-')) ?> · Grau: <?= htmlspecialchars((string) ($registro['grau'] ?? '-')) ?></div>
                                     <div class="mt-3 flex flex-wrap gap-2">
                                         <button type="submit" name="presente" value="1" class="rounded-md px-3 py-1.5 text-sm <?= !empty($registro['presente']) ? 'bg-emerald-600 text-white' : 'border border-emerald-300 text-emerald-700' ?>">Presente</button>
                                         <button type="submit" name="presente" value="0" class="rounded-md px-3 py-1.5 text-sm <?= empty($registro['presente']) ? 'bg-slate-700 text-white' : 'border border-slate-300 text-slate-700' ?>">Nao presente</button>
@@ -158,7 +174,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                                 </form>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 md:col-span-2">Nenhuma nominata prevista disponivel para esta sessao.</div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 md:col-span-2">Nenhuma nominata prevista disponivel para esta sessao.</div>
                         <?php endif; ?>
                     </div>
                 </article>
@@ -168,7 +184,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                         <div>
                             <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Fechamento da lista</p>
                             <h2 class="text-2xl font-semibold text-slate-900">Lista final de presentes</h2>
-                            <p class="mt-2 text-sm text-slate-600">Base de conferencia rapida para fechar a nominata efetiva da sessao.</p>
+                            <p class="mt-2 text-sm text-slate-700">Base de conferencia rapida para fechar a nominata efetiva da sessao.</p>
                         </div>
                         <span class="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700"><?= count($presentesEfetivos) ?> presentes</span>
                     </div>
@@ -177,11 +193,11 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                             <?php foreach ($presentesEfetivos as $presente): ?>
                                 <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
                                     <div class="font-medium text-slate-900"><?= htmlspecialchars((string) ($presente['nome'] ?? 'Obreiro')) ?></div>
-                                    <div class="mt-1 text-xs text-slate-600">CIM: <?= htmlspecialchars((string) ($presente['cim'] ?? '-')) ?> · Grau: <?= htmlspecialchars((string) ($presente['grau'] ?? '-')) ?></div>
+                                    <div class="mt-1 text-xs text-slate-700">CIM: <?= htmlspecialchars((string) ($presente['cim'] ?? '-')) ?> · Grau: <?= htmlspecialchars((string) ($presente['grau'] ?? '-')) ?></div>
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 md:col-span-2">Ainda nao ha presentes efetivos marcados para esta sessao.</div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 md:col-span-2">Ainda nao ha presentes efetivos marcados para esta sessao.</div>
                         <?php endif; ?>
                     </div>
                 </article>
@@ -191,7 +207,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Visitantes</p>
                     <h2 class="text-2xl font-semibold text-slate-900">Visitantes resumidos</h2>
-                    <p class="mt-2 text-sm text-slate-600">Esta lista alimenta a Secretaria para o balaustre e o Orador para a leitura nominal.</p>
+                    <p class="mt-2 text-sm text-slate-700">Esta lista alimenta a Secretaria para o balaustre e o Orador para a leitura nominal.</p>
                     <div class="mt-4 space-y-3">
                         <?php if ($visitantesResumo !== []): ?>
                             <?php foreach ($visitantesResumo as $visitante): ?>
@@ -201,7 +217,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Ainda nao ha lista resumida de visitantes registrada para esta sessao.</div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Ainda nao ha lista resumida de visitantes registrada para esta sessao.</div>
                         <?php endif; ?>
                     </div>
                 </article>
@@ -214,11 +230,11 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                             <?php foreach ($confirmados as $confirmado): ?>
                                 <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3">
                                     <div class="font-medium text-slate-900"><?= htmlspecialchars((string) ($confirmado['nome'] ?? 'Obreiro')) ?></div>
-                                    <div class="mt-1 text-sm text-slate-600"><?= !empty($confirmado['participara_agape']) ? 'Confirmado com agape' : 'Confirmado sem agape' ?></div>
+                                    <div class="mt-1 text-sm text-slate-700"><?= !empty($confirmado['participara_agape']) ? 'Confirmado com agape' : 'Confirmado sem agape' ?></div>
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Ainda nao ha confirmados registrados.</div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Ainda nao ha confirmados registrados.</div>
                         <?php endif; ?>
                     </div>
                 </article>

@@ -168,11 +168,11 @@ require __DIR__ . '/partials/erp_head.php';
                         <table class="min-w-full divide-y divide-erp-border text-sm">
                             <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">
                                 <tr>
-                                    <th class="px-5 py-4">Obreiro</th>
-                                    <th class="px-5 py-4">Situacao</th>
-                                    <th class="px-5 py-4">Financeiro</th>
-                                    <th class="px-5 py-4">Cargos</th>
-                                    <th class="px-5 py-4 text-right">Acoes</th>
+                                    <th class="px-4 py-3">Obreiro</th>
+                                    <th class="px-4 py-3">Situacao</th>
+                                    <th class="px-4 py-3">Financeiro</th>
+                                    <th class="px-4 py-3">Cargos</th>
+                                    <th class="px-4 py-3 text-right">Acoes</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-erp-border">
@@ -182,23 +182,23 @@ require __DIR__ . '/partials/erp_head.php';
                                     $situacao = (string) ($obreiro['situacao_quadro'] ?? 'Ativo');
                                     $cargosAtuais = $obreiro['cargos_codigos'] ?? [];
                                     ?>
-                                    <tr class="align-top">
-                                        <td class="px-5 py-4">
+                                    <tr class="align-top hover:bg-slate-50/70">
+                                        <td class="px-4 py-3">
                                             <div class="font-semibold text-erp-text"><?= htmlspecialchars($nomeExibicao) ?></div>
                                             <div class="mt-1 text-xs text-erp-muted">CIM <?= htmlspecialchars((string) ($obreiro['cim'] ?? '-')) ?> · <?= htmlspecialchars((string) ($obreiro['grau'] ?? 'Nao informado')) ?></div>
                                         </td>
-                                        <td class="px-5 py-4">
+                                        <td class="px-4 py-3">
                                             <span class="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
                                                 <?= htmlspecialchars($situacao) ?>
                                             </span>
                                         </td>
-                                        <td class="px-5 py-4">
+                                        <td class="px-4 py-3">
                                             <?php /* TODO: a view nao recebe regularidade financeira dos obreiros; aplicar StatusBadge real quando esse dado vier do backend. */ ?>
                                             <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
                                                 Nao integrado
                                             </span>
                                         </td>
-                                        <td class="px-5 py-4">
+                                        <td class="px-4 py-3">
                                             <?php if ($cargosAtuais !== []): ?>
                                                 <div class="flex flex-wrap gap-2">
                                                     <?php foreach ($cargosAtuais as $codigo): ?>
@@ -211,7 +211,7 @@ require __DIR__ . '/partials/erp_head.php';
                                                 <span class="text-xs text-erp-muted">Sem cargo oficial ativo</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td class="px-5 py-4 text-right">
+                                        <td class="px-4 py-3 text-right">
                                             <div class="flex justify-end gap-2">
                                                 <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>" class="rounded-lg bg-cobalto px-3 py-2 text-xs font-semibold text-white hover:bg-blue-900">
                                                     Abrir ficha

@@ -31,8 +31,24 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
             }
         }
     </script>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-\[11px\] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-[radial-gradient(circle_at_top,#f8f2e7_0%,#eceff3_42%,#e5e7eb_100%)] font-sans text-slate-900">
+<body class="erp-readable min-h-screen bg-[radial-gradient(circle_at_top,#f8f2e7_0%,#eceff3_42%,#e5e7eb_100%)] font-sans text-slate-900">
     <div class="mx-auto max-w-7xl px-4 py-8">
         <header class="mb-8 overflow-hidden rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d7b77a,transparent_28%),linear-gradient(135deg,#111827,#1f2937_55%,#374151)] px-6 py-7 text-white shadow-2xl">
             <p class="text-xs uppercase tracking-[0.2em] text-amber-300">Painel de governanca</p>
@@ -54,24 +70,24 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
         <section class="mb-6 grid gap-4 md:grid-cols-4">
             <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Balaustres aptos</div>
+                <div class="text-sm text-slate-700">Balaustres aptos</div>
                 <div class="mt-2 text-3xl font-bold text-onix"><?= count($balaustresAptos) ?></div>
-                <div class="mt-1 text-xs text-slate-500">Prontos para abrir votacao</div>
+                <div class="mt-1 text-xs text-slate-700">Prontos para abrir votacao</div>
             </article>
             <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Em votacao</div>
+                <div class="text-sm text-slate-700">Em votacao</div>
                 <div class="mt-2 text-3xl font-bold text-onix"><?= count($balaustresEmVotacao) ?></div>
-                <div class="mt-1 text-xs text-slate-500">Aguardando encerramento</div>
+                <div class="mt-1 text-xs text-slate-700">Aguardando encerramento</div>
             </article>
             <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Sessoes futuras</div>
+                <div class="text-sm text-slate-700">Sessoes futuras</div>
                 <div class="mt-2 text-3xl font-bold text-onix"><?= count($sessoes) ?></div>
-                <div class="mt-1 text-xs text-slate-500">Planejamento da loja</div>
+                <div class="mt-1 text-xs text-slate-700">Planejamento da loja</div>
             </article>
             <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Cargos com titular</div>
+                <div class="text-sm text-slate-700">Cargos com titular</div>
                 <div class="mt-2 text-3xl font-bold text-onix"><?= count(array_filter($nominata, static fn(array $c): bool => trim((string) ($c['titular_nome'] ?? '')) !== '')) ?></div>
-                <div class="mt-1 text-xs text-slate-500">Nominata oficial ativa</div>
+                <div class="mt-1 text-xs text-slate-700">Nominata oficial ativa</div>
             </article>
         </section>
 
@@ -81,7 +97,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                     <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                         <div>
                             <h2 class="font-display text-2xl font-semibold">Sessao em Foco</h2>
-                            <p class="mt-1 text-sm text-slate-600">O Veneravel pode trocar o contexto da sessao sem sair do painel.</p>
+                            <p class="mt-1 text-sm text-slate-700">O Veneravel pode trocar o contexto da sessao sem sair do painel.</p>
                         </div>
                         <form method="GET" action="/veneravel" class="w-full max-w-sm">
                             <label for="sessao_id" class="mb-1 block text-sm font-medium text-slate-700">Trocar sessao</label>
@@ -97,7 +113,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                     <?php if ($sessaoEmFoco): ?>
                         <div class="mt-3 rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,#f9fafb,#f4efe6)] p-4">
                             <div class="font-semibold"><?= htmlspecialchars($sessaoEmFoco['titulo'] ?: (($sessaoEmFoco['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoEmFoco['grau_sessao'] ?? ''))) ?></div>
-                            <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? '')) ?></div>
+                            <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? '')) ?></div>
                             <div class="mt-2 flex flex-wrap gap-2 text-xs">
                                 <span class="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Status: <?= htmlspecialchars((string) ($sessaoEmFoco['status'] ?? '')) ?></span>
                                 <span class="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Confirmados: <?= (int) ($sessaoEmFoco['total_confirmados'] ?? 0) ?></span>
@@ -105,20 +121,20 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                             </div>
                         </div>
                     <?php else: ?>
-                        <p class="mt-3 text-sm text-slate-600">Nenhuma sessao futura cadastrada.</p>
+                        <p class="mt-3 text-sm text-slate-700">Nenhuma sessao futura cadastrada.</p>
                     <?php endif; ?>
                 </article>
 
                 <article class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
                     <h2 class="font-display text-2xl font-semibold">Acoes Exclusivas do Veneravel Mestre</h2>
-                    <p class="mt-1 text-sm text-slate-600">Decisoes de governanca sobre a agenda oficial da loja.</p>
+                    <p class="mt-1 text-sm text-slate-700">Decisoes de governanca sobre a agenda oficial da loja.</p>
 
                     <div class="mt-4 space-y-3">
                         <?php foreach (array_slice($sessoes, 0, 6) as $sessao): ?>
                             <?php $statusSessao = (string) ($sessao['status'] ?? ''); ?>
                             <div class="rounded-2xl border border-slate-200 p-4">
                                 <div class="font-medium"><?= htmlspecialchars($sessao['titulo'] ?: (($sessao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessao['grau_sessao'] ?? ''))) ?></div>
-                                <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?></div>
+                                <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?></div>
                                 <div class="mt-2 flex flex-wrap gap-2 text-xs">
                                     <span class="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Status: <?= htmlspecialchars($statusSessao) ?></span>
                                     <span class="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Confirmados: <?= (int) ($sessao['total_confirmados'] ?? 0) ?></span>
@@ -160,15 +176,15 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
                 <article class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
                     <h2 class="font-display text-2xl font-semibold">Decisoes de Votacao</h2>
-                    <p class="mt-1 text-sm text-slate-600">Abertura e encerramento das votacoes de balaustre sob responsabilidade do Veneravel Mestre.</p>
+                    <p class="mt-1 text-sm text-slate-700">Abertura e encerramento das votacoes de balaustre sob responsabilidade do Veneravel Mestre.</p>
 
                     <div class="mt-4 space-y-3">
                         <?php foreach (array_slice($balaustresPendentesDecisao, 0, 12) as $balaustre): ?>
                             <?php $status = (string) ($balaustre['status'] ?? ''); ?>
                             <div class="rounded-2xl border border-slate-200 p-4">
                                 <div class="font-medium"><?= htmlspecialchars($balaustre['numero_balaustre'] ?: 'Sem numero') ?></div>
-                                <div class="text-sm text-slate-600"><?= htmlspecialchars($balaustre['sessao_titulo'] ?: (string) ($balaustre['data_hora_inicio'] ?? '')) ?></div>
-                                <div class="mt-1 text-xs text-slate-500">Status atual: <?= htmlspecialchars($status) ?></div>
+                                <div class="text-sm text-slate-700"><?= htmlspecialchars($balaustre['sessao_titulo'] ?: (string) ($balaustre['data_hora_inicio'] ?? '')) ?></div>
+                                <div class="mt-1 text-xs text-slate-700">Status atual: <?= htmlspecialchars($status) ?></div>
 
                                 <div class="mt-3 flex flex-wrap gap-2">
                                     <?php if ($status === 'apto_votacao'): ?>
@@ -189,7 +205,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                         <?php endforeach; ?>
 
                         <?php if ($balaustresPendentesDecisao === []): ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
                                 Nenhum balaustre pede decisao imediata neste momento.
                             </div>
                         <?php endif; ?>
@@ -198,13 +214,13 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
                 <article class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
                     <h2 class="font-display text-2xl font-semibold">Sessoes que Pedem Atencao</h2>
-                    <p class="mt-1 text-sm text-slate-600">Sessões com status sensível ou baixa confirmação para acompanhamento direto.</p>
+                    <p class="mt-1 text-sm text-slate-700">Sessões com status sensível ou baixa confirmação para acompanhamento direto.</p>
 
                     <div class="mt-4 space-y-3">
                         <?php foreach (array_slice($sessoesPendentesAtencao, 0, 8) as $sessao): ?>
                             <div class="rounded-2xl border border-slate-200 p-4">
                                 <div class="font-medium"><?= htmlspecialchars($sessao['titulo'] ?: (($sessao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessao['grau_sessao'] ?? ''))) ?></div>
-                                <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?></div>
+                                <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?></div>
                                 <div class="mt-2 flex flex-wrap gap-2 text-xs">
                                     <span class="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Status: <?= htmlspecialchars((string) ($sessao['status'] ?? '')) ?></span>
                                     <span class="rounded-full bg-slate-100 px-2 py-1 text-slate-700">Confirmados: <?= (int) ($sessao['total_confirmados'] ?? 0) ?></span>
@@ -214,7 +230,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                         <?php endforeach; ?>
 
                         <?php if ($sessoesPendentesAtencao === []): ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
                                 Nenhuma sessao precisa de atencao adicional agora.
                             </div>
                         <?php endif; ?>
@@ -225,12 +241,12 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
             <aside class="space-y-6">
                 <article class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
                     <h2 class="font-display text-2xl font-semibold">Nominata Principal</h2>
-                    <p class="mt-1 text-sm text-slate-600">Visao rapida dos cargos mais sensiveis para a governanca da sessao.</p>
+                    <p class="mt-1 text-sm text-slate-700">Visao rapida dos cargos mais sensiveis para a governanca da sessao.</p>
 
                     <div class="mt-4 max-h-[540px] space-y-2 overflow-y-auto pr-1">
                         <?php foreach ($nominataPrincipal as $cargo): ?>
                             <div class="rounded-2xl border border-slate-200 px-3 py-2">
-                                <div class="text-xs uppercase tracking-wide text-slate-500"><?= htmlspecialchars((string) ($cargo['codigo'] ?? '')) ?></div>
+                                <div class="text-xs uppercase tracking-wide text-slate-700"><?= htmlspecialchars((string) ($cargo['codigo'] ?? '')) ?></div>
                                 <div class="text-sm font-medium"><?= htmlspecialchars((string) ($cargo['nome_exibicao'] ?? 'Cargo')) ?></div>
                                 <div class="text-sm text-slate-700"><?= htmlspecialchars(trim((string) ($cargo['titular_nome'] ?? '')) ?: 'A definir') ?></div>
                             </div>
@@ -240,13 +256,13 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
                 <article class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
                     <h2 class="font-display text-2xl font-semibold">Pendencias Criticas</h2>
-                    <p class="mt-1 text-sm text-slate-600">Visao executiva das lacunas de nominata e dos cadastros que pedem intervencao.</p>
+                    <p class="mt-1 text-sm text-slate-700">Visao executiva das lacunas de nominata e dos cadastros que pedem intervencao.</p>
 
                     <div class="mt-4 grid gap-3 sm:grid-cols-2">
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                             <div class="text-sm font-semibold text-slate-800">Cargos sem titular</div>
                             <div class="mt-1 text-2xl font-bold text-onix"><?= count($cargosCriticosPendentes) ?></div>
-                            <div class="mt-3 space-y-2 text-sm text-slate-600">
+                            <div class="mt-3 space-y-2 text-sm text-slate-700">
                                 <?php foreach (array_slice($cargosCriticosPendentes, 0, 6) as $cargoPendente): ?>
                                     <div class="rounded-xl border border-slate-200 bg-white px-3 py-2"><?= htmlspecialchars((string) ($cargoPendente['nome_exibicao'] ?? $cargoPendente['codigo'] ?? 'Cargo')) ?></div>
                                 <?php endforeach; ?>
@@ -258,11 +274,11 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                             <div class="text-sm font-semibold text-slate-800">Cadastros com alerta</div>
                             <div class="mt-1 text-2xl font-bold text-onix"><?= (int) ($resumoCadastros['com_alerta'] ?? 0) ?></div>
-                            <div class="mt-3 space-y-2 text-sm text-slate-600">
+                            <div class="mt-3 space-y-2 text-sm text-slate-700">
                                 <?php foreach ($obreirosPendentesCriticos as $obreiro): ?>
                                     <div class="rounded-xl border border-slate-200 bg-white px-3 py-2">
                                         <div class="font-medium text-slate-800"><?= htmlspecialchars((string) ($obreiro['nome'] ?? 'Obreiro')) ?></div>
-                                        <div class="mt-1 text-xs text-slate-500">CIM <?= htmlspecialchars((string) ($obreiro['cim'] ?? '-')) ?> · <?= htmlspecialchars(implode(', ', $obreiro['alertas'] ?? [])) ?></div>
+                                        <div class="mt-1 text-xs text-slate-700">CIM <?= htmlspecialchars((string) ($obreiro['cim'] ?? '-')) ?> · <?= htmlspecialchars(implode(', ', $obreiro['alertas'] ?? [])) ?></div>
                                     </div>
                                 <?php endforeach; ?>
                                 <?php if ($obreirosPendentesCriticos === []): ?>

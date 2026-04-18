@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -144,7 +144,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Falha na operacao.');
+    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel concluir esta acao agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -171,7 +171,7 @@ function render() {
     const foco = dashboard.companheiro_foco;
     const companheiro = foco?.companheiro;
     document.getElementById('companheiro-nome').textContent = companheiro?.nome || 'Sem Companheiro';
-    document.getElementById('companheiro-meta').textContent = `CIM ${companheiro?.cim || '-'} · Elevacao ${companheiro?.data_elevacao || '-'}`;
+    document.getElementById('companheiro-meta').textContent = `CIM ${companheiro?.cim || '-'} Â· Elevacao ${companheiro?.data_elevacao || '-'}`;
     document.getElementById('meta-etapa').textContent = foco?.resumo?.etapa_atual ? `${foco.resumo.etapa_atual.ordem}` : '-';
     document.getElementById('meta-percentual').textContent = `${foco?.resumo?.percentual_conclusao || 0}%`;
 
@@ -180,7 +180,7 @@ function render() {
     (dashboard.companheiros || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.nome} · CIM ${item.cim || '-'}`;
+        option.textContent = `${item.nome} Â· CIM ${item.cim || '-'}`;
         if (companheiro && item.id === companheiro.id) option.selected = true;
         select.appendChild(option);
     });
@@ -215,12 +215,12 @@ function render() {
     document.getElementById('exaltacao-status').textContent = `Status atual: ${foco?.exaltacao?.status || 'nao_recomendada'}`;
 
     renderLista('lista-etapas', foco?.etapas || [], 'Sem etapas registradas.', item => ({
-        nome: `Etapa ${item.ordem} · ${item.titulo}`,
+        nome: `Etapa ${item.ordem} Â· ${item.titulo}`,
         linha: item.status
     }));
     renderLista('lista-historico', foco?.historico_formativo || [], 'Sem historico formativo registrado.', item => ({
         nome: item.titulo || item.tipo,
-        linha: `${item.momento || '-'} · ${item.descricao || ''}`
+        linha: `${item.momento || '-'} Â· ${item.descricao || ''}`
     }));
 }
 
@@ -315,3 +315,4 @@ carregar();
 </script>
 </body>
 </html>
+

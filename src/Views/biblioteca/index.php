@@ -15,8 +15,24 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biblioteca</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-[11px] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800">
+<body class="erp-readable bg-slate-50 min-h-screen text-slate-800">
     <header class="bg-blue-900 text-white shadow-sm">
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4">
             <div>
@@ -36,7 +52,7 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
             <div>
                 <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Catalogo</div>
                 <h2 class="mt-1 text-2xl font-semibold text-blue-900">Catalogo</h2>
-                <p class="mt-1 text-sm text-slate-500">Web e mobile usam o mesmo fluxo de biblioteca.</p>
+                <p class="mt-1 text-sm text-slate-700">Web e mobile usam o mesmo fluxo de biblioteca.</p>
             </div>
             <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <a href="/biblioteca/meus-emprestimos" class="w-full rounded-lg bg-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-300 sm:w-auto">Meus emprestimos</a>
@@ -69,8 +85,8 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                                         <span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">Indisponivel</span>
                                     <?php endif; ?>
                                 </div>
-                                <p class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($item['autor'] ?? '-')) ?></p>
-                                <div class="mt-2 space-y-1 text-xs text-slate-500">
+                                <p class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($item['autor'] ?? '-')) ?></p>
+                                <div class="mt-2 space-y-1 text-xs text-slate-700">
                                     <div>Codigo: <span class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></span></div>
                                     <div>ISBN: <?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></div>
                                     <div>Exemplares livres: <?= (int) ($item['quantidade_disponivel'] ?? 0) ?></div>
@@ -78,7 +94,7 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                             </div>
                         </div>
 
-                        <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
+                        <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-700">
                             <span class="rounded-full bg-slate-100 px-2.5 py-1">Gostou: <?= (int) ($item['total_gostei_sim'] ?? 0) ?></span>
                             <span class="rounded-full bg-slate-100 px-2.5 py-1">Nao gostou: <?= (int) ($item['total_gostei_nao'] ?? 0) ?></span>
                             <span class="rounded-full bg-slate-100 px-2.5 py-1">Comentarios: <?= (int) ($item['total_comentarios'] ?? 0) ?></span>
@@ -98,7 +114,7 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                     </article>
                 <?php endforeach; ?>
             <?php else: ?>
-                <div class="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500">
+                <div class="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-700">
                     Nenhum titulo cadastrado.
                 </div>
             <?php endif; ?>
@@ -132,7 +148,7 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                                     <td class="px-4 py-3 font-mono text-xs"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></td>
                                     <td class="px-4 py-3">
                                         <div class="font-medium"><?= htmlspecialchars((string) ($item['titulo'] ?? '')) ?></div>
-                                        <div class="text-xs text-slate-500">ISBN: <?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></div>
+                                        <div class="text-xs text-slate-700">ISBN: <?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></div>
                                     </td>
                                     <td class="px-4 py-3"><?= htmlspecialchars((string) ($item['autor'] ?? '-')) ?></td>
                                     <td class="px-4 py-3">
@@ -160,7 +176,7 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-slate-500">Nenhum titulo cadastrado.</td>
+                                <td colspan="7" class="px-4 py-8 text-center text-slate-700">Nenhum titulo cadastrado.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -174,7 +190,7 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
             <form action="/biblioteca/classificar" method="POST">
                 <div class="p-4 border-b border-slate-200">
                     <h3 class="font-semibold text-lg">Classificar leitura sugerida</h3>
-                    <p id="modal-livro-titulo" class="text-sm text-slate-500 mt-1"></p>
+                    <p id="modal-livro-titulo" class="text-sm text-slate-700 mt-1"></p>
                 </div>
                 <div class="p-4 space-y-3">
                     <input type="hidden" name="livro_id" id="modal-livro-id">
@@ -217,3 +233,4 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
     </script>
 </body>
 </html>
+

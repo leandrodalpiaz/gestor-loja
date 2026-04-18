@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -122,7 +122,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Falha ao carregar painel.');
+    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel carregar os dados deste painel agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -195,8 +195,8 @@ function render() {
     renderLista('lista-sessoes', dashboard.sessoes_financeiras, 'Nenhuma sessao financeira futura.', item => `
         <div class="font-medium">${esc(item.titulo || item.descricao_tipo || 'Sessao')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.data_hora_inicio || '')}</div>
-        <div class="mt-2 text-sm text-gray-700">${esc(item.descricao_agape || '-')} · ${esc(item.descricao_modelo || '-')}</div>
-        <div class="mt-2 text-xs text-gray-500">${esc(item.confirmados_agape || 0)} com agape · estimativa ${esc(moeda(item.estimativa_arrecadacao))}</div>
+        <div class="mt-2 text-sm text-gray-700">${esc(item.descricao_agape || '-')} Â· ${esc(item.descricao_modelo || '-')}</div>
+        <div class="mt-2 text-xs text-gray-500">${esc(item.confirmados_agape || 0)} com agape Â· estimativa ${esc(moeda(item.estimativa_arrecadacao))}</div>
     `);
 }
 
@@ -284,3 +284,4 @@ carregar();
 </script>
 </body>
 </html>
+

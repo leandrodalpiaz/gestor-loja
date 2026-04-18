@@ -64,50 +64,38 @@ $badgeStatusSessao = static function (?string $status): string {
     };
 };
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secretaria - Gestor da Loja</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        cobalto: '#183153',
-                        areia: '#f4efe6',
-                        cobre: '#9c6b30',
-                        tinta: '#1f2937'
-                    },
-                    fontFamily: {
-                        display: ['"Merriweather"', 'serif'],
-                        sans: ['"Inter"', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@700&display=swap" rel="stylesheet">
-</head>
-<body class="bg-areia text-tinta font-sans min-h-screen">
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between mb-8">
-            <div>
-                <p class="text-sm uppercase tracking-[0.25em] text-cobre">Secretaria</p>
-                <h1 class="font-display text-3xl text-cobalto">Centro operacional do Secretario</h1>
-                <p class="text-sm text-slate-600 mt-2">Sessões, publicações, trabalhos da ordem do dia e gestão cadastral dos membros em um fluxo único de secretaria.</p>
-            </div>
-            <div class="flex gap-3">
-                <a href="/obreiros" class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-medium">Cadastros dos membros</a>
-                <a href="/secretaria/votacao" class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-medium">Painel de votacao</a>
-                <a href="/secretaria/relatorio-anual" class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-medium">Relatorio anual</a>
-                <a href="/dashboard" class="px-4 py-2 rounded-lg bg-cobalto text-white text-sm font-medium">Voltar ao painel</a>
-            </div>
-        </div>
+<?php
+$erpPageTitle = 'Secretaria - Gestor de Loja';
+$appShellEyebrow = 'Secretaria';
+$appShellTitle = 'Centro operacional do Secretario';
+$appShellDescription = 'Sessões, publicações, trabalhos da ordem do dia e gestão cadastral dos membros em um fluxo único de secretaria.';
+$appShellActiveHref = '/secretaria';
+$appShellActions = [
+    ['label' => 'Cadastros dos membros', 'href' => '/obreiros'],
+    ['label' => 'Votacao', 'href' => '/secretaria/votacao'],
+    ['label' => 'Relatorio anual', 'href' => '/secretaria/relatorio-anual'],
+];
+$appShellSidebarSections = [
+    [
+        'title' => 'Secretaria',
+        'items' => [
+            ['label' => 'Painel da Secretaria', 'href' => '/secretaria'],
+            ['label' => 'Votacao de balaustre', 'href' => '/secretaria/votacao'],
+            ['label' => 'Relatorio anual', 'href' => '/secretaria/relatorio-anual'],
+            ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
+        ],
+    ],
+    [
+        'title' => 'Navegacao',
+        'items' => [
+            ['label' => 'Dashboard', 'href' => '/dashboard'],
+            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
+        ],
+    ],
+];
+require __DIR__ . '/../partials/erp_head.php';
+?>
+<?php require __DIR__ . '/../partials/erp_shell_open.php'; ?>
 
         <?php if ($mensagemSucesso): ?>
             <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700"><?= htmlspecialchars($mensagemSucesso) ?></div>
@@ -118,24 +106,24 @@ $badgeStatusSessao = static function (?string $status): string {
 
         <div class="grid gap-4 md:grid-cols-5 mb-8">
             <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
-                <div class="text-sm text-slate-500">Obreiros ativos</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) $resumo['obreiros_ativos'] ?></div>
+                <div class="text-sm text-slate-700">Obreiros ativos</div>
+                <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) $resumo['obreiros_ativos'] ?></div>
             </div>
             <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
-                <div class="text-sm text-slate-500">Sessoes futuras</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) $resumo['sessoes_futuras'] ?></div>
+                <div class="text-sm text-slate-700">Sessoes futuras</div>
+                <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) $resumo['sessoes_futuras'] ?></div>
             </div>
             <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
-                <div class="text-sm text-slate-500">Trabalhos pendentes</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) $resumo['trabalhos_pendentes'] ?></div>
+                <div class="text-sm text-slate-700">Trabalhos pendentes</div>
+                <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) $resumo['trabalhos_pendentes'] ?></div>
             </div>
             <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
-                <div class="text-sm text-slate-500">Publicacoes em rascunho</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) $resumo['publicacoes_rascunho'] ?></div>
+                <div class="text-sm text-slate-700">Publicacoes em rascunho</div>
+                <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) $resumo['publicacoes_rascunho'] ?></div>
             </div>
             <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
-                <div class="text-sm text-slate-500">Balaustres aptos</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) $resumo['balaustres_aptos'] ?></div>
+                <div class="text-sm text-slate-700">Balaustres aptos</div>
+                <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) $resumo['balaustres_aptos'] ?></div>
             </div>
         </div>
 
@@ -143,44 +131,44 @@ $badgeStatusSessao = static function (?string $status): string {
             <section class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <div class="text-xs uppercase tracking-[0.24em] text-cobre">Cadastros</div>
-                        <h2 class="font-display text-xl text-cobalto mt-2">Saude cadastral da Secretaria</h2>
-                        <p class="text-sm text-slate-500 mt-2">Resumo rapido para saneamento do quadro e preparo dos relatorios.</p>
+                        <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">Cadastros</div>
+                        <h2 class="font-sans text-xl text-erp-navy mt-2">Saude cadastral da Secretaria</h2>
+                        <p class="text-sm text-slate-700 mt-2">Resumo rapido para saneamento do quadro e preparo dos relatorios.</p>
                     </div>
                     <a href="/obreiros" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50">Abrir central de obreiros</a>
                 </div>
 
                 <div class="mt-5 grid gap-3 md:grid-cols-4">
                     <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                        <div class="text-xs uppercase tracking-wide text-slate-500">Total</div>
-                        <div class="mt-1 text-2xl font-semibold text-cobalto"><?= (int) ($resumoCadastros['total'] ?? 0) ?></div>
+                        <div class="text-xs uppercase tracking-wide text-slate-700">Total</div>
+                        <div class="mt-1 text-2xl font-semibold text-erp-navy"><?= (int) ($resumoCadastros['total'] ?? 0) ?></div>
                     </div>
                     <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                        <div class="text-xs uppercase tracking-wide text-slate-500">No quadro</div>
-                        <div class="mt-1 text-2xl font-semibold text-cobalto"><?= (int) ($resumoCadastros['ativos'] ?? 0) ?></div>
+                        <div class="text-xs uppercase tracking-wide text-slate-700">No quadro</div>
+                        <div class="mt-1 text-2xl font-semibold text-erp-navy"><?= (int) ($resumoCadastros['ativos'] ?? 0) ?></div>
                     </div>
                     <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
                         <div class="text-xs uppercase tracking-wide text-amber-800">Com alerta</div>
                         <div class="mt-1 text-2xl font-semibold text-amber-900"><?= (int) ($resumoCadastros['com_alerta'] ?? 0) ?></div>
                     </div>
                     <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                        <div class="text-xs uppercase tracking-wide text-slate-500">Com bot</div>
-                        <div class="mt-1 text-2xl font-semibold text-cobalto"><?= (int) ($resumoCadastros['com_telegram'] ?? 0) ?></div>
+                        <div class="text-xs uppercase tracking-wide text-slate-700">Com bot</div>
+                        <div class="mt-1 text-2xl font-semibold text-erp-navy"><?= (int) ($resumoCadastros['com_telegram'] ?? 0) ?></div>
                     </div>
                 </div>
 
                 <div class="mt-4 flex flex-wrap gap-2">
                     <a href="/obreiros?alerta=cadastro" class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100">Ver alertas cadastrais</a>
-                    <a href="/obreiros/novo" class="rounded-lg border border-cobalto px-4 py-2 text-sm font-medium text-cobalto hover:bg-cobalto hover:text-white">Novo obreiro</a>
+                    <a href="/obreiros/novo" class="rounded-lg border border-erp-navy px-4 py-2 text-sm font-medium text-erp-navy hover:bg-erp-navy hover:text-white">Novo obreiro</a>
                 </div>
             </section>
 
             <section class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <div class="text-xs uppercase tracking-[0.24em] text-cobre">Sessao em foco</div>
-                        <h2 class="font-display text-xl text-cobalto mt-2">Resumo operacional</h2>
-                        <p class="text-sm text-slate-500 mt-2">Confirmados, ausencias e agape consolidados na mesma visao da Secretaria.</p>
+                        <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">Sessao em foco</div>
+                        <h2 class="font-sans text-xl text-erp-navy mt-2">Resumo operacional</h2>
+                        <p class="text-sm text-slate-700 mt-2">Confirmados, ausencias e agape consolidados na mesma visao da Secretaria.</p>
                     </div>
                 </div>
 
@@ -194,14 +182,14 @@ $badgeStatusSessao = static function (?string $status): string {
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-sm font-medium text-white">Atualizar</button>
+                        <button type="submit" class="rounded-lg bg-erp-navy px-4 py-2 text-sm font-medium text-white">Atualizar</button>
                     </div>
                 </form>
 
                 <?php if (!empty($sessaoResumo)): ?>
                     <div class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                        <div class="font-semibold text-cobalto"><?= htmlspecialchars((string) ($sessaoResumo['titulo'] ?: (($sessaoResumo['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoResumo['grau_sessao'] ?? '')))) ?></div>
-                        <div class="mt-1 text-sm text-slate-600">
+                        <div class="font-semibold text-erp-navy"><?= htmlspecialchars((string) ($sessaoResumo['titulo'] ?: (($sessaoResumo['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoResumo['grau_sessao'] ?? '')))) ?></div>
+                        <div class="mt-1 text-sm text-slate-700">
                             <?= htmlspecialchars((string) ($sessaoResumo['data_hora_inicio'] ?? '')) ?>
                             ·
                             Status: <?= htmlspecialchars((string) ($sessaoResumo['status'] ?? '')) ?>
@@ -210,16 +198,16 @@ $badgeStatusSessao = static function (?string $status): string {
 
                     <div class="mt-4 grid gap-3 md:grid-cols-3">
                         <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                            <div class="text-xs uppercase tracking-wide text-slate-500">Confirmados</div>
-                            <div class="mt-1 text-2xl font-semibold text-cobalto"><?= (int) ($sessaoResumo['total_confirmados'] ?? 0) ?></div>
+                            <div class="text-xs uppercase tracking-wide text-slate-700">Confirmados</div>
+                            <div class="mt-1 text-2xl font-semibold text-erp-navy"><?= (int) ($sessaoResumo['total_confirmados'] ?? 0) ?></div>
                         </div>
                         <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                            <div class="text-xs uppercase tracking-wide text-slate-500">Ausentes</div>
-                            <div class="mt-1 text-2xl font-semibold text-cobalto"><?= (int) ($sessaoResumo['total_ausentes'] ?? 0) ?></div>
+                            <div class="text-xs uppercase tracking-wide text-slate-700">Ausentes</div>
+                            <div class="mt-1 text-2xl font-semibold text-erp-navy"><?= (int) ($sessaoResumo['total_ausentes'] ?? 0) ?></div>
                         </div>
                         <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                            <div class="text-xs uppercase tracking-wide text-slate-500">Agape</div>
-                            <div class="mt-1 text-2xl font-semibold text-cobalto"><?= (int) ($sessaoResumo['total_agape'] ?? 0) ?></div>
+                            <div class="text-xs uppercase tracking-wide text-slate-700">Agape</div>
+                            <div class="mt-1 text-2xl font-semibold text-erp-navy"><?= (int) ($sessaoResumo['total_agape'] ?? 0) ?></div>
                         </div>
                     </div>
 
@@ -230,11 +218,11 @@ $badgeStatusSessao = static function (?string $status): string {
                                 <?php foreach ($confirmadosSessaoResumo as $confirmado): ?>
                                     <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
                                         <span><?= htmlspecialchars((string) ($confirmado['nome'] ?? 'Irmao')) ?></span>
-                                        <span class="text-slate-500"><?= htmlspecialchars((string) ($confirmado['cim'] ?? '-')) ?></span>
+                                        <span class="text-slate-700"><?= htmlspecialchars((string) ($confirmado['cim'] ?? '-')) ?></span>
                                     </div>
                                 <?php endforeach; ?>
                                 <?php if ($confirmadosSessaoResumo === []): ?>
-                                    <div class="rounded-lg border border-dashed border-slate-300 px-3 py-3 text-sm text-slate-500">Sem confirmados nesta sessao.</div>
+                                    <div class="rounded-lg border border-dashed border-slate-300 px-3 py-3 text-sm text-slate-700">Sem confirmados nesta sessao.</div>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -245,17 +233,17 @@ $badgeStatusSessao = static function (?string $status): string {
                                 <?php foreach ($participantesAgapeResumo as $participanteAgape): ?>
                                     <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
                                         <span><?= htmlspecialchars((string) ($participanteAgape['nome'] ?? 'Irmao')) ?></span>
-                                        <span class="text-slate-500"><?= htmlspecialchars((string) ($participanteAgape['cim'] ?? '-')) ?></span>
+                                        <span class="text-slate-700"><?= htmlspecialchars((string) ($participanteAgape['cim'] ?? '-')) ?></span>
                                     </div>
                                 <?php endforeach; ?>
                                 <?php if ($participantesAgapeResumo === []): ?>
-                                    <div class="rounded-lg border border-dashed border-slate-300 px-3 py-3 text-sm text-slate-500">Sem participantes confirmados para o agape.</div>
+                                    <div class="rounded-lg border border-dashed border-slate-300 px-3 py-3 text-sm text-slate-700">Sem participantes confirmados para o agape.</div>
                                 <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 <?php else: ?>
-                    <div class="mt-4 rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-500">Nenhuma sessao disponivel para resumo operacional.</div>
+                    <div class="mt-4 rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Nenhuma sessao disponivel para resumo operacional.</div>
                 <?php endif; ?>
             </section>
         </div>
@@ -264,11 +252,11 @@ $badgeStatusSessao = static function (?string $status): string {
             <section class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
                 <div class="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
                     <div>
-                        <div class="text-xs uppercase tracking-[0.24em] text-cobre">Identidade da Loja</div>
-                        <h2 class="font-display text-2xl text-cobalto mt-2">
+                        <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">Identidade da Loja</div>
+                        <h2 class="font-sans text-2xl text-erp-navy mt-2">
                             <?= htmlspecialchars(trim((string) (($configuracaoLoja['nome_loja'] ?? '') . ' Nº ' . ($configuracaoLoja['numero_loja'] ?? '')), " Nº")) ?>
                         </h2>
-                        <p class="text-sm text-slate-600 mt-2">Base institucional para relatórios, Secretaria e leitura histórica da oficina.</p>
+                        <p class="text-sm text-slate-700 mt-2">Base institucional para relatórios, Secretaria e leitura histórica da oficina.</p>
                     </div>
                     <?php if (!empty($configuracaoLoja['potencia_sigla']) || !empty($configuracaoLoja['potencia_nome'])): ?>
                         <div class="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-800">
@@ -278,18 +266,18 @@ $badgeStatusSessao = static function (?string $status): string {
                 </div>
 
                 <div class="mt-5 grid gap-3 md:grid-cols-2">
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">Oriente: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['oriente'] ?? '-')) ?></strong></div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">Rito: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['rito'] ?? '-')) ?></strong></div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">Fundação: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['data_fundacao'] ?? '-')) ?></strong></div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">Instalação: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['data_instalacao'] ?? '-')) ?></strong></div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">Templo: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['nome_templo'] ?? '-')) ?></strong></div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">Reuniões: <strong class="text-slate-800"><?= htmlspecialchars(trim((string) (($configuracaoLoja['dia_semana_reuniao'] ?? '') . ' • ' . ($configuracaoLoja['horario_reuniao'] ?? '') . ' • ' . ($configuracaoLoja['periodicidade_reuniao'] ?? '')), ' •')) ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Oriente: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['oriente'] ?? '-')) ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Rito: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['rito'] ?? '-')) ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Fundação: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['data_fundacao'] ?? '-')) ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Instalação: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['data_instalacao'] ?? '-')) ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Templo: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['nome_templo'] ?? '-')) ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Reuniões: <strong class="text-slate-800"><?= htmlspecialchars(trim((string) (($configuracaoLoja['dia_semana_reuniao'] ?? '') . ' • ' . ($configuracaoLoja['horario_reuniao'] ?? '') . ' • ' . ($configuracaoLoja['periodicidade_reuniao'] ?? '')), ' •')) ?></strong></div>
                 </div>
             </section>
 
             <section class="rounded-2xl bg-[linear-gradient(180deg,#fffdf7,#f4efe4)] border border-amber-200 shadow-sm p-6">
-                <div class="text-xs uppercase tracking-[0.24em] text-cobre">História da Loja</div>
-                <h2 class="font-display text-2xl text-cobalto mt-2">Renascença em perspectiva</h2>
+                <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">História da Loja</div>
+                <h2 class="font-sans text-2xl text-erp-navy mt-2">Renascença em perspectiva</h2>
                 <p class="mt-4 text-sm leading-7 text-slate-700 whitespace-pre-line">
                     <?= htmlspecialchars($historiaLoja) ?>
                 </p>
@@ -301,16 +289,16 @@ $badgeStatusSessao = static function (?string $status): string {
                 <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <h2 class="font-display text-xl text-cobalto">Proxima sessao e agenda</h2>
-                            <p class="text-sm text-slate-500">Base operacional das sessoes sob responsabilidade da Secretaria.</p>
+                            <h2 class="font-sans text-xl text-erp-navy">Proxima sessao e agenda</h2>
+                            <p class="text-sm text-slate-700">Base operacional das sessoes sob responsabilidade da Secretaria.</p>
                         </div>
                     </div>
 
                     <?php if ($proximaSessao): ?>
                         <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 mb-4">
-                            <div class="text-sm text-slate-500">Proxima sessao oficial</div>
-                            <div class="mt-1 font-semibold text-cobalto"><?= htmlspecialchars($proximaSessao['titulo'] ?: (($proximaSessao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($proximaSessao['grau_sessao'] ?? ''))) ?></div>
-                            <div class="text-sm text-slate-600 mt-1"><?= htmlspecialchars((string) ($proximaSessao['data_hora_inicio'] ?? '')) ?></div>
+                            <div class="text-sm text-slate-700">Proxima sessao oficial</div>
+                            <div class="mt-1 font-semibold text-erp-navy"><?= htmlspecialchars($proximaSessao['titulo'] ?: (($proximaSessao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($proximaSessao['grau_sessao'] ?? ''))) ?></div>
+                            <div class="text-sm text-slate-700 mt-1"><?= htmlspecialchars((string) ($proximaSessao['data_hora_inicio'] ?? '')) ?></div>
                         </div>
                     <?php endif; ?>
 
@@ -318,8 +306,8 @@ $badgeStatusSessao = static function (?string $status): string {
                         <div class="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
                             <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                                 <div>
-                                    <div class="text-xs uppercase tracking-[0.24em] text-cobre">Revisao final</div>
-                                    <h3 class="mt-2 font-display text-lg text-cobalto">Resumo pronto para publicacao</h3>
+                                    <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">Revisao final</div>
+                                    <h3 class="mt-2 font-sans text-lg text-erp-navy">Resumo pronto para publicacao</h3>
                                 </div>
                                 <?php if ($sessaoDuplicada): ?>
                                     <div class="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
@@ -330,12 +318,12 @@ $badgeStatusSessao = static function (?string $status): string {
                             <pre class="mt-4 whitespace-pre-wrap rounded-xl bg-white p-4 text-sm leading-6 text-slate-700"><?= htmlspecialchars($resumoRascunhoSessao) ?></pre>
                             <div class="mt-4 flex flex-wrap gap-2">
                                 <?php foreach ($acoesConfirmacaoRascunho as $acaoRascunho): ?>
-                                    <span class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600"><?= htmlspecialchars((string) ($acaoRascunho['label'] ?? '')) ?></span>
+                                    <span class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700"><?= htmlspecialchars((string) ($acaoRascunho['label'] ?? '')) ?></span>
                                 <?php endforeach; ?>
                             </div>
                             <div class="mt-4 flex flex-wrap gap-2">
                                 <form method="POST" action="/secretaria/sessoes/publicar-rascunho">
-                                    <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-sm font-medium text-white">Confirmar publicacao</button>
+                                    <button type="submit" class="rounded-lg bg-erp-navy px-4 py-2 text-sm font-medium text-white">Confirmar publicacao</button>
                                 </form>
                                 <form method="POST" action="/secretaria/sessoes/cancelar-rascunho">
                                     <button type="submit" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">Cancelar rascunho</button>
@@ -350,8 +338,8 @@ $badgeStatusSessao = static function (?string $status): string {
                         <?php endif; ?>
                         <div class="md:col-span-2 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                             <div>
-                                <div class="text-xs uppercase tracking-[0.24em] text-cobre"><?= htmlspecialchars($labelFormularioSessao) ?></div>
-                                <div class="text-sm text-slate-600">
+                                <div class="text-xs uppercase tracking-[0.24em] text-erp-gold"><?= htmlspecialchars($labelFormularioSessao) ?></div>
+                                <div class="text-sm text-slate-700">
                                     <?= $modoEdicaoSessao ? 'Os dados abaixo foram carregados de uma sessao existente. Revise e confirme a atualizacao.' : 'Preencha os dados da nova sessao e siga para a revisao final.' ?>
                                 </div>
                             </div>
@@ -508,7 +496,7 @@ $badgeStatusSessao = static function (?string $status): string {
                             <textarea name="observacao_relatorio" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2"><?= htmlspecialchars((string) ($sessaoDraft['observacao_relatorio'] ?? '')) ?></textarea>
                         </div>
                         <div class="md:col-span-2">
-                            <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-white font-medium"><?= htmlspecialchars($acaoPrimariaSessao) ?></button>
+                            <button type="submit" class="rounded-lg bg-erp-navy px-4 py-2 text-white font-medium"><?= htmlspecialchars($acaoPrimariaSessao) ?></button>
                         </div>
                     </form>
 
@@ -522,8 +510,8 @@ $badgeStatusSessao = static function (?string $status): string {
                                 <article class="rounded-2xl border border-slate-200 bg-[linear-gradient(180deg,#ffffff,#f8fafc)] p-4 shadow-sm">
                                     <div class="flex items-start justify-between gap-3">
                                         <div>
-                                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-cobre">Sessao oficial</div>
-                                            <h3 class="mt-2 text-base font-semibold text-cobalto"><?= htmlspecialchars($tituloSessao) ?></h3>
+                                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-erp-gold">Sessao oficial</div>
+                                            <h3 class="mt-2 text-base font-semibold text-erp-navy"><?= htmlspecialchars($tituloSessao) ?></h3>
                                         </div>
                                         <span class="inline-flex rounded-full border px-3 py-1 text-xs font-semibold <?= $badgeStatusSessao($statusSessao) ?>">
                                             <?= htmlspecialchars($statusSessao !== '' ? $statusSessao : 'planejada') ?>
@@ -532,11 +520,11 @@ $badgeStatusSessao = static function (?string $status): string {
 
                                     <div class="mt-4 grid gap-3 sm:grid-cols-2">
                                         <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
-                                            <div class="text-xs uppercase tracking-wide text-slate-500">Data</div>
+                                            <div class="text-xs uppercase tracking-wide text-slate-700">Data</div>
                                             <div class="mt-1 text-sm font-medium text-slate-800"><?= htmlspecialchars($formatarDataAgenda((string) ($sessao['data_hora_inicio'] ?? ''))) ?></div>
                                         </div>
                                         <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
-                                            <div class="text-xs uppercase tracking-wide text-slate-500">Confirmados</div>
+                                            <div class="text-xs uppercase tracking-wide text-slate-700">Confirmados</div>
                                             <div class="mt-1 text-sm font-medium text-slate-800">
                                                 <?= (int) ($sessao['total_confirmados'] ?? 0) ?> irmão(s)
                                                 <?php if ((int) ($sessao['total_agape'] ?? 0) > 0): ?>
@@ -547,7 +535,7 @@ $badgeStatusSessao = static function (?string $status): string {
                                     </div>
 
                                     <div class="mt-4 flex flex-wrap gap-2">
-                                        <a href="/secretaria?editar_sessao=<?= (int) ($sessao['id'] ?? 0) ?>" class="inline-flex rounded-lg border border-cobalto px-3 py-2 text-xs font-medium text-cobalto hover:bg-cobalto hover:text-white">
+                                        <a href="/secretaria?editar_sessao=<?= (int) ($sessao['id'] ?? 0) ?>" class="inline-flex rounded-lg border border-erp-navy px-3 py-2 text-xs font-medium text-erp-navy hover:bg-erp-navy hover:text-white">
                                             Editar
                                         </a>
                                         <?php if (in_array($statusSessao, ['planejada', 'alterada'], true)): ?>
@@ -581,7 +569,7 @@ $badgeStatusSessao = static function (?string $status): string {
                             <?php endforeach; ?>
 
                             <?php if ($sessoes === []): ?>
-                                <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-500 md:col-span-2 xl:col-span-3">
+                                <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-700 md:col-span-2 xl:col-span-3">
                                     Nenhuma sessao futura cadastrada. Use o formulario acima para publicar a agenda oficial da Loja.
                                 </div>
                             <?php endif; ?>
@@ -589,7 +577,7 @@ $badgeStatusSessao = static function (?string $status): string {
 
                         <div class="hidden overflow-x-auto xl:block">
                         <table class="w-full text-sm">
-                            <thead class="text-left text-slate-500">
+                            <thead class="text-left text-slate-700">
                                 <tr>
                                     <th class="py-2">Sessao</th>
                                     <th class="py-2">Data</th>
@@ -606,7 +594,7 @@ $badgeStatusSessao = static function (?string $status): string {
                                         <td class="py-2"><?= htmlspecialchars($statusSessao) ?></td>
                                         <td class="py-2">
                                             <div class="flex flex-wrap gap-2">
-                                                <a href="/secretaria?editar_sessao=<?= (int) ($sessao['id'] ?? 0) ?>" class="inline-flex rounded-md border border-cobalto px-3 py-1 text-xs font-medium text-cobalto hover:bg-cobalto hover:text-white">
+                                                <a href="/secretaria?editar_sessao=<?= (int) ($sessao['id'] ?? 0) ?>" class="inline-flex rounded-md border border-erp-navy px-3 py-1 text-xs font-medium text-erp-navy hover:bg-erp-navy hover:text-white">
                                                     Editar
                                                 </a>
                                                 <?php if (in_array($statusSessao, ['planejada', 'alterada'], true)): ?>
@@ -648,8 +636,8 @@ $badgeStatusSessao = static function (?string $status): string {
                         <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                             <div class="flex items-center justify-between gap-3">
                                 <div>
-                                    <div class="text-xs uppercase tracking-[0.24em] text-cobre">Historico operacional</div>
-                                    <h3 class="mt-1 text-lg font-semibold text-cobalto">
+                                    <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">Historico operacional</div>
+                                    <h3 class="mt-1 text-lg font-semibold text-erp-navy">
                                         <?= htmlspecialchars((string) ($sessaoHistorico['titulo'] ?: (($sessaoHistorico['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoHistorico['grau_sessao'] ?? '')))) ?>
                                     </h3>
                                 </div>
@@ -661,19 +649,19 @@ $badgeStatusSessao = static function (?string $status): string {
                                     <div class="rounded-xl border border-slate-200 bg-white p-4">
                                         <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
                                             <div class="font-medium text-slate-800"><?= htmlspecialchars((string) ($itemHistorico['acao'] ?? 'acao')) ?></div>
-                                            <div class="text-xs text-slate-500">
+                                            <div class="text-xs text-slate-700">
                                                 <?= htmlspecialchars((string) ($itemHistorico['autor_nome'] ?? 'Sistema')) ?>
                                                 ·
                                                 <?= htmlspecialchars((string) ($itemHistorico['created_at'] ?? '')) ?>
                                             </div>
                                         </div>
                                         <?php if (!empty($itemHistorico['observacao'])): ?>
-                                            <p class="mt-2 text-sm text-slate-600"><?= htmlspecialchars((string) $itemHistorico['observacao']) ?></p>
+                                            <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars((string) $itemHistorico['observacao']) ?></p>
                                         <?php endif; ?>
                                     </div>
                                 <?php endforeach; ?>
                                 <?php if ($historicoSessao === []): ?>
-                                    <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-500">Ainda nao ha historico registrado para esta sessao.</div>
+                                    <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Ainda nao ha historico registrado para esta sessao.</div>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -681,8 +669,8 @@ $badgeStatusSessao = static function (?string $status): string {
                 </div>
 
                 <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
-                    <h2 class="font-display text-xl text-cobalto">Trabalhos e pecas de arquitetura</h2>
-                    <p class="text-sm text-slate-500 mb-4">Registro dos trabalhos apresentados em ordem do dia, com controle do envio em PDF para a Potencia e acervo futuro da Loja.</p>
+                    <h2 class="font-sans text-xl text-erp-navy">Trabalhos e pecas de arquitetura</h2>
+                    <p class="text-sm text-slate-700 mb-4">Registro dos trabalhos apresentados em ordem do dia, com controle do envio em PDF para a Potencia e acervo futuro da Loja.</p>
                     <form method="POST" action="/secretaria/trabalhos/salvar" class="grid gap-4 md:grid-cols-2">
                         <div>
                             <label class="block text-sm font-medium mb-1">Sessao</label>
@@ -736,19 +724,19 @@ $badgeStatusSessao = static function (?string $status): string {
                             <textarea name="observacao" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2"></textarea>
                         </div>
                         <div class="md:col-span-2">
-                            <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-white font-medium">Registrar trabalho</button>
+                            <button type="submit" class="rounded-lg bg-erp-navy px-4 py-2 text-white font-medium">Registrar trabalho</button>
                         </div>
                     </form>
 
                     <div class="mt-6 space-y-3">
                         <?php foreach ($trabalhos as $trabalho): ?>
                             <div class="rounded-xl border border-slate-200 p-4">
-                                <div class="font-medium text-cobalto"><?= htmlspecialchars($trabalho['titulo']) ?></div>
-                                <div class="text-sm text-slate-500 mt-1">
+                                <div class="font-medium text-erp-navy"><?= htmlspecialchars($trabalho['titulo']) ?></div>
+                                <div class="text-sm text-slate-700 mt-1">
                                     <?= htmlspecialchars($trabalho['sessao_titulo'] ?: (string) ($trabalho['data_hora_inicio'] ?? '')) ?>
                                     · <?= htmlspecialchars($trabalho['autor_nome'] ?: ($trabalho['autor_nome_livre'] ?? 'Autor nao informado')) ?>
                                 </div>
-                                <div class="text-xs text-slate-500 mt-1">Status Potencia: <?= htmlspecialchars((string) $trabalho['status_envio_potencia']) ?></div>
+                                <div class="text-xs text-slate-700 mt-1">Status Potencia: <?= htmlspecialchars((string) $trabalho['status_envio_potencia']) ?></div>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -757,8 +745,8 @@ $badgeStatusSessao = static function (?string $status): string {
 
             <section class="space-y-6">
                 <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
-                    <h2 class="font-display text-xl text-cobalto">Balaustre e votacao</h2>
-                    <p class="text-sm text-slate-500 mb-4">
+                    <h2 class="font-sans text-xl text-erp-navy">Balaustre e votacao</h2>
+                    <p class="text-sm text-slate-700 mb-4">
                         O Secretario prepara o balaustre e deixa apto para votacao. A abertura e o encerramento da votacao ficam sob atribuicao do Veneravel Mestre.
                     </p>
 
@@ -784,7 +772,7 @@ $badgeStatusSessao = static function (?string $status): string {
 
                         <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
                             <h3 class="text-sm font-semibold text-slate-700 mb-2">Palavra a bem da ordem (visitantes)</h3>
-                            <p class="text-xs text-slate-500 mb-3">
+                            <p class="text-xs text-slate-700 mb-3">
                                 Use as lojas frequentes como apoio de preenchimento. Registre as apresentacoes e agradecimentos dos visitantes.
                             </p>
                             <div class="mb-3">
@@ -813,7 +801,7 @@ $badgeStatusSessao = static function (?string $status): string {
 
                         <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
                             <h3 class="text-sm font-semibold text-slate-700 mb-2">Nominata de cargos da sessao</h3>
-                            <p class="text-xs text-slate-500 mb-3">
+                            <p class="text-xs text-slate-700 mb-3">
                                 O sistema assume <strong>regular</strong> quando o ocupante bate com o titular oficial da gestao. Se divergir, salva automaticamente como <strong>ad hoc</strong>.
                             </p>
                             <div class="space-y-2 max-h-80 overflow-y-auto pr-1">
@@ -823,7 +811,7 @@ $badgeStatusSessao = static function (?string $status): string {
                                         <input type="hidden" name="cargo_sessao_nome[]" value="<?= htmlspecialchars((string) ($cargoSessao['label'] ?? '')) ?>">
                                         <div class="md:col-span-3 rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs text-slate-700">
                                             <div class="font-semibold"><?= htmlspecialchars((string) ($cargoSessao['label'] ?? 'Cargo')) ?></div>
-                                            <div class="text-slate-500"><?= htmlspecialchars((string) ($cargoSessao['codigo'] ?? '')) ?></div>
+                                            <div class="text-slate-700"><?= htmlspecialchars((string) ($cargoSessao['codigo'] ?? '')) ?></div>
                                         </div>
                                         <div class="md:col-span-3">
                                             <input type="text" name="cargo_sessao_titular_oficial[]" value="<?= htmlspecialchars((string) ($cargoSessao['titular_oficial'] ?? '')) ?>" placeholder="Titular oficial" class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm">
@@ -841,7 +829,7 @@ $badgeStatusSessao = static function (?string $status): string {
 
                         <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
                             <h3 class="text-sm font-semibold text-slate-700 mb-2">Saco de propostas: visitas a outras Lojas</h3>
-                            <p class="text-xs text-slate-500 mb-3">
+                            <p class="text-xs text-slate-700 mb-3">
                                 Registre aqui quando algum membro do quadro da Loja informar visita realizada a outra Loja.
                             </p>
                             <div class="space-y-2">
@@ -983,7 +971,7 @@ $badgeStatusSessao = static function (?string $status): string {
                             <textarea name="dados_capturados" rows="2" placeholder='{"outros":"campos complementares"}' class="w-full rounded-lg border border-slate-300 px-3 py-2"></textarea>
                         </div>
                         <div class="md:col-span-2">
-                            <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-white font-medium">Salvar balaustre</button>
+                            <button type="submit" class="rounded-lg bg-erp-navy px-4 py-2 text-white font-medium">Salvar balaustre</button>
                         </div>
                     </form>
                     <?php endif; ?>
@@ -991,12 +979,12 @@ $badgeStatusSessao = static function (?string $status): string {
                     <div class="mt-6 space-y-3">
                         <?php foreach ($balaustres as $balaustre): ?>
                             <div class="rounded-xl border border-slate-200 p-4">
-                                <div class="font-medium text-cobalto">
+                                <div class="font-medium text-erp-navy">
                                     <?= htmlspecialchars($balaustre['numero_balaustre'] ?: 'Sem numero') ?>
                                     · <?= htmlspecialchars($balaustre['sessao_titulo'] ?: (string) ($balaustre['data_hora_inicio'] ?? '')) ?>
                                 </div>
-                                <div class="text-sm text-slate-500 mt-1">Status: <?= htmlspecialchars((string) ($balaustre['status'] ?? '')) ?></div>
-                                <div class="text-xs text-slate-500 mt-1">
+                                <div class="text-sm text-slate-700 mt-1">Status: <?= htmlspecialchars((string) ($balaustre['status'] ?? '')) ?></div>
+                                <div class="text-xs text-slate-700 mt-1">
                                     Palavra a bem da ordem: <?= (int) ($balaustre['resumo_palavra_bem_ordem'] ?? 0) ?> registro(s)
                                     · Cargos ad hoc: <?= (int) ($balaustre['resumo_cargos_ad_hoc'] ?? 0) ?>
                                 </div>
@@ -1005,14 +993,14 @@ $badgeStatusSessao = static function (?string $status): string {
                                     <?php if ($podeOperarSecretaria && (($balaustre['status'] ?? '') !== 'em_votacao')): ?>
                                     <form method="POST" action="/secretaria/balaustres/apto">
                                         <input type="hidden" name="balaustre_id" value="<?= (int) $balaustre['id'] ?>">
-                                        <button type="submit" class="rounded-md border border-cobalto px-3 py-1.5 text-sm text-cobalto">Deixar apto para votacao</button>
+                                        <button type="submit" class="rounded-md border border-erp-navy px-3 py-1.5 text-sm text-erp-navy">Deixar apto para votacao</button>
                                     </form>
                                     <?php endif; ?>
 
                                     <?php if ($podeAbrirVotacao && (($balaustre['status'] ?? '') === 'apto_votacao')): ?>
                                     <form method="POST" action="/secretaria/balaustres/abrir-votacao">
                                         <input type="hidden" name="balaustre_id" value="<?= (int) $balaustre['id'] ?>">
-                                        <button type="submit" class="rounded-md bg-cobalto px-3 py-1.5 text-sm text-white">Abrir votacao (Veneravel Mestre)</button>
+                                        <button type="submit" class="rounded-md bg-erp-navy px-3 py-1.5 text-sm text-white">Abrir votacao (Veneravel Mestre)</button>
                                     </form>
                                     <?php endif; ?>
 
@@ -1025,7 +1013,7 @@ $badgeStatusSessao = static function (?string $status): string {
                                             <option value="rejeitar">rejeitar</option>
                                         </select>
                                         <input type="text" name="justificativa" placeholder="Justificativa (opcional)" class="rounded-md border border-slate-300 px-2 py-1 text-sm">
-                                        <button type="submit" class="rounded-md border border-cobalto px-3 py-1.5 text-sm text-cobalto">Votar</button>
+                                        <button type="submit" class="rounded-md border border-erp-navy px-3 py-1.5 text-sm text-erp-navy">Votar</button>
                                     </form>
                                     <?php endif; ?>
 
@@ -1042,8 +1030,8 @@ $badgeStatusSessao = static function (?string $status): string {
                 </div>
 
                 <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
-                    <h2 class="font-display text-xl text-cobalto">Publicacoes oficiais</h2>
-                    <p class="text-sm text-slate-500 mb-4">Informativos das Potencias, agenda, proxima sessao e convites externos sob rastreio da Secretaria.</p>
+                    <h2 class="font-sans text-xl text-erp-navy">Publicacoes oficiais</h2>
+                    <p class="text-sm text-slate-700 mb-4">Informativos das Potencias, agenda, proxima sessao e convites externos sob rastreio da Secretaria.</p>
                     <form method="POST" action="/secretaria/publicacoes/salvar" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium mb-1">Tipo de publicacao</label>
@@ -1088,19 +1076,19 @@ $badgeStatusSessao = static function (?string $status): string {
                             <label class="block text-sm font-medium mb-1">Observacao</label>
                             <textarea name="observacao" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2"></textarea>
                         </div>
-                        <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-white font-medium">Registrar publicacao</button>
+                        <button type="submit" class="rounded-lg bg-erp-navy px-4 py-2 text-white font-medium">Registrar publicacao</button>
                     </form>
                 </div>
 
                 <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
-                    <h2 class="font-display text-xl text-cobalto">Ultimos registros</h2>
+                    <h2 class="font-sans text-xl text-erp-navy">Ultimos registros</h2>
                     <div class="space-y-3 mt-4">
                         <?php foreach ($publicacoes as $publicacao): ?>
                             <div class="rounded-xl border border-slate-200 p-4">
-                                <div class="font-medium text-cobalto"><?= htmlspecialchars($publicacao['titulo']) ?></div>
-                                <div class="text-sm text-slate-500 mt-1"><?= htmlspecialchars((string) $publicacao['tipo_publicacao']) ?> · <?= htmlspecialchars((string) $publicacao['status_publicacao']) ?></div>
+                                <div class="font-medium text-erp-navy"><?= htmlspecialchars($publicacao['titulo']) ?></div>
+                                <div class="text-sm text-slate-700 mt-1"><?= htmlspecialchars((string) $publicacao['tipo_publicacao']) ?> · <?= htmlspecialchars((string) $publicacao['status_publicacao']) ?></div>
                                 <?php if (!empty($publicacao['origem'])): ?>
-                                    <div class="text-xs text-slate-500 mt-1">Origem: <?= htmlspecialchars((string) $publicacao['origem']) ?></div>
+                                    <div class="text-xs text-slate-700 mt-1">Origem: <?= htmlspecialchars((string) $publicacao['origem']) ?></div>
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
@@ -1108,8 +1096,8 @@ $badgeStatusSessao = static function (?string $status): string {
                 </div>
 
                 <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
-                    <h2 class="font-display text-xl text-cobalto">Responsabilidades consolidadas</h2>
-                    <ul class="mt-4 space-y-2 text-sm text-slate-600 list-disc pl-5">
+                    <h2 class="font-sans text-xl text-erp-navy">Responsabilidades consolidadas</h2>
+                    <ul class="mt-4 space-y-2 text-sm text-slate-700 list-disc pl-5">
                         <li>Cadastro e atualizacao dos membros, inclusive grau e acesso a plataformas externas.</li>
                         <li>Operacao central das sessoes, publicacoes e fluxo documental da Loja.</li>
                         <li>Registro dos trabalhos da ordem do dia e preservacao do acervo em PDF.</li>
@@ -1118,6 +1106,4 @@ $badgeStatusSessao = static function (?string $status): string {
                 </div>
             </section>
         </div>
-    </div>
-</body>
-</html>
+<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>

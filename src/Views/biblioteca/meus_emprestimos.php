@@ -8,8 +8,24 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meus emprestimos</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-[11px] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-800">
+<body class="erp-readable bg-slate-50 min-h-screen text-slate-800">
     <header class="bg-blue-900 text-white">
         <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
             <div>
@@ -26,7 +42,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                 <div>
                     <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Leitura pessoal</div>
                     <h2 class="mt-1 text-xl font-semibold text-blue-900">Historico de emprestimos</h2>
-                    <p class="mt-1 text-sm text-slate-500">Acompanhe seus livros, prazos e situacao de devolucao.</p>
+                    <p class="mt-1 text-sm text-slate-700">Acompanhe seus livros, prazos e situacao de devolucao.</p>
                 </div>
                 <a href="/biblioteca" class="text-blue-700 hover:underline text-sm font-medium">Voltar ao catalogo</a>
             </div>
@@ -50,21 +66,21 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0 flex-1">
                                 <div class="text-base font-semibold text-slate-900"><?= htmlspecialchars((string) ($emp['titulo'] ?? '-')) ?></div>
-                                <div class="mt-1 text-xs font-mono text-slate-500"><?= htmlspecialchars((string) ($emp['codigo_acervo'] ?? '')) ?></div>
+                                <div class="mt-1 text-xs font-mono text-slate-700"><?= htmlspecialchars((string) ($emp['codigo_acervo'] ?? '')) ?></div>
                             </div>
                             <span class="rounded-full border px-2.5 py-1 text-xs font-medium <?= $statusClasses ?>">
                                 <?= htmlspecialchars(ucfirst((string) ($emp['status'] ?? '-'))) ?>
                             </span>
                         </div>
 
-                        <div class="mt-3 space-y-2 text-sm text-slate-600">
+                        <div class="mt-3 space-y-2 text-sm text-slate-700">
                             <div><span class="font-medium text-slate-700">Emprestimo:</span> <?= htmlspecialchars((string) ($emp['data_emprestimo'] ?? '-')) ?></div>
                             <div><span class="font-medium text-slate-700">Devolucao prevista:</span> <?= htmlspecialchars((string) ($emp['data_devolucao_prevista'] ?? '-')) ?></div>
                         </div>
                     </article>
                 <?php endforeach; ?>
             <?php else: ?>
-                <div class="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500 shadow-sm">Nenhum emprestimo registrado.</div>
+                <div class="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-700 shadow-sm">Nenhum emprestimo registrado.</div>
             <?php endif; ?>
         </div>
 
@@ -92,7 +108,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" class="px-4 py-8 text-center text-slate-500">Nenhum emprestimo registrado.</td>
+                            <td colspan="5" class="px-4 py-8 text-center text-slate-700">Nenhum emprestimo registrado.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -101,3 +117,4 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
     </main>
 </body>
 </html>
+

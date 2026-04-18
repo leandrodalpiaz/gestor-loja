@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -104,7 +104,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Falha na operacao.');
+    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel concluir esta acao agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -159,7 +159,7 @@ function render() {
 
     const sessao = dashboard.sessao_foco;
     document.getElementById('sessao-titulo').textContent = sessao ? (sessao.titulo || 'Sessao') : 'Sem sessao em foco';
-    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} · ${sessao.status || ''}` : 'Sem dados';
+    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} Â· ${sessao.status || ''}` : 'Sem dados';
     document.getElementById('meta-confirmados').textContent = sessao ? (sessao.total_confirmados || 0) : 0;
     document.getElementById('meta-agape').textContent = sessao ? (sessao.total_agape || 0) : 0;
     document.getElementById('meta-aptos').textContent = dashboard.balaustres_aptos?.length || 0;
@@ -170,7 +170,7 @@ function render() {
     (dashboard.sessoes || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.titulo || 'Sessao'} · ${item.status || ''}`;
+        option.textContent = `${item.titulo || 'Sessao'} Â· ${item.status || ''}`;
         if (sessao && item.id === sessao.id) option.selected = true;
         select.appendChild(option);
     });
@@ -183,7 +183,7 @@ function render() {
     }));
     renderListaSimples('lista-obreiros-pendentes', dashboard.obreiros_pendentes_criticos, 'Sem pendencias cadastrais criticas.', item => ({
         nome: item.nome,
-        linha: `CIM ${item.cim || '-'} · ${Array.isArray(item.alertas) ? item.alertas.join(', ') : ''}`
+        linha: `CIM ${item.cim || '-'} Â· ${Array.isArray(item.alertas) ? item.alertas.join(', ') : ''}`
     }));
 }
 
@@ -222,3 +222,4 @@ carregar();
 </script>
 </body>
 </html>
+

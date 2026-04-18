@@ -42,7 +42,7 @@ $gruposNominata = [
 $erpPageTitle = 'Nominata Oficial';
 $appShellEyebrow = 'Administracao';
 $appShellTitle = 'Nominata Oficial e Gestoes';
-$appShellDescription = 'Cargos eleitos, nomeados e historico administrativo da gestao em exercicio.';
+$appShellDescription = 'Cargos eleitos, nomeados e histórico administrativo da gestão em exercício.';
 $appShellActiveHref = '/admin/cargos';
 $appShellActions = [
     ['label' => 'Parametros da Loja', 'href' => '/admin/loja'],

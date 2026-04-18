@@ -263,8 +263,24 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
     <title>Meu Financeiro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-[11px] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-[linear-gradient(180deg,#f8f3e8_0%,#f4f4f5_42%,#ffffff_100%)] text-slate-900">
+<body class="erp-readable min-h-screen bg-[linear-gradient(180deg,#f8f3e8_0%,#f4f4f5_42%,#ffffff_100%)] text-slate-900">
 <div class="mx-auto max-w-7xl px-4 py-6">
     <section class="overflow-hidden rounded-[2rem] bg-slate-950 text-stone-100 shadow-2xl">
         <div class="bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.24),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(148,163,184,0.28),transparent_28%)] px-6 py-7 sm:px-8">
@@ -278,7 +294,7 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
                 </div>
                 <div class="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
                     <div class="uppercase tracking-[0.18em] text-amber-200">Ajuste inicial 2026</div>
-                    <div class="mt-1 text-slate-300">Janeiro, fevereiro e marco de 2026 aparecem como pagos para todos os irmaos.</div>
+                    <div class="mt-1 text-slate-300">Janeiro, fevereiro e marco de 2026 aparecem como quitados no ajuste inicial do sistema.</div>
                 </div>
             </div>
             <div class="mt-4 flex flex-wrap items-center gap-3">
@@ -327,7 +343,7 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
             <div class="mt-2 text-2xl font-semibold text-slate-900">
                 <?php echo $proximaObrigacao && !empty($proximaObrigacao['vencimento']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $proximaObrigacao['vencimento']))) : 'Sem previsao'; ?>
             </div>
-            <div class="mt-2 text-sm text-slate-500">Mensalidades seguem orientadas para o dia 10. Obrigacoes futuras ficam apenas programadas ate se aproximarem do pagamento.</div>
+            <div class="mt-2 text-sm text-slate-700">Mensalidades seguem orientadas para o dia 10. Obrigacoes futuras ficam apenas programadas ate se aproximarem do pagamento.</div>
         </div>
         <?php if ($joiaResumo !== null): ?>
             <div class="rounded-[1.75rem] border border-violet-100 bg-violet-50 p-5 shadow-sm sm:col-span-2 xl:col-span-4">
@@ -366,7 +382,7 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
                         <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Painel mensal</p>
                         <h2 class="mt-1 text-2xl font-semibold">Mes a mes da Loja</h2>
                     </div>
-                    <div class="text-sm text-slate-500">Visualmente aparente: total pago, total previsto e lista de obrigacoes dentro de cada competencia.</div>
+                    <div class="text-sm text-slate-700">Visualmente aparente: total pago, total previsto e lista de obrigacoes dentro de cada competencia.</div>
                 </div>
 
                 <div class="mt-5 space-y-4">
@@ -395,7 +411,7 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
                                 <div>
                                     <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Competencia</p>
                                     <h3 class="mt-2 text-2xl font-semibold text-slate-900"><?php echo htmlspecialchars((string) $mesFinanceiro['rotulo']); ?></h3>
-                                    <p class="mt-2 text-sm leading-6 text-slate-600">Resumo consolidado do mes para voce enxergar rapidamente o que ja entrou e o que ainda depende de pagamento.</p>
+                                    <p class="mt-2 text-sm leading-6 text-slate-700">Resumo consolidado do mes para voce enxergar rapidamente o que ja entrou e o que ainda depende de pagamento.</p>
                                     <?php if ($mostrarPixMes): ?>
                                         <button
                                             type="button"
@@ -407,7 +423,7 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
                                     <?php endif; ?>
                                 </div>
 
-                                <div class="grid gap-2 rounded-[1.5rem] bg-white p-4 text-sm text-slate-600 shadow-sm sm:grid-cols-3 xl:min-w-[380px]">
+                                <div class="grid gap-2 rounded-[1.5rem] bg-white p-4 text-sm text-slate-700 shadow-sm sm:grid-cols-3 xl:min-w-[380px]">
                                     <div>
                                         <div class="text-xs uppercase tracking-[0.16em] text-slate-400">Pago</div>
                                         <div class="mt-1 text-lg font-semibold text-emerald-700"><?php echo $formatCurrency($mesFinanceiro['total_pago']); ?></div>
@@ -425,7 +441,7 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
 
                             <div class="mt-5 grid gap-3 lg:grid-cols-2">
                                 <?php if ($mesFinanceiro['itens'] === []): ?>
-                                    <div class="lg:col-span-2 rounded-[1.35rem] border border-dashed border-stone-300 bg-white px-4 py-5 text-sm text-slate-500">
+                                    <div class="lg:col-span-2 rounded-[1.35rem] border border-dashed border-stone-300 bg-white px-4 py-5 text-sm text-slate-700">
                                         Nenhuma obrigacao lancada neste mes ainda. Quando houver mensalidade, biblioteca, joia ou outra cobranca, ela aparecera aqui.
                                     </div>
                                 <?php endif; ?>
@@ -435,7 +451,7 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
                                     $badgeLabel = 'Programada';
                                     if (!empty($parcela['pago_presumido'])) {
                                         $badgeClass = 'bg-sky-100 text-sky-700';
-                                        $badgeLabel = 'Pagto teste';
+                                        $badgeLabel = 'Quitado no ajuste inicial';
                                     } elseif (($parcela['status_exibicao'] ?? '') === 'pago') {
                                         $badgeClass = 'bg-emerald-100 text-emerald-700';
                                         $badgeLabel = 'Pago';
@@ -451,7 +467,7 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
                                         <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                             <div>
                                                 <div class="text-sm font-semibold text-slate-900"><?php echo htmlspecialchars((string) $parcela['obrigacao_titulo']); ?></div>
-                                                <div class="mt-1 text-sm text-slate-500">
+                                                <div class="mt-1 text-sm text-slate-700">
                                                     <?php echo htmlspecialchars((string) ($parcela['competencia_label'] ?? '-')); ?> • vencimento <?php echo !empty($parcela['vencimento']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $parcela['vencimento']))) : '-'; ?>
                                                     <?php if (!empty($parcela['pago_em'])): ?>
                                                         • pago em <?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $parcela['pago_em']))); ?>
@@ -463,7 +479,7 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
                                                 <span class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] <?php echo $badgeClass; ?>"><?php echo $badgeLabel; ?></span>
                                             </div>
                                         </div>
-                                        <div class="mt-3 text-sm text-slate-500"><?php echo htmlspecialchars((string) ($parcela['descricao_status'] ?? '')); ?></div>
+                                        <div class="mt-3 text-sm text-slate-700"><?php echo htmlspecialchars((string) ($parcela['descricao_status'] ?? '')); ?></div>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
@@ -479,18 +495,18 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
                 <h2 class="mt-1 text-2xl font-semibold">Historico recente</h2>
                 <div class="mt-4 space-y-3">
                     <?php if ($pagasRecentes === []): ?>
-                        <div class="rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 p-5 text-sm text-slate-500">Ainda nao ha compromissos reconhecidos como pagos.</div>
+                        <div class="rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 p-5 text-sm text-slate-700">Ainda nao ha compromissos reconhecidos como pagos.</div>
                     <?php endif; ?>
                     <?php foreach ($pagasRecentes as $parcela): ?>
                         <div class="rounded-[1.4rem] border border-stone-200 bg-stone-50 px-4 py-4">
                             <div class="flex items-start justify-between gap-4">
                                 <div>
                                     <div class="text-sm font-semibold text-slate-900"><?php echo htmlspecialchars((string) $parcela['obrigacao_titulo']); ?></div>
-                                    <div class="mt-1 text-sm text-slate-500"><?php echo htmlspecialchars((string) ($parcela['competencia_label'] ?? '-')); ?></div>
+                                    <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars((string) ($parcela['competencia_label'] ?? '-')); ?></div>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-sm font-semibold text-emerald-700"><?php echo $formatCurrency($parcela['valor_previsto'] ?? 0); ?></div>
-                                    <div class="mt-1 text-xs text-slate-500"><?php echo !empty($parcela['pago_presumido']) ? 'Pagto teste' : 'Pago'; ?></div>
+                                    <div class="mt-1 text-xs text-slate-700"><?php echo !empty($parcela['pago_presumido']) ? 'Quitado no ajuste inicial' : 'Pago'; ?></div>
                                 </div>
                             </div>
                         </div>
@@ -503,14 +519,14 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
                 <h2 class="mt-1 text-2xl font-semibold">Acompanhar agora</h2>
                 <div class="mt-4 space-y-3">
                     <?php if ($proximosCompromissos === []): ?>
-                        <div class="rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 p-5 text-sm text-slate-500">Nenhuma obrigacao futura programada no momento.</div>
+                        <div class="rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 p-5 text-sm text-slate-700">Nenhuma obrigacao futura programada no momento.</div>
                     <?php endif; ?>
                     <?php foreach ($proximosCompromissos as $parcela): ?>
                         <div class="rounded-[1.4rem] border border-stone-200 bg-stone-50 px-4 py-4">
                             <div class="flex items-start justify-between gap-4">
                                 <div>
                                     <div class="text-sm font-semibold text-slate-900"><?php echo htmlspecialchars((string) $parcela['obrigacao_titulo']); ?></div>
-                                    <div class="mt-1 text-sm text-slate-500"><?php echo htmlspecialchars((string) ($parcela['competencia_label'] ?? '-')); ?> • programada para <?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $parcela['vencimento']))); ?></div>
+                                    <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars((string) ($parcela['competencia_label'] ?? '-')); ?> • programada para <?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $parcela['vencimento']))); ?></div>
                                 </div>
                                 <div class="text-right text-sm font-semibold text-slate-900"><?php echo $formatCurrency($parcela['valor_previsto'] ?? 0); ?></div>
                             </div>
@@ -531,7 +547,7 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
                             <div class="flex items-start justify-between gap-4">
                                 <div>
                                     <div class="text-sm font-semibold text-slate-900"><?php echo htmlspecialchars((string) $parcela['obrigacao_titulo']); ?></div>
-                                    <div class="mt-1 text-sm text-slate-500"><?php echo htmlspecialchars((string) ($parcela['competencia_label'] ?? '-')); ?> • previsto para <?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $parcela['vencimento']))); ?></div>
+                                    <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars((string) ($parcela['competencia_label'] ?? '-')); ?> • previsto para <?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $parcela['vencimento']))); ?></div>
                                 </div>
                                 <div class="text-right text-sm font-semibold text-rose-700"><?php echo $formatCurrency($parcela['valor_previsto'] ?? 0); ?></div>
                             </div>
@@ -544,3 +560,4 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
 </div>
 </body>
 </html>
+

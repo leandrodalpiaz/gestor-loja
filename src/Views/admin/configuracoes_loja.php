@@ -6,7 +6,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 $erpPageTitle = 'Parametros da Loja';
 $appShellEyebrow = 'Administracao';
 $appShellTitle = 'Parametros da Loja';
-$appShellDescription = 'Cadastro oficial, parametros institucionais e memoria administrativa da Loja.';
+$appShellDescription = 'Cadastro oficial, parâmetros institucionais e memória administrativa da Loja.';
 $appShellActiveHref = '/admin/loja';
 $appShellActions = [
     ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],

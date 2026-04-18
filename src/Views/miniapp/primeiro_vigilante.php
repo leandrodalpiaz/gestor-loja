@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -132,7 +132,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Falha na operacao.');
+    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel concluir esta acao agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -155,7 +155,7 @@ function renderLista(id, itens, vazio, mapper) {
 function renderEtapas() {
     const etapas = dashboard?.aprendiz_foco?.etapas || [];
     renderLista('lista-etapas', etapas, 'Sem etapas registradas.', item => ({
-        nome: `Etapa ${item.ordem} · ${item.titulo}`,
+        nome: `Etapa ${item.ordem} Â· ${item.titulo}`,
         linha: item.status
     }));
 }
@@ -167,7 +167,7 @@ function render() {
     const foco = dashboard.aprendiz_foco;
     const aprendiz = foco?.aprendiz;
     document.getElementById('aprendiz-nome').textContent = aprendiz?.nome || 'Sem Aprendiz';
-    document.getElementById('aprendiz-meta').textContent = `CIM ${aprendiz?.cim || '-'} · Iniciacao ${aprendiz?.data_iniciacao || '-'}`;
+    document.getElementById('aprendiz-meta').textContent = `CIM ${aprendiz?.cim || '-'} Â· Iniciacao ${aprendiz?.data_iniciacao || '-'}`;
     document.getElementById('meta-etapa').textContent = foco?.resumo?.etapa_atual ? `${foco.resumo.etapa_atual.ordem}` : '-';
     document.getElementById('meta-percentual').textContent = `${foco?.resumo?.percentual_conclusao || 0}%`;
 
@@ -176,7 +176,7 @@ function render() {
     (dashboard.aprendizes || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.nome} · CIM ${item.cim || '-'}`;
+        option.textContent = `${item.nome} Â· CIM ${item.cim || '-'}`;
         if (aprendiz && item.id === aprendiz.id) option.selected = true;
         select.appendChild(option);
     });
@@ -210,7 +210,7 @@ function render() {
     renderEtapas();
     renderLista('lista-historico', foco?.historico_formativo || [], 'Sem historico formativo registrado.', item => ({
         nome: item.titulo || item.tipo,
-        linha: `${item.momento || '-'} · ${item.descricao || ''}`
+        linha: `${item.momento || '-'} Â· ${item.descricao || ''}`
     }));
 }
 
@@ -288,3 +288,4 @@ carregar();
 </script>
 </body>
 </html>
+

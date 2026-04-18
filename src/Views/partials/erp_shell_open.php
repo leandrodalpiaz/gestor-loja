@@ -7,13 +7,13 @@ $appShellSidebarSections = is_array($appShellSidebarSections ?? null) ? $appShel
 $appShellActiveHref = (string) ($appShellActiveHref ?? '');
 $appShellUserLabel = (string) ($appShellUserLabel ?? ($_SESSION['usuario_nome'] ?? 'Operador'));
 ?>
-<body class="min-h-screen bg-erp-app font-sans text-erp-text">
+<body class="erp-readable min-h-screen bg-erp-app font-sans text-erp-text">
 <div class="min-h-screen lg:grid lg:grid-cols-[296px_minmax(0,1fr)]">
     <aside class="hidden border-r border-erp-border bg-white lg:flex lg:flex-col">
         <div class="border-b border-erp-border px-7 py-7">
             <div class="text-sm font-semibold uppercase tracking-[0.24em] text-erp-gold"><?= htmlspecialchars($appShellEyebrow !== '' ? $appShellEyebrow : 'Gestor-Loja') ?></div>
-            <div class="mt-3 text-3xl font-semibold text-erp-navy">Painel ERP</div>
-            <div class="mt-3 text-base leading-7 text-erp-muted">Operacao centralizada, acesso rapido e leitura administrativa consistente.</div>
+            <div class="mt-3 text-2xl font-semibold text-erp-navy">Painel ERP</div>
+            <div class="mt-3 text-sm leading-6 text-erp-muted">Gestão centralizada, acesso rápido e visão administrativa clara.</div>
         </div>
         <div class="flex-1 overflow-y-auto px-5 py-6">
             <?php foreach ($appShellSidebarSections as $section): ?>
@@ -43,9 +43,9 @@ $appShellUserLabel = (string) ($appShellUserLabel ?? ($_SESSION['usuario_nome'] 
                     <?php if ($appShellEyebrow !== ''): ?>
                         <div class="text-sm font-semibold uppercase tracking-[0.24em] text-erp-gold"><?= htmlspecialchars($appShellEyebrow) ?></div>
                     <?php endif; ?>
-                    <h1 class="mt-2 text-4xl font-semibold text-erp-navy"><?= htmlspecialchars($appShellTitle) ?></h1>
+                    <h1 class="mt-2 text-3xl font-semibold text-erp-navy"><?= htmlspecialchars($appShellTitle) ?></h1>
                     <?php if ($appShellDescription !== ''): ?>
-                        <p class="mt-3 max-w-4xl text-base leading-7 text-erp-muted"><?= htmlspecialchars($appShellDescription) ?></p>
+                        <p class="mt-3 max-w-4xl text-sm leading-6 text-erp-muted"><?= htmlspecialchars($appShellDescription) ?></p>
                     <?php endif; ?>
                 </div>
                 <?php if ($appShellActions !== []): ?>

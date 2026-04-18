@@ -19,8 +19,24 @@ $semAgape = array_values(array_filter(
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-\[11px\] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-[linear-gradient(180deg,#f8f4ea_0%,#eef2f7_100%)] font-sans text-slate-900">
+<body class="erp-readable min-h-screen bg-[linear-gradient(180deg,#f8f4ea_0%,#eef2f7_100%)] font-sans text-slate-900">
     <div class="mx-auto max-w-6xl px-4 py-8">
         <header class="mb-8 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d3b269,transparent_28%),linear-gradient(135deg,#172030,#27364a)] px-6 py-7 text-white shadow-2xl">
             <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Painel do Mestre de Banquetes</p>
@@ -45,7 +61,7 @@ $semAgape = array_values(array_filter(
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div>
                             <h2 class="text-2xl font-semibold text-slate-900">Sessao em foco</h2>
-                            <p class="mt-2 text-sm text-slate-600">O Mestre de Banquetes pode alternar a sessao de trabalho para fechar previsao e operacao do agape.</p>
+                            <p class="mt-2 text-sm text-slate-700">O Mestre de Banquetes pode alternar a sessao de trabalho para fechar previsao e operacao do agape.</p>
                         </div>
                         <form method="GET" action="/mestre-banquetes" class="w-full max-w-md">
                             <label for="sessao_id" class="mb-1 block text-sm font-medium text-slate-700">Selecionar sessao</label>
@@ -62,7 +78,7 @@ $semAgape = array_values(array_filter(
                     <?php if ($sessaoEmFoco): ?>
                         <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                             <div class="text-lg font-semibold text-slate-900"><?= htmlspecialchars($sessaoEmFoco['titulo'] ?: (($sessaoEmFoco['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoEmFoco['grau_sessao'] ?? ''))) ?></div>
-                            <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? '')) ?></div>
+                            <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? '')) ?></div>
                             <div class="mt-3 flex flex-wrap gap-2 text-xs">
                                 <span class="rounded-full bg-white px-3 py-1 text-slate-700">Confirmados: <?= count($confirmados) ?></span>
                                 <span class="rounded-full bg-white px-3 py-1 text-slate-700">Agape: <?= count($participantesAgape) ?></span>
@@ -74,7 +90,7 @@ $semAgape = array_values(array_filter(
                             </div>
                         </div>
                     <?php else: ?>
-                        <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Nenhuma sessao futura cadastrada.</div>
+                        <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Nenhuma sessao futura cadastrada.</div>
                     <?php endif; ?>
                 </article>
 
@@ -82,7 +98,7 @@ $semAgape = array_values(array_filter(
                     <div class="flex items-center justify-between gap-3">
                         <div>
                             <h2 class="text-2xl font-semibold text-slate-900">Operacao do banquete</h2>
-                            <p class="mt-2 text-sm text-slate-600">Registre previsao, observacoes e o status logistico do agape.</p>
+                            <p class="mt-2 text-sm text-slate-700">Registre previsao, observacoes e o status logistico do agape.</p>
                         </div>
                         <a href="/miniapp/mestre-banquetes" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">Abrir mobile</a>
                     </div>
@@ -113,17 +129,17 @@ $semAgape = array_values(array_filter(
 
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 class="text-2xl font-semibold text-slate-900">Participantes do agape</h2>
-                    <p class="mt-2 text-sm text-slate-600">Lista pratica dos confirmados que optaram por participar do agape.</p>
+                    <p class="mt-2 text-sm text-slate-700">Lista pratica dos confirmados que optaram por participar do agape.</p>
                     <div class="mt-4 space-y-3">
                         <?php if ($participantesAgape !== []): ?>
                             <?php foreach ($participantesAgape as $participante): ?>
                                 <div class="rounded-2xl border border-amber-200 bg-[linear-gradient(135deg,#fffdf7,#f7f0df)] px-4 py-3">
                                     <div class="font-medium text-slate-900"><?= htmlspecialchars((string) ($participante['nome'] ?? 'Obreiro')) ?></div>
-                                    <div class="mt-1 text-sm text-slate-600">CIM: <?= htmlspecialchars((string) ($participante['cim'] ?? '-')) ?></div>
+                                    <div class="mt-1 text-sm text-slate-700">CIM: <?= htmlspecialchars((string) ($participante['cim'] ?? '-')) ?></div>
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Ainda nao ha participantes confirmados com agape.</div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Ainda nao ha participantes confirmados com agape.</div>
                         <?php endif; ?>
                     </div>
                 </article>
@@ -137,11 +153,11 @@ $semAgape = array_values(array_filter(
                             <?php foreach ($semAgape as $confirmado): ?>
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                                     <div class="font-medium text-slate-900"><?= htmlspecialchars((string) ($confirmado['nome'] ?? 'Obreiro')) ?></div>
-                                    <div class="mt-1 text-sm text-slate-600">CIM: <?= htmlspecialchars((string) ($confirmado['cim'] ?? '-')) ?></div>
+                                    <div class="mt-1 text-sm text-slate-700">CIM: <?= htmlspecialchars((string) ($confirmado['cim'] ?? '-')) ?></div>
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">Nao ha confirmados sem agape neste momento.</div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Nao ha confirmados sem agape neste momento.</div>
                         <?php endif; ?>
                     </div>
                 </article>
@@ -152,8 +168,8 @@ $semAgape = array_values(array_filter(
                         <?php foreach ($sessoes as $sessao): ?>
                             <a href="/mestre-banquetes?sessao_id=<?= (int) ($sessao['id'] ?? 0) ?>" class="block rounded-2xl border border-slate-200 bg-white px-4 py-3 hover:border-amber-300">
                                 <div class="font-medium text-slate-900"><?= htmlspecialchars($sessao['titulo'] ?: (($sessao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessao['grau_sessao'] ?? ''))) ?></div>
-                                <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?></div>
-                                <div class="mt-2 text-xs text-slate-500">Confirmados: <?= (int) ($sessao['total_confirmados'] ?? 0) ?> · Agape: <?= (int) ($sessao['total_agape'] ?? 0) ?></div>
+                                <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?></div>
+                                <div class="mt-2 text-xs text-slate-700">Confirmados: <?= (int) ($sessao['total_confirmados'] ?? 0) ?> · Agape: <?= (int) ($sessao['total_agape'] ?? 0) ?></div>
                             </a>
                         <?php endforeach; ?>
                     </div>

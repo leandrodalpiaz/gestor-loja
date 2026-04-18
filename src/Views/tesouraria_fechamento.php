@@ -12,8 +12,24 @@ if (!isset($_SESSION["usuario_logado"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fechamento Mensal - Tesouraria</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-[11px] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen text-gray-800">
+<body class="erp-readable bg-gray-50 min-h-screen text-gray-800">
     <div class="max-w-4xl mx-auto px-4 py-8">
         <header class="mb-6 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d6b672,transparent_30%),linear-gradient(135deg,#162033,#223145)] px-6 py-7 text-white shadow-xl">
             <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -225,3 +241,4 @@ if (!isset($_SESSION["usuario_logado"])) {
     </script>
 </body>
 </html>
+

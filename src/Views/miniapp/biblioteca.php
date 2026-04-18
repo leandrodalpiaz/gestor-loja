@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -104,7 +104,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Falha ao carregar biblioteca.');
+    if (!json.ok) throw new Error(json.erro || 'Nao foi possivel carregar os dados da biblioteca agora. Tente novamente em instantes.');
     return json;
 }
 
@@ -132,7 +132,7 @@ function render() {
     (dashboard.acervo || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.titulo} · ${item.autor}`;
+        option.textContent = `${item.titulo} Â· ${item.autor}`;
         if (Number(dashboard.item_foco?.id || 0) === Number(item.id)) {
             option.selected = true;
         }
@@ -146,10 +146,10 @@ function render() {
     document.getElementById('livro-foco').innerHTML = `
         <div class="font-medium">${esc(foco.titulo || 'Sem livro selecionado')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(foco.autor || '')}</div>
-        <div class="mt-2 text-xs text-gray-500">Codigo ${esc(foco.codigo_acervo || '-')} · ISBN ${esc(foco.isbn || '-')}</div>
+        <div class="mt-2 text-xs text-gray-500">Codigo ${esc(foco.codigo_acervo || '-')} Â· ISBN ${esc(foco.isbn || '-')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(foco.resumo || 'Sem resumo informado.')}</div>
-        <div class="mt-2 text-xs text-gray-500">Grau ${esc(foco.grau_recomendado || 'Livre')} · ${esc(foco.quantidade_disponivel || 0)} exemplar(es)</div>
-        <div class="mt-2 text-xs text-gray-500">${esc(foco.total_gostei_sim || 0)} gostei · ${esc(foco.total_gostei_nao || 0)} nao gostei</div>
+        <div class="mt-2 text-xs text-gray-500">Grau ${esc(foco.grau_recomendado || 'Livre')} Â· ${esc(foco.quantidade_disponivel || 0)} exemplar(es)</div>
+        <div class="mt-2 text-xs text-gray-500">${esc(foco.total_gostei_sim || 0)} gostei Â· ${esc(foco.total_gostei_nao || 0)} nao gostei</div>
     `;
     document.getElementById('btn-solicitar').disabled = !foco.id || !foco.pode_solicitar;
     document.getElementById('btn-solicitar').classList.toggle('opacity-50', !foco.id || !foco.pode_solicitar);
@@ -162,13 +162,13 @@ function render() {
 
     renderLista('lista-meus-emprestimos', dashboard.meus_emprestimos, 'Nenhum emprestimo registrado.', item => `
         <div class="font-medium">${esc(item.titulo || 'Livro')}</div>
-        <div class="mt-1 text-xs text-gray-500">Codigo ${esc(item.codigo_acervo || '-')} · ${esc(item.status || '-')}</div>
+        <div class="mt-1 text-xs text-gray-500">Codigo ${esc(item.codigo_acervo || '-')} Â· ${esc(item.status || '-')}</div>
         <div class="mt-2 text-sm text-gray-700">Previsto para ${esc(item.data_devolucao_prevista || '-')}</div>
     `);
 
     renderLista('lista-pendentes', dashboard.emprestimos_pendentes, 'Nenhum emprestimo pendente ou atrasado.', item => `
         <div class="font-medium">${esc(item.titulo || 'Livro')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(item.obreiro_nome || 'Obreiro')} · ${esc(item.status || '-')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.obreiro_nome || 'Obreiro')} Â· ${esc(item.status || '-')}</div>
         <div class="mt-2 text-sm text-gray-700">Devolucao prevista ${esc(item.data_devolucao_prevista || '-')}</div>
     `);
 }
@@ -218,3 +218,4 @@ carregar();
 </script>
 </body>
 </html>
+

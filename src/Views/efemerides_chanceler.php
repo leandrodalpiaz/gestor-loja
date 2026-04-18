@@ -1,24 +1,43 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sessao do Chanceler - Efemerides</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="min-h-screen bg-[linear-gradient(180deg,#f8f4ea_0%,#eef2f7_100%)] text-slate-800">
-    <div class="max-w-7xl mx-auto px-4 py-8">
+<?php
+$erpPageTitle = 'Sessao do Chanceler - Efemerides';
+$appShellEyebrow = 'Chancelaria';
+$appShellTitle = 'Efemerides e mensagem do dia';
+$appShellDescription = 'Operação de mensagem diária, cadastro de eventos e manutenção de registros da Loja.';
+$appShellActiveHref = '/chancelaria/efemerides';
+$appShellActions = [
+    ['label' => 'Voltar ao dashboard', 'href' => '/dashboard'],
+    ['label' => 'Emitir certificado', 'href' => '/chancelaria/certificado', 'primary' => true],
+];
+$appShellSidebarSections = [
+    [
+        'title' => 'Chancelaria',
+        'items' => [
+            ['label' => 'Efemerides', 'href' => '/chancelaria/efemerides'],
+            ['label' => 'Certificado', 'href' => '/chancelaria/certificado'],
+            ['label' => 'Sessao do Chanceler', 'href' => '/chanceler/sessao'],
+            ['label' => 'Dashboard', 'href' => '/dashboard'],
+        ],
+    ],
+];
+require __DIR__ . '/partials/erp_head.php';
+require __DIR__ . '/partials/erp_shell_open.php';
+?>
+    <div class="space-y-6">
         <?php $focoTela = trim((string) ($focoEfemeride ?? '')); ?>
-        <header class="mb-6 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d6b672,transparent_30%),linear-gradient(135deg,#162033,#223145)] px-6 py-7 text-white shadow-xl">
-            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <section class="rounded-3xl border border-erp-border bg-white px-6 py-5 shadow-sm">
+            <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
                 <div>
-                    <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Chancelaria</p>
-                    <h1 class="mt-2 text-3xl font-semibold">Efemerides e mensagem do dia</h1>
-                    <p class="mt-2 max-w-3xl text-sm text-slate-200">Aqui a Chancelaria revisa a mensagem do dia, atualiza os registros e mantem a memoria da Loja em ordem.</p>
+                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-erp-gold">Acesso rapido</p>
+                    <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Tarefas da Chancelaria</h2>
+                    <p class="mt-2 text-sm text-erp-muted">Priorize mensagem do dia, correcoes de registro e envio oficial sem trocar de tela.</p>
                 </div>
-                <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao dashboard</a>
+                <div class="flex flex-wrap gap-2">
+                    <a href="/chancelaria/efemerides?foco=mensagem" class="rounded-xl px-3 py-2 text-sm font-medium <?= $focoTela === 'mensagem' ? 'bg-erp-navy text-white' : 'border border-erp-border bg-slate-50 text-slate-700 hover:bg-white' ?>">Revisar mensagem</a>
+                    <a href="/chancelaria/efemerides?foco=dados" class="rounded-xl px-3 py-2 text-sm font-medium <?= $focoTela === 'dados' ? 'bg-emerald-700 text-white' : 'border border-erp-border bg-slate-50 text-slate-700 hover:bg-white' ?>">Corrigir dados</a>
+                    <a href="/chancelaria/efemerides" class="rounded-xl border border-erp-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Ver tudo</a>
+                </div>
             </div>
-        </header>
+        </section>
 
         <?php if (!empty($sucessoMensagem)): ?>
             <div class="mb-4 rounded border border-green-200 bg-green-50 text-green-700 px-4 py-3">
@@ -48,11 +67,11 @@
         };
         ?>
 
-        <div class="mb-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="hidden">
             <div class="mb-4">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Acesso rapido</p>
                 <h2 class="mt-2 text-2xl font-semibold text-slate-900">Tarefas da Chancelaria</h2>
-                <p class="mt-1 text-sm text-slate-600">Aqui voce encontra os atalhos mais usados: certificado, mensagem do dia e atualizacao dos registros.</p>
+                <p class="mt-1 text-sm text-slate-700">Aqui voce encontra os atalhos mais usados: certificado, mensagem do dia e atualizacao dos registros.</p>
             </div>
             <div class="mb-4 flex flex-wrap gap-2">
                 <a href="/chancelaria/certificado" class="px-3 py-2 text-sm rounded bg-cobalto text-white hover:bg-blue-800">Emitir certificado</a>
@@ -72,7 +91,7 @@
             </p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
             <section id="secao-mensagem" class="rounded-3xl border bg-white p-5 shadow-sm <?= $focoTela === 'mensagem' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-200' ?>">
                 <div class="flex items-center justify-between mb-2">
                     <div>
@@ -81,7 +100,7 @@
                     </div>
                     <span class="text-xs text-gray-500">Gerada automaticamente apos 00:01</span>
                 </div>
-                <p class="mb-3 text-sm text-gray-600">Altera apenas a previa que sera enviada hoje. Nao corrige o banco de dados.</p>
+                <p class="mb-3 text-sm text-gray-600">Esta edicao altera somente a mensagem de hoje. Os registros oficiais da base nao sao modificados aqui.</p>
                 <?php
                     $previewRaw = (string) ($mensagemPreview ?? '');
                     $previewRender = strip_tags($previewRaw, '<b><i><u><strong><em>');
@@ -116,7 +135,7 @@
             <section id="secao-dados" class="rounded-3xl border bg-white p-5 shadow-sm <?= $focoTela === 'dados' ? 'border-emerald-400 ring-2 ring-emerald-100' : 'border-slate-200' ?>">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Cadastro de efemerides</p>
                 <h2 class="mt-2 text-xl font-semibold text-slate-900">Atualizar registros da Loja</h2>
-                <p class="mb-3 text-sm text-slate-600">Os dados salvos aqui passam a valer tambem para os proximos envios.</p>
+                <p class="mb-3 text-sm text-slate-700">Os dados salvos aqui passam a valer tambem para os proximos envios.</p>
                 <form method="POST" action="/chancelaria/efemerides/salvar" class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div class="md:col-span-2">
                         <label class="text-sm block mb-1">Nome</label>
@@ -173,15 +192,15 @@
             </section>
         </div>
 
-        <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Consulta de registros</p>
             <h2 class="mt-2 text-xl font-semibold text-slate-900">Buscar e atualizar registros</h2>
-            <p class="mb-4 text-sm text-slate-600">Escolha um irmao para ver apenas os registros dele. Se preferir, voce tambem pode abrir a lista completa.</p>
+            <p class="mb-4 text-sm text-slate-700">Escolha um irmao para ver apenas os registros dele. Se preferir, voce tambem pode abrir a lista completa.</p>
 
             <div class="mb-4 grid gap-3 md:grid-cols-[1.8fr_1.5fr_1fr_1fr_auto]">
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                     <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Modo recomendado</p>
-                    <p class="mt-2 text-sm text-slate-700">Selecione um irmao e veja abaixo apenas os registros vinculados a ele.</p>
+                    <p class="mt-2 text-sm text-slate-700">Selecione um irmao para visualizar apenas os registros vinculados a ele.</p>
                 </div>
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                     <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Lista completa</p>
@@ -198,9 +217,9 @@
                 <a href="/chancelaria/efemerides" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50">Ver lista completa</a>
             </div>
 
-            <form method="GET" action="/chancelaria/efemerides" class="grid grid-cols-1 gap-3 mb-5 md:grid-cols-[2fr_2fr_1fr_1fr_auto]">
+            <form method="GET" action="/chancelaria/efemerides" class="mb-5 grid grid-cols-1 gap-3 xl:grid-cols-[1.4fr_1.8fr_1fr_1fr_1fr_auto]">
                 <div>
-                    <label class="text-sm block mb-1">Selecionar irmao</label>
+                    <label class="mb-1 block text-sm">Selecionar irmao</label>
                     <select name="irmao_ref" class="w-full border border-gray-300 rounded px-3 py-2">
                         <option value="">Todos os irmaos</option>
                         <?php foreach (($obreirosFiltro ?? []) as $obreiroFiltro): ?>
@@ -214,12 +233,12 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="md:col-span-2">
-                    <label class="text-sm block mb-1">Pesquisar por irmao, nome ou vinculo</label>
+                <div>
+                    <label class="mb-1 block text-sm">Pesquisar por irmao, nome ou vinculo</label>
                     <input type="text" name="termo" value="<?= htmlspecialchars($filtroTermo ?? '') ?>" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Ex.: nome do irmao">
                 </div>
                 <div>
-                    <label class="text-sm block mb-1">Tipo de evento</label>
+                    <label class="mb-1 block text-sm">Tipo de evento</label>
                     <select name="tipo" class="w-full border border-gray-300 rounded px-3 py-2">
                         <option value="">Todos</option>
                         <?php foreach (($tiposEfemeride ?? []) as $tipoOpcao): ?>
@@ -230,7 +249,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-sm block mb-1">Vinculo</label>
+                    <label class="mb-1 block text-sm">Vinculo</label>
                     <select name="vinculo" class="w-full border border-gray-300 rounded px-3 py-2">
                         <option value="">Todos</option>
                         <?php foreach ($vinculosPadrao as $itemVinculo): ?>
@@ -243,7 +262,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-sm block mb-1">Status</label>
+                    <label class="mb-1 block text-sm">Status</label>
                     <select name="ativo" class="w-full border border-gray-300 rounded px-3 py-2">
                         <option value="1" <?= (($filtroAtivo ?? '1') === '1') ? 'selected' : '' ?>>Ativos</option>
                         <option value="0" <?= (($filtroAtivo ?? '') === '0') ? 'selected' : '' ?>>Inativos</option>
@@ -251,8 +270,8 @@
                     </select>
                 </div>
                 <div class="flex items-end gap-2">
-                    <button type="submit" class="px-4 py-2 rounded bg-blue-700 text-white hover:bg-blue-800">Filtrar</button>
-                    <a href="/chancelaria/efemerides" class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">Limpar filtros</a>
+                    <button type="submit" class="rounded bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800">Aplicar</button>
+                    <a href="/chancelaria/efemerides" class="rounded border border-slate-300 bg-white px-4 py-2 font-medium text-slate-700 hover:bg-slate-50">Limpar</a>
                 </div>
             </form>
 
@@ -285,18 +304,18 @@
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <div class="text-base font-semibold text-slate-900"><?= htmlspecialchars((string) ($r['nome'] ?? '')) ?></div>
-                                <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($r['tipo'] ?? '')) ?> • <?= htmlspecialchars($formatarDataVisual((string) ($r['data_evento'] ?? ''))) ?></div>
+                                <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($r['tipo'] ?? '')) ?> • <?= htmlspecialchars($formatarDataVisual((string) ($r['data_evento'] ?? ''))) ?></div>
                             </div>
                             <span class="rounded-full px-3 py-1 text-xs font-semibold <?= !empty($r['ativo']) ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200 text-slate-700' ?>">
                                 <?= !empty($r['ativo']) ? 'Ativo' : 'Inativo' ?>
                             </span>
                         </div>
-                        <div class="mt-3 text-sm text-slate-600">
+                        <div class="mt-3 text-sm text-slate-700">
                             <div>Vinculo: <?= htmlspecialchars((string) ($r['vinculo'] ?? '-')) ?></div>
                             <div>Parentesco: <?= htmlspecialchars((string) ($r['parentesco'] ?? '-')) ?></div>
                         </div>
                         <?php if ($somenteLeitura): ?>
-                            <div class="mt-4 text-sm text-slate-500">Registro fixo do sistema. Para alterar, edite o arquivo de históricos.</div>
+                            <div class="mt-4 text-sm text-slate-700">Registro fixo do sistema. Para alterar, edite o arquivo de históricos.</div>
                         <?php elseif (!empty($r['ativo'])): ?>
                             <details class="mt-4 rounded-2xl border border-slate-200 bg-white p-3">
                                 <summary class="cursor-pointer text-sm font-medium text-blue-700">Editar registro</summary>
@@ -325,29 +344,33 @@
 
             <div class="hidden overflow-x-auto md:block">
                 <table class="min-w-full text-sm">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
                         <tr>
-                            <th class="text-left px-3 py-2">Data</th>
-                            <th class="text-left px-3 py-2">Nome</th>
-                            <th class="text-left px-3 py-2">Tipo</th>
-                            <th class="text-left px-3 py-2">Vinculo/Parentesco</th>
-                            <th class="text-left px-3 py-2">Status</th>
-                            <th class="text-left px-3 py-2">Acao</th>
+                            <th class="text-left px-3 py-3">Data</th>
+                            <th class="text-left px-3 py-3">Nome</th>
+                            <th class="text-left px-3 py-3">Tipo</th>
+                            <th class="text-left px-3 py-3">Vinculo/Parentesco</th>
+                            <th class="text-left px-3 py-3">Status</th>
+                            <th class="text-left px-3 py-3">Acao</th>
                         </tr>
                     </thead>
                     <tbody>
                     <?php foreach (($registrosRecentes ?? []) as $r): ?>
                         <?php $somenteLeitura = !empty($r['origem_fixa']); ?>
-                        <tr class="border-t align-top">
-                            <td class="px-3 py-2"><?= htmlspecialchars($formatarDataVisual((string) ($r['data_evento'] ?? ''))) ?></td>
-                            <td class="px-3 py-2"><?= htmlspecialchars((string) ($r['nome'] ?? '')) ?></td>
-                            <td class="px-3 py-2"><?= htmlspecialchars((string) ($r['tipo'] ?? '')) ?></td>
-                            <td class="px-3 py-2">
+                        <tr class="border-t align-top hover:bg-slate-50/70">
+                            <td class="px-3 py-2.5"><?= htmlspecialchars($formatarDataVisual((string) ($r['data_evento'] ?? ''))) ?></td>
+                            <td class="px-3 py-2.5"><?= htmlspecialchars((string) ($r['nome'] ?? '')) ?></td>
+                            <td class="px-3 py-2.5"><?= htmlspecialchars((string) ($r['tipo'] ?? '')) ?></td>
+                            <td class="px-3 py-2.5">
                                 <div><?= htmlspecialchars((string) ($r['vinculo'] ?? '-')) ?></div>
                                 <div class="text-xs text-gray-500"><?= htmlspecialchars((string) ($r['parentesco'] ?? '-')) ?></div>
                             </td>
-                            <td class="px-3 py-2"><?= !empty($r['ativo']) ? 'Ativo' : 'Inativo' ?></td>
-                            <td class="px-3 py-2">
+                            <td class="px-3 py-2.5">
+                                <span class="inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold <?= !empty($r['ativo']) ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-slate-300 bg-slate-100 text-slate-700' ?>">
+                                    <?= !empty($r['ativo']) ? 'Ativo' : 'Inativo' ?>
+                                </span>
+                            </td>
+                            <td class="px-3 py-2.5">
                                 <?php if ($somenteLeitura): ?>
                                     <span class="text-gray-500">Registro fixo</span>
                                 <?php elseif (!empty($r['ativo'])): ?>
@@ -434,5 +457,4 @@
             }
         })();
     </script>
-</body>
-</html>
+<?php require __DIR__ . '/partials/erp_shell_close.php'; ?>

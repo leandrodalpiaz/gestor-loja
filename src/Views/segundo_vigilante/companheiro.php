@@ -36,8 +36,24 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
             }
         }
     </script>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-[11px] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-[radial-gradient(circle_at_top,#faf6ed_0%,#edf1f5_46%,#e7eaef_100%)] font-sans text-slate-900">
+<body class="erp-readable min-h-screen bg-[radial-gradient(circle_at_top,#faf6ed_0%,#edf1f5_46%,#e7eaef_100%)] font-sans text-slate-900">
     <div class="mx-auto max-w-6xl px-4 py-8">
         <header class="rounded-3xl border border-white/50 bg-[radial-gradient(circle_at_top_left,#d9be84,transparent_28%),linear-gradient(135deg,#152538,#21405e_55%,#33555a)] px-6 py-7 text-white shadow-2xl">
             <p class="text-xs uppercase tracking-[0.22em] text-amber-200"><?= $somenteProprio ? 'Autoacompanhamento' : 'Acompanhamento formativo' ?></p>
@@ -66,20 +82,20 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
 
         <section class="mt-6 grid gap-4 md:grid-cols-4">
             <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Etapa atual</div>
+                <div class="text-sm text-slate-700">Etapa atual</div>
                 <div class="mt-2 text-2xl font-bold text-ardosia"><?= $etapaAtualOrdem ?></div>
-                <div class="mt-1 text-xs text-slate-500"><?= htmlspecialchars($etapaAtualTitulo) ?></div>
+                <div class="mt-1 text-xs text-slate-700"><?= htmlspecialchars($etapaAtualTitulo) ?></div>
             </article>
             <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Status atual</div>
+                <div class="text-sm text-slate-700">Status atual</div>
                 <div class="mt-2 text-lg font-semibold text-ardosia"><?= htmlspecialchars($etapaAtualStatus) ?></div>
             </article>
             <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Etapas concluidas</div>
+                <div class="text-sm text-slate-700">Etapas concluidas</div>
                 <div class="mt-2 text-2xl font-bold text-ardosia"><?= (int) ($resumoTrilha['total_concluidas'] ?? 0) ?> / <?= (int) ($resumoTrilha['total_etapas'] ?? 0) ?></div>
             </article>
             <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-500">Conclusao da trilha</div>
+                <div class="text-sm text-slate-700">Conclusao da trilha</div>
                 <div class="mt-2 text-2xl font-bold text-ardosia"><?= $percentual ?>%</div>
             </article>
         </section>
@@ -88,7 +104,7 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
             <section class="mt-6 grid gap-6 xl:grid-cols-2">
                 <article class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
                     <h2 class="font-display text-2xl font-semibold">Atualizar etapa da trilha</h2>
-                    <p class="mt-1 text-sm text-slate-600">Registre andamento, recebimento, revisao e devolutiva do Companheiro.</p>
+                    <p class="mt-1 text-sm text-slate-700">Registre andamento, recebimento, revisao e devolutiva do Companheiro.</p>
                     <form action="/segundo-vigilante/trilha/atualizar" method="POST" class="mt-4 grid gap-4 md:grid-cols-2">
                         <input type="hidden" name="companheiro_id" value="<?= htmlspecialchars((string) ($companheiro['id'] ?? '')) ?>">
                         <div>
@@ -121,7 +137,7 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
 
                 <article id="leitura-sugerida" class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
                     <h2 class="font-display text-2xl font-semibold">Leitura sugerida</h2>
-                    <p class="mt-1 text-sm text-slate-600">Conecte o acompanhamento do Companheiro com a biblioteca da Loja.</p>
+                    <p class="mt-1 text-sm text-slate-700">Conecte o acompanhamento do Companheiro com a biblioteca da Loja.</p>
                     <form action="/segundo-vigilante/leitura/salvar" method="POST" class="mt-4 space-y-4">
                         <input type="hidden" name="companheiro_id" value="<?= htmlspecialchars((string) ($companheiro['id'] ?? '')) ?>">
                         <div>
@@ -152,7 +168,7 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
                 <div class="flex items-center justify-between gap-4">
                     <div>
                         <h2 class="font-display text-2xl font-semibold">Linha do tempo da trilha</h2>
-                        <p class="mt-1 text-sm text-slate-600">Cada etapa mostra o estado real da jornada do Companheiro.</p>
+                        <p class="mt-1 text-sm text-slate-700">Cada etapa mostra o estado real da jornada do Companheiro.</p>
                     </div>
                     <div class="w-40">
                         <div class="h-3 overflow-hidden rounded-full bg-slate-200">
@@ -197,7 +213,7 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
                                         </div>
                                     <?php endif; ?>
                                 </div>
-                                <div class="grid gap-2 text-xs text-slate-500 md:text-right">
+                                <div class="grid gap-2 text-xs text-slate-700 md:text-right">
                                     <div>Disponibilizacao: <?= !empty($etapa['data_disponibilizacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_disponibilizacao']))) : '-' ?></div>
                                     <div>Entrega: <?= !empty($etapa['data_entrega']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_entrega']))) : '-' ?></div>
                                     <div>Revisao: <?= !empty($etapa['data_revisao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_revisao']))) : '-' ?></div>
@@ -211,12 +227,12 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
             <div class="space-y-6">
                 <article id="certificado" class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
                     <h2 class="font-display text-2xl font-semibold">Certificado de docencia</h2>
-                    <p class="mt-1 text-sm text-slate-600">Solicitacao formal da conclusao da docencia do Companheiro.</p>
+                    <p class="mt-1 text-sm text-slate-700">Solicitacao formal da conclusao da docencia do Companheiro.</p>
                     <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <div class="text-xs uppercase tracking-wide text-slate-500">Status</div>
+                        <div class="text-xs uppercase tracking-wide text-slate-700">Status</div>
                         <div class="mt-2 text-lg font-semibold text-ardosia"><?= htmlspecialchars((string) ($acompanhamento['certificado_status'] ?? 'nao_solicitado')) ?></div>
                         <?php if (!empty($acompanhamento['certificado_solicitado_em'])): ?>
-                            <div class="mt-1 text-sm text-slate-600">Solicitado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string) $acompanhamento['certificado_solicitado_em']))) ?></div>
+                            <div class="mt-1 text-sm text-slate-700">Solicitado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string) $acompanhamento['certificado_solicitado_em']))) ?></div>
                         <?php endif; ?>
                     </div>
                     <?php if (!$somenteProprio): ?>
@@ -235,12 +251,12 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
 
                 <article id="exaltacao" class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
                     <h2 class="font-display text-2xl font-semibold">Recomendacao de exaltacao</h2>
-                    <p class="mt-1 text-sm text-slate-600">Encaminhamento formal do Companheiro para apreciacao da exaltação.</p>
+                    <p class="mt-1 text-sm text-slate-700">Encaminhamento formal do Companheiro para apreciacao da exaltação.</p>
                     <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <div class="text-xs uppercase tracking-wide text-slate-500">Status</div>
+                        <div class="text-xs uppercase tracking-wide text-slate-700">Status</div>
                         <div class="mt-2 text-lg font-semibold text-ardosia"><?= htmlspecialchars((string) ($acompanhamento['exaltacao_status'] ?? 'nao_recomendada')) ?></div>
                         <?php if (!empty($acompanhamento['exaltacao_recomendada_em'])): ?>
-                            <div class="mt-1 text-sm text-slate-600">Recomendada em <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string) $acompanhamento['exaltacao_recomendada_em']))) ?></div>
+                            <div class="mt-1 text-sm text-slate-700">Recomendada em <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string) $acompanhamento['exaltacao_recomendada_em']))) ?></div>
                         <?php endif; ?>
                     </div>
                     <?php if (!$somenteProprio): ?>
@@ -259,20 +275,20 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
 
                 <article class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
                     <h2 class="font-display text-2xl font-semibold">Historico formativo</h2>
-                    <p class="mt-1 text-sm text-slate-600">Linha consolidada da trilha, leitura, certificado e exaltacao.</p>
+                    <p class="mt-1 text-sm text-slate-700">Linha consolidada da trilha, leitura, certificado e exaltacao.</p>
                     <div class="mt-4 space-y-3">
                         <?php foreach ($historicoFormativo as $evento): ?>
                             <div class="rounded-2xl border border-slate-200 px-4 py-3">
-                                <div class="text-xs uppercase tracking-wide text-slate-500"><?= htmlspecialchars((string) ($evento['tipo'] ?? 'evento')) ?></div>
+                                <div class="text-xs uppercase tracking-wide text-slate-700"><?= htmlspecialchars((string) ($evento['tipo'] ?? 'evento')) ?></div>
                                 <div class="mt-1 text-sm font-medium text-slate-800"><?= htmlspecialchars((string) ($evento['titulo'] ?? 'Marco formativo')) ?></div>
-                                <div class="mt-1 text-xs text-slate-500"><?= !empty($evento['momento']) ? htmlspecialchars(date('d/m/Y H:i', strtotime((string) $evento['momento']))) : '-' ?></div>
+                                <div class="mt-1 text-xs text-slate-700"><?= !empty($evento['momento']) ? htmlspecialchars(date('d/m/Y H:i', strtotime((string) $evento['momento']))) : '-' ?></div>
                                 <?php if (!empty($evento['descricao'])): ?>
-                                    <div class="mt-2 text-sm text-slate-600"><?= htmlspecialchars((string) $evento['descricao']) ?></div>
+                                    <div class="mt-2 text-sm text-slate-700"><?= htmlspecialchars((string) $evento['descricao']) ?></div>
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                         <?php if ($historicoFormativo === []): ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">Ainda nao ha marcos registrados para este Companheiro.</div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Ainda nao ha marcos registrados para este Companheiro.</div>
                         <?php endif; ?>
                     </div>
                 </article>
@@ -281,3 +297,4 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
     </div>
 </body>
 </html>
+

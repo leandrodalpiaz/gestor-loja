@@ -8,8 +8,24 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emprestimos - Biblioteca</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-[11px] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="erp-readable bg-gray-100 min-h-screen">
     <header class="bg-blue-900 text-white shadow-sm">
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
             <div>
@@ -55,7 +71,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                                 <div class="text-base font-semibold text-slate-900">
                                     <?= htmlspecialchars((string) ($emp['titulo'] ?? $emp['acervo_id'] ?? '-')) ?>
                                 </div>
-                                <div class="mt-1 text-sm text-slate-600">
+                                <div class="mt-1 text-sm text-slate-700">
                                     <?= htmlspecialchars((string) ($emp['obreiro_nome'] ?? $emp['obreiro_id'] ?? '-')) ?>
                                 </div>
                             </div>
@@ -64,7 +80,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                             </span>
                         </div>
 
-                        <div class="mt-3 space-y-2 text-sm text-slate-600">
+                        <div class="mt-3 space-y-2 text-sm text-slate-700">
                             <div><span class="font-medium text-slate-700">Data do emprestimo:</span> <?= htmlspecialchars((string) ($emp['data_emprestimo'] ?? '-')) ?></div>
                             <div><span class="font-medium text-slate-700">Data prevista:</span> <?= htmlspecialchars((string) ($emp['data_devolucao_prevista'] ?? '-')) ?></div>
                         </div>
@@ -78,7 +94,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                                     </button>
                                 </form>
                             <?php else: ?>
-                                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-sm text-slate-500">
+                                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-sm text-slate-700">
                                     Nenhuma acao disponivel
                                 </div>
                             <?php endif; ?>
@@ -86,7 +102,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                     </article>
                 <?php endforeach; ?>
             <?php else: ?>
-                <div class="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-500 shadow-sm">
+                <div class="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-700 shadow-sm">
                     Nenhum emprestimo pendente ou atrasado.
                 </div>
             <?php endif; ?>
@@ -146,3 +162,4 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
     </main>
 </body>
 </html>
+

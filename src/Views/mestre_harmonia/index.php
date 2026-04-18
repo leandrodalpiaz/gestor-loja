@@ -44,6 +44,12 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
             min-height: 100vh;
         }
 
+        @media (min-width: 1440px) {
+            body {
+                font-size: 1.06rem;
+            }
+        }
+
         .app {
             height: 100vh;
             display: grid;

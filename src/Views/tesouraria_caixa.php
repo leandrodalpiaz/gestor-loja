@@ -8,7 +8,7 @@ if (!isset($_SESSION["usuario_logado"])) {
 $erpPageTitle = 'Livro-Caixa';
 $appShellEyebrow = 'Tesouraria';
 $appShellTitle = 'Livro-Caixa';
-$appShellDescription = 'Entradas, saidas, saldo do periodo e acoes operacionais da tesouraria em leitura administrativa direta.';
+$appShellDescription = 'Entradas, saídas, saldo do período e ações operacionais da tesouraria em leitura administrativa direta.';
 $appShellActiveHref = '/tesouraria/caixa';
 $appShellActions = [
     ['label' => 'Voltar ao dashboard', 'href' => '/dashboard'],

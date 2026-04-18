@@ -71,8 +71,24 @@ $situacoesQuadro = [
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.08rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-[11px] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.03rem !important;
+                line-height: 1.58rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-pedra font-sans text-gray-800 antialiased">
+<body class="erp-readable bg-pedra font-sans text-gray-800 antialiased">
     <header class="bg-cobalto text-white shadow-md sticky top-0 z-50">
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
             <a href="/obreiros" class="text-gray-300 hover:text-white" title="Voltar">
@@ -300,3 +316,4 @@ $situacoesQuadro = [
     </main>
 </body>
 </html>
+

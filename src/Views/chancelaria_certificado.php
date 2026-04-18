@@ -6,8 +6,24 @@
     <title>Certificado de Presenca - Chancelaria</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        @media (min-width: 1440px) {
+            .erp-readable {
+                font-size: 1.06rem;
+            }
+            .erp-readable .text-xs,
+            .erp-readable .text-\[11px\] {
+                font-size: 0.92rem !important;
+                line-height: 1.4rem !important;
+            }
+            .erp-readable .text-sm {
+                font-size: 1.02rem !important;
+                line-height: 1.55rem !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 p-4 antialiased">
+<body class="erp-readable bg-gray-50 text-gray-800 p-4 antialiased">
     <?php
     $defaults = [
         'data_sessao' => trim((string) ($_GET['data_sessao'] ?? '')),
