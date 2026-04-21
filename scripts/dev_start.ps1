@@ -29,7 +29,10 @@ function Set-DotEnvValue {
 
     $lines = @()
     if (Test-Path $Path) {
-        $lines = Get-Content -Path $Path
+        # Sempre tratar como array de linhas. Se o arquivo tiver apenas 1 linha,
+        # Get-Content pode retornar string (e .Count vira tamanho em caracteres),
+        # o que corrompe o .env ao usar +=.
+        $lines = @(Get-Content -Path $Path)
     }
 
     $updated = $false

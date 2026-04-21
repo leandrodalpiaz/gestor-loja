@@ -104,6 +104,19 @@ class CommandHandler
         return in_array($telegramId, $this->devIds, true);
     }
 
+    private function isPrivateChat($chatId): bool
+    {
+        return (int) $chatId > 0;
+    }
+
+    private function notifyPrivateOnly($chatId): void
+    {
+        $this->telegram->sendMessage(
+            $chatId,
+            'Por segurança, painel e miniapps funcionam apenas no privado do bot. Abra o chat privado e use /painel.'
+        );
+    }
+
     private function ensureChancelariaAccess($chatId, int $requesterTelegramId): bool
     {
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
@@ -153,6 +166,11 @@ class CommandHandler
 
     public function handlePainelAdmin($chatId, $requesterTelegramId)
     {
+        if (!$this->isPrivateChat($chatId)) {
+            $this->notifyPrivateOnly($chatId);
+            return;
+        }
+
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'admin.cargos.view')) {
             $this->telegram->sendMessage($chatId, 'Acesso restrito aos Administradores do sistema.');
@@ -186,6 +204,11 @@ class CommandHandler
 
     public function sendMenuPrincipal($chatId, $fromId)
     {
+        if (!$this->isPrivateChat($chatId)) {
+            $this->notifyPrivateOnly($chatId);
+            return;
+        }
+
         $obreiro = $this->obreiroModel->findByTelegramId($fromId);
         $mensagem = "Bem-vindo ao painel da Loja, meu Irmão!";
         $teclado = ['inline_keyboard' => []];
@@ -805,6 +828,23 @@ class CommandHandler
                 $caption = $message['caption'] ?? '';
                 $fromId = $message['from']['id'];
 
+                if (
+                    !$this->isPrivateChat($chatId)
+                    && (
+                        strpos($text, '/start') === 0
+                        || strpos($text, '/painel') === 0
+                        || strpos($text, '/chancelaria') === 0
+                        || strpos($text, '/tesouraria') === 0
+                        || strpos($text, '/biblioteca') === 0
+                        || strpos($text, '/assistencia') === 0
+                        || strpos($text, '/pix') === 0
+                        || strpos($text, '/financeiro') === 0
+                    )
+                ) {
+                    $this->notifyPrivateOnly($chatId);
+                    return;
+                }
+
                 if (strpos($text, '/start') === 0) {
                     $this->sendMenuPrincipal($chatId, $fromId);
                 } elseif (strpos($text, '/painel') === 0) {
@@ -833,6 +873,12 @@ class CommandHandler
                 $chatId = $callback['message']['chat']['id'];
                 $data = $callback['data'];
                 $fromId = $callback['from']['id'];
+
+                if (!$this->isPrivateChat($chatId)) {
+                    $this->notifyPrivateOnly($chatId);
+                    $this->telegram->answerCallbackQuery($callback['id']);
+                    return;
+                }
 
                 switch ($data) {
                     case 'admin_chancelaria':
