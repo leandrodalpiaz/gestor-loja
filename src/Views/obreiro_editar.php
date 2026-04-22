@@ -5,6 +5,11 @@ if (!isset($_SESSION["usuario_logado"])) {
 }
 
 $appTitle = "Editar Obreiro - Secretaria";
+$acessosStatus = [
+    'pendente' => 'Pendente',
+    'ativo' => 'Ativo',
+    'inativo' => 'Inativo',
+];
 $estadosCivis = [
     'solteiro' => 'Solteiro',
     'casado' => 'Casado',
@@ -77,7 +82,7 @@ $situacoesQuadro = [
                 font-size: 1.08rem;
             }
             .erp-readable .text-xs,
-            .erp-readable .text-[11px] {
+            .erp-readable .text-\[11px\] {
                 font-size: 0.92rem !important;
                 line-height: 1.4rem !important;
             }
@@ -95,7 +100,7 @@ $situacoesQuadro = [
                 <i class="fas fa-arrow-left text-lg"></i>
             </a>
             <h1 class="font-serif text-lg font-bold tracking-wider">
-                <i class="fas fa-user-edit text-ouro mr-2"></i>Editar ficha
+                <i class="fas fa-user-check text-ouro mr-2"></i>Completar cadastro
             </h1>
         </div>
     </header>
@@ -104,11 +109,15 @@ $situacoesQuadro = [
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="p-6 border-b border-gray-100 bg-gray-50">
                 <h2 class="text-xl font-bold text-cobalto"><?= htmlspecialchars($obreiro['nome_historico'] ?? $obreiro['nome']) ?></h2>
-                <p class="text-sm text-gray-500 mt-1">Atualizacao cadastral operada pela Secretaria.</p>
+                <p class="text-sm text-gray-500 mt-1">Completar e manter o cadastro do obreiro existente (sem criar novo registro).</p>
             </div>
 
             <?php if (isset($_GET['sucesso'])): ?>
                 <div class="mx-6 mt-6 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">Ficha atualizada com sucesso.</div>
+            <?php endif; ?>
+
+            <?php if (isset($_GET['erro'])): ?>
+                <div class="mx-6 mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">Nao foi possivel salvar. Verifique se o CIM informado ja existe para outro obreiro.</div>
             <?php endif; ?>
 
             <form action="/obreiros/atualizar" method="POST" class="p-6 space-y-8">
@@ -158,7 +167,7 @@ $situacoesQuadro = [
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">CIM</label>
-                            <input type="number" name="cim" required value="<?= htmlspecialchars($obreiro['cim'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <input type="text" name="cim" value="<?= htmlspecialchars($obreiro['cim'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md" inputmode="numeric" autocomplete="off">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Grau</label>
@@ -169,8 +178,30 @@ $situacoesQuadro = [
                             </select>
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status de acesso</label>
+                            <select name="acesso_status" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <?php
+                                $acessoAtual = strtolower(trim((string) ($obreiro['acesso_status'] ?? '')));
+                                if (!in_array($acessoAtual, ['pendente', 'ativo', 'inativo'], true)) {
+                                    $acessoAtual = !empty($obreiro['ativo']) ? 'ativo' : 'inativo';
+                                }
+                                ?>
+                                <?php foreach ($acessosStatus as $valor => $rotulo): ?>
+                                    <option value="<?= htmlspecialchars($valor) ?>" <?= $acessoAtual === $valor ? 'selected' : '' ?>><?= htmlspecialchars($rotulo) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Cargo legado</label>
                             <input type="text" name="cargo" value="<?= htmlspecialchars($obreiro['cargo'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div class="md:col-span-2">
+                            <div class="text-xs uppercase tracking-wide text-gray-500 mb-2">Cargos oficiais (nominata)</div>
+                            <div class="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                                <?= !empty($obreiro['cargos_codigos']) ? htmlspecialchars(implode(', ', (array) $obreiro['cargos_codigos'])) : 'Sem cargo oficial ativo' ?>
+                                <span class="text-gray-400">·</span>
+                                <a href="/admin/cargos" class="text-cobalto underline">Abrir nominata</a>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Loja de origem</label>
@@ -278,7 +309,8 @@ $situacoesQuadro = [
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Telegram ID</label>
-                            <input type="number" name="telegram_id" value="<?= htmlspecialchars($obreiro['telegram_id'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <input type="text" value="<?= htmlspecialchars($obreiro['telegram_id'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" readonly>
+                            <div class="mt-1 text-xs text-gray-500">Vinculo controlado apenas pelo bot/onboarding (nao editavel aqui).</div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Login na Potencia</label>

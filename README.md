@@ -197,7 +197,7 @@ Esse modo:
 Para usar menus do bot em polling e manter Mini Apps abrindo (certificado, scanner, cadastro manual):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -WithPolling -WithTunnel
+powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -WithPolling -WithTunnel -TunnelProvider cloudflared
 ```
 
 Nesse caso:

@@ -12,6 +12,31 @@ class AdminRoutes
         $controller = new AdminController();
 
         switch ($requestUri) {
+            case '/admin/acessos':
+                ModuleGuards::requireAccessManage($openTestAccess, $session, $authorizer);
+                $controller->acessosPendentes();
+                return true;
+
+            case '/admin/acessos/atualizar':
+                ModuleGuards::requireAccessManage($openTestAccess, $session, $authorizer);
+                $controller->atualizarAcesso();
+                return true;
+
+            case '/admin/conteudo-publico':
+                ModuleGuards::requirePublicContentManage($openTestAccess, $session, $authorizer);
+                $controller->conteudoPublico();
+                return true;
+
+            case '/admin/conteudo-publico/salvar':
+                ModuleGuards::requirePublicContentManage($openTestAccess, $session, $authorizer);
+                $controller->salvarConteudoPublico();
+                return true;
+
+            case '/admin/conteudo-publico/excluir':
+                ModuleGuards::requirePublicContentManage($openTestAccess, $session, $authorizer);
+                $controller->excluirConteudoPublico();
+                return true;
+
             case '/admin/cargos':
                 ModuleGuards::requireAdminCargosView($openTestAccess, $session, $authorizer);
                 $controller->listarCargos();
@@ -45,6 +70,16 @@ class AdminRoutes
             case '/admin/loja/salvar':
                 ModuleGuards::requireAdminLojaManage($openTestAccess, $session, $authorizer);
                 $controller->salvarConfiguracoesLoja();
+                return true;
+
+            case '/admin/convites':
+                ModuleGuards::requireAccessManage($openTestAccess, $session, $authorizer);
+                $controller->convitesAcesso();
+                return true;
+
+            case '/admin/convites/gerar':
+                ModuleGuards::requireAccessManage($openTestAccess, $session, $authorizer);
+                $controller->gerarConviteAcesso();
                 return true;
 
             default:

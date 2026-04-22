@@ -61,6 +61,51 @@ class Obreiro
         $this->db = Database::getConnection();
     }
 
+    private function deveOcultarSystemAdminsEmListas(): bool
+    {
+        return empty($_SESSION['is_system_admin']);
+    }
+
+    private function idsTelegramSystemAdmin(): array
+    {
+        $raw = trim((string) (getenv('SYSTEM_ADMIN_TELEGRAM_IDS') ?: ''));
+        if ($raw === '') {
+            return [];
+        }
+
+        $ids = preg_split('/\s*,\s*/', $raw, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $result = [];
+        foreach ($ids as $id) {
+            $value = (int) trim((string) $id);
+            if ($value > 0) {
+                $result[] = $value;
+            }
+        }
+
+        return array_values(array_unique($result));
+    }
+
+    private function aplicarExclusaoSystemAdminsEmSql(string &$sql, array &$params): void
+    {
+        if (!$this->deveOcultarSystemAdminsEmListas()) {
+            return;
+        }
+
+        $ids = $this->idsTelegramSystemAdmin();
+        if ($ids === []) {
+            return;
+        }
+
+        $placeholders = [];
+        foreach ($ids as $i => $id) {
+            $key = 'sysadm_' . $i;
+            $placeholders[] = ':' . $key;
+            $params[$key] = $id;
+        }
+
+        $sql .= " AND (telegram_id IS NULL OR telegram_id NOT IN (" . implode(', ', $placeholders) . "))";
+    }
+
     private function suportaLojaId(): bool
     {
         if ($this->suportaLojaId !== null) {
@@ -106,12 +151,27 @@ class Obreiro
 
     public function findByTelegramId(int $telegramId): ?array
     {
+        $result = $this->findByTelegramIdAnyStatus($telegramId);
+
+        if (!$result) {
+            return null;
+        }
+
+        $status = $this->resolverAcessoStatus($result);
+        if (!($result['ativo'] ?? false) || $status !== 'ativo') {
+            return null;
+        }
+
+        return $this->hidratarCargosAtivos($result);
+    }
+
+    public function findByTelegramIdAnyStatus(int $telegramId): ?array
+    {
         if ($this->suportaLojaId() && $this->deveAplicarEscopoTenantNaIdentidade()) {
             $stmt = $this->db->prepare(
                 "SELECT *
                  FROM obreiros
                  WHERE telegram_id = :telegram_id
-                   AND ativo = true
                    AND loja_id = :loja_id
                  LIMIT 1"
             );
@@ -124,7 +184,6 @@ class Obreiro
                 "SELECT *
                  FROM obreiros
                  WHERE telegram_id = :telegram_id
-                   AND ativo = true
                  ORDER BY nome ASC
                  LIMIT 1"
             );
@@ -135,25 +194,55 @@ class Obreiro
         return $result ? $this->hidratarCargosAtivos($result) : null;
     }
 
-    public function getAllAtivos(): array
+    public function findByCimAnyStatus(string $cim): ?array
     {
-        if ($this->suportaLojaId()) {
+        if ($this->suportaLojaId() && $this->deveAplicarEscopoTenantNaIdentidade()) {
             $stmt = $this->db->prepare(
                 "SELECT *
                  FROM obreiros
-                 WHERE ativo = true
+                 WHERE cim = :cim
                    AND loja_id = :loja_id
-                 ORDER BY nome ASC"
+                 LIMIT 1"
             );
-            $stmt->execute(['loja_id' => $this->obterLojaAtualId()]);
+            $stmt->execute([
+                'cim' => $cim,
+                'loja_id' => $this->obterLojaAtualId(),
+            ]);
         } else {
-            $stmt = $this->db->query(
+            $stmt = $this->db->prepare(
                 "SELECT *
                  FROM obreiros
-                 WHERE ativo = true
-                 ORDER BY nome ASC"
+                 WHERE cim = :cim
+                 ORDER BY nome ASC
+                 LIMIT 1"
             );
+            $stmt->execute(['cim' => $cim]);
         }
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $this->hidratarCargosAtivos($result) : null;
+    }
+
+    public function getAllAtivos(): array
+    {
+        $params = [];
+        if ($this->suportaLojaId()) {
+            $sql = "SELECT *
+                    FROM obreiros
+                    WHERE ativo = true
+                      AND loja_id = :loja_id";
+            $params['loja_id'] = $this->obterLojaAtualId();
+        } else {
+            $sql = "SELECT *
+                    FROM obreiros
+                    WHERE ativo = true";
+        }
+
+        $this->aplicarExclusaoSystemAdminsEmSql($sql, $params);
+
+        $sql .= " ORDER BY nome ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
 
         return $this->hidratarListaCargosAtivos($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
@@ -205,6 +294,8 @@ class Obreiro
                 OR (COALESCE(situacao_quadro, 'ativo') = 'ativo' AND data_filiacao IS NULL AND data_iniciacao IS NULL)
             )";
         }
+
+        $this->aplicarExclusaoSystemAdminsEmSql($sql, $params);
 
         $cargoCodigo = trim((string) ($filtros['cargo_codigo'] ?? ''));
         if ($cargoCodigo !== '') {
@@ -474,6 +565,21 @@ class Obreiro
 
     public function update(array $data): bool
     {
+        $obreiroId = trim((string) ($data['id'] ?? ''));
+        if ($obreiroId === '') {
+            return false;
+        }
+
+        $cim = trim((string) ($data['cim'] ?? ''));
+        if ($cim !== '' && !$this->cimEstaDisponivelParaId($cim, $obreiroId)) {
+            return false;
+        }
+
+        $acessoStatus = strtolower(trim((string) ($data['acesso_status'] ?? '')));
+        if (!in_array($acessoStatus, ['pendente', 'ativo', 'inativo'], true)) {
+            $acessoStatus = '';
+        }
+
         $sql = "UPDATE obreiros SET
             cim = :cim,
             nome = :nome,
@@ -500,7 +606,6 @@ class Obreiro
             escolaridade = :escolaridade,
             faixa_renda = :faixa_renda,
             situacao_quadro = :situacao_quadro,
-            telegram_id = :telegram_id,
             potencia_nome = :potencia_nome,
             potencia_sigla = :potencia_sigla,
             numero_quadro = :numero_quadro,
@@ -508,6 +613,7 @@ class Obreiro
             acesso_potencia_liberado = :acesso_potencia_liberado,
             acesso_potencia_liberado_em = :acesso_potencia_liberado_em,
             observacao_secretaria = :observacao_secretaria,
+            acesso_status = :acesso_status,
             ativo = :ativo,
             updated_at = NOW()
             WHERE id = :id";
@@ -524,10 +630,13 @@ class Obreiro
         $situacaoQuadro = $this->normalizarSituacaoQuadro($data['situacao_quadro'] ?? null);
         $ativoManual = (isset($data['ativo']) && $data['ativo'] == '1');
         $ativo = ($ativoManual && $this->situacaoMantemCadastroAtivo($situacaoQuadro)) ? 'true' : 'false';
+        if ($acessoStatus !== '' && $acessoStatus !== 'ativo') {
+            $ativo = 'false';
+        }
 
         $params = [
-            'id' => $data['id'],
-            'cim' => $data['cim'],
+            'id' => $obreiroId,
+            'cim' => $cim !== '' ? $cim : null,
             'nome' => $data['nome_completo'],
             'nome_historico' => $data['nome_historico'],
             'cpf' => $data['cpf'] ?? null,
@@ -552,7 +661,6 @@ class Obreiro
             'escolaridade' => $this->normalizarValorEnum($data['escolaridade'] ?? null, self::ESCOLARIDADES),
             'faixa_renda' => $this->normalizarValorEnum($data['faixa_renda'] ?? null, self::FAIXAS_RENDA),
             'situacao_quadro' => $situacaoQuadro,
-            'telegram_id' => !empty($data['telegram_id']) ? (int) $data['telegram_id'] : null,
             'potencia_nome' => $data['potencia_nome'] ?? null,
             'potencia_sigla' => $data['potencia_sigla'] ?? null,
             'numero_quadro' => $data['numero_quadro'] ?? null,
@@ -562,6 +670,7 @@ class Obreiro
                 ? (!empty($data['acesso_potencia_liberado_em']) ? $data['acesso_potencia_liberado_em'] : date('c'))
                 : null,
             'observacao_secretaria' => $data['observacao_secretaria'] ?? null,
+            'acesso_status' => $acessoStatus !== '' ? $acessoStatus : null,
             'ativo' => $ativo,
         ];
 
@@ -572,39 +681,201 @@ class Obreiro
         return $stmt->execute($params);
     }
 
+    private function cimEstaDisponivelParaId(string $cim, string $id): bool
+    {
+        $cim = trim($cim);
+        if ($cim === '' || $id === '') {
+            return true;
+        }
+
+        if ($this->suportaLojaId()) {
+            $stmt = $this->db->prepare(
+                "SELECT 1
+                 FROM obreiros
+                 WHERE cim = :cim
+                   AND id <> :id
+                   AND loja_id = :loja_id
+                 LIMIT 1"
+            );
+            $stmt->execute([
+                'cim' => $cim,
+                'id' => $id,
+                'loja_id' => $this->obterLojaAtualId(),
+            ]);
+        } else {
+            $stmt = $this->db->prepare(
+                "SELECT 1
+                 FROM obreiros
+                 WHERE cim = :cim
+                   AND id <> :id
+                 LIMIT 1"
+            );
+            $stmt->execute([
+                'cim' => $cim,
+                'id' => $id,
+            ]);
+        }
+
+        return $stmt->fetchColumn() === false;
+    }
+
+    public function inativarPorId(string $id): bool
+    {
+        if ($id === '') {
+            return false;
+        }
+
+        if ($this->suportaLojaId()) {
+            $stmt = $this->db->prepare(
+                "UPDATE obreiros
+                 SET ativo = false,
+                     acesso_status = 'inativo',
+                     updated_at = NOW()
+                 WHERE id = :id
+                   AND loja_id = :loja_id"
+            );
+            $stmt->execute([
+                'id' => $id,
+                'loja_id' => $this->obterLojaAtualId(),
+            ]);
+        } else {
+            $stmt = $this->db->prepare(
+                "UPDATE obreiros
+                 SET ativo = false,
+                     acesso_status = 'inativo',
+                     updated_at = NOW()
+                 WHERE id = :id"
+            );
+            $stmt->execute(['id' => $id]);
+        }
+
+        return $stmt->rowCount() > 0;
+    }
+
     public function autenticar(string $matricula, string $senha): ?array
+    {
+        $usuario = $this->findByCimAnyStatus($matricula);
+
+        if (!$usuario) {
+            return null;
+        }
+
+        $status = $this->resolverAcessoStatus($usuario);
+        if (!($usuario['ativo'] ?? false) || $status !== 'ativo') {
+            return null;
+        }
+
+        if (!empty($usuario['senha_hash']) && password_verify($senha, $usuario['senha_hash'])) {
+            return $usuario;
+        }
+
+        return null;
+    }
+
+    public function resolverAcessoStatus(array $obreiro): string
+    {
+        $status = strtolower(trim((string) ($obreiro['acesso_status'] ?? '')));
+        if (in_array($status, ['pendente', 'ativo', 'inativo'], true)) {
+            return $status;
+        }
+
+        return !empty($obreiro['ativo']) ? 'ativo' : 'inativo';
+    }
+
+    public function solicitarAcessoPorCim(string $cim, string $senha, ?int $telegramId = null): array
+    {
+        $obreiro = $this->findByCimAnyStatus($cim);
+        if (!$obreiro) {
+            return ['ok' => false, 'reason' => 'not_found'];
+        }
+
+        $params = [
+            'id' => (string) ($obreiro['id'] ?? ''),
+            'senha_hash' => password_hash($senha, PASSWORD_DEFAULT),
+            'acesso_status' => 'pendente',
+        ];
+
+        $sql = "UPDATE obreiros
+                SET senha_hash = :senha_hash,
+                    acesso_status = :acesso_status,
+                    ativo = FALSE";
+
+        if ($telegramId !== null && $telegramId > 0) {
+            $sql .= ", telegram_id = :telegram_id";
+            $params['telegram_id'] = $telegramId;
+        }
+
+        if ($this->suportaLojaId() && $this->deveAplicarEscopoTenantNaIdentidade()) {
+            $sql .= " WHERE id = :id AND loja_id = :loja_id";
+            $params['loja_id'] = $this->obterLojaAtualId();
+        } else {
+            $sql .= " WHERE id = :id";
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+
+        return ['ok' => true, 'reason' => 'pending'];
+    }
+
+    public function listarPendentesAcesso(): array
     {
         if ($this->suportaLojaId() && $this->deveAplicarEscopoTenantNaIdentidade()) {
             $stmt = $this->db->prepare(
                 "SELECT *
                  FROM obreiros
-                 WHERE cim = :matricula
-                   AND ativo = true
+                 WHERE acesso_status = 'pendente'
                    AND loja_id = :loja_id
-                 LIMIT 1"
+                 ORDER BY nome ASC"
             );
-            $stmt->execute([
-                'matricula' => $matricula,
-                'loja_id' => $this->obterLojaAtualId(),
-            ]);
+            $stmt->execute(['loja_id' => $this->obterLojaAtualId()]);
         } else {
-            $stmt = $this->db->prepare(
+            $stmt = $this->db->query(
                 "SELECT *
                  FROM obreiros
-                 WHERE cim = :matricula
-                   AND ativo = true
-                 ORDER BY nome ASC
-                 LIMIT 1"
+                 WHERE acesso_status = 'pendente'
+                 ORDER BY nome ASC"
             );
-            $stmt->execute(['matricula' => $matricula]);
-        }
-        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($usuario && !empty($usuario['senha_hash']) && password_verify($senha, $usuario['senha_hash'])) {
-            return $this->hidratarCargosAtivos($usuario);
         }
 
-        return null;
+        return $this->hidratarListaCargosAtivos($stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    public function atualizarAcessoStatus(string $id, string $status): bool
+    {
+        $status = strtolower(trim($status));
+        if (!in_array($status, ['pendente', 'ativo', 'inativo'], true)) {
+            return false;
+        }
+
+        $ativo = $status === 'ativo';
+        if ($this->suportaLojaId() && $this->deveAplicarEscopoTenantNaIdentidade()) {
+            $stmt = $this->db->prepare(
+                "UPDATE obreiros
+                 SET acesso_status = :status,
+                     ativo = :ativo
+                 WHERE id = :id
+                   AND loja_id = :loja_id"
+            );
+            return $stmt->execute([
+                'status' => $status,
+                'ativo' => $ativo,
+                'id' => $id,
+                'loja_id' => $this->obterLojaAtualId(),
+            ]);
+        }
+
+        $stmt = $this->db->prepare(
+            "UPDATE obreiros
+             SET acesso_status = :status,
+                 ativo = :ativo
+             WHERE id = :id"
+        );
+        return $stmt->execute([
+            'status' => $status,
+            'ativo' => $ativo,
+            'id' => $id,
+        ]);
     }
 
     private function obterLojaAtualId(): int
@@ -629,6 +900,17 @@ class Obreiro
             $cargosSlugs,
             $this->normalizarCargoLegado((string) ($obreiro['cargo'] ?? ''))
         );
+
+        // System admin (fora do RBAC da loja): adiciona role "admin" sem alterar o cargo principal.
+        $telegramId = isset($obreiro['telegram_id']) ? (int) $obreiro['telegram_id'] : null;
+        if ($telegramId && $this->isSystemAdminTelegramId($telegramId)) {
+            $obreiro['is_system_admin'] = true;
+            if (!in_array('admin', $obreiro['cargos'], true)) {
+                $obreiro['cargos'][] = 'admin';
+            }
+        } else {
+            $obreiro['is_system_admin'] = false;
+        }
 
         return $obreiro;
     }
@@ -657,10 +939,37 @@ class Obreiro
                 $cargosSlugs,
                 $this->normalizarCargoLegado((string) ($obreiro['cargo'] ?? ''))
             );
+
+            $telegramId = isset($obreiro['telegram_id']) ? (int) $obreiro['telegram_id'] : null;
+            if ($telegramId && $this->isSystemAdminTelegramId($telegramId)) {
+                $obreiro['is_system_admin'] = true;
+                if (!in_array('admin', $obreiro['cargos'], true)) {
+                    $obreiro['cargos'][] = 'admin';
+                }
+            } else {
+                $obreiro['is_system_admin'] = false;
+            }
         }
         unset($obreiro);
 
         return $obreiros;
+    }
+
+    private function isSystemAdminTelegramId(int $telegramId): bool
+    {
+        $raw = trim((string) (getenv('SYSTEM_ADMIN_TELEGRAM_IDS') ?: ''));
+        if ($raw === '') {
+            return false;
+        }
+
+        $ids = preg_split('/\s*,\s*/', $raw, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        foreach ($ids as $id) {
+            if ((int) trim((string) $id) === $telegramId) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function buscarCodigosAtivosPorObreiroIds(array $ids): array

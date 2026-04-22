@@ -9,7 +9,7 @@ param(
     [switch]$WithPolling,
     [switch]$SkipWebhookUpdate,
     [switch]$SkipEnvUpdate,
-    [ValidateSet('localhostrun', 'cloudflared')][string]$TunnelProvider = 'localhostrun'
+    [ValidateSet('localhostrun', 'cloudflared')][string]$TunnelProvider = 'cloudflared'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -257,8 +257,8 @@ try {
             Write-Host "Nao foi possivel obter URL publica do tunnel." -ForegroundColor Red
             throw "Tunnel nao iniciado. Sem URL publica, os botoes Mini App nao irao abrir."
         } else {
-            Write-Host "Tunnel URL: $tunnelUrl" -ForegroundColor Green
-            Write-Host "Importante: envie /painel novamente no Telegram para gerar botoes com esta URL." -ForegroundColor Yellow
+            Write-Host "APP_URL atual (tunnel): $tunnelUrl" -ForegroundColor Green
+            Write-Host "Reenvie /painel para atualizar os botoes." -ForegroundColor Yellow
 
             if (-not $SkipEnvUpdate) {
                 Set-DotEnvValue -Path $envFile -Key 'APP_URL' -Value $tunnelUrl

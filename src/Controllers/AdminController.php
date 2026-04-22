@@ -5,11 +5,80 @@ namespace App\Controllers;
 use App\Models\Cargo;
 use App\Models\AuditoriaAdministrativa;
 use App\Models\ConfiguracaoLoja;
+use App\Models\ConteudoPublico;
 use App\Models\Gestao;
 use App\Models\Obreiro;
+use App\Models\ConviteAcesso;
 
 class AdminController
 {
+    public function acessosPendentes()
+    {
+        $itens = (new Obreiro())->listarPendentesAcesso();
+        require_once __DIR__ . '/../Views/admin/acessos.php';
+    }
+
+    public function atualizarAcesso()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = trim((string) ($_POST['id'] ?? ''));
+            $status = trim((string) ($_POST['status'] ?? ''));
+
+            if ($id === '' || $status === '') {
+                $_SESSION['mensagem_erro'] = 'Informe o obreiro e o status desejado.';
+            } else {
+                $ok = (new Obreiro())->atualizarAcessoStatus($id, $status);
+                if ($ok) {
+                    $_SESSION['mensagem_sucesso'] = 'Status de acesso atualizado com sucesso.';
+                } else {
+                    $_SESSION['mensagem_erro'] = 'Nao foi possivel atualizar o status de acesso.';
+                }
+            }
+        }
+
+        header('Location: /admin/acessos');
+        exit;
+    }
+
+    public function conteudoPublico()
+    {
+        $model = new ConteudoPublico();
+        $itens = $model->listarParaAdmin();
+
+        require_once __DIR__ . '/../Views/admin/conteudo_publico.php';
+    }
+
+    public function salvarConteudoPublico()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                (new ConteudoPublico())->salvar($_POST);
+                $_SESSION['mensagem_sucesso'] = 'Conteudo publico atualizado com sucesso.';
+            } catch (\Throwable $e) {
+                $_SESSION['mensagem_erro'] = 'Nao foi possivel salvar o conteudo: ' . $e->getMessage();
+            }
+        }
+
+        header('Location: /admin/conteudo-publico');
+        exit;
+    }
+
+    public function excluirConteudoPublico()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = (int) ($_POST['id'] ?? 0);
+            try {
+                (new ConteudoPublico())->excluir($id);
+                $_SESSION['mensagem_sucesso'] = 'Conteudo removido com sucesso.';
+            } catch (\Throwable $e) {
+                $_SESSION['mensagem_erro'] = 'Nao foi possivel remover o conteudo: ' . $e->getMessage();
+            }
+        }
+
+        header('Location: /admin/conteudo-publico');
+        exit;
+    }
+
     public function listarCargos()
     {
         $obreiroModel = new Obreiro();
@@ -126,6 +195,36 @@ class AdminController
     {
         $itens = (new AuditoriaAdministrativa())->listarRecentes(80);
         require_once __DIR__ . '/../Views/admin/auditoria.php';
+    }
+
+    public function convitesAcesso()
+    {
+        $obreiroModel = new Obreiro();
+        $conviteModel = new ConviteAcesso();
+
+        $pendentes = $obreiroModel->listarPendentesAcesso();
+        $convites = $conviteModel->listarRecentes(40);
+
+        require_once __DIR__ . '/../Views/admin/convites.php';
+    }
+
+    public function gerarConviteAcesso()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $obreiroId = trim((string) ($_POST['obreiro_id'] ?? ''));
+            $resultado = (new ConviteAcesso())->gerarParaObreiro($obreiroId);
+
+            if (!($resultado['ok'] ?? false)) {
+                $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'Nao foi possivel gerar o convite.');
+            } else {
+                $_SESSION['mensagem_sucesso'] = 'Convite gerado com sucesso.';
+                $_SESSION['convite_gerado_link'] = (string) ($resultado['deep_link'] ?? '');
+                $_SESSION['convite_gerado_expira_em'] = (string) ($resultado['expira_em'] ?? '');
+            }
+        }
+
+        header('Location: /admin/convites');
+        exit;
     }
 
     public function montarPayloadMiniapp(): array

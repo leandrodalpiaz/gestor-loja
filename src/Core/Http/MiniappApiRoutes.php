@@ -81,9 +81,14 @@ class MiniappApiRoutes
                 JsonResponse::error('Nao autenticado no miniapp.', 401);
             }
 
+            $rolesSource = $miniappObreiro['cargos'] ?? null;
+            if (!is_array($rolesSource) || $rolesSource === []) {
+                $rolesSource = [$miniappObreiro['cargo_principal'] ?? $miniappObreiro['cargo'] ?? ''];
+            }
+
             $roles = array_values(array_unique(array_filter(array_map(
                 $normalizeRole,
-                $miniappObreiro['cargos'] ?? [$miniappObreiro['cargo_principal'] ?? $miniappObreiro['cargo'] ?? '']
+                $rolesSource
             ))));
             $temPermissaoMiniapp = false;
             foreach ($miniappAllowedRoles as $allowedRole) {

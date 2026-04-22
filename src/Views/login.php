@@ -179,12 +179,14 @@ foreach ([
                                     <div class="max-w-xl rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-erpMuted">
                                         Em caso de duvida sobre acesso, procure a administracao da Loja. O painel web e o ambiente principal para operacao administrativa desktop.
                                     </div>
-                                    <button type="submit" class="inline-flex min-w-[260px] items-center justify-center rounded-xl border border-transparent bg-erpNavyDeep px-6 py-4 text-base font-semibold text-white transition hover:opacity-95">
-                                        <span>Entrar no sistema</span>
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                        </svg>
-                                    </button>
+                                    <div class="flex flex-col gap-3 sm:flex-row">
+                                        <button type="submit" name="acao" value="login" class="inline-flex min-w-[220px] items-center justify-center rounded-xl border border-transparent bg-erpNavyDeep px-6 py-4 text-base font-semibold text-white transition hover:opacity-95">
+                                            <span>Entrar no sistema</span>
+                                        </button>
+                                        <button type="submit" name="acao" value="solicitar" class="inline-flex min-w-[220px] items-center justify-center rounded-xl border border-erpBorder bg-white px-6 py-4 text-base font-semibold text-erpNavy transition hover:bg-erpBg">
+                                            <span>Solicitar acesso</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -200,6 +202,51 @@ foreach ([
                                 </p>
                             </div>
 
+                            <?php if (!empty($publicConteudos)): ?>
+                                <div class="rounded-[1.6rem] border border-erpBorder bg-white px-5 py-5">
+                                    <div class="flex items-center justify-between gap-4">
+                                        <div>
+                                            <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpMuted">Publico</div>
+                                            <div class="mt-2 text-base font-semibold text-erpNavy">Agenda e comunicados</div>
+                                        </div>
+                                        <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpGold">
+                                            Atualizacoes
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 space-y-3">
+                                        <?php foreach ($publicConteudos as $item): ?>
+                                            <?php
+                                            $tipo = (string) ($item['tipo'] ?? '');
+                                            $titulo = (string) ($item['titulo'] ?? '');
+                                            $resumo = (string) ($item['resumo'] ?? '');
+                                            $inicioEm = (string) ($item['inicio_em'] ?? '');
+                                            $link = (string) ($item['link_url'] ?? '');
+                                            ?>
+                                            <article class="rounded-[1.2rem] border border-erpBorder bg-slate-50 px-4 py-4">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="inline-flex items-center rounded-full border border-erpBorder bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-erpMuted">
+                                                        <?= htmlspecialchars($tipo !== '' ? $tipo : 'info') ?>
+                                                    </span>
+                                                    <?php if ($inicioEm !== ''): ?>
+                                                        <span class="text-xs text-erpMuted"><?= htmlspecialchars($inicioEm) ?></span>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div class="mt-2 text-sm font-semibold leading-6 text-erpText break-words"><?= htmlspecialchars($titulo) ?></div>
+                                                <?php if ($resumo !== ''): ?>
+                                                    <div class="mt-2 text-sm leading-6 text-erpMuted break-words"><?= htmlspecialchars($resumo) ?></div>
+                                                <?php endif; ?>
+                                                <?php if ($link !== ''): ?>
+                                                    <a class="mt-3 inline-flex items-center text-sm font-semibold text-erpNavy underline decoration-erpBorder underline-offset-4 hover:decoration-erpGold" href="<?= htmlspecialchars($link) ?>" target="_blank" rel="noopener noreferrer">
+                                                        Ver detalhes
+                                                    </a>
+                                                <?php endif; ?>
+                                            </article>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
                             <div class="space-y-3">
                                 <article class="rounded-[1.2rem] border border-erpBorder bg-white px-4 py-4">
                                     <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpMuted">Secretaria</div>
@@ -214,6 +261,45 @@ foreach ([
                                     <div class="mt-2 text-sm leading-6 text-erpText">Efemerides, nominata oficial e paineis por responsabilidade.</div>
                                 </article>
                             </div>
+
+                            <?php if (!empty($publicAds) || (($publicAdsEnabled ?? false) === true)): ?>
+                                <div class="rounded-[1.6rem] border border-erpBorder bg-white px-5 py-5">
+                                    <div class="flex items-center justify-between gap-4">
+                                        <div>
+                                            <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpMuted">Apoio</div>
+                                            <div class="mt-2 text-base font-semibold text-erpNavy">Publicidade discreta</div>
+                                        </div>
+                                        <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpGold">Sem trackers</div>
+                                    </div>
+
+                                    <?php if (!empty($publicAds)): ?>
+                                        <div class="mt-4 space-y-3">
+                                            <?php foreach ($publicAds as $ad): ?>
+                                                <?php
+                                                $adTitle = (string) ($ad['titulo'] ?? '');
+                                                $adResumo = (string) ($ad['resumo'] ?? '');
+                                                $adLink = (string) ($ad['link_url'] ?? '');
+                                                ?>
+                                                <div class="rounded-[1.2rem] border border-erpBorder bg-slate-50 px-4 py-4">
+                                                    <div class="text-sm font-semibold text-erpText break-words"><?= htmlspecialchars($adTitle) ?></div>
+                                                    <?php if ($adResumo !== ''): ?>
+                                                        <div class="mt-2 text-sm leading-6 text-erpMuted break-words"><?= htmlspecialchars($adResumo) ?></div>
+                                                    <?php endif; ?>
+                                                    <?php if ($adLink !== ''): ?>
+                                                        <a class="mt-3 inline-flex items-center text-sm font-semibold text-erpNavy underline decoration-erpBorder underline-offset-4 hover:decoration-erpGold" href="<?= htmlspecialchars($adLink) ?>" target="_blank" rel="noopener noreferrer">
+                                                            Acessar
+                                                        </a>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="mt-3 text-sm leading-6 text-erpMuted">
+                                            Espaco reservado. Para ativar, cadastre itens do tipo <span class="font-semibold">ad</span> e habilite a flag <span class="font-semibold">PUBLIC_ADS_ENABLED</span>.
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </aside>
                 </section>

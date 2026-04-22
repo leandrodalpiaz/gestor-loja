@@ -18,7 +18,14 @@ $update = json_decode($content, true);
 $updateId = $update['update_id'] ?? 'n/a';
 $hasMessage = isset($update['message']) ? '1' : '0';
 $hasCallback = isset($update['callback_query']) ? '1' : '0';
-error_log("[webhook] recebido update_id={$updateId} message={$hasMessage} callback={$hasCallback}");
+$chatType = (string) ($update['message']['chat']['type'] ?? $update['callback_query']['message']['chat']['type'] ?? 'unknown');
+$chatId = (string) ($update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'] ?? 'n/a');
+$userId = (string) ($update['message']['from']['id'] ?? $update['callback_query']['from']['id'] ?? 'n/a');
+$command = trim((string) ($update['message']['text'] ?? $update['callback_query']['data'] ?? 'unknown'));
+$appUrl = rtrim((string) Env::get('APP_URL', ''), '/');
+$safeCommand = $command !== '' ? explode(' ', $command)[0] : 'unknown';
+$safeAppUrl = $appUrl !== '' ? $appUrl : 'missing';
+error_log("[webhook] recebido update_id={$updateId} message={$hasMessage} callback={$hasCallback} chat_type={$chatType} chat_id={$chatId} user_id={$userId} comando={$safeCommand} app_url={$safeAppUrl}");
 
 if ($update) {
     try {

@@ -30,6 +30,7 @@ class ObreirosRoutes
                 $obreiros = $obreiroModel->listarParaSecretaria($filtrosObreiros);
                 $resumoObreiros = $obreiroModel->obterResumoSecretaria($filtrosObreiros);
                 $cargosFiltros = (new Cargo())->listarResumoCargos();
+                $podeGerenciarObreiros = $authorizer->hasPermission('obreiros.manage');
                 require __DIR__ . '/../../Views/obreiros.php';
                 return true;
 
@@ -93,6 +94,24 @@ class ObreirosRoutes
                 } else {
                     header('Location: /obreiros/editar?id=' . urlencode($obreiroId) . '&erro=1');
                 }
+                exit;
+
+            case '/obreiros/inativar':
+                ModuleGuards::requireObreirosManageAccess($openTestAccess, $session, $authorizer);
+                if ($method !== 'POST') {
+                    header('Location: /obreiros');
+                    exit;
+                }
+
+                $obreiroId = (string) ($_POST['id'] ?? '');
+                if ($obreiroId === '') {
+                    header('Location: /obreiros?erro=1');
+                    exit;
+                }
+
+                $obreiroModel = new Obreiro();
+                $ok = $obreiroModel->inativarPorId($obreiroId);
+                header('Location: /obreiros?' . ($ok ? 'sucesso=1' : 'erro=1'));
                 exit;
 
             default:

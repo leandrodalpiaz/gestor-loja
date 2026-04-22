@@ -56,6 +56,26 @@ class ModuleGuards
         );
     }
 
+    public static function requirePublicContentManage(bool $openTestAccess, array $session, Authorizer $authorizer): void
+    {
+        WebGuards::requireAuthenticatedPermission(
+            $openTestAccess,
+            $session,
+            $authorizer->hasPermission('public_content.manage'),
+            'Acesso restrito ao Administrador, Secretario ou Veneravel Mestre.'
+        );
+    }
+
+    public static function requireAccessManage(bool $openTestAccess, array $session, Authorizer $authorizer): void
+    {
+        WebGuards::requireAuthenticatedPermission(
+            $openTestAccess,
+            $session,
+            $authorizer->hasPermission('access.manage'),
+            'Acesso restrito ao Administrador ou Secretario.'
+        );
+    }
+
     public static function requireBibliotecaAccess(bool $openTestAccess, array $session, Authorizer $authorizer): void
     {
         WebGuards::requireAuthenticatedPermission(

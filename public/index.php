@@ -1,9 +1,14 @@
-﻿<?php
-session_start();
+<?php
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+$_SESSION = $_SESSION ?? [];
 
 use App\Config\Env;
 use App\Config\Database;
 use App\Core\Auth\CurrentUser;
+use App\Core\Auth\AccountGate;
 use App\Core\Http\AdminRoutes;
 use App\Core\Http\AssistenciaRoutes;
 use App\Core\Http\BibliotecaRoutes;
@@ -61,7 +66,18 @@ $normalizeRole = static function (?string $cargo): string {
     $cargo = strtolower(trim((string) $cargo));
     $cargo = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $cargo) ?: $cargo;
     $cargo = preg_replace('/[^a-z0-9_]+/', '', $cargo) ?? '';
-    return $cargo;
+
+    // Aliases legados -> codigos canonicos (RBAC).
+    // Importante para compatibilidade com cargos antigos (ex.: "Administrador").
+    $aliases = [
+        'administrador' => 'admin',
+        'administracao' => 'admin',
+        'adm' => 'admin',
+        'veneravelmestre' => 'veneravel',
+        'vm' => 'veneravel',
+    ];
+
+    return $aliases[$cargo] ?? $cargo;
 };
 
 $tenantContext = TenantContext::fromSessionAndEnv($_SESSION, $_ENV);
@@ -75,6 +91,19 @@ $permissionMap = new PermissionMap();
 $authorizer = new Authorizer($currentUser, $permissionMap, $bypassRoleChecks);
 $GLOBALS['gestor_loja_normalize_role'] = $normalizeRole;
 $GLOBALS['gestor_loja_permission_map'] = $permissionMap;
+
+if (isset($_SESSION['usuario_logado']) && !in_array($requestUri, ['/login', '/logout', '/health'], true)) {
+    $statusSessao = strtolower(trim((string) ($_SESSION['usuario_logado']['acesso_status'] ?? '')));
+    if ($statusSessao === '') {
+        $statusSessao = !empty($_SESSION['usuario_logado']['ativo']) ? 'ativo' : 'inativo';
+    }
+
+    if ($statusSessao !== 'ativo') {
+        session_destroy();
+        header('Location: /login');
+        exit;
+    }
+}
 
 $appToday = static function (): \DateTimeImmutable {
     $timezone = trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo'));
@@ -254,16 +283,30 @@ $syncSessionRoles = static function (?array $usuario = null) use ($normalizeRole
 
     $principal = Cargo::resolverCargoPrincipal($slugs, $fallback);
 
+    // System admin (fora do RBAC da loja): ganha permissao total sem virar "cargo principal" da loja.
+    $systemAdminTelegramIds = array_values(array_filter(array_map(
+        static fn ($value) => trim($value),
+        preg_split('/\s*,\s*/', (string) ($_ENV['SYSTEM_ADMIN_TELEGRAM_IDS'] ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: []
+    )));
+    $telegramIdSessao = (string) ($usuario['telegram_id'] ?? $_SESSION['usuario_logado']['telegram_id'] ?? '');
+    $isSystemAdmin = $telegramIdSessao !== '' && in_array($telegramIdSessao, $systemAdminTelegramIds, true);
+    $_SESSION['is_system_admin'] = $isSystemAdmin;
+
+    $slugsEfetivos = $slugs;
+    if ($isSystemAdmin && !in_array('admin', $slugsEfetivos, true)) {
+        $slugsEfetivos[] = 'admin';
+    }
+
     if (isset($_SESSION['usuario_logado']) && is_array($_SESSION['usuario_logado'])) {
         $_SESSION['usuario_logado']['cargo'] = $principal;
-        $_SESSION['usuario_logado']['cargos'] = $slugs;
+        $_SESSION['usuario_logado']['cargos'] = $slugsEfetivos;
     }
 
     $_SESSION['usuario_cargo'] = $principal;
-    $_SESSION['usuario_cargos'] = $slugs;
+    $_SESSION['usuario_cargos'] = $slugsEfetivos;
     $_SESSION['usuario_cargos_codigos'] = $codigos;
 
-    return [$principal, $slugs, $codigos];
+    return [$principal, $slugsEfetivos, $codigos];
 };
 
 $syncTenantSessionFromObreiro = static function (?array $usuario = null): void {
@@ -573,9 +616,9 @@ if (!function_exists('requireMiniappAuth')) {
 
         $initData = trim((string) ($_GET['init_data'] ?? $_GET['initData'] ?? $_POST['init_data'] ?? $_POST['initData'] ?? ''));
         if ($initData === '') {
-            http_response_code(401);
-            echo 'Nao autenticado no miniapp.';
-            exit;
+            // Telegram WebApp nao envia init_data na URL automaticamente; fica disponivel em JS (tg.initData).
+            // Para nao bloquear a abertura do miniapp, permitimos renderizar a pagina e deixamos a API exigir initData.
+            return [];
         }
 
         $botToken = trim((string) ($_ENV['TELEGRAM_BOT_TOKEN'] ?? ''));
@@ -849,19 +892,57 @@ switch ($requestUri) {
         }
 
         $erroLogin = null;
+        $publicConteudos = [];
+        $publicAds = [];
+        $publicAdsEnabled = filter_var($_ENV['PUBLIC_ADS_ENABLED'] ?? 'false', FILTER_VALIDATE_BOOL);
+
+        try {
+            $conteudoModel = new \App\Models\ConteudoPublico();
+            $publicConteudos = $conteudoModel->listarPublicos(null, 10);
+            $publicAds = $publicAdsEnabled ? $conteudoModel->listarAdsPublicos(3) : [];
+        } catch (\Throwable $e) {
+            $publicConteudos = [];
+            $publicAds = [];
+        }
+
         if ($method === "POST") {
             $matricula = $_POST["matricula"] ?? $_POST["cim"] ?? "";
             $password = $_POST["password"] ?? $_POST["senha"] ?? "";
+            $acao = trim((string) ($_POST['acao'] ?? 'login'));
 
             if (empty($matricula) || empty($password)) {
                 $erroLogin = "Informe CIM e senha para acessar.";
             } else {
                 $obreiroModel = new \App\Models\Obreiro();
-                $usuario = $obreiroModel->autenticar($matricula, $password);
+                $gate = new AccountGate($obreiroModel);
+                $estadoConta = $gate->byCim((string) $matricula);
+                $estado = (string) ($estadoConta['state'] ?? 'inexistente');
 
-                if (!$usuario) {
-                    $erroLogin = "Credenciais invalidas ou usuario inativo.";
+                if ($acao === 'solicitar') {
+                    $solicitacao = $obreiroModel->solicitarAcessoPorCim((string) $matricula, (string) $password);
+                    if (!($solicitacao['ok'] ?? false)) {
+                        $erroLogin = "Procure o secretario para cadastro";
+                    } else {
+                        $erroLogin = "Solicitacao registrada. Aguarde aprovacao do secretario/admin.";
+                    }
+                    require_once __DIR__ . "/../src/Views/login.php";
+                    break;
+                }
+
+                if ($estado === 'inexistente') {
+                    $erroLogin = "Procure o secretario para cadastro";
+                } elseif ($estado === 'pendente') {
+                    $erroLogin = "Seu acesso esta pendente. Aguarde aprovacao do secretario/admin.";
+                } elseif ($estado === 'inativo') {
+                    $erroLogin = "Seu acesso esta inativo. Procure o secretario/admin.";
                 } else {
+                    $usuario = $obreiroModel->autenticar((string) $matricula, (string) $password);
+                    if (!$usuario) {
+                        $erroLogin = "Credenciais invalidas.";
+                        require_once __DIR__ . "/../src/Views/login.php";
+                        break;
+                    }
+
                     $cargo = $normalizeRole((string) ($usuario['cargo_principal'] ?? $usuario['cargo'] ?? ''));
                     $cargosAtivos = array_values(array_unique(array_filter(array_map(
                         $normalizeRole,

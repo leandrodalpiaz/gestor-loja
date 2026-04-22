@@ -89,6 +89,9 @@ if (function_exists('pcntl_async_signals') && function_exists('pcntl_signal')) {
 }
 
 echo "[polling] iniciado timeout={$timeout}s offset_inicial={$offset}\n";
+$appUrl = rtrim((string) Env::get('APP_URL', ''), '/');
+$safeAppUrl = $appUrl !== '' ? $appUrl : 'missing';
+error_log("[polling] modo=polling app_url={$safeAppUrl}");
 
 while ($running) {
     $params = [
@@ -124,8 +127,13 @@ while ($running) {
         }
 
         $updateId = (int) ($update['update_id'] ?? 0);
+        $chatType = (string) ($update['message']['chat']['type'] ?? $update['callback_query']['message']['chat']['type'] ?? 'unknown');
+        $userId = (string) ($update['message']['from']['id'] ?? $update['callback_query']['from']['id'] ?? 'n/a');
+        $command = trim((string) ($update['message']['text'] ?? $update['callback_query']['data'] ?? 'unknown'));
+        $safeCommand = $command !== '' ? explode(' ', $command)[0] : 'unknown';
 
         try {
+            error_log("[polling] update_id={$updateId} chat_type={$chatType} user_id={$userId} comando={$safeCommand} app_url={$safeAppUrl}");
             $handler->handle($update);
         } catch (\Throwable $e) {
             error_log('[polling] erro ao processar update: ' . $e->getMessage());

@@ -3,11 +3,13 @@
 namespace App\Bot;
 
 use App\Config\Env;
+use App\Core\Auth\AccountGate;
 use App\Core\Authorization\PermissionMap;
 use App\Models\ComprovantePix;
 use App\Models\ConfiguracaoLoja;
 use App\Models\EfemerideRegistro;
 use App\Models\ObrigacaoFinanceira;
+use App\Models\ConviteAcesso;
 
 class CommandHandler
 {
@@ -30,7 +32,8 @@ class CommandHandler
     {
         $base = trim((string) Env::get('APP_URL', ''));
         if ($base === '') {
-            $base = 'http://localhost:8000';
+            error_log('[bot] APP_URL ausente no .env; links web_app foram bloqueados ate a configuracao.');
+            return '';
         }
 
         return rtrim($base, '/');
@@ -38,8 +41,14 @@ class CommandHandler
 
     private function buildAppUrl(string $path): string
     {
+        $base = $this->getAppBaseUrl();
+        if ($base === '') {
+            return '';
+        }
+
         $path = '/' . ltrim($path, '/');
-        return $this->getAppBaseUrl() . $path;
+        $separator = strpos($path, '?') === false ? '?' : '&';
+        return $base . $path . $separator . 'v=' . time();
     }
 
     private function getGroupChatId(): ?string
@@ -101,7 +110,23 @@ class CommandHandler
 
     private function isDev(int $telegramId): bool
     {
-        return in_array($telegramId, $this->devIds, true);
+        if (in_array($telegramId, $this->devIds, true)) {
+            return true;
+        }
+
+        $raw = trim((string) Env::get('SYSTEM_ADMIN_TELEGRAM_IDS', ''));
+        if ($raw === '') {
+            return false;
+        }
+
+        $ids = preg_split('/\s*,\s*/', $raw, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        foreach ($ids as $id) {
+            if ((int) trim((string) $id) === $telegramId) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function isPrivateChat($chatId): bool
@@ -109,11 +134,110 @@ class CommandHandler
         return (int) $chatId > 0;
     }
 
+    private function isPrivateChatType(string $chatType): bool
+    {
+        return strtolower(trim($chatType)) === 'private';
+    }
+
+    private function extractCommandLabel(array $update): string
+    {
+        if (isset($update['message']['text'])) {
+            $text = trim((string) $update['message']['text']);
+            if ($text !== '') {
+                return explode(' ', $text)[0];
+            }
+        }
+
+        if (isset($update['callback_query']['data'])) {
+            return 'callback:' . (string) $update['callback_query']['data'];
+        }
+
+        return 'unknown';
+    }
+
+    private function logBotEvent(string $source, array $update, ?string $appUrl = null): void
+    {
+        $chatType = (string) ($update['message']['chat']['type'] ?? $update['callback_query']['message']['chat']['type'] ?? 'unknown');
+        $chatId = (string) ($update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'] ?? 'n/a');
+        $userId = (string) ($update['message']['from']['id'] ?? $update['callback_query']['from']['id'] ?? 'n/a');
+        $command = $this->extractCommandLabel($update);
+        $safeAppUrl = $appUrl ?? $this->getAppBaseUrl();
+        $safeAppUrl = $safeAppUrl !== '' ? $safeAppUrl : 'missing';
+
+        error_log("[bot] source={$source} chat_type={$chatType} chat_id={$chatId} user_id={$userId} command={$command} app_url={$safeAppUrl}");
+    }
+
+    private function privateMenuHint(): string
+    {
+        return "\n\nSe algum botao nao abrir, envie /painel novamente.";
+    }
+
+    private function ensureAppUrlConfigured(int|string $chatId): bool
+    {
+        if ($this->getAppBaseUrl() !== '') {
+            return true;
+        }
+
+        $this->telegram->sendMessage(
+            $chatId,
+            'Mini app indisponivel no momento. APP_URL nao configurada. Reenvie /painel apos atualizar o ambiente local.'
+        );
+        return false;
+    }
+
+    private function resolvePrivateAccess(int $telegramId): array
+    {
+        $gate = new AccountGate($this->obreiroModel);
+        return $gate->byTelegramId($telegramId);
+    }
+
+    private function sendAccessStateMessage(int|string $chatId, string $state): void
+    {
+        if ($state === 'pendente') {
+            $this->telegram->sendMessage($chatId, 'Seu acesso esta pendente. Aguarde aprovacao do secretario/admin.');
+            return;
+        }
+
+        if ($state === 'inativo') {
+            $this->telegram->sendMessage($chatId, 'Seu acesso esta inativo. Procure o secretario/admin.');
+            return;
+        }
+
+        $this->telegram->sendMessage(
+            $chatId,
+            'Cadastro nao localizado. Use /solicitar <CIM> <senha> ou procure o secretario para cadastro.'
+        );
+    }
+
+    private function handleSolicitarAcessoTelegram(int|string $chatId, int $telegramId, string $text): void
+    {
+        $parts = preg_split('/\s+/', trim($text)) ?: [];
+        if (count($parts) < 3) {
+            $this->telegram->sendMessage($chatId, 'Use: /solicitar <CIM> <senha>');
+            return;
+        }
+
+        $cim = trim((string) ($parts[1] ?? ''));
+        $senha = trim((string) ($parts[2] ?? ''));
+        if ($cim === '' || $senha === '') {
+            $this->telegram->sendMessage($chatId, 'Use: /solicitar <CIM> <senha>');
+            return;
+        }
+
+        $solicitacao = $this->obreiroModel->solicitarAcessoPorCim($cim, $senha, $telegramId);
+        if (!($solicitacao['ok'] ?? false)) {
+            $this->telegram->sendMessage($chatId, 'Procure o secretario para cadastro');
+            return;
+        }
+
+        $this->telegram->sendMessage($chatId, 'Solicitacao registrada. Aguarde aprovacao do secretario/admin.');
+    }
+
     private function notifyPrivateOnly($chatId): void
     {
         $this->telegram->sendMessage(
             $chatId,
-            'Por segurança, painel e miniapps funcionam apenas no privado do bot. Abra o chat privado e use /painel.'
+            'Para acessar o sistema, fale comigo no privado.'
         );
     }
 
@@ -210,76 +334,41 @@ class CommandHandler
         }
 
         $obreiro = $this->obreiroModel->findByTelegramId($fromId);
-        $mensagem = "Bem-vindo ao painel da Loja, meu Irmão!";
-        $teclado = ['inline_keyboard' => []];
+        $this->logBotEvent('menu_principal', [
+            'message' => [
+                'chat' => ['id' => $chatId, 'type' => 'private'],
+                'from' => ['id' => $fromId],
+                'text' => '/painel',
+            ],
+        ], $this->getAppBaseUrl());
+        $mensagem = "Bem-vindo ao painel da Loja, meu Irmao!" . $this->privateMenuHint();
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Meu cadastro', 'callback_data' => 'menu_meu_cadastro'],
+                    ['text' => 'Minhas informacoes', 'callback_data' => 'menu_minhas_info'],
+                ],
+                [
+                    ['text' => 'Ajuda / contato', 'callback_data' => 'menu_ajuda_contato'],
+                ],
+            ],
+        ];
 
-        if (
-            $this->obreiroHasPermission($obreiro, 'admin.cargos.view')
-            || $this->obreiroHasPermission($obreiro, 'secretaria.manage')
-            || $this->obreiroHasPermission($obreiro, 'chancelaria.manage')
-            || $this->obreiroHasPermission($obreiro, 'tesouraria.manage')
-            || $this->obreiroHasPermission($obreiro, 'biblioteca.self')
-            || $this->obreiroHasPermission($obreiro, 'vigilancia.primeiro.manage')
-            || $this->obreiroHasPermission($obreiro, 'vigilancia.segundo.manage')
-            || $this->obreiroHasPermission($obreiro, 'hospitaleiro.manage')
-            || $this->obreiroHasPermission($obreiro, 'mestre_harmonia.manage')
-            || $this->obreiroHasPermission($obreiro, 'mestre_banquetes.manage')
-            || $this->obreiroHasPermission($obreiro, 'orador.view')
-            || $this->obreiroHasPermission($obreiro, 'veneravel.manage')
-        ) {
+        if ($this->obreiroHasPermission($obreiro, 'chancelaria.manage')) {
             $teclado['inline_keyboard'][] = [
                 ['text' => 'Chancelaria', 'callback_data' => 'admin_chancelaria'],
-                ['text' => 'Secretaria', 'callback_data' => 'secretaria_menu'],
             ];
-            if ($this->obreiroHasPermission($obreiro, 'veneravel.manage')) {
-                $teclado['inline_keyboard'][] = [
-                    ['text' => 'Painel do Venerável Mestre', 'web_app' => ['url' => $this->buildAppUrl('/veneravel')]],
-                    ['text' => 'Venerável Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
-                ];
-            }
-            if ($this->obreiroHasPermission($obreiro, 'vigilancia.primeiro.manage')) {
-                $teclado['inline_keyboard'][] = [
-                    ['text' => '1º Vigilante Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/primeiro-vigilante')]],
-                ];
-            }
-            if ($this->obreiroHasPermission($obreiro, 'vigilancia.segundo.manage')) {
-                $teclado['inline_keyboard'][] = [
-                    ['text' => '2º Vigilante Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/segundo-vigilante')]],
-                ];
-            }
+        }
+
+        if ($this->obreiroHasPermission($obreiro, 'biblioteca.self')) {
             $teclado['inline_keyboard'][] = [
-                ['text' => 'Tesouraria', 'callback_data' => 'tesouraria_menu'],
                 ['text' => 'Biblioteca', 'callback_data' => 'biblioteca_menu'],
             ];
-            if ($this->obreiroHasPermission($obreiro, 'mestre_banquetes.manage')) {
-                $teclado['inline_keyboard'][] = [
-                    ['text' => 'Mestre de Banquetes', 'web_app' => ['url' => $this->buildAppUrl('/mestre-banquetes')]],
-                ];
-            }
-            if ($this->obreiroHasPermission($obreiro, 'orador.view')) {
-                $teclado['inline_keyboard'][] = [
-                    ['text' => 'Orador', 'web_app' => ['url' => $this->buildAppUrl('/orador')]],
-                    ['text' => 'Orador Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/orador')]],
-                ];
-            }
-            if ($this->obreiroHasPermission($obreiro, 'mestre_harmonia.manage')) {
-                $teclado['inline_keyboard'][] = [
-                    ['text' => 'Mestre de Harmonia', 'web_app' => ['url' => $this->buildAppUrl('/mestre-harmonia')]],
-                    ['text' => 'Harmonia Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/mestre-harmonia')]],
-                ];
-            }
-        if ($this->obreiroHasPermission($obreiro, 'hospitaleiro.manage')) {
-                $teclado['inline_keyboard'][] = [
-                    ['text' => 'Assistência', 'callback_data' => 'assistencia_menu'],
-                ];
-            }
-        } else {
+        }
+
+        if ($this->obreiroHasPermission($obreiro, '*') || $this->obreiroHasPermission($obreiro, 'admin.cargos.view')) {
             $teclado['inline_keyboard'][] = [
-                ['text' => 'Confirmar Presença', 'callback_data' => 'presenca_confirmar'],
-                ['text' => 'Informar Ausência', 'callback_data' => 'presenca_ausencia'],
-            ];
-            $teclado['inline_keyboard'][] = [
-                ['text' => 'Ver Próxima Sessão', 'callback_data' => 'sessao_info'],
+                ['text' => 'Admin', 'callback_data' => 'menu_admin_total'],
             ];
         }
 
@@ -428,19 +517,24 @@ class CommandHandler
     public function handleHelp($chatId)
     {
         $mensagem = "<b>Ajuda do Gestor da Loja</b>\n\n";
-        $mensagem .= "Comandos disponíveis:\n";
+        $mensagem .= "Comandos disponiveis:\n";
         $mensagem .= "/start - abre o menu principal\n";
         $mensagem .= "/chancelaria - painel da chancelaria\n";
         $mensagem .= "/tesouraria - painel da tesouraria\n";
         $mensagem .= "/biblioteca - painel da biblioteca\n";
-        $mensagem .= "/assistencia - painel de assistência\n";
+        $mensagem .= "/assistencia - painel de assistencia\n";
         $mensagem .= "/painel - painel administrativo\n";
+        $mensagem .= "/solicitar <CIM> <senha> - solicitar liberacao de acesso\n";
 
         $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML']);
     }
 
     public function handleChancelaria($chatId, $requesterTelegramId)
     {
+        if (!$this->ensureAppUrlConfigured($chatId)) {
+            return;
+        }
+
         if (!$this->ensureChancelariaAccess($chatId, (int) $requesterTelegramId)) {
             return;
         }
@@ -483,6 +577,10 @@ class CommandHandler
 
     public function handleTesouraria($chatId, $requesterTelegramId)
     {
+        if (!$this->ensureAppUrlConfigured($chatId)) {
+            return;
+        }
+
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'tesoureiro', 'veneravel', 'admin'))) {
             $this->telegram->sendMessage($chatId, 'Acesso restrito ao Tesoureiro, Venerável Mestre ou Administrador.');
@@ -526,6 +624,10 @@ class CommandHandler
 
     public function handleBiblioteca($chatId, $requesterTelegramId)
     {
+        if (!$this->ensureAppUrlConfigured($chatId)) {
+            return;
+        }
+
         $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
         $isBibliotecario = $this->obreiroHasRole($obreiro, 'bibliotecario', 'admin', 'veneravel');
         $canClassificar = $this->obreiroHasRole($obreiro, 'primeiro_vigilante', 'segundo_vigilante', 'bibliotecario', 'admin', 'veneravel');
@@ -821,34 +923,64 @@ class CommandHandler
     public function handle($update)
     {
         try {
+            $this->logBotEvent('receive', $update);
+
+            $chatType = (string) ($update['message']['chat']['type'] ?? $update['callback_query']['message']['chat']['type'] ?? 'unknown');
+            $chatId = $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'] ?? null;
+            if ($chatId !== null && !$this->isPrivateChatType($chatType)) {
+                $this->notifyPrivateOnly($chatId);
+                if (isset($update['callback_query']['id'])) {
+                    $this->telegram->answerCallbackQuery($update['callback_query']['id']);
+                }
+                $this->logBotEvent('group_blocked', $update);
+                return;
+            }
+
             if (isset($update['message'])) {
                 $message = $update['message'];
                 $chatId = $message['chat']['id'];
                 $text = $message['text'] ?? '';
                 $caption = $message['caption'] ?? '';
-                $fromId = $message['from']['id'];
+                $fromId = (int) ($message['from']['id'] ?? 0);
 
-                if (
-                    !$this->isPrivateChat($chatId)
-                    && (
-                        strpos($text, '/start') === 0
-                        || strpos($text, '/painel') === 0
-                        || strpos($text, '/chancelaria') === 0
-                        || strpos($text, '/tesouraria') === 0
-                        || strpos($text, '/biblioteca') === 0
-                        || strpos($text, '/assistencia') === 0
-                        || strpos($text, '/pix') === 0
-                        || strpos($text, '/financeiro') === 0
-                    )
-                ) {
-                    $this->notifyPrivateOnly($chatId);
+                if (strpos($text, '/solicitar') === 0) {
+                    $this->handleSolicitarAcessoTelegram($chatId, $fromId, (string) $text);
+                    return;
+                }
+
+                if (strpos($text, '/start') === 0) {
+                    $parts = preg_split('/\s+/', trim((string) $text)) ?: [];
+                    $payload = (string) ($parts[1] ?? '');
+                    if ($payload !== '' && str_starts_with($payload, 'ativar_')) {
+                        $token = trim(substr($payload, strlen('ativar_')));
+                        if ($token === '') {
+                            $this->telegram->sendMessage($chatId, 'Token de ativacao invalido. Procure o secretario.');
+                            return;
+                        }
+
+                        $resultado = (new ConviteAcesso())->consumir($token, $fromId);
+                        if (!($resultado['ok'] ?? false)) {
+                            $this->telegram->sendMessage($chatId, (string) ($resultado['erro'] ?? 'Nao foi possivel ativar seu acesso. Procure o secretario.'));
+                            return;
+                        }
+
+                        $this->telegram->sendMessage($chatId, 'Acesso ativado com sucesso. Envie /painel para acessar.' . $this->privateMenuHint());
+                        $this->sendMenuPrincipal($chatId, $fromId);
+                        return;
+                    }
+                }
+
+                $access = $this->resolvePrivateAccess($fromId);
+                $state = (string) ($access['state'] ?? 'inexistente');
+                if ($state !== 'ativo') {
+                    $this->sendAccessStateMessage($chatId, $state);
                     return;
                 }
 
                 if (strpos($text, '/start') === 0) {
                     $this->sendMenuPrincipal($chatId, $fromId);
                 } elseif (strpos($text, '/painel') === 0) {
-                    $this->handlePainelAdmin($chatId, $fromId);
+                    $this->sendMenuPrincipal($chatId, $fromId);
                 } elseif (strpos($text, '/ajuda') === 0 || strpos($text, '/help') === 0) {
                     $this->handleHelp($chatId);
                 } elseif (strpos($text, '/chancelaria') === 0) {
@@ -872,10 +1004,12 @@ class CommandHandler
                 $callback = $update['callback_query'];
                 $chatId = $callback['message']['chat']['id'];
                 $data = $callback['data'];
-                $fromId = $callback['from']['id'];
+                $fromId = (int) ($callback['from']['id'] ?? 0);
 
-                if (!$this->isPrivateChat($chatId)) {
-                    $this->notifyPrivateOnly($chatId);
+                $access = $this->resolvePrivateAccess($fromId);
+                $state = (string) ($access['state'] ?? 'inexistente');
+                if ($state !== 'ativo') {
+                    $this->sendAccessStateMessage($chatId, $state);
                     $this->telegram->answerCallbackQuery($callback['id']);
                     return;
                 }
@@ -979,6 +1113,18 @@ class CommandHandler
 
                     case 'start_menu':
                         $this->sendMenuPrincipal($chatId, $fromId);
+                        break;
+                    case 'menu_meu_cadastro':
+                        $this->telegram->sendMessage($chatId, 'Meu cadastro: procure a Secretaria para ajustes cadastrais e validacao de dados.');
+                        break;
+                    case 'menu_minhas_info':
+                        $this->telegram->sendMessage($chatId, 'Minhas informacoes: use o painel web para consultar dados e situacao atual.');
+                        break;
+                    case 'menu_ajuda_contato':
+                        $this->telegram->sendMessage($chatId, 'Ajuda / contato: em caso de duvidas, fale com a Secretaria da Loja.');
+                        break;
+                    case 'menu_admin_total':
+                        $this->handlePainelAdmin($chatId, $fromId);
                         break;
 
                     default:
@@ -1236,6 +1382,10 @@ class CommandHandler
 
     public function handleSecretariaMenu($chatId, $fromId)
     {
+        if (!$this->ensureAppUrlConfigured($chatId)) {
+            return;
+        }
+
         $obreiro = $this->obreiroModel->findByTelegramId($fromId);
         if (!$this->isDev($fromId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'secretario', 'admin', 'veneravel'))) {
             $this->telegram->sendMessage($chatId, 'Acesso restrito a Secretaria da Loja.');
@@ -1272,6 +1422,10 @@ class CommandHandler
 
     public function handleAssistenciaMenu($chatId, $fromId): void
     {
+        if (!$this->ensureAppUrlConfigured($chatId)) {
+            return;
+        }
+
         $obreiro = $this->obreiroModel->findByTelegramId($fromId);
         if (!$this->isDev($fromId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'hospitaleiro', 'secretario', 'tesoureiro', 'veneravel', 'admin'))) {
             $this->telegram->sendMessage($chatId, 'Acesso restrito ao Mestre Hospitaleiro, Secretaria, Tesouraria, Venerável Mestre ou Administrador.');
@@ -1299,3 +1453,4 @@ class CommandHandler
         $this->telegram->sendMessage($chatId, "Use o painel web da Secretaria para operar sessões, publicações e trabalhos da ordem do dia.");
     }
 }
+
