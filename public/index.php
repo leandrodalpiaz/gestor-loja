@@ -3,6 +3,15 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+ini_set('default_charset', 'UTF-8');
+if (function_exists('mb_internal_encoding')) {
+    mb_internal_encoding('UTF-8');
+}
+
+if (!headers_sent()) {
+    header('Content-Type: text/html; charset=UTF-8');
+}
+
 $_SESSION = $_SESSION ?? [];
 
 use App\Config\Env;
@@ -153,7 +162,7 @@ $mergeHistoricosFixos = static function (array $registros, array $filtros): arra
     $vinculo = trim((string) ($filtros['vinculo'] ?? ''));
     $irmaoRef = trim((string) ($filtros['irmao_ref'] ?? ''));
 
-    if ($tipo !== '' && $tipo !== 'HistÃ³ria') {
+    if ($tipo !== '' && $tipo !== 'História') {
         return $registros;
     }
 
@@ -281,21 +290,33 @@ $syncSessionRoles = static function (?array $usuario = null) use ($normalizeRole
         $slugs = [$fallback];
     }
 
-    $principal = Cargo::resolverCargoPrincipal($slugs, $fallback);
-
-    // System admin (fora do RBAC da loja): ganha permissao total sem virar "cargo principal" da loja.
-    $systemAdminTelegramIds = array_values(array_filter(array_map(
-        static fn ($value) => trim($value),
-        preg_split('/\s*,\s*/', (string) ($_ENV['SYSTEM_ADMIN_TELEGRAM_IDS'] ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: []
-    )));
-    $telegramIdSessao = (string) ($usuario['telegram_id'] ?? $_SESSION['usuario_logado']['telegram_id'] ?? '');
-    $isSystemAdmin = $telegramIdSessao !== '' && in_array($telegramIdSessao, $systemAdminTelegramIds, true);
+    // "Admin tecnico" (fora do RBAC da loja) so existe via login tecnico (SYSTEM_ADMIN_WEB_*).
+    // Obreiros nunca devem herdar "admin" por cadastro/cargo, para evitar vinculo do admin a um membro.
+    $isSystemAdmin = !empty($_SESSION['force_system_admin']);
     $_SESSION['is_system_admin'] = $isSystemAdmin;
 
-    $slugsEfetivos = $slugs;
-    if ($isSystemAdmin && !in_array('admin', $slugsEfetivos, true)) {
-        $slugsEfetivos[] = 'admin';
+    $slugsEfetivos = array_values(array_unique($slugs));
+    if ($isSystemAdmin) {
+        if (!in_array('admin', $slugsEfetivos, true)) {
+            $slugsEfetivos[] = 'admin';
+        }
+    } else {
+        $slugsEfetivos = array_values(array_filter(
+            $slugsEfetivos,
+            static fn (string $slug): bool => $slug !== 'admin'
+        ));
     }
+
+    $fallbackEfetivo = $fallback;
+    if (!$isSystemAdmin && $fallbackEfetivo === 'admin') {
+        $fallbackEfetivo = 'obreiro';
+    }
+
+    if ($slugsEfetivos === [] && $fallbackEfetivo !== '') {
+        $slugsEfetivos = [$fallbackEfetivo];
+    }
+
+    $principal = Cargo::resolverCargoPrincipal($slugsEfetivos, $fallbackEfetivo);
 
     if (isset($_SESSION['usuario_logado']) && is_array($_SESSION['usuario_logado'])) {
         $_SESSION['usuario_logado']['cargo'] = $principal;
@@ -913,6 +934,27 @@ switch ($requestUri) {
             if (empty($matricula) || empty($password)) {
                 $erroLogin = "Informe CIM e senha para acessar.";
             } else {
+                // Login técnico (admin do sistema) - não é membro da Loja e não entra em nominata/listas.
+                $systemAdminLogin = trim((string) ($_ENV['SYSTEM_ADMIN_WEB_LOGIN'] ?? 'adm'));
+                $systemAdminPassword = trim((string) ($_ENV['SYSTEM_ADMIN_WEB_PASSWORD'] ?? ''));
+                if ($systemAdminPassword !== '' && $acao !== 'solicitar' && (string) $matricula === $systemAdminLogin && hash_equals($systemAdminPassword, (string) $password)) {
+                    $_SESSION['force_system_admin'] = true;
+                    $_SESSION['usuario_logado'] = [
+                        'id' => 0,
+                        'nome_historico' => 'adm',
+                        'nome_completo' => 'Admin do sistema',
+                        'cargo' => 'admin',
+                        'cargos' => ['admin'],
+                        'ativo' => true,
+                    ];
+                    $_SESSION['usuario_id'] = 0;
+                    $_SESSION['usuario_nome'] = 'adm';
+                    $syncSessionRoles($_SESSION['usuario_logado']);
+
+                    header("Location: /dashboard");
+                    exit;
+                }
+
                 $obreiroModel = new \App\Models\Obreiro();
                 $gate = new AccountGate($obreiroModel);
                 $estadoConta = $gate->byCim((string) $matricula);
@@ -975,6 +1017,14 @@ switch ($requestUri) {
         session_destroy();
         header("Location: /login");
         exit;
+
+    case "/sistema":
+        WebGuards::requireLogin($openTestAccess, $_SESSION);
+        if (empty($_SESSION['is_system_admin'])) {
+            WebGuards::forbidHtml('Acesso restrito ao administrador técnico do sistema.');
+        }
+        require_once __DIR__ . "/../src/Views/sistema/index.php";
+        break;
     default:
         http_response_code(404);
         echo "404 - Pagina nao encontrada.";

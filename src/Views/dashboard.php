@@ -20,6 +20,7 @@ if (in_array($usuarioNomeNormalizado, ['admin', 'administrador'], true)) {
     }
 }
 $usuarioCargos = $_SESSION['usuario_cargos'] ?? [$usuarioCargo];
+$isSystemAdmin = (bool) ($_SESSION['is_system_admin'] ?? false);
 $isTestSession = isset($_SESSION['usuario_id']) && (string) $_SESSION['usuario_id'] === '0';
 $allowAllPanels = filter_var($_ENV['APP_TEST_ALLOW_ALL_PANELS'] ?? 'true', FILTER_VALIDATE_BOOL);
 $showAllPanels = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VALIDATE_BOOL) || $isTestSession || $allowAllPanels;
@@ -153,8 +154,12 @@ if ($canSecretaria || $canVeneravel || $adminLivre) {
         'titulo' => 'Secretaria',
         'descricao' => 'Sessões, votações e acompanhamento administrativo.',
         'itens' => [
-            ['label' => 'Painel da Secretaria', 'href' => '/secretaria'],
-            ['label' => 'Votação de balaustre', 'href' => '/secretaria/votacao'],
+            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
+            ['label' => 'Central de obreiros', 'href' => '/obreiros'],
+            ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
+            ['label' => 'Acessos', 'href' => '/admin/acessos'],
+            ['label' => 'Sessões', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
         ],
     ];
 }
@@ -334,24 +339,17 @@ if (($canPrimeiroVigilante || $canSegundoVigilante) && !$canSecretaria && !$canC
 }
 
 if ($canAdminCargos || $canAdminLoja || $adminLivre) {
-    $secoes[] = [
-        'titulo' => 'Administração',
-        'descricao' => 'Configurações centrais e liberação ampla para o administrador.',
-        'itens' => array_values(array_filter([
-            ($dashboardCan('admin.cargos.view') || $adminLivre) ? ['label' => 'Administração de cargos', 'href' => '/admin/cargos'] : null,
-            ($dashboardCan('admin.loja.view') || $adminLivre) ? ['label' => 'Parâmetros da Loja', 'href' => '/admin/loja'] : null,
-        ])),
-    ];
-}
-
-if (($canSecretaria || $canVeneravel) && !$canAdminCargos) {
-    $secoes[] = [
-        'titulo' => 'Nominata Oficial',
-        'descricao' => 'Gestão da nominata, abertura de gestões e validação central dos cargos da loja.',
-        'itens' => [
-            ['label' => 'Nominata e gestões', 'href' => '/admin/cargos'],
-        ],
-    ];
+    if ($isSystemAdmin) {
+        $secoes[] = [
+            'titulo' => 'Sistema',
+            'descricao' => 'Painel técnico do sistema (oculto para membros da Loja).',
+            'itens' => array_values(array_filter([
+                ['label' => 'Painel do sistema', 'href' => '/sistema'],
+                ($dashboardCan('admin.loja.view') || $adminLivre) ? ['label' => 'Parâmetros da Loja', 'href' => '/admin/loja'] : null,
+                ($dashboardCan('admin.auditoria.view') || $adminLivre) ? ['label' => 'Auditoria', 'href' => '/admin/auditoria'] : null,
+            ])),
+        ];
+    }
 }
 
 $atalhos = [];
@@ -374,14 +372,17 @@ $atalhos = array_slice(array_values($atalhosMesclados), 0, 6);
 $nominataMap = [];
 try {
     $cargoModel = new \App\Models\Cargo();
-    foreach ($cargoModel->listarResumoCargos() as $cargoResumo) {
-        $codigo = strtoupper((string) ($cargoResumo['codigo'] ?? ''));
-        if ($codigo === '') {
-            continue;
-        }
-        $nominataMap[$codigo] = trim((string) ($cargoResumo['titular_nome'] ?? ''));
-    }
-} catch (\Throwable $e) {
+      foreach ($cargoModel->listarResumoCargos() as $cargoResumo) {
+          $codigo = strtoupper((string) ($cargoResumo['codigo'] ?? ''));
+          if ($codigo === '') {
+              continue;
+          }
+          if ($codigo === 'ADMINISTRADOR') {
+              continue;
+          }
+          $nominataMap[$codigo] = trim((string) ($cargoResumo['titular_nome'] ?? ''));
+      }
+  } catch (\Throwable $e) {
     $nominataMap = [];
 }
 
@@ -446,7 +447,7 @@ require __DIR__ . '/partials/erp_head.php';
 
         <div class="hidden items-center gap-4 md:flex">
             <?php if ($canAdminCargos && $canAdminLoja && $dashboardCan('admin.loja.manage')): ?>
-                <span class="hidden rounded-full bg-ouro px-3 py-1 text-xs font-semibold text-cobalto">Admin com acesso total</span>
+                <span class="hidden rounded-full bg-ouro px-3 py-1 text-xs font-semibold text-cobalto">Acesso técnico total</span>
             <?php elseif ($showAllPanels): ?>
                 <span class="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">Acesso ampliado nesta sessão</span>
             <?php endif; ?>
@@ -488,7 +489,7 @@ require __DIR__ . '/partials/erp_head.php';
             <div class="border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,#f8e8b6,transparent_45%),linear-gradient(135deg,#ffffff,#f6f1e7)] px-6 py-5">
                 <div class="text-xs font-semibold uppercase tracking-[0.22em] text-ardosia">Navegação</div>
                     <div class="mt-2 text-2xl font-semibold text-erp-navy">Menus por cargo</div>
-                <p class="mt-2 text-sm text-slate-600">Cada área aparece agrupada por responsabilidade. O administrador vê tudo.</p>
+                <p class="mt-2 text-sm text-slate-600">Cada área aparece agrupada por responsabilidade. O acesso técnico vê tudo.</p>
             </div>
 
             <nav class="space-y-6 px-5 py-5 xl:overflow-y-auto xl:pr-3">

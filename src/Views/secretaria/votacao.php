@@ -3,10 +3,10 @@ $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
-$erpPageTitle = 'Votação de Balaustre - Gestor de Loja';
+$erpPageTitle = 'Balaustres / votação - Secretaria';
 $appShellEyebrow = 'Secretaria';
-$appShellTitle = 'Votação de Balaustre';
-$appShellDescription = 'Painel de votação aberto para os presentes aptos na sessão.';
+$appShellTitle = 'Balaustres / votação';
+$appShellDescription = 'Acompanhe e registre votos nos balaustres das sessões publicadas.';
 $appShellActiveHref = '/secretaria/votacao';
 $appShellActions = [
     ['label' => 'Voltar para Secretaria', 'href' => '/secretaria'],
@@ -15,17 +15,19 @@ $appShellSidebarSections = [
     [
         'title' => 'Secretaria',
         'items' => [
-            ['label' => 'Painel da Secretaria', 'href' => '/secretaria'],
-            ['label' => 'Votação de balaustre', 'href' => '/secretaria/votacao'],
-            ['label' => 'Relatorio anual', 'href' => '/secretaria/relatorio-anual'],
+            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
+            ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
+            ['label' => 'Acessos', 'href' => '/admin/acessos'],
+            ['label' => 'Sessões', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
+            ['label' => 'Relatório anual', 'href' => '/secretaria/relatorio-anual'],
         ],
     ],
     [
-        'title' => 'Navegacao',
+        'title' => 'Geral',
         'items' => [
             ['label' => 'Dashboard', 'href' => '/dashboard'],
-            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
         ],
     ],
 ];

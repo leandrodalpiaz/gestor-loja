@@ -11,17 +11,19 @@ $appShellSidebarSections = [
     [
         'title' => 'Secretaria',
         'items' => [
-            ['label' => 'Painel da Secretaria', 'href' => '/secretaria'],
-            ['label' => 'Votação de balaustre', 'href' => '/secretaria/votacao'],
-            ['label' => 'Relatorio anual', 'href' => '/secretaria/relatorio-anual'],
+            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
+            ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
+            ['label' => 'Acessos', 'href' => '/admin/acessos'],
+            ['label' => 'Sessões', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
+            ['label' => 'Relatório anual', 'href' => '/secretaria/relatorio-anual'],
         ],
     ],
     [
-        'title' => 'Navegacao',
+        'title' => 'Geral',
         'items' => [
             ['label' => 'Dashboard', 'href' => '/dashboard'],
-            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
         ],
     ],
 ];

@@ -63,7 +63,54 @@ class Obreiro
 
     private function deveOcultarSystemAdminsEmListas(): bool
     {
-        return empty($_SESSION['is_system_admin']);
+        // System admin é suporte técnico, não membro ativo: não deve aparecer em listas comuns.
+        return true;
+    }
+
+    private function aplicarSanitizacaoObreirosEmSql(string &$sql, array &$params): void
+    {
+        // Oculta registros técnicos/teste do contexto da Loja (somente visual/listagem).
+        $sql .= " AND COALESCE(LOWER(NULLIF(nome_historico, '')), LOWER(NULLIF(nome, ''))) NOT IN ('admin', 'administrador')";
+
+        $rawCims = trim((string) (getenv('OBREIROS_SANITIZE_EXCLUDE_CIMS') ?: ''));
+        if ($rawCims !== '') {
+            $cims = preg_split('/\s*,\s*/', $rawCims, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            $cims = array_values(array_unique(array_filter(array_map(
+                static fn ($value) => preg_replace('/\D+/', '', (string) $value) ?: '',
+                $cims
+            ))));
+
+            if ($cims !== []) {
+                $placeholders = [];
+                foreach ($cims as $i => $cim) {
+                    $key = 'sanitize_cim_' . $i;
+                    $placeholders[] = ':' . $key;
+                    $params[$key] = $cim;
+                }
+
+                $sql .= " AND (COALESCE(cim::text, '') = '' OR COALESCE(cim::text, '') NOT IN (" . implode(', ', $placeholders) . "))";
+            }
+        }
+
+        $rawNomes = trim((string) (getenv('OBREIROS_SANITIZE_EXCLUDE_NAMES') ?: ''));
+        if ($rawNomes !== '') {
+            $nomes = preg_split('/\s*,\s*/', $rawNomes, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            $nomes = array_values(array_unique(array_filter(array_map(
+                static fn ($value) => strtolower(trim((string) $value)),
+                $nomes
+            ))));
+
+            if ($nomes !== []) {
+                $placeholders = [];
+                foreach ($nomes as $i => $nome) {
+                    $key = 'sanitize_nome_' . $i;
+                    $placeholders[] = ':' . $key;
+                    $params[$key] = $nome;
+                }
+
+                $sql .= " AND COALESCE(LOWER(NULLIF(nome_historico, '')), LOWER(NULLIF(nome, ''))) NOT IN (" . implode(', ', $placeholders) . ")";
+            }
+        }
     }
 
     private function idsTelegramSystemAdmin(): array
@@ -239,6 +286,7 @@ class Obreiro
         }
 
         $this->aplicarExclusaoSystemAdminsEmSql($sql, $params);
+        $this->aplicarSanitizacaoObreirosEmSql($sql, $params);
 
         $sql .= " ORDER BY nome ASC";
         $stmt = $this->db->prepare($sql);
@@ -296,6 +344,7 @@ class Obreiro
         }
 
         $this->aplicarExclusaoSystemAdminsEmSql($sql, $params);
+        $this->aplicarSanitizacaoObreirosEmSql($sql, $params);
 
         $cargoCodigo = trim((string) ($filtros['cargo_codigo'] ?? ''));
         if ($cargoCodigo !== '') {

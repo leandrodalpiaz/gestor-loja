@@ -9,26 +9,46 @@ $conviteGeradoExpiraEm = $_SESSION['convite_gerado_expira_em'] ?? null;
 
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro'], $_SESSION['convite_gerado_link'], $_SESSION['convite_gerado_expira_em']);
 
+$conviteGeradoUrl = null;
+if (is_string($conviteGeradoLink) && $conviteGeradoLink !== '' && filter_var($conviteGeradoLink, FILTER_VALIDATE_URL)) {
+    $conviteGeradoUrl = $conviteGeradoLink;
+}
+
 $conviteModel = new \App\Models\ConviteAcesso();
 $now = new DateTimeImmutable('now');
+
+$erpPageTitle = 'Convites de acesso - Secretaria';
+$appShellEyebrow = 'Secretaria';
+$appShellTitle = 'Convites de acesso';
+$appShellDescription = 'Gere links de ativacao para obreiros pendentes (expira em 7 dias; uso unico).';
+$appShellActiveHref = '/admin/convites';
+$appShellActions = [
+    ['label' => 'Central de obreiros', 'href' => '/obreiros'],
+    ['label' => 'Acessos', 'href' => '/admin/acessos'],
+];
+$appShellSidebarSections = [
+    [
+        'title' => 'Secretaria',
+        'items' => [
+            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
+            ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
+            ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
+            ['label' => 'Acessos', 'href' => '/admin/acessos'],
+            ['label' => 'Sessões', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
+        ],
+    ],
+    [
+        'title' => 'Geral',
+        'items' => [
+            ['label' => 'Dashboard', 'href' => '/dashboard'],
+        ],
+    ],
+];
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Convites de acesso</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-50 text-slate-900">
-<div class="mx-auto max-w-6xl p-6 space-y-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-xl font-bold">Convites de acesso</h1>
-            <p class="text-sm text-slate-600">Gere links de ativacao para obreiros pendentes. O convite expira em 7 dias e e uso unico.</p>
-        </div>
-        <a href="/dashboard" class="text-sm text-slate-700 underline">Voltar</a>
-    </div>
+<?php require __DIR__ . '/../partials/erp_head.php'; ?>
+<?php require __DIR__ . '/../partials/erp_shell_open.php'; ?>
+<div class="space-y-6">
 
     <?php if ($mensagemSucesso): ?>
         <div class="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800 border border-emerald-100">
@@ -47,6 +67,9 @@ $now = new DateTimeImmutable('now');
             <div class="flex flex-col gap-2 md:flex-row md:items-center">
                 <input class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" readonly value="<?= htmlspecialchars((string) $conviteGeradoLink) ?>">
                 <button type="button" class="copy-btn rounded-md bg-slate-900 px-4 py-2 text-sm text-white" data-copy="<?= htmlspecialchars((string) $conviteGeradoLink) ?>">Copiar</button>
+                <?php if ($conviteGeradoUrl): ?>
+                    <a href="<?= htmlspecialchars((string) $conviteGeradoUrl) ?>" target="_blank" rel="noopener" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 text-center">Abrir no Telegram</a>
+                <?php endif; ?>
             </div>
             <?php if ($conviteGeradoExpiraEm): ?>
                 <div class="text-xs text-slate-500">Expira em: <?= htmlspecialchars((string) $conviteGeradoExpiraEm) ?></div>
@@ -97,6 +120,7 @@ $now = new DateTimeImmutable('now');
                         if ($usado) $status = 'usado';
                         elseif ($expira && $expira <= $now) $status = 'expirado';
                         $deepLink = $token !== '' ? $conviteModel->deepLinkForToken($token) : '';
+                        $deepUrl = ($deepLink !== '' && filter_var($deepLink, FILTER_VALIDATE_URL)) ? $deepLink : null;
                         ?>
                         <div class="rounded-lg border border-slate-200 p-3 space-y-2">
                             <div class="flex items-center justify-between gap-3">
@@ -116,6 +140,9 @@ $now = new DateTimeImmutable('now');
                                 <div class="flex flex-col gap-2 md:flex-row md:items-center">
                                     <input class="w-full rounded-md border border-slate-300 px-3 py-2 text-xs" readonly value="<?= htmlspecialchars((string) $deepLink) ?>">
                                     <button type="button" class="copy-btn rounded-md bg-slate-900 px-3 py-2 text-xs text-white" data-copy="<?= htmlspecialchars((string) $deepLink) ?>">Copiar</button>
+                                    <?php if ($deepUrl): ?>
+                                        <a href="<?= htmlspecialchars((string) $deepUrl) ?>" target="_blank" rel="noopener" class="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 text-center">Abrir no Telegram</a>
+                                    <?php endif; ?>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -140,5 +167,4 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
     });
 });
 </script>
-</body>
-</html>
+<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>

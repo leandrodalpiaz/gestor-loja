@@ -67,29 +67,31 @@ $badgeStatusSessao = static function (?string $status): string {
 <?php
 $erpPageTitle = 'Secretaria - Gestor de Loja';
 $appShellEyebrow = 'Secretaria';
-$appShellTitle = 'Centro operacional do Secretario';
-$appShellDescription = 'Sessões, publicações, trabalhos da ordem do dia e gestão cadastral dos membros em um fluxo único de secretaria.';
+$appShellTitle = 'Secretaria';
+$appShellDescription = 'Gestão de obreiros, sessões, balaustres, acessos e convites da Loja.';
 $appShellActiveHref = '/secretaria';
 $appShellActions = [
-    ['label' => 'Cadastros dos membros', 'href' => '/obreiros'],
-    ['label' => 'Votação', 'href' => '/secretaria/votacao'],
-    ['label' => 'Relatorio anual', 'href' => '/secretaria/relatorio-anual'],
+    ['label' => 'Central de obreiros', 'href' => '/obreiros'],
+    ['label' => 'Convites', 'href' => '/admin/convites'],
+    ['label' => 'Acessos', 'href' => '/admin/acessos'],
 ];
 $appShellSidebarSections = [
     [
         'title' => 'Secretaria',
         'items' => [
-            ['label' => 'Painel da Secretaria', 'href' => '/secretaria'],
-            ['label' => 'Votação de balaustre', 'href' => '/secretaria/votacao'],
-            ['label' => 'Relatorio anual', 'href' => '/secretaria/relatorio-anual'],
+            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
+            ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
+            ['label' => 'Acessos', 'href' => '/admin/acessos'],
+            ['label' => 'Sessões', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
+            ['label' => 'Relatório anual', 'href' => '/secretaria/relatorio-anual'],
         ],
     ],
     [
-        'title' => 'Navegacao',
+        'title' => 'Geral',
         'items' => [
             ['label' => 'Dashboard', 'href' => '/dashboard'],
-            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
         ],
     ],
 ];

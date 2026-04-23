@@ -18,6 +18,9 @@ $cargosNomeados = [];
 
 foreach ($cargosResumo as $cargo) {
     $codigo = (string) ($cargo['codigo'] ?? '');
+    if (strtoupper($codigo) === 'ADMINISTRADOR') {
+        continue;
+    }
     if (in_array($codigo, $codigosEleitos, true)) {
         $cargosEleitos[] = $cargo;
         continue;
@@ -40,9 +43,9 @@ $gruposNominata = [
 ];
 
 $erpPageTitle = 'Nominata Oficial';
-$appShellEyebrow = 'Administracao';
-$appShellTitle = 'Nominata Oficial e Gestoes';
-$appShellDescription = 'Cargos eleitos, nomeados e histórico administrativo da gestão em exercício.';
+$appShellEyebrow = 'Secretaria';
+$appShellTitle = 'Nominata oficial';
+$appShellDescription = 'Fonte institucional dos cargos da Loja (base para acessos e permissões).';
 $appShellActiveHref = '/admin/cargos';
 $appShellActions = [
     ['label' => 'Parametros da Loja', 'href' => '/admin/loja'],
@@ -50,14 +53,29 @@ $appShellActions = [
 ];
 $appShellSidebarSections = [
     [
-        'title' => 'Administracao',
+        'title' => 'Secretaria',
         'items' => [
             ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
-            ['label' => 'Parametros da Loja', 'href' => '/admin/loja'],
+            ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
+            ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
+            ['label' => 'Acessos', 'href' => '/admin/acessos'],
+            ['label' => 'Sessões', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
+            ['label' => 'Relatório anual', 'href' => '/secretaria/relatorio-anual'],
             ['label' => 'Dashboard', 'href' => '/dashboard'],
         ],
     ],
 ];
+
+if (!empty($_SESSION['is_system_admin'])) {
+    $appShellSidebarSections[] = [
+        'title' => 'Sistema',
+        'items' => [
+            ['label' => 'Painel do sistema', 'href' => '/sistema'],
+            ['label' => 'Parametros da Loja', 'href' => '/admin/loja'],
+        ],
+    ];
+}
 require __DIR__ . '/../partials/erp_head.php';
 require __DIR__ . '/../partials/erp_shell_open.php';
 ?>

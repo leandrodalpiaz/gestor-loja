@@ -42,6 +42,10 @@ $appShellSidebarSections = [
         'title' => 'Secretaria',
         'items' => [
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
+            ['label' => 'Sessões', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
+            ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
+            ['label' => 'Acessos', 'href' => '/admin/acessos'],
             ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
             ['label' => 'Dashboard', 'href' => '/dashboard'],
         ],

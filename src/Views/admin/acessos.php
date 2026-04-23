@@ -5,19 +5,23 @@ $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
 $erpPageTitle = 'Aprovacao de acesso';
-$appShellEyebrow = 'Administracao';
-$appShellTitle = 'Aprovacao de acessos';
-$appShellDescription = 'Fluxo minimo para aprovar ou inativar solicitacoes de acesso.';
+$appShellEyebrow = 'Secretaria';
+$appShellTitle = 'Acessos';
+$appShellDescription = 'Aprovação e bloqueio de acessos ao sistema (pendente/ativo/inativo).';
 $appShellActiveHref = '/admin/acessos';
 $appShellActions = [
     ['label' => 'Voltar ao painel', 'href' => '/dashboard', 'primary' => true],
 ];
 $appShellSidebarSections = [
     [
-        'title' => 'Administracao',
+        'title' => 'Secretaria',
         'items' => [
-            ['label' => 'Aprovacao de acessos', 'href' => '/admin/acessos'],
             ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
+            ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
+            ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
+            ['label' => 'Aprovacao de acessos', 'href' => '/admin/acessos'],
+            ['label' => 'Sessões', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
             ['label' => 'Dashboard', 'href' => '/dashboard'],
         ],
     ],
@@ -80,4 +84,3 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 </section>
 
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
-
