@@ -970,11 +970,13 @@ class CommandHandler
                     }
                 }
 
-                $access = $this->resolvePrivateAccess($fromId);
-                $state = (string) ($access['state'] ?? 'inexistente');
-                if ($state !== 'ativo') {
-                    $this->sendAccessStateMessage($chatId, $state);
-                    return;
+                if (!$this->isDev($fromId)) {
+                    $access = $this->resolvePrivateAccess($fromId);
+                    $state = (string) ($access['state'] ?? 'inexistente');
+                    if ($state !== 'ativo') {
+                        $this->sendAccessStateMessage($chatId, $state);
+                        return;
+                    }
                 }
 
                 if (strpos($text, '/start') === 0) {
@@ -1006,12 +1008,14 @@ class CommandHandler
                 $data = $callback['data'];
                 $fromId = (int) ($callback['from']['id'] ?? 0);
 
-                $access = $this->resolvePrivateAccess($fromId);
-                $state = (string) ($access['state'] ?? 'inexistente');
-                if ($state !== 'ativo') {
-                    $this->sendAccessStateMessage($chatId, $state);
-                    $this->telegram->answerCallbackQuery($callback['id']);
-                    return;
+                if (!$this->isDev($fromId)) {
+                    $access = $this->resolvePrivateAccess($fromId);
+                    $state = (string) ($access['state'] ?? 'inexistente');
+                    if ($state !== 'ativo') {
+                        $this->sendAccessStateMessage($chatId, $state);
+                        $this->telegram->answerCallbackQuery($callback['id']);
+                        return;
+                    }
                 }
 
                 switch ($data) {
