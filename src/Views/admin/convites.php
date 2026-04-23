@@ -65,8 +65,9 @@ $appShellSidebarSections = [
         <div class="rounded-lg bg-white border border-slate-200 p-4 space-y-2">
             <div class="text-sm font-semibold">Link gerado</div>
             <div class="flex flex-col gap-2 md:flex-row md:items-center">
-                <input class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" readonly value="<?= htmlspecialchars((string) $conviteGeradoLink) ?>">
-                <button type="button" class="copy-btn rounded-md bg-slate-900 px-4 py-2 text-sm text-white" data-copy="<?= htmlspecialchars((string) $conviteGeradoLink) ?>">Copiar</button>
+                <input id="convite-link-admin-atual" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" readonly value="<?= htmlspecialchars((string) $conviteGeradoLink) ?>">
+                <button type="button" class="copy-btn rounded-md bg-slate-900 px-4 py-2 text-sm text-white" data-copy="<?= htmlspecialchars((string) $conviteGeradoLink) ?>">Copiar link</button>
+                <button type="button" class="select-btn rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-800" data-target="convite-link-admin-atual">Selecionar link</button>
                 <?php if ($conviteGeradoUrl): ?>
                     <a href="<?= htmlspecialchars((string) $conviteGeradoUrl) ?>" target="_blank" rel="noopener" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 text-center">Abrir no Telegram</a>
                 <?php endif; ?>
@@ -74,6 +75,7 @@ $appShellSidebarSections = [
             <?php if ($conviteGeradoExpiraEm): ?>
                 <div class="text-xs text-slate-500">Expira em: <?= htmlspecialchars((string) $conviteGeradoExpiraEm) ?></div>
             <?php endif; ?>
+            <div class="text-xs text-slate-500">Telefone nao e obrigatorio para gerar convite. O link pode ser encaminhado por qualquer canal.</div>
         </div>
     <?php endif; ?>
 
@@ -138,8 +140,10 @@ $appShellSidebarSections = [
                             </div>
                             <?php if ($deepLink !== ''): ?>
                                 <div class="flex flex-col gap-2 md:flex-row md:items-center">
-                                    <input class="w-full rounded-md border border-slate-300 px-3 py-2 text-xs" readonly value="<?= htmlspecialchars((string) $deepLink) ?>">
-                                    <button type="button" class="copy-btn rounded-md bg-slate-900 px-3 py-2 text-xs text-white" data-copy="<?= htmlspecialchars((string) $deepLink) ?>">Copiar</button>
+                                    <?php $inputId = 'convite-link-' . (string) ($c['id'] ?? uniqid('conv_', true)); ?>
+                                    <input id="<?= htmlspecialchars($inputId) ?>" class="w-full rounded-md border border-slate-300 px-3 py-2 text-xs" readonly value="<?= htmlspecialchars((string) $deepLink) ?>">
+                                    <button type="button" class="copy-btn rounded-md bg-slate-900 px-3 py-2 text-xs text-white" data-copy="<?= htmlspecialchars((string) $deepLink) ?>">Copiar link</button>
+                                    <button type="button" class="select-btn rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800" data-target="<?= htmlspecialchars($inputId) ?>">Selecionar</button>
                                     <?php if ($deepUrl): ?>
                                         <a href="<?= htmlspecialchars((string) $deepUrl) ?>" target="_blank" rel="noopener" class="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 text-center">Abrir no Telegram</a>
                                     <?php endif; ?>
@@ -159,11 +163,21 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
         if (!text) return;
         try {
             await navigator.clipboard.writeText(text);
+            const original = btn.textContent;
             btn.textContent = 'Copiado';
-            setTimeout(() => (btn.textContent = 'Copiar'), 1200);
+            setTimeout(() => (btn.textContent = original || 'Copiar link'), 1200);
         } catch (e) {
-            alert('Nao foi possivel copiar. Selecione e copie manualmente.');
+            alert('Nao foi possivel copiar. Use o botao Selecionar e copie manualmente.');
         }
+    });
+});
+document.querySelectorAll('.select-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target') || '';
+        const field = targetId ? document.getElementById(targetId) : null;
+        if (!field) return;
+        field.focus();
+        field.select();
     });
 });
 </script>

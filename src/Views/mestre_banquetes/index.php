@@ -55,6 +55,35 @@ $semAgape = array_values(array_filter(
             <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700"><?= htmlspecialchars($mensagemErro) ?></div>
         <?php endif; ?>
 
+        <?php
+        $dashboard = [
+            'title' => 'Dashboard operacional do Mestre de Banquetes',
+            'subtitle' => 'Execucao operacional e registro de operacao do cargo.',
+            'meta' => ['Perfil: operacao de sessao'],
+            'actions' => [
+                ['label' => 'Registrar operacao', 'href' => '/mestre-banquetes/operacao/salvar'],
+            ],
+            'blocks' => [
+                ['title' => 'Operacoes recentes', 'subtitle' => 'Status e previsao de participantes.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Confirmados', 'value' => (string) count($confirmados)],
+                    ['label' => 'Participantes agape', 'value' => (string) count($participantesAgape)],
+                ], 'list' => [['item' => 'Status operacional', 'meta' => (string) ($operacaoBanquete['status_operacional'] ?? 'planejamento'), 'status' => 'Ativo']]],
+                ['title' => 'Sessoes relacionadas e historico', 'subtitle' => 'Leitura simples da agenda.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Sessoes na agenda', 'value' => (string) count($sessoes)],
+                    ['label' => 'Sem agape', 'value' => (string) count($semAgape)],
+                ], 'list' => array_map(static fn (array $s): array => ['item' => (string) ($s['titulo'] ?: (($s['tipo_sessao'] ?? 'Sessao') . ' - ' . ($s['grau_sessao'] ?? ''))), 'meta' => (string) ($s['data_hora_inicio'] ?? ''), 'status' => (string) ($s['status'] ?? '-')], array_slice($sessoes, 0, 4))],
+            ],
+            'alerts' => [['title' => 'Operacao de agape', 'text' => 'Manter previsao e status alinhados com a sessao em foco.', 'tone' => 'warning']],
+            'activity' => array_map(static fn (array $p): array => ['item' => (string) ($p['nome'] ?? 'Participante'), 'meta' => 'CIM ' . (string) ($p['cim'] ?? '-')], array_slice($participantesAgape, 0, 4)),
+            'links' => [['label' => 'Dashboard do cargo', 'href' => '/mestre-banquetes/dashboard']],
+        ];
+        $dashboardRenderers = [
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+        ];
+        require __DIR__ . '/../layouts/dashboard.php';
+        ?>
+
         <div class="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
             <section class="space-y-6">
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

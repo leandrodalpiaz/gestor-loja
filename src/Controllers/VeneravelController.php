@@ -84,6 +84,153 @@ class VeneravelController
             ];
         }, array_slice($obreirosComPendencia, 0, 8));
 
+        $formatarPercentual = static fn (float $valor): string => number_format($valor, 1, ',', '.') . '%';
+        $balaustresConsolidados = array_values(array_filter(
+            $balaustresRecentes,
+            static fn (array $item): bool => in_array(
+                strtolower(trim((string) ($item['status'] ?? ''))),
+                ['finalizado', 'encerrado', 'aprovado'],
+                true
+            )
+        ));
+        if ($balaustresConsolidados === []) {
+            $balaustresConsolidados = $balaustresRecentes;
+        }
+        $totalSessoesRealizadas = max(1, count($balaustresConsolidados));
+        $sessoesPorGrau = [];
+        $totalConfirmados = 0;
+        $totalAgape = 0;
+        $sessaoSemGrau = 0;
+        $agapePago = 0;
+        $agapeGratuito = 0;
+        $agapePorFaixa = [
+            'Ate R$ 20' => 0,
+            'R$ 20 a R$ 40' => 0,
+            'Acima de R$ 40' => 0,
+        ];
+
+        foreach ($balaustresConsolidados as $balaustre) {
+            $grau = trim((string) ($balaustre['grau_sessao'] ?? ''));
+            if ($grau === '') {
+                $sessaoSemGrau++;
+                $grau = 'Nao informado';
+            }
+            $sessoesPorGrau[$grau] = ($sessoesPorGrau[$grau] ?? 0) + 1;
+            $totalConfirmados += (int) ($balaustre['total_confirmados'] ?? 0);
+            $totalAgape += (int) ($balaustre['total_agape'] ?? 0);
+            $modalidadeAgape = strtolower(trim((string) ($balaustre['agape_modalidade'] ?? '')));
+            $valorAgape = (float) ($balaustre['agape_valor'] ?? 0);
+            if ($modalidadeAgape === 'pago') {
+                $agapePago++;
+                if ($valorAgape <= 20) {
+                    $agapePorFaixa['Ate R$ 20']++;
+                } elseif ($valorAgape <= 40) {
+                    $agapePorFaixa['R$ 20 a R$ 40']++;
+                } else {
+                    $agapePorFaixa['Acima de R$ 40']++;
+                }
+            } elseif ($modalidadeAgape === 'gratuito') {
+                $agapeGratuito++;
+            }
+        }
+
+        arsort($sessoesPorGrau);
+        arsort($agapePorFaixa);
+        $frequenciaMedia = $totalConfirmados / $totalSessoesRealizadas;
+        $aderenciaAgape = $totalConfirmados > 0 ? ($totalAgape / $totalConfirmados) * 100 : 0;
+        $inadimplentes = (int) ($resumoCadastros['com_alerta'] ?? 0);
+        $baseObreiros = max(1, (int) ($resumoCadastros['ativos'] ?? 0));
+        $inadimplenciaPercentual = ($inadimplentes / $baseObreiros) * 100;
+
+        $dashboard = [
+            'title' => 'Dashboard estrategico do Veneravel',
+            'subtitle' => 'Supervisao institucional com foco analitico e leitura consolidada de sessoes finalizadas.',
+            'meta' => [
+                'Fonte oficial: balaustres finalizados',
+                'Financeiro executivo: leitura resumida',
+                'Perfil: estrategico e de supervisao',
+            ],
+            'actions' => [
+                ['label' => 'Abrir votacao', 'href' => '/secretaria/votacao'],
+                ['label' => 'Encerrar votacao', 'href' => '/secretaria/votacao'],
+                ['label' => 'Painel da Secretaria', 'href' => '/secretaria'],
+            ],
+            'blocks' => [
+                [
+                    'title' => 'Sessoes por grau',
+                    'subtitle' => 'Apenas sessoes realizadas com balaustre finalizado.',
+                    'span' => 'half',
+                    'metrics' => [
+                        ['label' => 'Sessoes consolidadas', 'value' => (string) count($balaustresConsolidados)],
+                        ['label' => 'Grau dominante', 'value' => (string) (array_key_first($sessoesPorGrau) ?? 'Nao definido')],
+                        ['label' => 'Sem grau informado', 'value' => (string) $sessaoSemGrau],
+                    ],
+                    'list' => array_map(static fn (string $grau, int $total): array => [
+                        'item' => $grau,
+                        'meta' => 'Sessoes realizadas',
+                        'status' => (string) $total,
+                    ], array_keys(array_slice($sessoesPorGrau, 0, 6, true)), array_values(array_slice($sessoesPorGrau, 0, 6, true))),
+                ],
+                [
+                    'title' => 'Frequencia',
+                    'subtitle' => 'Indicador institucional de adesao.',
+                    'span' => 'half',
+                    'metrics' => [
+                        ['label' => 'Media de presenca', 'value' => number_format($frequenciaMedia, 1, ',', '.'), 'hint' => 'Confirmados por sessao finalizada'],
+                        ['label' => 'Total confirmados', 'value' => (string) $totalConfirmados],
+                        ['label' => 'Aderencia ao agape', 'value' => $formatarPercentual($aderenciaAgape)],
+                    ],
+                    'list' => array_map(static fn (array $item): array => [
+                        'item' => (string) ($item['nome'] ?? 'Obreiro'),
+                        'meta' => 'CIM ' . (string) ($item['cim'] ?? '-'),
+                        'status' => 'Baixa frequencia',
+                    ], array_slice($obreirosPendentesCriticos, 0, 5)),
+                ],
+                [
+                    'title' => 'Agape',
+                    'subtitle' => 'Leitura de adesao e modelo adotado, sem arrecadacao.',
+                    'span' => 'half',
+                    'metrics' => [
+                        ['label' => 'Sessoes com agape pago', 'value' => (string) $agapePago],
+                        ['label' => 'Sessoes com agape gratuito', 'value' => (string) $agapeGratuito],
+                    ],
+                    'list' => array_map(static fn (string $faixa, int $total): array => [
+                        'item' => $faixa,
+                        'meta' => 'Quantidade de sessoes',
+                        'status' => (string) $total,
+                    ], array_keys($agapePorFaixa), array_values($agapePorFaixa)),
+                ],
+                [
+                    'title' => 'Financeiro executivo',
+                    'subtitle' => 'Resumo institucional com base em dados de tesouraria.',
+                    'span' => 'half',
+                    'metrics' => [
+                        ['label' => 'Base ativa', 'value' => (string) ($resumoCadastros['ativos'] ?? 0)],
+                        ['label' => 'Inadimplentes', 'value' => (string) $inadimplentes],
+                        ['label' => 'Inadimplencia', 'value' => $formatarPercentual($inadimplenciaPercentual)],
+                    ],
+                    'list' => [
+                        ['item' => 'Dados operacionais detalhados', 'meta' => 'Disponiveis em Tesouraria', 'status' => 'Contextual'],
+                        ['item' => 'Caixa e comprovantes', 'meta' => 'Consumidos como fonte oficial', 'status' => 'Resumo'],
+                    ],
+                ],
+            ],
+            'alerts' => [
+                ['title' => 'Baixa frequencia', 'text' => 'Obreiros com alertas cadastrais exigem acao conjunta com Secretaria.', 'tone' => 'warning'],
+                ['title' => 'Inadimplencia', 'text' => 'Percentual de inadimplencia em ' . $formatarPercentual($inadimplenciaPercentual) . '.', 'tone' => $inadimplenciaPercentual >= 20 ? 'danger' : 'warning'],
+                ['title' => 'Ritmo por grau', 'text' => $sessaoSemGrau > 0 ? 'Existem sessoes finalizadas sem grau classificado.' : 'Nao ha ausencia de classificacao de grau.', 'tone' => $sessaoSemGrau > 0 ? 'warning' : 'success'],
+            ],
+            'activity' => array_map(static fn (array $item): array => [
+                'item' => (string) ($item['sessao_titulo'] ?? $item['numero_balaustre'] ?? 'Balaustre'),
+                'meta' => 'Status: ' . (string) ($item['status'] ?? 'indefinido'),
+            ], array_slice($balaustresPendentesDecisao, 0, 6)),
+            'links' => [
+                ['label' => 'Dashboard geral', 'href' => '/dashboard'],
+                ['label' => 'Secretaria', 'href' => '/secretaria'],
+                ['label' => 'Tesouraria', 'href' => '/tesouraria/caixa'],
+            ],
+        ];
+
         require_once __DIR__ . '/../Views/veneravel/index.php';
     }
 

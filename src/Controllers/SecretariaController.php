@@ -210,6 +210,105 @@ class SecretariaController
             'balaustres_aptos' => count(array_filter($balaustres, static fn ($item) => ($item['status'] ?? '') === 'apto_votacao')),
         ];
 
+        $dashboard = [
+            'title' => 'Dashboard operacional da Secretaria',
+            'subtitle' => 'Execucao diaria, documental e centralizadora.',
+            'meta' => [
+                'Perfil: operacional',
+                'Sem analytics complexos',
+                'Foco em pendencias e estados',
+            ],
+            'actions' => [
+                ['label' => 'Nova sessao / salvar sessao', 'href' => '/secretaria'],
+                ['label' => 'Publicar rascunho', 'href' => '/secretaria'],
+                ['label' => 'Publicar sessao', 'href' => '/secretaria'],
+                ['label' => 'Salvar trabalho', 'href' => '/secretaria'],
+                ['label' => 'Salvar publicacao', 'href' => '/secretaria'],
+                ['label' => 'Atualizar obreiro', 'href' => '/obreiros'],
+                ['label' => 'Gerar convite', 'href' => '/admin/convites'],
+            ],
+            'blocks' => [
+                [
+                    'title' => 'Sessoes',
+                    'subtitle' => 'Agenda e operacao de sessoes.',
+                    'span' => 'half',
+                    'metrics' => [
+                        ['label' => 'Futuras', 'value' => (string) count($sessoes)],
+                        ['label' => 'Rascunhos', 'value' => (string) $resumo['publicacoes_rascunho']],
+                    ],
+                    'list' => array_map(static fn (array $sessao): array => [
+                        'item' => (string) ($sessao['titulo'] ?: (($sessao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessao['grau_sessao'] ?? ''))),
+                        'meta' => (string) ($sessao['data_hora_inicio'] ?? ''),
+                        'status' => (string) ($sessao['status'] ?? '-'),
+                    ], array_slice($sessoes, 0, 5)),
+                ],
+                [
+                    'title' => 'Balaustres',
+                    'subtitle' => 'Pendencias e estado operacional.',
+                    'span' => 'half',
+                    'metrics' => [
+                        ['label' => 'Aptos', 'value' => (string) $resumo['balaustres_aptos']],
+                        ['label' => 'Recentes', 'value' => (string) count($balaustres)],
+                    ],
+                    'list' => array_map(static fn (array $item): array => [
+                        'item' => (string) ($item['numero_balaustre'] ?: 'Sem numero'),
+                        'meta' => (string) ($item['sessao_titulo'] ?? ''),
+                        'status' => (string) ($item['status'] ?? '-'),
+                    ], array_slice($balaustres, 0, 5)),
+                ],
+                [
+                    'title' => 'Publicacoes e trabalhos',
+                    'subtitle' => 'Controle de envio e rascunho.',
+                    'span' => 'half',
+                    'metrics' => [
+                        ['label' => 'Trabalhos pendentes', 'value' => (string) $resumo['trabalhos_pendentes']],
+                        ['label' => 'Publicacoes rascunho', 'value' => (string) $resumo['publicacoes_rascunho']],
+                    ],
+                    'list' => array_map(static fn (array $item): array => [
+                        'item' => (string) ($item['titulo'] ?? 'Publicacao'),
+                        'meta' => (string) ($item['tipo_publicacao'] ?? 'Secretaria'),
+                        'status' => (string) ($item['status_publicacao'] ?? '-'),
+                    ], array_slice($publicacoes, 0, 4)),
+                ],
+                [
+                    'title' => 'Obreiros e acessos',
+                    'subtitle' => 'Cadastro, convites e integridade.',
+                    'span' => 'half',
+                    'metrics' => [
+                        ['label' => 'Obreiros ativos', 'value' => (string) $resumo['obreiros_ativos']],
+                        ['label' => 'Com alerta', 'value' => (string) ($resumoCadastros['com_alerta'] ?? 0)],
+                        ['label' => 'Com bot', 'value' => (string) ($resumoCadastros['com_telegram'] ?? 0)],
+                    ],
+                    'list' => [
+                        ['item' => 'Central de obreiros', 'meta' => 'Atualizacoes cadastrais', 'status' => 'Operacional'],
+                        ['item' => 'Convites de acesso', 'meta' => 'Controle de entrada', 'status' => 'Ativo'],
+                        ['item' => 'Acessos do sistema', 'meta' => 'Permissoes e auditoria', 'status' => 'Ativo'],
+                    ],
+                ],
+            ],
+            'alerts' => [
+                ['title' => 'Pendencias de sessao', 'text' => $resumo['sessoes_futuras'] > 0 ? 'Existem sessoes para revisao/publicacao.' : 'Nenhuma sessao pendente.', 'tone' => $resumo['sessoes_futuras'] > 0 ? 'warning' : 'success'],
+                ['title' => 'Balaustres aptos', 'text' => $resumo['balaustres_aptos'] . ' balaustre(s) apto(s) para encaminhamento.', 'tone' => $resumo['balaustres_aptos'] > 0 ? 'warning' : 'success'],
+                ['title' => 'Abertura/encerramento de votacao', 'text' => $podeAbrirVotacao ? 'Permitido para este usuario.' : 'Somente Veneravel/Admin podem abrir ou encerrar votacao.', 'tone' => $podeAbrirVotacao ? 'success' : 'warning'],
+            ],
+            'activity' => array_merge(
+                array_map(static fn (array $sessao): array => [
+                    'item' => 'Sessao: ' . (string) ($sessao['titulo'] ?: (($sessao['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessao['grau_sessao'] ?? ''))),
+                    'meta' => 'Status: ' . (string) ($sessao['status'] ?? '-'),
+                ], array_slice($sessoes, 0, 3)),
+                array_map(static fn (array $b): array => [
+                    'item' => 'Balaustre: ' . (string) ($b['numero_balaustre'] ?: 'Sem numero'),
+                    'meta' => 'Status: ' . (string) ($b['status'] ?? '-'),
+                ], array_slice($balaustres, 0, 3))
+            ),
+            'links' => [
+                ['label' => 'Balaustres / votacao', 'href' => '/secretaria/votacao'],
+                ['label' => 'Relatorio anual', 'href' => '/secretaria/relatorio-anual'],
+                ['label' => 'Central de obreiros', 'href' => '/obreiros'],
+                ['label' => 'Convites', 'href' => '/admin/convites'],
+            ],
+        ];
+
         require_once __DIR__ . '/../Views/secretaria/index.php';
     }
 

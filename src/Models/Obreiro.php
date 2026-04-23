@@ -309,6 +309,8 @@ class Obreiro
             $params = [];
         }
 
+        $situacaoFiltroInformado = trim((string) ($filtros['situacao'] ?? ''));
+
         $busca = trim((string) ($filtros['busca'] ?? ''));
         if ($busca !== '') {
             $sql .= " AND (
@@ -320,7 +322,7 @@ class Obreiro
             $params['busca'] = '%' . $busca . '%';
         }
 
-        $situacao = trim((string) ($filtros['situacao'] ?? ''));
+        $situacao = $situacaoFiltroInformado;
         if ($situacao !== '') {
             $sql .= " AND COALESCE(situacao_quadro, 'ativo') = :situacao";
             $params['situacao'] = $situacao;
@@ -778,7 +780,9 @@ class Obreiro
             $stmt = $this->db->prepare(
                 "UPDATE obreiros
                  SET ativo = false,
+                     situacao_quadro = 'inativo',
                      acesso_status = 'inativo',
+                     telegram_id = NULL,
                      updated_at = NOW()
                  WHERE id = :id
                    AND loja_id = :loja_id"
@@ -791,7 +795,9 @@ class Obreiro
             $stmt = $this->db->prepare(
                 "UPDATE obreiros
                  SET ativo = false,
+                     situacao_quadro = 'inativo',
                      acesso_status = 'inativo',
+                     telegram_id = NULL,
                      updated_at = NOW()
                  WHERE id = :id"
             );

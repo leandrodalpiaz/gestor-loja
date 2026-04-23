@@ -106,6 +106,44 @@ require __DIR__ . '/../partials/erp_head.php';
             <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700"><?= htmlspecialchars($mensagemErro) ?></div>
         <?php endif; ?>
 
+        <?php
+        $dashboardRenderers = [
+            static function (array $block): void {
+                $dashboardMetrics = is_array($block['metrics'] ?? null) ? $block['metrics'] : [];
+                $dashboardListItems = is_array($block['list'] ?? null) ? $block['list'] : [];
+                require __DIR__ . '/../components/dashboard_metrics.php';
+                echo '<div class="mt-3">';
+                require __DIR__ . '/../components/dashboard_list.php';
+                echo '</div>';
+            },
+            static function (array $block): void {
+                $dashboardMetrics = is_array($block['metrics'] ?? null) ? $block['metrics'] : [];
+                $dashboardListItems = is_array($block['list'] ?? null) ? $block['list'] : [];
+                require __DIR__ . '/../components/dashboard_metrics.php';
+                echo '<div class="mt-3">';
+                require __DIR__ . '/../components/dashboard_list.php';
+                echo '</div>';
+            },
+            static function (array $block): void {
+                $dashboardMetrics = is_array($block['metrics'] ?? null) ? $block['metrics'] : [];
+                $dashboardListItems = is_array($block['list'] ?? null) ? $block['list'] : [];
+                require __DIR__ . '/../components/dashboard_metrics.php';
+                echo '<div class="mt-3">';
+                require __DIR__ . '/../components/dashboard_list.php';
+                echo '</div>';
+            },
+            static function (array $block): void {
+                $dashboardMetrics = is_array($block['metrics'] ?? null) ? $block['metrics'] : [];
+                $dashboardListItems = is_array($block['list'] ?? null) ? $block['list'] : [];
+                require __DIR__ . '/../components/dashboard_metrics.php';
+                echo '<div class="mt-3">';
+                require __DIR__ . '/../components/dashboard_list.php';
+                echo '</div>';
+            },
+        ];
+        require __DIR__ . '/../layouts/dashboard.php';
+        ?>
+
         <div class="grid gap-4 md:grid-cols-5 mb-8">
             <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
                 <div class="text-sm text-slate-700">Obreiros ativos</div>

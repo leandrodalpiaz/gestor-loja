@@ -218,3 +218,9 @@ O projeto ja fica alinhado para migracao:
 - `Dockerfile` continua sendo a base do ambiente
 - `APP_URL` e vars de Telegram/Banco controlam comportamento por ambiente
 - deploy em Render/Fly.io/Railway/VM fica principalmente troca de infraestrutura, sem reescrever aplicacao
+
+## 8) Referencia funcional de cargos e dashboards
+
+Para regras de negócio, separação entre cargos da Loja e Administrador do Sistema, papel dos miniapps e fontes oficiais de dados, consulte:
+
+- `docs/regras-de-negocio.md`

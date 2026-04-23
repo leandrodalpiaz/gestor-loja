@@ -59,6 +59,36 @@ require __DIR__ . '/../partials/erp_head.php';
             <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700"><?= htmlspecialchars($mensagemErro) ?></div>
         <?php endif; ?>
 
+        <?php
+        $dashboard = [
+            'title' => 'Dashboard do Orador',
+            'subtitle' => 'Painel especifico do cargo com integracao ao miniapp.',
+            'meta' => ['Perfil: operacional de sessao', 'Miniapp como extensao do cargo'],
+            'actions' => [
+                ['label' => 'Abrir painel do orador', 'href' => '/orador'],
+                ['label' => 'Abrir miniapp', 'href' => '/miniapp/orador'],
+            ],
+            'blocks' => [
+                ['title' => 'Painel do orador', 'subtitle' => 'Sessao, pauta ritual e leitura.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Visitantes resumidos', 'value' => (string) count($visitantesResumo)],
+                    ['label' => 'Cargos capturados', 'value' => (string) count($cargosSessao)],
+                ], 'list' => array_map(static fn (array $v): array => ['item' => (string) ($v['nome'] ?? 'Visitante'), 'meta' => (string) ($v['linha_resumida'] ?? ''), 'status' => 'Leitura'], array_slice($visitantesResumo, 0, 4))],
+                ['title' => 'Resumo operacional', 'subtitle' => 'Eventos, lembretes e apoio ritual.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Eventos da sessao', 'value' => (string) count($eventosSessao)],
+                    ['label' => 'Lembretes', 'value' => (string) count($lembretes)],
+                ], 'list' => array_map(static fn (string $l): array => ['item' => $l, 'meta' => 'Roteiro do cargo', 'status' => 'Ativo'], array_slice($lembretes, 0, 4))],
+            ],
+            'alerts' => [['title' => 'Miniapp contextual', 'text' => 'O miniapp permanece como extensao do perfil do Orador.', 'tone' => 'success']],
+            'activity' => array_map(static fn (array $s): array => ['item' => 'Sessao: ' . $tituloSessao($s), 'meta' => $formatarData($s['data_hora_inicio'] ?? null)], array_slice($sessoes, 0, 4)),
+            'links' => [['label' => 'API miniapp dashboard', 'href' => '/api/miniapp/orador/dashboard']],
+        ];
+        $dashboardRenderers = [
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+        ];
+        require __DIR__ . '/../layouts/dashboard.php';
+        ?>
+
         <form method="get" action="/orador" class="mb-6 rounded-2xl border border-erp-border bg-white p-5 shadow-sm">
             <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div class="w-full lg:max-w-md">

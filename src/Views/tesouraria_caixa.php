@@ -30,6 +30,87 @@ $appShellSidebarSections = [
 require __DIR__ . '/partials/erp_head.php';
 require __DIR__ . '/partials/erp_shell_open.php';
 ?>
+        <?php
+        $dashboard = [
+            'title' => 'Dashboard financeiro operacional',
+            'subtitle' => 'Controle rigoroso da Tesouraria com foco em inadimplencia e operacao rapida.',
+            'meta' => [
+                'Perfil: tesoureiro',
+                'Fonte oficial: tesouraria',
+                'Miniapp alinhado ao cargo',
+            ],
+            'actions' => [
+                ['label' => 'Criar obrigacao', 'href' => '/tesouraria/obrigacoes'],
+                ['label' => 'Gerar mensalidades', 'href' => '/tesouraria/obrigacoes'],
+                ['label' => 'Quitar parcela', 'href' => '/tesouraria/obrigacoes'],
+                ['label' => 'Emitir recibo', 'href' => '/tesouraria/obrigacoes'],
+                ['label' => 'Criar isencao', 'href' => '/tesouraria/obrigacoes'],
+                ['label' => 'Abrir miniapp da tesouraria', 'href' => '/miniapp/tesouraria'],
+            ],
+            'blocks' => [
+                [
+                    'title' => 'Caixa e inadimplencia',
+                    'subtitle' => 'Resumo operacional de caixa e risco financeiro.',
+                    'span' => 'half',
+                    'metrics' => [
+                        ['label' => 'Entradas', 'value' => 'R$ 0,00', 'hint' => 'Atualizado pelo periodo filtrado'],
+                        ['label' => 'Saidas', 'value' => 'R$ 0,00', 'hint' => 'Atualizado pelo periodo filtrado'],
+                        ['label' => 'Saldo liquido', 'value' => 'R$ 0,00'],
+                    ],
+                    'list' => [
+                        ['item' => 'Obrigações em atraso', 'meta' => 'Operar no modulo de obrigacoes', 'status' => 'Prioritario'],
+                        ['item' => 'Comprovantes pendentes', 'meta' => 'Validacao diaria', 'status' => 'Prioritario'],
+                    ],
+                ],
+                [
+                    'title' => 'Sessoes e operacao financeira',
+                    'subtitle' => 'Impacto financeiro das sessoes e atalhos operacionais.',
+                    'span' => 'half',
+                    'metrics' => [
+                        ['label' => 'Comprovantes', 'value' => 'Validacao ativa'],
+                        ['label' => 'Relatorios', 'value' => 'Fechamento e gestao'],
+                    ],
+                    'list' => [
+                        ['item' => 'Sessoes com impacto financeiro', 'meta' => 'Acompanhar em /tesouraria/sessoes', 'status' => 'Ativo'],
+                        ['item' => 'Minhas obrigacoes', 'meta' => 'Consulta individual', 'status' => 'Ativo'],
+                    ],
+                ],
+            ],
+            'alerts' => [
+                ['title' => 'Inadimplencia visivel', 'text' => 'Manter obrigacoes atrasadas e comprovantes como prioridade diaria.', 'tone' => 'danger'],
+            ],
+            'activity' => [
+                ['item' => 'Livro-caixa em operacao', 'meta' => 'Lancamentos e filtros por competencia'],
+                ['item' => 'Comprovantes e obrigacoes', 'meta' => 'Fluxo financeiro oficial da tesouraria'],
+            ],
+            'links' => [
+                ['label' => 'Obrigacoes', 'href' => '/tesouraria/obrigacoes'],
+                ['label' => 'Comprovantes', 'href' => '/tesouraria/comprovantes'],
+                ['label' => 'Regularidade', 'href' => '/tesouraria/regularidade'],
+                ['label' => 'Relatorio de gestao', 'href' => '/tesouraria/relatorio-gestao'],
+            ],
+        ];
+
+        $dashboardRenderers = [
+            static function (array $block): void {
+                $dashboardMetrics = is_array($block['metrics'] ?? null) ? $block['metrics'] : [];
+                $dashboardListItems = is_array($block['list'] ?? null) ? $block['list'] : [];
+                require __DIR__ . '/components/dashboard_metrics.php';
+                echo '<div class="mt-3">';
+                require __DIR__ . '/components/dashboard_list.php';
+                echo '</div>';
+            },
+            static function (array $block): void {
+                $dashboardMetrics = is_array($block['metrics'] ?? null) ? $block['metrics'] : [];
+                $dashboardListItems = is_array($block['list'] ?? null) ? $block['list'] : [];
+                require __DIR__ . '/components/dashboard_metrics.php';
+                echo '<div class="mt-3">';
+                require __DIR__ . '/components/dashboard_list.php';
+                echo '</div>';
+            },
+        ];
+        require __DIR__ . '/layouts/dashboard.php';
+        ?>
         <section class="mb-6 grid gap-3 md:grid-cols-3">
             <article class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Movimentacao do caixa</p>

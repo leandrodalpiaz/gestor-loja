@@ -146,7 +146,7 @@ class MiniappApiRoutes
         }
 
         if ($requestUri === '/api/miniapp/historico/listar' && $method === 'GET') {
-            $registros = $efemerideModel->buscarComFiltros(['tipo' => 'HistÃ³ria', 'ativo' => 'all'], 300);
+            $registros = $efemerideModel->buscarComFiltros(['tipo' => 'História', 'ativo' => 'all'], 300);
             if ($registros === []) {
                 $registros = $efemerideModel->buscarComFiltros(['tipo' => 'Historia', 'ativo' => 'all'], 300);
             }

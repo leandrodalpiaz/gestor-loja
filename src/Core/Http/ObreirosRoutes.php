@@ -31,6 +31,7 @@ class ObreirosRoutes
                 $resumoObreiros = $obreiroModel->obterResumoSecretaria($filtrosObreiros);
                 $cargosFiltros = (new Cargo())->listarResumoCargos();
                 $podeGerenciarObreiros = $authorizer->hasPermission('obreiros.manage');
+                $podeGerarConvitesAcesso = $authorizer->hasPermission('access.manage');
                 require __DIR__ . '/../../Views/obreiros.php';
                 return true;
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Config\Env;
 use App\Config\Database;
 use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
@@ -11,6 +12,7 @@ class ConviteAcesso
 {
     use ResolvesStoreTenant;
 
+    private static ?string $cachedDeepLinkBase = null;
     private PDO $db;
 
     public function __construct()
@@ -245,13 +247,7 @@ class ConviteAcesso
             return '';
         }
 
-        $base = trim((string) (getenv('TELEGRAM_BOT_DEEPLINK_BASE') ?: ''));
-        if ($base === '') {
-            $username = trim((string) (getenv('TELEGRAM_BOT_USERNAME') ?: ''));
-            if ($username !== '') {
-                $base = 'https://t.me/' . ltrim($username, '@');
-            }
-        }
+        $base = $this->resolverDeepLinkBase();
 
         if ($base === '') {
             return 'ativar_' . $token;
@@ -259,6 +255,55 @@ class ConviteAcesso
 
         $joiner = str_contains($base, '?') ? '&' : '?';
         return $base . $joiner . 'start=ativar_' . $token;
+    }
+
+    private function resolverDeepLinkBase(): string
+    {
+        if (self::$cachedDeepLinkBase !== null) {
+            return self::$cachedDeepLinkBase;
+        }
+
+        $base = trim((string) (Env::get('TELEGRAM_BOT_DEEPLINK_BASE', '') ?: ''));
+        if ($base !== '') {
+            self::$cachedDeepLinkBase = $base;
+            return $base;
+        }
+
+        $username = trim((string) (Env::get('TELEGRAM_BOT_USERNAME', '') ?: ''));
+        if ($username !== '') {
+            $base = 'https://t.me/' . ltrim($username, '@');
+            self::$cachedDeepLinkBase = $base;
+            return $base;
+        }
+
+        $token = trim((string) (Env::get('TELEGRAM_BOT_TOKEN', '') ?: ''));
+        if ($token === '') {
+            self::$cachedDeepLinkBase = '';
+            return '';
+        }
+
+        try {
+            $apiUrl = 'https://api.telegram.org/bot' . rawurlencode($token) . '/getMe';
+            $response = @file_get_contents($apiUrl);
+            if (!is_string($response) || $response === '') {
+                self::$cachedDeepLinkBase = '';
+                return '';
+            }
+
+            $payload = json_decode($response, true);
+            $apiUsername = trim((string) ($payload['result']['username'] ?? ''));
+            if ($apiUsername === '') {
+                self::$cachedDeepLinkBase = '';
+                return '';
+            }
+
+            $base = 'https://t.me/' . ltrim($apiUsername, '@');
+            self::$cachedDeepLinkBase = $base;
+            return $base;
+        } catch (Throwable $e) {
+            self::$cachedDeepLinkBase = '';
+            return '';
+        }
     }
 
     private function buscarLojaAtualId(): int

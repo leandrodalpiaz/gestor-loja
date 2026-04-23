@@ -462,6 +462,9 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
         <div class="status-box">
             <strong id="sessionLabel">Sessao nao carregada</strong>
             <span id="globalStatus">Aguardando a escolha da sessao</span>
+            <div style="margin-top:8px;">
+                <a href="/miniapp/mestre-harmonia" style="display:inline-block;border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--text);text-decoration:none;background:#223447;font-size:14px;">Abrir miniapp do cargo</a>
+            </div>
         </div>
     </header>
 

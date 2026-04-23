@@ -46,6 +46,39 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             </div>
         <?php endif; ?>
 
+        <?php
+        $dashboard = [
+            'title' => 'Dashboard operacional do 1o Vigilante',
+            'subtitle' => 'Gestao de Aprendizes, trilhas, leituras e certificados.',
+            'meta' => ['Perfil: acompanhamento formativo', 'Obreiros: consulta em leitura'],
+            'actions' => [
+                ['label' => 'Atualizar trilha', 'href' => '/primeiro-vigilante'],
+                ['label' => 'Acao rapida', 'href' => '/primeiro-vigilante'],
+                ['label' => 'Registrar leitura', 'href' => '/primeiro-vigilante'],
+                ['label' => 'Solicitar certificado', 'href' => '/primeiro-vigilante'],
+                ['label' => 'Classificar', 'href' => '/biblioteca/classificar'],
+            ],
+            'blocks' => [
+                ['title' => 'Aprendizes', 'subtitle' => 'Base ativa e indicadores do ciclo.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Ativos', 'value' => (string) ($resumo['aprendizes_ativos'] ?? 0)],
+                    ['label' => 'Etapa inicial', 'value' => (string) ($resumo['etapa_inicial'] ?? 0)],
+                ], 'list' => array_map(static fn (array $a): array => ['item' => (string) ($a['nome_historico'] ?? $a['nome'] ?? 'Aprendiz'), 'meta' => 'Etapa ' . (int) ($a['trilha_etapa_atual'] ?? 1), 'status' => (string) ($a['trilha_status_atual'] ?? '-')], array_slice($aprendizes, 0, 5))],
+                ['title' => 'Leituras e certificados', 'subtitle' => 'Controle do fluxo de docencia.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Leituras sugeridas', 'value' => (string) ($resumo['leituras_sugeridas'] ?? 0)],
+                    ['label' => 'Aptos certificado', 'value' => (string) ($resumo['aptos_certificado'] ?? 0)],
+                ], 'list' => [['item' => 'Meu aprendizado', 'meta' => 'Acesso individual do Aprendiz', 'status' => 'Ativo'], ['item' => 'Biblioteca/classificacao', 'meta' => 'Apoio pedagogico', 'status' => 'Ativo']]],
+            ],
+            'alerts' => [['title' => 'Acompanhamento continuo', 'text' => 'Priorizar trilha e devolutiva dos Aprendizes com pendencia.', 'tone' => 'warning']],
+            'activity' => array_map(static fn (array $a): array => ['item' => 'Linha do tempo: ' . (string) ($a['nome_historico'] ?? $a['nome'] ?? 'Aprendiz'), 'meta' => (string) ($a['trilha_proxima_acao'] ?? 'A definir')], array_slice($aprendizes, 0, 4)),
+            'links' => [['label' => 'Meu aprendizado', 'href' => '/meu-aprendizado'], ['label' => 'Obreiros (leitura)', 'href' => '/obreiros']],
+        ];
+        $dashboardRenderers = [
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+        ];
+        require __DIR__ . '/../layouts/dashboard.php';
+        ?>
+
         <section class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             <article class="rounded-erp-lg border border-erp-border bg-white px-5 py-5 shadow-erp">
                 <div class="text-xs font-semibold uppercase tracking-[0.22em] text-erp-muted">Aprendizes ativos</div>

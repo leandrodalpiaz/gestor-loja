@@ -223,7 +223,12 @@ class AdminController
             }
         }
 
-        header('Location: /admin/convites');
+        $returnTo = trim((string) ($_POST['return_to'] ?? ''));
+        if ($returnTo === '' || $returnTo[0] !== '/') {
+            $returnTo = '/admin/convites';
+        }
+
+        header('Location: ' . $returnTo);
         exit;
     }
 

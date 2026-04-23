@@ -307,6 +307,38 @@ $resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
         </div>
     </section>
 
+    <?php
+    $dashboard = [
+        'title' => 'Dashboard do Obreiro',
+        'subtitle' => 'Consumo pessoal: financeiro, biblioteca e emprestimos.',
+        'meta' => ['Perfil: obreiro', 'Sem operacao administrativa'],
+        'actions' => [
+            ['label' => 'Ver obrigacoes', 'href' => '/financeiro/minhas-obrigacoes'],
+            ['label' => 'Solicitar item', 'href' => '/biblioteca'],
+            ['label' => 'Ver meus emprestimos', 'href' => '/biblioteca/meus-emprestimos'],
+        ],
+        'blocks' => [
+            ['title' => 'Minhas obrigacoes', 'subtitle' => 'Resumo financeiro pessoal.', 'span' => 'half', 'metrics' => [
+                ['label' => 'Total pago', 'value' => $formatCurrency($totalPagoExibicao)],
+                ['label' => 'Aguardando confirmacao', 'value' => (string) count($parcelasAguardandoConfirmacao)],
+                ['label' => 'Atrasadas', 'value' => (string) count($parcelasAtrasadas)],
+            ], 'list' => array_map(static fn (array $p): array => ['item' => (string) ($p['obrigacao_titulo'] ?? 'Obrigacao'), 'meta' => (string) ($p['competencia_label'] ?? '-'), 'status' => (string) ($p['status_exibicao'] ?? 'programada')], array_slice($parcelasAguardandoConfirmacao ?: $parcelasProgramadas, 0, 4))],
+            ['title' => 'Biblioteca e interacoes', 'subtitle' => 'Uso pessoal do acervo.', 'span' => 'half', 'metrics' => [
+                ['label' => 'Pagas recentes', 'value' => (string) count($pagasRecentes)],
+                ['label' => 'Proximos compromissos', 'value' => (string) count($proximosCompromissos)],
+            ], 'list' => [['item' => 'Biblioteca', 'meta' => 'Catalogo e solicitacoes', 'status' => 'Ativo'], ['item' => 'Meus emprestimos', 'meta' => 'Acompanhamento pessoal', 'status' => 'Ativo']]],
+        ],
+        'alerts' => [['title' => 'Compromissos financeiros', 'text' => 'Pagamentos e confirmacoes devem seguir os canais oficiais da tesouraria.', 'tone' => (count($parcelasAtrasadas) > 0 ? 'danger' : 'warning')]],
+        'activity' => array_map(static fn (array $p): array => ['item' => (string) ($p['obrigacao_titulo'] ?? 'Obrigacao'), 'meta' => 'Pago em ' . (string) ($p['pago_em'] ?? '-')] , array_slice($pagasRecentes, 0, 4)),
+        'links' => [['label' => 'Biblioteca', 'href' => '/biblioteca'], ['label' => 'Meus emprestimos', 'href' => '/biblioteca/meus-emprestimos']],
+    ];
+    $dashboardRenderers = [
+        static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/components/dashboard_list.php'; echo '</div>'; },
+        static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/components/dashboard_list.php'; echo '</div>'; },
+    ];
+    require __DIR__ . '/layouts/dashboard.php';
+    ?>
+
     <section class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <div class="rounded-[1.75rem] border border-emerald-100 bg-emerald-50 p-5 shadow-sm">
             <div class="text-xs uppercase tracking-[0.18em] text-emerald-500">O que ja foi pago</div>

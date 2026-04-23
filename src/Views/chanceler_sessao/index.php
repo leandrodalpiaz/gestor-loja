@@ -111,6 +111,36 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
             <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700"><?= htmlspecialchars($mensagemErro) ?></div>
         <?php endif; ?>
 
+        <?php
+        $dashboard = [
+            'title' => 'Dashboard operacional do Chanceler',
+            'subtitle' => 'Controle de sessao, presenca e consulta de obreiros.',
+            'meta' => ['Escopo: sessao e presenca', 'Obreiros: leitura operacional'],
+            'actions' => [
+                ['label' => 'Abrir sessao', 'href' => '/chanceler/sessao'],
+                ['label' => 'Registrar presenca', 'href' => '/chanceler/sessao/presenca'],
+            ],
+            'blocks' => [
+                ['title' => 'Sessao atual', 'subtitle' => 'Contexto ativo da operacao.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Sessao em foco', 'value' => (string) ($sessaoEmFoco['titulo'] ?? 'Sessao')],
+                    ['label' => 'Confirmados', 'value' => (string) count($confirmados)],
+                ], 'list' => [['item' => 'Agape', 'meta' => $descricaoAgape((array) ($sessaoEmFoco ?? [])), 'status' => 'Contexto']]],
+                ['title' => 'Presenca e obreiros', 'subtitle' => 'Registro de presença e apoio da nominata.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Presentes efetivos', 'value' => (string) count($presentesEfetivos)],
+                    ['label' => 'Visitantes resumidos', 'value' => (string) count($visitantesResumo)],
+                ], 'list' => array_map(static fn (array $p): array => ['item' => (string) ($p['nome'] ?? 'Obreiro'), 'meta' => 'CIM ' . (string) ($p['cim'] ?? '-'), 'status' => 'Presente'], array_slice($presentesEfetivos, 0, 4))],
+            ],
+            'alerts' => [['title' => 'Base de presenca oficial', 'text' => 'Check-in alimenta leitura da sessao e suporte aos demais modulos.', 'tone' => 'warning']],
+            'activity' => array_map(static fn (array $v): array => ['item' => (string) ($v['nome'] ?? 'Visitante'), 'meta' => (string) ($v['linha_resumida'] ?? '')], array_slice($visitantesResumo, 0, 4)),
+            'links' => [['label' => 'Dashboard Chanceler', 'href' => '/chanceler/sessao/dashboard'], ['label' => 'Obreiros (leitura)', 'href' => '/obreiros']],
+        ];
+        $dashboardRenderers = [
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+        ];
+        require __DIR__ . '/../layouts/dashboard.php';
+        ?>
+
         <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
             <section class="space-y-6">
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

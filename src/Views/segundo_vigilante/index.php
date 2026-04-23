@@ -46,6 +46,40 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             </div>
         <?php endif; ?>
 
+        <?php
+        $dashboard = [
+            'title' => 'Dashboard operacional do 2o Vigilante',
+            'subtitle' => 'Gestao de Companheiros, trilhas, leituras, certificados e exaltacao.',
+            'meta' => ['Perfil: acompanhamento formativo', 'Obreiros: consulta em leitura'],
+            'actions' => [
+                ['label' => 'Atualizar trilha', 'href' => '/segundo-vigilante'],
+                ['label' => 'Acao rapida', 'href' => '/segundo-vigilante'],
+                ['label' => 'Registrar leitura', 'href' => '/segundo-vigilante'],
+                ['label' => 'Solicitar certificado', 'href' => '/segundo-vigilante'],
+                ['label' => 'Recomendar exaltacao', 'href' => '/segundo-vigilante'],
+                ['label' => 'Classificar', 'href' => '/biblioteca/classificar'],
+            ],
+            'blocks' => [
+                ['title' => 'Companheiros', 'subtitle' => 'Base ativa e situacao da trilha.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Ativos', 'value' => (string) ($resumo['companheiros_ativos'] ?? 0)],
+                    ['label' => 'Aptos exaltacao', 'value' => (string) ($resumo['aptos_exaltacao'] ?? 0)],
+                ], 'list' => array_map(static fn (array $c): array => ['item' => (string) ($c['nome_historico'] ?? $c['nome'] ?? 'Companheiro'), 'meta' => 'Etapa ' . (int) ($c['trilha_etapa_atual'] ?? 1), 'status' => (string) ($c['trilha_status_atual'] ?? '-')], array_slice($companheiros, 0, 5))],
+                ['title' => 'Leituras, certificados e exaltacao', 'subtitle' => 'Fluxo de acompanhamento do cargo.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Leituras sugeridas', 'value' => (string) ($resumo['leituras_sugeridas'] ?? 0)],
+                    ['label' => 'Aptos docencia', 'value' => (string) ($resumo['aptos_docencia'] ?? 0)],
+                ], 'list' => [['item' => 'Meu companheirismo', 'meta' => 'Consulta individual', 'status' => 'Ativo'], ['item' => 'Biblioteca/classificacao', 'meta' => 'Apoio pedagogico', 'status' => 'Ativo']]],
+            ],
+            'alerts' => [['title' => 'Ritmo de exaltacao', 'text' => 'Monitorar companheiros aptos e pendencias de trilha.', 'tone' => 'warning']],
+            'activity' => array_map(static fn (array $c): array => ['item' => 'Linha do tempo: ' . (string) ($c['nome_historico'] ?? $c['nome'] ?? 'Companheiro'), 'meta' => (string) ($c['trilha_proxima_acao'] ?? 'A definir')], array_slice($companheiros, 0, 4)),
+            'links' => [['label' => 'Meu companheirismo', 'href' => '/meu-companheirismo'], ['label' => 'Obreiros (leitura)', 'href' => '/obreiros']],
+        ];
+        $dashboardRenderers = [
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+        ];
+        require __DIR__ . '/../layouts/dashboard.php';
+        ?>
+
         <section class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
             <article class="rounded-erp-lg border border-erp-border bg-white px-5 py-5 shadow-erp">
                 <div class="text-xs font-semibold uppercase tracking-[0.22em] text-erp-muted">Companheiros ativos</div>

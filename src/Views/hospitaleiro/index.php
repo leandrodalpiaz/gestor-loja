@@ -69,6 +69,37 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
             <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700"><?= htmlspecialchars($mensagemErro) ?></div>
         <?php endif; ?>
 
+        <?php
+        $dashboard = [
+            'title' => 'Dashboard operacional do Hospitaleiro',
+            'subtitle' => 'Assistencia, visitas e status das ocorrencias.',
+            'meta' => ['Perfil: acompanhamento social', 'Encaminhamentos: Veneravel/Tesouraria'],
+            'actions' => [
+                ['label' => 'Registrar ocorrencia', 'href' => '/assistencia/ocorrencias/salvar'],
+                ['label' => 'Atualizar status', 'href' => '/assistencia/ocorrencias/status'],
+                ['label' => 'Registrar visita', 'href' => '/assistencia/ocorrencias/visita'],
+            ],
+            'blocks' => [
+                ['title' => 'Ocorrencias abertas', 'subtitle' => 'Leitura operacional das pendencias.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Abertas', 'value' => (string) ($resumo['abertas'] ?? 0)],
+                    ['label' => 'Em acompanhamento', 'value' => (string) ($resumo['em_acompanhamento'] ?? 0)],
+                ], 'list' => array_map(static fn (array $o): array => ['item' => (string) ($o['obreiro_nome'] ?? 'Ocorrencia'), 'meta' => (string) ($o['tipo_ocorrencia'] ?? 'assistencia_geral'), 'status' => (string) ($o['status'] ?? 'aberta')], array_slice($ocorrencias, 0, 4))],
+                ['title' => 'Visitas e atividade', 'subtitle' => 'Retornos e registro recente.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Pendencias de visita', 'value' => (string) count($pendenciasVisita)],
+                    ['label' => 'Com apoio financeiro', 'value' => (string) ($resumo['com_apoio_financeiro'] ?? 0)],
+                ], 'list' => array_map(static fn (array $o): array => ['item' => (string) ($o['obreiro_nome'] ?? 'Ocorrencia'), 'meta' => 'Prioridade ' . (string) ($o['prioridade'] ?? 'media'), 'status' => (string) ($o['status'] ?? '-')], array_slice($pendenciasVisita, 0, 4))],
+            ],
+            'alerts' => [['title' => 'Pendencias sociais', 'text' => 'Priorizar ocorrencias abertas com visita pendente.', 'tone' => 'warning']],
+            'activity' => array_map(static fn (array $o): array => ['item' => (string) ($o['tipo_ocorrencia'] ?? 'assistencia_geral'), 'meta' => (string) ($o['obreiro_nome'] ?? 'Sem obreiro')], array_slice($ocorrencias, 0, 5)),
+            'links' => [['label' => 'Miniapp Hospitaleiro', 'href' => '/miniapp/hospitaleiro']],
+        ];
+        $dashboardRenderers = [
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+        ];
+        require __DIR__ . '/../layouts/dashboard.php';
+        ?>
+
         <div class="mb-8 grid gap-4 md:grid-cols-5">
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div class="text-sm text-slate-700">Total de ocorrencias</div>

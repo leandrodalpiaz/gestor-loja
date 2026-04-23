@@ -17,6 +17,19 @@ $filtrosObreiros = $filtrosObreiros ?? [
 ];
 $resumoObreiros = $resumoObreiros ?? ['total' => 0, 'ativos' => 0, 'com_alerta' => 0, 'com_telegram' => 0, 'mestres' => 0];
 $podeGerenciarObreiros = (bool) ($podeGerenciarObreiros ?? false);
+$podeGerarConvitesAcesso = (bool) ($podeGerarConvitesAcesso ?? false);
+$mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
+$mensagemErro = $_SESSION['mensagem_erro'] ?? null;
+$conviteGeradoLink = $_SESSION['convite_gerado_link'] ?? null;
+$conviteGeradoExpiraEm = $_SESSION['convite_gerado_expira_em'] ?? null;
+unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro'], $_SESSION['convite_gerado_link'], $_SESSION['convite_gerado_expira_em']);
+if (!$mensagemSucesso && isset($_GET['sucesso'])) {
+    $mensagemSucesso = 'Operacao concluida com sucesso.';
+}
+if (!$mensagemErro && isset($_GET['erro'])) {
+    $mensagemErro = 'Nao foi possivel concluir a operacao solicitada.';
+}
+$returnToAtual = (string) ($_SERVER['REQUEST_URI'] ?? '/obreiros');
 $rotulosAlerta = [
     'sem_nascimento' => 'Nascimento ausente',
     'sem_escolaridade' => 'Escolaridade ausente',
@@ -57,6 +70,40 @@ require __DIR__ . '/partials/erp_head.php';
 <?php require __DIR__ . '/partials/erp_shell_open.php'; ?>
 <?php /* TODO: a view ainda carrega classes locais antigas; consolidar tokens depois sem tocar no controller. */ ?>
 <div class="space-y-7">
+        <?php if ($mensagemSucesso): ?>
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"><?= htmlspecialchars((string) $mensagemSucesso) ?></div>
+        <?php endif; ?>
+        <?php if ($mensagemErro): ?>
+            <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"><?= htmlspecialchars((string) $mensagemErro) ?></div>
+        <?php endif; ?>
+        <?php if (is_string($conviteGeradoLink) && $conviteGeradoLink !== ''): ?>
+            <div class="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
+                <div class="text-sm font-semibold text-sky-900">Convite gerado com sucesso</div>
+                <div class="mt-2 flex flex-col gap-2 md:flex-row md:items-center">
+                    <input id="convite-link-obreiros" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800" readonly value="<?= htmlspecialchars((string) $conviteGeradoLink) ?>">
+                    <button type="button" class="copy-btn rounded-md bg-slate-900 px-4 py-2 text-sm text-white" data-copy="<?= htmlspecialchars((string) $conviteGeradoLink) ?>">Copiar link</button>
+                    <button type="button" class="select-btn rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-800" data-target="convite-link-obreiros">Selecionar link</button>
+                    <a href="/admin/convites" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-800">Abrir convites</a>
+                </div>
+                <?php if (is_string($conviteGeradoExpiraEm) && $conviteGeradoExpiraEm !== ''): ?>
+                    <div class="mt-1 text-xs text-slate-600">Expira em: <?= htmlspecialchars((string) $conviteGeradoExpiraEm) ?></div>
+                <?php endif; ?>
+                <div class="mt-1 text-xs text-slate-600">Pode encaminhar por Telegram, WhatsApp ou e-mail. Telefone no cadastro nao e obrigatorio para gerar convite.</div>
+            </div>
+        <?php endif; ?>
+
+        <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div class="flex flex-wrap gap-2">
+                <a href="/admin/cargos" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Nominata oficial</a>
+                <?php if ($podeGerarConvitesAcesso): ?>
+                    <a href="/admin/convites" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Convites de acesso</a>
+                <?php endif; ?>
+                <?php if ($podeGerenciarObreiros): ?>
+                    <a href="/obreiros/novo" class="rounded-lg border border-slate-900 bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">Novo obreiro</a>
+                <?php endif; ?>
+            </div>
+        </section>
+
         <section class="grid grid-cols-2 gap-3 xl:grid-cols-5 xl:gap-4">
             <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
                 <div class="text-xs text-gray-500 md:text-sm">Total filtrado</div>
@@ -103,7 +150,7 @@ require __DIR__ . '/partials/erp_head.php';
                     >
                 </div>
                     <div class="grid grid-cols-2 gap-2 md:col-span-1 xl:col-span-1">
-                        <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 text-sm font-medium text-white hover:bg-blue-900">Aplicar</button>
+                        <button type="submit" class="rounded-lg border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">Pesquisar</button>
                         <a href="/obreiros" class="rounded-lg border border-gray-300 px-4 py-2 text-center text-sm text-gray-700 bg-white hover:bg-gray-50">Limpar</a>
                     </div>
                 </div>
@@ -160,6 +207,15 @@ require __DIR__ . '/partials/erp_head.php';
                         </div>
                     </div>
                 </details>
+
+                <div class="flex flex-wrap gap-2 border-t border-gray-200 pt-3">
+                    <button type="submit" class="rounded-lg border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+                        Pesquisar obreiros
+                    </button>
+                    <a href="/obreiros" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 bg-white hover:bg-gray-50">
+                        Limpar filtros
+                    </a>
+                </div>
             </form>
         </section>
 
@@ -221,17 +277,26 @@ require __DIR__ . '/partials/erp_head.php';
                                         <td class="px-4 py-3 text-right">
                                             <div class="flex items-center justify-end gap-2">
                                                 <?php if ($podeGerenciarObreiros): ?>
-                                                    <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>" class="rounded-lg bg-cobalto px-3 py-2 text-xs font-semibold text-white hover:bg-blue-900">
+                                                    <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>" class="rounded-lg border border-slate-900 bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800">
                                                         Editar cadastro
                                                     </a>
-                                                    <form method="post" action="/obreiros/inativar" onsubmit="return confirm('Inativar este obreiro?');">
+                                                    <form method="post" action="/obreiros/inativar">
                                                         <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
                                                         <button type="submit" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
                                                             Inativar
                                                         </button>
                                                     </form>
                                                 <?php endif; ?>
-                                                <a href="/admin/cargos" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                                <?php if ($podeGerarConvitesAcesso): ?>
+                                                    <form method="post" action="/admin/convites/gerar" onsubmit="return confirm('Gerar convite de acesso para este obreiro?');">
+                                                        <input type="hidden" name="obreiro_id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
+                                                        <input type="hidden" name="return_to" value="<?= htmlspecialchars($returnToAtual) ?>">
+                                                        <button type="submit" class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
+                                                            Gerar convite
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+                                                <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>#cargos-oficiais" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
                                                     Nominata
                                                 </a>
                                             </div>
@@ -293,17 +358,26 @@ require __DIR__ . '/partials/erp_head.php';
 
                             <div class="flex flex-wrap items-center gap-2">
                                 <?php if ($podeGerenciarObreiros): ?>
-                                    <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>" class="rounded-lg bg-cobalto px-4 py-2 text-sm font-medium text-white hover:bg-blue-900">
+                                    <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>" class="rounded-lg border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
                                         Editar cadastro
                                     </a>
-                                    <form method="post" action="/obreiros/inativar" onsubmit="return confirm('Inativar este obreiro?');">
+                                    <form method="post" action="/obreiros/inativar">
                                         <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
                                         <button type="submit" class="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100">
                                             Inativar
                                         </button>
                                     </form>
                                 <?php endif; ?>
-                                <a href="/admin/cargos" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 bg-white hover:bg-gray-50">
+                                <?php if ($podeGerarConvitesAcesso): ?>
+                                    <form method="post" action="/admin/convites/gerar" onsubmit="return confirm('Gerar convite de acesso para este obreiro?');">
+                                        <input type="hidden" name="obreiro_id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
+                                        <input type="hidden" name="return_to" value="<?= htmlspecialchars($returnToAtual) ?>">
+                                        <button type="submit" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100">
+                                            Gerar convite
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                                <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>#cargos-oficiais" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 bg-white hover:bg-gray-50">
                                     Ver nominata
                                 </a>
                             </div>
@@ -347,7 +421,7 @@ require __DIR__ . '/partials/erp_head.php';
                                         <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>" class="rounded-lg bg-white border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                             Editar cadastro
                                         </a>
-                                        <form method="post" action="/obreiros/inativar" onsubmit="return confirm('Inativar este obreiro?');">
+                                        <form method="post" action="/obreiros/inativar">
                                             <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
                                             <button type="submit" class="rounded-lg bg-white border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50 text-left">
                                                 Inativar
@@ -371,6 +445,31 @@ require __DIR__ . '/partials/erp_head.php';
         </section>
     </div>
     <script>
+        document.querySelectorAll('.copy-btn').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const text = btn.getAttribute('data-copy') || '';
+                if (!text) return;
+                try {
+                    await navigator.clipboard.writeText(text);
+                    const original = btn.textContent;
+                    btn.textContent = 'Copiado';
+                    setTimeout(() => (btn.textContent = original || 'Copiar link'), 1200);
+                } catch (error) {
+                    alert('Nao foi possivel copiar automaticamente. Use o botao Selecionar link e copie manualmente.');
+                }
+            });
+        });
+
+        document.querySelectorAll('.select-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target') || '';
+                const field = targetId ? document.getElementById(targetId) : null;
+                if (!field) return;
+                field.focus();
+                field.select();
+            });
+        });
+
         (function () {
             const filtrosAvancados = document.getElementById('obreiros-filtros-avancados');
             if (!filtrosAvancados || !window.matchMedia) {

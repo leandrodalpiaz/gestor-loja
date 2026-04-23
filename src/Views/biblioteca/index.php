@@ -64,6 +64,35 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
             </div>
         </div>
 
+        <?php
+        $dashboard = [
+            'title' => $podeGerenciar ? 'Dashboard do Bibliotecario' : 'Dashboard do Obreiro (Biblioteca)',
+            'subtitle' => $podeGerenciar ? 'Gestao completa do acervo, emprestimos e classificacao.' : 'Consumo da biblioteca e interacoes pessoais.',
+            'meta' => [$podeGerenciar ? 'Perfil: bibliotecario' : 'Perfil: obreiro'],
+            'actions' => $podeGerenciar
+                ? [['label' => 'Adicionar item', 'href' => '/biblioteca/adicionar'], ['label' => 'Editar', 'href' => '/biblioteca/editar'], ['label' => 'Excluir', 'href' => '/biblioteca/editar'], ['label' => 'Registrar emprestimo', 'href' => '/biblioteca/emprestimos'], ['label' => 'Registrar devolucao', 'href' => '/biblioteca/emprestimos'], ['label' => 'Classificar', 'href' => '/biblioteca/classificar']]
+                : [['label' => 'Ver obrigacoes', 'href' => '/financeiro/minhas-obrigacoes'], ['label' => 'Solicitar item', 'href' => '/biblioteca'], ['label' => 'Ver meus emprestimos', 'href' => '/biblioteca/meus-emprestimos']],
+            'blocks' => [
+                ['title' => 'Acervo / visao geral', 'subtitle' => 'Itens e disponibilidade.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Itens no catalogo', 'value' => (string) count($lista)],
+                    ['label' => 'Disponiveis', 'value' => (string) count(array_filter($lista, static fn (array $i): bool => (bool) ($i['disponivel'] ?? false)))],
+                ], 'list' => array_map(static fn (array $i): array => ['item' => (string) ($i['titulo'] ?? 'Item'), 'meta' => (string) ($i['autor'] ?? '-'), 'status' => (bool) ($i['disponivel'] ?? false) ? 'Disponivel' : 'Indisponivel'], array_slice($lista, 0, 4))],
+                ['title' => $podeGerenciar ? 'Emprestimos e classificacao' : 'Meus emprestimos e interacoes', 'subtitle' => 'Fluxo operacional da biblioteca.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Comentarios', 'value' => (string) array_sum(array_map(static fn (array $i): int => (int) ($i['total_comentarios'] ?? 0), $lista))],
+                    ['label' => 'Reacoes', 'value' => (string) array_sum(array_map(static fn (array $i): int => (int) ($i['total_gostei_sim'] ?? 0) + (int) ($i['total_gostei_nao'] ?? 0), $lista))],
+                ], 'list' => [['item' => 'Emprestimos', 'meta' => 'Operacao de retirada e devolucao', 'status' => 'Ativo'], ['item' => 'Classificacao', 'meta' => 'Recomendacao por grau', 'status' => $podeClassificar ? 'Ativo' : 'Somente leitura']]],
+            ],
+            'alerts' => [['title' => 'Fluxo unico de biblioteca', 'text' => 'Web e mobile compartilham o mesmo fluxo e dados oficiais.', 'tone' => 'warning']],
+            'activity' => array_map(static fn (array $i): array => ['item' => (string) ($i['titulo'] ?? 'Item'), 'meta' => 'Comentarios: ' . (int) ($i['total_comentarios'] ?? 0)], array_slice($lista, 0, 5)),
+            'links' => [['label' => 'Meus emprestimos', 'href' => '/biblioteca/meus-emprestimos'], ['label' => 'Detalhes', 'href' => '/biblioteca/detalhes']],
+        ];
+        $dashboardRenderers = [
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
+        ];
+        require __DIR__ . '/../layouts/dashboard.php';
+        ?>
+
         <div class="space-y-3 md:hidden">
             <?php if ($lista !== []): ?>
                 <?php foreach ($lista as $item): ?>
