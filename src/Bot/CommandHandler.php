@@ -334,6 +334,7 @@ class CommandHandler
         }
 
         $obreiro = $this->obreiroModel->findByTelegramId($fromId);
+        $isDev = $this->isDev((int) $fromId);
         $this->logBotEvent('menu_principal', [
             'message' => [
                 'chat' => ['id' => $chatId, 'type' => 'private'],
@@ -354,19 +355,19 @@ class CommandHandler
             ],
         ];
 
-        if ($this->obreiroHasPermission($obreiro, 'chancelaria.manage')) {
+        if ($isDev || $this->obreiroHasPermission($obreiro, 'chancelaria.manage')) {
             $teclado['inline_keyboard'][] = [
                 ['text' => 'Chancelaria', 'callback_data' => 'admin_chancelaria'],
             ];
         }
 
-        if ($this->obreiroHasPermission($obreiro, 'biblioteca.self')) {
+        if ($isDev || $this->obreiroHasPermission($obreiro, 'biblioteca.self')) {
             $teclado['inline_keyboard'][] = [
                 ['text' => 'Biblioteca', 'callback_data' => 'biblioteca_menu'],
             ];
         }
 
-        if ($this->obreiroHasPermission($obreiro, '*') || $this->obreiroHasPermission($obreiro, 'admin.cargos.view')) {
+        if ($isDev || $this->obreiroHasPermission($obreiro, '*') || $this->obreiroHasPermission($obreiro, 'admin.cargos.view')) {
             $teclado['inline_keyboard'][] = [
                 ['text' => 'Admin', 'callback_data' => 'menu_admin_total'],
             ];
