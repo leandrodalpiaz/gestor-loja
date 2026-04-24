@@ -49,6 +49,41 @@ $method = $_SERVER["REQUEST_METHOD"];
 if ($method === 'HEAD') {
     $method = 'GET';
 }
+
+$shouldNormalizeHtmlOutput = !str_starts_with($requestUri, '/api/')
+    && !in_array($requestUri, ['/webhook', '/health'], true);
+if ($shouldNormalizeHtmlOutput) {
+    ob_start(static function (string $buffer): string {
+        $isHtmlLike = str_contains($buffer, '<html') || str_contains($buffer, '<!DOCTYPE html');
+        if (!$isHtmlLike) {
+            return $buffer;
+        }
+
+        return strtr($buffer, [
+            'Ã¡' => 'á',
+            'Ã¢' => 'â',
+            'Ã£' => 'ã',
+            'Ã©' => 'é',
+            'Ãª' => 'ê',
+            'Ã­' => 'í',
+            'Ã³' => 'ó',
+            'Ã´' => 'ô',
+            'Ãµ' => 'õ',
+            'Ãº' => 'ú',
+            'Ã§' => 'ç',
+            'Ã' => 'Á',
+            'Ã‰' => 'É',
+            'Ã' => 'Í',
+            'Ã“' => 'Ó',
+            'Ãš' => 'Ú',
+            'Ã‡' => 'Ç',
+            'â€¢' => '•',
+            'nÂº' => 'nº',
+            'NÂº' => 'Nº',
+            'Â·' => '·',
+        ]);
+    });
+}
 $openTestAccess = filter_var($_ENV["APP_TEST_OPEN_ACCESS"] ?? "false", FILTER_VALIDATE_BOOL);
 $allowAllPanels = filter_var($_ENV["APP_TEST_ALLOW_ALL_PANELS"] ?? "true", FILTER_VALIDATE_BOOL);
 $testLogin = trim((string) ($_ENV["APP_TEST_DEFAULT_LOGIN"] ?? ""));

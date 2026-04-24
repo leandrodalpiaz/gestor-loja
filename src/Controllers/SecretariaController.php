@@ -316,6 +316,10 @@ class SecretariaController
     {
         $balaustreModel = new Balaustre();
         $usuarioId = (string) ($_SESSION['usuario_id'] ?? '');
+        $usuarioUuidValido = (bool) preg_match(
+            '/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/',
+            trim($usuarioId)
+        );
         $roles = array_values(array_unique(array_map(
             static fn ($role) => strtolower((string) $role),
             $_SESSION['usuario_cargos'] ?? [$_SESSION['usuario_cargo'] ?? '']
@@ -326,10 +330,12 @@ class SecretariaController
             || in_array('admin', $roles, true);
 
         $votacoesAbertas = $balaustreModel->listarAbertosParaObreiro($usuarioId, $podeAcompanharTodas);
-        $elegibilidadeVoto = $balaustreModel->listarElegibilidadeDoObreiroNosBalaustres(
-            $usuarioId,
-            array_map(static fn ($row) => (int) ($row['id'] ?? 0), $votacoesAbertas)
-        );
+        $elegibilidadeVoto = $usuarioUuidValido
+            ? $balaustreModel->listarElegibilidadeDoObreiroNosBalaustres(
+                $usuarioId,
+                array_map(static fn ($row) => (int) ($row['id'] ?? 0), $votacoesAbertas)
+            )
+            : [];
 
         require_once __DIR__ . '/../Views/secretaria/votacao.php';
     }

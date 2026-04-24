@@ -19,6 +19,14 @@ class Balaustre
         $this->db = Database::getConnection();
     }
 
+    private function isUuid(string $value): bool
+    {
+        return (bool) preg_match(
+            '/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/',
+            trim($value)
+        );
+    }
+
     public function salvarPorSessao(int $sessaoId, array $data, ?string $autorId = null): bool
     {
         $dadosJson = $this->montarDadosCapturados($data);
@@ -621,7 +629,7 @@ class Balaustre
     public function listarElegibilidadeDoObreiroNosBalaustres(string $obreiroId, array $balaustreIds): array
     {
         $balaustreIds = array_values(array_filter(array_map('intval', $balaustreIds), static fn ($id) => $id > 0));
-        if ($obreiroId === '' || $balaustreIds === []) {
+        if (!$this->isUuid($obreiroId) || $balaustreIds === []) {
             return [];
         }
 
@@ -652,7 +660,8 @@ class Balaustre
 
     public function listarAbertosParaObreiro(string $obreiroId, bool $incluirSemElegibilidade = false): array
     {
-        if ($obreiroId === '' && !$incluirSemElegibilidade) {
+        $uuidValido = $this->isUuid($obreiroId);
+        if (!$uuidValido && !$incluirSemElegibilidade) {
             return [];
         }
 
@@ -674,7 +683,8 @@ class Balaustre
             FROM public.balaustres b
             JOIN public.sessoes s ON s.id = b.sessao_id
             JOIN public.balaustre_votacoes v ON v.balaustre_id = b.id AND v.status = 'aberta'
-            LEFT JOIN public.balaustre_votantes bv ON bv.votacao_id = v.id AND bv.obreiro_id = :obreiro_id
+            LEFT JOIN public.balaustre_votantes bv ON bv.votacao_id = v.id
+            " . ($uuidValido ? "AND bv.obreiro_id = :obreiro_id" : "AND 1 = 0") . "
             WHERE b.status = 'em_votacao'
               AND s.loja_id = :loja_id
         ";
@@ -686,10 +696,11 @@ class Balaustre
         $sql .= " ORDER BY s.data_hora_inicio DESC, b.id DESC";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            'obreiro_id' => $obreiroId,
-            'loja_id' => $this->obterLojaAtualId(),
-        ]);
+        $params = ['loja_id' => $this->obterLojaAtualId()];
+        if ($uuidValido) {
+            $params['obreiro_id'] = $obreiroId;
+        }
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
