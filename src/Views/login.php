@@ -84,13 +84,22 @@ foreach ([
                 <section class="border-b border-erpBorder bg-[linear-gradient(135deg,#173452_0%,#21466c_58%,#2d5d87_100%)] px-8 py-8 text-white sm:px-10 xl:px-12 xl:py-10">
                     <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                         <div class="max-w-4xl">
-                            <div class="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-white/80">
-                                Gestor de Loja
+                            <div class="flex items-center gap-5 sm:gap-6">
+                                <?php if ($logoRenascencaLogin): ?>
+                                    <div class="shrink-0 flex h-[6.5rem] w-[6.5rem] items-center justify-center overflow-hidden rounded-full border-2 border-white/30 bg-white/10 shadow-xl ring-4 ring-white/10">
+                                        <img src="<?= htmlspecialchars($logoRenascencaLogin) ?>" alt="Brasão da Loja Renascença nº 270" class="h-[6.2rem] w-[6.2rem] object-contain" loading="eager">
+                                    </div>
+                                <?php endif; ?>
+                                <div>
+                                    <div class="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-white/80">
+                                        Gestor de Loja
+                                    </div>
+                                    <h1 class="mt-4 text-4xl font-semibold leading-tight sm:text-[2.8rem] xl:text-[3.25rem]">
+                                        Painel da Loja com acesso administrativo claro e fraterno.
+                                    </h1>
+                                </div>
                             </div>
-                            <h1 class="mt-6 text-4xl font-semibold leading-tight sm:text-[2.8rem] xl:text-[3.25rem]">
-                                Painel da Loja com acesso administrativo claro e fraterno.
-                            </h1>
-                            <p class="mt-4 max-w-3xl text-base leading-8 text-white/78 xl:text-lg">
+                            <p class="mt-5 max-w-3xl text-base leading-8 text-white/78 xl:text-lg">
                                 Secretaria, Tesouraria, Chancelaria e nominata oficial em uma entrada única, pensada para rotina de gestão e consulta rápida.
                             </p>
                         </div>
@@ -116,9 +125,9 @@ foreach ([
                     <div class="px-8 py-8 sm:px-10 xl:px-12 xl:py-10">
                         <div class="max-w-[760px]">
                             <div class="flex items-center gap-4">
-                                <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-erpBorder bg-slate-50">
+                                <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-erpBorder bg-slate-50 shadow-sm">
                                     <?php if ($logoRenascencaLogin): ?>
-                                        <img src="<?= htmlspecialchars($logoRenascencaLogin) ?>" alt="Logotipo da Loja Renascenca" class="h-12 w-12 object-contain">
+                                        <img src="<?= htmlspecialchars($logoRenascencaLogin) ?>" alt="Brasão da Loja Renascença" class="h-[4.5rem] w-[4.5rem] object-contain">
                                     <?php else: ?>
                                         <span class="text-2xl font-semibold text-erpGold">&#8756;</span>
                                     <?php endif; ?>

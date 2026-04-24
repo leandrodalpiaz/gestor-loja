@@ -55,6 +55,20 @@ $dashboardMensagemSucesso = $dashboardMensagemSucesso ?? null;
 $dashboardMensagemErro = $dashboardMensagemErro ?? null;
 $dashboardConfiguracaoLoja = is_array($dashboardConfiguracaoLoja ?? null) ? $dashboardConfiguracaoLoja : [];
 $dashboardLogoUrl = $dashboardLogoUrl ?? null;
+if ($dashboardLogoUrl === null) {
+    foreach ([
+        '/assets/logo-renascenca.png',
+        '/assets/logo-renascenca.svg',
+        '/assets/logo-loja-renascenca.png',
+        '/assets/logo-loja-renascenca.svg',
+    ] as $_lp) {
+        if (file_exists(__DIR__ . '/../../public' . $_lp)) {
+            $dashboardLogoUrl = $_lp;
+            break;
+        }
+    }
+    unset($_lp);
+}
 $dashboardSessoes = is_array($dashboardSessoes ?? null) ? $dashboardSessoes : [];
 $dashboardRecados = is_array($dashboardRecados ?? null) ? $dashboardRecados : [];
 $dashboardPalavraIrmao = trim((string) ($dashboardPalavraIrmao ?? ''));
@@ -523,9 +537,9 @@ require __DIR__ . '/partials/erp_head.php';
         <section class="overflow-hidden rounded-[2rem] border border-erp-border bg-white shadow-sm">
             <div class="grid gap-6 border-b border-erp-border bg-[linear-gradient(135deg,#ffffff_0%,#f5f7fb_52%,#f9f2dd_100%)] px-6 py-7 xl:grid-cols-12 xl:px-8">
                 <div class="flex min-w-0 gap-5 xl:col-span-8 2xl:col-span-9">
-                    <div class="hidden h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-erp-border bg-white shadow-sm sm:flex sm:items-center sm:justify-center">
+                    <div class="hidden h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-erp-border bg-white shadow-sm sm:flex sm:items-center sm:justify-center">
                         <?php if ($dashboardLogoUrl): ?>
-                            <img src="<?= htmlspecialchars((string) $dashboardLogoUrl) ?>" alt="Brasao da Loja" class="h-16 w-16 object-contain">
+                            <img src="<?= htmlspecialchars((string) $dashboardLogoUrl) ?>" alt="Brasão da Loja Renascença" class="h-[5.5rem] w-[5.5rem] object-contain">
                         <?php else: ?>
                             <div class="text-3xl font-semibold text-erp-gold">&#9651;</div>
                         <?php endif; ?>
