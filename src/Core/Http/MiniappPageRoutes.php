@@ -29,8 +29,11 @@ class MiniappPageRoutes
                 return true;
 
             case '/miniapp/palavra-dia':
-            case '/miniapp/fallback':
                 require __DIR__ . '/../../Views/miniapp/palavra_dia.php';
+                return true;
+
+            case '/miniapp/fallback':
+                require __DIR__ . '/../../Views/miniapp/fallback.php';
                 return true;
 
             case '/miniapp/aprendizado':

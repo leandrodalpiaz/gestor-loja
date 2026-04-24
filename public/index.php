@@ -46,6 +46,9 @@ Env::load(__DIR__ . "/../.env");
 
 $requestUri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 $method = $_SERVER["REQUEST_METHOD"];
+if ($method === 'HEAD') {
+    $method = 'GET';
+}
 $openTestAccess = filter_var($_ENV["APP_TEST_OPEN_ACCESS"] ?? "false", FILTER_VALIDATE_BOOL);
 $allowAllPanels = filter_var($_ENV["APP_TEST_ALLOW_ALL_PANELS"] ?? "true", FILTER_VALIDATE_BOOL);
 $testLogin = trim((string) ($_ENV["APP_TEST_DEFAULT_LOGIN"] ?? ""));

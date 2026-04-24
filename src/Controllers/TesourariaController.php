@@ -25,29 +25,65 @@ class TesourariaController
         $sessaoModel = new Sessao();
         $presencaModel = new Presenca();
 
-        $totais = $lancamentos->obterTotaisMes($mes, $ano);
-        $listaComprovantes = $comprovantes->obterTodos();
-        $regularidade = $regularidadeModel->obterPorMes($mes, $ano);
-        $fechamento = $fechamentoModel->obter($mes, $ano);
-        if (!$fechamento) {
-            $mesPrev = $mes - 1;
-            $anoPrev = $ano;
-            if ($mesPrev < 1) {
-                $mesPrev = 12;
-                $anoPrev--;
-            }
-            $fechPrev = $fechamentoModel->obter($mesPrev, $anoPrev);
-            $saldoSugerido = $fechPrev ? (float) $fechPrev['saldo_final'] : 0;
-            $fechamentoModel->criar($mes, $ano, $saldoSugerido);
-            $fechamentoModel->recalcularTotais($mes, $ano);
-            $fechamento = $fechamentoModel->obter($mes, $ano);
-        } else {
-            $fechamentoModel->recalcularTotais($mes, $ano);
-            $fechamento = $fechamentoModel->obter($mes, $ano);
+        $totais = ['entrada' => 0, 'saida' => 0];
+        $listaComprovantes = [];
+        $regularidade = [];
+        $fechamento = null;
+        $resumoObrigacoes = [];
+        $sessoes = [];
+
+        try {
+            $totais = $lancamentos->obterTotaisMes($mes, $ano);
+        } catch (\Throwable $e) {
+            error_log('[tesouraria] falha ao obter totais do mes: ' . $e->getMessage());
         }
 
-        $resumoObrigacoes = $obrigacoesModel->listarResumoTesouraria();
-        $sessoes = $sessaoModel->listarFuturas(5);
+        try {
+            $listaComprovantes = $comprovantes->obterTodos();
+        } catch (\Throwable $e) {
+            error_log('[tesouraria] falha ao obter comprovantes: ' . $e->getMessage());
+        }
+
+        try {
+            $regularidade = $regularidadeModel->obterPorMes($mes, $ano);
+        } catch (\Throwable $e) {
+            error_log('[tesouraria] falha ao obter regularidade: ' . $e->getMessage());
+        }
+
+        try {
+            $fechamento = $fechamentoModel->obter($mes, $ano);
+            if (!$fechamento) {
+                $mesPrev = $mes - 1;
+                $anoPrev = $ano;
+                if ($mesPrev < 1) {
+                    $mesPrev = 12;
+                    $anoPrev--;
+                }
+                $fechPrev = $fechamentoModel->obter($mesPrev, $anoPrev);
+                $saldoSugerido = $fechPrev ? (float) $fechPrev['saldo_final'] : 0;
+                $fechamentoModel->criar($mes, $ano, $saldoSugerido);
+                $fechamentoModel->recalcularTotais($mes, $ano);
+                $fechamento = $fechamentoModel->obter($mes, $ano);
+            } else {
+                $fechamentoModel->recalcularTotais($mes, $ano);
+                $fechamento = $fechamentoModel->obter($mes, $ano);
+            }
+        } catch (\Throwable $e) {
+            error_log('[tesouraria] falha ao obter fechamento mensal: ' . $e->getMessage());
+            $fechamento = null;
+        }
+
+        try {
+            $resumoObrigacoes = $obrigacoesModel->listarResumoTesouraria();
+        } catch (\Throwable $e) {
+            error_log('[tesouraria] falha ao obter resumo de obrigacoes: ' . $e->getMessage());
+        }
+
+        try {
+            $sessoes = $sessaoModel->listarFuturas(5);
+        } catch (\Throwable $e) {
+            error_log('[tesouraria] falha ao obter sessoes futuras: ' . $e->getMessage());
+        }
         $sessoesFinanceiras = array_map(function (array $sessao) use ($sessaoModel, $presencaModel): array {
             $participantesAgape = !empty($sessao['id'])
                 ? $presencaModel->listarParticipantesAgapePorSessao((int) $sessao['id'])
