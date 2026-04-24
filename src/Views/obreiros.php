@@ -24,10 +24,10 @@ $conviteGeradoLink = $_SESSION['convite_gerado_link'] ?? null;
 $conviteGeradoExpiraEm = $_SESSION['convite_gerado_expira_em'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro'], $_SESSION['convite_gerado_link'], $_SESSION['convite_gerado_expira_em']);
 if (!$mensagemSucesso && isset($_GET['sucesso'])) {
-    $mensagemSucesso = 'Operação concluída com sucesso.';
+    $mensagemSucesso = 'Registro atualizado com sucesso.';
 }
 if (!$mensagemErro && isset($_GET['erro'])) {
-    $mensagemErro = 'Não foi possível concluir a operação solicitada.';
+    $mensagemErro = 'Nao foi possivel concluir a atualizacao deste registro.';
 }
 $returnToAtual = (string) ($_SERVER['REQUEST_URI'] ?? '/obreiros');
 $rotulosAlerta = [
@@ -42,13 +42,13 @@ $rotulosAlerta = [
 $erpPageTitle = $appTitle;
 $appShellEyebrow = 'Secretaria';
 $appShellTitle = 'Central de Obreiros';
-$appShellDescription = 'Cadastro administrativo, filtros operacionais e saneamento cadastral da Loja.';
+$appShellDescription = 'Registro administrativo, filtros operacionais e organizacao do quadro da Loja.';
 $appShellActiveHref = '/obreiros';
 $appShellActions = [
     ['label' => 'Somente alertas', 'href' => '/obreiros?alerta=cadastro'],
 ];
 if ($podeGerenciarObreiros) {
-    $appShellActions[] = ['label' => 'Adicionar obreiro', 'href' => '/obreiros/novo', 'primary' => false];
+    $appShellActions[] = ['label' => 'Registrar obreiro', 'href' => '/obreiros/novo', 'primary' => false];
 }
 $appShellSidebarSections = [
     [
@@ -60,7 +60,7 @@ $appShellSidebarSections = [
             ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
             ['label' => 'Acessos', 'href' => '/admin/acessos'],
             ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
-            ['label' => 'Dashboard', 'href' => '/dashboard'],
+            ['label' => 'Painel', 'href' => '/dashboard'],
         ],
     ],
 ];
@@ -78,7 +78,7 @@ require __DIR__ . '/partials/erp_head.php';
         <?php endif; ?>
         <?php if (is_string($conviteGeradoLink) && $conviteGeradoLink !== ''): ?>
             <div class="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
-                <div class="text-sm font-semibold text-sky-900">Convite gerado com sucesso</div>
+                <div class="text-sm font-semibold text-sky-900">Convite de acesso gerado com sucesso</div>
                 <div class="mt-2 flex flex-col gap-2 md:flex-row md:items-center">
                     <input id="convite-link-obreiros" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800" readonly value="<?= htmlspecialchars((string) $conviteGeradoLink) ?>">
                     <button type="button" class="copy-btn rounded-md bg-slate-900 px-4 py-2 text-sm text-white" data-copy="<?= htmlspecialchars((string) $conviteGeradoLink) ?>">Copiar link</button>
@@ -88,7 +88,7 @@ require __DIR__ . '/partials/erp_head.php';
                 <?php if (is_string($conviteGeradoExpiraEm) && $conviteGeradoExpiraEm !== ''): ?>
                     <div class="mt-1 text-xs text-slate-600">Expira em: <?= htmlspecialchars((string) $conviteGeradoExpiraEm) ?></div>
                 <?php endif; ?>
-                <div class="mt-1 text-xs text-slate-600">Pode encaminhar por Telegram, WhatsApp ou e-mail. Telefone no cadastro não é obrigatório para gerar convite.</div>
+                <div class="mt-1 text-xs text-slate-600">Pode encaminhar por Telegram, WhatsApp ou e-mail. Telefone no registro nao e obrigatorio para gerar convite.</div>
             </div>
         <?php endif; ?>
 
@@ -99,7 +99,7 @@ require __DIR__ . '/partials/erp_head.php';
                     <a href="/admin/convites" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Convites de acesso</a>
                 <?php endif; ?>
                 <?php if ($podeGerenciarObreiros): ?>
-                    <a href="/obreiros/novo" class="rounded-lg border border-slate-900 bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">Novo obreiro</a>
+                    <a href="/obreiros/novo" class="rounded-lg border border-slate-900 bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">Registrar obreiro</a>
                 <?php endif; ?>
             </div>
         </section>
@@ -110,7 +110,7 @@ require __DIR__ . '/partials/erp_head.php';
                 <div class="mt-1 text-2xl font-semibold text-cobalto md:mt-2 md:text-3xl"><?= (int) $resumoObreiros['total'] ?></div>
             </article>
             <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
-                <div class="text-xs text-gray-500 md:text-sm">No quadro</div>
+                <div class="text-xs text-gray-500 md:text-sm">Obreiros regulares</div>
                 <div class="mt-1 text-2xl font-semibold text-cobalto md:mt-2 md:text-3xl"><?= (int) $resumoObreiros['ativos'] ?></div>
             </article>
             <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
@@ -128,13 +128,13 @@ require __DIR__ . '/partials/erp_head.php';
         </section>
 
         <section class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
-            Alertas de cadastro servem como lembrete interno para a Secretaria tratar o tema reservadamente com o membro, sem expor o motivo como bloqueio operacional.
+            Alertas de registro servem como lembrete interno para a Secretaria tratar o tema reservadamente com o obreiro, sem expor o motivo como bloqueio operacional.
         </section>
 
         <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div class="flex flex-col gap-2 mb-4">
                 <h2 class="text-xl font-semibold text-cobalto">Filtros administrativos</h2>
-                <p class="text-sm text-gray-500">Use os filtros para saneamento cadastral, conferência da nominata e preparação dos relatórios.</p>
+                <p class="text-sm text-gray-500">Use os filtros para organizar registros, conferir a nominata e preparar relatorios da Secretaria.</p>
             </div>
 
             <form method="GET" action="/obreiros" class="space-y-4">
@@ -146,7 +146,7 @@ require __DIR__ . '/partials/erp_head.php';
                         name="busca"
                         value="<?= htmlspecialchars((string) ($filtrosObreiros['busca'] ?? '')) ?>"
                         class="w-full rounded-lg border border-gray-300 px-3 py-2"
-                        placeholder="Nome, nome historico, grau ou CIM"
+                        placeholder="Nome, nome historico, cargo ou CIM"
                     >
                 </div>
                     <div class="grid grid-cols-2 gap-2 md:col-span-1 xl:col-span-1">
@@ -193,7 +193,7 @@ require __DIR__ . '/partials/erp_head.php';
                             <label class="block text-sm font-medium text-gray-700 mb-1">Alerta</label>
                             <select name="alerta" class="w-full rounded-lg border border-gray-300 px-3 py-2">
                                 <option value="">Todos</option>
-                                <option value="cadastro" <?= ($filtrosObreiros['alerta'] ?? '') === 'cadastro' ? 'selected' : '' ?>>Com alerta cadastral</option>
+                                <option value="cadastro" <?= ($filtrosObreiros['alerta'] ?? '') === 'cadastro' ? 'selected' : '' ?>>Com alerta de registro</option>
                             </select>
                         </div>
                         <div>
@@ -223,7 +223,7 @@ require __DIR__ . '/partials/erp_head.php';
             <?php if (empty($obreiros)): ?>
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">
                     <i class="fas fa-users-slash text-4xl mb-3 text-gray-300"></i>
-                    <p>Nenhum obreiro encontrado com os filtros atuais.</p>
+                    <p>Nenhum obreiro foi localizado com os filtros atuais.</p>
                 </div>
             <?php else: ?>
                 <div class="hidden overflow-hidden rounded-2xl border border-erp-border bg-white shadow-sm lg:block">
@@ -233,7 +233,7 @@ require __DIR__ . '/partials/erp_head.php';
                                 <tr>
                                     <th class="px-4 py-3">Obreiro</th>
                                     <th class="px-4 py-3">Situacao</th>
-                                    <th class="px-4 py-3">Financeiro</th>
+                                    <th class="px-4 py-3">Tesouraria</th>
                                     <th class="px-4 py-3">Cargos</th>
                                     <th class="px-4 py-3 text-right">Acoes</th>
                                 </tr>
@@ -243,6 +243,13 @@ require __DIR__ . '/partials/erp_head.php';
                                     <?php
                                     $nomeExibicao = (string) ($obreiro['nome_historico'] ?: $obreiro['nome']);
                                     $situacao = (string) ($obreiro['situacao_quadro'] ?? 'Ativo');
+                                    $situacaoVisual = match (mb_strtolower(trim($situacao), 'UTF-8')) {
+                                        'ativo' => 'Regular',
+                                        'inativo' => 'Afastado',
+                                        'bloqueado' => 'Irregular',
+                                        'pendente' => 'Em analise',
+                                        default => $situacao,
+                                    };
                                     $cargosAtuais = $obreiro['cargos_codigos'] ?? [];
                                     ?>
                                     <tr class="align-top hover:bg-slate-50/70">
@@ -252,13 +259,13 @@ require __DIR__ . '/partials/erp_head.php';
                                         </td>
                                         <td class="px-4 py-3">
                                             <span class="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
-                                                <?= htmlspecialchars($situacao) ?>
+                                                <?= htmlspecialchars($situacaoVisual) ?>
                                             </span>
                                         </td>
                                         <td class="px-4 py-3">
                                             <?php /* TODO(dados): aplicar StatusBadge de regularidade quando o backend expor esse indicador na listagem. */ ?>
                                             <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                                                Não integrado
+                                                Em analise
                                             </span>
                                         </td>
                                         <td class="px-4 py-3">
@@ -271,19 +278,19 @@ require __DIR__ . '/partials/erp_head.php';
                                                     <?php endforeach; ?>
                                                 </div>
                                             <?php else: ?>
-                                                <span class="text-xs text-erp-muted">Sem cargo oficial ativo</span>
+                                                <span class="text-xs text-erp-muted">Sem cargo oficial em exercicio</span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="px-4 py-3 text-right">
                                             <div class="flex items-center justify-end gap-2">
                                                 <?php if ($podeGerenciarObreiros): ?>
                                                     <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>" class="rounded-lg border border-slate-900 bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800">
-                                                        Editar cadastro
+                                                        Atualizar obreiro
                                                     </a>
                                                     <form method="post" action="/obreiros/inativar">
                                                         <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
                                                         <button type="submit" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
-                                                            Inativar
+                                                            Afastar do quadro
                                                         </button>
                                                     </form>
                                                 <?php endif; ?>
@@ -311,6 +318,13 @@ require __DIR__ . '/partials/erp_head.php';
                     <?php
                     $nomeExibicao = (string) ($obreiro['nome_historico'] ?: $obreiro['nome']);
                     $situacao = (string) ($obreiro['situacao_quadro'] ?? 'ativo');
+                    $situacaoVisual = match (mb_strtolower(trim($situacao), 'UTF-8')) {
+                        'ativo' => 'Regular',
+                        'inativo' => 'Afastado',
+                        'bloqueado' => 'Irregular',
+                        'pendente' => 'Em analise',
+                        default => $situacao,
+                    };
                     $alertas = $obreiro['alertas_cadastro'] ?? [];
                     $cargosAtuais = $obreiro['cargos_codigos'] ?? [];
                     ?>
@@ -327,11 +341,11 @@ require __DIR__ . '/partials/erp_head.php';
                                             <?= htmlspecialchars((string) ($obreiro['grau'] ?? 'Não informado')) ?>
                                         </span>
                                         <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 border border-blue-100">
-                                            <?= htmlspecialchars($situacao) ?>
+                                            <?= htmlspecialchars($situacaoVisual) ?>
                                         </span>
                                         <?php if ($alertas !== []): ?>
                                             <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 border border-amber-200">
-                                                <?= count($alertas) ?> alerta(s)
+                                                <?= count($alertas) ?> alerta(s) de registro
                                             </span>
                                         <?php endif; ?>
                                     </div>
@@ -344,10 +358,10 @@ require __DIR__ . '/partials/erp_head.php';
                                     <div class="mt-2 flex flex-wrap gap-2 text-xs">
                                         <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 border <?= !empty($obreiro['telegram_id']) ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-gray-50 border-gray-200 text-gray-500' ?>">
                                             <i class="fab fa-telegram"></i>
-                                            <?= !empty($obreiro['telegram_id']) ? 'Bot vinculado' : 'Sem bot' ?>
+                                            <?= !empty($obreiro['telegram_id']) ? 'Bot vinculado' : 'Sem bot vinculado' ?>
                                         </span>
                                         <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 font-semibold text-slate-700">
-                                            Financeiro: Não integrado
+                                            Tesouraria: Em analise
                                         </span>
                                         <span class="inline-flex items-center rounded-full bg-gray-50 border border-gray-200 px-2.5 py-1 text-gray-600">
                                             Ingresso: <?= htmlspecialchars((string) ($obreiro['data_filiacao'] ?? $obreiro['data_iniciacao'] ?? '-')) ?>
@@ -359,12 +373,12 @@ require __DIR__ . '/partials/erp_head.php';
                             <div class="flex flex-wrap items-center gap-2">
                                 <?php if ($podeGerenciarObreiros): ?>
                                     <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>" class="rounded-lg border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
-                                        Editar cadastro
+                                        Atualizar obreiro
                                     </a>
                                     <form method="post" action="/obreiros/inativar">
                                         <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
                                         <button type="submit" class="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100">
-                                            Inativar
+                                            Afastar do quadro
                                         </button>
                                     </form>
                                 <?php endif; ?>
@@ -395,12 +409,12 @@ require __DIR__ . '/partials/erp_head.php';
                                         <?php endforeach; ?>
                                     </div>
                                 <?php else: ?>
-                                    <div class="text-sm text-gray-500">Sem cargo oficial ativo na nominata.</div>
+                                    <div class="text-sm text-gray-500">Sem cargo oficial em exercicio na nominata.</div>
                                 <?php endif; ?>
                             </div>
 
                             <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                                <div class="text-xs uppercase tracking-wide text-gray-500 mb-2">Alertas de cadastro</div>
+                                <div class="text-xs uppercase tracking-wide text-gray-500 mb-2">Alertas de registro</div>
                                 <?php if ($alertas !== []): ?>
                                     <div class="flex flex-wrap gap-2">
                                         <?php foreach ($alertas as $alerta): ?>
@@ -410,30 +424,30 @@ require __DIR__ . '/partials/erp_head.php';
                                         <?php endforeach; ?>
                                     </div>
                                 <?php else: ?>
-                                    <div class="text-sm text-emerald-700">Sem alerta cadastral principal.</div>
+                                    <div class="text-sm text-emerald-700">Sem alerta principal de registro.</div>
                                 <?php endif; ?>
                             </div>
 
                             <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                                <div class="text-xs uppercase tracking-wide text-gray-500 mb-2">Acoes rapidas</div>
+                                <div class="text-xs uppercase tracking-wide text-gray-500 mb-2">Acoes visiveis</div>
                                 <div class="flex flex-col gap-2">
                                     <?php if ($podeGerenciarObreiros): ?>
                                         <a href="/obreiros/editar?id=<?= htmlspecialchars((string) $obreiro['id']) ?>" class="rounded-lg bg-white border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                            Editar cadastro
+                                            Atualizar obreiro
                                         </a>
                                         <form method="post" action="/obreiros/inativar">
                                             <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
                                             <button type="submit" class="rounded-lg bg-white border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50 text-left">
-                                                Inativar
+                                                Afastar do quadro
                                             </button>
                                         </form>
                                     <?php endif; ?>
                                     <a href="/obreiros?busca=<?= urlencode((string) ($obreiro['cim'] ?? '')) ?>" class="rounded-lg bg-white border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        Isolar este obreiro
+                                        Filtrar este obreiro
                                     </a>
                                     <?php if ($alertas !== []): ?>
                                         <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-                                            Secretaria: tratar reservadamente com o membro.
+                                            Secretaria: tratar reservadamente com o obreiro.
                                         </div>
                                     <?php endif; ?>
                                 </div>
@@ -455,7 +469,7 @@ require __DIR__ . '/partials/erp_head.php';
                     btn.textContent = 'Copiado';
                     setTimeout(() => (btn.textContent = original || 'Copiar link'), 1200);
                 } catch (error) {
-                    alert('Não foi possível copiar automaticamente. Use o botão Selecionar link e copie manualmente.');
+                    alert('Nao foi possivel copiar automaticamente. Use o botao Selecionar link e copie manualmente.');
                 }
             });
         });

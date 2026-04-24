@@ -224,3 +224,13 @@ O projeto ja fica alinhado para migracao:
 Para regras de negócio, separação entre cargos da Loja e Administrador do Sistema, papel dos miniapps e fontes oficiais de dados, consulte:
 
 - `docs/regras-de-negocio.md`
+- `docs/topico-ajuda-usuarios.md`
+
+## 9) Operacao em producao (Render)
+
+Para manter o bot responsivo em producao:
+
+1. Garantir webhook ativo no Telegram apontando para `APP_URL/webhook.php`.
+2. Validar `APP_URL` com HTTPS e dominio publico correto.
+3. Confirmar resposta `200` em `GET /login` e `POST /webhook.php`.
+4. Evitar cliques repetidos no mesmo botao durante carregamento.

@@ -17,6 +17,9 @@ class CommandHandler
     private $obreiroModel;
     private $sessaoModel;
     private $presencaModel;
+    private array $accessStateCache = [];
+    private array $obreiroByTelegramCache = [];
+    private array $permissionsByKeyCache = [];
 
     private array $devIds = [8062119710];
 
@@ -104,8 +107,26 @@ class CommandHandler
             return false;
         }
 
-        $permissions = (new PermissionMap())->permissionsForRoles($this->getObreiroRoles($obreiro));
+        $permissions = $this->getPermissionsForObreiro($obreiro);
         return in_array('*', $permissions, true) || in_array($permission, $permissions, true);
+    }
+
+    private function getPermissionsForObreiro(?array $obreiro): array
+    {
+        if (!$obreiro) {
+            return [];
+        }
+
+        $roles = $this->getObreiroRoles($obreiro);
+        sort($roles);
+        $cacheKey = implode('|', $roles);
+        if (array_key_exists($cacheKey, $this->permissionsByKeyCache)) {
+            return $this->permissionsByKeyCache[$cacheKey];
+        }
+
+        $permissions = (new PermissionMap())->permissionsForRoles($roles);
+        $this->permissionsByKeyCache[$cacheKey] = $permissions;
+        return $permissions;
     }
 
     private function isDev(int $telegramId): bool
@@ -187,8 +208,25 @@ class CommandHandler
 
     private function resolvePrivateAccess(int $telegramId): array
     {
+        if (array_key_exists($telegramId, $this->accessStateCache)) {
+            return $this->accessStateCache[$telegramId];
+        }
+
         $gate = new AccountGate($this->obreiroModel);
-        return $gate->byTelegramId($telegramId);
+        $access = $gate->byTelegramId($telegramId);
+        $this->accessStateCache[$telegramId] = $access;
+        return $access;
+    }
+
+    private function findObreiroByTelegramId(int $telegramId): ?array
+    {
+        if (array_key_exists($telegramId, $this->obreiroByTelegramCache)) {
+            return $this->obreiroByTelegramCache[$telegramId];
+        }
+
+        $obreiro = $this->obreiroModel->findByTelegramId($telegramId);
+        $this->obreiroByTelegramCache[$telegramId] = $obreiro ?: null;
+        return $this->obreiroByTelegramCache[$telegramId];
     }
 
     private function sendAccessStateMessage(int|string $chatId, string $state): void
@@ -243,7 +281,7 @@ class CommandHandler
 
     private function ensureChancelariaAccess($chatId, int $requesterTelegramId): bool
     {
-        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
+        $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && (!$obreiro || !$this->obreiroHasPermission($obreiro, 'chancelaria.manage'))) {
             $this->telegram->sendMessage($chatId, 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
             return false;
@@ -295,7 +333,7 @@ class CommandHandler
             return;
         }
 
-        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
+        $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'admin.cargos.view')) {
             $this->telegram->sendMessage($chatId, 'Acesso restrito aos Administradores do sistema.');
             return;
@@ -333,7 +371,7 @@ class CommandHandler
             return;
         }
 
-        $obreiro = $this->obreiroModel->findByTelegramId($fromId);
+        $obreiro = $this->findObreiroByTelegramId((int) $fromId);
         $isDev = $this->isDev((int) $fromId);
         $this->logBotEvent('menu_principal', [
             'message' => [
@@ -460,7 +498,7 @@ class CommandHandler
 
     private function handleConfirmacaoProximaSessao($chatId, int $fromId, string $acao): void
     {
-        $obreiro = $this->obreiroModel->findByTelegramId($fromId);
+        $obreiro = $this->findObreiroByTelegramId((int) $fromId);
         if (!$obreiro) {
             $this->telegram->sendMessage($chatId, 'Não foi possível localizar seu cadastro agora. Tente novamente ou contate a Secretaria.');
             return;
@@ -582,7 +620,7 @@ class CommandHandler
             return;
         }
 
-        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
+        $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'tesoureiro', 'veneravel', 'admin'))) {
             $this->telegram->sendMessage($chatId, 'Acesso restrito ao Tesoureiro, Venerável Mestre ou Administrador.');
             return;
@@ -629,7 +667,7 @@ class CommandHandler
             return;
         }
 
-        $obreiro = $this->obreiroModel->findByTelegramId($requesterTelegramId);
+        $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         $isBibliotecario = $this->obreiroHasRole($obreiro, 'bibliotecario', 'admin', 'veneravel');
         $canClassificar = $this->obreiroHasRole($obreiro, 'primeiro_vigilante', 'segundo_vigilante', 'bibliotecario', 'admin', 'veneravel');
         $isDev = $this->isDev($requesterTelegramId);
@@ -673,7 +711,7 @@ class CommandHandler
         $obreiroModel = new \App\Models\Obreiro();
         $emprestimoModel = new \App\Models\Emprestimo();
 
-        $obreiro = $obreiroModel->findByTelegramId($requesterTelegramId);
+        $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$obreiro) {
             $this->telegram->sendMessage($chatId, "Não foi possível localizar seu cadastro agora. Tente novamente ou contate a Secretaria.");
             return;
@@ -1244,7 +1282,7 @@ class CommandHandler
 
     private function handleOrientacaoFinanceira($chatId, int $fromId): void
     {
-        $obreiro = $this->obreiroModel->findByTelegramId($fromId);
+        $obreiro = $this->findObreiroByTelegramId((int) $fromId);
         if (!$obreiro) {
             $this->telegram->sendMessage($chatId, 'Não conseguimos localizar seu cadastro para consulta financeira agora. Tente novamente em alguns minutos.');
             return;
@@ -1282,7 +1320,7 @@ class CommandHandler
 
     private function handleComprovantePixRecebido($chatId, int $fromId, array $message): void
     {
-        $obreiro = $this->obreiroModel->findByTelegramId($fromId);
+        $obreiro = $this->findObreiroByTelegramId((int) $fromId);
         if (!$obreiro) {
             $this->telegram->sendMessage($chatId, 'Não foi possível localizar seu cadastro agora. Tente novamente ou contate a Secretaria.');
             return;
@@ -1395,7 +1433,7 @@ class CommandHandler
             return;
         }
 
-        $obreiro = $this->obreiroModel->findByTelegramId($fromId);
+        $obreiro = $this->findObreiroByTelegramId((int) $fromId);
         if (!$this->isDev($fromId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'secretario', 'admin', 'veneravel'))) {
             $this->telegram->sendMessage($chatId, 'Acesso restrito a Secretaria da Loja.');
             return;
@@ -1435,7 +1473,7 @@ class CommandHandler
             return;
         }
 
-        $obreiro = $this->obreiroModel->findByTelegramId($fromId);
+        $obreiro = $this->findObreiroByTelegramId((int) $fromId);
         if (!$this->isDev($fromId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'hospitaleiro', 'secretario', 'tesoureiro', 'veneravel', 'admin'))) {
             $this->telegram->sendMessage($chatId, 'Acesso restrito ao Mestre Hospitaleiro, Secretaria, Tesouraria, Venerável Mestre ou Administrador.');
             return;
