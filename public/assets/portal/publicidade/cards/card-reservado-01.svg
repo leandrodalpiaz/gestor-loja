@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-labelledby="title desc">
+  <title id="title">Card reservado publicidade</title>
+  <desc id="desc">Placeholder para card de parceiro</desc>
+  <rect width="640" height="480" fill="#f7f9fc" stroke="#d9e0ea"/>
+  <rect x="44" y="44" width="552" height="56" rx="28" fill="#ffffff" stroke="#d9e0ea"/>
+  <text x="70" y="81" fill="#526173" font-size="22" font-family="Inter, Arial, sans-serif">Apoio institucional</text>
+  <text x="44" y="188" fill="#1e3a5f" font-size="40" font-family="Inter, Arial, sans-serif" font-weight="700">Espaco reservado</text>
+  <text x="44" y="242" fill="#526173" font-size="28" font-family="Inter, Arial, sans-serif">para publicidade local</text>
+  <text x="44" y="326" fill="#526173" font-size="24" font-family="Inter, Arial, sans-serif">Contate a Secretaria para cotas.</text>
+</svg>

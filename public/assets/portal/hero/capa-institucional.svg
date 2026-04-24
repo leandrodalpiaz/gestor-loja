@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Capa institucional</title>
+  <desc id="desc">Placeholder visual para hero do portal publico</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#173452"/>
+      <stop offset="55%" stop-color="#21466c"/>
+      <stop offset="100%" stop-color="#2d5d87"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <g opacity="0.25" fill="#ffffff">
+    <circle cx="220" cy="180" r="110"/>
+    <circle cx="1420" cy="140" r="80"/>
+    <circle cx="1370" cy="760" r="150"/>
+  </g>
+  <text x="110" y="430" fill="#ffffff" font-size="68" font-family="Inter, Arial, sans-serif" font-weight="700">Portal Publico da Loja</text>
+  <text x="110" y="500" fill="#d9e5f2" font-size="32" font-family="Inter, Arial, sans-serif">Imagem de capa provisoria. Substituir por foto institucional oficial.</text>
+</svg>

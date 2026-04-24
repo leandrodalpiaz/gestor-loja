@@ -985,6 +985,63 @@ switch ($requestUri) {
             $publicAds = [];
         }
 
+        if ($publicConteudos === []) {
+            $publicConteudos = [
+                [
+                    'tipo' => 'agenda',
+                    'titulo' => 'Sessao Magna Branca - Programacao Publica',
+                    'resumo' => 'Encontro de carater cultural e fraterno com participacao da comunidade convidada.',
+                    'inicio_em' => '15/05/2026',
+                    'link_url' => 'https://www.glojars.org.br/',
+                ],
+                [
+                    'tipo' => 'noticia',
+                    'titulo' => 'Acoes de solidariedade em destaque no trimestre',
+                    'resumo' => 'Painel de impacto social com foco em arrecadacoes e apoio institucional.',
+                    'inicio_em' => '10/05/2026',
+                    'link_url' => 'https://www.gob.org.br/',
+                ],
+                [
+                    'tipo' => 'comunicado',
+                    'titulo' => 'Calendario de eventos publicos da Loja',
+                    'resumo' => 'Programacao oficial em atualizacao continua para visitantes e convidados.',
+                    'inicio_em' => '06/05/2026',
+                    'link_url' => 'https://www.gorgs.org.br/',
+                ],
+                [
+                    'tipo' => 'agenda',
+                    'titulo' => 'Palestra aberta: etica, cidadania e fraternidade',
+                    'resumo' => 'Espaco de dialogo com convidados para aproximacao da Loja com a comunidade.',
+                    'inicio_em' => '30/05/2026',
+                    'link_url' => 'https://www.glojars.org.br/',
+                ],
+            ];
+        }
+
+        if ($publicAds === []) {
+            $publicAdsEnabled = true;
+            $publicAds = [
+                [
+                    'titulo' => 'Espaco reservado para publicidade institucional',
+                    'resumo' => 'Sua marca pode apoiar projetos da Loja com presenca discreta e qualificada.',
+                    'link_url' => '#',
+                    'imagem_url' => '/assets/portal/publicidade/banners/banner-reservado-01.svg',
+                ],
+                [
+                    'titulo' => 'Apoio local de alto valor comunitario',
+                    'resumo' => 'Cota de parceiro com exibicao em card e banner, sem rastreadores.',
+                    'link_url' => '#',
+                    'imagem_url' => '/assets/portal/publicidade/cards/card-reservado-01.svg',
+                ],
+                [
+                    'titulo' => 'Espaco premium para patrocinador',
+                    'resumo' => 'Visibilidade institucional para negocios alinhados a valores de etica e servico.',
+                    'link_url' => '#',
+                    'imagem_url' => '/assets/portal/publicidade/cards/card-reservado-01.svg',
+                ],
+            ];
+        }
+
         if ($method === "POST") {
             $matricula = $_POST["matricula"] ?? $_POST["cim"] ?? "";
             $password = $_POST["password"] ?? $_POST["senha"] ?? "";

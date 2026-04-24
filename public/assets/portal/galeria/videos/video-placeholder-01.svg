@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600" role="img" aria-labelledby="title desc">
+  <title id="title">Video placeholder</title>
+  <desc id="desc">Placeholder para galeria de videos</desc>
+  <rect width="900" height="600" fill="#1f2937"/>
+  <rect x="80" y="80" width="740" height="440" rx="24" fill="#111827" stroke="#374151"/>
+  <circle cx="450" cy="300" r="64" fill="#ffffff" opacity="0.9"/>
+  <polygon points="430,266 430,334 486,300" fill="#1f2937"/>
+  <text x="80" y="56" fill="#d1d5db" font-size="28" font-family="Inter, Arial, sans-serif">Video institucional (placeholder)</text>
+</svg>
