@@ -26,6 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+// Compatibilidade: alguns clientes enviam form-data (POST) em vez de JSON.
+if (!empty($_POST) && is_array($_POST)) {
+    $payload = array_merge($payload, $_POST);
+}
 $normalizeRole = static function (?string $cargo): string {
     $cargo = strtolower(trim((string) $cargo));
     $cargo = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $cargo) ?: $cargo;
@@ -40,7 +44,7 @@ $authorizer = new Authorizer($currentUser, $permissionMap, $openTestAccess);
 $authorized = isset($_SESSION['usuario_logado']) && $authorizer->hasPermission('biblioteca.manage');
 
 if (!$authorized) {
-    $initData = trim((string) ($payload['init_data'] ?? ''));
+    $initData = trim((string) ($payload['initData'] ?? $payload['init_data'] ?? ''));
     $botToken = trim((string) ($_ENV['TELEGRAM_BOT_TOKEN'] ?? ''));
     $telegramUser = TelegramInitDataValidator::validate($initData, $botToken);
 
@@ -63,7 +67,7 @@ if (!$authorized) {
     exit;
 }
 
-$isbn = trim((string) ($payload['isbn'] ?? ''));
+$isbn = trim((string) ($payload['isbn'] ?? $payload['ISBN'] ?? ''));
 if ($isbn === '') {
     http_response_code(400);
     echo json_encode(['ok' => false, 'erro' => 'ISBN nao informado.']);

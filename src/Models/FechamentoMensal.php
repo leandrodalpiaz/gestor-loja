@@ -11,6 +11,7 @@ class FechamentoMensal
     use ResolvesStoreTenant;
 
     private PDO $db;
+    private ?bool $tabelaTemLojaId = null;
 
     public function __construct()
     {
@@ -25,16 +26,20 @@ class FechamentoMensal
         $sql = "
             SELECT * FROM fechamento_mensal
             WHERE mes_ref = :mes AND ano_ref = :ano
-              AND loja_id = :loja_id
-            LIMIT 1
         ";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
+        $params = [
             'mes' => $mes,
             'ano' => $ano,
-            'loja_id' => $this->obterLojaAtualId(),
-        ]);
+        ];
+        if ($this->tabelaPossuiColunaLojaId()) {
+            $sql .= " AND loja_id = :loja_id";
+            $params['loja_id'] = $this->obterLojaAtualId();
+        }
+        $sql .= " LIMIT 1";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ?: null;
     }
@@ -44,14 +49,29 @@ class FechamentoMensal
      */
     public function criar(int $mes, int $ano, float $saldoInicial, ?string $observacoes = null, ?string $criadoPor = null): bool
     {
+        if ($this->tabelaPossuiColunaLojaId()) {
+            $sql = "
+                INSERT INTO fechamento_mensal (loja_id, mes_ref, ano_ref, saldo_inicial, saldo_final, criado_em, atualizado_em)
+                VALUES (:loja_id, :mes, :ano, :saldo_inicial, :saldo_final, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ";
+
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                'loja_id' => $this->obterLojaAtualId(),
+                'mes' => $mes,
+                'ano' => $ano,
+                'saldo_inicial' => $saldoInicial,
+                'saldo_final' => $saldoInicial,
+            ]);
+        }
+
         $sql = "
-            INSERT INTO fechamento_mensal (loja_id, mes_ref, ano_ref, saldo_inicial, saldo_final, criado_em, atualizado_em)
-            VALUES (:loja_id, :mes, :ano, :saldo_inicial, :saldo_final, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            INSERT INTO fechamento_mensal (mes_ref, ano_ref, saldo_inicial, saldo_final, criado_em, atualizado_em)
+            VALUES (:mes, :ano, :saldo_inicial, :saldo_final, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         ";
 
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
-            'loja_id' => $this->obterLojaAtualId(),
             'mes' => $mes,
             'ano' => $ano,
             'saldo_inicial' => $saldoInicial,
@@ -75,13 +95,17 @@ class FechamentoMensal
         $this->db->beginTransaction();
         try {
             // Atualiza saldo inicial e recalcula saldo final do período.
-            $sql = "UPDATE fechamento_mensal SET saldo_inicial = :saldo, saldo_final = (total_entradas - total_saidas + :saldo), atualizado_em = CURRENT_TIMESTAMP WHERE id = :id AND loja_id = :loja_id";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([
+            $sql = "UPDATE fechamento_mensal SET saldo_inicial = :saldo, saldo_final = (total_entradas - total_saidas + :saldo), atualizado_em = CURRENT_TIMESTAMP WHERE id = :id";
+            $params = [
                 'saldo' => $novoSaldo,
                 'id' => $fechamentoId,
-                'loja_id' => $this->obterLojaAtualId(),
-            ]);
+            ];
+            if ($this->tabelaPossuiColunaLojaId()) {
+                $sql .= " AND loja_id = :loja_id";
+                $params['loja_id'] = $this->obterLojaAtualId();
+            }
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
 
             // Registra trilha de auditoria do ajuste manual.
             $sqlAudit = "
@@ -130,18 +154,23 @@ class FechamentoMensal
                 total_saidas = :saidas,
                 saldo_final = :saldo_final,
                 atualizado_em = CURRENT_TIMESTAMP
-            WHERE mes_ref = :mes AND ano_ref = :ano AND loja_id = :loja_id
+            WHERE mes_ref = :mes AND ano_ref = :ano
         ";
 
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
+        $params = [
             'entradas' => $totais['entrada'],
             'saidas' => $totais['saida'],
             'saldo_final' => $saldoFinal,
             'mes' => $mes,
             'ano' => $ano,
-            'loja_id' => $this->obterLojaAtualId(),
-        ]);
+        ];
+        if ($this->tabelaPossuiColunaLojaId()) {
+            $sql .= " AND loja_id = :loja_id";
+            $params['loja_id'] = $this->obterLojaAtualId();
+        }
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
     }
 
     /**
@@ -155,15 +184,17 @@ class FechamentoMensal
             FROM fechamento_mensal fm
             LEFT JOIN obreiros o ON fm.fechado_por = o.id
             WHERE fm.id = :id
-              AND fm.loja_id = :loja_id
-            LIMIT 1
         ";
 
+        $params = ['id' => $fechamentoId];
+        if ($this->tabelaPossuiColunaLojaId()) {
+            $sqlFechamento .= " AND fm.loja_id = :loja_id";
+            $params['loja_id'] = $this->obterLojaAtualId();
+        }
+        $sqlFechamento .= " LIMIT 1";
+
         $stmt = $this->db->prepare($sqlFechamento);
-        $stmt->execute([
-            'id' => $fechamentoId,
-            'loja_id' => $this->obterLojaAtualId(),
-        ]);
+        $stmt->execute($params);
         $fechamento = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$fechamento) {
@@ -192,12 +223,15 @@ class FechamentoMensal
      */
     public function obterPorId(int $id): ?array
     {
-        $sql = "SELECT * FROM fechamento_mensal WHERE id = :id AND loja_id = :loja_id LIMIT 1";
+        $sql = "SELECT * FROM fechamento_mensal WHERE id = :id";
+        $params = ['id' => $id];
+        if ($this->tabelaPossuiColunaLojaId()) {
+            $sql .= " AND loja_id = :loja_id";
+            $params['loja_id'] = $this->obterLojaAtualId();
+        }
+        $sql .= " LIMIT 1";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            'id' => $id,
-            'loja_id' => $this->obterLojaAtualId(),
-        ]);
+        $stmt->execute($params);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ?: null;
     }
@@ -212,20 +246,45 @@ class FechamentoMensal
             SET status = 'fechado',
                 fechado_por = :fechado_por,
                 fechado_em = CURRENT_TIMESTAMP
-            WHERE mes_ref = :mes AND ano_ref = :ano AND loja_id = :loja_id
+            WHERE mes_ref = :mes AND ano_ref = :ano
         ";
 
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
+        $params = [
             'mes' => $mes,
             'ano' => $ano,
             'fechado_por' => $fechadoPor,
-            'loja_id' => $this->obterLojaAtualId(),
-        ]);
+        ];
+        if ($this->tabelaPossuiColunaLojaId()) {
+            $sql .= " AND loja_id = :loja_id";
+            $params['loja_id'] = $this->obterLojaAtualId();
+        }
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
     }
 
     private function obterLojaAtualId(): int
     {
         return $this->resolveCurrentStoreId($this->db);
+    }
+
+    private function tabelaPossuiColunaLojaId(): bool
+    {
+        if ($this->tabelaTemLojaId !== null) {
+            return $this->tabelaTemLojaId;
+        }
+
+        $stmt = $this->db->prepare("
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'fechamento_mensal'
+              AND column_name = 'loja_id'
+            LIMIT 1
+        ");
+        $stmt->execute();
+
+        $this->tabelaTemLojaId = (bool) $stmt->fetchColumn();
+        return $this->tabelaTemLojaId;
     }
 }
