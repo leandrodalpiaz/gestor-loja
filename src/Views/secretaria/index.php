@@ -8,8 +8,8 @@ $sessaoEmFormulario = is_array($sessaoRascunho ?? null)
 $sessaoDraft = $sessaoEmFormulario;
 $modoEdicaoSessao = !is_array($sessaoRascunho ?? null) && is_array($sessaoEdicao ?? null);
 $sessaoIdFormulario = (int) ($sessaoDraft['id'] ?? 0);
-$labelFormularioSessao = $modoEdicaoSessao ? 'Editar sessÃ£o existente' : 'Nova sessÃ£o';
-$acaoPrimariaSessao = $modoEdicaoSessao ? 'Revisar atualizaÃ§Ã£o da sessÃ£o' : 'Continuar para revisÃ£o';
+$labelFormularioSessao = $modoEdicaoSessao ? 'Editar sessão existente' : 'Nova sessão';
+$acaoPrimariaSessao = $modoEdicaoSessao ? 'Revisar atualização da sessão' : 'Continuar para revisão';
 $historicoSessao = is_array($historicoSessao ?? null) ? $historicoSessao : [];
 $draftInicio = '';
 if (!empty($sessaoDraft['data_hora_inicio'])) {
@@ -40,6 +40,21 @@ if ($historiaLoja !== '') {
     }
 }
 
+$formatarDataExibicao = static function (?string $valor): string {
+    $valor = trim((string) $valor);
+    if ($valor === '') {
+        return 'Data a definir';
+    }
+
+    try {
+        return (new DateTimeImmutable($valor))
+            ->setTimezone(new DateTimeZone('America/Sao_Paulo'))
+            ->format('d-m-Y');
+    } catch (\Throwable $e) {
+        return $valor;
+    }
+};
+
 $formatarDataAgenda = static function (?string $valor): string {
     $valor = trim((string) $valor);
     if ($valor === '') {
@@ -49,7 +64,7 @@ $formatarDataAgenda = static function (?string $valor): string {
     try {
         return (new DateTimeImmutable($valor))
             ->setTimezone(new DateTimeZone('America/Sao_Paulo'))
-            ->format('d/m/Y \Ã \s H:i');
+            ->format('d-m-Y \à\s H:i');
     } catch (\Throwable $e) {
         return $valor;
     }
@@ -68,7 +83,7 @@ $badgeStatusSessao = static function (?string $status): string {
 $erpPageTitle = 'Secretaria - Gestor de Loja';
 $appShellEyebrow = 'Secretaria';
 $appShellTitle = 'Secretaria';
-$appShellDescription = 'GestÃ£o de obreiros, sessÃµes, balaustres, acessos e convites da Loja.';
+$appShellDescription = 'Gestão de obreiros, sessões, balaústres, acessos e convites da Loja.';
 $appShellActiveHref = '/secretaria';
 $appShellActions = [
     ['label' => 'Central de obreiros', 'href' => '/obreiros'],
@@ -83,9 +98,9 @@ $appShellSidebarSections = [
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
             ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
             ['label' => 'Acessos', 'href' => '/admin/acessos'],
-            ['label' => 'SessÃµes', 'href' => '/secretaria'],
-            ['label' => 'Balaustres / votaÃ§Ã£o', 'href' => '/secretaria/votacao'],
-            ['label' => 'RelatÃ³rio anual', 'href' => '/secretaria/relatorio-anual'],
+            ['label' => 'Sessões', 'href' => '/secretaria'],
+            ['label' => 'Balaústres / votação', 'href' => '/secretaria/votacao'],
+            ['label' => 'Relatório anual', 'href' => '/secretaria/relatorio-anual'],
         ],
     ],
     [
@@ -158,7 +173,7 @@ require __DIR__ . '/../partials/erp_head.php';
                 <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) $resumo['trabalhos_pendentes'] ?></div>
             </div>
             <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
-                <div class="text-sm text-slate-700">PublicaÃ§Ãµes em rascunho</div>
+                <div class="text-sm text-slate-700">Publicações em rascunho</div>
                 <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) $resumo['publicacoes_rascunho'] ?></div>
             </div>
             <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
@@ -172,8 +187,8 @@ require __DIR__ . '/../partials/erp_head.php';
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">Registros</div>
-                        <h2 class="font-sans text-xl text-erp-navy mt-2">SaÃºde cadastral da Secretaria</h2>
-                        <p class="text-sm text-slate-700 mt-2">Resumo rÃ¡pido para saneamento do quadro e preparo dos relatÃ³rios.</p>
+                        <h2 class="font-sans text-xl text-erp-navy mt-2">Saúde cadastral da Secretaria</h2>
+                        <p class="text-sm text-slate-700 mt-2">Resumo rápido para saneamento do quadro e preparo dos relatórios.</p>
                     </div>
                     <a href="/obreiros" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50">Abrir central de obreiros</a>
                 </div>
@@ -206,19 +221,19 @@ require __DIR__ . '/../partials/erp_head.php';
             <section class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">SessÃ£o em foco</div>
+                        <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">Sessão em foco</div>
                         <h2 class="font-sans text-xl text-erp-navy mt-2">Resumo operacional</h2>
-                        <p class="text-sm text-slate-700 mt-2">Confirmados, ausÃªncias e Ã¡gape consolidados na mesma visÃ£o da Secretaria.</p>
+                        <p class="text-sm text-slate-700 mt-2">Confirmados, ausências e ágape consolidados na mesma visão da Secretaria.</p>
                     </div>
                 </div>
 
                 <form method="GET" action="/secretaria" class="mt-4">
-                    <label class="block text-sm font-medium mb-1">SessÃ£o para acompanhamento</label>
+                    <label class="block text-sm font-medium mb-1">Sessão para acompanhamento</label>
                     <div class="flex gap-2">
                         <select name="sessao_resumo" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                             <?php foreach ($sessoes as $sessaoOpcao): ?>
                                 <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>" <?= (int) ($sessaoResumo['id'] ?? 0) === (int) ($sessaoOpcao['id'] ?? 0) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars((string) ($sessaoOpcao['titulo'] ?: (($sessaoOpcao['tipo_sessao'] ?? 'SessÃ£o') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
+                                    <?= htmlspecialchars((string) ($sessaoOpcao['titulo'] ?: (($sessaoOpcao['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -228,10 +243,10 @@ require __DIR__ . '/../partials/erp_head.php';
 
                 <?php if (!empty($sessaoResumo)): ?>
                     <div class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                        <div class="font-semibold text-erp-navy"><?= htmlspecialchars((string) ($sessaoResumo['titulo'] ?: (($sessaoResumo['tipo_sessao'] ?? 'SessÃ£o') . ' - ' . ($sessaoResumo['grau_sessao'] ?? '')))) ?></div>
+                        <div class="font-semibold text-erp-navy"><?= htmlspecialchars((string) ($sessaoResumo['titulo'] ?: (($sessaoResumo['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessaoResumo['grau_sessao'] ?? '')))) ?></div>
                         <div class="mt-1 text-sm text-slate-700">
                             <?= htmlspecialchars((string) ($sessaoResumo['data_hora_inicio'] ?? '')) ?>
-                            Â·
+                            ·
                             Status: <?= htmlspecialchars((string) ($sessaoResumo['status'] ?? '')) ?>
                         </div>
                     </div>
@@ -253,37 +268,37 @@ require __DIR__ . '/../partials/erp_head.php';
 
                     <div class="mt-4 grid gap-4 md:grid-cols-2">
                         <div class="rounded-xl border border-slate-200 bg-white p-4">
-                            <div class="text-sm font-semibold text-slate-700">Confirmados da sessÃ£o</div>
+                            <div class="text-sm font-semibold text-slate-700">Confirmados da sessão</div>
                             <div class="mt-3 space-y-2">
                                 <?php foreach ($confirmadosSessaoResumo as $confirmado): ?>
                                     <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
-                                        <span><?= htmlspecialchars((string) ($confirmado['nome'] ?? 'IrmÃ£o')) ?></span>
+                                        <span><?= htmlspecialchars((string) ($confirmado['nome'] ?? 'Irmão')) ?></span>
                                         <span class="text-slate-700"><?= htmlspecialchars((string) ($confirmado['cim'] ?? '-')) ?></span>
                                     </div>
                                 <?php endforeach; ?>
                                 <?php if ($confirmadosSessaoResumo === []): ?>
-                                    <div class="rounded-lg border border-dashed border-slate-300 px-3 py-3 text-sm text-slate-700">Sem confirmados nesta sessÃ£o.</div>
+                                    <div class="rounded-lg border border-dashed border-slate-300 px-3 py-3 text-sm text-slate-700">Sem confirmados nesta sessão.</div>
                                 <?php endif; ?>
                             </div>
                         </div>
 
                         <div class="rounded-xl border border-slate-200 bg-white p-4">
-                            <div class="text-sm font-semibold text-slate-700">Participantes do Ã¡gape</div>
+                            <div class="text-sm font-semibold text-slate-700">Participantes do ágape</div>
                             <div class="mt-3 space-y-2">
                                 <?php foreach ($participantesÃgapeResumo as $participanteÃgape): ?>
                                     <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
-                                        <span><?= htmlspecialchars((string) ($participanteÃgape['nome'] ?? 'IrmÃ£o')) ?></span>
+                                        <span><?= htmlspecialchars((string) ($participanteÃgape['nome'] ?? 'Irmão')) ?></span>
                                         <span class="text-slate-700"><?= htmlspecialchars((string) ($participanteÃgape['cim'] ?? '-')) ?></span>
                                     </div>
                                 <?php endforeach; ?>
                                 <?php if ($participantesÃgapeResumo === []): ?>
-                                    <div class="rounded-lg border border-dashed border-slate-300 px-3 py-3 text-sm text-slate-700">Sem participantes confirmados para o Ã¡gape.</div>
+                                    <div class="rounded-lg border border-dashed border-slate-300 px-3 py-3 text-sm text-slate-700">Sem participantes confirmados para o ágape.</div>
                                 <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 <?php else: ?>
-                    <div class="mt-4 rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Nenhuma sessÃ£o disponÃ­vel para resumo operacional.</div>
+                    <div class="mt-4 rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Nenhuma sessão disponível para resumo operacional.</div>
                 <?php endif; ?>
             </section>
         </div>
@@ -294,9 +309,9 @@ require __DIR__ . '/../partials/erp_head.php';
                     <div>
                         <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">Identidade da Loja</div>
                         <h2 class="font-sans text-2xl text-erp-navy mt-2">
-                            <?= htmlspecialchars(trim((string) (($configuracaoLoja['nome_loja'] ?? '') . ' NÂº ' . ($configuracaoLoja['numero_loja'] ?? '')), " NÂº")) ?>
+                            <?= htmlspecialchars(trim((string) (($configuracaoLoja['nome_loja'] ?? '') . ' nº ' . ($configuracaoLoja['numero_loja'] ?? '')), " nº")) ?>
                         </h2>
-                        <p class="text-sm text-slate-700 mt-2">Base institucional para relatÃ³rios, Secretaria e leitura histÃ³rica da oficina.</p>
+                        <p class="text-sm text-slate-700 mt-2">Base institucional para relatórios, Secretaria e leitura histórica da oficina.</p>
                     </div>
                     <?php if (!empty($configuracaoLoja['potencia_sigla']) || !empty($configuracaoLoja['potencia_nome'])): ?>
                         <div class="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-800">
@@ -308,16 +323,16 @@ require __DIR__ . '/../partials/erp_head.php';
                 <div class="mt-5 grid gap-3 md:grid-cols-2">
                     <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Oriente: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['oriente'] ?? '-')) ?></strong></div>
                     <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Rito: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['rito'] ?? '-')) ?></strong></div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">FundaÃ§Ã£o: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['data_fundacao'] ?? '-')) ?></strong></div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">InstalaÃ§Ã£o: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['data_instalacao'] ?? '-')) ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Fundação: <strong class="text-slate-800"><?= htmlspecialchars(!empty($configuracaoLoja['data_fundacao']) ? $formatarDataExibicao((string) $configuracaoLoja['data_fundacao']) : '-') ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Instalação: <strong class="text-slate-800"><?= htmlspecialchars(!empty($configuracaoLoja['data_instalacao']) ? $formatarDataExibicao((string) $configuracaoLoja['data_instalacao']) : '-') ?></strong></div>
                     <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Templo: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracaoLoja['nome_templo'] ?? '-')) ?></strong></div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">ReuniÃµes: <strong class="text-slate-800"><?= htmlspecialchars(trim((string) (($configuracaoLoja['dia_semana_reuniao'] ?? '') . ' â€¢ ' . ($configuracaoLoja['horario_reuniao'] ?? '') . ' â€¢ ' . ($configuracaoLoja['periodicidade_reuniao'] ?? '')), ' â€¢')) ?></strong></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Reuniões: <strong class="text-slate-800"><?= htmlspecialchars(trim((string) (($configuracaoLoja['dia_semana_reuniao'] ?? '') . ' • ' . ($configuracaoLoja['horario_reuniao'] ?? '') . ' • ' . ($configuracaoLoja['periodicidade_reuniao'] ?? '')), ' •')) ?></strong></div>
                 </div>
             </section>
 
             <section class="rounded-2xl bg-[linear-gradient(180deg,#fffdf7,#f4efe4)] border border-amber-200 shadow-sm p-6">
-                <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">HistÃ³ria da Loja</div>
-                <h2 class="font-sans text-2xl text-erp-navy mt-2">RenascenÃ§a em perspectiva</h2>
+                <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">História da Loja</div>
+                <h2 class="font-sans text-2xl text-erp-navy mt-2">Renascença em perspectiva</h2>
                 <p class="mt-4 text-sm leading-7 text-slate-700 whitespace-pre-line">
                     <?= htmlspecialchars($historiaLoja) ?>
                 </p>
@@ -329,15 +344,15 @@ require __DIR__ . '/../partials/erp_head.php';
                 <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <h2 class="font-sans text-xl text-erp-navy">PrÃ³xima sessÃ£o e agenda</h2>
+                            <h2 class="font-sans text-xl text-erp-navy">Próxima sessão e agenda</h2>
                             <p class="text-sm text-slate-700">Base operacional das sessoes sob responsabilidade da Secretaria.</p>
                         </div>
                     </div>
 
                     <?php if ($proximaSessao): ?>
                         <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 mb-4">
-                            <div class="text-sm text-slate-700">PrÃ³xima sessÃ£o oficial</div>
-                            <div class="mt-1 font-semibold text-erp-navy"><?= htmlspecialchars($proximaSessao['titulo'] ?: (($proximaSessao['tipo_sessao'] ?? 'SessÃ£o') . ' - ' . ($proximaSessao['grau_sessao'] ?? ''))) ?></div>
+                            <div class="text-sm text-slate-700">Próxima sessão oficial</div>
+                            <div class="mt-1 font-semibold text-erp-navy"><?= htmlspecialchars($proximaSessao['titulo'] ?: (($proximaSessao['tipo_sessao'] ?? 'Sessão') . ' - ' . ($proximaSessao['grau_sessao'] ?? ''))) ?></div>
                             <div class="text-sm text-slate-700 mt-1"><?= htmlspecialchars((string) ($proximaSessao['data_hora_inicio'] ?? '')) ?></div>
                         </div>
                     <?php endif; ?>
@@ -346,7 +361,7 @@ require __DIR__ . '/../partials/erp_head.php';
                         <div class="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
                             <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                                 <div>
-                                    <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">RevisÃ£o final</div>
+                                    <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">Revisão final</div>
                                     <h3 class="mt-2 font-sans text-lg text-erp-navy">Resumo pronto para publicacao</h3>
                                 </div>
                                 <?php if ($sessaoDuplicada): ?>
@@ -380,7 +395,7 @@ require __DIR__ . '/../partials/erp_head.php';
                             <div>
                                 <div class="text-xs uppercase tracking-[0.24em] text-erp-gold"><?= htmlspecialchars($labelFormularioSessao) ?></div>
                                 <div class="text-sm text-slate-700">
-                                    <?= $modoEdicaoSessao ? 'Os dados abaixo foram carregados de uma sessÃ£o existente. Revise e confirme a atualizaÃ§Ã£o.' : 'Preencha os dados da nova sessÃ£o e siga para a revisÃ£o final.' ?>
+                                    <?= $modoEdicaoSessao ? 'Os dados abaixo foram carregados de uma sessão existente. Revise e confirme a atualização.' : 'Preencha os dados da nova sessão e siga para a revisão final.' ?>
                                 </div>
                             </div>
                             <?php if ($modoEdicaoSessao): ?>
@@ -388,7 +403,7 @@ require __DIR__ . '/../partials/erp_head.php';
                             <?php endif; ?>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1">TÃ­tulo da sessÃ£o</label>
+                            <label class="block text-sm font-medium mb-1">Título da sessão</label>
                             <input type="text" name="titulo" required value="<?= htmlspecialchars((string) ($sessaoDraft['titulo'] ?? '')) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                         </div>
                         <div>
@@ -400,7 +415,7 @@ require __DIR__ . '/../partials/erp_head.php';
                             <input type="datetime-local" name="data_hora_fim" value="<?= htmlspecialchars($draftFim) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1">Grau da sessÃ£o</label>
+                            <label class="block text-sm font-medium mb-1">Grau da sessão</label>
                             <select name="grau_sessao" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                                 <?php foreach (['Aprendiz', 'Companheiro', 'Mestre', 'Outro'] as $grauOpcao): ?>
                                     <option value="<?= htmlspecialchars($grauOpcao) ?>" <?= (($sessaoDraft['grau_personalizado'] ?? null) && ($sessaoDraft['grau_sessao'] ?? '') === $sessaoDraft['grau_personalizado'] && $grauOpcao === 'Outro') || (($sessaoDraft['grau_sessao'] ?? '') === $grauOpcao) ? 'selected' : '' ?>><?= htmlspecialchars($grauOpcao) ?></option>
@@ -414,7 +429,7 @@ require __DIR__ . '/../partials/erp_head.php';
                         <div>
                             <label class="block text-sm font-medium mb-1">Tipo principal</label>
                             <select name="tipo_sessao_principal" class="w-full rounded-lg border border-slate-300 px-3 py-2">
-                                <option value="economica" <?= (($sessaoDraft['tipo_sessao_principal'] ?? 'economica') === 'economica') ? 'selected' : '' ?>>EconÃ´mica</option>
+                                <option value="economica" <?= (($sessaoDraft['tipo_sessao_principal'] ?? 'economica') === 'economica') ? 'selected' : '' ?>>Econômica</option>
                                 <option value="magna" <?= (($sessaoDraft['tipo_sessao_principal'] ?? '') === 'magna') ? 'selected' : '' ?>>Magna</option>
                                 <option value="outra" <?= (($sessaoDraft['tipo_sessao_principal'] ?? '') === 'outra') ? 'selected' : '' ?>>Outra</option>
                             </select>
@@ -424,13 +439,13 @@ require __DIR__ . '/../partials/erp_head.php';
                             <select name="tipo_sessao_subtipo" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                                 <?php
                                 $subtiposSessao = [
-                                    'economica_1' => 'EconÃ´mica de 1Âº Grau',
-                                    'economica_2' => 'EconÃ´mica de 2Âº Grau',
-                                    'economica_3' => 'EconÃ´mica de 3Âº Grau',
-                                    'magna_iniciacao' => 'Magna de IniciaÃ§Ã£o',
-                                    'magna_elevacao' => 'Magna de ElevaÃ§Ã£o',
-                                    'magna_exaltacao' => 'Magna de ExaltaÃ§Ã£o',
-                                    'magna_instalacao' => 'Magna de InstalaÃ§Ã£o',
+                                    'economica_1' => 'Econômica de 1º Grau',
+                                    'economica_2' => 'Econômica de 2º Grau',
+                                    'economica_3' => 'Econômica de 3º Grau',
+                                    'magna_iniciacao' => 'Magna de Iniciação',
+                                    'magna_elevacao' => 'Magna de Elevação',
+                                    'magna_exaltacao' => 'Magna de Exaltação',
+                                    'magna_instalacao' => 'Magna de Instalação',
                                     'outra' => 'Outra',
                                 ];
                                 foreach ($subtiposSessao as $valorSubtipo => $labelSubtipo):
@@ -441,12 +456,12 @@ require __DIR__ . '/../partials/erp_head.php';
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium mb-1">Tipo livre, se necessario</label>
-                            <input type="text" name="tipo_sessao_personalizado" value="<?= htmlspecialchars((string) ($sessaoDraft['tipo_sessao_personalizado'] ?? '')) ?>" placeholder="Usar quando o tipo ou subtipo nÃ£o estiver na lista" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                            <input type="text" name="tipo_sessao_personalizado" value="<?= htmlspecialchars((string) ($sessaoDraft['tipo_sessao_personalizado'] ?? '')) ?>" placeholder="Usar quando o tipo ou subtipo não estiver na lista" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Traje</label>
                             <select name="traje_tipo" class="w-full rounded-lg border border-slate-300 px-3 py-2">
-                                <option value="maconico" <?= (($sessaoDraft['traje_tipo'] ?? 'maconico') === 'maconico') ? 'selected' : '' ?>>MaÃ§Ã´nico</option>
+                                <option value="maconico" <?= (($sessaoDraft['traje_tipo'] ?? 'maconico') === 'maconico') ? 'selected' : '' ?>>Maçônico</option>
                                 <option value="livre" <?= (($sessaoDraft['traje_tipo'] ?? '') === 'livre') ? 'selected' : '' ?>>Livre</option>
                                 <option value="outro" <?= (($sessaoDraft['traje_tipo'] ?? '') === 'outro') ? 'selected' : '' ?>>Outro</option>
                             </select>
@@ -456,15 +471,15 @@ require __DIR__ . '/../partials/erp_head.php';
                             <input type="text" name="traje_personalizado" value="<?= htmlspecialchars((string) ($sessaoDraft['traje_personalizado'] ?? '')) ?>" placeholder="Somente se o traje for Outro" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1">Ãgape</label>
+                            <label class="block text-sm font-medium mb-1">Ágape</label>
                             <select name="agape_modalidade" class="w-full rounded-lg border border-slate-300 px-3 py-2">
-                                <option value="nao_havera" <?= (($sessaoDraft['agape_modalidade'] ?? 'nao_havera') === 'nao_havera') ? 'selected' : '' ?>>NÃ£o haverÃ¡</option>
+                                <option value="nao_havera" <?= (($sessaoDraft['agape_modalidade'] ?? 'nao_havera') === 'nao_havera') ? 'selected' : '' ?>>Não haverá</option>
                                 <option value="gratuito" <?= (($sessaoDraft['agape_modalidade'] ?? '') === 'gratuito') ? 'selected' : '' ?>>Sim (gratuito)</option>
                                 <option value="pago" <?= (($sessaoDraft['agape_modalidade'] ?? '') === 'pago') ? 'selected' : '' ?>>Sim (pago)</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1">Modelo financeiro do Ã¡gape</label>
+                            <label class="block text-sm font-medium mb-1">Modelo financeiro do ágape</label>
                             <select name="agape_modelo_financeiro" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                                 <option value="oficial_loja" <?= (($sessaoDraft['agape_modelo_financeiro'] ?? 'oficial_loja') === 'oficial_loja') ? 'selected' : '' ?>>Oficial da Loja</option>
                                 <option value="particular" <?= (($sessaoDraft['agape_modelo_financeiro'] ?? '') === 'particular') ? 'selected' : '' ?>>Particular entre participantes</option>
@@ -472,18 +487,18 @@ require __DIR__ . '/../partials/erp_head.php';
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1">Valor de referÃªncia do Ã¡gape (opcional)</label>
+                            <label class="block text-sm font-medium mb-1">Valor de referência do ágape (opcional)</label>
                             <input type="text" name="agape_valor" value="<?= htmlspecialchars((string) ($sessaoDraft['agape_valor'] ?? '')) ?>" placeholder="Pode ficar em branco e ser definido depois pelo Mestre de Banquetes" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1">GestÃ£o de referÃªncia</label>
+                            <label class="block text-sm font-medium mb-1">Gestão de referência</label>
                             <input type="text" name="gestao_referencia" value="<?= htmlspecialchars((string) ($sessaoDraft['gestao_referencia'] ?? '')) ?>" placeholder="Ex.: 2026/2027" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1">Natureza da sessÃ£o</label>
+                            <label class="block text-sm font-medium mb-1">Natureza da sessão</label>
                             <select name="natureza_sessao" class="w-full rounded-lg border border-slate-300 px-3 py-2">
-                                <option value="ordinaria" <?= (($sessaoDraft['natureza_sessao'] ?? 'ordinaria') === 'ordinaria') ? 'selected' : '' ?>>OrdinÃ¡ria</option>
-                                <option value="extraordinaria" <?= (($sessaoDraft['natureza_sessao'] ?? '') === 'extraordinaria') ? 'selected' : '' ?>>ExtraordinÃ¡ria</option>
+                                <option value="ordinaria" <?= (($sessaoDraft['natureza_sessao'] ?? 'ordinaria') === 'ordinaria') ? 'selected' : '' ?>>Ordinária</option>
+                                <option value="extraordinaria" <?= (($sessaoDraft['natureza_sessao'] ?? '') === 'extraordinaria') ? 'selected' : '' ?>>Extraordinária</option>
                                 <option value="magna" <?= (($sessaoDraft['natureza_sessao'] ?? '') === 'magna') ? 'selected' : '' ?>>Magna</option>
                             </select>
                         </div>
@@ -492,18 +507,18 @@ require __DIR__ . '/../partials/erp_head.php';
                             <select name="formato_sessao" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                                 <option value="templo" <?= (($sessaoDraft['formato_sessao'] ?? 'templo') === 'templo') ? 'selected' : '' ?>>Templo</option>
                                 <option value="a_campo" <?= (($sessaoDraft['formato_sessao'] ?? '') === 'a_campo') ? 'selected' : '' ?>>A campo</option>
-                                <option value="publica" <?= (($sessaoDraft['formato_sessao'] ?? '') === 'publica') ? 'selected' : '' ?>>PÃºblica</option>
+                                <option value="publica" <?= (($sessaoDraft['formato_sessao'] ?? '') === 'publica') ? 'selected' : '' ?>>Pública</option>
                                 <option value="branca" <?= (($sessaoDraft['formato_sessao'] ?? '') === 'branca') ? 'selected' : '' ?>>Branca</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Finalidade ritual</label>
                             <select name="finalidade_ritual" class="w-full rounded-lg border border-slate-300 px-3 py-2">
-                                <option value="economica" <?= (($sessaoDraft['finalidade_ritual'] ?? 'economica') === 'economica') ? 'selected' : '' ?>>EconÃ´mica</option>
-                                <option value="iniciacao" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'iniciacao') ? 'selected' : '' ?>>IniciaÃ§Ã£o</option>
-                                <option value="elevacao" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'elevacao') ? 'selected' : '' ?>>ElevaÃ§Ã£o</option>
-                                <option value="exaltacao" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'exaltacao') ? 'selected' : '' ?>>ExaltaÃ§Ã£o</option>
-                                <option value="instalacao" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'instalacao') ? 'selected' : '' ?>>InstalaÃ§Ã£o</option>
+                                <option value="economica" <?= (($sessaoDraft['finalidade_ritual'] ?? 'economica') === 'economica') ? 'selected' : '' ?>>Econômica</option>
+                                <option value="iniciacao" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'iniciacao') ? 'selected' : '' ?>>Iniciação</option>
+                                <option value="elevacao" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'elevacao') ? 'selected' : '' ?>>Elevação</option>
+                                <option value="exaltacao" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'exaltacao') ? 'selected' : '' ?>>Exaltação</option>
+                                <option value="instalacao" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'instalacao') ? 'selected' : '' ?>>Instalação</option>
                                 <option value="outra" <?= (($sessaoDraft['finalidade_ritual'] ?? '') === 'outra') ? 'selected' : '' ?>>Outra</option>
                             </select>
                         </div>
@@ -566,9 +581,9 @@ require __DIR__ . '/../partials/erp_head.php';
                                         <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
                                             <div class="text-xs uppercase tracking-wide text-slate-700">Confirmados</div>
                                             <div class="mt-1 text-sm font-medium text-slate-800">
-                                                <?= (int) ($sessao['total_confirmados'] ?? 0) ?> irmÃ£o(s)
+                                                <?= (int) ($sessao['total_confirmados'] ?? 0) ?> irmão(s)
                                                 <?php if ((int) ($sessao['total_agape'] ?? 0) > 0): ?>
-                                                    Â· <?= (int) ($sessao['total_agape'] ?? 0) ?> com Ã¡gape
+                                                    · <?= (int) ($sessao['total_agape'] ?? 0) ?> com ágape
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -579,7 +594,7 @@ require __DIR__ . '/../partials/erp_head.php';
                                             Editar
                                         </a>
                                         <?php if (in_array($statusSessao, ['planejada', 'alterada'], true)): ?>
-                                            <form method="POST" action="/secretaria/sessoes/publicar" onsubmit="return confirm('Deseja publicar esta sessÃ£o agora?');">
+                                            <form method="POST" action="/secretaria/sessoes/publicar" onsubmit="return confirm('Deseja publicar esta sessão agora?');">
                                                 <input type="hidden" name="sessao_id" value="<?= (int) ($sessao['id'] ?? 0) ?>">
                                                 <button type="submit" class="inline-flex rounded-lg border border-amber-300 px-3 py-2 text-xs font-medium text-amber-800 hover:bg-amber-50">
                                                     PÃºblicar
@@ -610,7 +625,7 @@ require __DIR__ . '/../partials/erp_head.php';
 
                             <?php if ($sessoes === []): ?>
                                 <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-700 md:col-span-2 xl:col-span-3">
-                                    Nenhuma sessÃ£o futura cadastrada. Use o formulario acima para publicar a agenda oficial da Loja.
+                                    Nenhuma sessão futura cadastrada. Use o formulário acima para publicar a agenda oficial da Loja.
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -638,7 +653,7 @@ require __DIR__ . '/../partials/erp_head.php';
                                                     Editar
                                                 </a>
                                                 <?php if (in_array($statusSessao, ['planejada', 'alterada'], true)): ?>
-                                                    <form method="POST" action="/secretaria/sessoes/publicar" onsubmit="return confirm('Deseja publicar esta sessÃ£o agora?');">
+                                                    <form method="POST" action="/secretaria/sessoes/publicar" onsubmit="return confirm('Deseja publicar esta sessão agora?');">
                                                         <input type="hidden" name="sessao_id" value="<?= (int) ($sessao['id'] ?? 0) ?>">
                                                         <button type="submit" class="inline-flex rounded-md border border-amber-300 px-3 py-1 text-xs font-medium text-amber-800 hover:bg-amber-50">
                                                             PÃºblicar

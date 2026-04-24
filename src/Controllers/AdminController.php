@@ -124,7 +124,9 @@ class AdminController
             }
         }
 
-        header('Location: /admin/cargos');
+        $hashCodigo = strtoupper(trim((string) ($_POST['cargo_codigo'] ?? '')));
+        $hashCodigo = preg_replace('/[^A-Z0-9_]/', '', $hashCodigo) ?? '';
+        header('Location: /admin/cargos' . ($hashCodigo !== '' ? '#cargo-' . rawurlencode($hashCodigo) : ''));
         exit;
     }
 
