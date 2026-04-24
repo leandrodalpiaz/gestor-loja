@@ -3,10 +3,10 @@ $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
-$erpPageTitle = 'Balaustres / votaÃ§Ã£o - Secretaria';
+$erpPageTitle = 'Balaústres / votação - Secretaria';
 $appShellEyebrow = 'Secretaria';
-$appShellTitle = 'Balaustres / votaÃ§Ã£o';
-$appShellDescription = 'Acompanhe e registre votos nos balaustres das sessÃµes publicadas.';
+$appShellTitle = 'Balaústres / votação';
+$appShellDescription = 'Acompanhe e registre votos nos balaústres das sessões publicadas.';
 $appShellActiveHref = '/secretaria/votacao';
 $appShellActions = [
     ['label' => 'Voltar para Secretaria', 'href' => '/secretaria'],
@@ -19,9 +19,9 @@ $appShellSidebarSections = [
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
             ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
             ['label' => 'Acessos', 'href' => '/admin/acessos'],
-            ['label' => 'SessÃµes', 'href' => '/secretaria'],
-            ['label' => 'Balaustres / votaÃ§Ã£o', 'href' => '/secretaria/votacao'],
-            ['label' => 'RelatÃ³rio anual', 'href' => '/secretaria/relatorio-anual'],
+            ['label' => 'Sessões', 'href' => '/secretaria'],
+            ['label' => 'Balaústres / votação', 'href' => '/secretaria/votacao'],
+            ['label' => 'Relatório anual', 'href' => '/secretaria/relatorio-anual'],
         ],
     ],
     [
@@ -44,7 +44,7 @@ require __DIR__ . '/../partials/erp_head.php';
 
         <?php if ($votacoesAbertas === []): ?>
             <div class="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-700">
-                No momento, nÃ£o hÃ¡ votaÃ§Ãµes abertas para o seu perfil.
+                No momento, não há votações abertas para o seu perfil.
             </div>
         <?php else: ?>
             <div class="space-y-4">

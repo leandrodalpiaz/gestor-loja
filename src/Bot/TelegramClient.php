@@ -15,8 +15,57 @@ class TelegramClient
         $this->apiUrl = "https://api.telegram.org/bot{$this->botToken}/";
     }
 
+    private function normalizeMojibake(string $text): string
+    {
+        return strtr($text, [
+            'Ã¡' => 'á',
+            'Ã¢' => 'â',
+            'Ã£' => 'ã',
+            'Ã ' => 'à',
+            'Ã©' => 'é',
+            'Ãª' => 'ê',
+            'Ã­' => 'í',
+            'Ã³' => 'ó',
+            'Ã´' => 'ô',
+            'Ãµ' => 'õ',
+            'Ãº' => 'ú',
+            'Ã§' => 'ç',
+            'Ã' => 'Á',
+            'Ã‰' => 'É',
+            'Ã' => 'Í',
+            'Ã“' => 'Ó',
+            'Ãš' => 'Ú',
+            'Ã‡' => 'Ç',
+            'â€¢' => '•',
+            'Â·' => '·',
+            'Âº' => 'º',
+            'Âª' => 'ª',
+            'nÂº' => 'nº',
+            'NÂº' => 'Nº',
+        ]);
+    }
+
+    private function normalizeArrayStrings(array $value): array
+    {
+        foreach ($value as $key => $item) {
+            if (is_string($item)) {
+                $value[$key] = $this->normalizeMojibake($item);
+                continue;
+            }
+
+            if (is_array($item)) {
+                $value[$key] = $this->normalizeArrayStrings($item);
+            }
+        }
+
+        return $value;
+    }
+
     public function sendMessage(int|string $chatId, string $text, array $options = []): bool
     {
+        $text = $this->normalizeMojibake($text);
+        $options = $this->normalizeArrayStrings($options);
+
         $data = [
             'chat_id' => $chatId,
             'text' => $text,
@@ -68,7 +117,7 @@ class TelegramClient
         ];
 
         if (!empty($text)) {
-            $data['text'] = $text;
+            $data['text'] = $this->normalizeMojibake($text);
         }
 
         $options = [
@@ -101,7 +150,7 @@ class TelegramClient
         $postFields = [
             'chat_id' => $chatId,
             'photo' => new \CURLFile(realpath($photoPath)),
-            'caption' => $caption,
+            'caption' => $this->normalizeMojibake((string) $caption),
             'parse_mode' => 'Markdown'
         ];
 

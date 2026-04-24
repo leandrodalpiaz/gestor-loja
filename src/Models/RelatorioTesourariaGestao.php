@@ -31,7 +31,7 @@ class RelatorioTesourariaGestao
         }
 
         if (!$gestao) {
-            throw new \RuntimeException('Gestao nao encontrada para o relatorio financeiro.');
+            throw new \RuntimeException('Gestão não encontrada para o relatório financeiro.');
         }
 
         $timezone = new DateTimeZone('America/Sao_Paulo');
@@ -170,7 +170,7 @@ class RelatorioTesourariaGestao
     {
         $stmt = $this->db->prepare("
             SELECT
-                COALESCE(NULLIF(TRIM(l.entidade_auxiliada), ''), 'Nao informada') AS entidade,
+                COALESCE(NULLIF(TRIM(l.entidade_auxiliada), ''), 'Não informada') AS entidade,
                 COUNT(l.id) AS quantidade,
                 COALESCE(SUM(l.valor), 0) AS total
             FROM public.lancamentos_financeiros l

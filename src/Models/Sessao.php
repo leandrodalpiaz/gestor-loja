@@ -667,7 +667,7 @@ class Sessao
             'pago' => $valor !== null && $valor !== ''
                 ? 'Sim (pago - referencia R$ ' . number_format((float) $valor, 2, ',', '.') . ')'
                 : 'Sim (pago - valor a definir pelo Mestre de Banquetes)',
-            default => 'Nao havera',
+            default => 'Não haverá',
         };
     }
 
@@ -675,7 +675,7 @@ class Sessao
     {
         $modalidade = strtolower(trim((string) ($sessao['agape_modalidade'] ?? 'nao_havera')));
         if ($modalidade === 'nao_havera') {
-            return 'Nao se aplica';
+            return 'Não se aplica';
         }
 
         $modelo = strtolower(trim((string) ($sessao['agape_modelo_financeiro'] ?? 'oficial_loja')));

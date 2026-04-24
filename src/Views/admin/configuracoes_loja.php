@@ -3,10 +3,10 @@ $mensagem = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
  
-$erpPageTitle = 'Parametros da Loja';
-$appShellEyebrow = 'Administracao';
-$appShellTitle = 'Parametros da Loja';
-$appShellDescription = 'Registro oficial, parÃ¢metros institucionais e memÃ³ria administrativa da Loja.';
+$erpPageTitle = 'Parâmetros da Loja';
+$appShellEyebrow = 'Administração';
+$appShellTitle = 'Parâmetros da Loja';
+$appShellDescription = 'Registro oficial, parâmetros institucionais e memória administrativa da Loja.';
 $appShellActiveHref = '/admin/loja';
 $appShellActions = [
     ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
@@ -16,7 +16,7 @@ $appShellSidebarSections = [
     [
         'title' => 'Administracao',
         'items' => [
-            ['label' => 'Parametros da Loja', 'href' => '/admin/loja'],
+            ['label' => 'Parâmetros da Loja', 'href' => '/admin/loja'],
             ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
             ['label' => 'Painel', 'href' => '/dashboard'],
         ],
@@ -25,7 +25,7 @@ $appShellSidebarSections = [
 require __DIR__ . '/../partials/erp_head.php';
 require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
-<?php /* TODO(layout): consolidar classes visuais legadas mantendo o formulÃ¡rio e o contrato de submissÃ£o atuais. */ ?>
+<?php /* TODO(layout): consolidar classes visuais legadas mantendo o formulário e o contrato de submissão atuais. */ ?>
 <?php if (false): ?>
 <html lang="pt-BR">
 <head>
@@ -92,16 +92,16 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <form action="/admin/loja/salvar" method="POST" class="min-w-0 space-y-6 xl:col-span-8 2xl:col-span-9">
                 <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
                     <div class="border-b border-slate-200 pb-4">
-                        <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">IdentificaÃ§Ã£o institucional</div>
+                        <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Identificação institucional</div>
                         <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Dados formais da Loja</h2>
                     </div>
                     <div class="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">NÃºmero</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Número</label>
                             <input type="text" name="numero_loja" value="<?= htmlspecialchars((string) ($configuracao['numero_loja'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">TÃ­tulo de tratamento</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Título de tratamento</label>
                             <input type="text" name="titulo_tratamento" value="<?= htmlspecialchars((string) ($configuracao['titulo_tratamento'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div class="xl:col-span-1">
@@ -121,11 +121,11 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <input type="text" name="oriente" value="<?= htmlspecialchars((string) ($configuracao['oriente'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">FundaÃ§Ã£o</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Fundação</label>
                             <input type="date" name="data_fundacao" value="<?= htmlspecialchars((string) ($configuracao['data_fundacao'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Decreto de fundaÃ§Ã£o</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Decreto de fundação</label>
                             <input type="text" name="decreto_fundacao" value="<?= htmlspecialchars((string) ($configuracao['decreto_fundacao'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
@@ -137,7 +137,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <input type="date" name="data_reconhecimento" value="<?= htmlspecialchars((string) ($configuracao['data_reconhecimento'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">InstalaÃ§Ã£o</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Instalação</label>
                             <input type="date" name="data_instalacao" value="<?= htmlspecialchars((string) ($configuracao['data_instalacao'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
@@ -145,7 +145,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <input type="date" name="data_entrega_carta_constitutiva" value="<?= htmlspecialchars((string) ($configuracao['data_entrega_carta_constitutiva'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">EndereÃ§o administrativo</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Endereço administrativo</label>
                             <input type="text" name="endereco" value="<?= htmlspecialchars((string) ($configuracao['endereco'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
@@ -157,24 +157,24 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
                 <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
                     <div class="border-b border-slate-200 pb-4">
-                        <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">PotÃªncia e estrutura</div>
-                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">VÃ­nculos institucionais</h2>
+                        <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Potência e estrutura</div>
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Vínculos institucionais</h2>
                     </div>
                     <div class="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                         <div class="xl:col-span-2">
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Nome da PotÃªncia</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Nome da Potência</label>
                             <input type="text" name="potencia_nome" value="<?= htmlspecialchars((string) ($configuracao['potencia_nome'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Sigla da PotÃªncia</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Sigla da Potência</label>
                             <input type="text" name="potencia_sigla" value="<?= htmlspecialchars((string) ($configuracao['potencia_sigla'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div class="md:col-span-2 xl:col-span-3">
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Grande Secretaria / Delegacia / Ã³rgÃ£o correlato</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Grande Secretaria / Delegacia / órgão correlato</label>
                             <input type="text" name="grande_secretaria" value="<?= htmlspecialchars((string) ($configuracao['grande_secretaria'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">RegiÃ£o / simpÃ³sios</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Região / simpósios</label>
                             <input type="text" name="regiao_simposios" value="<?= htmlspecialchars((string) ($configuracao['regiao_simposios'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
@@ -182,7 +182,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <input type="text" name="rito" value="<?= htmlspecialchars((string) ($configuracao['rito'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">ObediÃªncia do templo</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Obediência do templo</label>
                             <input type="text" name="obediencia_templo" value="<?= htmlspecialchars((string) ($configuracao['obediencia_templo'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                     </div>
@@ -190,16 +190,16 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
                 <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
                     <div class="border-b border-slate-200 pb-4">
-                        <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Templo e reuniÃµes</div>
-                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">OperaÃ§Ã£o ritual da Loja</h2>
+                        <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Templo e reuniões</div>
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Operação ritual da Loja</h2>
                     </div>
                     <div class="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                         <div class="md:col-span-2 xl:col-span-3">
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">EndereÃ§o do templo</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Endereço do templo</label>
                             <input type="text" name="templo_endereco" value="<?= htmlspecialchars((string) ($configuracao['templo_endereco'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">ProprietÃ¡rio / locatÃ¡rio</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Proprietário / locatário</label>
                             <input type="text" name="proprietario_locatario" value="<?= htmlspecialchars((string) ($configuracao['proprietario_locatario'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
@@ -207,7 +207,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <input type="text" name="nome_templo" value="<?= htmlspecialchars((string) ($configuracao['nome_templo'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Data de sagraÃ§Ã£o</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Data de sagração</label>
                             <input type="date" name="data_sagracao_templo" value="<?= htmlspecialchars((string) ($configuracao['data_sagracao_templo'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
@@ -215,7 +215,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <input type="text" name="dia_semana_reuniao" value="<?= htmlspecialchars((string) ($configuracao['dia_semana_reuniao'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">HorÃ¡rio</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Horário</label>
                             <input type="text" name="horario_reuniao" value="<?= htmlspecialchars((string) ($configuracao['horario_reuniao'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
@@ -224,15 +224,15 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         </div>
                         <label class="md:col-span-2 xl:col-span-3 inline-flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
                             <input type="checkbox" name="trabalha_palacio_maconico" value="1" <?= !empty($configuracao['trabalha_palacio_maconico']) ? 'checked' : '' ?>>
-                            Loja trabalha no PalÃ¡cio MaÃ§Ã´nico
+                            Loja trabalha no Palácio Maçônico
                         </label>
                     </div>
                 </section>
 
                 <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
                     <div class="border-b border-slate-200 pb-4">
-                        <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Contato e memÃ³ria</div>
-                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Uso transversal e histÃ³ria</h2>
+                        <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Contato e memória</div>
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Uso transversal e história</h2>
                     </div>
                     <div class="mt-6 grid gap-4 md:grid-cols-2">
                         <div>
@@ -248,11 +248,11 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <input type="text" name="cnpj" value="<?= htmlspecialchars((string) ($configuracao['cnpj'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">ObservaÃ§Ã£o institucional para relatÃ³rios</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Observação institucional para relatórios</label>
                             <textarea name="observacao_relatorios" rows="3" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none"><?= htmlspecialchars((string) ($configuracao['observacao_relatorios'] ?? '')) ?></textarea>
                         </div>
                         <div class="md:col-span-2">
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">HistÃ³ria da Loja</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">História da Loja</label>
                             <textarea name="historia_loja" rows="14" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 focus:border-dourado focus:bg-white focus:outline-none"><?= htmlspecialchars((string) ($configuracao['historia_loja'] ?? '')) ?></textarea>
                         </div>
                     </div>
@@ -260,12 +260,12 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
                 <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
                     <div class="border-b border-slate-200 pb-4">
-                        <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Tesouraria e parÃ¢metros</div>
-                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Contribuicao mensal e regra institucional</h2>
+                        <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Tesouraria e parâmetros</div>
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Contribuição mensal e regra institucional</h2>
                     </div>
                     <div class="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Contribuicao mensal padrÃ£o</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Contribuição mensal padrão</label>
                             <input type="number" step="0.01" min="0" name="mensalidade_valor_padrao" value="<?= htmlspecialchars((string) ($configuracao['mensalidade_valor_padrao'] ?? '150.00')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
@@ -275,8 +275,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <div>
                             <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Regra de atraso</label>
                             <select name="mensalidade_regra_atraso" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
-                                <option value="primeiro_dia_util_mes_seguinte" <?= (($configuracao['mensalidade_regra_atraso'] ?? '') === 'primeiro_dia_util_mes_seguinte') ? 'selected' : '' ?>>Primeiro dia Ãºtil do mÃªs seguinte</option>
-                                <option value="dia_sugerido" <?= (($configuracao['mensalidade_regra_atraso'] ?? '') === 'dia_sugerido') ? 'selected' : '' ?>>No prÃ³prio dia sugerido</option>
+                                <option value="primeiro_dia_util_mes_seguinte" <?= (($configuracao['mensalidade_regra_atraso'] ?? '') === 'primeiro_dia_util_mes_seguinte') ? 'selected' : '' ?>>Primeiro dia útil do mês seguinte</option>
+                                <option value="dia_sugerido" <?= (($configuracao['mensalidade_regra_atraso'] ?? '') === 'dia_sugerido') ? 'selected' : '' ?>>No próprio dia sugerido</option>
                             </select>
                         </div>
                         <div>
@@ -284,7 +284,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <input type="number" step="0.01" min="0" name="contribuicao_biblioteca_valor_padrao" value="<?= htmlspecialchars((string) ($configuracao['contribuicao_biblioteca_valor_padrao'] ?? '44.00')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Contribuintes por mÃªs</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Contribuintes por mês</label>
                             <input type="number" min="1" max="12" name="contribuicao_biblioteca_quantidade_mensal" value="<?= htmlspecialchars((string) ($configuracao['contribuicao_biblioteca_quantidade_mensal'] ?? '2')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
@@ -296,18 +296,18 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <input type="text" name="pix_chave_valor" value="<?= htmlspecialchars((string) ($configuracao['pix_chave_valor'] ?? '31.274.071/0001-06')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">BeneficiÃ¡rio PIX</label>
-                            <input type="text" name="pix_beneficiario" value="<?= htmlspecialchars((string) ($configuracao['pix_beneficiario'] ?? 'RenascenÃ§a nÂº 270')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Beneficiário PIX</label>
+                            <input type="text" name="pix_beneficiario" value="<?= htmlspecialchars((string) ($configuracao['pix_beneficiario'] ?? 'Renascença nº 270')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div class="md:col-span-2 xl:col-span-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-900">
-                            Para a RenascenÃ§a, a orientaÃ§Ã£o Ã© pagar atÃ© o dia 10, mas a mensalidade sÃ³ entra como em aberto apÃ³s o primeiro dia Ãºtil do mÃªs seguinte. O valor padrÃ£o inicia em R$ 150,00 e continua editÃ¡vel aqui no admin.
+                            Para a Renascença, a orientação é pagar até o dia 10, mas a mensalidade só entra como em aberto após o primeiro dia útil do mês seguinte. O valor padrão inicia em R$ 150,00 e continua editável aqui no admin.
                         </div>
                     </div>
                 </section>
 
                 <div class="flex flex-wrap gap-3">
                     <button type="submit" class="rounded-xl bg-marinho px-5 py-3 text-sm font-medium text-white transition hover:bg-tinta">
-                        Salvar parÃ¢metros da Loja
+                        Salvar parâmetros da Loja
                     </button>
                     <a href="/admin/cargos" class="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                         Voltar para a nominata
@@ -317,26 +317,26 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
             <aside class="space-y-6 xl:sticky xl:top-8 xl:col-span-4 2xl:col-span-3">
                 <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
-                    <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Leitura rÃ¡pida</div>
+                    <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Leitura rápida</div>
                         <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">
-                        <?= htmlspecialchars(trim((string) (($configuracao['nome_loja'] ?? '') . ' NÂº ' . ($configuracao['numero_loja'] ?? '')), " NÂº")) ?>
+                        <?= htmlspecialchars(trim((string) (($configuracao['nome_loja'] ?? '') . ' Nº ' . ($configuracao['numero_loja'] ?? '')), " Nº")) ?>
                     </h2>
                     <div class="mt-5 space-y-3 text-sm text-slate-600">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">PotÃªncia: <strong class="text-slate-800"><?= htmlspecialchars((string) (($configuracao['potencia_sigla'] ?? '') !== '' ? $configuracao['potencia_sigla'] : ($configuracao['potencia_nome'] ?? '-'))) ?></strong></div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">Potência: <strong class="text-slate-800"><?= htmlspecialchars((string) (($configuracao['potencia_sigla'] ?? '') !== '' ? $configuracao['potencia_sigla'] : ($configuracao['potencia_nome'] ?? '-'))) ?></strong></div>
                         <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">Rito: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracao['rito'] ?? '-')) ?></strong></div>
                         <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">Oriente: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracao['oriente'] ?? '-')) ?></strong></div>
                         <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">Templo: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracao['nome_templo'] ?? '-')) ?></strong></div>
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">ReuniÃµes: <strong class="text-slate-800"><?= htmlspecialchars(trim((string) (($configuracao['dia_semana_reuniao'] ?? '') . ' â€¢ ' . ($configuracao['horario_reuniao'] ?? '') . ' â€¢ ' . ($configuracao['periodicidade_reuniao'] ?? '')), ' â€¢')) ?></strong></div>
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">Contribuicao mensal: <strong class="text-slate-800">R$ <?= htmlspecialchars(number_format((float) ($configuracao['mensalidade_valor_padrao'] ?? 150), 2, ',', '.')) ?></strong></div>
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">Biblioteca: <strong class="text-slate-800">R$ <?= htmlspecialchars(number_format((float) ($configuracao['contribuicao_biblioteca_valor_padrao'] ?? 44), 2, ',', '.')) ?> â€¢ <?= htmlspecialchars((string) ($configuracao['contribuicao_biblioteca_quantidade_mensal'] ?? 2)) ?> irmÃ£os/mÃªs</strong></div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">Reuniões: <strong class="text-slate-800"><?= htmlspecialchars(trim((string) (($configuracao['dia_semana_reuniao'] ?? '') . ' • ' . ($configuracao['horario_reuniao'] ?? '') . ' • ' . ($configuracao['periodicidade_reuniao'] ?? '')), ' •')) ?></strong></div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">Contribuição mensal: <strong class="text-slate-800">R$ <?= htmlspecialchars(number_format((float) ($configuracao['mensalidade_valor_padrao'] ?? 150), 2, ',', '.')) ?></strong></div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">Biblioteca: <strong class="text-slate-800">R$ <?= htmlspecialchars(number_format((float) ($configuracao['contribuicao_biblioteca_valor_padrao'] ?? 44), 2, ',', '.')) ?> • <?= htmlspecialchars((string) ($configuracao['contribuicao_biblioteca_quantidade_mensal'] ?? 2)) ?> irmãos/mês</strong></div>
                         <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">PIX: <strong class="text-slate-800"><?= htmlspecialchars((string) ($configuracao['pix_chave_tipo'] ?? 'CNPJ')) ?> <?= htmlspecialchars((string) ($configuracao['pix_chave_valor'] ?? '-')) ?></strong></div>
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">Atraso: <strong class="text-slate-800"><?= htmlspecialchars((string) (($configuracao['mensalidade_regra_atraso'] ?? '') === 'primeiro_dia_util_mes_seguinte' ? 'Primeiro dia Ãºtil do mÃªs seguinte' : 'Dia sugerido')) ?></strong></div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">Atraso: <strong class="text-slate-800"><?= htmlspecialchars((string) (($configuracao['mensalidade_regra_atraso'] ?? '') === 'primeiro_dia_util_mes_seguinte' ? 'Primeiro dia útil do mês seguinte' : 'Dia sugerido')) ?></strong></div>
                     </div>
                 </section>
 
                 <section class="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-7 shadow-sm">
-                    <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">MemÃ³ria institucional</div>
-                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">PrÃ©via da histÃ³ria</h2>
+                    <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Memória institucional</div>
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Prévia da história</h2>
                     <p class="mt-4 text-sm leading-7 text-slate-700 whitespace-pre-line">
                         <?php
                         $historiaLojaPreview = (string) ($configuracao['historia_loja'] ?? '');

@@ -116,7 +116,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nominata Oficial e GestÃµes</title>
+    <title>Nominata Oficial e Gestões</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -153,8 +153,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <section class="overflow-hidden rounded-[2rem] border border-white/50 bg-[linear-gradient(135deg,_rgba(16,35,63,0.96),_rgba(21,40,72,0.92)_52%,_rgba(199,161,75,0.28)_100%)] px-6 py-8 text-white shadow-dignidade sm:px-8 lg:px-10 lg:py-10">
                 <div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
                     <div class="max-w-3xl">
-                        <div class="text-[0.72rem] uppercase tracking-[0.34em] text-amber-200/90">Secretaria â€¢ Nominata Oficial</div>
-                        <h1 class="mt-3 font-display text-5xl leading-none text-white sm:text-6xl">GestÃ£o, ofÃ­cios e continuidade administrativa.</h1>
+                        <div class="text-[0.72rem] uppercase tracking-[0.34em] text-amber-200/90">Secretaria • Nominata Oficial</div>
+                        <h1 class="mt-3 font-display text-5xl leading-none text-white sm:text-6xl">Gestão, ofícios e continuidade administrativa.</h1>
                         <p class="mt-4 max-w-2xl text-sm leading-6 text-slate-200 sm:text-base">
                             Esta é a base oficial que sustenta validações de cargo, conferência de relatórios e a leitura formal da gestão em exercício.
                         </p>

@@ -63,6 +63,7 @@ if ($shouldNormalizeHtmlOutput) {
             'Ã¡' => 'á',
             'Ã¢' => 'â',
             'Ã£' => 'ã',
+            'Ã ' => 'à',
             'Ã©' => 'é',
             'Ãª' => 'ê',
             'Ã­' => 'í',
@@ -81,6 +82,8 @@ if ($shouldNormalizeHtmlOutput) {
             'nÂº' => 'nº',
             'NÂº' => 'Nº',
             'Â·' => '·',
+            'Âº' => 'º',
+            'Âª' => 'ª',
         ]);
     });
 }
@@ -625,6 +628,16 @@ $resolveObreiroByInitData = static function (?string $initData = null): ?array {
         return null;
     }
 };
+
+if (!isset($_SESSION['usuario_logado'])) {
+    $bootstrapInitData = trim((string) ($_GET['init_data'] ?? $_GET['initData'] ?? ''));
+    if ($bootstrapInitData !== '') {
+        $bootstrapObreiro = $resolveObreiroByInitData($bootstrapInitData);
+        if ($bootstrapObreiro) {
+            $loginTelegramObreiroInSession($bootstrapObreiro);
+        }
+    }
+}
 
 if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
     $_SESSION["usuario_logado"] = $buildTestSessionUser();

@@ -1,6 +1,6 @@
 <?php
 $lista = $itens ?? [];
-$usuarioNome = $_SESSION['usuario_nome'] ?? 'IrmÃ£o';
+$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
 $isTestSession = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id'] === 0;
 $allowAllPanels = filter_var($_ENV['APP_TEST_ALLOW_ALL_PANELS'] ?? 'true', FILTER_VALIDATE_BOOL);
 $showAllPanels = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VALIDATE_BOOL) || $isTestSession || $allowAllPanels;
@@ -50,15 +50,15 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
         <div class="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
             <div>
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Catalogo</div>
-                <h2 class="mt-1 text-2xl font-semibold text-blue-900">Catalogo</h2>
+                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Catálogo</div>
+                <h2 class="mt-1 text-2xl font-semibold text-blue-900">Catálogo</h2>
                 <p class="mt-1 text-sm text-slate-700">Web e mobile usam o mesmo fluxo de biblioteca.</p>
             </div>
             <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                <a href="/biblioteca/meus-emprestimos" class="w-full rounded-lg bg-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-300 sm:w-auto">Meus emprestimos</a>
+                <a href="/biblioteca/meus-emprestimos" class="w-full rounded-lg bg-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-300 sm:w-auto">Meus empréstimos</a>
                 <?php if ($podeGerenciar): ?>
-                    <a href="/biblioteca/emprestimos" class="w-full rounded-lg bg-amber-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-amber-700 sm:w-auto">Gerenciar emprestimos</a>
-                    <a href="/biblioteca/adicionar" class="w-full rounded-lg bg-emerald-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-emerald-700 sm:w-auto">Novo titulo</a>
+                    <a href="/biblioteca/emprestimos" class="w-full rounded-lg bg-amber-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-amber-700 sm:w-auto">Gerenciar empréstimos</a>
+                    <a href="/biblioteca/adicionar" class="w-full rounded-lg bg-emerald-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-emerald-700 sm:w-auto">Novo título</a>
                 <?php endif; ?>
             </div>
             </div>
@@ -66,25 +66,25 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
 
         <?php
         $dashboard = [
-            'title' => $podeGerenciar ? 'Painel do BibliotecÃ¡rio' : 'Painel do Obreiro (Biblioteca)',
-            'subtitle' => $podeGerenciar ? 'GestÃ£o completa do acervo, emprÃ©stimos e classificaÃ§Ã£o.' : 'Consumo da biblioteca e interaÃ§Ãµes pessoais.',
-            'meta' => [$podeGerenciar ? 'Perfil: bibliotecÃ¡rio' : 'Perfil: obreiro'],
+            'title' => $podeGerenciar ? 'Painel do Bibliotecário' : 'Painel do Obreiro (Biblioteca)',
+            'subtitle' => $podeGerenciar ? 'Gestão completa do acervo, empréstimos e classificação.' : 'Consumo da biblioteca e interações pessoais.',
+            'meta' => [$podeGerenciar ? 'Perfil: bibliotecário' : 'Perfil: obreiro'],
             'actions' => $podeGerenciar
-                ? [['label' => 'Adicionar item', 'href' => '/biblioteca/adicionar'], ['label' => 'Editar', 'href' => '/biblioteca/editar'], ['label' => 'Excluir', 'href' => '/biblioteca/editar'], ['label' => 'Registrar emprestimo', 'href' => '/biblioteca/emprestimos'], ['label' => 'Registrar devolucao', 'href' => '/biblioteca/emprestimos'], ['label' => 'Classificar', 'href' => '/biblioteca/classificar']]
-                : [['label' => 'Ver obrigaÃ§Ãµes', 'href' => '/financeiro/minhas-obrigacoes'], ['label' => 'Solicitar item', 'href' => '/biblioteca'], ['label' => 'Ver meus emprÃ©stimos', 'href' => '/biblioteca/meus-emprestimos']],
+                ? [['label' => 'Adicionar item', 'href' => '/biblioteca/adicionar'], ['label' => 'Editar', 'href' => '/biblioteca/editar'], ['label' => 'Excluir', 'href' => '/biblioteca/editar'], ['label' => 'Registrar empréstimo', 'href' => '/biblioteca/emprestimos'], ['label' => 'Registrar devolução', 'href' => '/biblioteca/emprestimos'], ['label' => 'Classificar', 'href' => '/biblioteca/classificar']]
+                : [['label' => 'Ver obrigações', 'href' => '/financeiro/minhas-obrigacoes'], ['label' => 'Solicitar item', 'href' => '/biblioteca'], ['label' => 'Ver meus empréstimos', 'href' => '/biblioteca/meus-emprestimos']],
             'blocks' => [
-                ['title' => 'Acervo / visÃ£o geral', 'subtitle' => 'Itens e disponibilidade.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'Itens no catÃ¡logo', 'value' => (string) count($lista)],
-                    ['label' => 'DisponÃ­veis', 'value' => (string) count(array_filter($lista, static fn (array $i): bool => (bool) ($i['disponivel'] ?? false)))],
-                ], 'list' => array_map(static fn (array $i): array => ['item' => (string) ($i['titulo'] ?? 'Item'), 'meta' => (string) ($i['autor'] ?? '-'), 'status' => (bool) ($i['disponivel'] ?? false) ? 'DisponÃ­vel' : 'IndisponÃ­vel'], array_slice($lista, 0, 4))],
-                ['title' => $podeGerenciar ? 'EmprÃ©stimos e classificaÃ§Ã£o' : 'Meus emprÃ©stimos e interaÃ§Ãµes', 'subtitle' => 'Fluxo operacional da biblioteca.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'ComentÃ¡rios', 'value' => (string) array_sum(array_map(static fn (array $i): int => (int) ($i['total_comentarios'] ?? 0), $lista))],
-                    ['label' => 'ReaÃ§Ãµes', 'value' => (string) array_sum(array_map(static fn (array $i): int => (int) ($i['total_gostei_sim'] ?? 0) + (int) ($i['total_gostei_nao'] ?? 0), $lista))],
-                ], 'list' => [['item' => 'EmprÃ©stimos', 'meta' => 'OperaÃ§Ã£o de retirada e devoluÃ§Ã£o', 'status' => 'Regular'], ['item' => 'ClassificaÃ§Ã£o', 'meta' => 'RecomendaÃ§Ã£o por grau', 'status' => $podeClassificar ? 'Regular' : 'Somente leitura']]],
+                ['title' => 'Acervo / visão geral', 'subtitle' => 'Itens e disponibilidade.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Itens no catálogo', 'value' => (string) count($lista)],
+                    ['label' => 'Disponíveis', 'value' => (string) count(array_filter($lista, static fn (array $i): bool => (bool) ($i['disponivel'] ?? false)))],
+                ], 'list' => array_map(static fn (array $i): array => ['item' => (string) ($i['titulo'] ?? 'Item'), 'meta' => (string) ($i['autor'] ?? '-'), 'status' => (bool) ($i['disponivel'] ?? false) ? 'Disponível' : 'Indisponível'], array_slice($lista, 0, 4))],
+                ['title' => $podeGerenciar ? 'Empréstimos e classificação' : 'Meus empréstimos e interações', 'subtitle' => 'Fluxo operacional da biblioteca.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Comentários', 'value' => (string) array_sum(array_map(static fn (array $i): int => (int) ($i['total_comentarios'] ?? 0), $lista))],
+                    ['label' => 'Reações', 'value' => (string) array_sum(array_map(static fn (array $i): int => (int) ($i['total_gostei_sim'] ?? 0) + (int) ($i['total_gostei_nao'] ?? 0), $lista))],
+                ], 'list' => [['item' => 'Empréstimos', 'meta' => 'Operação de retirada e devolução', 'status' => 'Regular'], ['item' => 'Classificação', 'meta' => 'Recomendação por grau', 'status' => $podeClassificar ? 'Regular' : 'Somente leitura']]],
             ],
-            'alerts' => [['title' => 'Fluxo Ãºnico de biblioteca', 'text' => 'Web e mobile compartilham o mesmo fluxo e dados oficiais.', 'tone' => 'warning']],
-            'activity' => array_map(static fn (array $i): array => ['item' => (string) ($i['titulo'] ?? 'Item'), 'meta' => 'ComentÃ¡rios: ' . (int) ($i['total_comentarios'] ?? 0)], array_slice($lista, 0, 5)),
-            'links' => [['label' => 'Meus emprÃ©stimos', 'href' => '/biblioteca/meus-emprestimos'], ['label' => 'Detalhes', 'href' => '/biblioteca/detalhes']],
+            'alerts' => [['title' => 'Fluxo único de biblioteca', 'text' => 'Web e mobile compartilham o mesmo fluxo e dados oficiais.', 'tone' => 'warning']],
+            'activity' => array_map(static fn (array $i): array => ['item' => (string) ($i['titulo'] ?? 'Item'), 'meta' => 'Comentários: ' . (int) ($i['total_comentarios'] ?? 0)], array_slice($lista, 0, 5)),
+            'links' => [['label' => 'Meus empréstimos', 'href' => '/biblioteca/meus-emprestimos'], ['label' => 'Detalhes', 'href' => '/biblioteca/detalhes']],
         ];
         $dashboardRenderers = [
             static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
@@ -109,14 +109,14 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                                 <div class="flex flex-wrap items-start gap-2">
                                     <h3 class="min-w-0 flex-1 text-base font-semibold text-slate-900"><?= htmlspecialchars((string) ($item['titulo'] ?? '')) ?></h3>
                                     <?php if ((bool) ($item['disponivel'] ?? false)): ?>
-                                        <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">DisponÃ­vel</span>
+                                        <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">Disponível</span>
                                     <?php else: ?>
-                                        <span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">IndisponÃ­vel</span>
+                                        <span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">Indisponível</span>
                                     <?php endif; ?>
                                 </div>
                                 <p class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($item['autor'] ?? '-')) ?></p>
                                 <div class="mt-2 space-y-1 text-xs text-slate-700">
-                                    <div>CÃ³digo: <span class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></span></div>
+                                    <div>Código: <span class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></span></div>
                                     <div>ISBN: <?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></div>
                                     <div>Exemplares livres: <?= (int) ($item['quantidade_disponivel'] ?? 0) ?></div>
                                 </div>
@@ -125,8 +125,8 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
 
                         <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-700">
                             <span class="rounded-full bg-slate-100 px-2.5 py-1">Gostou: <?= (int) ($item['total_gostei_sim'] ?? 0) ?></span>
-                            <span class="rounded-full bg-slate-100 px-2.5 py-1">NÃ£o gostou: <?= (int) ($item['total_gostei_nao'] ?? 0) ?></span>
-                            <span class="rounded-full bg-slate-100 px-2.5 py-1">Comentarios: <?= (int) ($item['total_comentarios'] ?? 0) ?></span>
+                            <span class="rounded-full bg-slate-100 px-2.5 py-1">Não gostou: <?= (int) ($item['total_gostei_nao'] ?? 0) ?></span>
+                            <span class="rounded-full bg-slate-100 px-2.5 py-1">Comentários: <?= (int) ($item['total_comentarios'] ?? 0) ?></span>
                         </div>
 
                         <div class="mt-4 flex flex-col gap-2">
@@ -144,7 +144,7 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                 <?php endforeach; ?>
             <?php else: ?>
                 <div class="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-700">
-                    Nenhum titulo cadastrado.
+                    Nenhum título cadastrado.
                 </div>
             <?php endif; ?>
         </div>
@@ -155,12 +155,12 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                     <thead class="bg-slate-100">
                         <tr>
                             <th class="text-left px-4 py-3">Capa</th>
-                            <th class="text-left px-4 py-3">Codigo</th>
-                            <th class="text-left px-4 py-3">Titulo</th>
+                            <th class="text-left px-4 py-3">Código</th>
+                            <th class="text-left px-4 py-3">Título</th>
                             <th class="text-left px-4 py-3">Autor</th>
                             <th class="text-left px-4 py-3">Disponibilidade</th>
-                            <th class="text-left px-4 py-3">Reacao</th>
-                            <th class="text-right px-4 py-3">Acoes</th>
+                            <th class="text-left px-4 py-3">Reação</th>
+                            <th class="text-right px-4 py-3">Ações</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -182,15 +182,15 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                                     <td class="px-4 py-3"><?= htmlspecialchars((string) ($item['autor'] ?? '-')) ?></td>
                                     <td class="px-4 py-3">
                                         <?php if ((bool) ($item['disponivel'] ?? false)): ?>
-                                            <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">DisponÃ­vel (<?= (int) ($item['quantidade_disponivel'] ?? 0) ?>)</span>
+                                            <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">Disponível (<?= (int) ($item['quantidade_disponivel'] ?? 0) ?>)</span>
                                         <?php else: ?>
-                                            <span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">IndisponÃ­vel</span>
+                                            <span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">Indisponível</span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="px-4 py-3 text-xs">
                                         <div>Gostou: <?= (int) ($item['total_gostei_sim'] ?? 0) ?></div>
-                                        <div>NÃ£o gostou: <?= (int) ($item['total_gostei_nao'] ?? 0) ?></div>
-                                        <div>Comentarios: <?= (int) ($item['total_comentarios'] ?? 0) ?></div>
+                                        <div>Não gostou: <?= (int) ($item['total_gostei_nao'] ?? 0) ?></div>
+                                        <div>Comentários: <?= (int) ($item['total_comentarios'] ?? 0) ?></div>
                                     </td>
                                     <td class="px-4 py-3 text-right">
                                         <a href="/biblioteca/detalhes?id=<?= (int) ($item['id'] ?? 0) ?>" class="text-blue-700 hover:underline mr-3">Detalhes</a>
@@ -205,7 +205,7 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-slate-700">Nenhum titulo cadastrado.</td>
+                                <td colspan="7" class="px-4 py-8 text-center text-slate-700">Nenhum título cadastrado.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -233,7 +233,7 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                         </select>
                     </div>
                     <div>
-                        <label class="text-sm font-medium">Nota de instrucao</label>
+                        <label class="text-sm font-medium">Nota de instrução</label>
                         <textarea name="nota_instrucao" id="modal-nota" rows="3" class="mt-1 w-full border border-slate-300 rounded px-3 py-2"></textarea>
                     </div>
                 </div>

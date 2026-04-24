@@ -12,30 +12,30 @@ $estadosCivis = [
     'casado' => 'Casado',
     'divorciado' => 'Divorciado',
     'separado' => 'Separado',
-    'viuvo' => 'Viuvo',
-    'uniao_estavel' => 'Uniao estavel',
-    'nao_informado' => 'NÃ£o informado',
+    'viuvo' => 'Viúvo',
+    'uniao_estavel' => 'União estável',
+    'nao_informado' => 'Não informado',
 ];
 $escolaridades = [
     'fundamental_incompleto' => 'Fundamental incompleto',
     'fundamental_completo' => 'Fundamental completo',
-    'medio_incompleto' => 'Medio incompleto',
-    'medio_completo' => 'Medio completo',
-    'tecnico' => 'Tecnico',
+    'medio_incompleto' => 'Médio incompleto',
+    'medio_completo' => 'Médio completo',
+    'tecnico' => 'Técnico',
     'superior_incompleto' => 'Superior incompleto',
     'superior_completo' => 'Superior completo',
-    'pos_graduacao' => 'Pos-graduacao',
+    'pos_graduacao' => 'Pós-graduação',
     'mestrado' => 'Mestrado',
     'doutorado' => 'Doutorado',
-    'nao_informado' => 'NÃ£o informado',
+    'nao_informado' => 'Não informado',
 ];
 $faixasRenda = [
-    'ate_1_sm' => 'Ate 1 salario minimo',
-    'de_1_a_3_sm' => 'De 1 a 3 salarios minimos',
-    'de_3_a_5_sm' => 'De 3 a 5 salarios minimos',
-    'de_5_a_10_sm' => 'De 5 a 10 salarios minimos',
-    'acima_10_sm' => 'Acima de 10 salarios minimos',
-    'nao_informado' => 'NÃ£o informado',
+    'ate_1_sm' => 'Até 1 salário mínimo',
+    'de_1_a_3_sm' => 'De 1 a 3 salários mínimos',
+    'de_3_a_5_sm' => 'De 3 a 5 salários mínimos',
+    'de_5_a_10_sm' => 'De 5 a 10 salários mínimos',
+    'acima_10_sm' => 'Acima de 10 salários mínimos',
+    'nao_informado' => 'Não informado',
 ];
 $situacoesQuadro = [
     'ativo' => 'Regular',
@@ -106,7 +106,7 @@ $situacoesQuadro = [
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="p-6 border-b border-gray-100 bg-gray-50">
                 <h2 class="text-xl font-bold text-cobalto">Ficha de cadastro</h2>
-                <p class="text-sm text-gray-500 mt-1">Registro reforcado para relatÃ³rios individuais, estatisticos e trilha de situacao do quadro.</p>
+                <p class="text-sm text-gray-500 mt-1">Registro reforçado para relatórios individuais, estatísticos e trilha de situação do quadro.</p>
             </div>
 
             <form action="/obreiros/salvar" method="POST" class="p-6 space-y-8">

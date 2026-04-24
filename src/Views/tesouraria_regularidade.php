@@ -36,7 +36,7 @@ if (!isset($_SESSION["usuario_logado"])) {
                 <div>
                     <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Tesouraria</p>
                     <h1 class="mt-2 text-3xl font-semibold">Regularidade de Obreiros</h1>
-                    <p class="mt-2 max-w-3xl text-sm text-slate-200">Leitura clara do periodo e edicao rapida da situacao financeira de cada obreiro.</p>
+                    <p class="mt-2 max-w-3xl text-sm text-slate-200">Leitura clara do período e edição rápida da situação financeira de cada obreiro.</p>
                 </div>
                 <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao Painel</a>
             </div>
@@ -45,10 +45,10 @@ if (!isset($_SESSION["usuario_logado"])) {
         <div class="mb-6 rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:items-end">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Mes</label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Mês</label>
                     <select id="filter-mes" class="w-full rounded border border-gray-300 px-3 py-2" onchange="filtrarRegularidade()">
                         <?php
-                        $mesesPT = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+                        $mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                         $mesAtual = (int) date('n');
                         for ($m = 1; $m <= 12; $m++) {
                             $selected = ($m === $mesAtual) ? 'selected' : '';
@@ -103,8 +103,8 @@ if (!isset($_SESSION["usuario_logado"])) {
                         <tr>
                             <th class="px-4 py-2 text-left">Obreiro</th>
                             <th class="px-4 py-2 text-left">Status Atual</th>
-                            <th class="px-4 py-2 text-left">Observacao</th>
-                            <th class="px-4 py-2 text-left">Acao</th>
+                            <th class="px-4 py-2 text-left">Observação</th>
+                            <th class="px-4 py-2 text-left">Ação</th>
                         </tr>
                     </thead>
                     <tbody id="regularidade-table">
@@ -141,7 +141,7 @@ if (!isset($_SESSION["usuario_logado"])) {
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium">Observacao</label>
+                    <label class="mb-1 block text-sm font-medium">Observação</label>
                     <textarea id="observacao" rows="3" class="w-full rounded border border-gray-300 px-3 py-2"></textarea>
                 </div>
 
@@ -182,8 +182,8 @@ if (!isset($_SESSION["usuario_logado"])) {
             const tbody = document.getElementById('regularidade-table');
             const cards = document.getElementById('regularidade-cards');
             if (lista.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">Nenhum obreiro neste periodo</td></tr>';
-                cards.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">Nenhum obreiro neste periodo.</div>';
+                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">Nenhum obreiro neste período</td></tr>';
+                cards.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">Nenhum obreiro neste período.</div>';
                 return;
             }
 
@@ -219,7 +219,7 @@ if (!isset($_SESSION["usuario_logado"])) {
                     <div class="flex items-start justify-between gap-3">
                         <div>
                             <div class="text-base font-semibold text-slate-900">${r.obreiro_nome}</div>
-                            <div class="mt-1 text-sm text-slate-700">${r.observacao || 'Sem observacao registrada'}</div>
+                            <div class="mt-1 text-sm text-slate-700">${r.observacao || 'Sem observação registrada'}</div>
                         </div>
                         <span class="rounded-full px-3 py-1 text-xs font-semibold ${r.status === 'regular' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
                             ${r.status === 'regular' ? 'Regular' : 'Irregular'}
@@ -260,7 +260,7 @@ if (!isset($_SESSION["usuario_logado"])) {
         }
 
         async function definirTodos(status) {
-            if (!confirm(`Marcar TODOS como ${status}? Esta acao nao pode ser desfeita facilmente.`)) return;
+            if (!confirm(`Marcar TODOS como ${status}? Esta ação não pode ser desfeita facilmente.`)) return;
 
             const mes = document.getElementById('filter-mes').value;
             const ano = document.getElementById('filter-ano').value;

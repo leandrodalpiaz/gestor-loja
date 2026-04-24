@@ -91,7 +91,7 @@ foreach ([
                                 Painel da Loja com acesso administrativo claro e fraterno.
                             </h1>
                             <p class="mt-4 max-w-3xl text-base leading-8 text-white/78 xl:text-lg">
-                                Secretaria, Tesouraria, Chancelaria e nominata oficial em uma entrada unica, pensada para rotina de gestao e consulta rapida.
+                                Secretaria, Tesouraria, Chancelaria e nominata oficial em uma entrada única, pensada para rotina de gestão e consulta rápida.
                             </p>
                         </div>
 
@@ -101,7 +101,7 @@ foreach ([
                                 <div class="mt-2 text-lg font-semibold">Desktop-first</div>
                             </div>
                             <div class="rounded-[1.2rem] border border-white/15 bg-white/10 px-4 py-4">
-                                <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/60">Canal rapido</div>
+                                <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/60">Canal rápido</div>
                                 <div class="mt-2 text-lg font-semibold">Telegram</div>
                             </div>
                             <div class="rounded-[1.2rem] border border-white/15 bg-white/10 px-4 py-4">
@@ -127,7 +127,7 @@ foreach ([
                                     <div class="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-erpGold">Acesso administrativo</div>
                                     <h2 class="mt-2 text-[2rem] font-semibold leading-tight text-erpNavy">Entrar no Gestor de Loja</h2>
                                     <p class="mt-2 text-base leading-7 text-erpMuted">
-                                        Use seu CIM e sua senha de acesso para entrar nos modulos administrativos da Loja.
+                                        Use seu CIM e sua senha de acesso para entrar nos módulos administrativos da Loja.
                                     </p>
                                 </div>
                             </div>
@@ -135,7 +135,7 @@ foreach ([
                             <form action="/login" method="POST" class="mt-8 space-y-6">
                                 <div class="grid gap-5 xl:grid-cols-2">
                                     <div class="xl:col-span-2">
-                                        <label class="mb-2 block text-sm font-semibold text-erpText">CIM / Matricula</label>
+                                        <label class="mb-2 block text-sm font-semibold text-erpText">CIM / Matrícula</label>
                                         <div class="relative">
                                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                                                 <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -177,7 +177,7 @@ foreach ([
 
                                 <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                                     <div class="max-w-xl rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-erpMuted">
-                                        Em caso de duvida de acesso, procure a Secretaria. O Painel da Loja concentra as operacoes administrativas de uso diario.
+                                        Em caso de dúvida de acesso, procure a Secretaria. O Painel da Loja concentra as operações administrativas de uso diário.
                                     </div>
                                     <div class="flex flex-col gap-3 sm:flex-row">
                                         <button type="submit" name="acao" value="login" class="inline-flex min-w-[220px] items-center justify-center rounded-xl border border-transparent bg-erpNavyDeep px-6 py-4 text-base font-semibold text-white transition hover:opacity-95">
@@ -196,9 +196,9 @@ foreach ([
                         <div class="space-y-5">
                             <div>
                                 <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpGold">Contexto</div>
-                                <div class="mt-2 text-xl font-semibold text-erpNavy">Uso administrativo continuo da Loja</div>
+                                <div class="mt-2 text-xl font-semibold text-erpNavy">Uso administrativo contínuo da Loja</div>
                                 <p class="mt-2 text-sm leading-7 text-erpMuted">
-                                    Esta entrada organiza os modulos que sustentam a rotina administrativa e fraterna da Loja.
+                                    Esta entrada organiza os módulos que sustentam a rotina administrativa e fraterna da Loja.
                                 </p>
                             </div>
 
@@ -206,11 +206,11 @@ foreach ([
                                 <div class="rounded-[1.6rem] border border-erpBorder bg-white px-5 py-5">
                                     <div class="flex items-center justify-between gap-4">
                                         <div>
-                                            <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpMuted">Publico</div>
+                                            <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpMuted">Público</div>
                                             <div class="mt-2 text-base font-semibold text-erpNavy">Agenda e comunicados</div>
                                         </div>
                                         <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpGold">
-                                            Atualizacoes
+                                            Atualizações
                                         </div>
                                     </div>
 
@@ -250,15 +250,15 @@ foreach ([
                             <div class="space-y-3">
                                 <article class="rounded-[1.2rem] border border-erpBorder bg-white px-4 py-4">
                                     <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpMuted">Secretaria</div>
-                                    <div class="mt-2 text-sm leading-6 text-erpText">Sessoes, trabalhos e acompanhamento do quadro de obreiros.</div>
+                                    <div class="mt-2 text-sm leading-6 text-erpText">Sessões, trabalhos e acompanhamento do quadro de obreiros.</div>
                                 </article>
                                 <article class="rounded-[1.2rem] border border-erpBorder bg-white px-4 py-4">
                                     <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpMuted">Tesouraria</div>
-                                    <div class="mt-2 text-sm leading-6 text-erpText">Contribuicoes, comprovantes, regularidade e fechamento mensal.</div>
+                                    <div class="mt-2 text-sm leading-6 text-erpText">Contribuições, comprovantes, regularidade e fechamento mensal.</div>
                                 </article>
                                 <article class="rounded-[1.2rem] border border-erpBorder bg-white px-4 py-4">
                                     <div class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-erpMuted">Chancelaria e cargos</div>
-                                    <div class="mt-2 text-sm leading-6 text-erpText">Efemerides, nominata oficial e paineis por responsabilidade.</div>
+                                    <div class="mt-2 text-sm leading-6 text-erpText">Efemérides, nominata oficial e painéis por responsabilidade.</div>
                                 </article>
                             </div>
 

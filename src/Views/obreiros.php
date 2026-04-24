@@ -27,22 +27,22 @@ if (!$mensagemSucesso && isset($_GET['sucesso'])) {
     $mensagemSucesso = 'Registro atualizado com sucesso.';
 }
 if (!$mensagemErro && isset($_GET['erro'])) {
-    $mensagemErro = 'Nao foi possivel concluir a atualizacao deste registro.';
+    $mensagemErro = 'Não foi possível concluir a atualização deste registro.';
 }
 $returnToAtual = (string) ($_SERVER['REQUEST_URI'] ?? '/obreiros');
 $rotulosAlerta = [
     'sem_nascimento' => 'Nascimento ausente',
     'sem_escolaridade' => 'Escolaridade ausente',
-    'sem_profissao' => 'Profissao ausente',
-    'sem_situacao' => 'Situacao do quadro ausente',
+    'sem_profissao' => 'Profissão ausente',
+    'sem_situacao' => 'Situação do quadro ausente',
     'sem_data_ingresso' => 'Data de ingresso ausente',
-    'sem_potencia' => 'Potencia ausente',
+    'sem_potencia' => 'Potência ausente',
 ];
  
 $erpPageTitle = $appTitle;
 $appShellEyebrow = 'Secretaria';
 $appShellTitle = 'Central de Obreiros';
-$appShellDescription = 'Registro administrativo, filtros operacionais e organizacao do quadro da Loja.';
+$appShellDescription = 'Registro administrativo, filtros operacionais e organização do quadro da Loja.';
 $appShellActiveHref = '/obreiros';
 $appShellActions = [
     ['label' => 'Somente alertas', 'href' => '/obreiros?alerta=cadastro'],
@@ -55,8 +55,8 @@ $appShellSidebarSections = [
         'title' => 'Secretaria',
         'items' => [
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
-            ['label' => 'SessÃµes', 'href' => '/secretaria'],
-            ['label' => 'Balaustres / votaÃ§Ã£o', 'href' => '/secretaria/votacao'],
+            ['label' => 'Sessões', 'href' => '/secretaria'],
+            ['label' => 'Balaústres / votação', 'href' => '/secretaria/votacao'],
             ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
             ['label' => 'Acessos', 'href' => '/admin/acessos'],
             ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
@@ -88,7 +88,7 @@ require __DIR__ . '/partials/erp_head.php';
                 <?php if (is_string($conviteGeradoExpiraEm) && $conviteGeradoExpiraEm !== ''): ?>
                     <div class="mt-1 text-xs text-slate-600">Expira em: <?= htmlspecialchars((string) $conviteGeradoExpiraEm) ?></div>
                 <?php endif; ?>
-                <div class="mt-1 text-xs text-slate-600">Pode encaminhar por Telegram, WhatsApp ou e-mail. Telefone no registro nao e obrigatorio para gerar convite.</div>
+                <div class="mt-1 text-xs text-slate-600">Pode encaminhar por Telegram, WhatsApp ou e-mail. Telefone no registro não é obrigatório para gerar convite.</div>
             </div>
         <?php endif; ?>
 
@@ -134,7 +134,7 @@ require __DIR__ . '/partials/erp_head.php';
         <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div class="flex flex-col gap-2 mb-4">
                 <h2 class="text-xl font-semibold text-cobalto">Filtros administrativos</h2>
-                <p class="text-sm text-gray-500">Use os filtros para organizar registros, conferir a nominata e preparar relatorios da Secretaria.</p>
+                <p class="text-sm text-gray-500">Use os filtros para organizar registros, conferir a nominata e preparar relatórios da Secretaria.</p>
             </div>
 
             <form method="GET" action="/obreiros" class="space-y-4">

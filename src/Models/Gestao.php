@@ -48,7 +48,7 @@ class Gestao
     {
         $aberta = $this->obterAberta();
         if ($aberta) {
-            throw new \RuntimeException('Ja existe uma gestao aberta. Encerre a atual antes de abrir outra.');
+            throw new \RuntimeException('Já existe uma gestão aberta. Encerre a atual antes de abrir outra.');
         }
 
         $stmt = $this->db->prepare("
@@ -66,7 +66,7 @@ class Gestao
             'gestao',
             null,
             'abertura',
-            'Gestao aberta',
+            'Gestão aberta',
             [
                 'titulo' => trim($titulo),
                 'inicio_em' => $inicioEm,
@@ -95,7 +95,7 @@ class Gestao
             'gestao',
             (string) $gestaoId,
             'encerramento',
-            'Gestao encerrada',
+            'Gestão encerrada',
             [
                 'gestao_id' => $gestaoId,
                 'encerrada_em' => $encerradaEm,
