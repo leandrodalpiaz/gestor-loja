@@ -3,10 +3,10 @@ $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
-$erpPageTitle = 'Balaustres / votação - Secretaria';
+$erpPageTitle = 'Balaustres / votaÃ§Ã£o - Secretaria';
 $appShellEyebrow = 'Secretaria';
-$appShellTitle = 'Balaustres / votação';
-$appShellDescription = 'Acompanhe e registre votos nos balaustres das sessões publicadas.';
+$appShellTitle = 'Balaustres / votaÃ§Ã£o';
+$appShellDescription = 'Acompanhe e registre votos nos balaustres das sessÃµes publicadas.';
 $appShellActiveHref = '/secretaria/votacao';
 $appShellActions = [
     ['label' => 'Voltar para Secretaria', 'href' => '/secretaria'],
@@ -19,15 +19,15 @@ $appShellSidebarSections = [
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
             ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
             ['label' => 'Acessos', 'href' => '/admin/acessos'],
-            ['label' => 'Sessões', 'href' => '/secretaria'],
-            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
-            ['label' => 'Relatório anual', 'href' => '/secretaria/relatorio-anual'],
+            ['label' => 'SessÃµes', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votaÃ§Ã£o', 'href' => '/secretaria/votacao'],
+            ['label' => 'RelatÃ³rio anual', 'href' => '/secretaria/relatorio-anual'],
         ],
     ],
     [
         'title' => 'Geral',
         'items' => [
-            ['label' => 'Dashboard', 'href' => '/dashboard'],
+            ['label' => 'Painel', 'href' => '/dashboard'],
         ],
     ],
 ];
@@ -44,7 +44,7 @@ require __DIR__ . '/../partials/erp_head.php';
 
         <?php if ($votacoesAbertas === []): ?>
             <div class="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-700">
-                No momento, não há votações abertas para o seu perfil.
+                No momento, nÃ£o hÃ¡ votaÃ§Ãµes abertas para o seu perfil.
             </div>
         <?php else: ?>
             <div class="space-y-4">
@@ -60,10 +60,10 @@ require __DIR__ . '/../partials/erp_head.php';
                                     <?= htmlspecialchars($balaustre['numero_balaustre'] ?: 'Balaustre sem numero') ?>
                                 </div>
                                 <div class="text-sm text-slate-700">
-                                    <?= htmlspecialchars($balaustre['sessao_titulo'] ?: (($balaustre['tipo_sessao'] ?? 'Sessão') . ' - ' . ($balaustre['grau_sessao'] ?? ''))) ?>
+                                    <?= htmlspecialchars($balaustre['sessao_titulo'] ?: (($balaustre['tipo_sessao'] ?? 'SessÃ£o') . ' - ' . ($balaustre['grau_sessao'] ?? ''))) ?>
                                 </div>
                                 <div class="text-xs text-slate-700 mt-1">
-                                    Data da sessão: <?= htmlspecialchars((string) ($balaustre['data_hora_inicio'] ?? '')) ?>
+                                    Data da sessÃ£o: <?= htmlspecialchars((string) ($balaustre['data_hora_inicio'] ?? '')) ?>
                                 </div>
                             </div>
                             <div class="text-sm">
@@ -88,10 +88,11 @@ require __DIR__ . '/../partials/erp_head.php';
                                 <button type="submit" class="rounded-lg bg-erp-navy px-4 py-2 text-sm text-white">Registrar voto</button>
                             </form>
                         <?php else: ?>
-                            <p class="mt-4 text-xs text-slate-700">Seu nome não consta na base congelada de votantes desta sessão.</p>
+                            <p class="mt-4 text-xs text-slate-700">Seu nome nÃ£o consta na base congelada de votantes desta sessÃ£o.</p>
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+

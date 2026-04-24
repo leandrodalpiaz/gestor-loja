@@ -34,14 +34,14 @@ $appShellSidebarSections = [
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
             ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
             ['label' => 'Acessos', 'href' => '/admin/acessos'],
-            ['label' => 'Sessões', 'href' => '/secretaria'],
-            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
+            ['label' => 'SessÃµes', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votaÃ§Ã£o', 'href' => '/secretaria/votacao'],
         ],
     ],
     [
         'title' => 'Geral',
         'items' => [
-            ['label' => 'Dashboard', 'href' => '/dashboard'],
+            ['label' => 'Painel', 'href' => '/dashboard'],
         ],
     ],
 ];
@@ -75,7 +75,7 @@ $appShellSidebarSections = [
             <?php if ($conviteGeradoExpiraEm): ?>
                 <div class="text-xs text-slate-500">Expira em: <?= htmlspecialchars((string) $conviteGeradoExpiraEm) ?></div>
             <?php endif; ?>
-            <div class="text-xs text-slate-500">Telefone não é obrigatório para gerar convite. O link pode ser encaminhado por qualquer canal.</div>
+            <div class="text-xs text-slate-500">Telefone nÃ£o Ã© obrigatÃ³rio para gerar convite. O link pode ser encaminhado por qualquer canal.</div>
         </div>
     <?php endif; ?>
 
@@ -128,7 +128,7 @@ $appShellSidebarSections = [
                             <div class="flex items-center justify-between gap-3">
                                 <div>
                                     <div class="text-sm font-medium"><?= htmlspecialchars((string) (($c['nome'] ?? '') ?: 'Obreiro')) ?></div>
-                                    <div class="text-xs text-slate-500">CIM <?= htmlspecialchars((string) ($c['cim'] ?? '-')) ?> · Token <?= htmlspecialchars($masked) ?></div>
+                                    <div class="text-xs text-slate-500">CIM <?= htmlspecialchars((string) ($c['cim'] ?? '-')) ?> Â· Token <?= htmlspecialchars($masked) ?></div>
                                 </div>
                                 <span class="text-xs px-2 py-1 rounded-full <?= $status === 'ativo' ? 'bg-emerald-50 text-emerald-700' : ($status === 'usado' ? 'bg-slate-100 text-slate-700' : 'bg-amber-50 text-amber-700') ?>">
                                     <?= htmlspecialchars($status) ?>
@@ -136,7 +136,7 @@ $appShellSidebarSections = [
                             </div>
                             <div class="text-xs text-slate-500">
                                 Expira: <?= htmlspecialchars((string) ($c['expira_em'] ?? '-')) ?>
-                                <?php if ($usado): ?> · Usado: <?= htmlspecialchars((string) ($c['usado_em'] ?? '-')) ?><?php endif; ?>
+                                <?php if ($usado): ?> Â· Usado: <?= htmlspecialchars((string) ($c['usado_em'] ?? '-')) ?><?php endif; ?>
                             </div>
                             <?php if ($deepLink !== ''): ?>
                                 <div class="flex flex-col gap-2 md:flex-row md:items-center">
@@ -167,7 +167,7 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
             btn.textContent = 'Copiado';
             setTimeout(() => (btn.textContent = original || 'Copiar link'), 1200);
         } catch (e) {
-            alert('Não foi possível copiar. Use o botão Selecionar e copie manualmente.');
+            alert('NÃ£o foi possÃ­vel copiar. Use o botÃ£o Selecionar e copie manualmente.');
         }
     });
 });
@@ -182,3 +182,4 @@ document.querySelectorAll('.select-btn').forEach(btn => {
 });
 </script>
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+

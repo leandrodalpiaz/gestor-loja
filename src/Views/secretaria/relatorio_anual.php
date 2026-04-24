@@ -1,8 +1,8 @@
 <?php
-$erpPageTitle = 'Relatório Anual - Secretaria';
+$erpPageTitle = 'RelatÃ³rio Anual - Secretaria';
 $appShellEyebrow = 'Secretaria';
-$appShellTitle = 'Relatório anual';
-$appShellDescription = 'Consolidação anual da atividade da Loja sob responsabilidade da Secretaria.';
+$appShellTitle = 'RelatÃ³rio anual';
+$appShellDescription = 'ConsolidaÃ§Ã£o anual da atividade da Loja sob responsabilidade da Secretaria.';
 $appShellActiveHref = '/secretaria/relatorio-anual';
 $appShellActions = [
     ['label' => 'Voltar para Secretaria', 'href' => '/secretaria'],
@@ -15,15 +15,15 @@ $appShellSidebarSections = [
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
             ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
             ['label' => 'Acessos', 'href' => '/admin/acessos'],
-            ['label' => 'Sessões', 'href' => '/secretaria'],
-            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
-            ['label' => 'Relatório anual', 'href' => '/secretaria/relatorio-anual'],
+            ['label' => 'SessÃµes', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votaÃ§Ã£o', 'href' => '/secretaria/votacao'],
+            ['label' => 'RelatÃ³rio anual', 'href' => '/secretaria/relatorio-anual'],
         ],
     ],
     [
         'title' => 'Geral',
         'items' => [
-            ['label' => 'Dashboard', 'href' => '/dashboard'],
+            ['label' => 'Painel', 'href' => '/dashboard'],
         ],
     ],
 ];
@@ -35,26 +35,26 @@ require __DIR__ . '/../partials/erp_head.php';
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm mb-6">
             <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
-                    <div class="text-xs uppercase tracking-[0.24em] text-slate-700">Identificação institucional</div>
+                    <div class="text-xs uppercase tracking-[0.24em] text-slate-700">IdentificaÃ§Ã£o institucional</div>
                     <h2 class="mt-2 text-2xl font-semibold text-erp-navy">
-                        <?= htmlspecialchars((string) (($relatorio['loja']['nome_loja'] ?? '') !== '' ? $relatorio['loja']['nome_loja'] : 'Loja não configurada')) ?>
+                        <?= htmlspecialchars((string) (($relatorio['loja']['nome_loja'] ?? '') !== '' ? $relatorio['loja']['nome_loja'] : 'Loja nÃ£o configurada')) ?>
                     </h2>
                     <p class="mt-2 text-sm text-slate-700">
-                        Potência: <?= htmlspecialchars((string) (($relatorio['loja']['potencia_nome'] ?? '') !== '' ? $relatorio['loja']['potencia_nome'] : 'não informada')) ?>
+                        PotÃªncia: <?= htmlspecialchars((string) (($relatorio['loja']['potencia_nome'] ?? '') !== '' ? $relatorio['loja']['potencia_nome'] : 'nÃ£o informada')) ?>
                         <?php if (!empty($relatorio['loja']['potencia_sigla'])): ?>
                             (<?= htmlspecialchars((string) $relatorio['loja']['potencia_sigla']) ?>)
                         <?php endif; ?>
                     </p>
                     <p class="mt-1 text-sm text-slate-700">
-                        Oriente: <?= htmlspecialchars((string) (($relatorio['loja']['oriente'] ?? '') !== '' ? $relatorio['loja']['oriente'] : 'não informado')) ?>
+                        Oriente: <?= htmlspecialchars((string) (($relatorio['loja']['oriente'] ?? '') !== '' ? $relatorio['loja']['oriente'] : 'nÃ£o informado')) ?>
                         <?php if (!empty($relatorio['loja']['cidade']) || !empty($relatorio['loja']['uf'])): ?>
                             | Cidade: <?= htmlspecialchars(trim((string) (($relatorio['loja']['cidade'] ?? '') . ' / ' . ($relatorio['loja']['uf'] ?? '')), ' /')) ?>
                         <?php endif; ?>
                     </p>
                     <p class="mt-1 text-sm text-slate-700">
-                        Rito: <?= htmlspecialchars((string) (($relatorio['loja']['rito'] ?? '') !== '' ? $relatorio['loja']['rito'] : 'não informado')) ?>
-                        | Fundação: <?= htmlspecialchars((string) (($relatorio['loja']['data_fundacao'] ?? '') !== '' ? $relatorio['loja']['data_fundacao'] : 'não informada')) ?>
-                        | Instalação: <?= htmlspecialchars((string) (($relatorio['loja']['data_instalacao'] ?? '') !== '' ? $relatorio['loja']['data_instalacao'] : 'não informada')) ?>
+                        Rito: <?= htmlspecialchars((string) (($relatorio['loja']['rito'] ?? '') !== '' ? $relatorio['loja']['rito'] : 'nÃ£o informado')) ?>
+                        | FundaÃ§Ã£o: <?= htmlspecialchars((string) (($relatorio['loja']['data_fundacao'] ?? '') !== '' ? $relatorio['loja']['data_fundacao'] : 'nÃ£o informada')) ?>
+                        | InstalaÃ§Ã£o: <?= htmlspecialchars((string) (($relatorio['loja']['data_instalacao'] ?? '') !== '' ? $relatorio['loja']['data_instalacao'] : 'nÃ£o informada')) ?>
                     </p>
                 </div>
                 <?php if (!empty($relatorio['loja']['observacao_relatorios'])): ?>
@@ -68,7 +68,7 @@ require __DIR__ . '/../partials/erp_head.php';
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm mb-6">
             <form method="GET" action="/secretaria/relatorio-anual" class="flex flex-col gap-3 sm:flex-row sm:items-end">
                 <div>
-                    <label class="block text-sm font-medium mb-1">Ano de referência</label>
+                    <label class="block text-sm font-medium mb-1">Ano de referÃªncia</label>
                     <select name="ano" class="rounded-lg border border-slate-300 px-3 py-2">
                         <?php foreach ($anosDisponiveis as $anoOpcao): ?>
                             <option value="<?= (int) $anoOpcao ?>" <?= (int) $anoOpcao === (int) $relatorio['ano'] ? 'selected' : '' ?>>
@@ -77,7 +77,7 @@ require __DIR__ . '/../partials/erp_head.php';
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <button type="submit" class="rounded-lg bg-erp-navy px-4 py-2 text-sm font-medium text-white">Atualizar relatório</button>
+                <button type="submit" class="rounded-lg bg-erp-navy px-4 py-2 text-sm font-medium text-white">Atualizar relatÃ³rio</button>
             </form>
         </div>
 
@@ -99,7 +99,7 @@ require __DIR__ . '/../partials/erp_head.php';
                 <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) ($relatorio['palestras']['total'] ?? 0) ?></div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Sessões no período</div>
+                <div class="text-sm text-slate-700">SessÃµes no perÃ­odo</div>
                 <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) ($relatorio['sessoes_por_grau']['total'] ?? 0) ?></div>
             </div>
         </div>
@@ -110,11 +110,11 @@ require __DIR__ . '/../partials/erp_head.php';
                 <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) ($relatorio['perfil_quadro']['total'] ?? 0) ?></div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Idade média</div>
+                <div class="text-sm text-slate-700">Idade mÃ©dia</div>
                 <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= htmlspecialchars((string) (($relatorio['perfil_quadro']['idade_media'] ?? null) !== null ? $relatorio['perfil_quadro']['idade_media'] : '-')) ?></div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Situação predominante</div>
+                <div class="text-sm text-slate-700">SituaÃ§Ã£o predominante</div>
                 <div class="mt-2 text-2xl font-semibold text-erp-navy">
                     <?= htmlspecialchars((string) (($relatorio['perfil_quadro']['situacoes'][0]['categoria'] ?? 'nao_informado'))) ?>
                 </div>
@@ -125,7 +125,7 @@ require __DIR__ . '/../partials/erp_head.php';
             <section class="space-y-6">
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 class="text-xl font-semibold text-erp-navy">Visitantes</h2>
-                    <p class="mt-1 text-sm text-slate-700">Quantidade total de visitantes extraída dos registros estruturados da palavra a bem da ordem no balaustre.</p>
+                    <p class="mt-1 text-sm text-slate-700">Quantidade total de visitantes extraÃ­da dos registros estruturados da palavra a bem da ordem no balaustre.</p>
                     <div class="mt-4 text-xs text-slate-700">Fonte: <?= htmlspecialchars((string) ($relatorio['visitantes']['fonte'] ?? '')) ?></div>
 
                     <div class="mt-5">
@@ -133,12 +133,12 @@ require __DIR__ . '/../partials/erp_head.php';
                         <div class="space-y-2">
                             <?php foreach (($relatorio['visitantes']['lojas_mais_frequentes'] ?? []) as $linha): ?>
                                 <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                                    <span><?= htmlspecialchars((string) ($linha['loja'] ?? 'Loja não informada')) ?></span>
+                                    <span><?= htmlspecialchars((string) ($linha['loja'] ?? 'Loja nÃ£o informada')) ?></span>
                                     <strong><?= (int) ($linha['total'] ?? 0) ?></strong>
                                 </div>
                             <?php endforeach; ?>
                             <?php if (($relatorio['visitantes']['lojas_mais_frequentes'] ?? []) === []): ?>
-                                <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Não há visitantes estruturados no período selecionado.</div>
+                                <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">NÃ£o hÃ¡ visitantes estruturados no perÃ­odo selecionado.</div>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -154,29 +154,29 @@ require __DIR__ . '/../partials/erp_head.php';
                         <div class="space-y-2">
                             <?php foreach (($relatorio['visitas_externas']['lojas_mais_visitadas'] ?? []) as $linha): ?>
                                 <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                                    <span><?= htmlspecialchars((string) ($linha['loja'] ?? 'Loja não informada')) ?></span>
+                                    <span><?= htmlspecialchars((string) ($linha['loja'] ?? 'Loja nÃ£o informada')) ?></span>
                                     <strong><?= (int) ($linha['total'] ?? 0) ?></strong>
                                 </div>
                             <?php endforeach; ?>
                             <?php if (($relatorio['visitas_externas']['lojas_mais_visitadas'] ?? []) === []): ?>
-                                <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Não há visitas externas estruturadas no período selecionado.</div>
+                                <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">NÃ£o hÃ¡ visitas externas estruturadas no perÃ­odo selecionado.</div>
                             <?php endif; ?>
                         </div>
                     </div>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-xl font-semibold text-erp-navy">Sessões por grau</h2>
+                    <h2 class="text-xl font-semibold text-erp-navy">SessÃµes por grau</h2>
                     <p class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($relatorio['sessoes_por_grau']['regra'] ?? '')) ?></p>
                     <div class="mt-5 space-y-2">
                         <?php foreach (($relatorio['sessoes_por_grau']['itens'] ?? []) as $linha): ?>
                             <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                                <span><?= htmlspecialchars((string) ($linha['grau_sessao'] ?? 'Não informado')) ?></span>
+                                <span><?= htmlspecialchars((string) ($linha['grau_sessao'] ?? 'NÃ£o informado')) ?></span>
                                 <strong><?= (int) ($linha['total'] ?? 0) ?></strong>
                             </div>
                         <?php endforeach; ?>
                         <?php if (($relatorio['sessoes_por_grau']['itens'] ?? []) === []): ?>
-                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Não há sessões no período selecionado.</div>
+                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">NÃ£o hÃ¡ sessÃµes no perÃ­odo selecionado.</div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -201,11 +201,11 @@ require __DIR__ . '/../partials/erp_head.php';
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 class="text-xl font-semibold text-erp-navy">Quadro da Loja</h2>
-                    <p class="mt-1 text-sm text-slate-700">Panorama anual da composição do quadro com base na trilha cadastral disponível hoje.</p>
+                    <p class="mt-1 text-sm text-slate-700">Panorama anual da composiÃ§Ã£o do quadro com base na trilha cadastral disponÃ­vel hoje.</p>
 
                     <div class="mt-5 grid gap-4 sm:grid-cols-2">
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-sm text-slate-700">Começaram o ano no quadro</div>
+                            <div class="text-sm text-slate-700">ComeÃ§aram o ano no quadro</div>
                             <div class="mt-2 text-2xl font-semibold text-erp-navy"><?= htmlspecialchars((string) (($relatorio['quadro']['inicio_ano'] ?? null) !== null ? $relatorio['quadro']['inicio_ano'] : '-')) ?></div>
                         </div>
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -220,13 +220,13 @@ require __DIR__ . '/../partials/erp_head.php';
 
                     <?php if (($relatorio['quadro']['movimentacao'] ?? null) !== null): ?>
                         <div class="mt-5">
-                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Movimentação do quadro</h3>
+                            <h3 class="text-sm font-semibold text-slate-700 mb-2">MovimentaÃ§Ã£o do quadro</h3>
                             <div class="grid gap-3 sm:grid-cols-2">
                                 <?php foreach ([
-                                    'filiacoes' => 'Filiações',
-                                    'regularizacoes' => 'Regularizações',
-                                    'reintegracoes' => 'Reintegrações',
-                                    'suspensoes' => 'Suspensões',
+                                    'filiacoes' => 'FiliaÃ§Ãµes',
+                                    'regularizacoes' => 'RegularizaÃ§Ãµes',
+                                    'reintegracoes' => 'ReintegraÃ§Ãµes',
+                                    'suspensoes' => 'SuspensÃµes',
                                     'desligamentos' => 'Desligamentos',
                                     'oriente_eterno' => 'Oriente Eterno',
                                 ] as $chave => $label): ?>
@@ -244,10 +244,10 @@ require __DIR__ . '/../partials/erp_head.php';
                     <h2 class="text-xl font-semibold text-erp-navy">Leitura administrativa</h2>
                     <ul class="mt-4 space-y-2 text-sm text-slate-700 list-disc pl-5">
                         <li>Visitantes refletem os registros estruturados no balaustre.</li>
-                        <li>Visitas externas refletem os registros feitos no saco de propostas durante a sessão.</li>
-                        <li>Congressos e palestras são contabilizados a partir dos eventos informados no balaustre.</li>
-                        <li>Sessões por grau usam as sessões do período com status diferente de cancelada.</li>
-                        <li>O quadro anual depende da trilha cadastral dos obreiros; quanto melhor a disciplina de cadastro, melhor a precisão do indicador.</li>
+                        <li>Visitas externas refletem os registros feitos no saco de propostas durante a sessÃ£o.</li>
+                        <li>Congressos e palestras sÃ£o contabilizados a partir dos eventos informados no balaustre.</li>
+                        <li>SessÃµes por grau usam as sessÃµes do perÃ­odo com status diferente de cancelada.</li>
+                        <li>O quadro anual depende da trilha cadastral dos obreiros; quanto melhor a disciplina de cadastro, melhor a precisÃ£o do indicador.</li>
                     </ul>
                 </div>
             </section>
@@ -255,7 +255,7 @@ require __DIR__ . '/../partials/erp_head.php';
             <section class="space-y-6">
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 class="text-xl font-semibold text-erp-navy">Perfil do quadro</h2>
-                    <p class="mt-1 text-sm text-slate-700">Recorte estatístico do cadastro de obreiros utilizado para relatórios da gestão e relatórios por irmão.</p>
+                    <p class="mt-1 text-sm text-slate-700">Recorte estatÃ­stico do cadastro de obreiros utilizado para relatÃ³rios da gestÃ£o e relatÃ³rios por irmÃ£o.</p>
 
                     <div class="mt-5 grid gap-4 md:grid-cols-3">
                         <div>
@@ -271,7 +271,7 @@ require __DIR__ . '/../partials/erp_head.php';
                         </div>
 
                         <div>
-                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Situação do quadro</h3>
+                            <h3 class="text-sm font-semibold text-slate-700 mb-2">SituaÃ§Ã£o do quadro</h3>
                             <div class="space-y-2">
                                 <?php foreach (($relatorio['perfil_quadro']['situacoes'] ?? []) as $linha): ?>
                                     <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
@@ -283,11 +283,11 @@ require __DIR__ . '/../partials/erp_head.php';
                         </div>
 
                         <div>
-                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Distribuição por grau</h3>
+                            <h3 class="text-sm font-semibold text-slate-700 mb-2">DistribuiÃ§Ã£o por grau</h3>
                             <div class="space-y-2">
                                 <?php foreach (($relatorio['perfil_quadro']['graus'] ?? []) as $linha): ?>
                                     <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                                        <span><?= htmlspecialchars((string) ($linha['categoria'] ?? 'Não informado')) ?></span>
+                                        <span><?= htmlspecialchars((string) ($linha['categoria'] ?? 'NÃ£o informado')) ?></span>
                                         <strong><?= (int) ($linha['total'] ?? 0) ?></strong>
                                     </div>
                                 <?php endforeach; ?>
@@ -298,7 +298,7 @@ require __DIR__ . '/../partials/erp_head.php';
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 class="text-xl font-semibold text-erp-navy">Amostra cadastral</h2>
-                    <p class="mt-1 text-sm text-slate-700">Leitura rápida por irmão para apoio ao saneamento cadastral e conferências do relatório.</p>
+                    <p class="mt-1 text-sm text-slate-700">Leitura rÃ¡pida por irmÃ£o para apoio ao saneamento cadastral e conferÃªncias do relatÃ³rio.</p>
 
                     <div class="mt-5 space-y-3">
                         <?php foreach (($relatorio['perfil_quadro']['amostra_cadastral'] ?? []) as $item): ?>
@@ -308,14 +308,14 @@ require __DIR__ . '/../partials/erp_head.php';
                                     <div class="text-xs uppercase tracking-wide text-slate-700"><?= htmlspecialchars((string) ($item['situacao_quadro'] ?? 'nao_informado')) ?></div>
                                 </div>
                                 <div class="mt-2 text-sm text-slate-700">
-                                    Grau: <?= htmlspecialchars((string) ($item['grau'] ?? 'Não informado')) ?> |
+                                    Grau: <?= htmlspecialchars((string) ($item['grau'] ?? 'NÃ£o informado')) ?> |
                                     Escolaridade: <?= htmlspecialchars((string) ($item['escolaridade'] ?? 'nao_informado')) ?> |
                                     Profissao: <?= htmlspecialchars((string) ($item['profissao'] ?? 'nao_informada')) ?>
                                 </div>
                                 <div class="mt-1 text-xs text-slate-700">
-                                    Filiação: <?= htmlspecialchars((string) ($item['data_filiacao'] ?? '-')) ?> |
-                                    Regularização: <?= htmlspecialchars((string) ($item['data_regularizacao'] ?? '-')) ?> |
-                                    Reintegração: <?= htmlspecialchars((string) ($item['data_reintegracao'] ?? '-')) ?> |
+                                    FiliaÃ§Ã£o: <?= htmlspecialchars((string) ($item['data_filiacao'] ?? '-')) ?> |
+                                    RegularizaÃ§Ã£o: <?= htmlspecialchars((string) ($item['data_regularizacao'] ?? '-')) ?> |
+                                    ReintegraÃ§Ã£o: <?= htmlspecialchars((string) ($item['data_reintegracao'] ?? '-')) ?> |
                                     Desligamento: <?= htmlspecialchars((string) ($item['data_desligamento'] ?? '-')) ?> |
                                     Oriente Eterno: <?= htmlspecialchars((string) ($item['data_oriente_eterno'] ?? '-')) ?>
                                 </div>
@@ -323,7 +323,7 @@ require __DIR__ . '/../partials/erp_head.php';
                         <?php endforeach; ?>
 
                         <?php if (($relatorio['perfil_quadro']['amostra_cadastral'] ?? []) === []): ?>
-                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Não há obreiros elegíveis no período selecionado.</div>
+                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">NÃ£o hÃ¡ obreiros elegÃ­veis no perÃ­odo selecionado.</div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -331,3 +331,4 @@ require __DIR__ . '/../partials/erp_head.php';
         </div>
 </div>
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+

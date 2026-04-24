@@ -38,7 +38,7 @@ if (!isset($_SESSION["usuario_logado"])) {
                     <h1 class="mt-2 text-3xl font-semibold">Regularidade de Obreiros</h1>
                     <p class="mt-2 max-w-3xl text-sm text-slate-200">Leitura clara do periodo e edicao rapida da situacao financeira de cada obreiro.</p>
                 </div>
-                <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao dashboard</a>
+                <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao Painel</a>
             </div>
         </header>
 
@@ -310,4 +310,5 @@ if (!isset($_SESSION["usuario_logado"])) {
     </script>
 </body>
 </html>
+
 

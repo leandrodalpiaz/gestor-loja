@@ -8,21 +8,21 @@ if (!isset($_SESSION["usuario_logado"])) {
 $erpPageTitle = 'Livro-Caixa';
 $appShellEyebrow = 'Tesouraria';
 $appShellTitle = 'Livro-Caixa';
-$appShellDescription = 'Entradas, saídas, saldo do período e ações operacionais da tesouraria em leitura administrativa direta.';
+$appShellDescription = 'Entradas, saÃ­das, saldo do perÃ­odo e aÃ§Ãµes operacionais da tesouraria em leitura administrativa direta.';
 $appShellActiveHref = '/tesouraria/caixa';
 $appShellActions = [
-    ['label' => 'Voltar ao dashboard', 'href' => '/dashboard'],
-    ['label' => 'Obrigações', 'href' => '/tesouraria/obrigacoes', 'primary' => true],
+    ['label' => 'Voltar ao Painel', 'href' => '/dashboard'],
+    ['label' => 'ObrigaÃ§Ãµes', 'href' => '/tesouraria/obrigacoes', 'primary' => true],
 ];
 $appShellSidebarSections = [
     [
         'title' => 'Tesouraria',
         'items' => [
             ['label' => 'Livro-Caixa', 'href' => '/tesouraria/caixa'],
-            ['label' => 'Obrigações', 'href' => '/tesouraria/obrigacoes'],
+            ['label' => 'ObrigaÃ§Ãµes', 'href' => '/tesouraria/obrigacoes'],
             ['label' => 'Comprovantes', 'href' => '/tesouraria/comprovantes'],
             ['label' => 'Regularidade', 'href' => '/tesouraria/regularidade'],
-            ['label' => 'Dashboard', 'href' => '/dashboard'],
+            ['label' => 'Painel', 'href' => '/dashboard'],
         ],
     ],
 ];
@@ -32,62 +32,62 @@ require __DIR__ . '/partials/erp_shell_open.php';
 ?>
         <?php
         $dashboard = [
-            'title' => 'Dashboard financeiro operacional',
-            'subtitle' => 'Controle rigoroso da Tesouraria com foco em inadimplência e operação rápida.',
+            'title' => 'Painel financeiro operacional',
+            'subtitle' => 'Controle rigoroso da Tesouraria com foco em inadimplÃªncia e operaÃ§Ã£o rÃ¡pida.',
             'meta' => [
                 'Perfil: tesoureiro',
                 'Fonte oficial: tesouraria',
                 'Miniapp alinhado ao cargo',
             ],
             'actions' => [
-                ['label' => 'Criar obrigação', 'href' => '/tesouraria/obrigacoes'],
+                ['label' => 'Criar obrigaÃ§Ã£o', 'href' => '/tesouraria/obrigacoes'],
                 ['label' => 'Gerar mensalidades', 'href' => '/tesouraria/obrigacoes'],
                 ['label' => 'Quitar parcela', 'href' => '/tesouraria/obrigacoes'],
                 ['label' => 'Emitir recibo', 'href' => '/tesouraria/obrigacoes'],
-                ['label' => 'Criar isenção', 'href' => '/tesouraria/obrigacoes'],
+                ['label' => 'Criar isenÃ§Ã£o', 'href' => '/tesouraria/obrigacoes'],
                 ['label' => 'Abrir miniapp da tesouraria', 'href' => '/miniapp/tesouraria'],
             ],
             'blocks' => [
                 [
-                    'title' => 'Caixa e inadimplência',
+                    'title' => 'Caixa e inadimplÃªncia',
                     'subtitle' => 'Resumo operacional de caixa e risco financeiro.',
                     'span' => 'half',
                     'metrics' => [
                         ['label' => 'Entradas', 'value' => 'R$ 0,00', 'hint' => 'Atualizado pelo periodo filtrado'],
-                        ['label' => 'Saídas', 'value' => 'R$ 0,00', 'hint' => 'Atualizado pelo periodo filtrado'],
-                        ['label' => 'Saldo líquido', 'value' => 'R$ 0,00'],
+                        ['label' => 'SaÃ­das', 'value' => 'R$ 0,00', 'hint' => 'Atualizado pelo periodo filtrado'],
+                        ['label' => 'Saldo lÃ­quido', 'value' => 'R$ 0,00'],
                     ],
                     'list' => [
-                        ['item' => 'Obrigações em atraso', 'meta' => 'Operar no módulo de obrigações', 'status' => 'Prioritário'],
-                        ['item' => 'Comprovantes pendentes', 'meta' => 'Validação diária', 'status' => 'Prioritário'],
+                        ['item' => 'ObrigaÃ§Ãµes em atraso', 'meta' => 'Operar no mÃ³dulo de obrigaÃ§Ãµes', 'status' => 'PrioritÃ¡rio'],
+                        ['item' => 'Comprovantes pendentes', 'meta' => 'ValidaÃ§Ã£o diÃ¡ria', 'status' => 'PrioritÃ¡rio'],
                     ],
                 ],
                 [
-                    'title' => 'Sessões e operação financeira',
-                    'subtitle' => 'Impacto financeiro das sessões e atalhos operacionais.',
+                    'title' => 'SessÃµes e operaÃ§Ã£o financeira',
+                    'subtitle' => 'Impacto financeiro das sessÃµes e atalhos operacionais.',
                     'span' => 'half',
                     'metrics' => [
-                        ['label' => 'Comprovantes', 'value' => 'Validação ativa'],
-                        ['label' => 'Relatórios', 'value' => 'Fechamento e gestão'],
+                        ['label' => 'Comprovantes', 'value' => 'ValidaÃ§Ã£o ativa'],
+                        ['label' => 'RelatÃ³rios', 'value' => 'Fechamento e gestÃ£o'],
                     ],
                     'list' => [
-                        ['item' => 'Sessões com impacto financeiro', 'meta' => 'Acompanhar em /tesouraria/sessoes', 'status' => 'Ativo'],
-                        ['item' => 'Minhas obrigações', 'meta' => 'Consulta individual', 'status' => 'Ativo'],
+                        ['item' => 'SessÃµes com impacto financeiro', 'meta' => 'Acompanhar em /tesouraria/sessoes', 'status' => 'Regular'],
+                        ['item' => 'Minhas obrigaÃ§Ãµes', 'meta' => 'Consulta individual', 'status' => 'Regular'],
                     ],
                 ],
             ],
             'alerts' => [
-                ['title' => 'Inadimplência visível', 'text' => 'Manter obrigações atrasadas e comprovantes como prioridade diária.', 'tone' => 'danger'],
+                ['title' => 'InadimplÃªncia visÃ­vel', 'text' => 'Manter obrigaÃ§Ãµes atrasadas e comprovantes como prioridade diÃ¡ria.', 'tone' => 'danger'],
             ],
             'activity' => [
-                ['item' => 'Livro-caixa em operação', 'meta' => 'Lançamentos e filtros por competência'],
-                ['item' => 'Comprovantes e obrigações', 'meta' => 'Fluxo financeiro oficial da tesouraria'],
+                ['item' => 'Caixa da Loja em operaÃ§Ã£o', 'meta' => 'LanÃ§amentos e filtros por competÃªncia'],
+                ['item' => 'Comprovantes e obrigaÃ§Ãµes', 'meta' => 'Fluxo financeiro oficial da tesouraria'],
             ],
             'links' => [
-                ['label' => 'Obrigações', 'href' => '/tesouraria/obrigacoes'],
+                ['label' => 'ObrigaÃ§Ãµes', 'href' => '/tesouraria/obrigacoes'],
                 ['label' => 'Comprovantes', 'href' => '/tesouraria/comprovantes'],
                 ['label' => 'Regularidade', 'href' => '/tesouraria/regularidade'],
-                ['label' => 'Relatório de gestão', 'href' => '/tesouraria/relatorio-gestao'],
+                ['label' => 'RelatÃ³rio de gestÃ£o', 'href' => '/tesouraria/relatorio-gestao'],
             ],
         ];
 
@@ -113,16 +113,16 @@ require __DIR__ . '/partials/erp_shell_open.php';
         ?>
         <section class="mb-6 grid gap-3 md:grid-cols-3">
             <article class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Movimentação do caixa</p>
-                <p class="mt-2 text-base font-semibold text-slate-900">Registre entradas e saídas do período</p>
-                <p class="mt-1 text-sm text-slate-600">Os lançamentos rápidos continuam disponíveis logo abaixo.</p>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">MovimentaÃ§Ã£o do caixa</p>
+                <p class="mt-2 text-base font-semibold text-slate-900">Registre entradas e saÃ­das do perÃ­odo</p>
+                <p class="mt-1 text-sm text-slate-600">Os lanÃ§amentos rÃ¡pidos continuam disponÃ­veis logo abaixo.</p>
             </article>
             <article class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 shadow-sm">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">Entradas</p>
                 <p class="mt-2 text-2xl font-semibold text-emerald-800" id="resumo-entradas-mobile">R$ 0,00</p>
             </article>
             <article class="rounded-2xl border border-red-200 bg-red-50 px-4 py-4 shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-red-700">Saídas</p>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-red-700">SaÃ­das</p>
                 <p class="mt-2 text-2xl font-semibold text-red-800" id="resumo-saidas-mobile">R$ 0,00</p>
             </article>
         </section>
@@ -130,10 +130,10 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <div class="mb-6 rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-4 md:items-end">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Mês</label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">MÃªs</label>
                     <select id="filter-mes" class="w-full rounded border border-gray-300 px-3 py-2" onchange="filtrarCaixa()">
                         <?php
-                        $mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+                        $mesesPT = ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                         $mesAtual = (int) date('n');
                         for ($m = 1; $m <= 12; $m++) {
                             $selected = ($m === $mesAtual) ? 'selected' : '';
@@ -161,7 +161,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         Nova Entrada
                     </button>
                     <button onclick="abrirModalSaida()" class="flex-1 rounded bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800">
-                        Nova Saída
+                        Nova SaÃ­da
                     </button>
                 </div>
             </div>
@@ -169,7 +169,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
         <div class="mb-6 rounded-3xl border border-gray-200 bg-white shadow-sm">
             <div class="flex cursor-pointer items-center justify-between border-b border-gray-200 p-4 select-none" onclick="toggleSugestoes()">
-                <h2 class="font-semibold text-gray-700">Lançamentos rápidos</h2>
+                <h2 class="font-semibold text-gray-700">LanÃ§amentos rÃ¡pidos</h2>
                 <span id="sugestoes-toggle-icon" class="text-xs font-medium text-gray-400">Ocultar</span>
             </div>
             <div id="sugestoes-panel" class="p-4">
@@ -181,7 +181,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         </div>
                     </div>
                     <div>
-                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-red-700">Saídas</p>
+                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-red-700">SaÃ­das</p>
                         <div id="sugestoes-saidas" class="flex flex-wrap gap-2">
                             <span class="text-sm text-gray-400">Carregando...</span>
                         </div>
@@ -196,20 +196,20 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <p class="text-2xl font-bold text-green-700" id="total-entradas">R$ 0,00</p>
             </div>
             <div class="rounded-lg border border-red-200 bg-red-50 p-4">
-                <p class="text-sm font-medium text-red-600">Total Saídas</p>
+                <p class="text-sm font-medium text-red-600">Total SaÃ­das</p>
                 <p class="text-2xl font-bold text-red-700" id="total-saidas">R$ 0,00</p>
             </div>
             <div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <p class="text-sm font-medium text-blue-600">Saldo Líquido</p>
+                <p class="text-sm font-medium text-blue-600">Saldo LÃ­quido</p>
                 <p class="text-2xl font-bold text-blue-700" id="saldo-liquido">R$ 0,00</p>
             </div>
         </div>
 
         <div class="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-5">
             <div class="min-h-[320px] rounded-lg border border-gray-200 bg-white p-4 shadow-sm xl:col-span-2">
-                <h2 class="mb-4 font-semibold">Composição do período</h2>
+                <h2 class="mb-4 font-semibold">ComposiÃ§Ã£o do perÃ­odo</h2>
                 <div class="flex h-72 flex-col items-center justify-center gap-4">
-                    <div id="chartCaixaPizza" class="h-52 w-52 rounded-full border border-gray-200" aria-label="Gráfico de composição do período"></div>
+                    <div id="chartCaixaPizza" class="h-52 w-52 rounded-full border border-gray-200" aria-label="GrÃ¡fico de composiÃ§Ã£o do perÃ­odo"></div>
                     <div class="flex flex-wrap items-center justify-center gap-4 text-sm">
                         <div class="flex items-center gap-2">
                             <span class="inline-block h-3 w-3 rounded-full bg-green-600"></span>
@@ -217,21 +217,21 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="inline-block h-3 w-3 rounded-full bg-red-600"></span>
-                            <span id="legenda-saidas">Saídas: R$ 0,00</span>
+                            <span id="legenda-saidas">SaÃ­das: R$ 0,00</span>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="min-h-[320px] rounded-lg border border-gray-200 bg-white p-4 shadow-sm xl:col-span-3">
-                <h2 class="mb-1 font-semibold">Evolução do caixa</h2>
-                <p class="mb-4 text-xs text-gray-500">Compara o mês anterior, o mês atual e uma estimativa simples do próximo período.</p>
+                <h2 class="mb-1 font-semibold">EvoluÃ§Ã£o do caixa</h2>
+                <p class="mb-4 text-xs text-gray-500">Compara o mÃªs anterior, o mÃªs atual e uma estimativa simples do prÃ³ximo perÃ­odo.</p>
                 <div id="chartCaixaTendencia" class="h-72"></div>
             </div>
         </div>
 
         <div class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
             <div class="border-b border-gray-200 bg-gray-50 p-4">
-                <h2 class="font-semibold">Lançamentos do período</h2>
+                <h2 class="font-semibold">LanÃ§amentos do perÃ­odo</h2>
             </div>
             <div id="lancamentos-cards" class="space-y-3 p-4 md:hidden">
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">Carregando...</div>
@@ -243,10 +243,10 @@ require __DIR__ . '/partials/erp_shell_open.php';
                             <th class="px-4 py-2 text-left">Data</th>
                             <th class="px-4 py-2 text-left">Tipo</th>
                             <th class="px-4 py-2 text-left">Categoria</th>
-                            <th class="px-4 py-2 text-left">Descrição</th>
+                            <th class="px-4 py-2 text-left">DescriÃ§Ã£o</th>
                             <th class="px-4 py-2 text-left">Obreiro</th>
                             <th class="px-4 py-2 text-right">Valor</th>
-                            <th class="px-4 py-2 text-center">Ação</th>
+                            <th class="px-4 py-2 text-center">AÃ§Ã£o</th>
                         </tr>
                     </thead>
                     <tbody id="lancamentos-table">
@@ -285,7 +285,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium">Descrição</label>
+                    <label class="mb-1 block text-sm font-medium">DescriÃ§Ã£o</label>
                     <textarea id="descricao" rows="3" class="w-full rounded border border-gray-300 px-3 py-2"></textarea>
                 </div>
 
@@ -298,7 +298,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 
     <script>
-        const nomesMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const nomesMeses = ['Janeiro', 'Fevereiro', 'MarÃ§o', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         document.getElementById('data_lancamento').valueAsDate = new Date();
 
         function toggleSugestoes() {
@@ -336,20 +336,20 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 document.getElementById('sugestoes-entradas').innerHTML = renderPills(entradas, 'entrada') || '<span class="text-sm text-gray-400">Nenhuma categoria</span>';
                 document.getElementById('sugestoes-saidas').innerHTML = renderPills(saidas, 'saida') || '<span class="text-sm text-gray-400">Nenhuma categoria</span>';
             } catch (err) {
-                console.error('Erro ao carregar sugestões:', err);
+                console.error('Erro ao carregar sugestÃµes:', err);
             }
         }
 
         async function lancarRapido(categoriaId, tipo) {
             document.getElementById('tipo-lancamento').value = tipo;
-            document.getElementById('modal-title').textContent = tipo === 'entrada' ? 'Nova Entrada' : 'Nova Saída';
+            document.getElementById('modal-title').textContent = tipo === 'entrada' ? 'Nova Entrada' : 'Nova SaÃ­da';
             await carregarCategorias(tipo);
             const select = document.getElementById('categoria_id');
             select.value = categoriaId;
             const nomeCategoria = select.options[select.selectedIndex]?.text ?? '';
             if (nomeCategoria) {
                 document.getElementById('modal-title').textContent =
-                    (tipo === 'entrada' ? 'Nova Entrada' : 'Nova Saída') + ` - ${nomeCategoria}`;
+                    (tipo === 'entrada' ? 'Nova Entrada' : 'Nova SaÃ­da') + ` - ${nomeCategoria}`;
             }
             document.getElementById('modal-lancamento').classList.remove('hidden');
             document.getElementById('modal-lancamento').classList.add('flex');
@@ -365,7 +365,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
         async function abrirModalSaida() {
             document.getElementById('tipo-lancamento').value = 'saida';
-            document.getElementById('modal-title').textContent = 'Nova Saída';
+            document.getElementById('modal-title').textContent = 'Nova SaÃ­da';
             await carregarCategorias('saida');
             document.getElementById('modal-lancamento').classList.remove('hidden');
             document.getElementById('modal-lancamento').classList.add('flex');
@@ -448,8 +448,8 @@ require __DIR__ . '/partials/erp_shell_open.php';
             const tbody = document.getElementById('lancamentos-table');
             const cards = document.getElementById('lancamentos-cards');
             if (lancamentos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-4 text-center text-gray-500">Nenhum lançamento neste período</td></tr>';
-                cards.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">Nenhum lançamento neste período.</div>';
+                tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-4 text-center text-gray-500">Nenhum lanÃ§amento neste perÃ­odo</td></tr>';
+                cards.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">Nenhum lanÃ§amento neste perÃ­odo.</div>';
             } else {
                 tbody.innerHTML = lancamentos.map(l => `
                     <tr class="border-b border-gray-200 hover:bg-gray-50">
@@ -460,7 +460,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                                     ? 'bg-green-100 text-green-700'
                                     : 'bg-red-100 text-red-700'
                             }">
-                                ${l.tipo === 'entrada' ? 'Entrada' : 'Saída'}
+                                ${l.tipo === 'entrada' ? 'Entrada' : 'SaÃ­da'}
                             </span>
                         </td>
                         <td class="px-4 py-2">${l.categoria_nome}</td>
@@ -485,11 +485,11 @@ require __DIR__ . '/partials/erp_shell_open.php';
                                 <div class="mt-1 text-sm text-slate-600">${new Date(l.data_lancamento).toLocaleDateString('pt-BR')}</div>
                             </div>
                             <span class="rounded-full px-3 py-1 text-xs font-semibold ${l.tipo === 'entrada' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
-                                ${l.tipo === 'entrada' ? 'Entrada' : 'Saída'}
+                                ${l.tipo === 'entrada' ? 'Entrada' : 'SaÃ­da'}
                             </span>
                         </div>
                         <div class="mt-3 text-sm text-slate-600">
-                            <div>Descrição: ${l.descricao || '-'}</div>
+                            <div>DescriÃ§Ã£o: ${l.descricao || '-'}</div>
                             <div>Obreiro: ${l.obreiro_nome || '-'}</div>
                         </div>
                         <div class="mt-4 flex items-center justify-between gap-3">
@@ -642,3 +642,4 @@ require __DIR__ . '/partials/erp_shell_open.php';
         });
     </script>
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
+

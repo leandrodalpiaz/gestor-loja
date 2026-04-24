@@ -38,7 +38,7 @@ if (!isset($_SESSION["usuario_logado"])) {
                     <h1 class="mt-2 text-3xl font-semibold">Fechamento Mensal</h1>
                     <p class="mt-2 max-w-3xl text-sm text-slate-200">Conferencia final do periodo com leitura mais clara para saldo inicial, movimento e saldo final.</p>
                 </div>
-                <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao dashboard</a>
+                <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao Painel</a>
             </div>
         </header>
 
@@ -157,19 +157,19 @@ if (!isset($_SESSION["usuario_logado"])) {
                 btnFechar.className = fechamento.status === 'fechado'
                     ? 'rounded bg-gray-300 px-4 py-2 text-gray-500 cursor-not-allowed'
                     : 'rounded bg-blue-700 px-4 py-2 text-white hover:bg-blue-800';
-                btnFechar.textContent = fechamento.status === 'fechado' ? 'Mês Fechado' : 'Fechar Mês';
+                btnFechar.textContent = fechamento.status === 'fechado' ? 'MÃªs Fechado' : 'Fechar MÃªs';
 
                 document.getElementById('fechamento-content').innerHTML = `
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
                             <h3 class="mb-2 font-semibold">Resumo do fechamento</h3>
-                            <p><strong>Período:</strong> ${String(mes).padStart(2, '0')}/${ano}</p>
+                            <p><strong>PerÃ­odo:</strong> ${String(mes).padStart(2, '0')}/${ano}</p>
                             <p><strong>Status:</strong> ${fechamento.status || 'Aberto'}</p>
-                            <p><strong>Data de fechamento:</strong> ${fechamento.data_fechamento ? new Date(fechamento.data_fechamento).toLocaleString('pt-BR') : 'Ainda não fechado'}</p>
+                            <p><strong>Data de fechamento:</strong> ${fechamento.data_fechamento ? new Date(fechamento.data_fechamento).toLocaleString('pt-BR') : 'Ainda nÃ£o fechado'}</p>
                         </div>
                         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                            <h3 class="mb-2 font-semibold">Observações</h3>
-                            <p class="text-sm text-gray-600">Use esta tela para consolidar o período após validar caixa, comprovantes e regularidade.</p>
+                            <h3 class="mb-2 font-semibold">ObservaÃ§Ãµes</h3>
+                            <p class="text-sm text-gray-600">Use esta tela para consolidar o perÃ­odo apÃ³s validar caixa, comprovantes e regularidade.</p>
                         </div>
                     </div>
                 `;
@@ -215,7 +215,7 @@ if (!isset($_SESSION["usuario_logado"])) {
         }
 
         async function fecharMes() {
-            if (!confirm('Confirma o fechamento deste mês? A ação não deve ser feita sem conferência final.')) return;
+            if (!confirm('Confirma o fechamento deste mÃªs? A aÃ§Ã£o nÃ£o deve ser feita sem conferÃªncia final.')) return;
 
             const mes = parseInt(document.getElementById('filter-mes').value);
             const ano = parseInt(document.getElementById('filter-ano').value);
@@ -230,10 +230,10 @@ if (!isset($_SESSION["usuario_logado"])) {
                 if (json.ok) {
                     carregarFechamento();
                 } else {
-                    alert(json.erro || 'Não foi possível fechar o mês.');
+                    alert(json.erro || 'NÃ£o foi possÃ­vel fechar o mÃªs.');
                 }
             } catch (err) {
-                console.error('Erro ao fechar mês:', err);
+                console.error('Erro ao fechar mÃªs:', err);
             }
         }
 
@@ -241,4 +241,5 @@ if (!isset($_SESSION["usuario_logado"])) {
     </script>
 </body>
 </html>
+
 

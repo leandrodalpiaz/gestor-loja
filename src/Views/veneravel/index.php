@@ -8,14 +8,14 @@ $appShellTitle = 'Veneravel Mestre';
 $appShellDescription = 'Painel estrategico e analitico da Loja.';
 $appShellActiveHref = '/veneravel';
 $appShellActions = [
-    ['label' => 'Dashboard geral', 'href' => '/dashboard'],
+    ['label' => 'Painel da Loja', 'href' => '/dashboard'],
     ['label' => 'Painel de votacao', 'href' => '/secretaria/votacao', 'primary' => true],
 ];
 $appShellSidebarSections = [
     [
         'title' => 'Veneravel',
         'items' => [
-            ['label' => 'Dashboard estrategico', 'href' => '/veneravel'],
+            ['label' => 'Painel estrategico', 'href' => '/veneravel'],
             ['label' => 'Balaustres / votacao', 'href' => '/secretaria/votacao'],
             ['label' => 'Secretaria', 'href' => '/secretaria'],
             ['label' => 'Tesouraria', 'href' => '/tesouraria/caixa'],
@@ -24,7 +24,7 @@ $appShellSidebarSections = [
     [
         'title' => 'Geral',
         'items' => [
-            ['label' => 'Dashboard', 'href' => '/dashboard'],
+            ['label' => 'Painel', 'href' => '/dashboard'],
         ],
     ],
 ];
@@ -90,3 +90,4 @@ $dashboardRenderers = [
 require __DIR__ . '/../layouts/dashboard.php';
 ?>
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+

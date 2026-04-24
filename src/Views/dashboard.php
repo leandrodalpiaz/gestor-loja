@@ -4,7 +4,7 @@ if (!headers_sent()) {
 }
 ?>
 <?php
-$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
+$usuarioNome = $_SESSION['usuario_nome'] ?? 'IrmÃ£o';
 $usuarioCargo = (string) ($_SESSION['usuario_cargo'] ?? '');
 $usuarioLogado = is_array($_SESSION['usuario_logado'] ?? null) ? $_SESSION['usuario_logado'] : [];
 $usuarioNomeCompleto = trim((string) ($usuarioLogado['nome_completo'] ?? ''));
@@ -16,7 +16,7 @@ if (in_array($usuarioNomeNormalizado, ['admin', 'administrador'], true)) {
     } elseif ($usuarioNomeHistorico !== '' && !in_array(strtolower($usuarioNomeHistorico), ['admin', 'administrador'], true)) {
         $usuarioNome = $usuarioNomeHistorico;
     } else {
-        $usuarioNome = 'Irmão';
+        $usuarioNome = 'IrmÃ£o';
     }
 }
 $usuarioCargos = $_SESSION['usuario_cargos'] ?? [$usuarioCargo];
@@ -40,7 +40,7 @@ $canSecretaria = $dashboardCan('secretaria.manage');
 $canOrador = $dashboardCan('orador.view');
 $canBanquetes = $dashboardCan('mestre_banquetes.manage');
 $canTesouraria = $dashboardCan('tesouraria.manage');
-$canFinanceiroPessoal = $dashboardCan('financeiro.self');
+$canTesourariaPessoal = $dashboardCan('financeiro.self');
 $canBibliotecaConsultar = $dashboardCan('biblioteca.self');
 $canBibliotecaGerir = $dashboardCan('biblioteca.manage');
 $canBibliotecaClassificar = $dashboardCan('biblioteca.classificar');
@@ -60,17 +60,17 @@ $dashboardRecados = is_array($dashboardRecados ?? null) ? $dashboardRecados : []
 $dashboardPalavraIrmao = trim((string) ($dashboardPalavraIrmao ?? ''));
 $dashboardOutrasLojas = is_array($dashboardOutrasLojas ?? null) ? $dashboardOutrasLojas : [];
 
-$dashboardNomeLoja = trim((string) ($dashboardConfiguracaoLoja['nome_loja'] ?? 'Loja Maçonica Renascença'));
+$dashboardNomeLoja = trim((string) ($dashboardConfiguracaoLoja['nome_loja'] ?? 'Loja MaÃ§onica RenascenÃ§a'));
 $dashboardNumeroLoja = trim((string) ($dashboardConfiguracaoLoja['numero_loja'] ?? ''));
 if ($dashboardNumeroLoja !== '') {
-    $dashboardNomeLoja .= ' nº ' . $dashboardNumeroLoja;
+    $dashboardNomeLoja .= ' nÂº ' . $dashboardNumeroLoja;
 }
-$dashboardDiaReuniao = trim((string) ($dashboardConfiguracaoLoja['dia_semana_reuniao'] ?? ''));
-$dashboardHorarioReuniao = trim((string) ($dashboardConfiguracaoLoja['horario_reuniao'] ?? ''));
+$dashboardDiaSessao = trim((string) ($dashboardConfiguracaoLoja['dia_semana_reuniao'] ?? ''));
+$dashboardHorarioSessao = trim((string) ($dashboardConfiguracaoLoja['horario_reuniao'] ?? ''));
 $dashboardRecadoPrincipal = $dashboardRecados[0] ?? null;
 $dashboardRecadosSecundarios = array_slice($dashboardRecados, 1, 2);
 
-$formatarDataHoraDashboard = static function (?string $valor): string {
+$formatarDataHoraPainel = static function (?string $valor): string {
     $valor = trim((string) $valor);
     if ($valor === '') {
         return 'Data a definir';
@@ -79,7 +79,7 @@ $formatarDataHoraDashboard = static function (?string $valor): string {
     try {
         return (new DateTimeImmutable($valor))
             ->setTimezone(new DateTimeZone('America/Sao_Paulo'))
-            ->format('d/m/Y \à\s H:i');
+            ->format('d/m/Y \Ã \s H:i');
     } catch (\Throwable $e) {
         return $valor;
     }
@@ -108,7 +108,7 @@ $dashboardStatusClasses = static function (?string $status): string {
 };
 
 $secaoGeral = [
-    ['label' => 'Dashboard', 'href' => '/dashboard'],
+    ['label' => 'Painel', 'href' => '/dashboard'],
 ];
 
 $secoes = [];
@@ -118,13 +118,13 @@ $blocosPrioritarios = [];
 if ($canChancelaria || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Chancelaria',
-        'descricao' => 'Mensagens do dia, certificados e manutenção de efemérides.',
+        'descricao' => 'Mensagens do dia, certificados e manutenÃ§Ã£o de efemÃ©rides.',
         'itens' => [
             ['label' => 'Revisar mensagem do dia', 'href' => '/chancelaria/efemerides?foco=mensagem'],
-            ['label' => 'Corrigir dados das efemérides', 'href' => '/chancelaria/efemerides?foco=dados'],
-            ['label' => 'Visão completa da Chancelaria', 'href' => '/chancelaria/efemerides'],
+            ['label' => 'Corrigir dados das efemÃ©rides', 'href' => '/chancelaria/efemerides?foco=dados'],
+            ['label' => 'VisÃ£o completa da Chancelaria', 'href' => '/chancelaria/efemerides'],
             ['label' => 'Emitir certificado', 'href' => '/chancelaria/certificado'],
-            ['label' => 'Sessão e check-in do Chanceler', 'href' => '/chanceler/sessao'],
+            ['label' => 'SessÃ£o e check-in do Chanceler', 'href' => '/chanceler/sessao'],
         ],
     ];
 
@@ -132,18 +132,18 @@ if ($canChancelaria || $canVeneravel || $adminLivre) {
         $atalhosPrioritarios = array_merge($atalhosPrioritarios, [
             ['label' => 'Mensagem do dia', 'href' => '/chancelaria/efemerides?foco=mensagem'],
             ['label' => 'Certificado', 'href' => '/chancelaria/certificado'],
-            ['label' => 'Sessão do Chanceler', 'href' => '/chanceler/sessao'],
+            ['label' => 'SessÃ£o do Chanceler', 'href' => '/chanceler/sessao'],
         ]);
 
         $blocosPrioritarios[] = [
             'perfil' => 'Chancelaria',
             'titulo' => 'Prioridades do Chanceler',
-            'descricao' => 'Acesso direto ao que mais pesa no uso diário: efemérides, certificado e apoio de sessão.',
+            'descricao' => 'Acesso direto ao que mais pesa no uso diÃ¡rio: efemÃ©rides, certificado e apoio de sessÃ£o.',
             'principal' => ['label' => 'Revisar mensagem do dia', 'href' => '/chancelaria/efemerides?foco=mensagem'],
             'secundarios' => [
-                ['label' => 'Corrigir dados das efemérides', 'href' => '/chancelaria/efemerides?foco=dados'],
+                ['label' => 'Corrigir dados das efemÃ©rides', 'href' => '/chancelaria/efemerides?foco=dados'],
                 ['label' => 'Emitir certificado', 'href' => '/chancelaria/certificado'],
-                ['label' => 'Sessão e check-in', 'href' => '/chanceler/sessao'],
+                ['label' => 'SessÃ£o e check-in', 'href' => '/chanceler/sessao'],
             ],
         ];
     }
@@ -152,14 +152,14 @@ if ($canChancelaria || $canVeneravel || $adminLivre) {
 if ($canSecretaria || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Secretaria',
-        'descricao' => 'Sessões, votações e acompanhamento administrativo.',
+        'descricao' => 'SessÃµes, votaÃ§Ãµes e acompanhamento administrativo.',
         'itens' => [
             ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
             ['label' => 'Central de obreiros', 'href' => '/obreiros'],
             ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
             ['label' => 'Acessos', 'href' => '/admin/acessos'],
-            ['label' => 'Sessões', 'href' => '/secretaria'],
-            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
+            ['label' => 'SessÃµes', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votaÃ§Ã£o', 'href' => '/secretaria/votacao'],
         ],
     ];
 }
@@ -167,7 +167,7 @@ if ($canSecretaria || $canVeneravel || $adminLivre) {
 if ($canOrador || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Orador',
-        'descricao' => 'Leitura resumida da sessão, apoio ritual e nominata resumida de visitantes para agradecimento em Loja.',
+        'descricao' => 'Leitura resumida da sessÃ£o, apoio ritual e nominata resumida de visitantes para agradecimento em Loja.',
         'itens' => [
             ['label' => 'Painel do Orador', 'href' => '/orador'],
         ],
@@ -177,7 +177,7 @@ if ($canOrador || $canVeneravel || $adminLivre) {
 if ($canBanquetes || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Mestre de Banquetes',
-        'descricao' => 'Leitura operacional dos confirmados com e sem ágape para planejamento do banquete.',
+        'descricao' => 'Leitura operacional dos confirmados com e sem Ã¡gape para planejamento do banquete.',
         'itens' => [
             ['label' => 'Painel do Mestre de Banquetes', 'href' => '/mestre-banquetes'],
         ],
@@ -187,9 +187,9 @@ if ($canBanquetes || $canVeneravel || $adminLivre) {
 if ($canHospitaleiro || $canVeneravel || $canTesouraria || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Hospitalaria',
-        'descricao' => 'Ocorrências assistenciais, acompanhamento e encaminhamentos ao Venerável e Tesouraria.',
+        'descricao' => 'OcorrÃªncias assistenciais, acompanhamento e encaminhamentos ao VenerÃ¡vel e Tesouraria.',
         'itens' => [
-            ['label' => 'Painel de Assistência', 'href' => '/assistencia'],
+            ['label' => 'Painel de AssistÃªncia', 'href' => '/assistencia'],
         ],
     ];
 }
@@ -197,7 +197,7 @@ if ($canHospitaleiro || $canVeneravel || $canTesouraria || $adminLivre) {
 if ($canMestreHarmonia || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Mestre de Harmonia',
-        'descricao' => 'Player ritual em tela cheia, com etapas principais, transições e extras por sessão.',
+        'descricao' => 'Player ritual em tela cheia, com etapas principais, transiÃ§Ãµes e extras por sessÃ£o.',
         'itens' => [
             ['label' => 'Painel do Mestre de Harmonia', 'href' => '/mestre-harmonia'],
         ],
@@ -206,35 +206,35 @@ if ($canMestreHarmonia || $canVeneravel || $adminLivre) {
 
 if ($canPrimeiroVigilante || $canVeneravel || $adminLivre) {
     $secoes[] = [
-        'titulo' => '1º Vigilante',
-        'descricao' => 'Acompanhamento formativo dos Aprendizes, trilha de estudos e orientação de instruções.',
+        'titulo' => '1Âº Vigilante',
+        'descricao' => 'Acompanhamento formativo dos Aprendizes, trilha de estudos e orientaÃ§Ã£o de instruÃ§Ãµes.',
         'itens' => [
-            ['label' => 'Painel do 1º Vigilante', 'href' => '/primeiro-vigilante'],
+            ['label' => 'Painel do 1Âº Vigilante', 'href' => '/primeiro-vigilante'],
             ['label' => 'Lista de obreiros', 'href' => '/obreiros'],
-            ['label' => 'Biblioteca e classificação', 'href' => '/biblioteca'],
+            ['label' => 'Biblioteca e classificaÃ§Ã£o', 'href' => '/biblioteca'],
         ],
     ];
 }
 
 if ($canSegundoVigilante || $canVeneravel || $adminLivre) {
     $secoes[] = [
-        'titulo' => '2º Vigilante',
-        'descricao' => 'Acompanhamento formativo dos Companheiros, trilha de estudos e orientação de instruções.',
+        'titulo' => '2Âº Vigilante',
+        'descricao' => 'Acompanhamento formativo dos Companheiros, trilha de estudos e orientaÃ§Ã£o de instruÃ§Ãµes.',
         'itens' => [
-            ['label' => 'Painel do 2º Vigilante', 'href' => '/segundo-vigilante'],
+            ['label' => 'Painel do 2Âº Vigilante', 'href' => '/segundo-vigilante'],
             ['label' => 'Lista de obreiros', 'href' => '/obreiros'],
-            ['label' => 'Biblioteca e classificação', 'href' => '/biblioteca'],
+            ['label' => 'Biblioteca e classificaÃ§Ã£o', 'href' => '/biblioteca'],
         ],
     ];
 }
 
 if ($canVeneravel || $adminLivre) {
     $secoes[] = [
-        'titulo' => 'Venerável Mestre',
-        'descricao' => 'Decisões de votação, acompanhamento de sessão e nominata oficial.',
+        'titulo' => 'VenerÃ¡vel Mestre',
+        'descricao' => 'DecisÃµes de votaÃ§Ã£o, acompanhamento de sessÃ£o e nominata oficial.',
         'itens' => [
-            ['label' => 'Dashboard do Venerável', 'href' => '/veneravel'],
-            ['label' => 'Abrir/encerrar votações', 'href' => '/secretaria/votacao'],
+            ['label' => 'Painel do VenerÃ¡vel', 'href' => '/veneravel'],
+            ['label' => 'Abrir/encerrar votaÃ§Ãµes', 'href' => '/secretaria/votacao'],
         ],
     ];
 }
@@ -242,29 +242,29 @@ if ($canVeneravel || $adminLivre) {
 if ($canTesouraria || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Tesouraria',
-        'descricao' => 'Financeiro, comprovantes, regularidade e fechamento mensal.',
+        'descricao' => 'Tesouraria, comprovantes, regularidade e fechamento mensal.',
         'itens' => [
-            ['label' => 'Sessões e ágape pago', 'href' => '/tesouraria/sessoes'],
-            ['label' => 'Livro-caixa', 'href' => '/tesouraria/caixa'],
-            ['label' => 'Obrigações financeiras', 'href' => '/tesouraria/obrigacoes'],
-            ['label' => 'Validação de comprovantes', 'href' => '/tesouraria/comprovantes'],
+            ['label' => 'SessÃµes e Ã¡gape pago', 'href' => '/tesouraria/sessoes'],
+            ['label' => 'Caixa da Loja', 'href' => '/tesouraria/caixa'],
+            ['label' => 'ObrigaÃ§Ãµes financeiras', 'href' => '/tesouraria/obrigacoes'],
+            ['label' => 'ValidaÃ§Ã£o de comprovantes', 'href' => '/tesouraria/comprovantes'],
             ['label' => 'Regularidade', 'href' => '/tesouraria/regularidade'],
             ['label' => 'Fechamento mensal', 'href' => '/tesouraria/fechamento'],
-            ['label' => 'Relatório da gestão', 'href' => '/tesouraria/relatorio-gestao'],
+            ['label' => 'RelatÃ³rio da gestÃ£o', 'href' => '/tesouraria/relatorio-gestao'],
         ],
     ];
 
     if ($canTesouraria && !$canVeneravel) {
         $atalhosPrioritarios = array_merge($atalhosPrioritarios, [
             ['label' => 'Comprovantes', 'href' => '/tesouraria/comprovantes'],
-            ['label' => 'Livro-caixa', 'href' => '/tesouraria/caixa'],
+            ['label' => 'Caixa da Loja', 'href' => '/tesouraria/caixa'],
             ['label' => 'Regularidade', 'href' => '/tesouraria/regularidade'],
         ]);
 
         $blocosPrioritarios[] = [
             'perfil' => 'Tesouraria',
             'titulo' => 'Fila principal da Tesouraria',
-            'descricao' => 'Atalhos para validar comprovantes, acompanhar o caixa e fechar pendências do mês.',
+            'descricao' => 'Atalhos para validar comprovantes, acompanhar o caixa e fechar pendÃªncias do mÃªs.',
             'principal' => ['label' => 'Validar comprovantes', 'href' => '/tesouraria/comprovantes'],
             'secundarios' => [
                 ['label' => 'Abrir livro-caixa', 'href' => '/tesouraria/caixa'],
@@ -275,12 +275,12 @@ if ($canTesouraria || $canVeneravel || $adminLivre) {
     }
 }
 
-if ($canFinanceiroPessoal || $adminLivre) {
+if ($canTesourariaPessoal || $adminLivre) {
     $secoes[] = [
-        'titulo' => 'Meu Financeiro',
-        'descricao' => 'Consulta pessoal de mensalidades, biblioteca, joias e demais obrigações cadastradas pela Tesouraria.',
+        'titulo' => 'Meu Tesouraria',
+        'descricao' => 'Consulta pessoal de mensalidades, biblioteca, joias e demais obrigaÃ§Ãµes cadastradas pela Tesouraria.',
         'itens' => [
-            ['label' => 'Minhas obrigações financeiras', 'href' => '/financeiro/minhas-obrigacoes'],
+            ['label' => 'Minhas obrigaÃ§Ãµes financeiras', 'href' => '/financeiro/minhas-obrigacoes'],
         ],
     ];
 }
@@ -288,7 +288,7 @@ if ($canFinanceiroPessoal || $adminLivre) {
 if ($canBibliotecaConsultar || $canBibliotecaGerir || $canBibliotecaClassificar || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Biblioteca',
-        'descricao' => 'Acervo, empréstimos, classificação de leituras e curadoria formativa.',
+        'descricao' => 'Acervo, emprÃ©stimos, classificaÃ§Ã£o de leituras e curadoria formativa.',
         'itens' => [
             ['label' => 'Painel da Biblioteca', 'href' => '/biblioteca'],
         ],
@@ -316,8 +316,8 @@ if ($canBibliotecaConsultar || $canBibliotecaGerir || $canBibliotecaClassificar 
 
 if ($canSecretaria || $canChancelaria || $canVeneravel || $adminLivre) {
     $secoes[] = [
-        'titulo' => 'Cadastro e Obreiros',
-        'descricao' => 'Consulta e manutenção dos obreiros ativos da loja.',
+        'titulo' => 'Registro e Obreiros',
+        'descricao' => 'Consulta e manutenÃ§Ã£o dos obreiros ativos da loja.',
         'itens' => [
             ['label' => 'Lista de obreiros', 'href' => '/obreiros'],
         ],
@@ -326,7 +326,7 @@ if ($canSecretaria || $canChancelaria || $canVeneravel || $adminLivre) {
 
 if (($canPrimeiroVigilante || $canSegundoVigilante) && !$canSecretaria && !$canChancelaria && !$canVeneravel && !$adminLivre) {
     $secoes[] = [
-        'titulo' => 'Cadastro e Obreiros',
+        'titulo' => 'Registro e Obreiros',
         'descricao' => $canPrimeiroVigilante && !$canSegundoVigilante
             ? 'Consulta dos Aprendizes ativos da loja.'
             : ($canSegundoVigilante && !$canPrimeiroVigilante
@@ -342,10 +342,10 @@ if ($canAdminCargos || $canAdminLoja || $adminLivre) {
     if ($isSystemAdmin) {
         $secoes[] = [
             'titulo' => 'Sistema',
-            'descricao' => 'Painel técnico do sistema (oculto para membros da Loja).',
+            'descricao' => 'Painel tÃ©cnico do sistema (oculto para membros da Loja).',
             'itens' => array_values(array_filter([
                 ['label' => 'Painel do sistema', 'href' => '/sistema'],
-                ($dashboardCan('admin.loja.view') || $adminLivre) ? ['label' => 'Parâmetros da Loja', 'href' => '/admin/loja'] : null,
+                ($dashboardCan('admin.loja.view') || $adminLivre) ? ['label' => 'ParÃ¢metros da Loja', 'href' => '/admin/loja'] : null,
                 ($dashboardCan('admin.auditoria.view') || $adminLivre) ? ['label' => 'Auditoria', 'href' => '/admin/auditoria'] : null,
             ])),
         ];
@@ -387,29 +387,29 @@ try {
 }
 
 $cargosDestaque = [
-    ['label' => 'Venerável Mestre', 'codigo' => 'VENERAVEL'],
-    ['label' => '1º Vigilante', 'codigo' => 'PRIMEIRO_VIGILANTE'],
-    ['label' => '2º Vigilante', 'codigo' => 'SEGUNDO_VIGILANTE'],
+    ['label' => 'VenerÃ¡vel Mestre', 'codigo' => 'VENERAVEL'],
+    ['label' => '1Âº Vigilante', 'codigo' => 'PRIMEIRO_VIGILANTE'],
+    ['label' => '2Âº Vigilante', 'codigo' => 'SEGUNDO_VIGILANTE'],
 ];
 
 $cargosGestao = [
     ['label' => 'Orador', 'codigo' => 'ORADOR'],
     ['label' => 'Guarda da Lei', 'codigo' => 'GUARDA_DA_LEI'],
-    ['label' => 'Secretário', 'codigo' => 'SECRETARIO'],
+    ['label' => 'SecretÃ¡rio', 'codigo' => 'SECRETARIO'],
     ['label' => 'Tesoureiro', 'codigo' => 'TESOUREIRO'],
     ['label' => 'Mestre de Banquetes', 'codigo' => 'MESTRE_BANQUETES'],
     ['label' => 'Guarda do Templo', 'codigo' => 'GUARDA_DO_TEMPLO'],
-    ['label' => 'Mestre de Cerimônias', 'codigo' => 'MESTRE_DE_CERIMONIAS'],
+    ['label' => 'Mestre de CerimÃ´nias', 'codigo' => 'MESTRE_DE_CERIMONIAS'],
     ['label' => 'Chanceler', 'codigo' => 'CHANCELER'],
     ['label' => 'Mestre Hospitaleiro', 'codigo' => 'HOSPITALEIRO'],
-    ['label' => '1º Diácono', 'codigo' => 'PRIMEIRO_DIACONO'],
+    ['label' => '1Âº DiÃ¡cono', 'codigo' => 'PRIMEIRO_DIACONO'],
 ];
 // TODO(layout): consolidar classes visuais legadas no shell ERP em um lote dedicado,
-// sem alterar regras de negócio nem contratos do payload atual.
-$erpPageTitle = 'Dashboard - Gestor de Loja';
-$appShellEyebrow = 'Dashboard';
+// sem alterar regras de negÃ³cio nem contratos do payload atual.
+$erpPageTitle = 'Painel - Gestor de Loja';
+$appShellEyebrow = 'Painel';
 $appShellTitle = $dashboardNomeLoja;
-$appShellDescription = 'Abertura operacional da Loja com agenda, recados e acessos prioritários.';
+$appShellDescription = 'Abertura operacional da Loja com agenda, recados e acessos prioritÃ¡rios.';
 $appShellActiveHref = '/dashboard';
 $appShellUserLabel = $usuarioNome;
 $appShellActions = [
@@ -435,24 +435,24 @@ require __DIR__ . '/partials/erp_head.php';
         <div class="flex items-center gap-3">
             <div class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/10 text-xl text-ouro">
                 <?php if ($dashboardLogoUrl): ?>
-                    <img src="<?= htmlspecialchars($dashboardLogoUrl) ?>" alt="Logotipo da Loja Renascença" class="h-full w-full object-cover">
+                    <img src="<?= htmlspecialchars($dashboardLogoUrl) ?>" alt="Logotipo da Loja RenascenÃ§a" class="h-full w-full object-cover">
                 <?php else: ?>
-                    <span>∴</span>
+                    <span>âˆ´</span>
                 <?php endif; ?>
             </div>
             <div>
                 <div class="font-serif text-lg font-bold tracking-wide"><?= htmlspecialchars($dashboardNomeLoja) ?></div>
-                <div class="text-xs text-slate-300">Acesso da Loja por ofícios e responsabilidades</div>
+                <div class="text-xs text-slate-300">Acesso da Loja por ofÃ­cios e responsabilidades</div>
             </div>
         </div>
 
         <div class="hidden items-center gap-4 md:flex">
             <?php if ($canAdminCargos && $canAdminLoja && $dashboardCan('admin.loja.manage')): ?>
-                <span class="hidden rounded-full bg-ouro px-3 py-1 text-xs font-semibold text-cobalto">Acesso técnico total</span>
+                <span class="hidden rounded-full bg-ouro px-3 py-1 text-xs font-semibold text-cobalto">Acesso tÃ©cnico total</span>
             <?php elseif ($showAllPanels): ?>
-                <span class="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">Acesso ampliado nesta sessão</span>
+                <span class="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">Acesso ampliado nesta sessÃ£o</span>
             <?php endif; ?>
-            <span class="text-sm text-slate-200">Olá, <?= htmlspecialchars($usuarioNome) ?></span>
+            <span class="text-sm text-slate-200">OlÃ¡, <?= htmlspecialchars($usuarioNome) ?></span>
             <a href="/logout" class="rounded-md border border-white/15 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 hover:text-white">Sair</a>
         </div>
 
@@ -488,9 +488,9 @@ require __DIR__ . '/partials/erp_head.php';
     <aside class="hidden w-72 shrink-0 xl:block xl:w-[300px]">
                 <div class="sticky top-24 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm xl:max-h-[calc(100vh-7rem)]">
             <div class="border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,#f8e8b6,transparent_45%),linear-gradient(135deg,#ffffff,#f6f1e7)] px-6 py-5">
-                <div class="text-xs font-semibold uppercase tracking-[0.22em] text-ardosia">Navegação</div>
+                <div class="text-xs font-semibold uppercase tracking-[0.22em] text-ardosia">NavegaÃ§Ã£o</div>
                     <div class="mt-2 text-2xl font-semibold text-erp-navy">Menus por cargo</div>
-                <p class="mt-2 text-sm text-slate-600">Cada área aparece agrupada por responsabilidade. O acesso técnico vê tudo.</p>
+                <p class="mt-2 text-sm text-slate-600">Cada Ã¡rea aparece agrupada por responsabilidade. O acesso tÃ©cnico vÃª tudo.</p>
             </div>
 
             <nav class="space-y-6 px-5 py-5 xl:overflow-y-auto xl:pr-3">
@@ -534,7 +534,7 @@ require __DIR__ . '/partials/erp_head.php';
                         <div class="text-sm font-semibold uppercase tracking-[0.24em] text-erp-gold">Centro de comando</div>
                         <h2 class="mt-3 text-4xl font-semibold leading-tight text-erp-navy 2xl:text-5xl"><?= htmlspecialchars($dashboardNomeLoja) ?></h2>
                         <p class="mt-4 max-w-4xl text-base leading-7 text-erp-muted">
-                            Abertura administrativa com agenda da Loja, recados prioritários e acessos operacionais organizados por responsabilidade.
+                            Abertura administrativa com agenda da Loja, recados prioritÃ¡rios e acessos operacionais organizados por responsabilidade.
                         </p>
                         <div class="mt-5 flex flex-wrap gap-3">
                             <a href="/secretaria" class="rounded-erp-md border border-erp-border bg-white px-4 py-2.5 text-sm font-semibold text-erp-text hover:border-erp-navy hover:text-erp-navy">Abrir secretaria</a>
@@ -546,20 +546,20 @@ require __DIR__ . '/partials/erp_head.php';
                 <div class="grid gap-4 sm:grid-cols-3 xl:col-span-4 xl:grid-cols-1 2xl:col-span-3 2xl:grid-cols-3">
                     <article class="rounded-2xl border border-erp-border bg-white/90 px-5 py-4 shadow-sm">
                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Perfil ativo</div>
-                        <div class="mt-2 text-xl font-semibold text-erp-navy"><?= htmlspecialchars($usuarioCargo !== '' ? $usuarioCargo : 'Operação geral') ?></div>
-                        <p class="mt-1 text-sm leading-6 text-erp-muted">Leitura personalizada conforme as permissões desta sessão.</p>
+                        <div class="mt-2 text-xl font-semibold text-erp-navy"><?= htmlspecialchars($usuarioCargo !== '' ? $usuarioCargo : 'OperaÃ§Ã£o geral') ?></div>
+                        <p class="mt-1 text-sm leading-6 text-erp-muted">Leitura personalizada conforme as permissÃµes desta sessÃ£o.</p>
                     </article>
                     <article class="rounded-2xl border border-erp-border bg-white/90 px-5 py-4 shadow-sm">
-                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Áreas visíveis</div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Ãreas visÃ­veis</div>
                         <div class="mt-2 text-xl font-semibold text-erp-navy"><?= count($secoes) ?></div>
                         <p class="mt-1 text-sm leading-6 text-erp-muted">Blocos operacionais liberados nesta abertura administrativa.</p>
                     </article>
                     <article class="rounded-2xl border border-erp-border bg-white/90 px-5 py-4 shadow-sm">
-                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Próxima reunião</div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">PrÃ³xima reuniÃ£o</div>
                         <div class="mt-2 text-lg font-semibold text-erp-navy">
-                            <?= htmlspecialchars(trim($dashboardDiaReuniao . ($dashboardHorarioReuniao !== '' ? ' · ' . $dashboardHorarioReuniao : '')) ?: 'A definir') ?>
+                            <?= htmlspecialchars(trim($dashboardDiaSessao . ($dashboardHorarioSessao !== '' ? ' Â· ' . $dashboardHorarioSessao : '')) ?: 'A definir') ?>
                         </div>
-                        <p class="mt-1 text-sm leading-6 text-erp-muted">Referência institucional usada para orientar a agenda da Loja.</p>
+                        <p class="mt-1 text-sm leading-6 text-erp-muted">ReferÃªncia institucional usada para orientar a agenda da Loja.</p>
                     </article>
                 </div>
             </div>
@@ -569,13 +569,13 @@ require __DIR__ . '/partials/erp_head.php';
                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Total de obreiros</div>
                     <?php /* TODO(dados): exibir total consolidado de obreiros quando o payload disponibilizar esse indicador. */ ?>
                     <div class="mt-2 text-3xl font-semibold text-erp-navy">N/D</div>
-                    <p class="mt-1 text-sm text-erp-muted">Indicador será ligado ao payload oficial sem criar query na view.</p>
+                    <p class="mt-1 text-sm text-erp-muted">Indicador serÃ¡ ligado ao payload oficial sem criar query na view.</p>
                 </article>
                 <article class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 shadow-sm">
                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Adimplentes</div>
                     <?php /* TODO(dados): exibir consolidado financeiro real quando o payload fornecer os totais oficiais. */ ?>
                     <div class="mt-2 text-3xl font-semibold text-emerald-800">N/D</div>
-                    <p class="mt-1 text-sm text-emerald-700">Resumo financeiro depende de dado que ainda não chega nesta view.</p>
+                    <p class="mt-1 text-sm text-emerald-700">Resumo financeiro depende de dado que ainda nÃ£o chega nesta view.</p>
                 </article>
                 <article class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 shadow-sm">
                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Inadimplentes</div>
@@ -584,12 +584,12 @@ require __DIR__ . '/partials/erp_head.php';
                     <p class="mt-1 text-sm text-amber-700">Badge mantido para o desenho ERP sem inventar contagem nova.</p>
                 </article>
                 <article class="rounded-2xl border border-erp-border bg-white px-5 py-4 shadow-sm">
-                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Próxima sessão</div>
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">PrÃ³xima sessÃ£o</div>
                     <div class="mt-2 text-xl font-semibold text-erp-navy">
-                        <?= htmlspecialchars(isset($dashboardSessoes[0]['data_hora_inicio']) ? $formatarDataHoraDashboard($dashboardSessoes[0]['data_hora_inicio']) : 'Aguardando publicação') ?>
+                        <?= htmlspecialchars(isset($dashboardSessoes[0]['data_hora_inicio']) ? $formatarDataHoraPainel($dashboardSessoes[0]['data_hora_inicio']) : 'Aguardando publicaÃ§Ã£o') ?>
                     </div>
                     <p class="mt-1 text-sm text-erp-muted">
-                        <?= htmlspecialchars((string) ($dashboardSessoes[0]['titulo'] ?? 'Sem sessão agendada no momento.')) ?>
+                        <?= htmlspecialchars((string) ($dashboardSessoes[0]['titulo'] ?? 'Sem sessÃ£o agendada no momento.')) ?>
                     </p>
                 </article>
             </div>
@@ -605,9 +605,9 @@ require __DIR__ . '/partials/erp_head.php';
         <section id="sessoes-loja" class="mt-8 grid gap-6 xl:grid-cols-12">
             <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm xl:col-span-8 2xl:col-span-9">
                 <div class="border-b border-slate-200 bg-slate-50 px-6 py-6">
-                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Sessões da Loja</div>
-                    <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Próximas sessões da Loja</h2>
-                    <p class="mt-2 text-sm text-slate-600">Confirme sua presença, ajuste quando precisar e abra a sessão sem sair da página inicial.</p>
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">SessÃµes da Loja</div>
+                    <h2 class="mt-2 text-2xl font-semibold text-erp-navy">PrÃ³ximas sessÃµes da Loja</h2>
+                    <p class="mt-2 text-sm text-slate-600">Confirme sua presenÃ§a, ajuste quando precisar e abra a sessÃ£o sem sair da pÃ¡gina inicial.</p>
                 </div>
 
                 <div class="grid gap-4 px-6 py-6 xl:grid-cols-2">
@@ -616,8 +616,8 @@ require __DIR__ . '/partials/erp_head.php';
                         <article class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
-                                    <h3 class="text-xl font-semibold text-erp-navy"><?= htmlspecialchars((string) ($sessaoCard['titulo'] ?? 'Sessão')) ?></h3>
-                                    <div class="mt-2 text-sm text-slate-600"><?= htmlspecialchars($formatarDataHoraDashboard($sessaoCard['data_hora_inicio'] ?? null)) ?></div>
+                                    <h3 class="text-xl font-semibold text-erp-navy"><?= htmlspecialchars((string) ($sessaoCard['titulo'] ?? 'SessÃ£o')) ?></h3>
+                                    <div class="mt-2 text-sm text-slate-600"><?= htmlspecialchars($formatarDataHoraPainel($sessaoCard['data_hora_inicio'] ?? null)) ?></div>
                                 </div>
                                 <span class="inline-flex rounded-full border px-3 py-1 text-xs font-semibold <?= $dashboardStatusClasses($sessaoCard['status'] ?? null) ?>">
                                     <?= htmlspecialchars((string) ($sessaoCard['status'] ?? 'Programada')) ?>
@@ -628,15 +628,15 @@ require __DIR__ . '/partials/erp_head.php';
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                                     <div class="text-xs uppercase tracking-[0.18em] text-slate-500">Tipo e grau</div>
                                     <div class="mt-1 text-sm font-medium text-slate-800">
-                                        <?= htmlspecialchars(trim((string) (($sessaoCard['tipo_sessao'] ?? 'Sessão') . ((string) ($sessaoCard['grau_sessao'] ?? '') !== '' ? ' · ' . $sessaoCard['grau_sessao'] : '')))) ?>
+                                        <?= htmlspecialchars(trim((string) (($sessaoCard['tipo_sessao'] ?? 'SessÃ£o') . ((string) ($sessaoCard['grau_sessao'] ?? '') !== '' ? ' Â· ' . $sessaoCard['grau_sessao'] : '')))) ?>
                                     </div>
                                 </div>
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                                     <div class="text-xs uppercase tracking-[0.18em] text-slate-500">Confirmados</div>
                                     <div class="mt-1 text-sm font-medium text-slate-800">
-                                        <?= (int) ($sessaoCard['total_confirmados'] ?? 0) ?> irmão(s)
+                                        <?= (int) ($sessaoCard['total_confirmados'] ?? 0) ?> irmÃ£o(s)
                                         <?php if ((int) ($sessaoCard['total_agape'] ?? 0) > 0): ?>
-                                            · <?= (int) ($sessaoCard['total_agape'] ?? 0) ?> com ágape
+                                            Â· <?= (int) ($sessaoCard['total_agape'] ?? 0) ?> com Ã¡gape
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -645,7 +645,7 @@ require __DIR__ . '/partials/erp_head.php';
                             <div class="mt-4 rounded-2xl border <?= $sessaoConfirmada ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-slate-50' ?> px-4 py-3">
                                 <div class="text-xs uppercase tracking-[0.18em] <?= $sessaoConfirmada ? 'text-emerald-700' : 'text-slate-500' ?>">Sua resposta</div>
                                 <div class="mt-1 text-sm font-semibold <?= $sessaoConfirmada ? 'text-emerald-800' : 'text-slate-700' ?>">
-                                    <?= htmlspecialchars($sessaoConfirmada ? 'Presença confirmada' : 'Ainda sem confirmação registrada') ?>
+                                    <?= htmlspecialchars($sessaoConfirmada ? 'PresenÃ§a confirmada' : 'Ainda sem confirmaÃ§Ã£o registrada') ?>
                                 </div>
                                 <div class="mt-1 text-xs text-slate-500"><?= htmlspecialchars((string) ($sessaoCard['descricao_agape'] ?? '')) ?></div>
                             </div>
@@ -654,11 +654,11 @@ require __DIR__ . '/partials/erp_head.php';
                                 <form method="POST" action="/dashboard#sessoes-loja" class="grid gap-3 sm:grid-cols-2">
                                     <input type="hidden" name="dashboard_action" value="sessao_confirmacao">
                                     <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoCard['id'] ?? 0) ?>">
-                                    <button type="submit" name="acao" value="confirmar" class="rounded-2xl bg-cobalto px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#163761]">Confirmar presença</button>
-                                    <button type="submit" name="acao" value="cancelar" class="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-rose-300 hover:text-rose-700">Cancelar confirmação</button>
+                                    <button type="submit" name="acao" value="confirmar" class="rounded-2xl bg-cobalto px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#163761]">Confirmar presenÃ§a</button>
+                                    <button type="submit" name="acao" value="cancelar" class="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-rose-300 hover:text-rose-700">Cancelar confirmaÃ§Ã£o</button>
                                 </form>
                                 <a href="<?= htmlspecialchars((string) ($sessaoCard['detalhe_href'] ?? '/dashboard#sessoes-loja')) ?>" class="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-cobalto hover:bg-white hover:text-cobalto">
-                                    <span>Abrir sessão</span>
+                                    <span>Abrir sessÃ£o</span>
                                     <span class="text-slate-400">Abrir</span>
                                 </a>
                             </div>
@@ -667,7 +667,7 @@ require __DIR__ . '/partials/erp_head.php';
 
                     <?php if ($dashboardSessoes === []): ?>
                         <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-6 text-sm text-slate-600 lg:col-span-2">
-                            Nenhuma sessão futura encontrada no momento. Assim que a Secretaria publicar a agenda, ela aparecerá aqui com ação direta.
+                            Nenhuma sessÃ£o futura encontrada no momento. Assim que a Secretaria publicar a agenda, ela aparecerÃ¡ aqui com aÃ§Ã£o direta.
                         </div>
                     <?php endif; ?>
                 </div>
@@ -687,7 +687,7 @@ require __DIR__ . '/partials/erp_head.php';
                                 <p class="mt-2 text-sm leading-6 text-slate-600"><?= htmlspecialchars($dashboardResumirTexto((string) ($dashboardRecadoPrincipal['conteudo'] ?? ''), 220)) ?></p>
                             </div>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600">Ainda não há recados recentes publicados para destaque.</div>
+                            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600">Ainda nÃ£o hÃ¡ recados recentes publicados para destaque.</div>
                         <?php endif; ?>
 
                         <?php foreach ($dashboardRecadosSecundarios as $recadoSecundario): ?>
@@ -701,27 +701,27 @@ require __DIR__ . '/partials/erp_head.php';
 
                 <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
                     <div class="border-b border-slate-200 bg-slate-50 px-6 py-5">
-                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Palavra do irmão</div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Palavra do irmÃ£o</div>
                         <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Palavra do dia</h2>
                     </div>
                     <div class="px-6 py-5">
                         <?php if ($dashboardPalavraIrmao !== ''): ?>
                             <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-slate-700"><?= nl2br(htmlspecialchars($dashboardResumirTexto($dashboardPalavraIrmao, 520))) ?></div>
-                            <a href="/chancelaria/efemerides" class="mt-4 inline-flex rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-cobalto hover:text-cobalto">Abrir efemérides completas</a>
+                            <a href="/chancelaria/efemerides" class="mt-4 inline-flex rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-cobalto hover:text-cobalto">Abrir efemÃ©rides completas</a>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600">A mensagem diária ainda não está disponível. Quando a Chancelaria atualizar as efemérides, ela aparecerá aqui.</div>
+                            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600">A mensagem diÃ¡ria ainda nÃ£o estÃ¡ disponÃ­vel. Quando a Chancelaria atualizar as efemÃ©rides, ela aparecerÃ¡ aqui.</div>
                         <?php endif; ?>
                     </div>
                 </article>
 
                 <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
                     <div class="border-b border-slate-200 bg-slate-50 px-6 py-5">
-                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Gestão</div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">GestÃ£o</div>
                         <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Nominata oficial</h2>
                     </div>
                     <div class="px-6 py-5">
-                        <p class="text-sm leading-6 text-slate-600">A nominata continua disponível como área de gestão, sem ocupar o espaço principal da abertura.</p>
-                        <a href="/admin/cargos" class="mt-4 inline-flex rounded-2xl bg-cobalto px-4 py-3 text-sm font-semibold text-white hover:bg-[#163761]">Abrir nominata e gestões</a>
+                        <p class="text-sm leading-6 text-slate-600">A nominata continua disponÃ­vel como Ã¡rea de gestÃ£o, sem ocupar o espaÃ§o principal da abertura.</p>
+                        <a href="/admin/cargos" class="mt-4 inline-flex rounded-2xl bg-cobalto px-4 py-3 text-sm font-semibold text-white hover:bg-[#163761]">Abrir nominata e gestÃµes</a>
                     </div>
                 </article>
             </aside>
@@ -729,22 +729,22 @@ require __DIR__ . '/partials/erp_head.php';
 
         <section class="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 bg-slate-50 px-6 py-6">
-                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Sessões de outras Lojas</div>
-                <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Sessões de outras Lojas</h2>
-                <p class="mt-2 text-sm text-slate-600">Aqui ficam os convites e compromissos de outras Lojas, sem tirar o foco da agenda principal da Renascença.</p>
+                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">SessÃµes de outras Lojas</div>
+                <h2 class="mt-2 text-2xl font-semibold text-erp-navy">SessÃµes de outras Lojas</h2>
+                <p class="mt-2 text-sm text-slate-600">Aqui ficam os convites e compromissos de outras Lojas, sem tirar o foco da agenda principal da RenascenÃ§a.</p>
             </div>
             <div class="grid gap-4 px-6 py-6 md:grid-cols-2 xl:grid-cols-3">
                 <?php if ($dashboardOutrasLojas !== []): ?>
                     <?php foreach ($dashboardOutrasLojas as $sessaoExterna): ?>
                         <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                             <div class="text-sm font-semibold text-slate-900"><?= htmlspecialchars((string) ($sessaoExterna['loja'] ?? 'Outra Loja')) ?></div>
-                            <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($sessaoExterna['titulo'] ?? 'Sessão')) ?></div>
-                            <div class="mt-2 text-xs text-slate-500"><?= htmlspecialchars($formatarDataHoraDashboard($sessaoExterna['data_hora_inicio'] ?? null)) ?></div>
+                            <div class="mt-1 text-sm text-slate-600"><?= htmlspecialchars((string) ($sessaoExterna['titulo'] ?? 'SessÃ£o')) ?></div>
+                            <div class="mt-2 text-xs text-slate-500"><?= htmlspecialchars($formatarDataHoraPainel($sessaoExterna['data_hora_inicio'] ?? null)) ?></div>
                         </article>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600 md:col-span-2 xl:col-span-3">
-                        Ainda não há sessões externas cadastradas para exibir aqui.
+                        Ainda nÃ£o hÃ¡ sessÃµes externas cadastradas para exibir aqui.
                     </div>
                 <?php endif; ?>
             </div>
@@ -800,9 +800,9 @@ require __DIR__ . '/partials/erp_head.php';
 
         <section class="mt-8 rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
             <div>
-                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Acesso rápido</div>
+                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Acesso rÃ¡pido</div>
                 <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Atalhos do dia a dia</h2>
-                <p class="mt-2 text-sm text-slate-600">Use estes atalhos para chegar mais rápido ao que você mais consulta.</p>
+                <p class="mt-2 text-sm text-slate-600">Use estes atalhos para chegar mais rÃ¡pido ao que vocÃª mais consulta.</p>
             </div>
             <div class="mt-5 flex flex-wrap gap-3">
                 <?php foreach ($atalhos as $item): ?>
@@ -815,3 +815,4 @@ require __DIR__ . '/partials/erp_head.php';
     <?php endif; ?>
 </div>
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
+

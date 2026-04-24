@@ -19,7 +19,7 @@ $appShellSidebarSections = [
             ['label' => 'Conteudo publico', 'href' => '/admin/conteudo-publico'],
             ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
             ['label' => 'Parametros da Loja', 'href' => '/admin/loja'],
-            ['label' => 'Dashboard', 'href' => '/dashboard'],
+            ['label' => 'Painel', 'href' => '/dashboard'],
         ],
     ],
 ];
@@ -221,4 +221,5 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 </script>
 
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+
 

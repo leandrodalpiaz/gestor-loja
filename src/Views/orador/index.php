@@ -16,7 +16,7 @@ $formatarData = static function (?string $valor): string {
 
 $tituloSessao = static function (?array $sessao): string {
     if (!$sessao) {
-        return 'Nenhuma sessão em foco';
+        return 'Nenhuma sessÃ£o em foco';
     }
     $titulo = trim((string) ($sessao['titulo'] ?? ''));
     if ($titulo !== '') {
@@ -29,7 +29,7 @@ $tituloSessao = static function (?array $sessao): string {
 $erpPageTitle = 'Orador - Gestor de Loja';
 $appShellEyebrow = 'Orador';
 $appShellTitle = 'Pauta ritual, leitura e visitantes';
-$appShellDescription = 'Painel consolidado para apoiar a palavra a bem da ordem, a leitura ritual e a menção correta de visitantes, cargos e eventos registrados na sessão.';
+$appShellDescription = 'Painel consolidado para apoiar a palavra a bem da ordem, a leitura ritual e a menÃ§Ã£o correta de visitantes, cargos e eventos registrados na sessÃ£o.';
 $appShellActiveHref = '/orador';
 $appShellActions = [
     ['label' => 'Abrir miniapp', 'href' => '/miniapp/orador'],
@@ -44,7 +44,7 @@ $appShellSidebarSections = [
     [
         'title' => 'Navegacao',
         'items' => [
-            ['label' => 'Dashboard', 'href' => '/dashboard'],
+            ['label' => 'Painel', 'href' => '/dashboard'],
         ],
     ],
 ];
@@ -61,7 +61,7 @@ require __DIR__ . '/../partials/erp_head.php';
 
         <?php
         $dashboard = [
-            'title' => 'Dashboard do Orador',
+            'title' => 'Painel do Orador',
             'subtitle' => 'Painel especifico do cargo com integracao ao miniapp.',
             'meta' => ['Perfil: operacional de sessao', 'Miniapp como extensao do cargo'],
             'actions' => [
@@ -73,10 +73,10 @@ require __DIR__ . '/../partials/erp_head.php';
                     ['label' => 'Visitantes resumidos', 'value' => (string) count($visitantesResumo)],
                     ['label' => 'Cargos capturados', 'value' => (string) count($cargosSessao)],
                 ], 'list' => array_map(static fn (array $v): array => ['item' => (string) ($v['nome'] ?? 'Visitante'), 'meta' => (string) ($v['linha_resumida'] ?? ''), 'status' => 'Leitura'], array_slice($visitantesResumo, 0, 4))],
-                ['title' => 'Resumo operacional', 'subtitle' => 'Eventos, lembretes e apoio ritual.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'Eventos da sessao', 'value' => (string) count($eventosSessao)],
+                ['title' => 'Resumo operacional', 'subtitle' => 'Atividades, lembretes e apoio ritual.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Atividades da sessao', 'value' => (string) count($eventosSessao)],
                     ['label' => 'Lembretes', 'value' => (string) count($lembretes)],
-                ], 'list' => array_map(static fn (string $l): array => ['item' => $l, 'meta' => 'Roteiro do cargo', 'status' => 'Ativo'], array_slice($lembretes, 0, 4))],
+                ], 'list' => array_map(static fn (string $l): array => ['item' => $l, 'meta' => 'Roteiro do cargo', 'status' => 'Regular'], array_slice($lembretes, 0, 4))],
             ],
             'alerts' => [['title' => 'Miniapp contextual', 'text' => 'O miniapp permanece como extensao do perfil do Orador.', 'tone' => 'success']],
             'activity' => array_map(static fn (array $s): array => ['item' => 'Sessao: ' . $tituloSessao($s), 'meta' => $formatarData($s['data_hora_inicio'] ?? null)], array_slice($sessoes, 0, 4)),
@@ -92,12 +92,12 @@ require __DIR__ . '/../partials/erp_head.php';
         <form method="get" action="/orador" class="mb-6 rounded-2xl border border-erp-border bg-white p-5 shadow-sm">
             <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div class="w-full lg:max-w-md">
-                    <label for="sessao_id" class="mb-2 block text-sm font-medium text-erp-text">Sessão em foco</label>
+                    <label for="sessao_id" class="mb-2 block text-sm font-medium text-erp-text">SessÃ£o em foco</label>
                     <select id="sessao_id" name="sessao_id" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-erp-text">
                         <option value="">Usar proxima sessao publicada</option>
                         <?php foreach ($sessoes as $sessao): ?>
                             <option value="<?= (int) ($sessao['id'] ?? 0) ?>" <?= (int) ($sessaoEmFoco['id'] ?? 0) === (int) ($sessao['id'] ?? 0) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($tituloSessao($sessao)) ?> · <?= htmlspecialchars($formatarData($sessao['data_hora_inicio'] ?? null)) ?>
+                                <?= htmlspecialchars($tituloSessao($sessao)) ?> Â· <?= htmlspecialchars($formatarData($sessao['data_hora_inicio'] ?? null)) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -111,7 +111,7 @@ require __DIR__ . '/../partials/erp_head.php';
                 <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div class="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                            <p class="text-xs uppercase tracking-[0.22em] text-erp-gold">Sessão em foco</p>
+                            <p class="text-xs uppercase tracking-[0.22em] text-erp-gold">SessÃ£o em foco</p>
                             <h2 class="mt-2 font-sans text-2xl text-erp-navy"><?= htmlspecialchars($tituloSessao($sessaoEmFoco)) ?></h2>
                             <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($formatarData($sessaoEmFoco['data_hora_inicio'] ?? null)) ?></p>
                         </div>
@@ -146,14 +146,14 @@ require __DIR__ . '/../partials/erp_head.php';
                             <?php endforeach; ?>
                         </div>
                     <?php else: ?>
-                        <div class="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">Nenhum visitante resumido foi registrado para a sessão em foco.</div>
+                        <div class="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">Nenhum visitante resumido foi registrado para a sessÃ£o em foco.</div>
                     <?php endif; ?>
                 </article>
 
                 <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div class="grid gap-6 lg:grid-cols-2">
                         <div>
-                            <h2 class="font-sans text-2xl text-erp-navy">Cargos e composição</h2>
+                            <h2 class="font-sans text-2xl text-erp-navy">Cargos e composiÃ§Ã£o</h2>
                             <p class="mt-2 text-sm text-slate-700">Apoio rapido para leitura coerente da ocupacao da sessao.</p>
                             <?php if ($cargosSessao !== []): ?>
                                 <div class="mt-4 space-y-3">
@@ -166,19 +166,19 @@ require __DIR__ . '/../partials/erp_head.php';
                                     <?php endforeach; ?>
                                 </div>
                             <?php else: ?>
-                                <div class="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">Sem composição de cargos capturada no balaustre.</div>
+                                <div class="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">Sem composiÃ§Ã£o de cargos capturada no balaustre.</div>
                             <?php endif; ?>
                         </div>
 
                         <div>
-                            <h2 class="font-sans text-2xl text-erp-navy">Eventos registrados</h2>
+                            <h2 class="font-sans text-2xl text-erp-navy">Atividades registrados</h2>
                             <p class="mt-2 text-sm text-slate-700">Congressos, palestras e outros registros que podem merecer mencao.</p>
                             <?php if ($eventosSessao !== []): ?>
                                 <div class="mt-4 space-y-3">
                                     <?php foreach ($eventosSessao as $evento): ?>
                                         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                             <div class="flex items-center justify-between gap-2">
-                                                <div class="font-semibold text-erp-navy"><?= htmlspecialchars((string) ($evento['titulo'] ?? 'Evento')) ?></div>
+                                                <div class="font-semibold text-erp-navy"><?= htmlspecialchars((string) ($evento['titulo'] ?? 'Atividade')) ?></div>
                                                 <span class="rounded-full bg-rose-800/10 px-3 py-1 text-xs font-medium uppercase tracking-wide text-rose-800"><?= htmlspecialchars((string) ($evento['tipo'] ?? 'evento')) ?></span>
                                             </div>
                                             <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($evento['linha'] ?? '')) ?></div>
@@ -228,3 +228,4 @@ require __DIR__ . '/../partials/erp_head.php';
         </div>
 
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+

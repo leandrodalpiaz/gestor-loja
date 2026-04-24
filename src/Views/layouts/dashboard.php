@@ -1,7 +1,7 @@
 <?php
 $dashboard = is_array($dashboard ?? null) ? $dashboard : [];
 $dashboardHeader = [
-    'title' => (string) ($dashboard['title'] ?? 'Dashboard'),
+    'title' => (string) ($dashboard['title'] ?? 'Painel'),
     'subtitle' => (string) ($dashboard['subtitle'] ?? ''),
     'meta' => is_array($dashboard['meta'] ?? null) ? $dashboard['meta'] : [],
 ];
@@ -39,3 +39,4 @@ $dashboardRenderers = is_array($dashboardRenderers ?? null) ? $dashboardRenderer
     <?php require __DIR__ . '/../components/dashboard_activity.php'; ?>
     <?php require __DIR__ . '/../components/dashboard_links.php'; ?>
 </div>
+

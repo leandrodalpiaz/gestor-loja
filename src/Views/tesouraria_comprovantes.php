@@ -15,7 +15,7 @@ $pixBeneficiario = (string) ($configuracaoLoja['pix_beneficiario'] ?? '');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Validação de Comprovantes - Tesouraria</title>
+    <title>ValidaÃ§Ã£o de Comprovantes - Tesouraria</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @media (min-width: 1440px) {
@@ -41,9 +41,9 @@ $pixBeneficiario = (string) ($configuracaoLoja['pix_beneficiario'] ?? '');
                 <div>
                     <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Tesouraria</p>
                     <h1 class="mt-2 text-3xl font-semibold">Caixa de Entrada - Comprovantes PIX</h1>
-                    <p class="mt-2 max-w-3xl text-sm text-slate-200">Validação clara dos comprovantes recebidos, com prioridade total para pendências.</p>
+                    <p class="mt-2 max-w-3xl text-sm text-slate-200">ValidaÃ§Ã£o clara dos comprovantes recebidos, com prioridade total para pendÃªncias.</p>
                 </div>
-                <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao dashboard</a>
+                <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao Painel</a>
             </div>
         </header>
 
@@ -54,13 +54,13 @@ $pixBeneficiario = (string) ($configuracaoLoja['pix_beneficiario'] ?? '');
             </article>
             <article class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm md:col-span-2">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">PIX oficial da Loja</p>
-                <p class="mt-2 text-sm text-slate-700"><strong><?php echo htmlspecialchars($pixTipo); ?> <?php echo htmlspecialchars($pixValor); ?></strong><?php if ($pixBeneficiario !== ''): ?> • <?php echo htmlspecialchars($pixBeneficiario); ?><?php endif; ?></p>
+                <p class="mt-2 text-sm text-slate-700"><strong><?php echo htmlspecialchars($pixTipo); ?> <?php echo htmlspecialchars($pixValor); ?></strong><?php if ($pixBeneficiario !== ''): ?> â€¢ <?php echo htmlspecialchars($pixBeneficiario); ?><?php endif; ?></p>
             </article>
         </section>
 
         <div class="mb-6 flex flex-wrap gap-2 border-b border-gray-200 pb-2">
             <button type="button" data-status="pendente" onclick="filtrarStatus('pendente')" class="tab-status rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
-                Pendentes (<span id="count-pendentes">0</span>)
+                Em analises (<span id="count-pendentes">0</span>)
             </button>
             <button type="button" data-status="aprovado" onclick="filtrarStatus('aprovado')" class="tab-status rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
                 Aprovados (<span id="count-aprovados">0</span>)
@@ -148,7 +148,7 @@ $pixBeneficiario = (string) ($configuracaoLoja['pix_beneficiario'] ?? '');
 
                 <div>
                     <label class="mb-1 block text-sm font-medium">Rotulo do pagamento</label>
-                    <input type="text" id="rotulo-pagamento" class="w-full rounded border border-gray-300 px-3 py-2" placeholder="Ex.: Mensalidade 05/2026 + Biblioteca">
+                    <input type="text" id="rotulo-pagamento" class="w-full rounded border border-gray-300 px-3 py-2" placeholder="Ex.: Contribuicao mensal 05/2026 + Biblioteca">
                 </div>
 
                 <div>
@@ -317,7 +317,7 @@ $pixBeneficiario = (string) ($configuracaoLoja['pix_beneficiario'] ?? '');
                 parcelas.forEach((parcela) => {
                     const option = document.createElement('option');
                     option.value = parcela.id;
-                    option.textContent = `${parcela.titulo} • ${parcela.competencia_label || '-'} • ${formatarMoeda(parcela.valor_previsto)}`;
+                    option.textContent = `${parcela.titulo} â€¢ ${parcela.competencia_label || '-'} â€¢ ${formatarMoeda(parcela.valor_previsto)}`;
                     if (String(selecionada) === String(parcela.id)) {
                         option.selected = true;
                     }
@@ -406,3 +406,4 @@ $pixBeneficiario = (string) ($configuracaoLoja['pix_beneficiario'] ?? '');
     </script>
 </body>
 </html>
+

@@ -7,7 +7,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 $erpPageTitle = 'Aprovacao de acesso';
 $appShellEyebrow = 'Secretaria';
 $appShellTitle = 'Acessos';
-$appShellDescription = 'Aprovação e bloqueio de acessos ao sistema (pendente/ativo/inativo).';
+$appShellDescription = 'AprovaÃ§Ã£o e bloqueio de acessos ao sistema (pendente/ativo/inativo).';
 $appShellActiveHref = '/admin/acessos';
 $appShellActions = [
     ['label' => 'Voltar ao painel', 'href' => '/dashboard', 'primary' => true],
@@ -20,9 +20,9 @@ $appShellSidebarSections = [
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
             ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
             ['label' => 'Aprovacao de acessos', 'href' => '/admin/acessos'],
-            ['label' => 'Sessões', 'href' => '/secretaria'],
-            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
-            ['label' => 'Dashboard', 'href' => '/dashboard'],
+            ['label' => 'SessÃµes', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votaÃ§Ã£o', 'href' => '/secretaria/votacao'],
+            ['label' => 'Painel', 'href' => '/dashboard'],
         ],
     ],
 ];
@@ -33,7 +33,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
 <section class="rounded-2xl border border-erpBorder bg-white">
     <div class="border-b border-erpBorder px-6 py-5">
-        <div class="text-sm font-semibold text-erpNavy">Pendentes de aprovacao</div>
+        <div class="text-sm font-semibold text-erpNavy">Em analises de aprovacao</div>
         <div class="mt-1 text-sm text-erpMuted">Somente secretario/admin devem concluir esta etapa.</div>
     </div>
 
@@ -58,7 +58,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <div>
                             <div class="text-sm font-semibold text-erpText"><?= htmlspecialchars((string) ($item['nome_historico'] ?? $item['nome'] ?? 'Sem nome')) ?></div>
                             <div class="mt-1 text-sm text-erpMuted">CIM: <?= htmlspecialchars((string) ($item['cim'] ?? '-')) ?></div>
-                            <div class="mt-1 text-xs text-erpMuted">Telegram: <?= htmlspecialchars((string) ($item['telegram_id'] ?? 'não informado')) ?></div>
+                            <div class="mt-1 text-xs text-erpMuted">Telegram: <?= htmlspecialchars((string) ($item['telegram_id'] ?? 'nÃ£o informado')) ?></div>
                         </div>
                         <div class="flex flex-col gap-2 sm:flex-row">
                             <form method="POST" action="/admin/acessos/atualizar">
@@ -84,3 +84,4 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 </section>
 
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+

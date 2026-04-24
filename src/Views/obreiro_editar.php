@@ -6,9 +6,9 @@ if (!isset($_SESSION["usuario_logado"])) {
 
 $appTitle = "Editar Obreiro - Secretaria";
 $acessosStatus = [
-    'pendente' => 'Pendente',
-    'ativo' => 'Ativo',
-    'inativo' => 'Inativo',
+    'pendente' => 'Em analise',
+    'ativo' => 'Regular',
+    'inativo' => 'Afastado',
 ];
 $estadosCivis = [
     'solteiro' => 'Solteiro',
@@ -17,7 +17,7 @@ $estadosCivis = [
     'separado' => 'Separado',
     'viuvo' => 'Viuvo',
     'uniao_estavel' => 'Uniao estavel',
-    'nao_informado' => 'Não informado',
+    'nao_informado' => 'NÃ£o informado',
 ];
 $escolaridades = [
     'fundamental_incompleto' => 'Fundamental incompleto',
@@ -30,7 +30,7 @@ $escolaridades = [
     'pos_graduacao' => 'Pos-graduacao',
     'mestrado' => 'Mestrado',
     'doutorado' => 'Doutorado',
-    'nao_informado' => 'Não informado',
+    'nao_informado' => 'NÃ£o informado',
 ];
 $faixasRenda = [
     'ate_1_sm' => 'Ate 1 salario minimo',
@@ -38,16 +38,16 @@ $faixasRenda = [
     'de_3_a_5_sm' => 'De 3 a 5 salarios minimos',
     'de_5_a_10_sm' => 'De 5 a 10 salarios minimos',
     'acima_10_sm' => 'Acima de 10 salarios minimos',
-    'nao_informado' => 'Não informado',
+    'nao_informado' => 'NÃ£o informado',
 ];
 $situacoesQuadro = [
-    'ativo' => 'Ativo',
+    'ativo' => 'Regular',
     'licenciado' => 'Licenciado',
     'suspenso' => 'Suspenso',
     'desligado' => 'Desligado',
     'falecido' => 'Falecido',
     'oriente_eterno' => 'Oriente Eterno',
-    'inativo' => 'Inativo',
+    'inativo' => 'Afastado',
 ];
 ?>
 <!DOCTYPE html>
@@ -117,7 +117,7 @@ $situacoesQuadro = [
             <?php endif; ?>
 
             <?php if (isset($_GET['erro'])): ?>
-                <div class="mx-6 mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">Não foi possível salvar. Verifique se o CIM informado já existe para outro obreiro.</div>
+                <div class="mx-6 mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">NÃ£o foi possÃ­vel salvar. Verifique se o CIM informado jÃ¡ existe para outro obreiro.</div>
             <?php endif; ?>
 
             <form action="/obreiros/atualizar" method="POST" class="p-6 space-y-8">
@@ -199,7 +199,7 @@ $situacoesQuadro = [
                             <div class="text-xs uppercase tracking-wide text-gray-500 mb-2">Cargos oficiais (nominata)</div>
                             <div class="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
                                 <?= !empty($obreiro['cargos_codigos']) ? htmlspecialchars(implode(', ', (array) $obreiro['cargos_codigos'])) : 'Sem cargo oficial ativo' ?>
-                                <span class="text-gray-400">·</span>
+                                <span class="text-gray-400">Â·</span>
                                 <a href="/admin/cargos" class="text-cobalto underline">Abrir nominata</a>
                             </div>
                         </div>
@@ -310,7 +310,7 @@ $situacoesQuadro = [
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Telegram ID</label>
                             <input type="text" value="<?= htmlspecialchars($obreiro['telegram_id'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" readonly>
-                            <div class="mt-1 text-xs text-gray-500">Vínculo controlado apenas pelo bot/onboarding (não editável aqui).</div>
+                            <div class="mt-1 text-xs text-gray-500">VÃ­nculo controlado apenas pelo bot/onboarding (nÃ£o editÃ¡vel aqui).</div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Login na Potencia</label>
@@ -332,7 +332,7 @@ $situacoesQuadro = [
                 <div class="flex items-center">
                     <input type="hidden" name="ativo" value="0">
                     <input type="checkbox" id="ativo" name="ativo" value="1" <?= ($obreiro['ativo'] ?? true) ? 'checked' : '' ?> class="h-4 w-4 text-cobalto border-gray-300 rounded">
-                    <label for="ativo" class="ml-2 block text-sm text-gray-900 font-medium">Cadastro habilitado no sistema</label>
+                    <label for="ativo" class="ml-2 block text-sm text-gray-900 font-medium">Registro habilitado no sistema</label>
                 </div>
 
                 <div class="border-t border-gray-100 bg-gray-50 -my-6 -mx-6 mt-2 p-6 flex justify-end gap-3 flex-col sm:flex-row rounded-b-xl">
@@ -348,4 +348,5 @@ $situacoesQuadro = [
     </main>
 </body>
 </html>
+
 

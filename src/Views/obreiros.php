@@ -55,8 +55,8 @@ $appShellSidebarSections = [
         'title' => 'Secretaria',
         'items' => [
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
-            ['label' => 'Sessões', 'href' => '/secretaria'],
-            ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
+            ['label' => 'SessÃµes', 'href' => '/secretaria'],
+            ['label' => 'Balaustres / votaÃ§Ã£o', 'href' => '/secretaria/votacao'],
             ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
             ['label' => 'Acessos', 'href' => '/admin/acessos'],
             ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
@@ -242,7 +242,7 @@ require __DIR__ . '/partials/erp_head.php';
                                 <?php foreach ($obreiros as $obreiro): ?>
                                     <?php
                                     $nomeExibicao = (string) ($obreiro['nome_historico'] ?: $obreiro['nome']);
-                                    $situacao = (string) ($obreiro['situacao_quadro'] ?? 'Ativo');
+                                    $situacao = (string) ($obreiro['situacao_quadro'] ?? 'Regular');
                                     $situacaoVisual = match (mb_strtolower(trim($situacao), 'UTF-8')) {
                                         'ativo' => 'Regular',
                                         'inativo' => 'Afastado',
@@ -255,7 +255,7 @@ require __DIR__ . '/partials/erp_head.php';
                                     <tr class="align-top hover:bg-slate-50/70">
                                         <td class="px-4 py-3">
                                             <div class="font-semibold text-erp-text"><?= htmlspecialchars($nomeExibicao) ?></div>
-                                            <div class="mt-1 text-xs text-erp-muted">CIM <?= htmlspecialchars((string) ($obreiro['cim'] ?? '-')) ?> · <?= htmlspecialchars((string) ($obreiro['grau'] ?? 'Não informado')) ?></div>
+                                            <div class="mt-1 text-xs text-erp-muted">CIM <?= htmlspecialchars((string) ($obreiro['cim'] ?? '-')) ?> Â· <?= htmlspecialchars((string) ($obreiro['grau'] ?? 'NÃ£o informado')) ?></div>
                                         </td>
                                         <td class="px-4 py-3">
                                             <span class="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
@@ -338,7 +338,7 @@ require __DIR__ . '/partials/erp_head.php';
                                     <div class="flex flex-wrap items-center gap-2">
                                         <h3 class="text-lg font-bold text-gray-900"><?= htmlspecialchars($nomeExibicao) ?></h3>
                                         <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-                                            <?= htmlspecialchars((string) ($obreiro['grau'] ?? 'Não informado')) ?>
+                                            <?= htmlspecialchars((string) ($obreiro['grau'] ?? 'NÃ£o informado')) ?>
                                         </span>
                                         <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 border border-blue-100">
                                             <?= htmlspecialchars($situacaoVisual) ?>
@@ -504,3 +504,4 @@ require __DIR__ . '/partials/erp_head.php';
         })();
     </script>
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
+

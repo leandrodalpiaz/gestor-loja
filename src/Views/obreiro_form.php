@@ -14,7 +14,7 @@ $estadosCivis = [
     'separado' => 'Separado',
     'viuvo' => 'Viuvo',
     'uniao_estavel' => 'Uniao estavel',
-    'nao_informado' => 'Não informado',
+    'nao_informado' => 'NÃ£o informado',
 ];
 $escolaridades = [
     'fundamental_incompleto' => 'Fundamental incompleto',
@@ -27,7 +27,7 @@ $escolaridades = [
     'pos_graduacao' => 'Pos-graduacao',
     'mestrado' => 'Mestrado',
     'doutorado' => 'Doutorado',
-    'nao_informado' => 'Não informado',
+    'nao_informado' => 'NÃ£o informado',
 ];
 $faixasRenda = [
     'ate_1_sm' => 'Ate 1 salario minimo',
@@ -35,16 +35,16 @@ $faixasRenda = [
     'de_3_a_5_sm' => 'De 3 a 5 salarios minimos',
     'de_5_a_10_sm' => 'De 5 a 10 salarios minimos',
     'acima_10_sm' => 'Acima de 10 salarios minimos',
-    'nao_informado' => 'Não informado',
+    'nao_informado' => 'NÃ£o informado',
 ];
 $situacoesQuadro = [
-    'ativo' => 'Ativo',
+    'ativo' => 'Regular',
     'licenciado' => 'Licenciado',
     'suspenso' => 'Suspenso',
     'desligado' => 'Desligado',
     'falecido' => 'Falecido',
     'oriente_eterno' => 'Oriente Eterno',
-    'inativo' => 'Inativo',
+    'inativo' => 'Afastado',
 ];
 ?>
 <!DOCTYPE html>
@@ -106,7 +106,7 @@ $situacoesQuadro = [
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="p-6 border-b border-gray-100 bg-gray-50">
                 <h2 class="text-xl font-bold text-cobalto">Ficha de cadastro</h2>
-                <p class="text-sm text-gray-500 mt-1">Cadastro reforcado para relatórios individuais, estatisticos e trilha de situacao do quadro.</p>
+                <p class="text-sm text-gray-500 mt-1">Registro reforcado para relatÃ³rios individuais, estatisticos e trilha de situacao do quadro.</p>
             </div>
 
             <form action="/obreiros/salvar" method="POST" class="p-6 space-y-8">
@@ -316,4 +316,5 @@ $situacoesQuadro = [
     </main>
 </body>
 </html>
+
 

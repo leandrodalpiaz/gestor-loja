@@ -1,6 +1,6 @@
 <?php
 $header = is_array($dashboardHeader ?? null) ? $dashboardHeader : [];
-$title = trim((string) ($header['title'] ?? 'Dashboard'));
+$title = trim((string) ($header['title'] ?? 'Painel'));
 $subtitle = trim((string) ($header['subtitle'] ?? ''));
 $meta = is_array($header['meta'] ?? null) ? $header['meta'] : [];
 ?>
@@ -18,3 +18,4 @@ $meta = is_array($header['meta'] ?? null) ? $header['meta'] : [];
         </div>
     <?php endif; ?>
 </section>
+

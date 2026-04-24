@@ -4,22 +4,22 @@ $configuracaoLoja = $configuracaoLoja ?? [];
 $formatCurrency = static function ($value): string {
     return number_format((float) $value, 2, ',', '.');
 };
-$nomeLoja = trim((string) ($configuracaoLoja['nome_loja'] ?? 'Renascença'));
+$nomeLoja = trim((string) ($configuracaoLoja['nome_loja'] ?? 'RenascenÃ§a'));
 $numeroLoja = trim((string) ($configuracaoLoja['numero_loja'] ?? '270'));
 $tituloTratamento = trim((string) ($configuracaoLoja['titulo_tratamento'] ?? 'Aug Resp Loj Simb'));
 $oriente = trim((string) ($configuracaoLoja['oriente'] ?? (($configuracaoLoja['cidade'] ?? 'Arroio do Sal') . ' / ' . ($configuracaoLoja['uf'] ?? 'RS'))));
 $dataFundacao = !empty($configuracaoLoja['data_fundacao']) ? date('d/m/Y', strtotime((string) $configuracaoLoja['data_fundacao'])) : '';
-$nomeIrmao = (string) ($parcelaRecibo['obreiro_nome'] ?? 'Irmão');
-$tituloPagamento = (string) ($parcelaRecibo['titulo'] ?? 'Recebimento');
+$nomeIrmao = (string) ($parcelaRecibo['obreiro_nome'] ?? 'IrmÃ£o');
+$tituloContribuicao = (string) ($parcelaRecibo['titulo'] ?? 'Recebimento');
 $tipoObrigacao = strtolower((string) ($parcelaRecibo['tipo_obrigacao'] ?? 'outra'));
 $categoriaNome = (string) ($parcelaRecibo['categoria_nome'] ?? '');
 $competencia = (string) ($parcelaRecibo['competencia_label'] ?? '');
 $valorPago = (float) ($parcelaRecibo['valor_previsto'] ?? 0);
-$dataPagamento = !empty($parcelaRecibo['pago_em']) ? date('d/m/Y', strtotime((string) $parcelaRecibo['pago_em'])) : date('d/m/Y');
+$dataContribuicao = !empty($parcelaRecibo['pago_em']) ? date('d/m/Y', strtotime((string) $parcelaRecibo['pago_em'])) : date('d/m/Y');
 $numeroRecibo = str_pad((string) ($parcelaRecibo['lancamento_id'] ?? $parcelaRecibo['id'] ?? 0), 5, '0', STR_PAD_LEFT);
 
 $campos = [
-    'Mensalidade' => '',
+    'Contribuicao mensal' => '',
     'Iniciacao' => '',
     'Elevacao' => '',
     'Exaltacao' => '',
@@ -27,15 +27,15 @@ $campos = [
 ];
 
 if ($tipoObrigacao === 'mensalidade') {
-    $campos['Mensalidade'] = $competencia !== '' ? 'Ref. ' . $competencia : $tituloPagamento;
-} elseif (str_contains($tituloPagamento, 'Inici')) {
-    $campos['Iniciacao'] = $tituloPagamento;
-} elseif (str_contains($tituloPagamento, 'Eleva')) {
-    $campos['Elevacao'] = $tituloPagamento;
-} elseif (str_contains($tituloPagamento, 'Exalta')) {
-    $campos['Exaltacao'] = $tituloPagamento;
+    $campos['Contribuicao mensal'] = $competencia !== '' ? 'Ref. ' . $competencia : $tituloContribuicao;
+} elseif (str_contains($tituloContribuicao, 'Inici')) {
+    $campos['Iniciacao'] = $tituloContribuicao;
+} elseif (str_contains($tituloContribuicao, 'Eleva')) {
+    $campos['Elevacao'] = $tituloContribuicao;
+} elseif (str_contains($tituloContribuicao, 'Exalta')) {
+    $campos['Exaltacao'] = $tituloContribuicao;
 } else {
-    $campos['Outros recebimentos'] = trim($tituloPagamento . ($categoriaNome !== '' ? ' - ' . $categoriaNome : ''));
+    $campos['Outros recebimentos'] = trim($tituloContribuicao . ($categoriaNome !== '' ? ' - ' . $categoriaNome : ''));
 }
 ?>
 <!DOCTYPE html>
@@ -109,7 +109,7 @@ if ($tipoObrigacao === 'mensalidade') {
 
         <div class="mt-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div class="text-lg">
-                Arroio do Sal, <?php echo htmlspecialchars($dataPagamento); ?>
+                Arroio do Sal, <?php echo htmlspecialchars($dataContribuicao); ?>
             </div>
             <div class="min-w-[240px] text-center">
                 <div class="border-b border-stone-500 pb-2 text-lg uppercase"><?php echo htmlspecialchars($tesoureiroNome ?? 'Tesoureiro'); ?></div>
@@ -119,4 +119,5 @@ if ($tipoObrigacao === 'mensalidade') {
     </main>
 </body>
 </html>
+
 

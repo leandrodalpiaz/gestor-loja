@@ -106,8 +106,8 @@ foreach ($linhasMesAtual as $linha) {
     $painelGeral[$obreiroIdLinha]['itens'][] = $linha + ['esta_vencido' => $estaVencido];
 }
 
-// Garante consistência do indicador "falta no mês": quando não existir mensalidade
-// lançada no mês vigente para o obreiro, considera a mensalidade padrão como pendente.
+// Garante consistÃªncia do indicador "falta no mÃªs": quando nÃ£o existir mensalidade
+// lanÃ§ada no mÃªs vigente para o obreiro, considera a mensalidade padrÃ£o como pendente.
 foreach ($obreirosPainel as $obreiroBase) {
     $obreiroIdBase = (string) ($obreiroBase['id'] ?? '');
     if ($obreiroIdBase === '') {
@@ -145,7 +145,7 @@ foreach ($obreirosPainel as $obreiroBase) {
         }
         $painelGeral[$obreiroIdBase]['itens'][] = [
             'parcela_id' => 0,
-            'titulo' => 'Mensalidade da Loja',
+            'titulo' => 'Contribuicao mensal da Loja',
             'tipo_obrigacao' => 'mensalidade',
             'valor_previsto' => $mensalidadePadrao,
             'vencimento' => $vencimentoPadrao,
@@ -190,7 +190,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acompanhamento Financeiro - Tesouraria</title>
+    <title>Acompanhamento Tesouraria - Tesouraria</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @media (min-width: 1440px) {
@@ -219,8 +219,8 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                 <p class="mt-2 text-sm text-slate-300">Panorama geral do passado e do mes vigente, com leitura intuitiva de quem esta a prumo e quem ja tem pendencia vencida.</p>
             </div>
             <div class="flex flex-wrap gap-3 text-sm">
-                <a href="/dashboard" class="rounded-full border border-white/15 px-4 py-2 hover:bg-white/10">Dashboard</a>
-                <a href="/tesouraria/caixa" class="rounded-full border border-white/15 px-4 py-2 hover:bg-white/10">Livro-caixa</a>
+                <a href="/dashboard" class="rounded-full border border-white/15 px-4 py-2 hover:bg-white/10">Painel</a>
+                <a href="/tesouraria/caixa" class="rounded-full border border-white/15 px-4 py-2 hover:bg-white/10">Caixa da Loja</a>
                 <a href="/tesouraria/comprovantes" class="rounded-full border border-white/15 px-4 py-2 hover:bg-white/10">Comprovantes PIX</a>
             </div>
         </div>
@@ -230,22 +230,22 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
         <div class="rounded-[1.5rem] bg-white p-5 shadow-sm">
             <div class="text-xs uppercase tracking-[0.16em] text-slate-400">Resumo do passado</div>
             <div class="mt-2 text-3xl font-semibold"><?php echo $formatCurrency($historicoGeral['total_passado'] ?? 0); ?></div>
-            <div class="mt-2 text-sm text-slate-700">Receitas registradas antes de <?php echo htmlspecialchars($tituloMesAtual); ?>.</div>
+            <div class="mt-2 text-sm text-slate-700">Entradas registradas antes de <?php echo htmlspecialchars($tituloMesAtual); ?>.</div>
         </div>
         <div class="rounded-[1.5rem] bg-emerald-50 p-5 shadow-sm">
-            <div class="text-xs uppercase tracking-[0.16em] text-emerald-500">Pago no mês vigente</div>
+            <div class="text-xs uppercase tracking-[0.16em] text-emerald-500">Pago no mÃªs vigente</div>
             <div class="mt-2 text-3xl font-semibold text-emerald-700"><?php echo $formatCurrency($recebidoMes); ?></div>
             <div class="mt-2 text-sm text-emerald-700"><?php echo htmlspecialchars($competenciaAtual); ?>.</div>
         </div>
         <div class="rounded-[1.5rem] bg-amber-50 p-5 shadow-sm">
-            <div class="text-xs uppercase tracking-[0.16em] text-amber-500">Ainda falta no mês</div>
+            <div class="text-xs uppercase tracking-[0.16em] text-amber-500">Ainda falta no mÃªs</div>
             <div class="mt-2 text-3xl font-semibold text-amber-700"><?php echo $formatCurrency($faltanteMes); ?></div>
-            <div class="mt-2 text-sm text-amber-700">Obrigações abertas do mês vigente.</div>
+            <div class="mt-2 text-sm text-amber-700">ObrigaÃ§Ãµes abertas do mÃªs vigente.</div>
         </div>
         <div class="rounded-[1.5rem] bg-sky-50 p-5 shadow-sm">
             <div class="text-xs uppercase tracking-[0.16em] text-sky-500">A prumo com a tesouraria</div>
             <div class="mt-2 text-3xl font-semibold text-sky-800"><?php echo (int) $irmaosAPrumo; ?></div>
-            <div class="mt-2 text-sm text-sky-700">Irmãos sem pendência vencida no mês.</div>
+            <div class="mt-2 text-sm text-sky-700">IrmÃ£os sem pendÃªncia vencida no mÃªs.</div>
         </div>
     </section>
 
@@ -256,7 +256,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                 <form method="get" action="/tesouraria/obrigacoes" class="mt-4">
                     <label class="mb-2 block text-sm font-medium text-slate-700">Selecionar obreiro</label>
                     <select name="obreiro_id" class="w-full rounded-2xl border border-stone-300 px-3 py-2.5 text-sm">
-                        <option value="">Visão geral (sem detalhe individual)</option>
+                        <option value="">VisÃ£o geral (sem detalhe individual)</option>
                         <?php foreach ($painelGeral as $registroOpcao): ?>
                             <option value="<?php echo htmlspecialchars((string) $registroOpcao['obreiro_id']); ?>" <?php echo $selectedObreiroId === (string) $registroOpcao['obreiro_id'] ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars((string) $registroOpcao['nome']); ?>
@@ -286,7 +286,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                                 <div>
                                     <div class="font-semibold <?php echo $classeNome; ?>"><?php echo htmlspecialchars((string) $registro['nome']); ?></div>
                                     <div class="mt-1 text-xs text-slate-700">
-                                        <?php echo $formatCurrency($registro['pago']); ?> pago • <?php echo $formatCurrency($registro['aberto']); ?> em aberto
+                                        <?php echo $formatCurrency($registro['pago']); ?> pago â€¢ <?php echo $formatCurrency($registro['aberto']); ?> em aberto
                                     </div>
                                 </div>
                                 <div class="text-right">
@@ -303,11 +303,11 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
             </section>
 
             <section class="rounded-[2rem] bg-white p-5 shadow-sm">
-                <h2 class="text-lg font-semibold">Parâmetros da Loja</h2>
+                <h2 class="text-lg font-semibold">ParÃ¢metros da Loja</h2>
                 <div class="mt-4 space-y-3 text-sm text-slate-700">
-                    <div class="rounded-2xl bg-stone-50 px-4 py-3">Mensalidade: <span class="font-semibold text-slate-900"><?php echo $formatCurrency($mensalidadePadrao); ?></span></div>
+                    <div class="rounded-2xl bg-stone-50 px-4 py-3">Contribuicao mensal: <span class="font-semibold text-slate-900"><?php echo $formatCurrency($mensalidadePadrao); ?></span></div>
                     <div class="rounded-2xl bg-stone-50 px-4 py-3">Biblioteca: <span class="font-semibold text-slate-900"><?php echo $formatCurrency($bibliotecaPadrao); ?></span></div>
-                    <div class="rounded-2xl bg-stone-50 px-4 py-3">PIX <?php echo htmlspecialchars($pixTipo); ?>: <span class="font-semibold text-slate-900"><?php echo htmlspecialchars($pixValor ?: 'Não informado'); ?></span></div>
+                    <div class="rounded-2xl bg-stone-50 px-4 py-3">PIX <?php echo htmlspecialchars($pixTipo); ?>: <span class="font-semibold text-slate-900"><?php echo htmlspecialchars($pixValor ?: 'NÃ£o informado'); ?></span></div>
                 </div>
             </section>
         </aside>
@@ -316,9 +316,9 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
             <section class="rounded-[2rem] bg-white p-6 shadow-sm">
                 <div class="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
                     <div>
-                        <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Mês vigente</p>
+                        <p class="text-xs uppercase tracking-[0.2em] text-slate-400">MÃªs vigente</p>
                         <h2 class="mt-1 text-2xl font-semibold"><?php echo htmlspecialchars($tituloMesAtual); ?></h2>
-                        <p class="mt-2 text-sm text-slate-700">Panorama do mês atual com foco no que já entrou e no que ainda falta confirmar.</p>
+                        <p class="mt-2 text-sm text-slate-700">Panorama do mÃªs atual com foco no que jÃ¡ entrou e no que ainda falta confirmar.</p>
                     </div>
                     <div class="rounded-[1.3rem] bg-stone-50 px-4 py-3 text-sm text-slate-700">
                         <?php echo count($painelGeral); ?> obreiros com obrigacoes do mes
@@ -327,7 +327,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
 
                 <div class="mt-5 grid gap-4 lg:grid-cols-2">
                     <section class="rounded-[1.6rem] border border-emerald-100 bg-emerald-50 p-5">
-                        <p class="text-xs uppercase tracking-[0.16em] text-emerald-500">Quem já pagou</p>
+                        <p class="text-xs uppercase tracking-[0.16em] text-emerald-500">Quem jÃ¡ pagou</p>
                         <div class="mt-2 text-3xl font-semibold text-emerald-800"><?php echo $formatCurrency($recebidoMes); ?></div>
                         <div class="mt-4 grid gap-3">
                             <?php
@@ -336,7 +336,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                             }));
                             if ($pagosMes === []):
                             ?>
-                                <div class="rounded-2xl bg-white/80 px-4 py-4 text-sm text-emerald-700">Nenhum recebimento confirmado no mês vigente.</div>
+                                <div class="rounded-2xl bg-white/80 px-4 py-4 text-sm text-emerald-700">Nenhum recebimento confirmado no mÃªs vigente.</div>
                             <?php endif; ?>
                             <?php foreach ($pagosMes as $registroPago): ?>
                                 <div class="rounded-2xl bg-white px-4 py-4">
@@ -361,7 +361,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                             }));
                             if ($faltantesMes === []):
                             ?>
-                                <div class="rounded-2xl bg-white/80 px-4 py-4 text-sm text-amber-700">Não há faltantes no mês vigente.</div>
+                                <div class="rounded-2xl bg-white/80 px-4 py-4 text-sm text-amber-700">NÃ£o hÃ¡ faltantes no mÃªs vigente.</div>
                             <?php endif; ?>
                             <?php foreach ($faltantesMes as $registroAberto): ?>
                                 <div class="rounded-2xl bg-white px-4 py-4">
@@ -385,23 +385,23 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                             <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Detalhe individual</p>
                             <h3 class="mt-1 text-2xl font-semibold"><?php echo htmlspecialchars($selectedObreiroNome); ?></h3>
                         </div>
-                        <div class="text-sm text-slate-700">Abrir o detalhe individual e opcional para a operação do tesoureiro.</div>
+                        <div class="text-sm text-slate-700">Abrir o detalhe individual e opcional para a operaÃ§Ã£o do tesoureiro.</div>
                     </div>
 
                     <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                         <div class="rounded-[1.3rem] bg-emerald-50 p-4">
-                            <div class="text-xs uppercase tracking-[0.16em] text-emerald-500">Já pago</div>
+                            <div class="text-xs uppercase tracking-[0.16em] text-emerald-500">JÃ¡ pago</div>
                             <div class="mt-1 text-2xl font-semibold text-emerald-700"><?php echo $formatCurrency($registroSelecionado['pago']); ?></div>
                         </div>
                         <div class="rounded-[1.3rem] bg-amber-50 p-4">
-                            <div class="text-xs uppercase tracking-[0.16em] text-amber-500">Falta no mês</div>
+                            <div class="text-xs uppercase tracking-[0.16em] text-amber-500">Falta no mÃªs</div>
                             <div class="mt-1 text-2xl font-semibold text-amber-700"><?php echo $formatCurrency($registroSelecionado['aberto']); ?></div>
                         </div>
                         <?php if ((int) ($registroSelecionado['vencidos'] ?? 0) > 0): ?>
                             <div class="rounded-[1.3rem] bg-rose-50 p-4">
-                                <div class="text-xs uppercase tracking-[0.16em] text-rose-400">Atenção</div>
+                                <div class="text-xs uppercase tracking-[0.16em] text-rose-400">AtenÃ§Ã£o</div>
                                 <div class="mt-1 text-2xl font-semibold text-rose-700"><?php echo (int) $registroSelecionado['vencidos']; ?></div>
-                                <div class="mt-2 text-sm text-rose-700">Pendências já vencidas.</div>
+                                <div class="mt-2 text-sm text-rose-700">PendÃªncias jÃ¡ vencidas.</div>
                             </div>
                         <?php else: ?>
                             <div class="flex items-center justify-center rounded-[1.3rem] bg-[linear-gradient(135deg,#eff6ff_0%,#dbeafe_100%)] p-4">
@@ -411,23 +411,23 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                         <div class="rounded-[1.3rem] bg-white p-4 shadow-sm">
                             <div class="text-xs uppercase tracking-[0.16em] text-slate-400">PIX</div>
                             <div class="mt-1 text-lg font-semibold text-slate-900"><?php echo htmlspecialchars($pixTipo); ?></div>
-                            <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars($pixValor ?: 'Não informado'); ?></div>
+                            <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars($pixValor ?: 'NÃ£o informado'); ?></div>
                         </div>
                     </div>
 
                     <div class="mt-6 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
                         <section class="rounded-[1.6rem] border border-emerald-100 bg-emerald-50 p-5">
-                            <p class="text-xs uppercase tracking-[0.16em] text-emerald-500">Já pago no mês</p>
+                            <p class="text-xs uppercase tracking-[0.16em] text-emerald-500">JÃ¡ pago no mÃªs</p>
                             <div class="mt-4 space-y-3">
                                 <?php if ($itensSelecionadosPago === []): ?>
-                                    <div class="rounded-2xl bg-white/80 px-4 py-4 text-sm text-emerald-700">Nenhum pagamento confirmado para este obreiro no mês vigente.</div>
+                                    <div class="rounded-2xl bg-white/80 px-4 py-4 text-sm text-emerald-700">Nenhum pagamento confirmado para este obreiro no mÃªs vigente.</div>
                                 <?php endif; ?>
                                 <?php foreach ($itensSelecionadosPago as $linha): ?>
                                     <article class="rounded-2xl bg-white px-4 py-4">
                                         <div class="flex items-start justify-between gap-4">
                                             <div>
                                                 <div class="font-medium text-slate-900"><?php echo htmlspecialchars((string) ($linha['titulo'] ?? 'Obrigacao')); ?></div>
-                                                <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars($competenciaAtual); ?> • pago em <?php echo !empty($linha['pago_em']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $linha['pago_em']))) : 'data não informada'; ?></div>
+                                                <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars($competenciaAtual); ?> â€¢ pago em <?php echo !empty($linha['pago_em']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $linha['pago_em']))) : 'data nÃ£o informada'; ?></div>
                                             </div>
                                             <div class="text-right">
                                                 <div class="font-semibold text-emerald-700"><?php echo $formatCurrency($linha['valor_previsto'] ?? 0); ?></div>
@@ -440,10 +440,10 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                         </section>
 
                         <section class="rounded-[1.6rem] border border-amber-100 bg-amber-50 p-5">
-                            <p class="text-xs uppercase tracking-[0.16em] text-amber-500">Falta confirmar no mês</p>
+                            <p class="text-xs uppercase tracking-[0.16em] text-amber-500">Falta confirmar no mÃªs</p>
                             <div class="mt-4 space-y-3">
                                 <?php if ($itensSelecionadosAberto === []): ?>
-                                    <div class="rounded-2xl bg-white/80 px-4 py-4 text-sm text-amber-700">Nada pendente para este obreiro no mês vigente.</div>
+                                    <div class="rounded-2xl bg-white/80 px-4 py-4 text-sm text-amber-700">Nada pendente para este obreiro no mÃªs vigente.</div>
                                 <?php endif; ?>
                                 <?php foreach ($itensSelecionadosAberto as $linha): ?>
                                     <?php
@@ -454,7 +454,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                                         <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                                             <div>
                                                 <div class="font-medium text-slate-900"><?php echo htmlspecialchars((string) ($linha['titulo'] ?? 'Obrigacao')); ?></div>
-                                                <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars($competenciaAtual); ?> • vence em <?php echo !empty($linha['vencimento']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $linha['vencimento']))) : '-'; ?></div>
+                                                <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars($competenciaAtual); ?> â€¢ vence em <?php echo !empty($linha['vencimento']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $linha['vencimento']))) : '-'; ?></div>
                                                 <?php if ($linhaAtrasada): ?>
                                                     <div class="mt-2 inline-flex rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-rose-700">Em atraso</div>
                                                 <?php endif; ?>
@@ -498,8 +498,8 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
             <section class="rounded-[2rem] bg-white p-6 shadow-sm">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold">Nova obrigação</h3>
-                        <p class="mt-2 text-sm text-slate-700">Lançamento guiado para o tesoureiro registrar mensalidade, contribuição e joia com o contexto financeiro correto desde a data de início.</p>
+                        <h3 class="text-lg font-semibold">Nova obrigaÃ§Ã£o</h3>
+                        <p class="mt-2 text-sm text-slate-700">LanÃ§amento guiado para o tesoureiro registrar mensalidade, contribuiÃ§Ã£o e joia com o contexto financeiro correto desde a data de inÃ­cio.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <a href="/tesouraria/obrigacoes" class="rounded-2xl border border-stone-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-stone-50">Cancelar</a>
@@ -518,17 +518,17 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                         </select>
                     </div>
                     <label class="space-y-2">
-                        <span class="block text-sm font-medium text-slate-700">Tipo da obrigação</span>
+                        <span class="block text-sm font-medium text-slate-700">Tipo da obrigaÃ§Ã£o</span>
                         <select name="tipo_obrigacao" id="tipo_obrigacao" class="w-full rounded-2xl border border-stone-300 px-3 py-2.5 text-sm">
-                        <option value="mensalidade">Mensalidade</option>
+                        <option value="mensalidade">Contribuicao mensal</option>
                         <option value="biblioteca">Biblioteca</option>
                         <option value="joia">Joia</option>
-                        <option value="doacao">Doação</option>
+                        <option value="doacao">DoaÃ§Ã£o</option>
                         <option value="outra">Outra</option>
                         </select>
                     </label>
                     <label class="space-y-2">
-                        <span class="block text-sm font-medium text-slate-700">Forma de cobrança</span>
+                        <span class="block text-sm font-medium text-slate-700">Forma de cobranÃ§a</span>
                         <select name="recorrencia" id="recorrencia" class="w-full rounded-2xl border border-stone-300 px-3 py-2.5 text-sm">
                         <option value="mensal">Mensal</option>
                         <option value="anual">Anual</option>
@@ -539,8 +539,8 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                     <div class="md:col-span-2 grid gap-3 rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4 lg:grid-cols-[1.15fr_0.85fr]">
                         <div class="space-y-3">
                             <label class="space-y-2">
-                                <span class="block text-sm font-medium text-slate-700">Título ou contexto</span>
-                                <input type="text" name="titulo" id="titulo_obrigacao" placeholder="Ex.: Joia de exaltação" class="w-full rounded-2xl border border-stone-300 px-3 py-2.5 text-sm" required>
+                                <span class="block text-sm font-medium text-slate-700">TÃ­tulo ou contexto</span>
+                                <input type="text" name="titulo" id="titulo_obrigacao" placeholder="Ex.: Joia de exaltaÃ§Ã£o" class="w-full rounded-2xl border border-stone-300 px-3 py-2.5 text-sm" required>
                             </label>
                             <div class="grid gap-3 sm:grid-cols-2">
                                 <label class="space-y-2">
@@ -554,18 +554,18 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                             </div>
                             <div class="grid gap-3 sm:grid-cols-2">
                                 <label class="space-y-2">
-                                    <span class="block text-sm font-medium text-slate-700">Início do lançamento</span>
+                                    <span class="block text-sm font-medium text-slate-700">InÃ­cio do lanÃ§amento</span>
                                     <input type="date" name="inicio_competencia" id="inicio_competencia" value="<?php echo date('Y-m-d'); ?>" class="w-full rounded-2xl border border-stone-300 px-3 py-2.5 text-sm">
                                 </label>
                                 <label class="space-y-2">
-                                    <span class="block text-sm font-medium text-slate-700">Fim da cobrança</span>
+                                    <span class="block text-sm font-medium text-slate-700">Fim da cobranÃ§a</span>
                                     <input type="date" name="fim_competencia" id="fim_competencia" class="w-full rounded-2xl border border-stone-300 px-3 py-2.5 text-sm">
                                 </label>
                             </div>
                         </div>
                         <div class="rounded-[1.35rem] bg-white p-4 shadow-sm">
-                            <div class="text-xs uppercase tracking-[0.18em] text-slate-400">Resumo automático</div>
-                            <div id="resumo_obrigacao_principal" class="mt-3 text-lg font-semibold text-slate-900">Mensalidade padrão da Loja</div>
+                            <div class="text-xs uppercase tracking-[0.18em] text-slate-400">Resumo automÃ¡tico</div>
+                            <div id="resumo_obrigacao_principal" class="mt-3 text-lg font-semibold text-slate-900">Contribuicao mensal padrÃ£o da Loja</div>
                             <div id="resumo_obrigacao_secundario" class="mt-2 text-sm text-slate-700">Valor total de <?php echo $formatCurrency($mensalidadePadrao); ?> com vencimento guiado a partir da data informada.</div>
                             <div class="mt-4 grid gap-3 sm:grid-cols-2">
                                 <div class="rounded-2xl bg-stone-50 px-4 py-3">
@@ -573,8 +573,8 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                                     <div id="resumo_valor_parcela" class="mt-1 text-base font-semibold text-slate-900"><?php echo $formatCurrency($mensalidadePadrao); ?></div>
                                 </div>
                                 <div class="rounded-2xl bg-stone-50 px-4 py-3">
-                                    <div class="text-[11px] uppercase tracking-[0.16em] text-slate-400">Término previsto</div>
-                                    <div id="resumo_fim_previsto" class="mt-1 text-base font-semibold text-slate-900">No mesmo mês</div>
+                                    <div class="text-[11px] uppercase tracking-[0.16em] text-slate-400">TÃ©rmino previsto</div>
+                                    <div id="resumo_fim_previsto" class="mt-1 text-base font-semibold text-slate-900">No mesmo mÃªs</div>
                                 </div>
                             </div>
                             <div id="resumo_alerta_joia" class="mt-4 hidden rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -588,10 +588,10 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                             <option value="<?php echo (int) $categoria['id']; ?>" data-nome="<?php echo htmlspecialchars((string) $categoria['nome']); ?>"><?php echo htmlspecialchars((string) $categoria['nome']); ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <textarea name="instrucoes_pagamento" id="instrucoes_pagamento" rows="2" class="md:col-span-2 rounded-2xl border border-stone-300 px-3 py-2.5 text-sm" placeholder="Instruções de pagamento"></textarea>
+                    <textarea name="instrucoes_pagamento" id="instrucoes_pagamento" rows="2" class="md:col-span-2 rounded-2xl border border-stone-300 px-3 py-2.5 text-sm" placeholder="InstruÃ§Ãµes de pagamento"></textarea>
                     <div class="md:col-span-2 flex flex-col gap-3 sm:flex-row sm:justify-end">
                         <a href="/tesouraria/obrigacoes" class="rounded-2xl border border-stone-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-stone-50">Cancelar</a>
-                        <button type="submit" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">Salvar obrigação</button>
+                        <button type="submit" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">Salvar obrigaÃ§Ã£o</button>
                     </div>
                 </form>
             </section>
@@ -674,7 +674,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
             if (tipo.value === 'mensalidade') {
                 valorBase.value = Number(mensalidadePadrao).toFixed(2);
                 if (!titulo.value.trim()) {
-                    titulo.value = 'Mensalidade da Loja';
+                    titulo.value = 'Contribuicao mensal da Loja';
                 }
                 if (recorrencia.value === 'avulsa') {
                     recorrencia.value = 'mensal';
@@ -685,14 +685,14 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
             if (tipo.value === 'biblioteca') {
                 valorBase.value = Number(bibliotecaPadrao).toFixed(2);
                 if (!titulo.value.trim()) {
-                    titulo.value = 'Contribuição Biblioteca';
+                    titulo.value = 'ContribuiÃ§Ã£o Biblioteca';
                 }
                 setCategoriaPorNome('biblioteca');
             }
 
             if (tipo.value === 'joia') {
                 valorBase.value = Number(salarioMinimo).toFixed(2);
-                if (!titulo.value.trim() || titulo.value === 'Mensalidade da Loja' || titulo.value === 'Contribuição Biblioteca') {
+                if (!titulo.value.trim() || titulo.value === 'Contribuicao mensal da Loja' || titulo.value === 'ContribuiÃ§Ã£o Biblioteca') {
                     titulo.value = 'Joia';
                 }
                 if (recorrencia.value === 'mensal' || recorrencia.value === 'anual') {
@@ -703,7 +703,7 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                 }
                 setCategoriaPorNome('joia');
                 if (!instrucoes.value.trim()) {
-                    instrucoes.value = 'Joia no valor de 1 salário mínimo vigente, com acompanhamento parcelado a partir da data de lançamento.';
+                    instrucoes.value = 'Joia no valor de 1 salÃ¡rio mÃ­nimo vigente, com acompanhamento parcelado a partir da data de lanÃ§amento.';
                 }
             }
         }
@@ -725,18 +725,18 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
                     ? parcelas + ' parcelas iniciando em ' + formatDate(inicioData) + ', com acompanhamento mensal ate ' + formatDate(fimData) + '.'
                     : 'Joia lancada a partir de ' + formatDate(inicioData) + '.';
             } else if (tipo.value === 'biblioteca') {
-                resumoPrincipal.textContent = titulo.value.trim() || 'Contribuição Biblioteca';
-                resumoSecundario.textContent = 'Contribuição individual vinculada ao mês designado, com valor atual de ' + money.format(valor) + '.';
+                resumoPrincipal.textContent = titulo.value.trim() || 'ContribuiÃ§Ã£o Biblioteca';
+                resumoSecundario.textContent = 'ContribuiÃ§Ã£o individual vinculada ao mÃªs designado, com valor atual de ' + money.format(valor) + '.';
             } else if (tipo.value === 'mensalidade') {
-                resumoPrincipal.textContent = titulo.value.trim() || 'Mensalidade da Loja';
+                resumoPrincipal.textContent = titulo.value.trim() || 'Contribuicao mensal da Loja';
                 resumoSecundario.textContent = 'Obrigacao recorrente da Loja, considerada aberta somente apos o primeiro dia util do mes seguinte.';
             } else {
-                resumoPrincipal.textContent = titulo.value.trim() || 'Obrigação financeira';
+                resumoPrincipal.textContent = titulo.value.trim() || 'ObrigaÃ§Ã£o financeira';
                 resumoSecundario.textContent = 'Lancamento a partir de ' + formatDate(inicioData) + ' com contexto financeiro definido pelo tesoureiro.';
             }
 
             resumoParcela.textContent = money.format(valorParcela);
-            resumoFim.textContent = recorrencia.value === 'parcelado' ? formatDate(fimData) : 'No mesmo mês';
+            resumoFim.textContent = recorrencia.value === 'parcelado' ? formatDate(fimData) : 'No mesmo mÃªs';
 
             if (recorrencia.value === 'parcelado') {
                 fim.value = fimData.toISOString().slice(0, 10);
@@ -760,3 +760,4 @@ $itensSelecionadosAberto = array_values(array_filter($itensSelecionados, static 
 </script>
 </body>
 </html>
+
