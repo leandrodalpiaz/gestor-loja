@@ -1,5 +1,5 @@
 <?php
-$usuarioNome = $_SESSION['usuario_nome'] ?? 'IrmÃ£o';
+$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -68,7 +68,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'IrmÃ£o';
                     </select>
                 </div>
                 <div>
-                    <label class="text-sm font-medium">Quantidade disponÃ­vel *</label>
+                    <label class="text-sm font-medium">Quantidade disponível *</label>
                     <input type="number" name="quantidade_disponivel" min="1" value="1" required class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
                 </div>
                 <div>

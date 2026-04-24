@@ -1,14 +1,14 @@
 <?php
 $rotulosBloco = [
-    'receitas_ordinarias' => 'Entradas ordinÃ¡rias',
+    'receitas_ordinarias' => 'Entradas ordinárias',
     'receitas_eventuais' => 'Entradas eventuais',
     'receitas_financeiras' => 'Entradas financeiras',
-    'capitacoes' => 'CapitaÃ§Ãµes',
-    'agapes_eventos' => 'Ãgapes e eventos',
-    'despesas_potencia' => 'Saidas com a PotÃªncia',
+    'capitacoes' => 'Capitações',
+    'agapes_eventos' => 'Ágapes e eventos',
+    'despesas_potencia' => 'Saidas com a Potência',
     'despesas_administrativas' => 'Saidas administrativas',
-    'despesas_bancarias' => 'Saidas bancÃ¡rias',
-    'despesas_ritualisticas' => 'Saidas ritualÃ­sticas',
+    'despesas_bancarias' => 'Saidas bancárias',
+    'despesas_ritualisticas' => 'Saidas ritualísticas',
     'tronco' => 'Tronco de solidariedade',
     'entidades_auxiliadas' => 'Entidades auxiliadas',
     'outros' => 'Outros',
@@ -21,7 +21,7 @@ $formatarMoeda = static fn ($valor) => 'R$ ' . number_format((float) $valor, 2, 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RelatÃ³rio Tesouraria da GestÃ£o</title>
+    <title>Relatório Tesouraria da Gestão</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @media (min-width: 1440px) {
@@ -45,8 +45,8 @@ $formatarMoeda = static fn ($valor) => 'R$ ' . number_format((float) $valor, 2, 
         <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between mb-8">
             <div>
                 <p class="text-xs uppercase tracking-[0.25em] text-slate-700">Tesouraria</p>
-                <h1 class="text-3xl font-semibold text-slate-900">RelatÃ³rio financeiro da gestÃ£o</h1>
-                <p class="mt-2 text-sm text-slate-700">ConsolidaÃ§Ã£o por perÃ­odo de gestÃ£o para leitura administrativa, prestaÃ§Ã£o de contas e relatÃ³rio final.</p>
+                <h1 class="text-3xl font-semibold text-slate-900">Relatório financeiro da gestão</h1>
+                <p class="mt-2 text-sm text-slate-700">Consolidação por período de gestão para leitura administrativa, prestação de contas e relatório final.</p>
             </div>
             <div class="flex gap-2">
                 <a href="/tesouraria/caixa" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium">Caixa da Loja</a>
@@ -57,11 +57,11 @@ $formatarMoeda = static fn ($valor) => 'R$ ' . number_format((float) $valor, 2, 
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm mb-6">
             <form method="GET" action="/tesouraria/relatorio-gestao" class="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
                 <div>
-                    <label class="block text-sm font-medium mb-1">GestÃ£o</label>
+                    <label class="block text-sm font-medium mb-1">Gestão</label>
                     <select name="gestao_id" class="w-full rounded-lg border border-slate-300 px-3 py-2">
                         <?php foreach ($gestoes as $gestao): ?>
                             <option value="<?= (int) $gestao['id'] ?>" <?= (int) $gestao['id'] === (int) ($relatorio['gestao']['id'] ?? 0) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars((string) ($gestao['titulo'] ?? 'GestÃ£o')) ?>
+                                <?= htmlspecialchars((string) ($gestao['titulo'] ?? 'Gestão')) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -98,15 +98,15 @@ $formatarMoeda = static fn ($valor) => 'R$ ' . number_format((float) $valor, 2, 
         <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
             <section class="space-y-6">
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-xl font-semibold text-slate-900">SÃ­ntese por blocos</h2>
-                    <p class="mt-1 text-sm text-slate-700">Agrupamentos pensados para o relatÃ³rio da gestÃ£o, incluindo mensalidades, captaÃ§Ãµes, Ã¡gaes, despesas da PotÃªncia e entidades auxiliadas.</p>
+                    <h2 class="text-xl font-semibold text-slate-900">Síntese por blocos</h2>
+                    <p class="mt-1 text-sm text-slate-700">Agrupamentos pensados para o relatório da gestão, incluindo mensalidades, captações, ágaes, despesas da Potência e entidades auxiliadas.</p>
                     <div class="mt-5 space-y-3">
                         <?php foreach (($relatorio['blocos'] ?? []) as $bloco => $totais): ?>
                             <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                                 <div class="font-medium text-slate-900"><?= htmlspecialchars($rotulosBloco[$bloco] ?? $bloco) ?></div>
                                 <div class="mt-2 grid gap-2 sm:grid-cols-2 text-sm">
                                     <div class="flex items-center justify-between"><span>Entradas</span><strong class="text-emerald-700"><?= htmlspecialchars($formatarMoeda($totais['entrada'] ?? 0)) ?></strong></div>
-                                    <div class="flex items-center justify-between"><span>SaÃ­das</span><strong class="text-rose-700"><?= htmlspecialchars($formatarMoeda($totais['saida'] ?? 0)) ?></strong></div>
+                                    <div class="flex items-center justify-between"><span>Saídas</span><strong class="text-rose-700"><?= htmlspecialchars($formatarMoeda($totais['saida'] ?? 0)) ?></strong></div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -120,11 +120,11 @@ $formatarMoeda = static fn ($valor) => 'R$ ' . number_format((float) $valor, 2, 
                             <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm gap-4">
                                 <div>
                                     <div class="font-medium text-slate-900"><?= htmlspecialchars((string) ($linha['nome'] ?? '-')) ?></div>
-                                    <div class="text-xs text-slate-700"><?= htmlspecialchars($rotulosBloco[(string) ($linha['bloco_relatorio'] ?? 'outros')] ?? (string) ($linha['bloco_relatorio'] ?? 'outros')) ?> â€¢ <?= htmlspecialchars((string) ($linha['tipo'] ?? '')) ?></div>
+                                    <div class="text-xs text-slate-700"><?= htmlspecialchars($rotulosBloco[(string) ($linha['bloco_relatorio'] ?? 'outros')] ?? (string) ($linha['bloco_relatorio'] ?? 'outros')) ?> • <?= htmlspecialchars((string) ($linha['tipo'] ?? '')) ?></div>
                                 </div>
                                 <div class="text-right">
                                     <div class="font-semibold"><?= htmlspecialchars($formatarMoeda($linha['total'] ?? 0)) ?></div>
-                                    <div class="text-xs text-slate-700"><?= (int) ($linha['quantidade'] ?? 0) ?> lanÃ§amento(s)</div>
+                                    <div class="text-xs text-slate-700"><?= (int) ($linha['quantidade'] ?? 0) ?> lançamento(s)</div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -141,25 +141,25 @@ $formatarMoeda = static fn ($valor) => 'R$ ' . number_format((float) $valor, 2, 
                             <div class="mt-2 text-2xl font-semibold text-emerald-700"><?= htmlspecialchars($formatarMoeda($relatorio['tronco']['entradas'] ?? 0)) ?></div>
                         </div>
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-sm text-slate-700">SaÃ­das do tronco</div>
+                            <div class="text-sm text-slate-700">Saídas do tronco</div>
                             <div class="mt-2 text-2xl font-semibold text-rose-700"><?= htmlspecialchars($formatarMoeda($relatorio['tronco']['saidas'] ?? 0)) ?></div>
                         </div>
                     </div>
                     <div class="mt-5 space-y-2">
                         <?php foreach (($relatorio['entidades_auxiliadas'] ?? []) as $entidade): ?>
                             <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                                <span><?= htmlspecialchars((string) ($entidade['entidade'] ?? 'NÃ£o informada')) ?></span>
+                                <span><?= htmlspecialchars((string) ($entidade['entidade'] ?? 'Não informada')) ?></span>
                                 <strong><?= htmlspecialchars($formatarMoeda($entidade['total'] ?? 0)) ?></strong>
                             </div>
                         <?php endforeach; ?>
                         <?php if (($relatorio['entidades_auxiliadas'] ?? []) === []): ?>
-                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Ainda nÃ£o hÃ¡ entidades auxiliadas registradas no perÃ­odo.</div>
+                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Ainda não há entidades auxiliadas registradas no período.</div>
                         <?php endif; ?>
                     </div>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-xl font-semibold text-slate-900">LanÃ§amentos recentes do perÃ­odo</h2>
+                    <h2 class="text-xl font-semibold text-slate-900">Lançamentos recentes do período</h2>
                     <div class="mt-5 space-y-3">
                         <?php foreach (($relatorio['lancamentos'] ?? []) as $lancamento): ?>
                             <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -169,8 +169,8 @@ $formatarMoeda = static fn ($valor) => 'R$ ' . number_format((float) $valor, 2, 
                                         <div class="text-sm text-slate-700 mt-1"><?= htmlspecialchars((string) ($lancamento['descricao'] ?? 'Sem descricao')) ?></div>
                                         <div class="text-xs text-slate-700 mt-1">
                                             <?= htmlspecialchars((string) ($lancamento['data_lancamento'] ?? '-')) ?>
-                                            <?php if (!empty($lancamento['obreiro_nome'])): ?> â€¢ <?= htmlspecialchars((string) $lancamento['obreiro_nome']) ?><?php endif; ?>
-                                            <?php if (!empty($lancamento['entidade_auxiliada'])): ?> â€¢ <?= htmlspecialchars((string) $lancamento['entidade_auxiliada']) ?><?php endif; ?>
+                                            <?php if (!empty($lancamento['obreiro_nome'])): ?> • <?= htmlspecialchars((string) $lancamento['obreiro_nome']) ?><?php endif; ?>
+                                            <?php if (!empty($lancamento['entidade_auxiliada'])): ?> • <?= htmlspecialchars((string) $lancamento['entidade_auxiliada']) ?><?php endif; ?>
                                         </div>
                                     </div>
                                     <strong class="<?= ($lancamento['tipo'] ?? '') === 'entrada' ? 'text-emerald-700' : 'text-rose-700' ?>">

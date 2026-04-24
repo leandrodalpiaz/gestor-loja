@@ -418,16 +418,16 @@ $syncTenantSessionFromObreiro = static function (?array $usuario = null): void {
         : 'Loja ' . (string) ($loja['numero_loja'] ?? $loja['id']);
 };
 
-$sessionHasRole = static function (string ...$roles) use ($authorizer, $normalizeRole): bool {
+$sessionHasRole = static function (string ...$roles) use (&$authorizer, $normalizeRole): bool {
     $roles = array_map($normalizeRole, $roles);
     return $authorizer->hasRole(...$roles);
 };
 
-$getSessionRoles = static function () use ($authorizer): array {
+$getSessionRoles = static function () use (&$authorizer): array {
     return $authorizer->roles();
 };
 
-$sessionHasPermission = static function (string $permission) use ($authorizer): bool {
+$sessionHasPermission = static function (string $permission) use (&$authorizer): bool {
     return $authorizer->hasPermission($permission);
 };
 
@@ -629,12 +629,14 @@ $resolveObreiroByInitData = static function (?string $initData = null): ?array {
     }
 };
 
+$bootstrapLoginDone = false;
 if (!isset($_SESSION['usuario_logado'])) {
     $bootstrapInitData = trim((string) ($_GET['init_data'] ?? $_GET['initData'] ?? ''));
     if ($bootstrapInitData !== '') {
         $bootstrapObreiro = $resolveObreiroByInitData($bootstrapInitData);
         if ($bootstrapObreiro) {
             $loginTelegramObreiroInSession($bootstrapObreiro);
+            $bootstrapLoginDone = true;
         }
     }
 }
@@ -650,6 +652,12 @@ if ($openTestAccess && !isset($_SESSION["usuario_logado"])) {
 
 if (isset($_SESSION['usuario_logado']) && !$openTestAccess && !$isTestSession) {
     $syncSessionRoles();
+}
+
+if ($bootstrapLoginDone) {
+    $currentUser = new CurrentUser($_SESSION, $normalizeRole);
+    $authorizer = new Authorizer($currentUser, $permissionMap, $bypassRoleChecks);
+    $GLOBALS['gestor_loja_permission_map'] = $permissionMap;
 }
 
 if (!function_exists('requireMiniappAuth')) {

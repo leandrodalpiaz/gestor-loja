@@ -4,12 +4,12 @@ $configuracaoLoja = $configuracaoLoja ?? [];
 $formatCurrency = static function ($value): string {
     return number_format((float) $value, 2, ',', '.');
 };
-$nomeLoja = trim((string) ($configuracaoLoja['nome_loja'] ?? 'RenascenÃ§a'));
+$nomeLoja = trim((string) ($configuracaoLoja['nome_loja'] ?? 'Renascença'));
 $numeroLoja = trim((string) ($configuracaoLoja['numero_loja'] ?? '270'));
 $tituloTratamento = trim((string) ($configuracaoLoja['titulo_tratamento'] ?? 'Aug Resp Loj Simb'));
 $oriente = trim((string) ($configuracaoLoja['oriente'] ?? (($configuracaoLoja['cidade'] ?? 'Arroio do Sal') . ' / ' . ($configuracaoLoja['uf'] ?? 'RS'))));
 $dataFundacao = !empty($configuracaoLoja['data_fundacao']) ? date('d/m/Y', strtotime((string) $configuracaoLoja['data_fundacao'])) : '';
-$nomeIrmao = (string) ($parcelaRecibo['obreiro_nome'] ?? 'IrmÃ£o');
+$nomeIrmao = (string) ($parcelaRecibo['obreiro_nome'] ?? 'Irmão');
 $tituloContribuicao = (string) ($parcelaRecibo['titulo'] ?? 'Recebimento');
 $tipoObrigacao = strtolower((string) ($parcelaRecibo['tipo_obrigacao'] ?? 'outra'));
 $categoriaNome = (string) ($parcelaRecibo['categoria_nome'] ?? '');

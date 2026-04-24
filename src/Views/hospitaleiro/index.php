@@ -54,7 +54,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
             <div>
                 <p class="text-sm uppercase tracking-[0.24em] text-cobre">Hospitalaria</p>
                 <h1 class="font-display text-3xl text-cobalto">Painel do Mestre Hospitaleiro</h1>
-                <p class="mt-2 text-sm text-slate-700">OcorrÃªncias assistenciais, visitas, retornos e encaminhamentos ao VenerÃ¡vel e Ã  Tesouraria.</p>
+                <p class="mt-2 text-sm text-slate-700">Ocorrências assistenciais, visitas, retornos e encaminhamentos ao Venerável e à Tesouraria.</p>
             </div>
             <div class="flex gap-3">
                 <a href="/dashboard" class="rounded-lg bg-cobalto px-4 py-2 text-sm font-medium text-white">Voltar ao painel</a>
@@ -72,24 +72,24 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
         <?php
         $dashboard = [
             'title' => 'Painel operacional do Hospitaleiro',
-            'subtitle' => 'AssistÃªncia, visitas e status das ocorrÃªncias.',
-            'meta' => ['Perfil: acompanhamento social', 'Encaminhamentos: VenerÃ¡vel/Tesouraria'],
+            'subtitle' => 'Assistência, visitas e status das ocorrências.',
+            'meta' => ['Perfil: acompanhamento social', 'Encaminhamentos: Venerável/Tesouraria'],
             'actions' => [
-                ['label' => 'Registrar ocorrÃªncia', 'href' => '/assistencia/ocorrencias/salvar'],
+                ['label' => 'Registrar ocorrência', 'href' => '/assistencia/ocorrencias/salvar'],
                 ['label' => 'Atualizar status', 'href' => '/assistencia/ocorrencias/status'],
                 ['label' => 'Registrar visita', 'href' => '/assistencia/ocorrencias/visita'],
             ],
             'blocks' => [
-                ['title' => 'OcorrÃªncias abertas', 'subtitle' => 'Leitura operacional das pendÃªncias.', 'span' => 'half', 'metrics' => [
+                ['title' => 'Ocorrências abertas', 'subtitle' => 'Leitura operacional das pendências.', 'span' => 'half', 'metrics' => [
                     ['label' => 'Abertas', 'value' => (string) ($resumo['abertas'] ?? 0)],
                     ['label' => 'Em acompanhamento', 'value' => (string) ($resumo['em_acompanhamento'] ?? 0)],
-                ], 'list' => array_map(static fn (array $o): array => ['item' => (string) ($o['obreiro_nome'] ?? 'OcorrÃªncia'), 'meta' => (string) ($o['tipo_ocorrencia'] ?? 'assistencia_geral'), 'status' => (string) ($o['status'] ?? 'aberta')], array_slice($ocorrencias, 0, 4))],
+                ], 'list' => array_map(static fn (array $o): array => ['item' => (string) ($o['obreiro_nome'] ?? 'Ocorrência'), 'meta' => (string) ($o['tipo_ocorrencia'] ?? 'assistencia_geral'), 'status' => (string) ($o['status'] ?? 'aberta')], array_slice($ocorrencias, 0, 4))],
                 ['title' => 'Visitas e atividade', 'subtitle' => 'Retornos e registro recente.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'PendÃªncias de visita', 'value' => (string) count($pendenciasVisita)],
+                    ['label' => 'Pendências de visita', 'value' => (string) count($pendenciasVisita)],
                     ['label' => 'Com apoio financeiro', 'value' => (string) ($resumo['com_apoio_financeiro'] ?? 0)],
-                ], 'list' => array_map(static fn (array $o): array => ['item' => (string) ($o['obreiro_nome'] ?? 'OcorrÃªncia'), 'meta' => 'Prioridade ' . (string) ($o['prioridade'] ?? 'media'), 'status' => (string) ($o['status'] ?? '-')], array_slice($pendenciasVisita, 0, 4))],
+                ], 'list' => array_map(static fn (array $o): array => ['item' => (string) ($o['obreiro_nome'] ?? 'Ocorrência'), 'meta' => 'Prioridade ' . (string) ($o['prioridade'] ?? 'media'), 'status' => (string) ($o['status'] ?? '-')], array_slice($pendenciasVisita, 0, 4))],
             ],
-            'alerts' => [['title' => 'PendÃªncias sociais', 'text' => 'Priorizar ocorrÃªncias abertas com visita pendente.', 'tone' => 'warning']],
+            'alerts' => [['title' => 'Pendências sociais', 'text' => 'Priorizar ocorrências abertas com visita pendente.', 'tone' => 'warning']],
             'activity' => array_map(static fn (array $o): array => ['item' => (string) ($o['tipo_ocorrencia'] ?? 'assistencia_geral'), 'meta' => (string) ($o['obreiro_nome'] ?? 'Sem obreiro')], array_slice($ocorrencias, 0, 5)),
             'links' => [['label' => 'Miniapp Hospitaleiro', 'href' => '/miniapp/hospitaleiro']],
         ];
@@ -102,7 +102,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
         <div class="mb-8 grid gap-4 md:grid-cols-5">
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Total de ocorrÃªncias</div>
+                <div class="text-sm text-slate-700">Total de ocorrências</div>
                 <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) ($resumo['total'] ?? 0) ?></div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -114,7 +114,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                 <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) ($resumo['em_acompanhamento'] ?? 0) ?></div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">ConcluÃ­das</div>
+                <div class="text-sm text-slate-700">Concluídas</div>
                 <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) ($resumo['concluidas'] ?? 0) ?></div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -126,15 +126,15 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
         <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
             <section class="space-y-6">
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="font-display text-xl text-cobalto">PendÃªncias de visita e retorno</h2>
-                    <p class="mb-4 text-sm text-slate-700">OcorrÃªncias que pedem presenÃ§a em campo ou acompanhamento ativo.</p>
+                    <h2 class="font-display text-xl text-cobalto">Pendências de visita e retorno</h2>
+                    <p class="mb-4 text-sm text-slate-700">Ocorrências que pedem presença em campo ou acompanhamento ativo.</p>
                     <div class="space-y-3">
                         <?php foreach ($pendenciasVisita as $ocorrencia): ?>
                             <article class="rounded-xl border border-slate-200 p-4">
                                 <div class="flex flex-wrap items-start justify-between gap-3">
                                     <div>
                                         <div class="font-semibold text-cobalto"><?= htmlspecialchars((string) ($ocorrencia['obreiro_nome'] ?? 'Sem obreiro vinculado')) ?></div>
-                                        <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($ocorrencia['tipo_ocorrencia'] ?? 'assistencia_geral')) ?> Â· Prioridade <?= htmlspecialchars((string) ($ocorrencia['prioridade'] ?? 'media')) ?></div>
+                                        <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($ocorrencia['tipo_ocorrencia'] ?? 'assistencia_geral')) ?> · Prioridade <?= htmlspecialchars((string) ($ocorrencia['prioridade'] ?? 'media')) ?></div>
                                     </div>
                                     <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700"><?= htmlspecialchars((string) ($ocorrencia['status'] ?? 'aberta')) ?></span>
                                 </div>
@@ -142,7 +142,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                 <?php if ($podeOperarOcorrencias): ?>
                                     <form method="POST" action="/assistencia/ocorrencias/visita" class="mt-4 grid gap-3 md:grid-cols-[1fr_180px_auto]">
                                         <input type="hidden" name="ocorrencia_id" value="<?= (int) ($ocorrencia['id'] ?? 0) ?>">
-                                        <input type="text" name="observacao_visita" placeholder="ObservaÃ§Ã£o da visita ou retorno" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
+                                        <input type="text" name="observacao_visita" placeholder="Observação da visita ou retorno" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
                                         <input type="date" name="data_proxima_acao" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
                                         <button type="submit" class="rounded-md border border-cobalto px-3 py-2 text-sm text-cobalto">Registrar visita</button>
                                     </form>
@@ -150,13 +150,13 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                             </article>
                         <?php endforeach; ?>
                         <?php if ($pendenciasVisita === []): ?>
-                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Nenhuma pendÃªncia de visita no momento.</div>
+                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Nenhuma pendência de visita no momento.</div>
                         <?php endif; ?>
                     </div>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="font-display text-xl text-cobalto">OcorrÃªncias assistenciais recentes</h2>
+                    <h2 class="font-display text-xl text-cobalto">Ocorrências assistenciais recentes</h2>
                     <p class="mb-4 text-sm text-slate-700">Fluxo assistencial de saude, nascimento, falecimento, solidariedade e apoio geral.</p>
 
                     <div class="space-y-3">
@@ -169,7 +169,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                         <div class="mt-1 text-sm text-slate-700">
                                             <?= htmlspecialchars((string) ($ocorrencia['obreiro_nome'] ?? 'Sem obreiro vinculado')) ?>
                                             <?php if (!empty($ocorrencia['nome_familiar'])): ?>
-                                                Â· Familiar: <?= htmlspecialchars((string) $ocorrencia['nome_familiar']) ?>
+                                                · Familiar: <?= htmlspecialchars((string) $ocorrencia['nome_familiar']) ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -179,8 +179,8 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                 <div class="mt-3 grid gap-2 text-xs text-slate-700 md:grid-cols-2">
                                     <div>Prioridade: <?= htmlspecialchars((string) ($ocorrencia['prioridade'] ?? 'media')) ?></div>
                                     <div>Encaminhar para: <?= htmlspecialchars((string) ($ocorrencia['encaminhar_para'] ?? 'nenhum')) ?></div>
-                                    <div>Data da ocorrÃªncia: <?= htmlspecialchars((string) ($ocorrencia['data_ocorrencia'] ?? '-')) ?></div>
-                                    <div>PrÃ³xima aÃ§Ã£o: <?= htmlspecialchars((string) ($ocorrencia['data_proxima_acao'] ?? '-')) ?></div>
+                                    <div>Data da ocorrência: <?= htmlspecialchars((string) ($ocorrencia['data_ocorrencia'] ?? '-')) ?></div>
+                                    <div>Próxima ação: <?= htmlspecialchars((string) ($ocorrencia['data_proxima_acao'] ?? '-')) ?></div>
                                 </div>
 
                                 <?php if ($podeOperarOcorrencias || $podeTratarTesouraria): ?>
@@ -189,10 +189,10 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                         <select name="status" class="rounded-md border border-slate-300 px-2 py-1 text-sm">
                                             <option value="aberta" <?= $status === 'aberta' ? 'selected' : '' ?>>Aberta</option>
                                             <option value="em_acompanhamento" <?= $status === 'em_acompanhamento' ? 'selected' : '' ?>>Em acompanhamento</option>
-                                            <option value="concluida" <?= $status === 'concluida' ? 'selected' : '' ?>>ConcluÃ­da</option>
+                                            <option value="concluida" <?= $status === 'concluida' ? 'selected' : '' ?>>Concluída</option>
                                             <option value="cancelada" <?= $status === 'cancelada' ? 'selected' : '' ?>>Cancelada</option>
                                         </select>
-                                        <input type="text" name="observacao_status" placeholder="ObservaÃ§Ã£o de status" class="min-w-[220px] flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm">
+                                        <input type="text" name="observacao_status" placeholder="Observação de status" class="min-w-[220px] flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm">
                                         <button type="submit" class="rounded-md border border-cobalto px-3 py-1.5 text-sm text-cobalto">Atualizar status</button>
                                     </form>
                                 <?php endif; ?>
@@ -204,16 +204,16 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
             <section class="space-y-6">
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="font-display text-xl text-cobalto">Nova ocorrÃªncia assistencial</h2>
-                    <p class="mb-4 text-sm text-slate-700">Registro de ocorrÃªncia, visita, apoio financeiro e encaminhamento institucional.</p>
+                    <h2 class="font-display text-xl text-cobalto">Nova ocorrência assistencial</h2>
+                    <p class="mb-4 text-sm text-slate-700">Registro de ocorrência, visita, apoio financeiro e encaminhamento institucional.</p>
 
                     <?php if ($podeOperarOcorrencias): ?>
                         <form method="POST" action="/assistencia/ocorrencias/salvar" class="grid gap-4">
                             <div>
-                                <label class="mb-1 block text-sm font-medium">Tipo de ocorrÃªncia</label>
+                                <label class="mb-1 block text-sm font-medium">Tipo de ocorrência</label>
                                 <select name="tipo_ocorrencia" class="w-full rounded-lg border border-slate-300 px-3 py-2">
-                                    <option value="assistencia_geral">AssistÃªncia geral</option>
-                                    <option value="saude">SaÃºde</option>
+                                    <option value="assistencia_geral">Assistência geral</option>
+                                    <option value="saude">Saúde</option>
                                     <option value="nascimento">Nascimento</option>
                                     <option value="falecimento">Falecimento</option>
                                     <option value="solidariedade">Solidariedade</option>
@@ -222,7 +222,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                             <div>
                                 <label class="mb-1 block text-sm font-medium">Obreiro vinculado</label>
                                 <select name="obreiro_id" class="w-full rounded-lg border border-slate-300 px-3 py-2">
-                                    <option value="">NÃ£o vincular obreiro</option>
+                                    <option value="">Não vincular obreiro</option>
                                     <?php foreach ($obreiros as $obreiro): ?>
                                         <option value="<?= htmlspecialchars((string) ($obreiro['id'] ?? '')) ?>">
                                             <?= htmlspecialchars((string) ($obreiro['nome_historico'] ?? $obreiro['nome'] ?? '')) ?> - CIM <?= htmlspecialchars((string) ($obreiro['cim'] ?? '-')) ?>
@@ -243,9 +243,9 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                 </select>
                                 <select name="encaminhar_para" class="rounded-lg border border-slate-300 px-3 py-2">
                                     <option value="nenhum">Nenhum</option>
-                                    <option value="veneravel">VenerÃ¡vel Mestre</option>
+                                    <option value="veneravel">Venerável Mestre</option>
                                     <option value="tesoureiro">Tesoureiro</option>
-                                    <option value="ambos">VenerÃ¡vel + Tesoureiro</option>
+                                    <option value="ambos">Venerável + Tesoureiro</option>
                                 </select>
                             </div>
                             <div class="grid gap-3 md:grid-cols-2">
@@ -256,7 +256,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                 <input type="text" name="valor_solicitado" placeholder="Valor solicitado" class="rounded-lg border border-slate-300 px-3 py-2">
                                 <input type="text" name="valor_aprovado" placeholder="Valor aprovado" class="rounded-lg border border-slate-300 px-3 py-2">
                             </div>
-                            <textarea name="descricao" rows="5" required class="w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="DescriÃ§Ã£o detalhada da ocorrÃªncia"></textarea>
+                            <textarea name="descricao" rows="5" required class="w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="Descrição detalhada da ocorrência"></textarea>
                             <label class="inline-flex items-center gap-2 text-sm">
                                 <input type="checkbox" name="necessita_visita" value="1">
                                 Necessita visita presencial
@@ -265,19 +265,19 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
                                 <input type="checkbox" name="necessita_apoio_financeiro" value="1">
                                 Necessita apoio financeiro
                             </label>
-                            <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 font-medium text-white">Registrar ocorrÃªncia</button>
+                            <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 font-medium text-white">Registrar ocorrência</button>
                         </form>
                     <?php endif; ?>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="font-display text-xl text-cobalto">FunÃ§Ãµes do cargo no painel</h2>
+                    <h2 class="font-display text-xl text-cobalto">Funções do cargo no painel</h2>
                     <ul class="mt-4 list-disc space-y-2 pl-5 text-sm text-slate-700">
-                        <li>Registrar ocorrÃªncias assistenciais.</li>
+                        <li>Registrar ocorrências assistenciais.</li>
                         <li>Priorizar casos e marcar necessidade de visita.</li>
-                        <li>Controlar retorno e prÃ³xima aÃ§Ã£o.</li>
-                        <li>Encaminhar casos ao VenerÃ¡vel e Ã  Tesouraria.</li>
-                        <li>Acompanhar apoio financeiro e status de resoluÃ§Ã£o.</li>
+                        <li>Controlar retorno e próxima ação.</li>
+                        <li>Encaminhar casos ao Venerável e à Tesouraria.</li>
+                        <li>Acompanhar apoio financeiro e status de resolução.</li>
                     </ul>
                 </div>
             </section>

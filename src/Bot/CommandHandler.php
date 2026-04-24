@@ -1497,7 +1497,7 @@ class CommandHandler
 
     public function handleSecAgendas($chatId)
     {
-        $this->telegram->sendMessage($chatId, "Use o painel web da Secretaria para operar sessÃµes, publicaÃ§Ãµes e trabalhos da ordem do dia.");
+        $this->telegram->sendMessage($chatId, "Use o painel web da Secretaria para operar sessões, publicações e trabalhos da ordem do dia.");
     }
 }
 
