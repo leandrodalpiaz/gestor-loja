@@ -1010,13 +1010,16 @@ class CommandHandler
                 $chatId = $callback['message']['chat']['id'];
                 $data = $callback['data'];
                 $fromId = (int) ($callback['from']['id'] ?? 0);
+                $callbackId = (string) ($callback['id'] ?? '');
+                if ($callbackId !== '') {
+                    $this->telegram->answerCallbackQuery($callbackId);
+                }
 
                 if (!$this->isDev($fromId)) {
                     $access = $this->resolvePrivateAccess($fromId);
                     $state = (string) ($access['state'] ?? 'inexistente');
                     if ($state !== 'ativo') {
                         $this->sendAccessStateMessage($chatId, $state);
-                        $this->telegram->answerCallbackQuery($callback['id']);
                         return;
                     }
                 }
@@ -1139,7 +1142,6 @@ class CommandHandler
                         break;
                 }
 
-                $this->telegram->answerCallbackQuery($callback['id']);
             } else {
                 error_log('[handle] Update nao suportado: ' . json_encode($update));
             }
