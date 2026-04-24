@@ -5,9 +5,7 @@ namespace App\Core\Http;
 use App\Core\Authorization\PermissionMap;
 use App\Models\Balaustre;
 use App\Models\EfemerideRegistro;
-use App\Models\HistoriaMaconica;
 use App\Models\MensagemComplementar;
-use App\Models\PalavraDia;
 use App\Models\Sessao;
 
 class MiniappApiRoutes
@@ -106,10 +104,22 @@ class MiniappApiRoutes
             }
         }
 
-        $efemerideModel = new EfemerideRegistro();
-        $historiaModel = new HistoriaMaconica();
-        $palavraDiaModel = new PalavraDia();
-        $mensagensModel = new MensagemComplementar();
+        $efemerideModel = null;
+        $mensagensModel = null;
+        $resolveEfemerideModel = static function () use (&$efemerideModel): EfemerideRegistro {
+            if (!$efemerideModel instanceof EfemerideRegistro) {
+                $efemerideModel = new EfemerideRegistro();
+            }
+
+            return $efemerideModel;
+        };
+        $resolveMensagensModel = static function () use (&$mensagensModel): MensagemComplementar {
+            if (!$mensagensModel instanceof MensagemComplementar) {
+                $mensagensModel = new MensagemComplementar();
+            }
+
+            return $mensagensModel;
+        };
 
         if ($requestUri === '/api/miniapp/efemeride/salvar' && $method === 'POST') {
             $id = (int) ($body['id'] ?? 0);
@@ -122,10 +132,10 @@ class MiniappApiRoutes
             }
 
             if ($id > 0) {
-                $ok = $efemerideModel->atualizar($id, $body);
+                $ok = $resolveEfemerideModel()->atualizar($id, $body);
             } else {
                 $createdBy = (int) ($miniappObreiro['id'] ?? ($session['usuario_id'] ?? 0));
-                $ok = $efemerideModel->create($body, $createdBy > 0 ? $createdBy : null);
+                $ok = $resolveEfemerideModel()->create($body, $createdBy > 0 ? $createdBy : null);
             }
 
             JsonResponse::send(['ok' => $ok]);
@@ -133,28 +143,28 @@ class MiniappApiRoutes
 
         if ($requestUri === '/api/miniapp/efemeride/desativar' && $method === 'POST') {
             $id = (int) ($body['id'] ?? 0);
-            JsonResponse::send(['ok' => $id > 0 ? $efemerideModel->desativar($id) : false]);
+            JsonResponse::send(['ok' => $id > 0 ? $resolveEfemerideModel()->desativar($id) : false]);
         }
 
         if ($requestUri === '/api/miniapp/efemerides/listar' && $method === 'GET') {
-            JsonResponse::send(['ok' => true, 'registros' => $efemerideModel->buscarComFiltros(['ativo' => 'all'], 300)]);
+            JsonResponse::send(['ok' => true, 'registros' => $resolveEfemerideModel()->buscarComFiltros(['ativo' => 'all'], 300)]);
         }
 
         if ($requestUri === '/api/miniapp/efemerides/excluir' && $method === 'POST') {
             $id = (int) ($body['id'] ?? 0);
-            JsonResponse::send(['ok' => $id > 0 ? $efemerideModel->excluir($id) : false]);
+            JsonResponse::send(['ok' => $id > 0 ? $resolveEfemerideModel()->excluir($id) : false]);
         }
 
         if ($requestUri === '/api/miniapp/historico/listar' && $method === 'GET') {
-            $registros = $efemerideModel->buscarComFiltros(['tipo' => 'História', 'ativo' => 'all'], 300);
+            $registros = $resolveEfemerideModel()->buscarComFiltros(['tipo' => 'História', 'ativo' => 'all'], 300);
             if ($registros === []) {
-                $registros = $efemerideModel->buscarComFiltros(['tipo' => 'Historia', 'ativo' => 'all'], 300);
+                $registros = $resolveEfemerideModel()->buscarComFiltros(['tipo' => 'Historia', 'ativo' => 'all'], 300);
             }
             JsonResponse::send(['ok' => true, 'registros' => $registros]);
         }
 
         if ($requestUri === '/api/miniapp/fallback/listar' && $method === 'GET') {
-            JsonResponse::send(['ok' => true, 'mensagens' => $mensagensModel->listarPorTipo('fallback')]);
+            JsonResponse::send(['ok' => true, 'mensagens' => $resolveMensagensModel()->listarPorTipo('fallback')]);
         }
 
         if ($requestUri === '/api/miniapp/fallback/salvar' && $method === 'POST') {
@@ -164,18 +174,19 @@ class MiniappApiRoutes
                 JsonResponse::send(['ok' => false, 'erro' => 'Mensagem vazia.']);
             }
 
-            $ok = $id > 0 ? $mensagensModel->atualizar($id, $mensagem) : $mensagensModel->criar('fallback', $mensagem);
+            $mensagens = $resolveMensagensModel();
+            $ok = $id > 0 ? $mensagens->atualizar($id, $mensagem) : $mensagens->criar('fallback', $mensagem);
             JsonResponse::send(['ok' => $ok]);
         }
 
         if ($requestUri === '/api/miniapp/fallback/toggle' && $method === 'POST') {
             $id = (int) ($body['id'] ?? 0);
-            JsonResponse::send(['ok' => $id > 0 ? $mensagensModel->toggleAtivo($id) : false]);
+            JsonResponse::send(['ok' => $id > 0 ? $resolveMensagensModel()->toggleAtivo($id) : false]);
         }
 
         if ($requestUri === '/api/miniapp/fallback/excluir' && $method === 'POST') {
             $id = (int) ($body['id'] ?? 0);
-            JsonResponse::send(['ok' => $id > 0 ? $mensagensModel->excluir($id) : false]);
+            JsonResponse::send(['ok' => $id > 0 ? $resolveMensagensModel()->excluir($id) : false]);
         }
 
         if ($requestUri === '/api/miniapp/aprendizado' && $method === 'GET') {

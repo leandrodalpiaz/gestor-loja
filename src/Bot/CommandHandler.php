@@ -872,11 +872,13 @@ class CommandHandler
         );
 
         if ($enviadoNoPrivado) {
-            $this->telegram->sendMessage(
-                $chatId,
-                "A prévia de 'Neste Dia' foi enviada no seu privado para revisão.",
-                ['parse_mode' => 'HTML']
-            );
+            if ((string) $chatId !== (string) $requesterTelegramId) {
+                $this->telegram->sendMessage(
+                    $chatId,
+                    "A prévia de 'Neste Dia' foi enviada no seu privado para revisão.",
+                    ['parse_mode' => 'HTML']
+                );
+            }
             return;
         }
 
