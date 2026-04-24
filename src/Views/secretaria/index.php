@@ -158,7 +158,7 @@ require __DIR__ . '/../partials/erp_head.php';
                 <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) $resumo['trabalhos_pendentes'] ?></div>
             </div>
             <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
-                <div class="text-sm text-slate-700">Públicacoes em rascunho</div>
+                <div class="text-sm text-slate-700">Publicações em rascunho</div>
                 <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) $resumo['publicacoes_rascunho'] ?></div>
             </div>
             <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
@@ -172,7 +172,7 @@ require __DIR__ . '/../partials/erp_head.php';
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">Cadastros</div>
-                        <h2 class="font-sans text-xl text-erp-navy mt-2">Saude cadastral da Secretaria</h2>
+                        <h2 class="font-sans text-xl text-erp-navy mt-2">Saúde cadastral da Secretaria</h2>
                         <p class="text-sm text-slate-700 mt-2">Resumo rápido para saneamento do quadro e preparo dos relatórios.</p>
                     </div>
                     <a href="/obreiros" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50">Abrir central de obreiros</a>
@@ -1070,7 +1070,7 @@ require __DIR__ . '/../partials/erp_head.php';
                 </div>
 
                 <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
-                    <h2 class="font-sans text-xl text-erp-navy">Públicacoes oficiais</h2>
+                    <h2 class="font-sans text-xl text-erp-navy">Publicações oficiais</h2>
                     <p class="text-sm text-slate-700 mb-4">Informativos das Potências, agenda, próxima sessão e convites externos sob rastreio da Secretaria.</p>
                     <form method="POST" action="/secretaria/publicacoes/salvar" class="space-y-4">
                         <div>
@@ -1139,7 +1139,7 @@ require __DIR__ . '/../partials/erp_head.php';
                     <h2 class="font-sans text-xl text-erp-navy">Responsabilidades consolidadas</h2>
                     <ul class="mt-4 space-y-2 text-sm text-slate-700 list-disc pl-5">
                         <li>Cadastro e atualização dos membros, inclusive grau e acesso a plataformas externas.</li>
-                        <li>Operacao central das sessoes, publicacoes e fluxo documental da Loja.</li>
+                        <li>Operação central das sessões, publicações e fluxo documental da Loja.</li>
                         <li>Registro dos trabalhos da ordem do dia e preservacao do acervo em PDF.</li>
                         <li>Preparacao dos insumos do balaustre em ambiente web, com fechamento posterior.</li>
                     </ul>

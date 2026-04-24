@@ -60,7 +60,7 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Operacao do bibliotecario</div>
+            <div class="text-sm font-semibold">Operação do bibliotecário</div>
             <div id="lista-pendentes" class="mt-3 space-y-2 text-sm"></div>
             <div class="mt-3 grid grid-cols-2 gap-2">
                 <button id="atalho-catalogo" class="rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Abrir catalogo web</button>
@@ -104,7 +104,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não foi possível carregar os dados da biblioteca agora. Tente novamente em instantes.');
+    if (!json.ok) throw new Error(json.erro || 'Não conseguimos carregar os dados da biblioteca agora. Atualize a tela e tente novamente.');
     return json;
 }
 
@@ -155,7 +155,7 @@ function render() {
     document.getElementById('btn-solicitar').classList.toggle('opacity-50', !foco.id || !foco.pode_solicitar);
 
     renderLista('lista-comentarios', dashboard.comentarios, 'Nenhum comentario recente para o livro em foco.', item => `
-        <div class="font-medium">${esc(item.obreiro_nome || 'Irmao')}</div>
+        <div class="font-medium">${esc(item.obreiro_nome || 'Irmão')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.criado_em || '')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(item.comentario || '')}</div>
     `);

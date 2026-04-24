@@ -170,7 +170,7 @@ class ObrigacaoFinanceira
             ]);
 
             if (!$lancamentoOk) {
-                throw new \RuntimeException('Nao foi possivel registrar o lancamento financeiro.');
+                throw new \RuntimeException('Não foi possível registrar o lançamento financeiro.');
             }
 
             $lancamentoId = (int) $this->db->lastInsertId();
@@ -1022,3 +1022,4 @@ class ObrigacaoFinanceira
         }
     }
 }
+

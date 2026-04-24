@@ -133,7 +133,7 @@ class SecretariaController
         if ($sessaoEdicaoId > 0) {
             $sessaoEdicao = $sessaoModel->findById($sessaoEdicaoId);
             if (!$sessaoEdicao) {
-                $_SESSION['mensagem_erro'] = 'Sessao informada para edicao nao foi encontrada.';
+                $_SESSION['mensagem_erro'] = 'Sessão informada para edição não foi encontrada.';
                 header('Location: /secretaria');
                 exit;
             }
@@ -212,25 +212,25 @@ class SecretariaController
 
         $dashboard = [
             'title' => 'Dashboard operacional da Secretaria',
-            'subtitle' => 'Execucao diaria, documental e centralizadora.',
+            'subtitle' => 'Execução diária, documental e centralizadora.',
             'meta' => [
                 'Perfil: operacional',
                 'Sem analytics complexos',
                 'Foco em pendencias e estados',
             ],
             'actions' => [
-                ['label' => 'Nova sessao / salvar sessao', 'href' => '/secretaria'],
+                ['label' => 'Nova sessão / salvar sessão', 'href' => '/secretaria'],
                 ['label' => 'Publicar rascunho', 'href' => '/secretaria'],
-                ['label' => 'Publicar sessao', 'href' => '/secretaria'],
+                ['label' => 'Publicar sessão', 'href' => '/secretaria'],
                 ['label' => 'Salvar trabalho', 'href' => '/secretaria'],
-                ['label' => 'Salvar publicacao', 'href' => '/secretaria'],
+                ['label' => 'Salvar publicação', 'href' => '/secretaria'],
                 ['label' => 'Atualizar obreiro', 'href' => '/obreiros'],
                 ['label' => 'Gerar convite', 'href' => '/admin/convites'],
             ],
             'blocks' => [
                 [
-                    'title' => 'Sessoes',
-                    'subtitle' => 'Agenda e operacao de sessoes.',
+                    'title' => 'Sessões',
+                    'subtitle' => 'Agenda e operação de sessões.',
                     'span' => 'half',
                     'metrics' => [
                         ['label' => 'Futuras', 'value' => (string) count($sessoes)],
@@ -244,28 +244,28 @@ class SecretariaController
                 ],
                 [
                     'title' => 'Balaustres',
-                    'subtitle' => 'Pendencias e estado operacional.',
+                    'subtitle' => 'Pendências e estado operacional.',
                     'span' => 'half',
                     'metrics' => [
                         ['label' => 'Aptos', 'value' => (string) $resumo['balaustres_aptos']],
                         ['label' => 'Recentes', 'value' => (string) count($balaustres)],
                     ],
                     'list' => array_map(static fn (array $item): array => [
-                        'item' => (string) ($item['numero_balaustre'] ?: 'Sem numero'),
+                        'item' => (string) ($item['numero_balaustre'] ?: 'Sem número'),
                         'meta' => (string) ($item['sessao_titulo'] ?? ''),
                         'status' => (string) ($item['status'] ?? '-'),
                     ], array_slice($balaustres, 0, 5)),
                 ],
                 [
-                    'title' => 'Publicacoes e trabalhos',
+                    'title' => 'Publicações e trabalhos',
                     'subtitle' => 'Controle de envio e rascunho.',
                     'span' => 'half',
                     'metrics' => [
                         ['label' => 'Trabalhos pendentes', 'value' => (string) $resumo['trabalhos_pendentes']],
-                        ['label' => 'Publicacoes rascunho', 'value' => (string) $resumo['publicacoes_rascunho']],
+                        ['label' => 'Publicações rascunho', 'value' => (string) $resumo['publicacoes_rascunho']],
                     ],
                     'list' => array_map(static fn (array $item): array => [
-                        'item' => (string) ($item['titulo'] ?? 'Publicacao'),
+                        'item' => (string) ($item['titulo'] ?? 'Publicação'),
                         'meta' => (string) ($item['tipo_publicacao'] ?? 'Secretaria'),
                         'status' => (string) ($item['status_publicacao'] ?? '-'),
                     ], array_slice($publicacoes, 0, 4)),
@@ -280,16 +280,16 @@ class SecretariaController
                         ['label' => 'Com bot', 'value' => (string) ($resumoCadastros['com_telegram'] ?? 0)],
                     ],
                     'list' => [
-                        ['item' => 'Central de obreiros', 'meta' => 'Atualizacoes cadastrais', 'status' => 'Operacional'],
+                        ['item' => 'Central de obreiros', 'meta' => 'Atualizações cadastrais', 'status' => 'Operacional'],
                         ['item' => 'Convites de acesso', 'meta' => 'Controle de entrada', 'status' => 'Ativo'],
-                        ['item' => 'Acessos do sistema', 'meta' => 'Permissoes e auditoria', 'status' => 'Ativo'],
+                        ['item' => 'Acessos do sistema', 'meta' => 'Permissões e auditoria', 'status' => 'Ativo'],
                     ],
                 ],
             ],
             'alerts' => [
-                ['title' => 'Pendencias de sessao', 'text' => $resumo['sessoes_futuras'] > 0 ? 'Existem sessoes para revisao/publicacao.' : 'Nenhuma sessao pendente.', 'tone' => $resumo['sessoes_futuras'] > 0 ? 'warning' : 'success'],
+                ['title' => 'Pendências de sessão', 'text' => $resumo['sessoes_futuras'] > 0 ? 'Existem sessões para revisão/publicação.' : 'Nenhuma sessão pendente.', 'tone' => $resumo['sessoes_futuras'] > 0 ? 'warning' : 'success'],
                 ['title' => 'Balaustres aptos', 'text' => $resumo['balaustres_aptos'] . ' balaustre(s) apto(s) para encaminhamento.', 'tone' => $resumo['balaustres_aptos'] > 0 ? 'warning' : 'success'],
-                ['title' => 'Abertura/encerramento de votacao', 'text' => $podeAbrirVotacao ? 'Permitido para este usuario.' : 'Somente Veneravel/Admin podem abrir ou encerrar votacao.', 'tone' => $podeAbrirVotacao ? 'success' : 'warning'],
+                ['title' => 'Abertura/encerramento de votação', 'text' => $podeAbrirVotacao ? 'Permitido para este usuário.' : 'Somente Venerável/Admin podem abrir ou encerrar votação.', 'tone' => $podeAbrirVotacao ? 'success' : 'warning'],
             ],
             'activity' => array_merge(
                 array_map(static fn (array $sessao): array => [
@@ -302,7 +302,7 @@ class SecretariaController
                 ], array_slice($balaustres, 0, 3))
             ),
             'links' => [
-                ['label' => 'Balaustres / votacao', 'href' => '/secretaria/votacao'],
+                ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
                 ['label' => 'Relatorio anual', 'href' => '/secretaria/relatorio-anual'],
                 ['label' => 'Central de obreiros', 'href' => '/obreiros'],
                 ['label' => 'Convites', 'href' => '/admin/convites'],
@@ -397,8 +397,8 @@ class SecretariaController
         }
         $_SESSION['secretaria_sessao_rascunho'] = $payload;
         $_SESSION['mensagem_sucesso'] = $sessaoId > 0
-            ? 'Sessao preparada para revisao final da edicao. Confira o resumo antes de confirmar a atualizacao.'
-            : 'Sessao preparada para revisao final. Confira o resumo antes de publicar.';
+            ? 'Sessão preparada para revisão final da edição. Confira o resumo antes de confirmar a atualização.'
+            : 'Sessão preparada para revisão final. Confira o resumo antes de publicar.';
 
         header('Location: /secretaria');
         exit;
@@ -413,7 +413,7 @@ class SecretariaController
 
         $rascunho = $_SESSION['secretaria_sessao_rascunho'] ?? null;
         if (!is_array($rascunho)) {
-            $_SESSION['mensagem_erro'] = 'Nao existe rascunho de sessao aguardando revisao.';
+            $_SESSION['mensagem_erro'] = 'Não existe rascunho de sessão aguardando revisão.';
             header('Location: /secretaria');
             exit;
         }
@@ -429,10 +429,10 @@ class SecretariaController
                 $sessaoIdExistente,
                 $rascunho,
                 $autorId,
-                'Atualizacao confirmada pela Secretaria apos revisao final.'
+                'Atualização confirmada pela Secretaria após revisão final.'
             );
             if (!$ok) {
-                $_SESSION['mensagem_erro'] = 'Nao foi possivel atualizar a sessao revisada.';
+                $_SESSION['mensagem_erro'] = 'Não foi possível atualizar a sessão revisada.';
                 header('Location: /secretaria');
                 exit;
             }
@@ -441,12 +441,12 @@ class SecretariaController
             $sessaoId = $sessaoModel->criar($rascunho, $autorId);
 
             if (!$sessaoId) {
-                $_SESSION['mensagem_erro'] = 'Nao foi possivel persistir a sessao revisada.';
+                $_SESSION['mensagem_erro'] = 'Não foi possível persistir a sessão revisada.';
                 header('Location: /secretaria');
                 exit;
             }
 
-            $sessaoModel->marcarPublicada($sessaoId, $autorId, 'Publicacao confirmada pela Secretaria apos revisao final.');
+            $sessaoModel->marcarPublicada($sessaoId, $autorId, 'Publicação confirmada pela Secretaria após revisão final.');
         }
 
         $sessaoCriada = $sessaoModel->findById($sessaoId) ?? $rascunho;
@@ -455,8 +455,8 @@ class SecretariaController
 
         unset($_SESSION['secretaria_sessao_rascunho']);
         $_SESSION['mensagem_sucesso'] = $sessaoIdExistente > 0
-            ? 'Sessao atualizada com sucesso e historico registrado.'
-            : 'Sessao publicada com sucesso e pronta para confirmacoes.';
+            ? 'Sessão atualizada com sucesso e histórico registrado.'
+            : 'Sessão publicada com sucesso e pronta para confirmações.';
         header('Location: /secretaria');
         exit;
     }
@@ -464,7 +464,7 @@ class SecretariaController
     public function cancelarRascunhoSessao(): void
     {
         unset($_SESSION['secretaria_sessao_rascunho']);
-        $_SESSION['mensagem_sucesso'] = 'Rascunho da sessao descartado.';
+        $_SESSION['mensagem_sucesso'] = 'Rascunho da sessão descartado.';
         header('Location: /secretaria');
         exit;
     }
@@ -478,7 +478,7 @@ class SecretariaController
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         if ($sessaoId <= 0) {
-            $_SESSION['mensagem_erro'] = 'Sessao invalida para cancelamento.';
+            $_SESSION['mensagem_erro'] = 'Sessão inválida para cancelamento.';
             header('Location: /secretaria');
             exit;
         }
@@ -491,8 +491,8 @@ class SecretariaController
         );
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Sessao cancelada com sucesso pela Secretaria.'
-            : 'Nao foi possivel cancelar a sessao.';
+            ? 'Sessão cancelada com sucesso pela Secretaria.'
+            : 'Não foi possível cancelar a sessão.';
 
         header('Location: /secretaria');
         exit;
@@ -507,7 +507,7 @@ class SecretariaController
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         if ($sessaoId <= 0) {
-            $_SESSION['mensagem_erro'] = 'Sessao invalida para reabertura.';
+            $_SESSION['mensagem_erro'] = 'Sessão inválida para reabertura.';
             header('Location: /secretaria');
             exit;
         }
@@ -520,8 +520,8 @@ class SecretariaController
         );
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Sessao reaberta com sucesso pela Secretaria.'
-            : 'Nao foi possivel reabrir a sessao.';
+            ? 'Sessão reaberta com sucesso pela Secretaria.'
+            : 'Não foi possível reabrir a sessão.';
 
         header('Location: /secretaria');
         exit;
@@ -536,7 +536,7 @@ class SecretariaController
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         if ($sessaoId <= 0) {
-            $_SESSION['mensagem_erro'] = 'Sessao invalida para publicacao.';
+            $_SESSION['mensagem_erro'] = 'Sessão inválida para publicação.';
             header('Location: /secretaria');
             exit;
         }
@@ -547,12 +547,12 @@ class SecretariaController
         $ok = (new Sessao())->marcarPublicada(
             $sessaoId,
             $autorId,
-            'Publicacao operacional realizada pela Secretaria.'
+            'Publicação operacional realizada pela Secretaria.'
         );
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Sessao publicada com sucesso pela Secretaria.'
-            : 'Nao foi possivel publicar a sessao.';
+            ? 'Sessão publicada com sucesso pela Secretaria.'
+            : 'Não foi possível publicar a sessão.';
 
         header('Location: /secretaria');
         exit;
@@ -571,7 +571,7 @@ class SecretariaController
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Trabalho registrado com sucesso.'
-            : 'Nao foi possivel registrar o trabalho.';
+            : 'Não foi possível registrar o trabalho.';
 
         header('Location: /secretaria');
         exit;
@@ -589,8 +589,8 @@ class SecretariaController
         $ok = $publicacaoModel->criar($_POST, $autorId !== '' ? $autorId : null);
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Publicacao registrada com sucesso.'
-            : 'Nao foi possivel registrar a publicacao.';
+            ? 'Publicação registrada com sucesso.'
+            : 'Não foi possível registrar a publicação.';
 
         header('Location: /secretaria');
         exit;
@@ -605,7 +605,7 @@ class SecretariaController
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         if ($sessaoId <= 0) {
-            $_SESSION['mensagem_erro'] = 'Selecione a sessao para salvar o balaustre.';
+            $_SESSION['mensagem_erro'] = 'Selecione a sessão para salvar o balaustre.';
             header('Location: /secretaria');
             exit;
         }
@@ -615,7 +615,7 @@ class SecretariaController
         $ok = $model->salvarPorSessao($sessaoId, $_POST, $autorId !== '' ? $autorId : null);
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Balaustre salvo em rascunho.'
-            : 'Nao foi possivel salvar o balaustre.';
+            : 'Não foi possível salvar o balaustre.';
 
         header('Location: /secretaria');
         exit;
@@ -630,7 +630,7 @@ class SecretariaController
 
         $balaustreId = (int) ($_POST['balaustre_id'] ?? 0);
         if ($balaustreId <= 0) {
-            $_SESSION['mensagem_erro'] = 'Balaustre invalido para marcar como apto.';
+            $_SESSION['mensagem_erro'] = 'Balaustre inválido para marcar como apto.';
             header('Location: /secretaria');
             exit;
         }
@@ -639,8 +639,8 @@ class SecretariaController
         $autorId = (string) ($_SESSION['usuario_id'] ?? '');
         $ok = $model->marcarAptoVotacao($balaustreId, $autorId !== '' ? $autorId : null);
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Balaustre apto para votacao. O Veneravel Mestre ja pode abrir a votacao.'
-            : 'Nao foi possivel marcar o balaustre como apto.';
+            ? 'Balaustre apto para votação. O Venerável Mestre já pode abrir a votação.'
+            : 'Não foi possível marcar o balaustre como apto.';
 
         header('Location: /secretaria');
         exit;
@@ -655,7 +655,7 @@ class SecretariaController
 
         $balaustreId = (int) ($_POST['balaustre_id'] ?? 0);
         if ($balaustreId <= 0) {
-            $_SESSION['mensagem_erro'] = 'Balaustre invalido para abrir votacao.';
+            $_SESSION['mensagem_erro'] = 'Balaustre inválido para abrir votação.';
             header('Location: /secretaria');
             exit;
         }
@@ -664,9 +664,9 @@ class SecretariaController
         $autorId = (string) ($_SESSION['usuario_id'] ?? '');
         $resultado = $model->abrirVotacao($balaustreId, $autorId !== '' ? $autorId : null);
         if (($resultado['ok'] ?? false) === true) {
-            $_SESSION['mensagem_sucesso'] = 'Votacao aberta com sucesso pelo Veneravel Mestre. Votantes aptos: ' . (int) ($resultado['total_votantes'] ?? 0) . '.';
+            $_SESSION['mensagem_sucesso'] = 'Votação aberta com sucesso pelo Venerável Mestre. Votantes aptos: ' . (int) ($resultado['total_votantes'] ?? 0) . '.';
         } else {
-            $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'Nao foi possivel abrir votacao.');
+            $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'Não foi possível abrir votação.');
         }
 
         header('Location: /secretaria');
@@ -702,7 +702,7 @@ class SecretariaController
         if (($resultado['ok'] ?? false) === true) {
             $_SESSION['mensagem_sucesso'] = 'Voto registrado com sucesso.';
         } else {
-            $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'Nao foi possivel registrar voto.');
+            $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'Não foi possível registrar voto.');
         }
 
         header('Location: ' . $destino);
@@ -718,7 +718,7 @@ class SecretariaController
 
         $balaustreId = (int) ($_POST['balaustre_id'] ?? 0);
         if ($balaustreId <= 0) {
-            $_SESSION['mensagem_erro'] = 'Balaustre invalido para encerrar votacao.';
+            $_SESSION['mensagem_erro'] = 'Balaustre inválido para encerrar votação.';
             header('Location: /secretaria');
             exit;
         }
@@ -726,9 +726,9 @@ class SecretariaController
         $model = new Balaustre();
         $resultado = $model->encerrarVotacaoPorBalaustre($balaustreId);
         if (($resultado['ok'] ?? false) === true) {
-            $_SESSION['mensagem_sucesso'] = 'Votacao encerrada. Resultado do balaustre: ' . (string) ($resultado['status'] ?? 'indefinido') . '.';
+            $_SESSION['mensagem_sucesso'] = 'Votação encerrada. Resultado do balaustre: ' . (string) ($resultado['status'] ?? 'indefinido') . '.';
         } else {
-            $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'Nao foi possivel encerrar votacao.');
+            $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'Não foi possível encerrar votação.');
         }
 
         header('Location: /secretaria');
@@ -883,7 +883,7 @@ class SecretariaController
         ];
 
         if ($payload['titulo'] === '' || $payload['data_hora_inicio'] === '') {
-            return ['ok' => false, 'erro' => 'Titulo e data/hora de inicio sao obrigatorios.'];
+            return ['ok' => false, 'erro' => 'Título e data/hora de início são obrigatórios.'];
         }
 
         $payload = $this->normalizarRascunhoSessao($payload);
@@ -891,11 +891,11 @@ class SecretariaController
 
         if ($sessaoId > 0) {
             $ok = $sessaoModel->atualizar($sessaoId, $payload, $autorId, 'Atualizacao realizada pela Secretaria no miniapp.');
-            return ['ok' => $ok, 'sessao_id' => $sessaoId, 'erro' => $ok ? null : 'Nao foi possivel atualizar a sessao.'];
+            return ['ok' => $ok, 'sessao_id' => $sessaoId, 'erro' => $ok ? null : 'Não foi possível atualizar a sessão.'];
         }
 
         $novoId = $sessaoModel->criar($payload, $autorId);
-        return ['ok' => $novoId !== null, 'sessao_id' => $novoId, 'erro' => $novoId !== null ? null : 'Nao foi possivel criar a sessao.'];
+        return ['ok' => $novoId !== null, 'sessao_id' => $novoId, 'erro' => $novoId !== null ? null : 'Não foi possível criar a sessão.'];
     }
 
     private function mapearSessaoMiniapp(array $sessao, Sessao $sessaoModel): array
@@ -925,18 +925,18 @@ class SecretariaController
         ];
 
         if ($payload['sessao_id'] <= 0 || $payload['titulo'] === '') {
-            return ['ok' => false, 'erro' => 'Sessao e titulo sao obrigatorios para registrar o trabalho.'];
+            return ['ok' => false, 'erro' => 'Sessão e título são obrigatórios para registrar o trabalho.'];
         }
 
         $ok = (new TrabalhoSessao())->criar($payload, $autorId);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar o trabalho.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar o trabalho.'];
     }
 
     public function salvarBalaustreMiniapp(array $input, ?string $autorId = null): array
     {
         $sessaoId = (int) ($input['sessao_id'] ?? 0);
         if ($sessaoId <= 0) {
-            return ['ok' => false, 'erro' => 'Selecione a sessao para registrar o balaustre.'];
+            return ['ok' => false, 'erro' => 'Selecione a sessão para registrar o balaustre.'];
         }
 
         $payload = [
@@ -947,6 +947,6 @@ class SecretariaController
         ];
 
         $ok = (new Balaustre())->salvarPorSessao($sessaoId, $payload, $autorId);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel salvar o balaustre.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível salvar o balaustre.'];
     }
 }

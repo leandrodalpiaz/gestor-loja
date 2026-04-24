@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Certificado de Presenca - Chancelaria</title>
+    <title>Certificado de Presença - Chancelaria</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -37,7 +37,7 @@
                 <div>
                     <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Chancelaria</p>
                     <h1 class="mt-2 text-3xl font-semibold">Emitir certificado</h1>
-                    <p class="mt-1 text-sm text-slate-200">Fluxo web da Chancelaria para gerar e enviar certificado de presenca com os dados oficiais da sessao.</p>
+                    <p class="mt-1 text-sm text-slate-200">Fluxo web da Chancelaria para gerar e enviar certificado de presença com os dados oficiais da sessão.</p>
                 </div>
                 <a href="/chancelaria/efemerides" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar para Chancelaria</a>
             </div>
@@ -50,56 +50,56 @@
             <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div class="mb-5 grid gap-3 md:grid-cols-3">
                     <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Data da sessao</p>
-                        <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($defaults['data_sessao'] !== '' ? $defaults['data_sessao'] : 'Definir no formulario') ?></p>
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Data da sessão</p>
+                        <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($defaults['data_sessao'] !== '' ? $defaults['data_sessao'] : 'Definir no formulário') ?></p>
                     </article>
                     <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                         <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Tipo</p>
-                        <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($defaults['tipo_sessao'] !== '' ? $defaults['tipo_sessao'] : 'Definir no formulario') ?></p>
+                        <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($defaults['tipo_sessao'] !== '' ? $defaults['tipo_sessao'] : 'Definir no formulário') ?></p>
                     </article>
                     <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                         <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Grau</p>
-                        <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($defaults['grau_sessao'] !== '' ? $defaults['grau_sessao'] : 'Definir no formulario') ?></p>
+                        <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($defaults['grau_sessao'] !== '' ? $defaults['grau_sessao'] : 'Definir no formulário') ?></p>
                     </article>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
                         <label for="nome_visitante" class="block mb-2 font-semibold">Nome do visitante</label>
-                        <input type="text" id="nome_visitante" name="nome_visitante" placeholder="Ex: Joao da Silva" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700">
+                        <input type="text" id="nome_visitante" name="nome_visitante" placeholder="Ex: João da Silva" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700">
                     </div>
 
                     <div class="md:col-span-2">
                         <label for="loja_visitante" class="block mb-2 font-semibold">Loja do visitante</label>
-                        <input type="text" id="loja_visitante" name="loja_visitante" placeholder="Ex: ARLS Luz e Verdade n 123" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700">
+                        <input type="text" id="loja_visitante" name="loja_visitante" placeholder="Ex: ARLS Luz e Verdade nº 123" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700">
                     </div>
 
                     <div>
                         <label for="oriente" class="block mb-2 font-semibold">Oriente</label>
-                        <input type="text" id="oriente" name="oriente" placeholder="Ex: Sao Paulo - SP" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700">
+                        <input type="text" id="oriente" name="oriente" placeholder="Ex: São Paulo - SP" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700">
                     </div>
 
                     <div>
-                        <label for="data_sessao" class="block mb-2 font-semibold">Data da sessao</label>
+                        <label for="data_sessao" class="block mb-2 font-semibold">Data da sessão</label>
                         <input type="date" id="data_sessao" name="data_sessao" value="<?= htmlspecialchars($defaults['data_sessao']) ?>" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700">
                     </div>
 
                     <div>
-                        <label for="tipo_sessao" class="block mb-2 font-semibold">Tipo de sessao</label>
+                        <label for="tipo_sessao" class="block mb-2 font-semibold">Tipo de sessão</label>
                         <select id="tipo_sessao" name="tipo_sessao" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700 bg-white">
-                            <option value="Ordinaria" <?= $defaults['tipo_sessao'] === 'Ordinaria' ? 'selected' : '' ?>>Ordinaria</option>
+                            <option value="Ordinaria" <?= $defaults['tipo_sessao'] === 'Ordinaria' ? 'selected' : '' ?>>Ordinária</option>
                             <option value="Magna" <?= $defaults['tipo_sessao'] === 'Magna' ? 'selected' : '' ?>>Magna</option>
-                            <option value="Magna de Iniciacao" <?= $defaults['tipo_sessao'] === 'Magna de Iniciacao' ? 'selected' : '' ?>>Magna de Iniciacao</option>
-                            <option value="Magna de Elevacao" <?= $defaults['tipo_sessao'] === 'Magna de Elevacao' ? 'selected' : '' ?>>Magna de Elevacao</option>
-                            <option value="Magna de Exaltacao" <?= $defaults['tipo_sessao'] === 'Magna de Exaltacao' ? 'selected' : '' ?>>Magna de Exaltacao</option>
+                            <option value="Magna de Iniciacao" <?= $defaults['tipo_sessao'] === 'Magna de Iniciacao' ? 'selected' : '' ?>>Magna de Iniciação</option>
+                            <option value="Magna de Elevacao" <?= $defaults['tipo_sessao'] === 'Magna de Elevacao' ? 'selected' : '' ?>>Magna de Elevação</option>
+                            <option value="Magna de Exaltacao" <?= $defaults['tipo_sessao'] === 'Magna de Exaltacao' ? 'selected' : '' ?>>Magna de Exaltação</option>
                         </select>
                     </div>
 
                     <div>
-                        <label for="grau_sessao" class="block mb-2 font-semibold">Grau da sessao</label>
+                        <label for="grau_sessao" class="block mb-2 font-semibold">Grau da sessão</label>
                         <select id="grau_sessao" name="grau_sessao" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700 bg-white">
-                            <option value="Aprendiz Macom" <?= $defaults['grau_sessao'] === 'Aprendiz Macom' ? 'selected' : '' ?>>Aprendiz Macom (Grau 1)</option>
-                            <option value="Companheiro Macom" <?= $defaults['grau_sessao'] === 'Companheiro Macom' ? 'selected' : '' ?>>Companheiro Macom (Grau 2)</option>
-                            <option value="Mestre Macom" <?= $defaults['grau_sessao'] === 'Mestre Macom' ? 'selected' : '' ?>>Mestre Macom (Grau 3)</option>
+                            <option value="Aprendiz Macom" <?= $defaults['grau_sessao'] === 'Aprendiz Macom' ? 'selected' : '' ?>>Aprendiz Maçom (Grau 1)</option>
+                            <option value="Companheiro Macom" <?= $defaults['grau_sessao'] === 'Companheiro Macom' ? 'selected' : '' ?>>Companheiro Maçom (Grau 2)</option>
+                            <option value="Mestre Macom" <?= $defaults['grau_sessao'] === 'Mestre Macom' ? 'selected' : '' ?>>Mestre Maçom (Grau 3)</option>
                         </select>
                     </div>
                 </div>

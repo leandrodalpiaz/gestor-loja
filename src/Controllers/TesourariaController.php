@@ -155,13 +155,13 @@ class TesourariaController
     {
         $comprovanteId = (int) ($input['id'] ?? 0);
         if ($comprovanteId <= 0) {
-            return ['ok' => false, 'erro' => 'Comprovante invalido.'];
+            return ['ok' => false, 'erro' => 'Comprovante inválido.'];
         }
 
         $comprovanteModel = new ComprovantePix();
         $comprovante = $comprovanteModel->obterPorId($comprovanteId);
         if (!$comprovante) {
-            return ['ok' => false, 'erro' => 'Comprovante nao encontrado.'];
+            return ['ok' => false, 'erro' => 'Comprovante não encontrado.'];
         }
 
         $valor = (float) ($input['valor'] ?? ($comprovante['valor_informado'] ?? 0));
@@ -179,7 +179,7 @@ class TesourariaController
             'validado_por' => $usuarioId,
         ]);
 
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel aprovar o comprovante.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível aprovar o comprovante.'];
     }
 
     public function rejeitarComprovanteMiniapp(int $id, string $motivo, ?string $usuarioId): array
@@ -190,23 +190,23 @@ class TesourariaController
         }
 
         $ok = (new ComprovantePix())->rejeitar($id, $motivo, $usuarioId);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel rejeitar o comprovante.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível rejeitar o comprovante.'];
     }
 
     public function definirRegularidadeMiniapp(string $obreiroId, int $mes, int $ano, string $status, ?string $usuarioId): array
     {
         if ($obreiroId === '' || !in_array($status, ['regular', 'irregular'], true)) {
-            return ['ok' => false, 'erro' => 'Dados invalidos para regularidade.'];
+            return ['ok' => false, 'erro' => 'Dados inválidos para regularidade.'];
         }
 
         $ok = (new RegularidadeObreiro())->definir($obreiroId, $mes, $ano, $status, 'Ajuste realizado no miniapp da Tesouraria.', $usuarioId);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel atualizar a regularidade.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível atualizar a regularidade.'];
     }
 
     public function fecharCompetenciaMiniapp(int $mes, int $ano, ?string $usuarioId = null): array
     {
         if ($mes < 1 || $mes > 12 || $ano < 2000) {
-            return ['ok' => false, 'erro' => 'Competencia invalida para fechamento.'];
+            return ['ok' => false, 'erro' => 'Competência inválida para fechamento.'];
         }
 
         $fechModel = new FechamentoMensal();
@@ -216,11 +216,11 @@ class TesourariaController
             $fechamento = $fechModel->obter($mes, $ano);
         }
         if (!$fechamento) {
-            return ['ok' => false, 'erro' => 'Nao foi possivel preparar o fechamento da competencia.'];
+            return ['ok' => false, 'erro' => 'Não foi possível preparar o fechamento da competência.'];
         }
 
         $ok = $fechModel->fechar($mes, $ano, $usuarioId);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel fechar a competencia.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível fechar a competência.'];
     }
 
     private function calcularEstimativaArrecadacao(array $sessao, int $totalAgape): float

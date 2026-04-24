@@ -16,7 +16,7 @@ $formatarData = static function (?string $valor): string {
 
 $tituloSessao = static function (?array $sessao): string {
     if (!$sessao) {
-        return 'Nenhuma sessao em foco';
+        return 'Nenhuma sessão em foco';
     }
     $titulo = trim((string) ($sessao['titulo'] ?? ''));
     if ($titulo !== '') {
@@ -92,7 +92,7 @@ require __DIR__ . '/../partials/erp_head.php';
         <form method="get" action="/orador" class="mb-6 rounded-2xl border border-erp-border bg-white p-5 shadow-sm">
             <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div class="w-full lg:max-w-md">
-                    <label for="sessao_id" class="mb-2 block text-sm font-medium text-erp-text">Sessao em foco</label>
+                    <label for="sessao_id" class="mb-2 block text-sm font-medium text-erp-text">Sessão em foco</label>
                     <select id="sessao_id" name="sessao_id" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-erp-text">
                         <option value="">Usar proxima sessao publicada</option>
                         <?php foreach ($sessoes as $sessao): ?>
@@ -111,7 +111,7 @@ require __DIR__ . '/../partials/erp_head.php';
                 <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div class="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                            <p class="text-xs uppercase tracking-[0.22em] text-erp-gold">Sessao em foco</p>
+                            <p class="text-xs uppercase tracking-[0.22em] text-erp-gold">Sessão em foco</p>
                             <h2 class="mt-2 font-sans text-2xl text-erp-navy"><?= htmlspecialchars($tituloSessao($sessaoEmFoco)) ?></h2>
                             <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($formatarData($sessaoEmFoco['data_hora_inicio'] ?? null)) ?></p>
                         </div>
@@ -146,14 +146,14 @@ require __DIR__ . '/../partials/erp_head.php';
                             <?php endforeach; ?>
                         </div>
                     <?php else: ?>
-                        <div class="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">Nenhum visitante resumido foi registrado para a sessao em foco.</div>
+                        <div class="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">Nenhum visitante resumido foi registrado para a sessão em foco.</div>
                     <?php endif; ?>
                 </article>
 
                 <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div class="grid gap-6 lg:grid-cols-2">
                         <div>
-                            <h2 class="font-sans text-2xl text-erp-navy">Cargos e composicao</h2>
+                            <h2 class="font-sans text-2xl text-erp-navy">Cargos e composição</h2>
                             <p class="mt-2 text-sm text-slate-700">Apoio rapido para leitura coerente da ocupacao da sessao.</p>
                             <?php if ($cargosSessao !== []): ?>
                                 <div class="mt-4 space-y-3">
@@ -166,7 +166,7 @@ require __DIR__ . '/../partials/erp_head.php';
                                     <?php endforeach; ?>
                                 </div>
                             <?php else: ?>
-                                <div class="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">Sem composicao de cargos capturada no balaustre.</div>
+                                <div class="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">Sem composição de cargos capturada no balaustre.</div>
                             <?php endif; ?>
                         </div>
 

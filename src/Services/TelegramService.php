@@ -107,7 +107,7 @@ class TelegramService
 
         $payload = json_decode((string) $response, true);
         if (!is_array($payload) || empty($payload['ok'])) {
-            $descricao = is_array($payload) ? (string) ($payload['description'] ?? 'Resposta invalida da API Telegram.') : 'Resposta invalida da API Telegram.';
+            $descricao = is_array($payload) ? (string) ($payload['description'] ?? 'Resposta inválida da API Telegram.') : 'Resposta inválida da API Telegram.';
             $this->lastError = $descricao;
             error_log('TelegramBot Error: ' . $descricao . ' | Response: ' . (string) $response);
             curl_close($ch);

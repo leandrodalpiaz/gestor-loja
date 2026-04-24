@@ -7,7 +7,7 @@ use App\Config\Database;
 
 class Livro
 {
-    // Valores válidos conforme formulário Mini App
+    // Valores aceitos pelo fluxo de cadastro do miniapp.
     private const TIPOS = [
         'Livro Físico',
         'Digital (PDF)',
@@ -27,16 +27,16 @@ class Livro
      */
     public function cadastrar(array $dados)
     {
-        // Validação dos campos obrigatórios
+        // Valida campos mínimos para criação do registro.
         if (empty($dados['titulo']) || empty($dados['autor'])) {
             throw new Exception('Título e Autor são obrigatórios.');
         }
-        // Validação do tipo de material
+        // Valida tipo de material contra a lista permitida.
         $tipo = $dados['tipo'] ?? 'Livro Físico';
         if (!in_array($tipo, self::TIPOS, true)) {
             throw new Exception('Tipo de material inválido.');
         }
-        // Validação do grau recomendado
+        // Valida grau recomendado, quando informado.
         $grau = $dados['grau_recomendado'] ?? 'Livre';
         if ($grau && !in_array($grau, self::GRAUS, true)) {
             throw new Exception('Grau recomendado inválido.');

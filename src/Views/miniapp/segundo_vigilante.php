@@ -44,7 +44,7 @@
                     <div id="meta-etapa" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Conclusao</div>
+                    <div class="text-gray-500">Conclusão</div>
                     <div id="meta-percentual" class="mt-1 text-lg font-semibold"></div>
                 </div>
             </div>
@@ -144,7 +144,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não foi possível concluir esta ação agora. Tente novamente em instantes.');
+    if (!json.ok) throw new Error(json.erro || 'Não conseguimos concluir sua solicitação agora. Tente novamente em alguns minutos.');
     return json;
 }
 

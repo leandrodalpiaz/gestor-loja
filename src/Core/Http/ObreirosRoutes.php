@@ -68,7 +68,7 @@ class ObreirosRoutes
                 $obreiro = $obreiroModel->findById($id);
                 if (!$obreiro) {
                     http_response_code(404);
-                    echo 'Obreiro nao encontrado.';
+                    echo 'Obreiro não encontrado.';
                     exit;
                 }
 

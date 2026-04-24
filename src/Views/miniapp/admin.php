@@ -109,7 +109,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não foi possível carregar os dados administrativos agora. Tente novamente em instantes.');
+    if (!json.ok) throw new Error(json.erro || 'Não conseguimos carregar o painel administrativo no momento. Atualize a tela e tente novamente.');
     return json;
 }
 

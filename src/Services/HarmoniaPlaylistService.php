@@ -24,7 +24,7 @@ class HarmoniaPlaylistService
         if ($resolvedBase === null) {
             return [
                 'ok' => false,
-                'erro' => 'Diretorio base invalido ou inacessivel.',
+                'erro' => 'Diretório base inválido ou inacessível.',
                 'base_path' => $basePath,
                 'sessions' => [],
                 'selected_session' => null,
@@ -36,7 +36,7 @@ class HarmoniaPlaylistService
         if ($sessionDirs === []) {
             return [
                 'ok' => false,
-                'erro' => 'Nenhum arquivo MP3 encontrado no diretorio informado.',
+                'erro' => 'Nenhum arquivo MP3 encontrado no diretório informado.',
                 'base_path' => $resolvedBase,
                 'sessions' => [],
                 'selected_session' => null,
@@ -68,7 +68,7 @@ class HarmoniaPlaylistService
         if ($sessions === []) {
             return [
                 'ok' => false,
-                'erro' => 'As pastas localizadas nao possuem MP3 validos.',
+                'erro' => 'As pastas localizadas não possuem MP3 válidos.',
                 'base_path' => $resolvedBase,
                 'sessions' => [],
                 'selected_session' => null,
@@ -129,8 +129,8 @@ class HarmoniaPlaylistService
         $directories = [];
         $baseHasMp3 = $this->directoryHasMp3InCurrentLevel($basePath);
 
-        // Quando a pasta informada ja possui MP3 (caso da sessao Magna),
-        // ela deve aparecer como sessao principal em vez de forcar uma subpasta.
+        // Se a pasta-base já tiver MP3 (ex.: sessão Magna), ela deve ser tratada
+        // como sessão principal, sem exigir subpasta adicional.
         if ($baseHasMp3) {
             $directories[] = $basePath;
         }
@@ -251,13 +251,13 @@ class HarmoniaPlaylistService
             $code = $matches[1];
             $body = trim((string) $matches[2]);
         } elseif (preg_match('/^\s*([^-]+?)\s*-\s*(\d{1,4})\s*-\s*(.+)$/u', $cleanName, $matches) === 1) {
-            // Ex.: "INICIACAO -10 - ENTRADA - Musica..."
+            // Ex.: "INICIACAO -10 - ENTRADA - Musica..." (prefixo de sessão + ordem + faixa)
             $sessionPrefix = trim((string) $matches[1]);
             $order = (int) $matches[2];
             $code = $matches[2];
             $body = trim((string) $matches[3]);
         } elseif (preg_match('/(?:^|[^0-9])(\d{1,4})\s*[-_]\s*(.+)$/u', $cleanName, $matches) === 1) {
-            // Fallback para codificacoes menos padronizadas com numero no meio.
+            // Fallback para nomes menos padronizados com número no meio.
             $order = (int) $matches[1];
             $code = $matches[1];
             $body = trim((string) $matches[2]);

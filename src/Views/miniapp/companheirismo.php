@@ -55,7 +55,7 @@ async function carregar() {
         const json = await res.json();
         document.getElementById('loading').classList.add('hidden');
         if (!json.ok) {
-            throw new Error(json.erro || 'Não foi possível carregar o acompanhamento.');
+            throw new Error(json.erro || 'Não conseguimos carregar o acompanhamento agora. Tente novamente em alguns minutos.');
         }
 
         const dados = json.dados;

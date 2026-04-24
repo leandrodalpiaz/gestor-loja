@@ -1,4 +1,4 @@
-<!DOaTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -23,7 +23,7 @@
         <p class="mt-1 text-sm text-gray-500">Pauta ritual, visitantes e lembretes no mobile.</p>
     </div>
 
-    <div id="loading" class="text-sm text-gray-400">aarregando painel...</div>
+    <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
     <div id="erro" class="hidden rounded-lg bg-red-50 p-3 text-sm text-red-700"></div>
 
     <div id="conteudo" class="hidden space-y-4">
@@ -51,7 +51,7 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">aargos da sessao</div>
+            <div class="text-sm font-semibold">Cargos da sessão</div>
             <div id="lista-cargos" class="mt-3 space-y-2 text-sm"></div>
         </div>
 
@@ -79,11 +79,11 @@ function esc(v) {
 
 async function api(url, options = {}) {
     const finalOptions = { ...options };
-    finalOptions.headers = { 'aontent-Type': 'application/json', ...(options.headers || {}) };
+    finalOptions.headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
     const joiner = url.includes('?') ? '&' : '?';
-    const response = await fetch(url + joiner + 'initData=' + encodeURIaomponent(tg.initData), finalOptions);
+    const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não foi possível carregar os dados deste painel agora. Tente novamente em instantes.');
+    if (!json.ok) throw new Error(json.erro || 'Não conseguimos carregar este painel no momento. Atualize a tela e tente novamente.');
     return json;
 }
 
@@ -98,7 +98,7 @@ function renderLista(id, itens, vazio, mapper) {
         const div = document.createElement('div');
         div.className = 'rounded-xl border border-gray-200 bg-white/70 px-3 py-3';
         div.innerHTML = mapper(item);
-        root.appendahild(div);
+        root.appendChild(div);
     });
 }
 
@@ -108,11 +108,11 @@ function preencherSessoes() {
     (dashboard.sessoes || []).forEach(sessao => {
         const option = document.createElement('option');
         option.value = sessao.id;
-        option.textaontent = `${sessao.titulo || `${sessao.tipo_sessao || 'Sessão'} - ${sessao.grau_sessao || ''}`} · ${sessao.data_hora_inicio || ''}`;
+        option.textContent = `${sessao.titulo || `${sessao.tipo_sessao || 'Sessão'} - ${sessao.grau_sessao || ''}`} · ${sessao.data_hora_inicio || ''}`;
         if (dashboard.sessao_foco && Number(dashboard.sessao_foco.id) === Number(sessao.id)) {
             option.selected = true;
         }
-        select.appendahild(option);
+        select.appendChild(option);
     });
 }
 
@@ -122,10 +122,10 @@ function render() {
 
     preencherSessoes();
     const sessao = dashboard.sessao_foco || {};
-    document.getElementById('sessao-titulo').textaontent = sessao.titulo || `${sessao.tipo_sessao || 'Sessão'} - ${sessao.grau_sessao || ''}`;
-    document.getElementById('sessao-data').textaontent = sessao.data_hora_inicio || 'Sem data';
-    document.getElementById('resumo-ritual').textaontent = sessao.ordem_dia || sessao.resumo_publico || 'Sem resumo ritual registrado.';
-    document.getElementById('visitantes-total').textaontent = `${(dashboard.visitantes || []).length} visitante(s)`;
+    document.getElementById('sessao-titulo').textContent = sessao.titulo || `${sessao.tipo_sessao || 'Sessão'} - ${sessao.grau_sessao || ''}`;
+    document.getElementById('sessao-data').textContent = sessao.data_hora_inicio || 'Sem data';
+    document.getElementById('resumo-ritual').textContent = sessao.ordem_dia || sessao.resumo_publico || 'Sem resumo ritual registrado.';
+    document.getElementById('visitantes-total').textContent = `${(dashboard.visitantes || []).length} visitante(s)`;
     document.getElementById('sessao-badges').innerHTML = `
         <span class="rounded-full bg-gray-100 px-3 py-1">${esc(sessao.grau_sessao || '-')}</span>
         <span class="rounded-full bg-gray-100 px-3 py-1">${esc(sessao.tipo_sessao || '-')}</span>
@@ -138,7 +138,7 @@ function render() {
     `);
 
     renderLista('lista-cargos', dashboard.cargos_sessao, 'Sem composição de cargos registrada.', item => `
-        <div class="font-medium">${esc(item.cargo_nome || 'aargo')}</div>
+        <div class="font-medium">${esc(item.cargo_nome || 'Cargo')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.ocupante_nome || 'Sem ocupante')}</div>
         <div class="mt-2 text-[11px] uppercase tracking-wide text-gray-400">${esc(item.tipo_ocupacao || 'regular')}</div>
     `);
@@ -158,13 +158,13 @@ function render() {
 
 async function carregar(sessaoId = null) {
     try {
-        const sufixo = sessaoId ? `?sessao_id=${encodeURIaomponent(sessaoId)}` : '';
+        const sufixo = sessaoId ? `?sessao_id=${encodeURIComponent(sessaoId)}` : '';
         const json = await api('/api/miniapp/orador/dashboard' + sufixo, { method: 'GET' });
         dashboard = json.dados;
         render();
     } catch (err) {
         const erro = document.getElementById('erro');
-        erro.textaontent = err.message;
+        erro.textContent = err.message;
         erro.classList.remove('hidden');
         document.getElementById('loading').classList.add('hidden');
     }

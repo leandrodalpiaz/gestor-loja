@@ -32,7 +32,7 @@ class CommandHandler
     {
         $base = trim((string) Env::get('APP_URL', ''));
         if ($base === '') {
-            error_log('[bot] APP_URL ausente no .env; links web_app foram bloqueados ate a configuracao.');
+            error_log('[bot] APP_URL ausente no .env; links web_app foram bloqueados até a configuração.');
             return '';
         }
 
@@ -169,7 +169,7 @@ class CommandHandler
 
     private function privateMenuHint(): string
     {
-        return "\n\nSe algum botao nao abrir, envie /painel novamente.";
+        return "\n\nSe algum botão não abrir, envie /painel novamente.";
     }
 
     private function ensureAppUrlConfigured(int|string $chatId): bool
@@ -180,7 +180,7 @@ class CommandHandler
 
         $this->telegram->sendMessage(
             $chatId,
-            'Mini app indisponivel no momento. APP_URL nao configurada. Reenvie /painel apos atualizar o ambiente local.'
+            'Mini app indisponível no momento. APP_URL não configurada. Reenvie /painel após atualizar o ambiente local.'
         );
         return false;
     }
@@ -194,18 +194,18 @@ class CommandHandler
     private function sendAccessStateMessage(int|string $chatId, string $state): void
     {
         if ($state === 'pendente') {
-            $this->telegram->sendMessage($chatId, 'Seu acesso esta pendente. Aguarde aprovacao do secretario/admin.');
+            $this->telegram->sendMessage($chatId, 'Seu acesso está pendente. Aguarde aprovação do secretário/admin.');
             return;
         }
 
         if ($state === 'inativo') {
-            $this->telegram->sendMessage($chatId, 'Seu acesso esta inativo. Procure o secretario/admin.');
+            $this->telegram->sendMessage($chatId, 'Seu acesso está inativo. Procure o secretário/admin.');
             return;
         }
 
         $this->telegram->sendMessage(
             $chatId,
-            'Cadastro nao localizado. Use /solicitar <CIM> <senha> ou procure o secretario para cadastro.'
+            'Cadastro não localizado. Use /solicitar <CIM> <senha> ou procure o secretário para cadastro.'
         );
     }
 
@@ -226,11 +226,11 @@ class CommandHandler
 
         $solicitacao = $this->obreiroModel->solicitarAcessoPorCim($cim, $senha, $telegramId);
         if (!($solicitacao['ok'] ?? false)) {
-            $this->telegram->sendMessage($chatId, 'Procure o secretario para cadastro');
+            $this->telegram->sendMessage($chatId, 'Procure o secretário para cadastro');
             return;
         }
 
-        $this->telegram->sendMessage($chatId, 'Solicitacao registrada. Aguarde aprovacao do secretario/admin.');
+        $this->telegram->sendMessage($chatId, 'Solicitação registrada. Aguarde aprovação do secretário/admin.');
     }
 
     private function notifyPrivateOnly($chatId): void
@@ -342,12 +342,12 @@ class CommandHandler
                 'text' => '/painel',
             ],
         ], $this->getAppBaseUrl());
-        $mensagem = "Bem-vindo ao painel da Loja, meu Irmao!" . $this->privateMenuHint();
+        $mensagem = "Bem-vindo ao painel da Loja, meu Irmão!" . $this->privateMenuHint();
         $teclado = [
             'inline_keyboard' => [
                 [
                     ['text' => 'Meu cadastro', 'callback_data' => 'menu_meu_cadastro'],
-                    ['text' => 'Minhas informacoes', 'callback_data' => 'menu_minhas_info'],
+                    ['text' => 'Minhas informações', 'callback_data' => 'menu_minhas_info'],
                 ],
                 [
                     ['text' => 'Ajuda / contato', 'callback_data' => 'menu_ajuda_contato'],
@@ -475,7 +475,7 @@ class CommandHandler
         $sessaoId = (int) $sessao['id'];
         $obreiroId = (string) ($obreiro['id'] ?? '');
         $ok = false;
-        $mensagem = 'Não foi possível registrar sua resposta agora. Tente novamente em instantes.';
+        $mensagem = 'Não conseguimos registrar sua resposta agora. Tente novamente em alguns minutos.';
 
         switch ($acao) {
             case 'confirmar':
@@ -518,14 +518,14 @@ class CommandHandler
     public function handleHelp($chatId)
     {
         $mensagem = "<b>Ajuda do Gestor da Loja</b>\n\n";
-        $mensagem .= "Comandos disponiveis:\n";
+        $mensagem .= "Comandos disponíveis:\n";
         $mensagem .= "/start - abre o menu principal\n";
         $mensagem .= "/chancelaria - painel da chancelaria\n";
         $mensagem .= "/tesouraria - painel da tesouraria\n";
         $mensagem .= "/biblioteca - painel da biblioteca\n";
         $mensagem .= "/assistencia - painel de assistencia\n";
         $mensagem .= "/painel - painel administrativo\n";
-        $mensagem .= "/solicitar <CIM> <senha> - solicitar liberacao de acesso\n";
+        $mensagem .= "/solicitar <CIM> <senha> - solicitar liberação de acesso\n";
 
         $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML']);
     }
@@ -955,13 +955,13 @@ class CommandHandler
                     if ($payload !== '' && str_starts_with($payload, 'ativar_')) {
                         $token = trim(substr($payload, strlen('ativar_')));
                         if ($token === '') {
-                            $this->telegram->sendMessage($chatId, 'Token de ativacao invalido. Procure o secretario.');
+                            $this->telegram->sendMessage($chatId, 'Token de ativação inválido. Procure o secretário.');
                             return;
                         }
 
                         $resultado = (new ConviteAcesso())->consumir($token, $fromId);
                         if (!($resultado['ok'] ?? false)) {
-                            $this->telegram->sendMessage($chatId, (string) ($resultado['erro'] ?? 'Nao foi possivel ativar seu acesso. Procure o secretario.'));
+                            $this->telegram->sendMessage($chatId, (string) ($resultado['erro'] ?? 'Não foi possível ativar seu acesso. Procure o secretário.'));
                             return;
                         }
 
@@ -1120,13 +1120,13 @@ class CommandHandler
                         $this->sendMenuPrincipal($chatId, $fromId);
                         break;
                     case 'menu_meu_cadastro':
-                        $this->telegram->sendMessage($chatId, 'Meu cadastro: procure a Secretaria para ajustes cadastrais e validacao de dados.');
+                        $this->telegram->sendMessage($chatId, 'Meu cadastro: procure a Secretaria para ajustes cadastrais e validação de dados.');
                         break;
                     case 'menu_minhas_info':
-                        $this->telegram->sendMessage($chatId, 'Minhas informacoes: use o painel web para consultar dados e situacao atual.');
+                        $this->telegram->sendMessage($chatId, 'Minhas informações: use o painel web para consultar dados e situação atual.');
                         break;
                     case 'menu_ajuda_contato':
-                        $this->telegram->sendMessage($chatId, 'Ajuda / contato: em caso de duvidas, fale com a Secretaria da Loja.');
+                        $this->telegram->sendMessage($chatId, 'Ajuda / contato: em caso de dúvidas, fale com a Secretaria da Loja.');
                         break;
                     case 'menu_admin_total':
                         $this->handlePainelAdmin($chatId, $fromId);
@@ -1242,7 +1242,7 @@ class CommandHandler
     {
         $obreiro = $this->obreiroModel->findByTelegramId($fromId);
         if (!$obreiro) {
-            $this->telegram->sendMessage($chatId, 'Não foi possível localizar seu cadastro para consulta financeira agora. Tente novamente em instantes.');
+            $this->telegram->sendMessage($chatId, 'Não conseguimos localizar seu cadastro para consulta financeira agora. Tente novamente em alguns minutos.');
             return;
         }
 
@@ -1323,7 +1323,7 @@ class CommandHandler
         ]);
 
         if (!$ok) {
-            $this->telegram->sendMessage($chatId, 'Não foi possível registrar seu comprovante agora. Tente novamente em instantes.');
+            $this->telegram->sendMessage($chatId, 'Não conseguimos registrar seu comprovante agora. Tente novamente em alguns minutos.');
             return;
         }
 

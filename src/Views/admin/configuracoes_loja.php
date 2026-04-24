@@ -25,7 +25,7 @@ $appShellSidebarSections = [
 require __DIR__ . '/../partials/erp_head.php';
 require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
-<?php /* TODO: a estrutura interna ainda carrega classes visuais legadas; consolidar depois sem mexer no formulario. */ ?>
+<?php /* TODO(layout): consolidar classes visuais legadas mantendo o formulário e o contrato de submissão atuais. */ ?>
 <?php if (false): ?>
 <html lang="pt-BR">
 <head>

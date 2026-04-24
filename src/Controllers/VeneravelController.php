@@ -113,7 +113,7 @@ class VeneravelController
             $grau = trim((string) ($balaustre['grau_sessao'] ?? ''));
             if ($grau === '') {
                 $sessaoSemGrau++;
-                $grau = 'Nao informado';
+                $grau = 'Não informado';
             }
             $sessoesPorGrau[$grau] = ($sessoesPorGrau[$grau] ?? 0) + 1;
             $totalConfirmados += (int) ($balaustre['total_confirmados'] ?? 0);
@@ -352,29 +352,29 @@ class VeneravelController
     public function executarAcaoSessaoMiniapp(string $acao, int $sessaoId, ?string $autorId = null): array
     {
         if ($sessaoId <= 0) {
-            return ['ok' => false, 'erro' => 'Sessao invalida para a acao solicitada.'];
+            return ['ok' => false, 'erro' => 'Sessão inválida para a ação solicitada.'];
         }
 
         $sessaoModel = new Sessao();
         $ok = false;
-        $erro = 'Nao foi possivel concluir a acao na sessao.';
+        $erro = 'Não foi possível concluir a ação na sessão.';
 
         switch ($acao) {
             case 'publicar':
-                $ok = $sessaoModel->marcarPublicada($sessaoId, $autorId, 'Publicacao autorizada pelo Veneravel Mestre.');
-                $erro = 'Nao foi possivel publicar a sessao.';
+                $ok = $sessaoModel->marcarPublicada($sessaoId, $autorId, 'Publicação autorizada pelo Venerável Mestre.');
+                $erro = 'Não foi possível publicar a sessão.';
                 break;
             case 'cancelar':
-                $ok = $sessaoModel->cancelar($sessaoId, $autorId, 'Cancelamento determinado pelo Veneravel Mestre.');
-                $erro = 'Nao foi possivel cancelar a sessao.';
+                $ok = $sessaoModel->cancelar($sessaoId, $autorId, 'Cancelamento determinado pelo Venerável Mestre.');
+                $erro = 'Não foi possível cancelar a sessão.';
                 break;
             case 'reabrir':
-                $ok = $sessaoModel->reabrir($sessaoId, $autorId, 'Reabertura determinada pelo Veneravel Mestre.');
-                $erro = 'Nao foi possivel reabrir a sessao.';
+                $ok = $sessaoModel->reabrir($sessaoId, $autorId, 'Reabertura determinada pelo Venerável Mestre.');
+                $erro = 'Não foi possível reabrir a sessão.';
                 break;
             case 'realizar':
-                $ok = $sessaoModel->marcarRealizada($sessaoId, $autorId, 'Sessao marcada como realizada pelo Veneravel Mestre.');
-                $erro = 'Nao foi possivel marcar a sessao como realizada.';
+                $ok = $sessaoModel->marcarRealizada($sessaoId, $autorId, 'Sessão marcada como realizada pelo Venerável Mestre.');
+                $erro = 'Não foi possível marcar a sessão como realizada.';
                 break;
         }
 
@@ -384,7 +384,7 @@ class VeneravelController
     public function executarAcaoBalaustreMiniapp(string $acao, int $balaustreId, ?string $autorId = null): array
     {
         if ($balaustreId <= 0) {
-            return ['ok' => false, 'erro' => 'Balaustre invalido para a acao solicitada.'];
+            return ['ok' => false, 'erro' => 'Balaustre inválido para a ação solicitada.'];
         }
 
         $model = new Balaustre();
@@ -392,14 +392,14 @@ class VeneravelController
             $resultado = $model->abrirVotacao($balaustreId, $autorId);
             return [
                 'ok' => (bool) ($resultado['ok'] ?? false),
-                'erro' => ($resultado['ok'] ?? false) ? null : (string) ($resultado['erro'] ?? 'Nao foi possivel abrir votacao.'),
+                'erro' => ($resultado['ok'] ?? false) ? null : (string) ($resultado['erro'] ?? 'Não foi possível abrir votação.'),
             ];
         }
 
         $resultado = $model->encerrarVotacaoPorBalaustre($balaustreId);
         return [
             'ok' => (bool) ($resultado['ok'] ?? false),
-            'erro' => ($resultado['ok'] ?? false) ? null : (string) ($resultado['erro'] ?? 'Nao foi possivel encerrar votacao.'),
+            'erro' => ($resultado['ok'] ?? false) ? null : (string) ($resultado['erro'] ?? 'Não foi possível encerrar votação.'),
         ];
     }
 
@@ -412,7 +412,7 @@ class VeneravelController
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         if ($sessaoId <= 0) {
-            $_SESSION['mensagem_erro'] = 'Sessao invalida para a acao solicitada.';
+            $_SESSION['mensagem_erro'] = 'Sessão inválida para a ação solicitada.';
             header('Location: /veneravel');
             exit;
         }
@@ -422,29 +422,29 @@ class VeneravelController
         $autorId = $autorId !== '' ? $autorId : null;
 
         $ok = false;
-        $mensagemSucesso = 'Acao concluida com sucesso.';
-        $mensagemErro = 'Nao foi possivel concluir a acao na sessao.';
+        $mensagemSucesso = 'Ação concluída com sucesso.';
+        $mensagemErro = 'Não foi possível concluir a ação na sessão.';
 
         switch ($acao) {
             case 'publicar':
-                $ok = $sessaoModel->marcarPublicada($sessaoId, $autorId, 'Publicacao autorizada pelo Veneravel Mestre.');
-                $mensagemSucesso = 'Sessao publicada com sucesso.';
-                $mensagemErro = 'Nao foi possivel publicar a sessao.';
+                $ok = $sessaoModel->marcarPublicada($sessaoId, $autorId, 'Publicação autorizada pelo Venerável Mestre.');
+                $mensagemSucesso = 'Sessão publicada com sucesso.';
+                $mensagemErro = 'Não foi possível publicar a sessão.';
                 break;
             case 'cancelar':
-                $ok = $sessaoModel->cancelar($sessaoId, $autorId, 'Cancelamento determinado pelo Veneravel Mestre.');
-                $mensagemSucesso = 'Sessao cancelada com sucesso.';
-                $mensagemErro = 'Nao foi possivel cancelar a sessao.';
+                $ok = $sessaoModel->cancelar($sessaoId, $autorId, 'Cancelamento determinado pelo Venerável Mestre.');
+                $mensagemSucesso = 'Sessão cancelada com sucesso.';
+                $mensagemErro = 'Não foi possível cancelar a sessão.';
                 break;
             case 'reabrir':
-                $ok = $sessaoModel->reabrir($sessaoId, $autorId, 'Reabertura determinada pelo Veneravel Mestre.');
-                $mensagemSucesso = 'Sessao reaberta com sucesso.';
-                $mensagemErro = 'Nao foi possivel reabrir a sessao.';
+                $ok = $sessaoModel->reabrir($sessaoId, $autorId, 'Reabertura determinada pelo Venerável Mestre.');
+                $mensagemSucesso = 'Sessão reaberta com sucesso.';
+                $mensagemErro = 'Não foi possível reabrir a sessão.';
                 break;
             case 'realizar':
-                $ok = $sessaoModel->marcarRealizada($sessaoId, $autorId, 'Sessao marcada como realizada pelo Veneravel Mestre.');
-                $mensagemSucesso = 'Sessao marcada como realizada.';
-                $mensagemErro = 'Nao foi possivel marcar a sessao como realizada.';
+                $ok = $sessaoModel->marcarRealizada($sessaoId, $autorId, 'Sessão marcada como realizada pelo Venerável Mestre.');
+                $mensagemSucesso = 'Sessão marcada como realizada.';
+                $mensagemErro = 'Não foi possível marcar a sessão como realizada.';
                 break;
         }
 
@@ -465,8 +465,8 @@ class VeneravelController
         $resultado = $this->executarAcaoBalaustreMiniapp($acao, $balaustreId, $autorId !== '' ? $autorId : null);
 
         $_SESSION[$resultado['ok'] ? 'mensagem_sucesso' : 'mensagem_erro'] = $resultado['ok']
-            ? ($acao === 'abrir' ? 'Votacao aberta com sucesso pelo Veneravel Mestre.' : 'Votacao encerrada com sucesso pelo Veneravel Mestre.')
-            : (string) ($resultado['erro'] ?? 'Nao foi possivel concluir a acao do balaustre.');
+            ? ($acao === 'abrir' ? 'Votação aberta com sucesso pelo Venerável Mestre.' : 'Votação encerrada com sucesso pelo Venerável Mestre.')
+            : (string) ($resultado['erro'] ?? 'Não foi possível concluir a ação do balaustre.');
         header('Location: /veneravel');
         exit;
     }
@@ -496,3 +496,4 @@ class VeneravelController
         ];
     }
 }
+

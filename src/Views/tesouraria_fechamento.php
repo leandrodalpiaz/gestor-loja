@@ -18,7 +18,7 @@ if (!isset($_SESSION["usuario_logado"])) {
                 font-size: 1.08rem;
             }
             .erp-readable .text-xs,
-            .erp-readable .text-[11px] {
+            .erp-readable .text-\[11px\] {
                 font-size: 0.92rem !important;
                 line-height: 1.4rem !important;
             }
@@ -157,19 +157,19 @@ if (!isset($_SESSION["usuario_logado"])) {
                 btnFechar.className = fechamento.status === 'fechado'
                     ? 'rounded bg-gray-300 px-4 py-2 text-gray-500 cursor-not-allowed'
                     : 'rounded bg-blue-700 px-4 py-2 text-white hover:bg-blue-800';
-                btnFechar.textContent = fechamento.status === 'fechado' ? 'Mes Fechado' : 'Fechar Mes';
+                btnFechar.textContent = fechamento.status === 'fechado' ? 'Mês Fechado' : 'Fechar Mês';
 
                 document.getElementById('fechamento-content').innerHTML = `
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
                             <h3 class="mb-2 font-semibold">Resumo do fechamento</h3>
-                            <p><strong>Periodo:</strong> ${String(mes).padStart(2, '0')}/${ano}</p>
+                            <p><strong>Período:</strong> ${String(mes).padStart(2, '0')}/${ano}</p>
                             <p><strong>Status:</strong> ${fechamento.status || 'Aberto'}</p>
-                            <p><strong>Data de fechamento:</strong> ${fechamento.data_fechamento ? new Date(fechamento.data_fechamento).toLocaleString('pt-BR') : 'Ainda nao fechado'}</p>
+                            <p><strong>Data de fechamento:</strong> ${fechamento.data_fechamento ? new Date(fechamento.data_fechamento).toLocaleString('pt-BR') : 'Ainda não fechado'}</p>
                         </div>
                         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                            <h3 class="mb-2 font-semibold">Observacoes</h3>
-                            <p class="text-sm text-gray-600">Use esta tela para consolidar o periodo apos validar caixa, comprovantes e regularidade.</p>
+                            <h3 class="mb-2 font-semibold">Observações</h3>
+                            <p class="text-sm text-gray-600">Use esta tela para consolidar o período após validar caixa, comprovantes e regularidade.</p>
                         </div>
                     </div>
                 `;
@@ -215,7 +215,7 @@ if (!isset($_SESSION["usuario_logado"])) {
         }
 
         async function fecharMes() {
-            if (!confirm('Confirma o fechamento deste mes? A acao nao deve ser feita sem conferencia final.')) return;
+            if (!confirm('Confirma o fechamento deste mês? A ação não deve ser feita sem conferência final.')) return;
 
             const mes = parseInt(document.getElementById('filter-mes').value);
             const ano = parseInt(document.getElementById('filter-ano').value);
@@ -230,10 +230,10 @@ if (!isset($_SESSION["usuario_logado"])) {
                 if (json.ok) {
                     carregarFechamento();
                 } else {
-                    alert(json.erro || 'Nao foi possivel fechar o mes.');
+                    alert(json.erro || 'Não foi possível fechar o mês.');
                 }
             } catch (err) {
-                console.error('Erro ao fechar mes:', err);
+                console.error('Erro ao fechar mês:', err);
             }
         }
 

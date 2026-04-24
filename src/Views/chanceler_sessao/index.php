@@ -17,13 +17,13 @@ $descricaoAgape = static function (array $sessao): string {
     if ($modalidade === 'pago') {
         return 'Pago';
     }
-    return 'Nao havera';
+    return 'Não haverá';
 };
 
 $descricaoModeloFinanceiroAgape = static function (array $sessao): string {
     $modalidade = strtolower(trim((string) ($sessao['agape_modalidade'] ?? 'nao_havera')));
     if ($modalidade === 'nao_havera') {
-        return 'Nao se aplica';
+        return 'Não se aplica';
     }
 
     $modelo = strtolower(trim((string) ($sessao['agape_modelo_financeiro'] ?? 'oficial_loja')));
@@ -51,7 +51,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chanceler - Sessao</title>
+    <title>Chanceler - Sessão</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,7 +78,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
         <header class="mb-8 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d6b672,transparent_28%),linear-gradient(135deg,#162033,#223145)] px-6 py-7 text-white shadow-2xl">
             <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Painel do Chanceler</p>
             <h1 class="mt-2 text-3xl font-semibold">Check-in do quadro e visitantes</h1>
-            <p class="mt-2 max-w-3xl text-sm text-slate-200">Use esta tela para fazer o check-in da sessao, acompanhar a nominata prevista e manter a leitura objetiva dos visitantes para apoio da Secretaria e do Orador.</p>
+            <p class="mt-2 max-w-3xl text-sm text-slate-200">Use esta tela para fazer o check-in da sessão, acompanhar a nominata prevista e manter a leitura objetiva dos visitantes para apoio da Secretaria e do Orador.</p>
             <div class="mt-4 flex flex-wrap gap-2">
                 <a href="/secretaria" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Ir para Secretaria</a>
                 <a href="/dashboard" class="rounded-md bg-amber-400 px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300">Voltar ao dashboard</a>
@@ -88,14 +88,14 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
 
         <section class="mb-6 grid gap-3 md:grid-cols-3">
             <article class="rounded-2xl border border-white/60 bg-white/90 px-4 py-4 shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Sessao ativa</p>
-                <p class="mt-2 text-lg font-semibold text-slate-900"><?= htmlspecialchars((string) ($sessaoEmFoco['titulo'] ?? (($sessaoEmFoco['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoEmFoco['grau_sessao'] ?? '')))) ?></p>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Sessão ativa</p>
+                <p class="mt-2 text-lg font-semibold text-slate-900"><?= htmlspecialchars((string) ($sessaoEmFoco['titulo'] ?? (($sessaoEmFoco['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessaoEmFoco['grau_sessao'] ?? '')))) ?></p>
                 <p class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? 'Sem data definida')) ?></p>
             </article>
             <article class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 shadow-sm">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">Presenca efetiva</p>
                 <p class="mt-2 text-3xl font-semibold text-emerald-800"><?= count($presentesEfetivos) ?></p>
-                <p class="mt-1 text-sm text-emerald-700">Obreiros confirmados no quadro final da sessao.</p>
+                <p class="mt-1 text-sm text-emerald-700">Obreiros confirmados no quadro final da sessão.</p>
             </article>
             <article class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 shadow-sm">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-800">Visitantes resumidos</p>
@@ -114,23 +114,23 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
         <?php
         $dashboard = [
             'title' => 'Dashboard operacional do Chanceler',
-            'subtitle' => 'Controle de sessao, presenca e consulta de obreiros.',
-            'meta' => ['Escopo: sessao e presenca', 'Obreiros: leitura operacional'],
+            'subtitle' => 'Controle de sessão, presença e consulta de obreiros.',
+            'meta' => ['Escopo: sessão e presença', 'Obreiros: leitura operacional'],
             'actions' => [
-                ['label' => 'Abrir sessao', 'href' => '/chanceler/sessao'],
-                ['label' => 'Registrar presenca', 'href' => '/chanceler/sessao/presenca'],
+                ['label' => 'Abrir sessão', 'href' => '/chanceler/sessao'],
+                ['label' => 'Registrar presença', 'href' => '/chanceler/sessao/presenca'],
             ],
             'blocks' => [
-                ['title' => 'Sessao atual', 'subtitle' => 'Contexto ativo da operacao.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'Sessao em foco', 'value' => (string) ($sessaoEmFoco['titulo'] ?? 'Sessao')],
+                ['title' => 'Sessão atual', 'subtitle' => 'Contexto ativo da operação.', 'span' => 'half', 'metrics' => [
+                    ['label' => 'Sessão em foco', 'value' => (string) ($sessaoEmFoco['titulo'] ?? 'Sessão')],
                     ['label' => 'Confirmados', 'value' => (string) count($confirmados)],
-                ], 'list' => [['item' => 'Agape', 'meta' => $descricaoAgape((array) ($sessaoEmFoco ?? [])), 'status' => 'Contexto']]],
-                ['title' => 'Presenca e obreiros', 'subtitle' => 'Registro de presença e apoio da nominata.', 'span' => 'half', 'metrics' => [
+                ], 'list' => [['item' => 'Ágape', 'meta' => $descricaoAgape((array) ($sessaoEmFoco ?? [])), 'status' => 'Contexto']]],
+                ['title' => 'Presença e obreiros', 'subtitle' => 'Registro de presença e apoio da nominata.', 'span' => 'half', 'metrics' => [
                     ['label' => 'Presentes efetivos', 'value' => (string) count($presentesEfetivos)],
                     ['label' => 'Visitantes resumidos', 'value' => (string) count($visitantesResumo)],
                 ], 'list' => array_map(static fn (array $p): array => ['item' => (string) ($p['nome'] ?? 'Obreiro'), 'meta' => 'CIM ' . (string) ($p['cim'] ?? '-'), 'status' => 'Presente'], array_slice($presentesEfetivos, 0, 4))],
             ],
-            'alerts' => [['title' => 'Base de presenca oficial', 'text' => 'Check-in alimenta leitura da sessao e suporte aos demais modulos.', 'tone' => 'warning']],
+            'alerts' => [['title' => 'Base de presença oficial', 'text' => 'Check-in alimenta leitura da sessão e suporte aos demais módulos.', 'tone' => 'warning']],
             'activity' => array_map(static fn (array $v): array => ['item' => (string) ($v['nome'] ?? 'Visitante'), 'meta' => (string) ($v['linha_resumida'] ?? '')], array_slice($visitantesResumo, 0, 4)),
             'links' => [['label' => 'Dashboard Chanceler', 'href' => '/chanceler/sessao/dashboard'], ['label' => 'Obreiros (leitura)', 'href' => '/obreiros']],
         ];
@@ -146,12 +146,12 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                 <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div>
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Contexto da sessao</p>
-                            <h2 class="text-2xl font-semibold text-slate-900">Sessao em foco</h2>
-                            <p class="mt-2 text-sm text-slate-700">Troque a sessao em foco sem perder o contexto de confirmados, presenca efetiva e visitantes.</p>
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Contexto da sessão</p>
+                            <h2 class="text-2xl font-semibold text-slate-900">Sessão em foco</h2>
+                            <p class="mt-2 text-sm text-slate-700">Troque a sessão em foco sem perder o contexto de confirmados, presença efetiva e visitantes.</p>
                         </div>
                         <form method="GET" action="/chanceler/sessao" class="w-full max-w-md">
-                            <label for="sessao_id" class="mb-1 block text-sm font-medium text-slate-700">Selecionar sessao</label>
+                            <label for="sessao_id" class="mb-1 block text-sm font-medium text-slate-700">Selecionar sessão</label>
                             <select id="sessao_id" name="sessao_id" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">
                                 <?php foreach ($sessoes as $sessaoOpcao): ?>
                                     <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>" <?= !empty($sessaoEmFoco['id']) && (int) $sessaoEmFoco['id'] === (int) ($sessaoOpcao['id'] ?? 0) ? 'selected' : '' ?>>
@@ -166,7 +166,7 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                         <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
-                                    <div class="text-lg font-semibold text-slate-900"><?= htmlspecialchars($sessaoEmFoco['titulo'] ?: (($sessaoEmFoco['tipo_sessao'] ?? 'Sessao') . ' - ' . ($sessaoEmFoco['grau_sessao'] ?? ''))) ?></div>
+                                    <div class="text-lg font-semibold text-slate-900"><?= htmlspecialchars($sessaoEmFoco['titulo'] ?: (($sessaoEmFoco['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessaoEmFoco['grau_sessao'] ?? ''))) ?></div>
                                     <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? '')) ?></div>
                                 </div>
                                 <a href="<?= htmlspecialchars($urlCertificado) ?>" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">Emitir certificado</a>
@@ -176,12 +176,12 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                                 <span class="rounded-full bg-sky-50 px-3 py-1 text-sky-700">Nominata prevista: <?= count($mapaPresencas) ?></span>
                                 <span class="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">Presentes efetivos: <?= count($presentesEfetivos) ?></span>
                                 <span class="rounded-full bg-white px-3 py-1 text-slate-700">Visitantes resumidos: <?= count($visitantesResumo) ?></span>
-                                <span class="rounded-full bg-white px-3 py-1 text-slate-700">Agape: <?= htmlspecialchars($descricaoAgape($sessaoEmFoco)) ?></span>
+                                <span class="rounded-full bg-white px-3 py-1 text-slate-700">Ágape: <?= htmlspecialchars($descricaoAgape($sessaoEmFoco)) ?></span>
                                 <span class="rounded-full bg-white px-3 py-1 text-slate-700">Modelo financeiro: <?= htmlspecialchars($descricaoModeloFinanceiroAgape($sessaoEmFoco)) ?></span>
                             </div>
                         </div>
                     <?php else: ?>
-                        <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Nenhuma sessao futura cadastrada.</div>
+                        <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Nenhuma sessão futura cadastrada.</div>
                     <?php endif; ?>
                 </article>
 
@@ -199,12 +199,12 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
                                     <div class="mt-1 text-xs text-slate-700">CIM: <?= htmlspecialchars((string) ($registro['cim'] ?? '-')) ?> · Grau: <?= htmlspecialchars((string) ($registro['grau'] ?? '-')) ?></div>
                                     <div class="mt-3 flex flex-wrap gap-2">
                                         <button type="submit" name="presente" value="1" class="rounded-md px-3 py-1.5 text-sm <?= !empty($registro['presente']) ? 'bg-emerald-600 text-white' : 'border border-emerald-300 text-emerald-700' ?>">Presente</button>
-                                        <button type="submit" name="presente" value="0" class="rounded-md px-3 py-1.5 text-sm <?= empty($registro['presente']) ? 'bg-slate-700 text-white' : 'border border-slate-300 text-slate-700' ?>">Nao presente</button>
+                                        <button type="submit" name="presente" value="0" class="rounded-md px-3 py-1.5 text-sm <?= empty($registro['presente']) ? 'bg-slate-700 text-white' : 'border border-slate-300 text-slate-700' ?>">Não presente</button>
                                     </div>
                                 </form>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 md:col-span-2">Nenhuma nominata prevista disponivel para esta sessao.</div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 md:col-span-2">Nenhuma nominata prevista disponível para esta sessão.</div>
                         <?php endif; ?>
                     </div>
                 </article>
@@ -254,13 +254,13 @@ $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' 
 
                 <article class="rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,#fff,#f4efe3)] p-6 shadow-sm">
                     <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Base de presenca</p>
-                    <h2 class="text-2xl font-semibold text-slate-900">Confirmados da sessao</h2>
+                    <h2 class="text-2xl font-semibold text-slate-900">Confirmados da sessão</h2>
                     <div class="mt-4 space-y-3">
                         <?php if ($confirmados !== []): ?>
                             <?php foreach ($confirmados as $confirmado): ?>
                                 <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3">
                                     <div class="font-medium text-slate-900"><?= htmlspecialchars((string) ($confirmado['nome'] ?? 'Obreiro')) ?></div>
-                                    <div class="mt-1 text-sm text-slate-700"><?= !empty($confirmado['participara_agape']) ? 'Confirmado com agape' : 'Confirmado sem agape' ?></div>
+                                    <div class="mt-1 text-sm text-slate-700"><?= !empty($confirmado['participara_agape']) ? 'Confirmado com ágape' : 'Confirmado sem ágape' ?></div>
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>

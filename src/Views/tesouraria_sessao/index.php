@@ -74,7 +74,7 @@ $sessaoFormatter = new \App\Models\Sessao();
                             </div>
                             <?php if (empty($proximaSessao['reflete_financeiro_oficial'])): ?>
                                 <div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                                    Esta sessao nao gera reflexo automatico no financeiro oficial da Loja.
+                                    Esta sessão não gera reflexo automático no financeiro oficial da Loja.
                                 </div>
                             <?php endif; ?>
                         </div>

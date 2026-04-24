@@ -118,7 +118,7 @@ class MiniappApiRoutes
             $dataEvento = trim((string) ($body['data_evento'] ?? ''));
             $dataValida = \DateTimeImmutable::createFromFormat('Y-m-d', $dataEvento) !== false;
             if ($nome === '' || $tipo === '' || $dataEvento === '' || !$dataValida) {
-                JsonResponse::send(['ok' => false, 'erro' => 'Dados invalidos para salvar efemeride.']);
+                JsonResponse::send(['ok' => false, 'erro' => 'Dados inválidos para salvar efeméride.']);
             }
 
             if ($id > 0) {
@@ -190,7 +190,7 @@ class MiniappApiRoutes
             $controller = new \App\Controllers\PrimeiroVigilanteController();
             $payload = $controller->montarPayloadMiniapp($aprendizIdConsulta);
             if ($payload === null) {
-                JsonResponse::send(['ok' => false, 'erro' => 'Aprendiz nao encontrado para acompanhamento.']);
+                JsonResponse::send(['ok' => false, 'erro' => 'Aprendiz não encontrado para acompanhamento.']);
             }
             JsonResponse::send(['ok' => true, 'dados' => $payload]);
         }
@@ -246,7 +246,7 @@ class MiniappApiRoutes
             $controller = new \App\Controllers\SegundoVigilanteController();
             $payload = $controller->montarPayloadMiniapp($companheiroIdConsulta);
             if ($payload === null) {
-                JsonResponse::send(['ok' => false, 'erro' => 'Companheiro nao encontrado para acompanhamento.']);
+                JsonResponse::send(['ok' => false, 'erro' => 'Companheiro não encontrado para acompanhamento.']);
             }
             JsonResponse::send(['ok' => true, 'dados' => $payload]);
         }
@@ -315,22 +315,22 @@ class MiniappApiRoutes
         if ($requestUri === '/api/miniapp/secretaria/sessao/publicar' && $method === 'POST') {
             $sessaoId = (int) ($body['sessao_id'] ?? 0);
             $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
-            $ok = $sessaoId > 0 ? (new Sessao())->marcarPublicada($sessaoId, $autorId !== '' ? $autorId : null, 'Publicacao realizada pela Secretaria no miniapp.') : false;
-            JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel publicar a sessao.']);
+            $ok = $sessaoId > 0 ? (new Sessao())->marcarPublicada($sessaoId, $autorId !== '' ? $autorId : null, 'Publicação realizada pela Secretaria no miniapp.') : false;
+            JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível publicar a sessão.']);
         }
 
         if ($requestUri === '/api/miniapp/secretaria/sessao/cancelar' && $method === 'POST') {
             $sessaoId = (int) ($body['sessao_id'] ?? 0);
             $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
             $ok = $sessaoId > 0 ? (new Sessao())->cancelar($sessaoId, $autorId !== '' ? $autorId : null, 'Cancelamento realizado pela Secretaria no miniapp.') : false;
-            JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel cancelar a sessao.']);
+            JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível cancelar a sessão.']);
         }
 
         if ($requestUri === '/api/miniapp/secretaria/sessao/reabrir' && $method === 'POST') {
             $sessaoId = (int) ($body['sessao_id'] ?? 0);
             $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
             $ok = $sessaoId > 0 ? (new Sessao())->reabrir($sessaoId, $autorId !== '' ? $autorId : null, 'Reabertura realizada pela Secretaria no miniapp.') : false;
-            JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel reabrir a sessao.']);
+            JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível reabrir a sessão.']);
         }
 
         if ($requestUri === '/api/miniapp/secretaria/trabalho/salvar' && $method === 'POST') {
@@ -349,18 +349,18 @@ class MiniappApiRoutes
             $balaustreId = (int) ($body['balaustre_id'] ?? 0);
             $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
             $ok = $balaustreId > 0 ? (new Balaustre())->marcarAptoVotacao($balaustreId, $autorId !== '' ? $autorId : null) : false;
-            JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel marcar o balaustre como apto.']);
+            JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível marcar o balaustre como apto.']);
         }
 
         if ($requestUri === '/api/miniapp/secretaria/balaustre/abrir-votacao' && $method === 'POST') {
             $balaustreId = (int) ($body['balaustre_id'] ?? 0);
             $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
-            JsonResponse::send($balaustreId > 0 ? (new Balaustre())->abrirVotacao($balaustreId, $autorId !== '' ? $autorId : null) : ['ok' => false, 'erro' => 'Balaustre invalido.']);
+            JsonResponse::send($balaustreId > 0 ? (new Balaustre())->abrirVotacao($balaustreId, $autorId !== '' ? $autorId : null) : ['ok' => false, 'erro' => 'Balaustre inválido.']);
         }
 
         if ($requestUri === '/api/miniapp/secretaria/balaustre/encerrar-votacao' && $method === 'POST') {
             $balaustreId = (int) ($body['balaustre_id'] ?? 0);
-            JsonResponse::send($balaustreId > 0 ? (new Balaustre())->encerrarVotacaoPorBalaustre($balaustreId) : ['ok' => false, 'erro' => 'Balaustre invalido.']);
+            JsonResponse::send($balaustreId > 0 ? (new Balaustre())->encerrarVotacaoPorBalaustre($balaustreId) : ['ok' => false, 'erro' => 'Balaustre inválido.']);
         }
 
         if ($requestUri === '/api/miniapp/chanceler/dashboard' && $method === 'GET') {
@@ -558,5 +558,6 @@ class MiniappApiRoutes
         }
 
         JsonResponse::error('API miniapp nao encontrada.', 404);
+        return true;
     }
 }

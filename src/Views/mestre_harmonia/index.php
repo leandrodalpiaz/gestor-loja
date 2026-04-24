@@ -3,7 +3,7 @@ if (!headers_sent()) {
     header('Content-Type: text/html; charset=UTF-8');
 }
 
-$usuarioNome = (string) ($_SESSION['usuario_nome'] ?? 'Irmao');
+$usuarioNome = (string) ($_SESSION['usuario_nome'] ?? 'Irmão');
 $operadorEmExercicio = (string) ($operadorEmExercicio ?? '');
 $payloadSafe = json_encode($payload ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 $basePathValue = (string) ($payload['base_path'] ?? '');
@@ -456,12 +456,12 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
     <header class="panel topbar">
         <div>
             <h1 class="title">MESTRE DE HARMONIA</h1>
-            <p class="subtitle">Responsavel: <?= htmlspecialchars($usuarioNome) ?> | Conducao musical da sessao em tela cheia</p>
-            <div class="operator-line">Irmao em exercicio: <strong id="operatorNameDisplay">Nao informado</strong><button type="button" id="btnChangeOperator">Alterar</button></div>
+            <p class="subtitle">Responsável: <?= htmlspecialchars($usuarioNome) ?> | Condução musical da sessão em tela cheia</p>
+            <div class="operator-line">Irmão em exercício: <strong id="operatorNameDisplay">Não informado</strong><button type="button" id="btnChangeOperator">Alterar</button></div>
         </div>
         <div class="status-box">
-            <strong id="sessionLabel">Sessao nao carregada</strong>
-            <span id="globalStatus">Aguardando a escolha da sessao</span>
+            <strong id="sessionLabel">Sessão não carregada</strong>
+            <span id="globalStatus">Aguardando a escolha da sessão</span>
             <div style="margin-top:8px;">
                 <a href="/miniapp/mestre-harmonia" style="display:inline-block;border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--text);text-decoration:none;background:#223447;font-size:14px;">Abrir miniapp do cargo</a>
             </div>
@@ -479,7 +479,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
     <section class="layout">
         <aside class="panel playlist-panel">
             <div class="playlist-header">
-                <h2>Roteiro da sessao</h2>
+                <h2>Roteiro da sessão</h2>
                 <span id="playlistCount" style="color: var(--muted); font-size: 18px;">0 etapas</span>
             </div>
             <div class="playlist-scroll" id="stepsList"></div>
@@ -504,10 +504,10 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
 
             <section class="mini-grid">
                 <article class="panel mini-box">
-                    <h3>Proxima etapa</h3>
+                    <h3>Próxima etapa</h3>
                     <div class="mini-primary" id="nextStepCode">--</div>
-                    <div id="nextStepTitle" style="font-size: 28px; color: var(--muted);">Sem proxima etapa</div>
-                    <div class="footer">Use "Proxima etapa" para seguir a sessao com tranquilidade.</div>
+                    <div id="nextStepTitle" style="font-size: 28px; color: var(--muted);">Sem próxima etapa</div>
+                    <div class="footer">Use "Próxima etapa" para seguir a sessão com tranquilidade.</div>
                 </article>
 
                 <article class="panel mini-box">
@@ -526,7 +526,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
         <button type="button" class="ctrl-btn danger" id="btnStop">Parar</button>
         <button type="button" class="ctrl-btn" id="btnRestart">Reiniciar</button>
         <button type="button" class="ctrl-btn" id="btnPrev">Etapa Anterior</button>
-        <button type="button" class="ctrl-btn primary" id="btnNext">Proxima Etapa</button>
+        <button type="button" class="ctrl-btn primary" id="btnNext">Próxima etapa</button>
         <button type="button" class="ctrl-btn warn" id="btnSilence">Silencio</button>
     </section>
 
@@ -535,7 +535,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
         <button type="button" class="ctrl-btn" id="btnFadeOut">Fade Out</button>
         <button type="button" class="ctrl-btn" id="btnVolDown">Volume -</button>
         <button type="button" class="ctrl-btn" id="btnVolUp">Volume +</button>
-        <button type="button" class="ctrl-btn" id="btnToggleAuto">Proxima automatica: OFF</button>
+        <button type="button" class="ctrl-btn" id="btnToggleAuto">Próxima automática: OFF</button>
         <button type="button" class="ctrl-btn" id="btnOpenCurrentAlt">Tocar Alternativa</button>
     </section>
 
@@ -544,9 +544,9 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
 
 <div class="operator-overlay" id="operatorOverlay">
     <div class="operator-modal">
-        <h2>Identificacao da sessao</h2>
-        <p>Informe o nome do irmao que esta exercendo a funcao nesta sessao. Esse dado fica registrado para apoio posterior.</p>
-        <input type="text" id="operatorInput" placeholder="Nome do irmao em exercicio">
+        <h2>Identificação da sessão</h2>
+        <p>Informe o nome do irmão que está exercendo a função nesta sessão. Esse dado fica registrado para apoio posterior.</p>
+        <input type="text" id="operatorInput" placeholder="Nome do irmão em exercício">
         <div class="actions">
             <button type="button" class="primary" id="btnSaveOperator">Confirmar e abrir player</button>
         </div>
@@ -613,7 +613,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
     }
 
     function kindLabel(type) {
-        if (type === 'transicao') return 'Transicao';
+        if (type === 'transicao') return 'Transição';
         if (type === 'extra') return 'Extra';
         return 'Principal';
     }
@@ -659,7 +659,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
             el.currentTrackTitle.textContent = 'Nenhuma faixa carregada';
             el.currentType.textContent = '-';
             el.nextStepCode.textContent = '--';
-            el.nextStepTitle.textContent = 'Sem proxima etapa';
+            el.nextStepTitle.textContent = 'Sem próxima etapa';
             el.alternativesList.innerHTML = '<div class="list-item"><span>Nenhuma alternativa.</span></div>';
             return;
         }
@@ -670,7 +670,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
         el.currentTrackTitle.textContent = current.title || current.filename;
         el.currentType.textContent = kindLabel(current.type);
         el.nextStepCode.textContent = next ? `${next.code || '--'} - ${next.phase || 'Etapa'}` : '--';
-        el.nextStepTitle.textContent = next ? (next.title || next.filename) : 'Sem proxima etapa';
+        el.nextStepTitle.textContent = next ? (next.title || next.filename) : 'Sem próxima etapa';
 
         if (loadOnly) {
             el.audio.src = resolveTrackUrl(current);
@@ -694,7 +694,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
     }
 
     function updateOperatorDisplay() {
-        el.operatorNameDisplay.textContent = currentOperator && currentOperator.trim() !== '' ? currentOperator : 'Nao informado';
+        el.operatorNameDisplay.textContent = currentOperator && currentOperator.trim() !== '' ? currentOperator : 'Não informado';
     }
 
     async function saveOperator(name) {
@@ -833,8 +833,8 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
 
     function updateHeader() {
         if (!currentSession) {
-            el.sessionLabel.textContent = 'Sessao nao carregada';
-            el.globalStatus.textContent = payload.erro || 'Nenhuma informacao disponivel no momento';
+            el.sessionLabel.textContent = 'Sessão não carregada';
+            el.globalStatus.textContent = payload.erro || 'Nenhuma informação disponível no momento';
             return;
         }
         el.sessionLabel.textContent = currentSession.name;
@@ -889,7 +889,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
             clearFadeTimer();
             el.audio.volume = 0;
             el.volumeStatus.textContent = '0%';
-            el.fadeStatus.textContent = 'Silencio imediato';
+            el.fadeStatus.textContent = 'Silêncio imediato';
             if (!el.audio.paused) {
                 el.audio.pause();
             }
@@ -914,7 +914,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
         });
         el.btnToggleAuto.addEventListener('click', () => {
             autoNext = !autoNext;
-            el.btnToggleAuto.textContent = `Proxima automatica: ${autoNext ? 'ON' : 'OFF'}`;
+            el.btnToggleAuto.textContent = `Próxima automática: ${autoNext ? 'ON' : 'OFF'}`;
         });
         el.btnOpenCurrentAlt.addEventListener('click', () => {
             const current = tracks[currentIndex];
@@ -964,7 +964,7 @@ $operadorSafe = json_encode($operadorEmExercicio, JSON_UNESCAPED_UNICODE | JSON_
         }
 
         if (payload.ok !== true) {
-            el.globalStatus.textContent = payload.erro || 'Nao foi possivel carregar a playlist.';
+            el.globalStatus.textContent = payload.erro || 'Não foi possível carregar a playlist.';
         }
     }
 

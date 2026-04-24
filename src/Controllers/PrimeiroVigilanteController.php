@@ -244,7 +244,7 @@ class PrimeiroVigilanteController
         $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
 
         if ($aprendizId === '') {
-            $_SESSION['mensagem_erro'] = 'Aprendiz invalido para registrar leitura sugerida.';
+            $_SESSION['mensagem_erro'] = 'Aprendiz inválido para registrar leitura sugerida.';
             header('Location: /primeiro-vigilante');
             exit;
         }
@@ -258,7 +258,7 @@ class PrimeiroVigilanteController
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Leitura sugerida registrada com sucesso.'
-            : 'Nao foi possivel registrar a leitura sugerida.';
+            : 'Não foi possível registrar a leitura sugerida.';
         header('Location: ' . $retorno . '#leitura-sugerida');
         exit;
     }
@@ -276,7 +276,7 @@ class PrimeiroVigilanteController
         $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
 
         if ($aprendizId === '') {
-            $_SESSION['mensagem_erro'] = 'Aprendiz invalido para solicitar certificado.';
+            $_SESSION['mensagem_erro'] = 'Aprendiz inválido para solicitar certificado.';
             header('Location: /primeiro-vigilante');
             exit;
         }
@@ -293,8 +293,8 @@ class PrimeiroVigilanteController
         );
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Solicitacao formal de certificado registrada.'
-            : 'Nao foi possivel registrar a solicitacao do certificado.';
+            ? 'Solicitação formal de certificado registrada.'
+            : 'Não foi possível registrar a solicitação do certificado.';
         header('Location: ' . $retorno . '#certificado');
         exit;
     }
@@ -303,7 +303,7 @@ class PrimeiroVigilanteController
     {
         $aprendizId = trim($aprendizId);
         if ($aprendizId === '') {
-            return ['ok' => false, 'erro' => 'Aprendiz invalido para registrar leitura sugerida.'];
+            return ['ok' => false, 'erro' => 'Aprendiz inválido para registrar leitura sugerida.'];
         }
 
         $ok = (new PrimeiroVigilanteAcompanhamento())->salvarLeituraSugerida(
@@ -313,14 +313,14 @@ class PrimeiroVigilanteController
             $autorId
         );
 
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar a leitura sugerida.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar a leitura sugerida.'];
     }
 
     public function solicitarCertificadoMiniapp(string $aprendizId, ?string $observacao, ?string $autorId = null): array
     {
         $aprendizId = trim($aprendizId);
         if ($aprendizId === '') {
-            return ['ok' => false, 'erro' => 'Aprendiz invalido para solicitar certificado.'];
+            return ['ok' => false, 'erro' => 'Aprendiz inválido para solicitar certificado.'];
         }
 
         $trilhaModel = new TrilhaAprendiz();
@@ -330,7 +330,7 @@ class PrimeiroVigilanteController
 
         $ok = (new PrimeiroVigilanteAcompanhamento())->solicitarCertificado($aprendizId, $observacao, $autorId);
 
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar a solicitacao do certificado.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar a solicitação do certificado.'];
     }
 
     public function atualizarEtapaMiniapp(string $aprendizId, int $etapaOrdem, string $status, ?string $observacao = null, ?string $autorId = null): array
@@ -342,11 +342,11 @@ class PrimeiroVigilanteController
 
         $trilhaModel = new TrilhaAprendiz();
         if (!$trilhaModel->trilhaDisponivel()) {
-            return ['ok' => false, 'erro' => 'A trilha ainda nao foi criada no banco.'];
+            return ['ok' => false, 'erro' => 'A trilha ainda não foi criada no banco.'];
         }
 
         $ok = $trilhaModel->atualizarEtapa($aprendizId, $etapaOrdem, trim($status), $observacao, $autorId);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel atualizar a etapa da trilha.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível atualizar a etapa da trilha.'];
     }
 
     private function resolverProximaAcao(int $etapa, string $status): string

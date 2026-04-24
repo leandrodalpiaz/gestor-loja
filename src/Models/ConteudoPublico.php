@@ -96,7 +96,7 @@ class ConteudoPublico
         $fimEm = trim((string) ($input['fim_em'] ?? ''));
 
         if ($titulo === '' || !in_array($tipo, self::TIPOS, true)) {
-            throw new \InvalidArgumentException('Tipo e titulo sao obrigatorios.');
+            throw new \InvalidArgumentException('Tipo e título são obrigatórios.');
         }
 
         $payload = [
@@ -155,4 +155,5 @@ class ConteudoPublico
         $stmt->execute(['id' => $id]);
     }
 }
+
 

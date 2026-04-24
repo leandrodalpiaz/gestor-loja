@@ -17,7 +17,7 @@ $estadosCivis = [
     'separado' => 'Separado',
     'viuvo' => 'Viuvo',
     'uniao_estavel' => 'Uniao estavel',
-    'nao_informado' => 'Nao informado',
+    'nao_informado' => 'Não informado',
 ];
 $escolaridades = [
     'fundamental_incompleto' => 'Fundamental incompleto',
@@ -30,7 +30,7 @@ $escolaridades = [
     'pos_graduacao' => 'Pos-graduacao',
     'mestrado' => 'Mestrado',
     'doutorado' => 'Doutorado',
-    'nao_informado' => 'Nao informado',
+    'nao_informado' => 'Não informado',
 ];
 $faixasRenda = [
     'ate_1_sm' => 'Ate 1 salario minimo',
@@ -38,7 +38,7 @@ $faixasRenda = [
     'de_3_a_5_sm' => 'De 3 a 5 salarios minimos',
     'de_5_a_10_sm' => 'De 5 a 10 salarios minimos',
     'acima_10_sm' => 'Acima de 10 salarios minimos',
-    'nao_informado' => 'Nao informado',
+    'nao_informado' => 'Não informado',
 ];
 $situacoesQuadro = [
     'ativo' => 'Ativo',
@@ -117,7 +117,7 @@ $situacoesQuadro = [
             <?php endif; ?>
 
             <?php if (isset($_GET['erro'])): ?>
-                <div class="mx-6 mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">Nao foi possivel salvar. Verifique se o CIM informado ja existe para outro obreiro.</div>
+                <div class="mx-6 mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">Não foi possível salvar. Verifique se o CIM informado já existe para outro obreiro.</div>
             <?php endif; ?>
 
             <form action="/obreiros/atualizar" method="POST" class="p-6 space-y-8">
@@ -310,7 +310,7 @@ $situacoesQuadro = [
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Telegram ID</label>
                             <input type="text" value="<?= htmlspecialchars($obreiro['telegram_id'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" readonly>
-                            <div class="mt-1 text-xs text-gray-500">Vinculo controlado apenas pelo bot/onboarding (nao editavel aqui).</div>
+                            <div class="mt-1 text-xs text-gray-500">Vínculo controlado apenas pelo bot/onboarding (não editável aqui).</div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Login na Potencia</label>

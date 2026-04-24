@@ -29,7 +29,7 @@ $formatarMoeda = static fn ($valor) => 'R$ ' . number_format((float) $valor, 2, 
                 font-size: 1.08rem;
             }
             .erp-readable .text-xs,
-            .erp-readable .text-[11px] {
+            .erp-readable .text-\[11px\] {
                 font-size: 0.92rem !important;
                 line-height: 1.4rem !important;
             }
@@ -148,12 +148,12 @@ $formatarMoeda = static fn ($valor) => 'R$ ' . number_format((float) $valor, 2, 
                     <div class="mt-5 space-y-2">
                         <?php foreach (($relatorio['entidades_auxiliadas'] ?? []) as $entidade): ?>
                             <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                                <span><?= htmlspecialchars((string) ($entidade['entidade'] ?? 'Nao informada')) ?></span>
+                                <span><?= htmlspecialchars((string) ($entidade['entidade'] ?? 'Não informada')) ?></span>
                                 <strong><?= htmlspecialchars($formatarMoeda($entidade['total'] ?? 0)) ?></strong>
                             </div>
                         <?php endforeach; ?>
                         <?php if (($relatorio['entidades_auxiliadas'] ?? []) === []): ?>
-                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Ainda nao ha entidades auxiliadas registradas no periodo.</div>
+                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Ainda não há entidades auxiliadas registradas no período.</div>
                         <?php endif; ?>
                     </div>
                 </div>

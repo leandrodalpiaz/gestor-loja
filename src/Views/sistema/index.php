@@ -44,7 +44,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 ['label' => 'Escopo', 'value' => 'Infra/operacao'],
             ], 'list' => [['item' => 'Separacao semantica', 'meta' => 'Nao misturar com cargos da Loja', 'status' => 'Obrigatorio']]],
             ['title' => 'Logs e auditoria tecnica', 'subtitle' => 'Rastreamento de operacoes criticas.', 'span' => 'half', 'metrics' => [
-                ['label' => 'Auditoria', 'value' => 'Disponivel'],
+                ['label' => 'Auditoria', 'value' => 'Disponível'],
                 ['label' => 'Integracoes', 'value' => 'Gerenciaveis'],
             ], 'list' => [['item' => 'Auditoria tecnica', 'meta' => 'Leitura consolidada', 'status' => 'Ativo'], ['item' => 'Parametros da Loja', 'meta' => 'Configuracao central', 'status' => 'Ativo']]],
         ],

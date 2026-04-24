@@ -15,7 +15,7 @@ $pixBeneficiario = (string) ($configuracaoLoja['pix_beneficiario'] ?? '');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Validacao de Comprovantes - Tesouraria</title>
+    <title>Validação de Comprovantes - Tesouraria</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @media (min-width: 1440px) {
@@ -41,7 +41,7 @@ $pixBeneficiario = (string) ($configuracaoLoja['pix_beneficiario'] ?? '');
                 <div>
                     <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Tesouraria</p>
                     <h1 class="mt-2 text-3xl font-semibold">Caixa de Entrada - Comprovantes PIX</h1>
-                    <p class="mt-2 max-w-3xl text-sm text-slate-200">Validacao clara dos comprovantes recebidos, com prioridade total para pendencias.</p>
+                    <p class="mt-2 max-w-3xl text-sm text-slate-200">Validação clara dos comprovantes recebidos, com prioridade total para pendências.</p>
                 </div>
                 <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao dashboard</a>
             </div>

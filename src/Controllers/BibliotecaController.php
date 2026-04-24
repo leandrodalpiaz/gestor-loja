@@ -117,7 +117,7 @@ class BibliotecaController
         $item = $this->acervoModel->buscarDetalhes($id, $obreiroId !== '' ? $obreiroId : null);
         if (!$item) {
             http_response_code(404);
-            echo 'Livro nao encontrado.';
+            echo 'Livro não encontrado.';
             exit;
         }
 
@@ -272,32 +272,32 @@ class BibliotecaController
     public function solicitarMiniapp(int $acervoId, string $obreiroId): array
     {
         if ($acervoId <= 0 || trim($obreiroId) === '') {
-            return ['ok' => false, 'erro' => 'Livro ou obreiro invalido para solicitacao.'];
+            return ['ok' => false, 'erro' => 'Livro ou obreiro inválido para solicitação.'];
         }
 
         $ok = $this->emprestimoModel->solicitar($acervoId, $obreiroId);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel solicitar o emprestimo.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível solicitar o empréstimo.'];
     }
 
     public function comentarMiniapp(int $acervoId, string $obreiroId, string $comentario): array
     {
         $comentario = trim($comentario);
         if ($acervoId <= 0 || trim($obreiroId) === '' || $comentario === '') {
-            return ['ok' => false, 'erro' => 'Comentario invalido para publicacao.'];
+            return ['ok' => false, 'erro' => 'Comentário inválido para publicação.'];
         }
 
         $ok = $this->comentarioModel->adicionar($acervoId, $obreiroId, $comentario);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel publicar o comentario.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível publicar o comentário.'];
     }
 
     public function reagirMiniapp(int $acervoId, string $obreiroId, bool $gostei): array
     {
         if ($acervoId <= 0 || trim($obreiroId) === '') {
-            return ['ok' => false, 'erro' => 'Reacao invalida para este item.'];
+            return ['ok' => false, 'erro' => 'Reação inválida para este item.'];
         }
 
         $ok = $this->reacaoModel->definir($acervoId, $obreiroId, $gostei);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar a reacao.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar a reação.'];
     }
 
     private function resolverPermissoes(): array

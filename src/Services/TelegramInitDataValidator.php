@@ -33,7 +33,7 @@ class TelegramInitDataValidator
         }
         unset($params['hash']);
 
-        // Monta data-check-string: pares key=value em ordem alfabética
+        // Monta data-check-string (pares key=value ordenados) conforme especificação.
         ksort($params);
         $dataCheckString = implode("\n", array_map(
             static fn(string $k, string $v) => "{$k}={$v}",
@@ -41,7 +41,7 @@ class TelegramInitDataValidator
             array_values($params)
         ));
 
-        // Chave secreta derivada do token do bot
+        // Deriva a chave secreta a partir do token do bot (fluxo oficial do Telegram).
         $secretKey = hash_hmac('sha256', $botToken, 'WebAppData', true);
         $expectedHash = hash_hmac('sha256', $dataCheckString, $secretKey);
 
@@ -49,7 +49,7 @@ class TelegramInitDataValidator
             return null;
         }
 
-        // Verifica expiração
+        // Rejeita payload fora da janela de validade definida.
         $authDate = (int) ($params['auth_date'] ?? 0);
         if ((time() - $authDate) > self::MAX_AGE_SECONDS) {
             return null;

@@ -16,7 +16,7 @@ if (in_array($usuarioNomeNormalizado, ['admin', 'administrador'], true)) {
     } elseif ($usuarioNomeHistorico !== '' && !in_array(strtolower($usuarioNomeHistorico), ['admin', 'administrador'], true)) {
         $usuarioNome = $usuarioNomeHistorico;
     } else {
-        $usuarioNome = 'Irmao';
+        $usuarioNome = 'Irmão';
     }
 }
 $usuarioCargos = $_SESSION['usuario_cargos'] ?? [$usuarioCargo];
@@ -124,7 +124,7 @@ if ($canChancelaria || $canVeneravel || $adminLivre) {
             ['label' => 'Corrigir dados das efemérides', 'href' => '/chancelaria/efemerides?foco=dados'],
             ['label' => 'Visão completa da Chancelaria', 'href' => '/chancelaria/efemerides'],
             ['label' => 'Emitir certificado', 'href' => '/chancelaria/certificado'],
-            ['label' => 'Sessao e check-in do Chanceler', 'href' => '/chanceler/sessao'],
+            ['label' => 'Sessão e check-in do Chanceler', 'href' => '/chanceler/sessao'],
         ],
     ];
 
@@ -132,18 +132,18 @@ if ($canChancelaria || $canVeneravel || $adminLivre) {
         $atalhosPrioritarios = array_merge($atalhosPrioritarios, [
             ['label' => 'Mensagem do dia', 'href' => '/chancelaria/efemerides?foco=mensagem'],
             ['label' => 'Certificado', 'href' => '/chancelaria/certificado'],
-            ['label' => 'Sessao do Chanceler', 'href' => '/chanceler/sessao'],
+            ['label' => 'Sessão do Chanceler', 'href' => '/chanceler/sessao'],
         ]);
 
         $blocosPrioritarios[] = [
             'perfil' => 'Chancelaria',
             'titulo' => 'Prioridades do Chanceler',
-            'descricao' => 'Acesso direto ao que mais pesa no uso diario: efemerides, certificado e apoio de sessao.',
+            'descricao' => 'Acesso direto ao que mais pesa no uso diário: efemérides, certificado e apoio de sessão.',
             'principal' => ['label' => 'Revisar mensagem do dia', 'href' => '/chancelaria/efemerides?foco=mensagem'],
             'secundarios' => [
-                ['label' => 'Corrigir dados das efemerides', 'href' => '/chancelaria/efemerides?foco=dados'],
+                ['label' => 'Corrigir dados das efemérides', 'href' => '/chancelaria/efemerides?foco=dados'],
                 ['label' => 'Emitir certificado', 'href' => '/chancelaria/certificado'],
-                ['label' => 'Sessao e check-in', 'href' => '/chanceler/sessao'],
+                ['label' => 'Sessão e check-in', 'href' => '/chanceler/sessao'],
             ],
         ];
     }
@@ -167,7 +167,7 @@ if ($canSecretaria || $canVeneravel || $adminLivre) {
 if ($canOrador || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Orador',
-        'descricao' => 'Leitura resumida da sessao, apoio ritual e nominata resumida de visitantes para agradecimento em Loja.',
+        'descricao' => 'Leitura resumida da sessão, apoio ritual e nominata resumida de visitantes para agradecimento em Loja.',
         'itens' => [
             ['label' => 'Painel do Orador', 'href' => '/orador'],
         ],
@@ -177,7 +177,7 @@ if ($canOrador || $canVeneravel || $adminLivre) {
 if ($canBanquetes || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Mestre de Banquetes',
-        'descricao' => 'Leitura operacional dos confirmados com e sem agape para planejamento do banquete.',
+        'descricao' => 'Leitura operacional dos confirmados com e sem ágape para planejamento do banquete.',
         'itens' => [
             ['label' => 'Painel do Mestre de Banquetes', 'href' => '/mestre-banquetes'],
         ],
@@ -187,9 +187,9 @@ if ($canBanquetes || $canVeneravel || $adminLivre) {
 if ($canHospitaleiro || $canVeneravel || $canTesouraria || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Hospitalaria',
-        'descricao' => 'Ocorrencias assistenciais, acompanhamento e encaminhamentos ao Veneravel e Tesouraria.',
+        'descricao' => 'Ocorrências assistenciais, acompanhamento e encaminhamentos ao Venerável e Tesouraria.',
         'itens' => [
-            ['label' => 'Painel de Assistencia', 'href' => '/assistencia'],
+            ['label' => 'Painel de Assistência', 'href' => '/assistencia'],
         ],
     ];
 }
@@ -197,7 +197,7 @@ if ($canHospitaleiro || $canVeneravel || $canTesouraria || $adminLivre) {
 if ($canMestreHarmonia || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Mestre de Harmonia',
-        'descricao' => 'Player ritual em tela cheia, com etapas principais, transicoes e extras por sessao.',
+        'descricao' => 'Player ritual em tela cheia, com etapas principais, transições e extras por sessão.',
         'itens' => [
             ['label' => 'Painel do Mestre de Harmonia', 'href' => '/mestre-harmonia'],
         ],
@@ -246,7 +246,7 @@ if ($canTesouraria || $canVeneravel || $adminLivre) {
         'itens' => [
             ['label' => 'Sessões e ágape pago', 'href' => '/tesouraria/sessoes'],
             ['label' => 'Livro-caixa', 'href' => '/tesouraria/caixa'],
-            ['label' => 'Obrigacoes financeiras', 'href' => '/tesouraria/obrigacoes'],
+            ['label' => 'Obrigações financeiras', 'href' => '/tesouraria/obrigacoes'],
             ['label' => 'Validação de comprovantes', 'href' => '/tesouraria/comprovantes'],
             ['label' => 'Regularidade', 'href' => '/tesouraria/regularidade'],
             ['label' => 'Fechamento mensal', 'href' => '/tesouraria/fechamento'],
@@ -264,7 +264,7 @@ if ($canTesouraria || $canVeneravel || $adminLivre) {
         $blocosPrioritarios[] = [
             'perfil' => 'Tesouraria',
             'titulo' => 'Fila principal da Tesouraria',
-            'descricao' => 'Atalhos para validar comprovantes, acompanhar o caixa e fechar pendencias do mes.',
+            'descricao' => 'Atalhos para validar comprovantes, acompanhar o caixa e fechar pendências do mês.',
             'principal' => ['label' => 'Validar comprovantes', 'href' => '/tesouraria/comprovantes'],
             'secundarios' => [
                 ['label' => 'Abrir livro-caixa', 'href' => '/tesouraria/caixa'],
@@ -278,9 +278,9 @@ if ($canTesouraria || $canVeneravel || $adminLivre) {
 if ($canFinanceiroPessoal || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Meu Financeiro',
-        'descricao' => 'Consulta pessoal de mensalidades, biblioteca, joias e demais obrigacoes cadastradas pela Tesouraria.',
+        'descricao' => 'Consulta pessoal de mensalidades, biblioteca, joias e demais obrigações cadastradas pela Tesouraria.',
         'itens' => [
-            ['label' => 'Minhas obrigacoes financeiras', 'href' => '/financeiro/minhas-obrigacoes'],
+            ['label' => 'Minhas obrigações financeiras', 'href' => '/financeiro/minhas-obrigacoes'],
         ],
     ];
 }
@@ -404,7 +404,8 @@ $cargosGestao = [
     ['label' => 'Mestre Hospitaleiro', 'codigo' => 'HOSPITALEIRO'],
     ['label' => '1º Diácono', 'codigo' => 'PRIMEIRO_DIACONO'],
 ];
-// TODO: ainda existem classes visuais antigas misturadas ao shell ERP neste dashboard; consolidar em um lote visual dedicado depois.
+// TODO(layout): consolidar classes visuais legadas no shell ERP em um lote dedicado,
+// sem alterar regras de negócio nem contratos do payload atual.
 $erpPageTitle = 'Dashboard - Gestor de Loja';
 $appShellEyebrow = 'Dashboard';
 $appShellTitle = $dashboardNomeLoja;
@@ -533,7 +534,7 @@ require __DIR__ . '/partials/erp_head.php';
                         <div class="text-sm font-semibold uppercase tracking-[0.24em] text-erp-gold">Centro de comando</div>
                         <h2 class="mt-3 text-4xl font-semibold leading-tight text-erp-navy 2xl:text-5xl"><?= htmlspecialchars($dashboardNomeLoja) ?></h2>
                         <p class="mt-4 max-w-4xl text-base leading-7 text-erp-muted">
-                            Abertura administrativa com agenda da Loja, recados prioritarios e acessos operacionais organizados por responsabilidade.
+                            Abertura administrativa com agenda da Loja, recados prioritários e acessos operacionais organizados por responsabilidade.
                         </p>
                         <div class="mt-5 flex flex-wrap gap-3">
                             <a href="/secretaria" class="rounded-erp-md border border-erp-border bg-white px-4 py-2.5 text-sm font-semibold text-erp-text hover:border-erp-navy hover:text-erp-navy">Abrir secretaria</a>
@@ -545,20 +546,20 @@ require __DIR__ . '/partials/erp_head.php';
                 <div class="grid gap-4 sm:grid-cols-3 xl:col-span-4 xl:grid-cols-1 2xl:col-span-3 2xl:grid-cols-3">
                     <article class="rounded-2xl border border-erp-border bg-white/90 px-5 py-4 shadow-sm">
                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Perfil ativo</div>
-                        <div class="mt-2 text-xl font-semibold text-erp-navy"><?= htmlspecialchars($usuarioCargo !== '' ? $usuarioCargo : 'Operacao geral') ?></div>
-                        <p class="mt-1 text-sm leading-6 text-erp-muted">Leitura personalizada conforme as permissoes desta sessao.</p>
+                        <div class="mt-2 text-xl font-semibold text-erp-navy"><?= htmlspecialchars($usuarioCargo !== '' ? $usuarioCargo : 'Operação geral') ?></div>
+                        <p class="mt-1 text-sm leading-6 text-erp-muted">Leitura personalizada conforme as permissões desta sessão.</p>
                     </article>
                     <article class="rounded-2xl border border-erp-border bg-white/90 px-5 py-4 shadow-sm">
-                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Areas visiveis</div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Áreas visíveis</div>
                         <div class="mt-2 text-xl font-semibold text-erp-navy"><?= count($secoes) ?></div>
                         <p class="mt-1 text-sm leading-6 text-erp-muted">Blocos operacionais liberados nesta abertura administrativa.</p>
                     </article>
                     <article class="rounded-2xl border border-erp-border bg-white/90 px-5 py-4 shadow-sm">
-                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Proxima reuniao</div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Próxima reunião</div>
                         <div class="mt-2 text-lg font-semibold text-erp-navy">
                             <?= htmlspecialchars(trim($dashboardDiaReuniao . ($dashboardHorarioReuniao !== '' ? ' · ' . $dashboardHorarioReuniao : '')) ?: 'A definir') ?>
                         </div>
-                        <p class="mt-1 text-sm leading-6 text-erp-muted">Referencia institucional usada para orientar a agenda da Loja.</p>
+                        <p class="mt-1 text-sm leading-6 text-erp-muted">Referência institucional usada para orientar a agenda da Loja.</p>
                     </article>
                 </div>
             </div>
@@ -566,29 +567,29 @@ require __DIR__ . '/partials/erp_head.php';
             <div class="grid gap-4 px-6 py-6 md:grid-cols-2 2xl:grid-cols-4 xl:px-8">
                 <article class="rounded-2xl border border-erp-border bg-white px-5 py-4 shadow-sm">
                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Total de obreiros</div>
-                    <?php /* TODO: o payload atual do dashboard nao entrega total de obreiros consolidado. */ ?>
+                    <?php /* TODO(dados): exibir total consolidado de obreiros quando o payload disponibilizar esse indicador. */ ?>
                     <div class="mt-2 text-3xl font-semibold text-erp-navy">N/D</div>
-                    <p class="mt-1 text-sm text-erp-muted">Indicador sera ligado ao payload oficial sem criar query na view.</p>
+                    <p class="mt-1 text-sm text-erp-muted">Indicador será ligado ao payload oficial sem criar query na view.</p>
                 </article>
                 <article class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 shadow-sm">
                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Adimplentes</div>
-                    <?php /* TODO: o payload atual do dashboard nao entrega consolidado financeiro. */ ?>
+                    <?php /* TODO(dados): exibir consolidado financeiro real quando o payload fornecer os totais oficiais. */ ?>
                     <div class="mt-2 text-3xl font-semibold text-emerald-800">N/D</div>
-                    <p class="mt-1 text-sm text-emerald-700">Resumo financeiro depende de dado que ainda nao chega nesta view.</p>
+                    <p class="mt-1 text-sm text-emerald-700">Resumo financeiro depende de dado que ainda não chega nesta view.</p>
                 </article>
                 <article class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 shadow-sm">
                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Inadimplentes</div>
-                    <?php /* TODO: o payload atual do dashboard nao entrega consolidado financeiro. */ ?>
+                    <?php /* TODO(dados): exibir consolidado financeiro real quando o payload fornecer os totais oficiais. */ ?>
                     <div class="mt-2 text-3xl font-semibold text-amber-800">N/D</div>
                     <p class="mt-1 text-sm text-amber-700">Badge mantido para o desenho ERP sem inventar contagem nova.</p>
                 </article>
                 <article class="rounded-2xl border border-erp-border bg-white px-5 py-4 shadow-sm">
-                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Proxima sessao</div>
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">Próxima sessão</div>
                     <div class="mt-2 text-xl font-semibold text-erp-navy">
-                        <?= htmlspecialchars(isset($dashboardSessoes[0]['data_hora_inicio']) ? $formatarDataHoraDashboard($dashboardSessoes[0]['data_hora_inicio']) : 'Aguardando publicacao') ?>
+                        <?= htmlspecialchars(isset($dashboardSessoes[0]['data_hora_inicio']) ? $formatarDataHoraDashboard($dashboardSessoes[0]['data_hora_inicio']) : 'Aguardando publicação') ?>
                     </div>
                     <p class="mt-1 text-sm text-erp-muted">
-                        <?= htmlspecialchars((string) ($dashboardSessoes[0]['titulo'] ?? 'Sem sessao agendada no momento.')) ?>
+                        <?= htmlspecialchars((string) ($dashboardSessoes[0]['titulo'] ?? 'Sem sessão agendada no momento.')) ?>
                     </p>
                 </article>
             </div>

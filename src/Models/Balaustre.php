@@ -492,13 +492,13 @@ class Balaustre
     {
         $balaustre = $this->buscarPorId($balaustreId);
         if (!$balaustre) {
-            return ['ok' => false, 'erro' => 'Balaustre nao encontrado.'];
+            return ['ok' => false, 'erro' => 'Balaustre não encontrado.'];
         }
         if (!(bool) $balaustre['apto_votacao']) {
-            return ['ok' => false, 'erro' => 'Balaustre ainda nao esta apto para votacao.'];
+            return ['ok' => false, 'erro' => 'Balaustre ainda não está apto para votação.'];
         }
         if (($balaustre['status'] ?? '') === 'em_votacao') {
-            return ['ok' => false, 'erro' => 'A votacao deste balaustre ja esta aberta.'];
+            return ['ok' => false, 'erro' => 'A votação deste balaustre já está aberta.'];
         }
 
         $this->db->beginTransaction();
@@ -539,7 +539,7 @@ class Balaustre
 
             if ($presentes === []) {
                 $this->db->rollBack();
-                return ['ok' => false, 'erro' => 'Nao ha presencas registradas para compor a lista apta.'];
+                return ['ok' => false, 'erro' => 'Não há presenças registradas para compor a lista apta.'];
             }
 
             $votanteStmt = $this->db->prepare("
@@ -587,7 +587,7 @@ class Balaustre
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
             }
-            return ['ok' => false, 'erro' => 'Falha ao abrir votacao: ' . $e->getMessage()];
+            return ['ok' => false, 'erro' => 'Falha ao abrir votação: ' . $e->getMessage()];
         }
     }
 
@@ -697,12 +697,12 @@ class Balaustre
     {
         $voto = trim($voto);
         if (!in_array($voto, ['aprovar', 'pedir_correcao', 'rejeitar'], true)) {
-            return ['ok' => false, 'erro' => 'Voto invalido.'];
+            return ['ok' => false, 'erro' => 'Voto inválido.'];
         }
 
         $votacao = $this->buscarVotacaoAbertaPorBalaustre($balaustreId);
         if (!$votacao) {
-            return ['ok' => false, 'erro' => 'Nao existe votacao aberta para este balaustre.'];
+            return ['ok' => false, 'erro' => 'Não existe votação aberta para este balaustre.'];
         }
 
         $elegivelStmt = $this->db->prepare("
@@ -756,7 +756,7 @@ class Balaustre
     {
         $votacao = $this->buscarVotacaoAbertaPorBalaustre($balaustreId);
         if (!$votacao) {
-            return ['ok' => false, 'erro' => 'Nao existe votacao aberta para este balaustre.'];
+            return ['ok' => false, 'erro' => 'Não existe votação aberta para este balaustre.'];
         }
 
         $stmt = $this->db->prepare("

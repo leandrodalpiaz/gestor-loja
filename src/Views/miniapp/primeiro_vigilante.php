@@ -44,7 +44,7 @@
                     <div id="meta-etapa" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Conclusao</div>
+                    <div class="text-gray-500">Conclusão</div>
                     <div id="meta-percentual" class="mt-1 text-lg font-semibold"></div>
                 </div>
             </div>
@@ -132,7 +132,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não foi possível concluir esta ação agora. Tente novamente em instantes.');
+    if (!json.ok) throw new Error(json.erro || 'Não conseguimos concluir sua solicitação agora. Tente novamente em alguns minutos.');
     return json;
 }
 
@@ -140,14 +140,14 @@ function renderLista(id, itens, vazio, mapper) {
     const root = document.getElementById(id);
     root.innerHTML = '';
     if (!itens || itens.length === 0) {
-        root.innerHTML = C<div class="rounded-xl border border-dashed border-gray-300 px-3 py-3 text-gray-500">${esc(vazio)}</div>C;
+        root.innerHTML = `<div class="rounded-xl border border-dashed border-gray-300 px-3 py-3 text-gray-500">${esc(vazio)}</div>`;
         return;
     }
     itens.forEach(item => {
         const data = mapper(item);
         const div = document.createElement('div');
         div.className = 'rounded-xl border border-gray-200 bg-white/70 px-3 py-2';
-        div.innerHTML = C<div class="font-medium">${esc(data.nome)}</div>${data.linha ? C<div class="text-xs text-gray-500 mt-1">${esc(data.linha)}</div>C : ''}C;
+        div.innerHTML = `<div class="font-medium">${esc(data.nome)}</div>${data.linha ? `<div class="text-xs text-gray-500 mt-1">${esc(data.linha)}</div>` : ''}`;
         root.appendChild(div);
     });
 }
@@ -155,7 +155,7 @@ function renderLista(id, itens, vazio, mapper) {
 function renderEtapas() {
     const etapas = dashboard?.aprendiz_foco?.etapas || [];
     renderLista('lista-etapas', etapas, 'Sem etapas registradas.', item => ({
-        nome: CEtapa ${item.ordem}    ${item.titulo}C,
+        nome: `Etapa ${item.ordem} · ${item.titulo}`,
         linha: item.status
     }));
 }
@@ -176,7 +176,7 @@ function render() {
     (dashboard.aprendizes || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = C${item.nome}    CIM ${item.cim || '-'}C;
+        option.textContent = `${item.nome} · CIM ${item.cim || '-'}`;
         if (aprendiz && item.id === aprendiz.id) option.selected = true;
         select.appendChild(option);
     });
@@ -186,20 +186,20 @@ function render() {
     (dashboard.leituras_disponiveis || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = C${item.titulo} - ${item.autor || ''}C;
+        option.textContent = `${item.titulo} - ${item.autor || ''}`;
         if ((foco?.leitura_sugerida?.acervo_id || 0) === item.id) option.selected = true;
         acervo.appendChild(option);
     });
 
     document.getElementById('observacao_leitura').value = foco?.leitura_sugerida?.observacao || '';
     document.getElementById('observacao_certificado').value = foco?.certificado?.observacao || '';
-    document.getElementById('certificado-status').textContent = CStatus atual: ${foco?.certificado?.status || 'nao_solicitado'}C;
+    document.getElementById('certificado-status').textContent = `Status atual: ${foco?.certificado?.status || 'nao_solicitado'}`;
     const etapaSelect = document.getElementById('etapa_ordem');
     etapaSelect.innerHTML = '';
     (foco?.etapas || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.ordem;
-        option.textContent = CEtapa ${item.ordem} - ${item.titulo}C;
+        option.textContent = `Etapa ${item.ordem} - ${item.titulo}`;
         if ((foco?.resumo?.etapa_atual?.ordem || 0) === item.ordem) option.selected = true;
         etapaSelect.appendChild(option);
     });
@@ -210,7 +210,7 @@ function render() {
     renderEtapas();
     renderLista('lista-historico', foco?.historico_formativo || [], 'Sem histórico formativo registrado.', item => ({
         nome: item.titulo || item.tipo,
-        linha: C${item.momento || '-'}    ${item.descricao || ''}C
+        linha: `${item.momento || '-'} · ${item.descricao || ''}`
     }));
 }
 

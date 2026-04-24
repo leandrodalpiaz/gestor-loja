@@ -65,7 +65,7 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Votacoes de balaustre</div>
+            <div class="text-sm font-semibold">Votações de balaustre</div>
             <div id="lista-balaustres-aptos" class="mt-3 space-y-2 text-sm"></div>
             <div id="lista-balaustres-votação" class="mt-3 space-y-2 text-sm"></div>
         </div>
@@ -76,7 +76,7 @@
                 <div id="lista-cargos-pendentes" class="mt-3 space-y-2 text-sm"></div>
             </div>
             <div class="card rounded-2xl p-4">
-                <div class="text-sm font-semibold">Pendencias cadastrais</div>
+                <div class="text-sm font-semibold">Pendências cadastrais</div>
                 <div id="lista-obreiros-pendentes" class="mt-3 space-y-2 text-sm"></div>
             </div>
         </div>
@@ -104,7 +104,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não foi possível concluir esta ação agora. Tente novamente em instantes.');
+    if (!json.ok) throw new Error(json.erro || 'Não conseguimos concluir sua solicitação agora. Tente novamente em alguns minutos.');
     return json;
 }
 
@@ -134,7 +134,7 @@ function renderBalaustres(id, itens, vazio, acao, label) {
     itens.forEach(item => {
         const div = document.createElement('div');
         div.className = 'rounded-xl border border-gray-200 bg-white/70 px-3 py-3';
-        div.innerHTML = `<div class="font-medium">${esc(item.numero_balaustre || 'Sem numero')}</div>
+        div.innerHTML = `<div class="font-medium">${esc(item.numero_balaustre || 'Sem número')}</div>
             <div class="mt-1 text-xs text-gray-500">${esc(item.sessao_titulo || item.data_hora_inicio || '')}</div>
             <button type="button" class="mt-3 w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white">${esc(label)}</button>`;
         div.querySelector('button').addEventListener('click', async () => {
@@ -143,7 +143,7 @@ function renderBalaustres(id, itens, vazio, acao, label) {
                     method: 'POST',
                     body: { balaustre_id: item.id }
                 });
-                tg.showAlert('Acao registrada com sucesso.');
+                tg.showAlert('Ação registrada com sucesso.');
                 await carregar(sessaoAtualId);
             } catch (err) {
                 tg.showAlert(err.message);
@@ -177,11 +177,11 @@ function render() {
 
     renderBalaustres('lista-balaustres-aptos', dashboard.balaustres_aptos, 'Nenhum balaustre apto para abrir votação.', 'abrir-votação', 'Abrir votação');
     renderBalaustres('lista-balaustres-votação', dashboard.balaustres_em_votação, 'Nenhum balaustre em votação.', 'encerrar-votação', 'Encerrar votação');
-    renderListaSimples('lista-cargos-pendentes', dashboard.cargos_criticos_pendentes, 'Nenhum cargo critico pendente.', item => ({
+    renderListaSimples('lista-cargos-pendentes', dashboard.cargos_criticos_pendentes, 'Nenhum cargo crítico pendente.', item => ({
         nome: item.nome_exibicao || item.codigo,
         linha: item.codigo || ''
     }));
-    renderListaSimples('lista-obreiros-pendentes', dashboard.obreiros_pendentes_criticos, 'Sem pendencias cadastrais criticas.', item => ({
+    renderListaSimples('lista-obreiros-pendentes', dashboard.obreiros_pendentes_criticos, 'Sem pendências cadastrais críticas.', item => ({
         nome: item.nome,
         linha: `CIM ${item.cim || '-'} · ${Array.isArray(item.alertas) ? item.alertas.join(', ') : ''}`
     }));
@@ -210,7 +210,7 @@ document.querySelectorAll('[data-acao-sessao]').forEach(button => {
                 method: 'POST',
                 body: { sessao_id: sessaoAtualId }
             });
-            tg.showAlert('Acao registrada com sucesso.');
+            tg.showAlert('Ação registrada com sucesso.');
             await carregar(sessaoAtualId);
         } catch (err) {
             tg.showAlert(err.message);

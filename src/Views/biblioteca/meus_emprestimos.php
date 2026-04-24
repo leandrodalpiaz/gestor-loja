@@ -1,12 +1,12 @@
 <?php
-$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
+$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meus emprestimos</title>
+    <title>Meus empréstimos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @media (min-width: 1440px) {
@@ -14,7 +14,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                 font-size: 1.08rem;
             }
             .erp-readable .text-xs,
-            .erp-readable .text-[11px] {
+            .erp-readable .text-\[11px\] {
                 font-size: 0.92rem !important;
                 line-height: 1.4rem !important;
             }
@@ -30,7 +30,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
         <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
             <div>
                 <div class="text-xs uppercase tracking-[0.18em] text-blue-100/80">Biblioteca</div>
-                <h1 class="font-semibold">Meus emprestimos</h1>
+                <h1 class="font-semibold">Meus empréstimos</h1>
             </div>
             <div class="text-sm"><?= htmlspecialchars($usuarioNome) ?></div>
         </div>
@@ -41,8 +41,8 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Leitura pessoal</div>
-                    <h2 class="mt-1 text-xl font-semibold text-blue-900">Historico de emprestimos</h2>
-                    <p class="mt-1 text-sm text-slate-700">Acompanhe seus livros, prazos e situacao de devolucao.</p>
+                    <h2 class="mt-1 text-xl font-semibold text-blue-900">Histórico de empréstimos</h2>
+                    <p class="mt-1 text-sm text-slate-700">Acompanhe seus livros, prazos e situação de devolução.</p>
                 </div>
                 <a href="/biblioteca" class="text-blue-700 hover:underline text-sm font-medium">Voltar ao catalogo</a>
             </div>
@@ -74,13 +74,13 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                         </div>
 
                         <div class="mt-3 space-y-2 text-sm text-slate-700">
-                            <div><span class="font-medium text-slate-700">Emprestimo:</span> <?= htmlspecialchars((string) ($emp['data_emprestimo'] ?? '-')) ?></div>
-                            <div><span class="font-medium text-slate-700">Devolucao prevista:</span> <?= htmlspecialchars((string) ($emp['data_devolucao_prevista'] ?? '-')) ?></div>
+                            <div><span class="font-medium text-slate-700">Empréstimo:</span> <?= htmlspecialchars((string) ($emp['data_emprestimo'] ?? '-')) ?></div>
+                            <div><span class="font-medium text-slate-700">Devolução prevista:</span> <?= htmlspecialchars((string) ($emp['data_devolucao_prevista'] ?? '-')) ?></div>
                         </div>
                     </article>
                 <?php endforeach; ?>
             <?php else: ?>
-                <div class="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-700 shadow-sm">Nenhum emprestimo registrado.</div>
+                <div class="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-700 shadow-sm">Nenhum empréstimo registrado.</div>
             <?php endif; ?>
         </div>
 

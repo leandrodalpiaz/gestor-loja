@@ -56,7 +56,7 @@ class MestreHarmoniaController
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
-            echo json_encode(['ok' => false, 'erro' => 'Metodo nao permitido.']);
+            echo json_encode(['ok' => false, 'erro' => 'Método não permitido.']);
             return;
         }
 
@@ -66,7 +66,7 @@ class MestreHarmoniaController
 
         if ($nome === '') {
             http_response_code(422);
-            echo json_encode(['ok' => false, 'erro' => 'Informe o nome do irmao em exercicio.']);
+            echo json_encode(['ok' => false, 'erro' => 'Informe o nome do irmão em exercício.']);
             return;
         }
 
@@ -87,7 +87,7 @@ class MestreHarmoniaController
         if (!$sessaoSelecionada || $tracks === []) {
             return [
                 'ok' => false,
-                'erro' => $payload['erro'] ?? 'Nenhuma playlist disponivel para o cargo.',
+                'erro' => $payload['erro'] ?? 'Nenhuma playlist disponível para o cargo.',
                 'sessoes' => [],
             ];
         }
@@ -133,14 +133,14 @@ class MestreHarmoniaController
         $nome = trim((string) ($dados['nome'] ?? ''));
 
         if ($sessaoPath === '' || $nome === '') {
-            return ['ok' => false, 'erro' => 'Informe sessao e operador para continuar.'];
+            return ['ok' => false, 'erro' => 'Informe sessão e operador para continuar.'];
         }
 
         $payload = $this->playlistService->scanBase($this->resolveDefaultBasePath(), $sessaoPath);
         $sessaoSelecionada = $payload['selected_session'] ?? null;
         $tracks = (array) ($payload['selected_tracks'] ?? []);
         if (!$sessaoSelecionada || $tracks === []) {
-            return ['ok' => false, 'erro' => $payload['erro'] ?? 'Sessao musical nao encontrada.'];
+            return ['ok' => false, 'erro' => $payload['erro'] ?? 'Sessão musical não encontrada.'];
         }
 
         $estado = $this->resolverEstadoOperacional($sessaoSelecionada, $tracks);
@@ -159,7 +159,7 @@ class MestreHarmoniaController
         $tracks = (array) ($payload['selected_tracks'] ?? []);
 
         if (!$sessaoSelecionada || $tracks === []) {
-            return ['ok' => false, 'erro' => $payload['erro'] ?? 'Sessao musical nao encontrada.'];
+            return ['ok' => false, 'erro' => $payload['erro'] ?? 'Sessão musical não encontrada.'];
         }
 
         $estado = $this->resolverEstadoOperacional($sessaoSelecionada, $tracks);
@@ -174,7 +174,7 @@ class MestreHarmoniaController
                 $faixaId = trim((string) ($dados['faixa_id'] ?? ''));
                 $novaFaixa = $this->encontrarFaixa($tracks, $faixaId);
                 if (!$novaFaixa) {
-                    return ['ok' => false, 'erro' => 'Faixa nao encontrada na sessao selecionada.'];
+                    return ['ok' => false, 'erro' => 'Faixa não encontrada na sessão selecionada.'];
                 }
                 $faixaAtual = $novaFaixa;
                 $estado['status_player'] = 'pronto';
@@ -210,7 +210,7 @@ class MestreHarmoniaController
                 $estado['volume_percent'] = max(0, ((int) ($estado['volume_percent'] ?? 100)) - 10);
                 break;
             default:
-                return ['ok' => false, 'erro' => 'Acao do player nao reconhecida.'];
+                return ['ok' => false, 'erro' => 'Ação do player não reconhecida.'];
         }
 
         $estado['faixa_atual_id'] = (string) ($faixaAtual['id'] ?? '');
@@ -242,7 +242,8 @@ class MestreHarmoniaController
             }
         }
 
-        // Fallback exibido no campo para ajuste manual caso nenhum caminho exista.
+        // Valor padrão exibido no formulário quando nenhum diretório válido é detectado.
+        // O operador ainda pode ajustar manualmente antes de iniciar a sessão.
         return 'D:\leandro_pessoal\Renascença\Mestre Harmonia LD';
     }
 
@@ -254,21 +255,21 @@ class MestreHarmoniaController
 
         if ($trackId === '' || $filePath === '' || !is_file($filePath)) {
             http_response_code(404);
-            echo 'Arquivo de audio nao encontrado para este item.';
+            echo 'Arquivo de áudio não encontrado para este item.';
             return;
         }
 
         $extension = strtolower((string) pathinfo($filePath, PATHINFO_EXTENSION));
         if ($extension !== 'mp3') {
             http_response_code(415);
-            echo 'Formato de audio nao suportado.';
+            echo 'Formato de áudio não suportado.';
             return;
         }
 
         $size = filesize($filePath);
         if ($size === false) {
             http_response_code(500);
-            echo 'Nao foi possivel ler o audio.';
+            echo 'Não foi possível ler o áudio.';
             return;
         }
 

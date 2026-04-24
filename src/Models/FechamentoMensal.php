@@ -71,10 +71,10 @@ class FechamentoMensal
 
         $saldoAnterior = (float) $fechamento['saldo_inicial'];
 
-        // Inicia transação
+        // Transação para manter saldo e auditoria consistentes.
         $this->db->beginTransaction();
         try {
-            // Atualiza saldo
+            // Atualiza saldo inicial e recalcula saldo final do período.
             $sql = "UPDATE fechamento_mensal SET saldo_inicial = :saldo, saldo_final = (total_entradas - total_saidas + :saldo), atualizado_em = CURRENT_TIMESTAMP WHERE id = :id AND loja_id = :loja_id";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
@@ -83,7 +83,7 @@ class FechamentoMensal
                 'loja_id' => $this->obterLojaAtualId(),
             ]);
 
-            // Registra auditoria
+            // Registra trilha de auditoria do ajuste manual.
             $sqlAudit = "
                 INSERT INTO ajustes_saldo_auditoria 
                 (fechamento_id, campo_alterado, valor_anterior, valor_novo, justificativa, alterado_por)
@@ -112,7 +112,7 @@ class FechamentoMensal
      */
     public function recalcularTotais(int $mes, int $ano): bool
     {
-        // Obtém totais de lançamentos
+        // Obtém totais do mês para recalcular o fechamento consolidado.
         $lancModel = new LancamentoFinanceiro();
         $totais = $lancModel->obterTotaisMes($mes, $ano);
 

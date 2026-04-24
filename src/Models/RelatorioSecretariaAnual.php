@@ -108,14 +108,14 @@ class RelatorioSecretariaAnual
     {
         $stmt = $this->db->prepare("
             SELECT
-                COALESCE(NULLIF(TRIM(grau_sessao), ''), 'Nao informado') AS grau_sessao,
+                COALESCE(NULLIF(TRIM(grau_sessao), ''), 'Não informado') AS grau_sessao,
                 COUNT(*) AS total
             FROM public.sessoes
             WHERE data_hora_inicio >= :inicio
               AND data_hora_inicio < :fim_exclusivo
               AND loja_id = :loja_id
               AND COALESCE(status, 'planejada') <> 'cancelada'
-            GROUP BY COALESCE(NULLIF(TRIM(grau_sessao), ''), 'Nao informado')
+            GROUP BY COALESCE(NULLIF(TRIM(grau_sessao), ''), 'Não informado')
             ORDER BY total DESC, grau_sessao ASC
         ");
         $stmt->execute([
@@ -386,7 +386,7 @@ class RelatorioSecretariaAnual
             return [
                 'inicio_ano' => null,
                 'fim_ano' => null,
-                'observacao' => 'Indicador indisponivel: tabela obreiros ainda sem trilha cadastral minima completa.',
+                'observacao' => 'Indicador indisponível: tabela obreiros ainda sem trilha cadastral mínima completa.',
                 'metodo' => 'indisponivel',
             ];
         }
@@ -491,7 +491,7 @@ class RelatorioSecretariaAnual
 
         $stmtGraus = $this->db->prepare("
             SELECT
-                COALESCE(NULLIF(TRIM(grau), ''), 'Nao informado') AS categoria,
+                COALESCE(NULLIF(TRIM(grau), ''), 'Não informado') AS categoria,
                 COUNT(*) AS total
             " . $sqlBase . "
             GROUP BY categoria
@@ -575,3 +575,4 @@ class RelatorioSecretariaAnual
         return $this->resolveCurrentStoreId($this->db);
     }
 }
+

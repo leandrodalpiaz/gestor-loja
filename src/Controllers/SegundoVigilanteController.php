@@ -248,7 +248,7 @@ class SegundoVigilanteController
         $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
 
         if ($companheiroId === '') {
-            $_SESSION['mensagem_erro'] = 'Companheiro invalido para registrar leitura sugerida.';
+            $_SESSION['mensagem_erro'] = 'Companheiro inválido para registrar leitura sugerida.';
             header('Location: /segundo-vigilante');
             exit;
         }
@@ -262,7 +262,7 @@ class SegundoVigilanteController
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Leitura sugerida registrada com sucesso.'
-            : 'Nao foi possivel registrar a leitura sugerida.';
+            : 'Não foi possível registrar a leitura sugerida.';
         header('Location: ' . $retorno . '#leitura-sugerida');
         exit;
     }
@@ -280,7 +280,7 @@ class SegundoVigilanteController
         $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
 
         if ($companheiroId === '') {
-            $_SESSION['mensagem_erro'] = 'Companheiro invalido para solicitar certificado.';
+            $_SESSION['mensagem_erro'] = 'Companheiro inválido para solicitar certificado.';
             header('Location: /segundo-vigilante');
             exit;
         }
@@ -297,8 +297,8 @@ class SegundoVigilanteController
         );
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Solicitacao formal de certificado registrada.'
-            : 'Nao foi possivel registrar a solicitacao do certificado.';
+            ? 'Solicitação formal de certificado registrada.'
+            : 'Não foi possível registrar a solicitação do certificado.';
         header('Location: ' . $retorno . '#certificado');
         exit;
     }
@@ -316,7 +316,7 @@ class SegundoVigilanteController
         $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
 
         if ($companheiroId === '') {
-            $_SESSION['mensagem_erro'] = 'Companheiro invalido para recomendar exaltacao.';
+            $_SESSION['mensagem_erro'] = 'Companheiro inválido para recomendar exaltação.';
             header('Location: /segundo-vigilante');
             exit;
         }
@@ -334,7 +334,7 @@ class SegundoVigilanteController
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Recomendacao formal de exaltacao registrada.'
-            : 'Nao foi possivel registrar a recomendacao de exaltacao.';
+            : 'Não foi possível registrar a recomendação de exaltação.';
         header('Location: ' . $retorno . '#exaltacao');
         exit;
     }
@@ -456,7 +456,7 @@ class SegundoVigilanteController
     {
         $companheiroId = trim($companheiroId);
         if ($companheiroId === '') {
-            return ['ok' => false, 'erro' => 'Companheiro invalido para registrar leitura sugerida.'];
+            return ['ok' => false, 'erro' => 'Companheiro inválido para registrar leitura sugerida.'];
         }
 
         $ok = (new SegundoVigilanteAcompanhamento())->salvarLeituraSugerida(
@@ -466,14 +466,14 @@ class SegundoVigilanteController
             $autorId
         );
 
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar a leitura sugerida.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar a leitura sugerida.'];
     }
 
     public function solicitarCertificadoMiniapp(string $companheiroId, ?string $observacao, ?string $autorId = null): array
     {
         $companheiroId = trim($companheiroId);
         if ($companheiroId === '') {
-            return ['ok' => false, 'erro' => 'Companheiro invalido para solicitar certificado.'];
+            return ['ok' => false, 'erro' => 'Companheiro inválido para solicitar certificado.'];
         }
 
         $trilhaModel = new TrilhaCompanheiro();
@@ -482,14 +482,14 @@ class SegundoVigilanteController
         }
 
         $ok = (new SegundoVigilanteAcompanhamento())->solicitarCertificado($companheiroId, $observacao, $autorId);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar a solicitacao do certificado.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar a solicitação do certificado.'];
     }
 
     public function recomendarExaltacaoMiniapp(string $companheiroId, ?string $observacao, ?string $autorId = null): array
     {
         $companheiroId = trim($companheiroId);
         if ($companheiroId === '') {
-            return ['ok' => false, 'erro' => 'Companheiro invalido para recomendar exaltacao.'];
+            return ['ok' => false, 'erro' => 'Companheiro inválido para recomendar exaltação.'];
         }
 
         $trilhaModel = new TrilhaCompanheiro();
@@ -498,7 +498,7 @@ class SegundoVigilanteController
         }
 
         $ok = (new SegundoVigilanteAcompanhamento())->recomendarExaltacao($companheiroId, $observacao, $autorId);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel registrar a recomendacao de exaltacao.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar a recomendação de exaltação.'];
     }
 
     public function atualizarEtapaMiniapp(string $companheiroId, int $etapaOrdem, string $status, ?string $observacao = null, ?string $autorId = null): array
@@ -510,11 +510,11 @@ class SegundoVigilanteController
 
         $trilhaModel = new TrilhaCompanheiro();
         if (!$trilhaModel->trilhaDisponivel()) {
-            return ['ok' => false, 'erro' => 'A trilha ainda nao foi criada no banco.'];
+            return ['ok' => false, 'erro' => 'A trilha ainda não foi criada no banco.'];
         }
 
         $ok = $trilhaModel->atualizarEtapa($companheiroId, $etapaOrdem, trim($status), $observacao, $autorId);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel atualizar a etapa da trilha.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível atualizar a etapa da trilha.'];
     }
 
     private function resolverProximaAcao(int $etapa, string $status): string

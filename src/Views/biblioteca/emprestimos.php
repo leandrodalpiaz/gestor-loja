@@ -1,5 +1,5 @@
 <?php
-$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
+$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -14,7 +14,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                 font-size: 1.08rem;
             }
             .erp-readable .text-xs,
-            .erp-readable .text-[11px] {
+            .erp-readable .text-\[11px\] {
                 font-size: 0.92rem !important;
                 line-height: 1.4rem !important;
             }
@@ -95,7 +95,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                                 </form>
                             <?php else: ?>
                                 <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-sm text-slate-700">
-                                    Nenhuma acao disponivel
+                                    Nenhuma ação disponível
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -103,7 +103,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                 <?php endforeach; ?>
             <?php else: ?>
                 <div class="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-700 shadow-sm">
-                    Nenhum emprestimo pendente ou atrasado.
+                    Nenhum empréstimo pendente ou atrasado.
                 </div>
             <?php endif; ?>
         </div>
@@ -114,13 +114,13 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-3 text-left">ID</th>
-                        <th class="px-4 py-3 text-left">Codigo</th>
+                        <th class="px-4 py-3 text-left">Código</th>
                         <th class="px-4 py-3 text-left">Livro</th>
                         <th class="px-4 py-3 text-left">Obreiro</th>
-                        <th class="px-4 py-3 text-left">Emprestimo</th>
-                        <th class="px-4 py-3 text-left">Prev. Devolucao</th>
+                        <th class="px-4 py-3 text-left">Empréstimo</th>
+                        <th class="px-4 py-3 text-left">Prev. Devolução</th>
                         <th class="px-4 py-3 text-left">Status</th>
-                        <th class="px-4 py-3 text-right">Acao</th>
+                        <th class="px-4 py-3 text-right">Ação</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -139,7 +139,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                                         <form action="/biblioteca/devolver" method="POST" class="inline">
                                             <input type="hidden" name="id" value="<?= htmlspecialchars((string) ($emp['id'] ?? '')) ?>">
                                             <button type="submit" class="px-3 py-1 rounded bg-green-600 text-white hover:bg-green-700">
-                                                Registrar devolucao
+                                                Registrar devolução
                                             </button>
                                         </form>
                                     <?php else: ?>

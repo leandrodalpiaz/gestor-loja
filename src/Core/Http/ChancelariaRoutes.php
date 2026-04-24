@@ -310,45 +310,45 @@ class ChancelariaRoutes
                 self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
 
                 $sucessoMensagem = match ((string) ($_GET['sucesso'] ?? '')) {
-                    'previa_salva' => 'Previa salva com sucesso.',
-                    'previa_enviada' => 'Previa enviada no privado do Chanceler.',
+                    'previa_salva' => 'Prévia salva com sucesso.',
+                    'previa_enviada' => 'Prévia enviada no privado do Chanceler.',
                     'enviado' => 'Mensagem enviada ao grupo oficial.',
                     'registro_salvo' => 'Registro salvo com sucesso.',
                     'registro_atualizado' => 'Registro atualizado com sucesso.',
                     'registro_desativado' => 'Registro desativado com sucesso.',
-                    'historia_salva' => 'Historia salva com sucesso.',
-                    'historia_atualizada' => 'Historia atualizada com sucesso.',
-                    'historia_status' => 'Status da historia atualizado com sucesso.',
-                    'historia_excluida' => 'Historia excluida com sucesso.',
+                    'historia_salva' => 'História salva com sucesso.',
+                    'historia_atualizada' => 'História atualizada com sucesso.',
+                    'historia_status' => 'Status da história atualizado com sucesso.',
+                    'historia_excluida' => 'História excluída com sucesso.',
                     'palavra_salva' => 'Palavra do Dia salva com sucesso.',
                     'palavra_atualizada' => 'Palavra do Dia atualizada com sucesso.',
                     'palavra_status' => 'Status da Palavra do Dia atualizado com sucesso.',
-                    'palavra_excluida' => 'Palavra do Dia excluida com sucesso.',
-                    'permissoes_salvas' => 'Permissoes por categoria atualizadas com sucesso.',
+                    'palavra_excluida' => 'Palavra do Dia excluída com sucesso.',
+                    'permissoes_salvas' => 'Permissões por categoria atualizadas com sucesso.',
                     default => null,
                 };
 
                 $erroMensagem = match ((string) ($_GET['erro'] ?? '')) {
-                    'previa_vazia' => 'A mensagem da previa nao pode ficar vazia.',
-                    'falha_salvar_previa' => 'Nao foi possivel salvar a previa.',
-                    'falha_enviar_previa' => 'Falha ao enviar a previa no privado.' . (!empty($_GET['detalhe']) ? ' Detalhe: ' . (string) $_GET['detalhe'] : ''),
+                    'previa_vazia' => 'A mensagem da prévia não pode ficar vazia.',
+                    'falha_salvar_previa' => 'Não foi possível salvar a prévia.',
+                    'falha_enviar_previa' => 'Falha ao enviar a prévia no privado.' . (!empty($_GET['detalhe']) ? ' Detalhe: ' . (string) $_GET['detalhe'] : ''),
                     'falha_enviar_grupo' => 'Falha ao enviar no grupo oficial.' . (!empty($_GET['detalhe']) ? ' Detalhe: ' . (string) $_GET['detalhe'] : ''),
                     'registro_invalido' => 'Preencha nome, tipo e data do evento corretamente.',
-                    'falha_salvar_registro' => 'Nao foi possivel salvar o registro.',
-                    'falha_atualizar_registro' => 'Nao foi possivel atualizar o registro.',
-                    'id_invalido' => 'Registro invalido para desativacao.',
-                    'falha_desativar' => 'Nao foi possivel desativar o registro.',
-                    'historia_invalida' => 'Preencha os dados da historia corretamente.',
-                    'falha_salvar_historia' => 'Nao foi possivel salvar a historia.',
-                    'falha_atualizar_historia' => 'Nao foi possivel atualizar a historia.',
-                    'falha_status_historia' => 'Nao foi possivel atualizar o status da historia.',
-                    'falha_excluir_historia' => 'Nao foi possivel excluir a historia.',
+                    'falha_salvar_registro' => 'Não foi possível salvar o registro.',
+                    'falha_atualizar_registro' => 'Não foi possível atualizar o registro.',
+                    'id_invalido' => 'Registro inválido para desativação.',
+                    'falha_desativar' => 'Não foi possível desativar o registro.',
+                    'historia_invalida' => 'Preencha os dados da história corretamente.',
+                    'falha_salvar_historia' => 'Não foi possível salvar a história.',
+                    'falha_atualizar_historia' => 'Não foi possível atualizar a história.',
+                    'falha_status_historia' => 'Não foi possível atualizar o status da história.',
+                    'falha_excluir_historia' => 'Não foi possível excluir a história.',
                     'palavra_invalida' => 'Preencha os dados da Palavra do Dia corretamente.',
-                    'falha_salvar_palavra' => 'Nao foi possivel salvar a Palavra do Dia.',
-                    'falha_atualizar_palavra' => 'Nao foi possivel atualizar a Palavra do Dia.',
-                    'falha_status_palavra' => 'Nao foi possivel atualizar o status da Palavra do Dia.',
-                    'falha_excluir_palavra' => 'Nao foi possivel excluir a Palavra do Dia.',
-                    'falha_salvar_permissoes' => 'Nao foi possivel salvar as permissoes por categoria.',
+                    'falha_salvar_palavra' => 'Não foi possível salvar a Palavra do Dia.',
+                    'falha_atualizar_palavra' => 'Não foi possível atualizar a Palavra do Dia.',
+                    'falha_status_palavra' => 'Não foi possível atualizar o status da Palavra do Dia.',
+                    'falha_excluir_palavra' => 'Não foi possível excluir a Palavra do Dia.',
+                    'falha_salvar_permissoes' => 'Não foi possível salvar as permissões por categoria.',
                     default => null,
                 };
 
@@ -451,3 +451,5 @@ class ChancelariaRoutes
         }
     }
 }
+
+

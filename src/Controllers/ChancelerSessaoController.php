@@ -58,7 +58,7 @@ class ChancelerSessaoController
         $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
 
         if ($sessaoId <= 0 || $obreiroId === '') {
-            $_SESSION['mensagem_erro'] = 'Dados insuficientes para registrar a presenca.';
+            $_SESSION['mensagem_erro'] = 'Dados insuficientes para registrar a presença.';
             header('Location: /chanceler/sessao');
             exit;
         }
@@ -72,8 +72,8 @@ class ChancelerSessaoController
         );
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Presenca efetiva atualizada pelo Chanceler.'
-            : 'Nao foi possivel atualizar a presenca efetiva.';
+            ? 'Presença efetiva atualizada pelo Chanceler.'
+            : 'Não foi possível atualizar a presença efetiva.';
 
         header('Location: /chanceler/sessao?sessao_id=' . urlencode((string) $sessaoId));
         exit;
@@ -140,7 +140,7 @@ class ChancelerSessaoController
     public function registrarPresencaMiniapp(int $sessaoId, string $obreiroId, bool $presente, ?string $autorId = null, ?string $observacao = null): array
     {
         if ($sessaoId <= 0 || trim($obreiroId) === '') {
-            return ['ok' => false, 'erro' => 'Dados insuficientes para atualizar a presenca.'];
+            return ['ok' => false, 'erro' => 'Dados insuficientes para atualizar a presença.'];
         }
 
         $ok = (new PresencaSessao())->registrar(
@@ -151,7 +151,7 @@ class ChancelerSessaoController
             $observacao
         );
 
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel atualizar a presenca.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível atualizar a presença.'];
     }
 
     private function mapearSessao(array $sessao): array

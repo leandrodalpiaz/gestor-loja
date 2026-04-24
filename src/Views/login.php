@@ -177,7 +177,7 @@ foreach ([
 
                                 <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                                     <div class="max-w-xl rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-erpMuted">
-                                        Em caso de duvida sobre acesso, procure a administracao da Loja. O painel web e o ambiente principal para operacao administrativa desktop.
+                                        Em caso de dúvida sobre acesso, procure a administração da Loja. O painel web é o ambiente principal para operação administrativa desktop.
                                     </div>
                                     <div class="flex flex-col gap-3 sm:flex-row">
                                         <button type="submit" name="acao" value="login" class="inline-flex min-w-[220px] items-center justify-center rounded-xl border border-transparent bg-erpNavyDeep px-6 py-4 text-base font-semibold text-white transition hover:opacity-95">

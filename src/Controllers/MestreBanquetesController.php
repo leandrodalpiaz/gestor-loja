@@ -55,8 +55,8 @@ class MestreBanquetesController
         $ok = $sessaoId > 0 && (new BanqueteOperacao())->salvar($sessaoId, $_POST, $autorId);
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Operacao do banquete atualizada com sucesso.'
-            : 'Nao foi possivel atualizar a operacao do banquete.';
+            ? 'Operação do banquete atualizada com sucesso.'
+            : 'Não foi possível atualizar a operação do banquete.';
 
         header('Location: /mestre-banquetes?sessao_id=' . urlencode((string) $sessaoId));
         exit;
@@ -111,11 +111,11 @@ class MestreBanquetesController
     {
         $sessaoId = (int) ($dados['sessao_id'] ?? 0);
         if ($sessaoId <= 0) {
-            return ['ok' => false, 'erro' => 'Sessao invalida para operacao do banquete.'];
+            return ['ok' => false, 'erro' => 'Sessão inválida para operação do banquete.'];
         }
 
         $ok = (new BanqueteOperacao())->salvar($sessaoId, $dados, $autorId);
 
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Nao foi possivel salvar a operacao do banquete.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível salvar a operação do banquete.'];
     }
 }

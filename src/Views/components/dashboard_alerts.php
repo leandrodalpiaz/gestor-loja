@@ -3,7 +3,7 @@ $alerts = is_array($dashboardAlerts ?? null) ? $dashboardAlerts : [];
 ?>
 <?php if ($alerts !== []): ?>
     <section class="rounded-erp-md border border-erp-border bg-white px-5 py-4">
-        <h3 class="text-lg font-semibold text-erp-navy">Alertas e pendencias</h3>
+        <h3 class="text-lg font-semibold text-erp-navy">Alertas e pendências</h3>
         <div class="mt-3 space-y-2">
             <?php foreach ($alerts as $alert): ?>
                 <?php $tone = (string) ($alert['tone'] ?? 'warning'); ?>

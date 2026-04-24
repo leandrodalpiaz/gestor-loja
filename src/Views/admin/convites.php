@@ -75,7 +75,7 @@ $appShellSidebarSections = [
             <?php if ($conviteGeradoExpiraEm): ?>
                 <div class="text-xs text-slate-500">Expira em: <?= htmlspecialchars((string) $conviteGeradoExpiraEm) ?></div>
             <?php endif; ?>
-            <div class="text-xs text-slate-500">Telefone nao e obrigatorio para gerar convite. O link pode ser encaminhado por qualquer canal.</div>
+            <div class="text-xs text-slate-500">Telefone não é obrigatório para gerar convite. O link pode ser encaminhado por qualquer canal.</div>
         </div>
     <?php endif; ?>
 
@@ -167,7 +167,7 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
             btn.textContent = 'Copiado';
             setTimeout(() => (btn.textContent = original || 'Copiar link'), 1200);
         } catch (e) {
-            alert('Nao foi possivel copiar. Use o botao Selecionar e copie manualmente.');
+            alert('Não foi possível copiar. Use o botão Selecionar e copie manualmente.');
         }
     });
 });

@@ -115,7 +115,7 @@ class VigilanciaRoutes
                 WebGuards::requireLogin($openTestAccess, $session);
                 $usuarioId = trim((string) ($session['usuario_id'] ?? ''));
                 if ($usuarioId === '') {
-                    WebGuards::forbidHtml('Nao foi possivel identificar o Aprendiz logado.');
+                    WebGuards::forbidHtml('Não foi possível identificar o Aprendiz logado.');
                 }
                 (new PrimeiroVigilanteController())->aprendiz($usuarioId, true);
                 return true;
@@ -124,7 +124,7 @@ class VigilanciaRoutes
                 WebGuards::requireLogin($openTestAccess, $session);
                 $usuarioId = trim((string) ($session['usuario_id'] ?? ''));
                 if ($usuarioId === '') {
-                    WebGuards::forbidHtml('Nao foi possivel identificar o Companheiro logado.');
+                    WebGuards::forbidHtml('Não foi possível identificar o Companheiro logado.');
                 }
                 (new SegundoVigilanteController())->companheiro($usuarioId, true);
                 return true;
@@ -141,3 +141,4 @@ class VigilanciaRoutes
     }
 
 }
+

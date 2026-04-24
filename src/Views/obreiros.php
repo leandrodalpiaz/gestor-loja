@@ -24,10 +24,10 @@ $conviteGeradoLink = $_SESSION['convite_gerado_link'] ?? null;
 $conviteGeradoExpiraEm = $_SESSION['convite_gerado_expira_em'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro'], $_SESSION['convite_gerado_link'], $_SESSION['convite_gerado_expira_em']);
 if (!$mensagemSucesso && isset($_GET['sucesso'])) {
-    $mensagemSucesso = 'Operacao concluida com sucesso.';
+    $mensagemSucesso = 'Operação concluída com sucesso.';
 }
 if (!$mensagemErro && isset($_GET['erro'])) {
-    $mensagemErro = 'Nao foi possivel concluir a operacao solicitada.';
+    $mensagemErro = 'Não foi possível concluir a operação solicitada.';
 }
 $returnToAtual = (string) ($_SERVER['REQUEST_URI'] ?? '/obreiros');
 $rotulosAlerta = [
@@ -68,7 +68,7 @@ require __DIR__ . '/partials/erp_head.php';
 ?>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <?php require __DIR__ . '/partials/erp_shell_open.php'; ?>
-<?php /* TODO: a view ainda carrega classes locais antigas; consolidar tokens depois sem tocar no controller. */ ?>
+<?php /* TODO(layout): consolidar classes locais legadas em tokens do shell ERP, sem alterar o controller. */ ?>
 <div class="space-y-7">
         <?php if ($mensagemSucesso): ?>
             <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"><?= htmlspecialchars((string) $mensagemSucesso) ?></div>
@@ -88,7 +88,7 @@ require __DIR__ . '/partials/erp_head.php';
                 <?php if (is_string($conviteGeradoExpiraEm) && $conviteGeradoExpiraEm !== ''): ?>
                     <div class="mt-1 text-xs text-slate-600">Expira em: <?= htmlspecialchars((string) $conviteGeradoExpiraEm) ?></div>
                 <?php endif; ?>
-                <div class="mt-1 text-xs text-slate-600">Pode encaminhar por Telegram, WhatsApp ou e-mail. Telefone no cadastro nao e obrigatorio para gerar convite.</div>
+                <div class="mt-1 text-xs text-slate-600">Pode encaminhar por Telegram, WhatsApp ou e-mail. Telefone no cadastro não é obrigatório para gerar convite.</div>
             </div>
         <?php endif; ?>
 
@@ -134,7 +134,7 @@ require __DIR__ . '/partials/erp_head.php';
         <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div class="flex flex-col gap-2 mb-4">
                 <h2 class="text-xl font-semibold text-cobalto">Filtros administrativos</h2>
-                <p class="text-sm text-gray-500">Use os filtros para saneamento cadastral, conferencia da nominata e preparacao dos relatorios.</p>
+                <p class="text-sm text-gray-500">Use os filtros para saneamento cadastral, conferência da nominata e preparação dos relatórios.</p>
             </div>
 
             <form method="GET" action="/obreiros" class="space-y-4">
@@ -248,7 +248,7 @@ require __DIR__ . '/partials/erp_head.php';
                                     <tr class="align-top hover:bg-slate-50/70">
                                         <td class="px-4 py-3">
                                             <div class="font-semibold text-erp-text"><?= htmlspecialchars($nomeExibicao) ?></div>
-                                            <div class="mt-1 text-xs text-erp-muted">CIM <?= htmlspecialchars((string) ($obreiro['cim'] ?? '-')) ?> · <?= htmlspecialchars((string) ($obreiro['grau'] ?? 'Nao informado')) ?></div>
+                                            <div class="mt-1 text-xs text-erp-muted">CIM <?= htmlspecialchars((string) ($obreiro['cim'] ?? '-')) ?> · <?= htmlspecialchars((string) ($obreiro['grau'] ?? 'Não informado')) ?></div>
                                         </td>
                                         <td class="px-4 py-3">
                                             <span class="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
@@ -256,9 +256,9 @@ require __DIR__ . '/partials/erp_head.php';
                                             </span>
                                         </td>
                                         <td class="px-4 py-3">
-                                            <?php /* TODO: a view nao recebe regularidade financeira dos obreiros; aplicar StatusBadge real quando esse dado vier do backend. */ ?>
+                                            <?php /* TODO(dados): aplicar StatusBadge de regularidade quando o backend expor esse indicador na listagem. */ ?>
                                             <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                                                Nao integrado
+                                                Não integrado
                                             </span>
                                         </td>
                                         <td class="px-4 py-3">
@@ -324,7 +324,7 @@ require __DIR__ . '/partials/erp_head.php';
                                     <div class="flex flex-wrap items-center gap-2">
                                         <h3 class="text-lg font-bold text-gray-900"><?= htmlspecialchars($nomeExibicao) ?></h3>
                                         <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-                                            <?= htmlspecialchars((string) ($obreiro['grau'] ?? 'Nao informado')) ?>
+                                            <?= htmlspecialchars((string) ($obreiro['grau'] ?? 'Não informado')) ?>
                                         </span>
                                         <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 border border-blue-100">
                                             <?= htmlspecialchars($situacao) ?>
@@ -347,7 +347,7 @@ require __DIR__ . '/partials/erp_head.php';
                                             <?= !empty($obreiro['telegram_id']) ? 'Bot vinculado' : 'Sem bot' ?>
                                         </span>
                                         <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 font-semibold text-slate-700">
-                                            Financeiro: Nao integrado
+                                            Financeiro: Não integrado
                                         </span>
                                         <span class="inline-flex items-center rounded-full bg-gray-50 border border-gray-200 px-2.5 py-1 text-gray-600">
                                             Ingresso: <?= htmlspecialchars((string) ($obreiro['data_filiacao'] ?? $obreiro['data_iniciacao'] ?? '-')) ?>
@@ -455,7 +455,7 @@ require __DIR__ . '/partials/erp_head.php';
                     btn.textContent = 'Copiado';
                     setTimeout(() => (btn.textContent = original || 'Copiar link'), 1200);
                 } catch (error) {
-                    alert('Nao foi possivel copiar automaticamente. Use o botao Selecionar link e copie manualmente.');
+                    alert('Não foi possível copiar automaticamente. Use o botão Selecionar link e copie manualmente.');
                 }
             });
         });

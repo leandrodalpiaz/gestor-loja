@@ -65,7 +65,7 @@ class TesourariaRoutes
                 $gestaoIdSelecionada = (int) ($_GET['gestao_id'] ?? ($gestaoAtual['id'] ?? ($gestoes[0]['id'] ?? 0)));
                 if ($gestaoIdSelecionada <= 0) {
                     http_response_code(404);
-                    echo 'Nenhuma gestao cadastrada para consolidar o relatorio financeiro.';
+                    echo 'Nenhuma gestão cadastrada para consolidar o relatório financeiro.';
                     exit;
                 }
                 $encerramentoInformado = trim((string) ($_GET['encerramento_em'] ?? ''));
@@ -258,7 +258,7 @@ class TesourariaRoutes
                 $obreiroFinanceiroId = trim((string) ($obreiroFinanceiro['id'] ?? $session['usuario_id'] ?? ''));
                 if ($obreiroFinanceiroId === '' || $obreiroFinanceiroId === '0') {
                     http_response_code(403);
-                    echo 'Nao foi possivel identificar o obreiro para consultar suas obrigacoes.';
+                    echo 'Não foi possível identificar o obreiro para consultar suas obrigações.';
                     exit;
                 }
                 $requirePermission('financeiro.self', 'Acesso restrito ao financeiro do obreiro.');

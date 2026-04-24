@@ -37,7 +37,7 @@
         </div>
 
         <form id="form-operador" class="card rounded-2xl p-4 space-y-3">
-            <div class="text-sm font-semibold">Irmao em exercicio</div>
+            <div class="text-sm font-semibold">Irmão em exercício</div>
             <input id="operador_nome" type="text" placeholder="Nome do operador" class="w-full rounded-lg border px-3 py-2 text-sm">
             <button type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white">Salvar operador</button>
         </form>
@@ -53,7 +53,7 @@
                     <div id="estado-volume" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Auto proxima</div>
+                    <div class="text-gray-500">Auto próxima</div>
                     <div id="estado-auto" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
@@ -69,7 +69,7 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Proxima faixa</div>
+            <div class="text-sm font-semibold">Próxima faixa</div>
             <div id="proxima-faixa" class="mt-3 rounded-xl bg-white/70 p-3 text-sm"></div>
         </div>
 
@@ -79,11 +79,11 @@
                 <button data-acao="pausar" class="rounded-xl bg-slate-700 px-3 py-3 text-sm font-medium text-white">Pausar</button>
                 <button data-acao="parar" class="rounded-xl bg-rose-700 px-3 py-3 text-sm font-medium text-white">Parar</button>
                 <button data-acao="anterior" class="rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Anterior</button>
-                <button data-acao="proxima" class="rounded-xl bg-amber-600 px-3 py-3 text-sm font-medium text-white">Proxima</button>
-                <button data-acao="silencio" class="rounded-xl bg-slate-500 px-3 py-3 text-sm font-medium text-white">Silencio</button>
+                <button data-acao="proxima" class="rounded-xl bg-amber-600 px-3 py-3 text-sm font-medium text-white">Próxima</button>
+                <button data-acao="silencio" class="rounded-xl bg-slate-500 px-3 py-3 text-sm font-medium text-white">Silêncio</button>
                 <button data-acao="volume_down" class="rounded-xl bg-slate-800 px-3 py-3 text-sm font-medium text-white">Volume -</button>
                 <button data-acao="volume_up" class="rounded-xl bg-slate-800 px-3 py-3 text-sm font-medium text-white">Volume +</button>
-                <button data-acao="toggle_auto" class="rounded-xl bg-indigo-700 px-3 py-3 text-sm font-medium text-white">Auto prox.</button>
+                <button data-acao="toggle_auto" class="rounded-xl bg-indigo-700 px-3 py-3 text-sm font-medium text-white">Auto próxima</button>
             </div>
         </div>
 
@@ -118,7 +118,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não foi possível concluir esta ação agora. Tente novamente em instantes.');
+    if (!json.ok) throw new Error(json.erro || 'Não conseguimos concluir sua solicitação agora. Tente novamente em alguns minutos.');
     return json;
 }
 
@@ -167,7 +167,7 @@ function render() {
     document.getElementById('proxima-faixa').innerHTML = dashboard.proxima_faixa ? `
         <div class="font-medium">${esc(dashboard.proxima_faixa.code || '--')} · ${esc(dashboard.proxima_faixa.phase || 'Etapa')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(dashboard.proxima_faixa.title || '')}</div>
-    ` : `<div class="text-gray-500">Sem proxima faixa.</div>`;
+    ` : `<div class="text-gray-500">Sem próxima faixa.</div>`;
 
     renderLista('lista-faixas', dashboard.faixas, 'Nenhuma faixa encontrada.', item => `
         <button data-faixa="${esc(item.id)}" class="w-full text-left">

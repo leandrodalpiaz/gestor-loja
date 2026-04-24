@@ -22,14 +22,14 @@ class CertificadoGenerator
 
         $fontPath = __DIR__ . '/../../public/assets/fonte.ttf';
             if (!file_exists($fontPath)) {
-                // URL direta para uma fonte clássica e elegante (Playfair Display) no repositório oficial do Google
+                // Fonte padrão do certificado (Playfair Display), baixada do repositório oficial.
                 $fontUrl = 'https://raw.githubusercontent.com/google/fonts/main/ofl/playfairdisplay/PlayfairDisplay-Regular.ttf';
 
-                // Tenta baixar a fonte
+                // Tenta obter a fonte automaticamente para evitar falha em ambiente novo.
                 $fontData = @file_get_contents($fontUrl);
 
                 if ($fontData !== false) {
-                    // Salva a fonte na pasta assets
+                    // Persiste a fonte para reutilização nas próximas emissões.
                     file_put_contents($fontPath, $fontData);
                 } else {
                     throw new Exception("Erro: O arquivo fonte.ttf não existe e o download automático falhou. Por favor, adicione o arquivo manualmente na pasta public/assets/");
@@ -43,7 +43,7 @@ class CertificadoGenerator
         }
         $corTexto = imagecolorallocate($imagem, 0, 0, 0);
 
-        // Símbolo maçônico correto
+        // Símbolo maçônico utilizado no texto formal do certificado.
         $pontos = "∴";
         $limite = 50;
         $texto = wordwrap("Certificamo-os com grande alegria no coração que o Ir{$pontos} {$nomeVisitante}", $limite, "\n");
@@ -55,9 +55,9 @@ class CertificadoGenerator
         $assinatura = str_pad("Chan{$pontos}", 30, " ", STR_PAD_RIGHT) . str_pad("Ven{$pontos} Mes{$pontos}", 30, " ", STR_PAD_LEFT);
         $texto .= "\n\n\n" . $assinatura;
 
-        // Centralizar texto entre as colunas
-        $x = 120; // Ajuste para centralização
-        $y = 320; // Ajuste para altura inicial
+        // Inicia desenho na área central do template e calcula centralização por linha.
+        $x = 120; // Referência horizontal do bloco de texto.
+        $y = 320; // Referência vertical inicial.
         $tamanho = 22;
         $linhas = explode("\n", $texto);
         foreach ($linhas as $i => $linha) {

@@ -28,27 +28,27 @@ class ConviteAcesso
         }
 
         if (!$this->isUuid($obreiroId)) {
-            return ['ok' => false, 'erro' => 'Obreiro invalido para gerar convite.'];
+            return ['ok' => false, 'erro' => 'Obreiro inválido para gerar convite.'];
         }
 
         try {
             $obreiro = (new Obreiro())->findById($obreiroId);
         } catch (Throwable $e) {
-            return ['ok' => false, 'erro' => 'Obreiro invalido para gerar convite.'];
+            return ['ok' => false, 'erro' => 'Obreiro inválido para gerar convite.'];
         }
         if (!$obreiro) {
-            return ['ok' => false, 'erro' => 'Obreiro nao encontrado para gerar convite.'];
+            return ['ok' => false, 'erro' => 'Obreiro não encontrado para gerar convite.'];
         }
 
         $lojaAtual = $this->buscarLojaAtualId();
         $lojaObreiro = (int) ($obreiro['loja_id'] ?? 0);
         if ($lojaObreiro <= 0 || $lojaObreiro !== $lojaAtual) {
-            return ['ok' => false, 'erro' => 'Obreiro nao pertence a loja atual.'];
+            return ['ok' => false, 'erro' => 'Obreiro não pertence à loja atual.'];
         }
 
         $status = strtolower(trim((string) ($obreiro['acesso_status'] ?? '')));
         if ($status === 'inativo') {
-            return ['ok' => false, 'erro' => 'Obreiro esta inativo. Nao gerar convite.'];
+            return ['ok' => false, 'erro' => 'Obreiro está inativo. Não gerar convite.'];
         }
 
         if (!empty($obreiro['telegram_id'])) {
@@ -72,7 +72,7 @@ class ConviteAcesso
             ]);
 
             if (!$ok) {
-                return ['ok' => false, 'erro' => 'Nao foi possivel gerar o convite.'];
+                return ['ok' => false, 'erro' => 'Não foi possível gerar o convite.'];
             }
 
             return [
@@ -115,7 +115,7 @@ class ConviteAcesso
     {
         $token = trim($token);
         if ($token === '' || $telegramId <= 0) {
-            return ['ok' => false, 'erro' => 'Token invalido para ativacao.'];
+            return ['ok' => false, 'erro' => 'Token inválido para ativação.'];
         }
 
         try {
@@ -132,7 +132,7 @@ class ConviteAcesso
             $convite = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
             if (!$convite) {
                 $this->db->rollBack();
-                return ['ok' => false, 'erro' => 'Convite invalido.'];
+                return ['ok' => false, 'erro' => 'Convite inválido.'];
             }
 
             if (!empty($convite['usado_em'])) {
@@ -154,25 +154,25 @@ class ConviteAcesso
 
             if (!$this->isUuid($obreiroId)) {
                 $this->db->rollBack();
-                return ['ok' => false, 'erro' => 'Obreiro do convite invalido.'];
+                return ['ok' => false, 'erro' => 'Obreiro do convite inválido.'];
             }
 
             $obreiro = (new Obreiro())->findById($obreiroId);
             if (!$obreiro) {
                 $this->db->rollBack();
-                return ['ok' => false, 'erro' => 'Obreiro do convite nao encontrado.'];
+                return ['ok' => false, 'erro' => 'Obreiro do convite não encontrado.'];
             }
 
             $lojaObreiro = (int) ($obreiro['loja_id'] ?? 0);
             if ($lojaObreiro <= 0) {
                 $this->db->rollBack();
-                return ['ok' => false, 'erro' => 'Loja do obreiro invalida.'];
+                return ['ok' => false, 'erro' => 'Loja do obreiro inválida.'];
             }
 
             $statusObreiro = strtolower(trim((string) ($obreiro['acesso_status'] ?? '')));
             if ($statusObreiro === 'inativo') {
                 $this->db->rollBack();
-                return ['ok' => false, 'erro' => 'Obreiro esta inativo. Procure o secretario.'];
+                return ['ok' => false, 'erro' => 'Obreiro está inativo. Procure o secretário.'];
             }
 
             if (!empty($obreiro['telegram_id'])) {
@@ -206,7 +206,7 @@ class ConviteAcesso
             ]);
             if (!$okUp) {
                 $this->db->rollBack();
-                return ['ok' => false, 'erro' => 'Nao foi possivel ativar o acesso.'];
+                return ['ok' => false, 'erro' => 'Não foi possível ativar o acesso.'];
             }
 
             $stmtUse = $this->db->prepare(
@@ -323,5 +323,5 @@ class ConviteAcesso
         return (bool) preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $value);
     }
 
-    // deepLinkForToken e o metodo publico para montar o link de ativacao.
+    // O método público deepLinkForToken monta o link de ativação usado no onboarding.
 }

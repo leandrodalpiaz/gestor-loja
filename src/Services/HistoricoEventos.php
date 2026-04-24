@@ -124,8 +124,8 @@ class HistoricoEventos
     }
 
     /**
-     * Retorna todos os eventos fixos para exibição no painel
-     * (usado pela listagem do Mini App de Histórico).
+        * Retorna todos os eventos fixos para exibição no painel
+        * (usado pela listagem do miniapp de Histórico).
      *
      * @return array<string, array<string, int|string|null>>
      */

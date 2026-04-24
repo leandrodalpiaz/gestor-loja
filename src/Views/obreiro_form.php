@@ -14,7 +14,7 @@ $estadosCivis = [
     'separado' => 'Separado',
     'viuvo' => 'Viuvo',
     'uniao_estavel' => 'Uniao estavel',
-    'nao_informado' => 'Nao informado',
+    'nao_informado' => 'Não informado',
 ];
 $escolaridades = [
     'fundamental_incompleto' => 'Fundamental incompleto',
@@ -27,7 +27,7 @@ $escolaridades = [
     'pos_graduacao' => 'Pos-graduacao',
     'mestrado' => 'Mestrado',
     'doutorado' => 'Doutorado',
-    'nao_informado' => 'Nao informado',
+    'nao_informado' => 'Não informado',
 ];
 $faixasRenda = [
     'ate_1_sm' => 'Ate 1 salario minimo',
@@ -35,7 +35,7 @@ $faixasRenda = [
     'de_3_a_5_sm' => 'De 3 a 5 salarios minimos',
     'de_5_a_10_sm' => 'De 5 a 10 salarios minimos',
     'acima_10_sm' => 'Acima de 10 salarios minimos',
-    'nao_informado' => 'Nao informado',
+    'nao_informado' => 'Não informado',
 ];
 $situacoesQuadro = [
     'ativo' => 'Ativo',
@@ -79,7 +79,7 @@ $situacoesQuadro = [
                 font-size: 1.08rem;
             }
             .erp-readable .text-xs,
-            .erp-readable .text-[11px] {
+            .erp-readable .text-\[11px\] {
                 font-size: 0.92rem !important;
                 line-height: 1.4rem !important;
             }

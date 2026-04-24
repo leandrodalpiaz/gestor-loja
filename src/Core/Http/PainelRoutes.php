@@ -211,7 +211,7 @@ class PainelRoutes
             $acao = trim((string) ($_POST['acao'] ?? ''));
 
             if ($sessaoId <= 0) {
-                $_SESSION['mensagem_erro'] = 'Sessao invalida para atualizar a confirmacao.';
+                $_SESSION['mensagem_erro'] = 'Sessão inválida para atualizar a confirmação.';
             } elseif (!$dashboardObreiro || $dashboardUsuarioId === '' || $dashboardUsuarioId === '0') {
                 $_SESSION['mensagem_erro'] = 'A confirmacao direta no dashboard requer um obreiro real autenticado.';
             } else {
@@ -226,10 +226,10 @@ class PainelRoutes
                             ? 'Confirmacao cancelada com sucesso.'
                             : 'Presenca confirmada com sucesso.';
                     } else {
-                        $_SESSION['mensagem_erro'] = 'Nao foi possivel atualizar a confirmacao desta sessao.';
+                        $_SESSION['mensagem_erro'] = 'Não foi possível atualizar a confirmação desta sessão.';
                     }
                 } catch (\Throwable $e) {
-                    $_SESSION['mensagem_erro'] = 'Falha ao atualizar a confirmacao da sessao.';
+                    $_SESSION['mensagem_erro'] = 'Falha ao atualizar a confirmação da sessão.';
                     error_log('Falha no POST do dashboard: ' . $e->getMessage());
                 }
             }

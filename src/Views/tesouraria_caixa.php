@@ -12,14 +12,14 @@ $appShellDescription = 'Entradas, saídas, saldo do período e ações operacion
 $appShellActiveHref = '/tesouraria/caixa';
 $appShellActions = [
     ['label' => 'Voltar ao dashboard', 'href' => '/dashboard'],
-    ['label' => 'Obrigacoes', 'href' => '/tesouraria/obrigacoes', 'primary' => true],
+    ['label' => 'Obrigações', 'href' => '/tesouraria/obrigacoes', 'primary' => true],
 ];
 $appShellSidebarSections = [
     [
         'title' => 'Tesouraria',
         'items' => [
             ['label' => 'Livro-Caixa', 'href' => '/tesouraria/caixa'],
-            ['label' => 'Obrigacoes', 'href' => '/tesouraria/obrigacoes'],
+            ['label' => 'Obrigações', 'href' => '/tesouraria/obrigacoes'],
             ['label' => 'Comprovantes', 'href' => '/tesouraria/comprovantes'],
             ['label' => 'Regularidade', 'href' => '/tesouraria/regularidade'],
             ['label' => 'Dashboard', 'href' => '/dashboard'],
@@ -33,61 +33,61 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <?php
         $dashboard = [
             'title' => 'Dashboard financeiro operacional',
-            'subtitle' => 'Controle rigoroso da Tesouraria com foco em inadimplencia e operacao rapida.',
+            'subtitle' => 'Controle rigoroso da Tesouraria com foco em inadimplência e operação rápida.',
             'meta' => [
                 'Perfil: tesoureiro',
                 'Fonte oficial: tesouraria',
                 'Miniapp alinhado ao cargo',
             ],
             'actions' => [
-                ['label' => 'Criar obrigacao', 'href' => '/tesouraria/obrigacoes'],
+                ['label' => 'Criar obrigação', 'href' => '/tesouraria/obrigacoes'],
                 ['label' => 'Gerar mensalidades', 'href' => '/tesouraria/obrigacoes'],
                 ['label' => 'Quitar parcela', 'href' => '/tesouraria/obrigacoes'],
                 ['label' => 'Emitir recibo', 'href' => '/tesouraria/obrigacoes'],
-                ['label' => 'Criar isencao', 'href' => '/tesouraria/obrigacoes'],
+                ['label' => 'Criar isenção', 'href' => '/tesouraria/obrigacoes'],
                 ['label' => 'Abrir miniapp da tesouraria', 'href' => '/miniapp/tesouraria'],
             ],
             'blocks' => [
                 [
-                    'title' => 'Caixa e inadimplencia',
+                    'title' => 'Caixa e inadimplência',
                     'subtitle' => 'Resumo operacional de caixa e risco financeiro.',
                     'span' => 'half',
                     'metrics' => [
                         ['label' => 'Entradas', 'value' => 'R$ 0,00', 'hint' => 'Atualizado pelo periodo filtrado'],
-                        ['label' => 'Saidas', 'value' => 'R$ 0,00', 'hint' => 'Atualizado pelo periodo filtrado'],
-                        ['label' => 'Saldo liquido', 'value' => 'R$ 0,00'],
+                        ['label' => 'Saídas', 'value' => 'R$ 0,00', 'hint' => 'Atualizado pelo periodo filtrado'],
+                        ['label' => 'Saldo líquido', 'value' => 'R$ 0,00'],
                     ],
                     'list' => [
-                        ['item' => 'Obrigações em atraso', 'meta' => 'Operar no modulo de obrigacoes', 'status' => 'Prioritario'],
-                        ['item' => 'Comprovantes pendentes', 'meta' => 'Validacao diaria', 'status' => 'Prioritario'],
+                        ['item' => 'Obrigações em atraso', 'meta' => 'Operar no módulo de obrigações', 'status' => 'Prioritário'],
+                        ['item' => 'Comprovantes pendentes', 'meta' => 'Validação diária', 'status' => 'Prioritário'],
                     ],
                 ],
                 [
-                    'title' => 'Sessoes e operacao financeira',
-                    'subtitle' => 'Impacto financeiro das sessoes e atalhos operacionais.',
+                    'title' => 'Sessões e operação financeira',
+                    'subtitle' => 'Impacto financeiro das sessões e atalhos operacionais.',
                     'span' => 'half',
                     'metrics' => [
-                        ['label' => 'Comprovantes', 'value' => 'Validacao ativa'],
-                        ['label' => 'Relatorios', 'value' => 'Fechamento e gestao'],
+                        ['label' => 'Comprovantes', 'value' => 'Validação ativa'],
+                        ['label' => 'Relatórios', 'value' => 'Fechamento e gestão'],
                     ],
                     'list' => [
-                        ['item' => 'Sessoes com impacto financeiro', 'meta' => 'Acompanhar em /tesouraria/sessoes', 'status' => 'Ativo'],
-                        ['item' => 'Minhas obrigacoes', 'meta' => 'Consulta individual', 'status' => 'Ativo'],
+                        ['item' => 'Sessões com impacto financeiro', 'meta' => 'Acompanhar em /tesouraria/sessoes', 'status' => 'Ativo'],
+                        ['item' => 'Minhas obrigações', 'meta' => 'Consulta individual', 'status' => 'Ativo'],
                     ],
                 ],
             ],
             'alerts' => [
-                ['title' => 'Inadimplencia visivel', 'text' => 'Manter obrigacoes atrasadas e comprovantes como prioridade diaria.', 'tone' => 'danger'],
+                ['title' => 'Inadimplência visível', 'text' => 'Manter obrigações atrasadas e comprovantes como prioridade diária.', 'tone' => 'danger'],
             ],
             'activity' => [
-                ['item' => 'Livro-caixa em operacao', 'meta' => 'Lancamentos e filtros por competencia'],
-                ['item' => 'Comprovantes e obrigacoes', 'meta' => 'Fluxo financeiro oficial da tesouraria'],
+                ['item' => 'Livro-caixa em operação', 'meta' => 'Lançamentos e filtros por competência'],
+                ['item' => 'Comprovantes e obrigações', 'meta' => 'Fluxo financeiro oficial da tesouraria'],
             ],
             'links' => [
-                ['label' => 'Obrigacoes', 'href' => '/tesouraria/obrigacoes'],
+                ['label' => 'Obrigações', 'href' => '/tesouraria/obrigacoes'],
                 ['label' => 'Comprovantes', 'href' => '/tesouraria/comprovantes'],
                 ['label' => 'Regularidade', 'href' => '/tesouraria/regularidade'],
-                ['label' => 'Relatorio de gestao', 'href' => '/tesouraria/relatorio-gestao'],
+                ['label' => 'Relatório de gestão', 'href' => '/tesouraria/relatorio-gestao'],
             ],
         ];
 
@@ -113,16 +113,16 @@ require __DIR__ . '/partials/erp_shell_open.php';
         ?>
         <section class="mb-6 grid gap-3 md:grid-cols-3">
             <article class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Movimentacao do caixa</p>
-                <p class="mt-2 text-base font-semibold text-slate-900">Registre entradas e saidas do periodo</p>
-                <p class="mt-1 text-sm text-slate-600">Os lancamentos rapidos continuam disponiveis logo abaixo.</p>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Movimentação do caixa</p>
+                <p class="mt-2 text-base font-semibold text-slate-900">Registre entradas e saídas do período</p>
+                <p class="mt-1 text-sm text-slate-600">Os lançamentos rápidos continuam disponíveis logo abaixo.</p>
             </article>
             <article class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 shadow-sm">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">Entradas</p>
                 <p class="mt-2 text-2xl font-semibold text-emerald-800" id="resumo-entradas-mobile">R$ 0,00</p>
             </article>
             <article class="rounded-2xl border border-red-200 bg-red-50 px-4 py-4 shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-red-700">Saidas</p>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-red-700">Saídas</p>
                 <p class="mt-2 text-2xl font-semibold text-red-800" id="resumo-saidas-mobile">R$ 0,00</p>
             </article>
         </section>
@@ -130,10 +130,10 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <div class="mb-6 rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-4 md:items-end">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Mes</label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Mês</label>
                     <select id="filter-mes" class="w-full rounded border border-gray-300 px-3 py-2" onchange="filtrarCaixa()">
                         <?php
-                        $mesesPT = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+                        $mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                         $mesAtual = (int) date('n');
                         for ($m = 1; $m <= 12; $m++) {
                             $selected = ($m === $mesAtual) ? 'selected' : '';
@@ -161,7 +161,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         Nova Entrada
                     </button>
                     <button onclick="abrirModalSaida()" class="flex-1 rounded bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800">
-                        Nova Saida
+                        Nova Saída
                     </button>
                 </div>
             </div>
@@ -169,7 +169,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
         <div class="mb-6 rounded-3xl border border-gray-200 bg-white shadow-sm">
             <div class="flex cursor-pointer items-center justify-between border-b border-gray-200 p-4 select-none" onclick="toggleSugestoes()">
-                <h2 class="font-semibold text-gray-700">Lancamentos rapidos</h2>
+                <h2 class="font-semibold text-gray-700">Lançamentos rápidos</h2>
                 <span id="sugestoes-toggle-icon" class="text-xs font-medium text-gray-400">Ocultar</span>
             </div>
             <div id="sugestoes-panel" class="p-4">
@@ -181,7 +181,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         </div>
                     </div>
                     <div>
-                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-red-700">Saidas</p>
+                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-red-700">Saídas</p>
                         <div id="sugestoes-saidas" class="flex flex-wrap gap-2">
                             <span class="text-sm text-gray-400">Carregando...</span>
                         </div>
@@ -196,20 +196,20 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <p class="text-2xl font-bold text-green-700" id="total-entradas">R$ 0,00</p>
             </div>
             <div class="rounded-lg border border-red-200 bg-red-50 p-4">
-                <p class="text-sm font-medium text-red-600">Total Saidas</p>
+                <p class="text-sm font-medium text-red-600">Total Saídas</p>
                 <p class="text-2xl font-bold text-red-700" id="total-saidas">R$ 0,00</p>
             </div>
             <div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <p class="text-sm font-medium text-blue-600">Saldo Liquido</p>
+                <p class="text-sm font-medium text-blue-600">Saldo Líquido</p>
                 <p class="text-2xl font-bold text-blue-700" id="saldo-liquido">R$ 0,00</p>
             </div>
         </div>
 
         <div class="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-5">
             <div class="min-h-[320px] rounded-lg border border-gray-200 bg-white p-4 shadow-sm xl:col-span-2">
-                <h2 class="mb-4 font-semibold">Composicao do periodo</h2>
+                <h2 class="mb-4 font-semibold">Composição do período</h2>
                 <div class="flex h-72 flex-col items-center justify-center gap-4">
-                    <div id="chartCaixaPizza" class="h-52 w-52 rounded-full border border-gray-200" aria-label="Grafico de composicao do periodo"></div>
+                    <div id="chartCaixaPizza" class="h-52 w-52 rounded-full border border-gray-200" aria-label="Gráfico de composição do período"></div>
                     <div class="flex flex-wrap items-center justify-center gap-4 text-sm">
                         <div class="flex items-center gap-2">
                             <span class="inline-block h-3 w-3 rounded-full bg-green-600"></span>
@@ -217,21 +217,21 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="inline-block h-3 w-3 rounded-full bg-red-600"></span>
-                            <span id="legenda-saidas">Saidas: R$ 0,00</span>
+                            <span id="legenda-saidas">Saídas: R$ 0,00</span>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="min-h-[320px] rounded-lg border border-gray-200 bg-white p-4 shadow-sm xl:col-span-3">
-                <h2 class="mb-1 font-semibold">Evolucao do caixa</h2>
-                <p class="mb-4 text-xs text-gray-500">Compara o mes anterior, o mes atual e uma estimativa simples do proximo periodo.</p>
+                <h2 class="mb-1 font-semibold">Evolução do caixa</h2>
+                <p class="mb-4 text-xs text-gray-500">Compara o mês anterior, o mês atual e uma estimativa simples do próximo período.</p>
                 <div id="chartCaixaTendencia" class="h-72"></div>
             </div>
         </div>
 
         <div class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
             <div class="border-b border-gray-200 bg-gray-50 p-4">
-                <h2 class="font-semibold">Lancamentos do periodo</h2>
+                <h2 class="font-semibold">Lançamentos do período</h2>
             </div>
             <div id="lancamentos-cards" class="space-y-3 p-4 md:hidden">
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">Carregando...</div>
@@ -243,10 +243,10 @@ require __DIR__ . '/partials/erp_shell_open.php';
                             <th class="px-4 py-2 text-left">Data</th>
                             <th class="px-4 py-2 text-left">Tipo</th>
                             <th class="px-4 py-2 text-left">Categoria</th>
-                            <th class="px-4 py-2 text-left">Descricao</th>
+                            <th class="px-4 py-2 text-left">Descrição</th>
                             <th class="px-4 py-2 text-left">Obreiro</th>
                             <th class="px-4 py-2 text-right">Valor</th>
-                            <th class="px-4 py-2 text-center">Acao</th>
+                            <th class="px-4 py-2 text-center">Ação</th>
                         </tr>
                     </thead>
                     <tbody id="lancamentos-table">
@@ -285,7 +285,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium">Descricao</label>
+                    <label class="mb-1 block text-sm font-medium">Descrição</label>
                     <textarea id="descricao" rows="3" class="w-full rounded border border-gray-300 px-3 py-2"></textarea>
                 </div>
 
@@ -298,7 +298,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 
     <script>
-        const nomesMeses = ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const nomesMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         document.getElementById('data_lancamento').valueAsDate = new Date();
 
         function toggleSugestoes() {
@@ -336,20 +336,20 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 document.getElementById('sugestoes-entradas').innerHTML = renderPills(entradas, 'entrada') || '<span class="text-sm text-gray-400">Nenhuma categoria</span>';
                 document.getElementById('sugestoes-saidas').innerHTML = renderPills(saidas, 'saida') || '<span class="text-sm text-gray-400">Nenhuma categoria</span>';
             } catch (err) {
-                console.error('Erro ao carregar sugestoes:', err);
+                console.error('Erro ao carregar sugestões:', err);
             }
         }
 
         async function lancarRapido(categoriaId, tipo) {
             document.getElementById('tipo-lancamento').value = tipo;
-            document.getElementById('modal-title').textContent = tipo === 'entrada' ? 'Nova Entrada' : 'Nova Saida';
+            document.getElementById('modal-title').textContent = tipo === 'entrada' ? 'Nova Entrada' : 'Nova Saída';
             await carregarCategorias(tipo);
             const select = document.getElementById('categoria_id');
             select.value = categoriaId;
             const nomeCategoria = select.options[select.selectedIndex]?.text ?? '';
             if (nomeCategoria) {
                 document.getElementById('modal-title').textContent =
-                    (tipo === 'entrada' ? 'Nova Entrada' : 'Nova Saida') + ` - ${nomeCategoria}`;
+                    (tipo === 'entrada' ? 'Nova Entrada' : 'Nova Saída') + ` - ${nomeCategoria}`;
             }
             document.getElementById('modal-lancamento').classList.remove('hidden');
             document.getElementById('modal-lancamento').classList.add('flex');
@@ -365,7 +365,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
         async function abrirModalSaida() {
             document.getElementById('tipo-lancamento').value = 'saida';
-            document.getElementById('modal-title').textContent = 'Nova Saida';
+            document.getElementById('modal-title').textContent = 'Nova Saída';
             await carregarCategorias('saida');
             document.getElementById('modal-lancamento').classList.remove('hidden');
             document.getElementById('modal-lancamento').classList.add('flex');
@@ -448,8 +448,8 @@ require __DIR__ . '/partials/erp_shell_open.php';
             const tbody = document.getElementById('lancamentos-table');
             const cards = document.getElementById('lancamentos-cards');
             if (lancamentos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-4 text-center text-gray-500">Nenhum lancamento neste periodo</td></tr>';
-                cards.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">Nenhum lancamento neste periodo.</div>';
+                tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-4 text-center text-gray-500">Nenhum lançamento neste período</td></tr>';
+                cards.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">Nenhum lançamento neste período.</div>';
             } else {
                 tbody.innerHTML = lancamentos.map(l => `
                     <tr class="border-b border-gray-200 hover:bg-gray-50">
@@ -460,7 +460,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                                     ? 'bg-green-100 text-green-700'
                                     : 'bg-red-100 text-red-700'
                             }">
-                                ${l.tipo === 'entrada' ? 'Entrada' : 'Saida'}
+                                ${l.tipo === 'entrada' ? 'Entrada' : 'Saída'}
                             </span>
                         </td>
                         <td class="px-4 py-2">${l.categoria_nome}</td>
@@ -485,11 +485,11 @@ require __DIR__ . '/partials/erp_shell_open.php';
                                 <div class="mt-1 text-sm text-slate-600">${new Date(l.data_lancamento).toLocaleDateString('pt-BR')}</div>
                             </div>
                             <span class="rounded-full px-3 py-1 text-xs font-semibold ${l.tipo === 'entrada' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
-                                ${l.tipo === 'entrada' ? 'Entrada' : 'Saida'}
+                                ${l.tipo === 'entrada' ? 'Entrada' : 'Saída'}
                             </span>
                         </div>
                         <div class="mt-3 text-sm text-slate-600">
-                            <div>Descricao: ${l.descricao || '-'}</div>
+                            <div>Descrição: ${l.descricao || '-'}</div>
                             <div>Obreiro: ${l.obreiro_nome || '-'}</div>
                         </div>
                         <div class="mt-4 flex items-center justify-between gap-3">

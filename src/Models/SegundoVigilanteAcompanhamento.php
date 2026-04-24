@@ -245,8 +245,8 @@ class SegundoVigilanteAcompanhamento
                 $historico[] = [
                     'momento' => (string) $acompanhamento['exaltacao_recomendada_em'],
                     'tipo' => 'exaltacao_recomendada',
-                    'titulo' => 'Exaltacao recomendada',
-                    'descricao' => (string) ($acompanhamento['exaltacao_observacao'] ?? 'Encaminhamento para apreciacao da exaltacao.'),
+                    'titulo' => 'Exaltação recomendada',
+                    'descricao' => (string) ($acompanhamento['exaltacao_observacao'] ?? 'Encaminhamento para apreciação da exaltação.'),
                 ];
             }
         }

@@ -118,7 +118,7 @@ async function api(url, options = {}) {
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
     if (!json.ok) {
-        throw new Error(json.erro || 'Não foi possível concluir esta ação agora. Tente novamente em instantes.');
+        throw new Error(json.erro || 'Não conseguimos concluir sua solicitação agora. Tente novamente em alguns minutos.');
     }
     return json;
 }

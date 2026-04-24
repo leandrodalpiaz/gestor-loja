@@ -3,7 +3,7 @@ $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
-$erpPageTitle = '2o Vigilante - Painel de Instrucao';
+$erpPageTitle = '2o Vigilante - Painel de Instrução';
 $appShellEyebrow = '2o Vigilante';
 $appShellTitle = 'Painel do 2o Vigilante';
 $appShellDescription = 'Acompanhamento formativo dos Companheiros com trilha, leitura orientada, docência, certificado e recomendação de exaltação.';
@@ -11,16 +11,16 @@ $appShellActiveHref = '/segundo-vigilante';
 $appShellActions = [
     ['label' => 'Voltar ao dashboard', 'href' => '/dashboard'],
     ['label' => 'Ver Companheiros', 'href' => '/obreiros', 'primary' => true],
-    ['label' => 'Biblioteca e classificacao', 'href' => '/biblioteca'],
+    ['label' => 'Biblioteca e classificação', 'href' => '/biblioteca'],
     ['label' => 'Abrir miniapp do cargo', 'href' => '/miniapp/segundo-vigilante'],
 ];
 $appShellSidebarSections = [
     [
-        'title' => 'Vigilancia',
+        'title' => 'Vigilância',
         'items' => [
             ['label' => 'Painel do 2o Vigilante', 'href' => '/segundo-vigilante'],
             ['label' => 'Lista de obreiros', 'href' => '/obreiros'],
-            ['label' => 'Biblioteca e classificacao', 'href' => '/biblioteca'],
+            ['label' => 'Biblioteca e classificação', 'href' => '/biblioteca'],
             ['label' => 'Dashboard', 'href' => '/dashboard'],
         ],
     ],
@@ -49,27 +49,27 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         <?php
         $dashboard = [
             'title' => 'Dashboard operacional do 2o Vigilante',
-            'subtitle' => 'Gestao de Companheiros, trilhas, leituras, certificados e exaltacao.',
+            'subtitle' => 'Gestão de Companheiros, trilhas, leituras, certificados e exaltação.',
             'meta' => ['Perfil: acompanhamento formativo', 'Obreiros: consulta em leitura'],
             'actions' => [
                 ['label' => 'Atualizar trilha', 'href' => '/segundo-vigilante'],
-                ['label' => 'Acao rapida', 'href' => '/segundo-vigilante'],
+                ['label' => 'Ação rápida', 'href' => '/segundo-vigilante'],
                 ['label' => 'Registrar leitura', 'href' => '/segundo-vigilante'],
                 ['label' => 'Solicitar certificado', 'href' => '/segundo-vigilante'],
-                ['label' => 'Recomendar exaltacao', 'href' => '/segundo-vigilante'],
+                ['label' => 'Recomendar exaltação', 'href' => '/segundo-vigilante'],
                 ['label' => 'Classificar', 'href' => '/biblioteca/classificar'],
             ],
             'blocks' => [
-                ['title' => 'Companheiros', 'subtitle' => 'Base ativa e situacao da trilha.', 'span' => 'half', 'metrics' => [
+                ['title' => 'Companheiros', 'subtitle' => 'Base ativa e situação da trilha.', 'span' => 'half', 'metrics' => [
                     ['label' => 'Ativos', 'value' => (string) ($resumo['companheiros_ativos'] ?? 0)],
-                    ['label' => 'Aptos exaltacao', 'value' => (string) ($resumo['aptos_exaltacao'] ?? 0)],
+                    ['label' => 'Aptos à exaltação', 'value' => (string) ($resumo['aptos_exaltacao'] ?? 0)],
                 ], 'list' => array_map(static fn (array $c): array => ['item' => (string) ($c['nome_historico'] ?? $c['nome'] ?? 'Companheiro'), 'meta' => 'Etapa ' . (int) ($c['trilha_etapa_atual'] ?? 1), 'status' => (string) ($c['trilha_status_atual'] ?? '-')], array_slice($companheiros, 0, 5))],
-                ['title' => 'Leituras, certificados e exaltacao', 'subtitle' => 'Fluxo de acompanhamento do cargo.', 'span' => 'half', 'metrics' => [
+                ['title' => 'Leituras, certificados e exaltação', 'subtitle' => 'Fluxo de acompanhamento do cargo.', 'span' => 'half', 'metrics' => [
                     ['label' => 'Leituras sugeridas', 'value' => (string) ($resumo['leituras_sugeridas'] ?? 0)],
-                    ['label' => 'Aptos docencia', 'value' => (string) ($resumo['aptos_docencia'] ?? 0)],
-                ], 'list' => [['item' => 'Meu companheirismo', 'meta' => 'Consulta individual', 'status' => 'Ativo'], ['item' => 'Biblioteca/classificacao', 'meta' => 'Apoio pedagogico', 'status' => 'Ativo']]],
+                    ['label' => 'Aptos à docência', 'value' => (string) ($resumo['aptos_docencia'] ?? 0)],
+                ], 'list' => [['item' => 'Meu companheirismo', 'meta' => 'Consulta individual', 'status' => 'Ativo'], ['item' => 'Biblioteca/classificação', 'meta' => 'Apoio pedagógico', 'status' => 'Ativo']]],
             ],
-            'alerts' => [['title' => 'Ritmo de exaltacao', 'text' => 'Monitorar companheiros aptos e pendencias de trilha.', 'tone' => 'warning']],
+            'alerts' => [['title' => 'Ritmo de exaltação', 'text' => 'Monitorar companheiros aptos e pendências de trilha.', 'tone' => 'warning']],
             'activity' => array_map(static fn (array $c): array => ['item' => 'Linha do tempo: ' . (string) ($c['nome_historico'] ?? $c['nome'] ?? 'Companheiro'), 'meta' => (string) ($c['trilha_proxima_acao'] ?? 'A definir')], array_slice($companheiros, 0, 4)),
             'links' => [['label' => 'Meu companheirismo', 'href' => '/meu-companheirismo'], ['label' => 'Obreiros (leitura)', 'href' => '/obreiros']],
         ];
@@ -98,7 +98,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <div class="mt-2 text-4xl font-semibold text-erp-navy"><?= (int) ($resumo['aptos_docencia'] ?? 0) ?></div>
             </article>
             <article class="rounded-erp-lg border border-erp-border bg-white px-5 py-5 shadow-erp">
-                <div class="text-xs font-semibold uppercase tracking-[0.22em] text-erp-muted">Aptos para exaltacao</div>
+                <div class="text-xs font-semibold uppercase tracking-[0.22em] text-erp-muted">Aptos para exaltação</div>
                 <div class="mt-2 text-4xl font-semibold text-erp-navy"><?= (int) ($resumo['aptos_exaltacao'] ?? 0) ?></div>
             </article>
             <article class="rounded-erp-lg border border-erp-border bg-white px-5 py-5 shadow-erp">
@@ -113,7 +113,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <div>
                         <div class="text-xs font-semibold uppercase tracking-[0.22em] text-erp-muted">Fluxo operacional</div>
                         <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Companheiros em acompanhamento</h2>
-                        <p class="mt-2 max-w-4xl text-sm leading-6 text-erp-muted">Painel central com trilha, docencia, certificado e indicacao de exaltacao.</p>
+                        <p class="mt-2 max-w-4xl text-sm leading-6 text-erp-muted">Painel central com trilha, docência, certificado e indicação de exaltação.</p>
                     </div>
                     <div class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
                         Ativo
@@ -125,10 +125,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <thead class="bg-white">
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">Companheiro</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">Elevacao</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">Elevação</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">Etapa atual</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">Proxima acao</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">Próxima ação</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 bg-white">
@@ -139,7 +139,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                         <div class="text-xs text-erp-muted">CIM <?= htmlspecialchars((string) ($companheiro['cim'] ?? '-')) ?></div>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-slate-700">
-                                        <?= !empty($companheiro['data_elevacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $companheiro['data_elevacao']))) : 'Nao informada' ?>
+                                        <?= !empty($companheiro['data_elevacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $companheiro['data_elevacao']))) : 'Não informada' ?>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-slate-700">
                                         <div class="font-semibold">Etapa <?= (int) ($companheiro['trilha_etapa_atual'] ?? 1) ?></div>
@@ -178,7 +178,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <div class="mt-2 text-lg font-semibold text-slate-900">
                             <?= htmlspecialchars(trim((string) ($titularCargo['titular_nome'] ?? '')) ?: 'A definir') ?>
                         </div>
-                        <div class="mt-2 text-sm leading-6 text-erp-muted">Cargo orientado a instrucao dos Companheiros, revisao de trabalhos e preparo para exaltacao.</div>
+                        <div class="mt-2 text-sm leading-6 text-erp-muted">Cargo orientado à instrução dos Companheiros, revisão de trabalhos e preparo para exaltação.</div>
                     </div>
                 </article>
 

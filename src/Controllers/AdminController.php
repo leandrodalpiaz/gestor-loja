@@ -31,7 +31,7 @@ class AdminController
                 if ($ok) {
                     $_SESSION['mensagem_sucesso'] = 'Status de acesso atualizado com sucesso.';
                 } else {
-                    $_SESSION['mensagem_erro'] = 'Nao foi possivel atualizar o status de acesso.';
+                    $_SESSION['mensagem_erro'] = 'Não foi possível atualizar o status de acesso.';
                 }
             }
         }
@@ -53,9 +53,10 @@ class AdminController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 (new ConteudoPublico())->salvar($_POST);
-                $_SESSION['mensagem_sucesso'] = 'Conteudo publico atualizado com sucesso.';
+                $_SESSION['mensagem_sucesso'] = 'Conteúdo público atualizado com sucesso.';
             } catch (\Throwable $e) {
-                $_SESSION['mensagem_erro'] = 'Nao foi possivel salvar o conteudo: ' . $e->getMessage();
+                error_log('AdminController::salvarConteudoPublico - ' . $e->getMessage());
+                $_SESSION['mensagem_erro'] = 'Não foi possível salvar o conteúdo agora. Revise os dados e tente novamente.';
             }
         }
 
@@ -69,9 +70,10 @@ class AdminController
             $id = (int) ($_POST['id'] ?? 0);
             try {
                 (new ConteudoPublico())->excluir($id);
-                $_SESSION['mensagem_sucesso'] = 'Conteudo removido com sucesso.';
+                $_SESSION['mensagem_sucesso'] = 'Conteúdo removido com sucesso.';
             } catch (\Throwable $e) {
-                $_SESSION['mensagem_erro'] = 'Nao foi possivel remover o conteudo: ' . $e->getMessage();
+                error_log('AdminController::excluirConteudoPublico - ' . $e->getMessage());
+                $_SESSION['mensagem_erro'] = 'Não foi possível remover o conteúdo agora. Tente novamente.';
             }
         }
 
@@ -114,7 +116,8 @@ class AdminController
                     );
                     $_SESSION['mensagem_sucesso'] = 'Titularidade atualizada com sucesso.';
                 } catch (\Throwable $e) {
-                    $_SESSION['mensagem_erro'] = 'Nao foi possivel atualizar o cargo: ' . $e->getMessage();
+                    error_log('AdminController::salvarCargo - ' . $e->getMessage());
+                    $_SESSION['mensagem_erro'] = 'Não foi possível atualizar o cargo agora. Confira os dados e tente novamente.';
                 }
             } else {
                 $_SESSION['mensagem_erro'] = 'Selecione um cargo e um obreiro para concluir a troca.';
@@ -135,12 +138,13 @@ class AdminController
             if ($titulo !== '' && $inicioEm !== '') {
                 try {
                     (new Gestao())->criar($titulo, $inicioEm, $observacao !== '' ? $observacao : null);
-                    $_SESSION['mensagem_sucesso'] = 'Gestao aberta com sucesso.';
+                    $_SESSION['mensagem_sucesso'] = 'Gestão aberta com sucesso.';
                 } catch (\Throwable $e) {
-                    $_SESSION['mensagem_erro'] = 'Nao foi possivel abrir a gestao: ' . $e->getMessage();
+                    error_log('AdminController::salvarGestao - ' . $e->getMessage());
+                    $_SESSION['mensagem_erro'] = 'Não foi possível abrir a gestão agora. Verifique as informações e tente novamente.';
                 }
             } else {
-                $_SESSION['mensagem_erro'] = 'Informe titulo e data de inicio para abrir a gestao.';
+                $_SESSION['mensagem_erro'] = 'Informe título e data de início para abrir a gestão.';
             }
         }
 
@@ -157,12 +161,13 @@ class AdminController
             if ($gestaoId > 0) {
                 try {
                     (new Gestao())->encerrar($gestaoId, $encerradaEm !== '' ? $encerradaEm : null);
-                    $_SESSION['mensagem_sucesso'] = 'Gestao encerrada com sucesso.';
+                    $_SESSION['mensagem_sucesso'] = 'Gestão encerrada com sucesso.';
                 } catch (\Throwable $e) {
-                    $_SESSION['mensagem_erro'] = 'Nao foi possivel encerrar a gestao: ' . $e->getMessage();
+                    error_log('AdminController::encerrarGestao - ' . $e->getMessage());
+                    $_SESSION['mensagem_erro'] = 'Não foi possível encerrar a gestão agora. Tente novamente.';
                 }
             } else {
-                $_SESSION['mensagem_erro'] = 'Gestao invalida para encerramento.';
+                $_SESSION['mensagem_erro'] = 'Gestão inválida para encerramento.';
             }
         }
 
@@ -181,9 +186,10 @@ class AdminController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 (new ConfiguracaoLoja())->salvar($_POST);
-                $_SESSION['mensagem_sucesso'] = 'Parametros gerais da Loja atualizados com sucesso.';
+                $_SESSION['mensagem_sucesso'] = 'Parâmetros gerais da Loja atualizados com sucesso.';
             } catch (\Throwable $e) {
-                $_SESSION['mensagem_erro'] = 'Nao foi possivel salvar os parametros da Loja: ' . $e->getMessage();
+                error_log('AdminController::salvarConfiguracoesLoja - ' . $e->getMessage());
+                $_SESSION['mensagem_erro'] = 'Não foi possível salvar os parâmetros da Loja agora. Tente novamente.';
             }
         }
 
@@ -215,7 +221,7 @@ class AdminController
             $resultado = (new ConviteAcesso())->gerarParaObreiro($obreiroId);
 
             if (!($resultado['ok'] ?? false)) {
-                $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'Nao foi possivel gerar o convite.');
+                $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'Não foi possível gerar o convite.');
             } else {
                 $_SESSION['mensagem_sucesso'] = 'Convite gerado com sucesso.';
                 $_SESSION['convite_gerado_link'] = (string) ($resultado['deep_link'] ?? '');
@@ -312,21 +318,23 @@ class AdminController
             (new Gestao())->criar($titulo, $inicioEm, $observacao);
             return ['ok' => true, 'erro' => null];
         } catch (\Throwable $e) {
-            return ['ok' => false, 'erro' => $e->getMessage()];
+            error_log('AdminController::abrirGestaoMiniapp - ' . $e->getMessage());
+            return ['ok' => false, 'erro' => 'Não foi possível abrir a gestão agora. Tente novamente em alguns minutos.'];
         }
     }
 
     public function encerrarGestaoMiniapp(int $gestaoId, ?string $encerradaEm = null): array
     {
         if ($gestaoId <= 0) {
-            return ['ok' => false, 'erro' => 'Gestao invalida para encerramento.'];
+            return ['ok' => false, 'erro' => 'Gestão inválida para encerramento.'];
         }
 
         try {
             (new Gestao())->encerrar($gestaoId, $encerradaEm);
             return ['ok' => true, 'erro' => null];
         } catch (\Throwable $e) {
-            return ['ok' => false, 'erro' => $e->getMessage()];
+            error_log('AdminController::encerrarGestaoMiniapp - ' . $e->getMessage());
+            return ['ok' => false, 'erro' => 'Não foi possível encerrar a gestão agora. Tente novamente em alguns minutos.'];
         }
     }
 
@@ -342,7 +350,8 @@ class AdminController
             (new Cargo())->atribuirPorCodigo($cargoCodigo, $obreiroId, $observacao, $gestaoId, $inicioEm);
             return ['ok' => true, 'erro' => null];
         } catch (\Throwable $e) {
-            return ['ok' => false, 'erro' => $e->getMessage()];
+            error_log('AdminController::atribuirCargoMiniapp - ' . $e->getMessage());
+            return ['ok' => false, 'erro' => 'Não foi possível atualizar o cargo agora. Tente novamente em alguns minutos.'];
         }
     }
 
@@ -354,7 +363,8 @@ class AdminController
             $configModel->salvar(array_merge($atual, $input));
             return ['ok' => true, 'erro' => null];
         } catch (\Throwable $e) {
-            return ['ok' => false, 'erro' => $e->getMessage()];
+            error_log('AdminController::salvarConfiguracaoMiniapp - ' . $e->getMessage());
+            return ['ok' => false, 'erro' => 'Não foi possível salvar as configurações agora. Tente novamente em alguns minutos.'];
         }
     }
 }

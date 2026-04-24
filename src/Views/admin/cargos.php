@@ -79,7 +79,7 @@ if (!empty($_SESSION['is_system_admin'])) {
 require __DIR__ . '/../partials/erp_head.php';
 require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
-<?php /* TODO: a estrutura interna ainda carrega classes visuais legadas; consolidar depois sem mexer no fluxo da nominata. */ ?>
+<?php /* TODO(layout): consolidar classes visuais legadas sem alterar o fluxo funcional da nominata. */ ?>
 <?php if (false): ?>
 <!DOCTYPE html>
 <html lang="pt-BR">

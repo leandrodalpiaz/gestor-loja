@@ -1,5 +1,5 @@
 <?php
-$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
+$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -14,7 +14,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                 font-size: 1.08rem;
             }
             .erp-readable .text-xs,
-            .erp-readable .text-[11px] {
+            .erp-readable .text-\[11px\] {
                 font-size: 0.92rem !important;
                 line-height: 1.4rem !important;
             }
@@ -69,7 +69,7 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
                     </select>
                 </div>
                 <div>
-                    <label class="text-sm font-medium">Quantidade disponivel *</label>
+                    <label class="text-sm font-medium">Quantidade disponível *</label>
                     <input type="number" name="quantidade_disponivel" min="0" value="<?= (int) ($item['quantidade_disponivel'] ?? 0) ?>" required class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
                 </div>
                 <div>

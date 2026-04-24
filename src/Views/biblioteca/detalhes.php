@@ -1,5 +1,5 @@
 <?php
-$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmao';
+$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
 $podeSolicitar = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id'] > 0;
 ?>
 <!DOCTYPE html>
@@ -15,7 +15,7 @@ $podeSolicitar = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id']
                 font-size: 1.08rem;
             }
             .erp-readable .text-xs,
-            .erp-readable .text-[11px] {
+            .erp-readable .text-\[11px\] {
                 font-size: 0.92rem !important;
                 line-height: 1.4rem !important;
             }
@@ -39,7 +39,7 @@ $podeSolicitar = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id']
 
     <main class="max-w-5xl mx-auto p-4 md:p-6">
         <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <a href="/biblioteca" class="text-sm font-medium text-blue-700 hover:underline">Voltar ao catalogo</a>
+            <a href="/biblioteca" class="text-sm font-medium text-blue-700 hover:underline">Voltar ao catálogo</a>
 
             <div class="mt-4 grid grid-cols-1 gap-5 md:grid-cols-[180px_1fr]">
                 <div>
@@ -53,22 +53,22 @@ $podeSolicitar = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id']
                     <div class="flex flex-wrap items-start gap-2">
                         <h2 class="min-w-0 flex-1 text-2xl font-semibold text-blue-900"><?= htmlspecialchars((string) ($item['titulo'] ?? '')) ?></h2>
                         <?php if ((int) ($item['quantidade_disponivel'] ?? 0) > 0): ?>
-                            <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">Disponivel</span>
+                            <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">Disponível</span>
                         <?php else: ?>
-                            <span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">Indisponivel</span>
+                            <span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">Indisponível</span>
                         <?php endif; ?>
                     </div>
                     <p class="mt-1 text-slate-700"><?= htmlspecialchars((string) ($item['autor'] ?? '')) ?></p>
                     <div class="mt-3 text-sm space-y-1">
-                        <div><span class="font-medium">Codigo:</span> <span class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></span></div>
+                        <div><span class="font-medium">Código:</span> <span class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></span></div>
                         <div><span class="font-medium">ISBN:</span> <?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></div>
                         <div><span class="font-medium">Exemplares livres:</span> <?= (int) ($item['quantidade_disponivel'] ?? 0) ?></div>
                         <div><span class="font-medium">Grau sugerido:</span> <?= htmlspecialchars((string) ($item['grau_recomendado'] ?? 'Livre')) ?></div>
                     </div>
-                    <p class="mt-4 whitespace-pre-wrap text-sm text-slate-700"><?= htmlspecialchars((string) ($item['resumo'] ?? 'Resumo ainda nao informado.')) ?></p>
+                    <p class="mt-4 whitespace-pre-wrap text-sm text-slate-700"><?= htmlspecialchars((string) ($item['resumo'] ?? 'Resumo ainda não informado.')) ?></p>
 
                     <div class="mt-4">
-                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Acoes</div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Ações</div>
                         <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                             <?php if ($podeSolicitar): ?>
                                 <form action="/biblioteca/solicitar" method="POST">
@@ -85,7 +85,7 @@ $podeSolicitar = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id']
                             <form action="/biblioteca/reagir" method="POST">
                                 <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
                                 <input type="hidden" name="gostei" value="nao">
-                                <button type="submit" class="w-full rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50 sm:w-auto">Nao gostei (<?= (int) ($item['total_gostei_nao'] ?? 0) ?>)</button>
+                                <button type="submit" class="w-full rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50 sm:w-auto">Não gostei (<?= (int) ($item['total_gostei_nao'] ?? 0) ?>)</button>
                             </form>
                         </div>
                     </div>
@@ -111,13 +111,13 @@ $podeSolicitar = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id']
                 <?php if (!empty($comentarios)): ?>
                     <?php foreach ($comentarios as $comentario): ?>
                         <article class="border border-slate-200 rounded p-3">
-                            <div class="text-sm font-medium text-slate-900"><?= htmlspecialchars((string) ($comentario['obreiro_nome'] ?? 'Irmao')) ?></div>
+                            <div class="text-sm font-medium text-slate-900"><?= htmlspecialchars((string) ($comentario['obreiro_nome'] ?? 'Irmão')) ?></div>
                             <div class="text-xs text-slate-700 mt-1"><?= htmlspecialchars((string) ($comentario['criado_em'] ?? '')) ?></div>
                             <p class="text-sm text-slate-700 mt-2 whitespace-pre-wrap"><?= htmlspecialchars((string) ($comentario['comentario'] ?? '')) ?></p>
                         </article>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <p class="text-sm text-slate-700">Ainda nao ha comentarios para este livro.</p>
+                    <p class="text-sm text-slate-700">Ainda não há comentários para este livro.</p>
                 <?php endif; ?>
             </div>
         </section>

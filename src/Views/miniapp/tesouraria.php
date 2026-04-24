@@ -15,7 +15,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">Tesouraria</h1>
-        <p class="mt-1 text-sm text-gray-500">Caixa, comprovantes, regularidade, fechamento e obrigacoes.</p>
+        <p class="mt-1 text-sm text-gray-500">Caixa, comprovantes, regularidade, fechamento e obrigações.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -29,11 +29,11 @@
                     <div id="meta-entradas" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Saidas</div>
+                    <div class="text-gray-500">Saídas</div>
                     <div id="meta-saidas" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Saldo liquido</div>
+                    <div class="text-gray-500">Saldo líquido</div>
                     <div id="meta-saldo" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
@@ -71,11 +71,11 @@
         <div class="card rounded-2xl p-4">
             <div class="text-sm font-semibold">Fechamento mensal</div>
             <div id="fechamento" class="mt-3 rounded-xl bg-white/70 p-3 text-sm"></div>
-            <button id="btn-fechar-competencia" class="mt-3 w-full rounded-xl bg-emerald-700 px-3 py-3 text-sm font-medium text-white">Fechar competencia atual</button>
+            <button id="btn-fechar-competencia" class="mt-3 w-full rounded-xl bg-emerald-700 px-3 py-3 text-sm font-medium text-white">Fechar competência atual</button>
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Obrigacoes em alerta</div>
+            <div class="text-sm font-semibold">Obrigações em alerta</div>
             <div id="lista-obrigacoes" class="mt-3 space-y-2 text-sm"></div>
         </div>
 
@@ -122,7 +122,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não foi possível carregar os dados deste painel agora. Tente novamente em instantes.');
+    if (!json.ok) throw new Error(json.erro || 'Não conseguimos carregar este painel no momento. Atualize a tela e tente novamente.');
     return json;
 }
 
@@ -172,7 +172,7 @@ function render() {
         </div>
     `);
 
-    renderLista('lista-regularidade-alertas', dashboard.regularidade_alertas || [], 'Nenhum alerta de regularidade no periodo.', item => `
+    renderLista('lista-regularidade-alertas', dashboard.regularidade_alertas || [], 'Nenhum alerta de regularidade no período.', item => `
         <div class="font-medium">${esc(item.obreiro_nome || 'Obreiro')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.status || 'irregular')}</div>
         <div class="mt-3">
@@ -235,7 +235,7 @@ async function aprovarComprovante(id) {
 }
 
 async function rejeitarComprovante(id) {
-    const motivo = window.prompt('Informe o motivo da rejeicao:');
+    const motivo = window.prompt('Informe o motivo da rejeição:');
     if (!motivo) return;
     try {
         await api('/api/miniapp/tesouraria/comprovante/rejeitar', {
@@ -273,7 +273,7 @@ document.getElementById('btn-fechar-competencia').addEventListener('click', asyn
             method: 'POST',
             body: { mes: dashboard?.mes_ref, ano: dashboard?.ano_ref }
         });
-        tg.showAlert('Competencia fechada com sucesso.');
+        tg.showAlert('Competência fechada com sucesso.');
         await carregar();
     } catch (err) {
         tg.showAlert(err.message);
