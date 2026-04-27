@@ -78,12 +78,9 @@ class ModuleGuards
 
     public static function requireBibliotecaAccess(bool $openTestAccess, array $session, Authorizer $authorizer): void
     {
-        WebGuards::requireAuthenticatedPermission(
-            $openTestAccess,
-            $session,
-            $authorizer->hasPermission('biblioteca.self'),
-            'Acesso restrito a obreiros autenticados.'
-        );
+        // Biblioteca (catálogo) é consulta básica para todo obreiro autenticado.
+        // A operação (gerência) continua protegida por permissões específicas.
+        WebGuards::requireLogin($openTestAccess, $session);
     }
 
     public static function requireBibliotecaManageAccess(bool $openTestAccess, array $session, Authorizer $authorizer): void

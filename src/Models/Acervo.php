@@ -20,11 +20,30 @@ class Acervo
         $this->metadataService = new LivroMetadataService();
     }
 
-    public function listarTodos(): array
+    public function listarTodos(?array $lojasIds = null): array
     {
         $lojaId = $this->buscarLojaAtualId();
+        $lojasIds = $lojasIds !== null ? array_values(array_unique(array_filter(array_map('intval', $lojasIds)))) : null;
+        if ($lojasIds === []) {
+            $lojasIds = [$lojaId];
+        }
+        if ($lojasIds === null) {
+            $lojasIds = [$lojaId];
+        }
+
+        $placeholders = [];
+        $params = [];
+        foreach ($lojasIds as $idx => $id) {
+            $key = 'loja_' . $idx;
+            $placeholders[] = ':' . $key;
+            $params[$key] = $id;
+        }
+        $inClause = implode(', ', $placeholders);
         $sql = "SELECT
                     a.*,
+                    l.nome AS loja_nome,
+                    l.numero_loja,
+                    l.sigla AS loja_sigla,
                     COALESCE(c.total_comentarios, 0) AS total_comentarios,
                     COALESCE(r.total_gostei_sim, 0) AS total_gostei_sim,
                     COALESCE(r.total_gostei_nao, 0) AS total_gostei_nao,
@@ -33,6 +52,7 @@ class Acervo
                         ELSE FALSE
                     END AS disponivel
                 FROM acervo a
+                JOIN lojas l ON l.id = a.loja_id
                 LEFT JOIN (
                     SELECT acervo_id, COUNT(*) AS total_comentarios
                     FROM biblioteca_comentarios
@@ -48,10 +68,10 @@ class Acervo
                     GROUP BY acervo_id
                 ) r ON r.acervo_id = a.id
                 WHERE a.ativo = TRUE
-                  AND a.loja_id = :loja_id
+                  AND a.loja_id IN ($inClause)
                 ORDER BY a.criado_em DESC, a.id DESC";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['loja_id' => $lojaId]);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -67,11 +87,14 @@ class Acervo
         return $result ?: null;
     }
 
-    public function buscarDetalhes(int $id, ?string $obreiroId = null): ?array
+    public function buscarDetalhes(int $id, ?string $obreiroId = null, ?int $lojaId = null): ?array
     {
-        $lojaId = $this->buscarLojaAtualId();
+        $lojaId = $lojaId ?? $this->buscarLojaAtualId();
         $sql = "SELECT
                     a.*,
+                    l.nome AS loja_nome,
+                    l.numero_loja,
+                    l.sigla AS loja_sigla,
                     COALESCE(c.total_comentarios, 0) AS total_comentarios,
                     COALESCE(r.total_gostei_sim, 0) AS total_gostei_sim,
                     COALESCE(r.total_gostei_nao, 0) AS total_gostei_nao,
@@ -81,6 +104,7 @@ class Acervo
                         ELSE FALSE
                     END AS disponivel
                 FROM acervo a
+                JOIN lojas l ON l.id = a.loja_id
                 LEFT JOIN (
                     SELECT acervo_id, COUNT(*) AS total_comentarios
                     FROM biblioteca_comentarios

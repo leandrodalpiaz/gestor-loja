@@ -1,0 +1,10 @@
+{
+  "mssql.autoDisableNonTSqlLanguageService": true,
+  "mssql.intelliSense.enableErrorChecking": false,
+  "mssql.intelliSense.enableIntelliSense": false,
+  "mssql.intelliSense.enableSuggestions": false,
+  "files.associations": {
+    "**/database/05_biblioteca_rede.sql": "sql",
+    "**/database/06_biblioteca_emprestimo_interloja.sql": "plaintext"
+  }
+}

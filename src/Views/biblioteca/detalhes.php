@@ -1,6 +1,8 @@
 <?php
 $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
 $podeSolicitar = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id'] > 0;
+$lojaIdDetalhe = (int) ($_GET['loja_id'] ?? 0);
+$voltarHref = $lojaIdDetalhe > 0 ? '/biblioteca?acervo=rede' : '/biblioteca';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -39,7 +41,7 @@ $podeSolicitar = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id']
 
     <main class="max-w-5xl mx-auto p-4 md:p-6">
         <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <a href="/biblioteca" class="text-sm font-medium text-blue-700 hover:underline">Voltar ao catálogo</a>
+            <a href="<?= htmlspecialchars($voltarHref) ?>" class="text-sm font-medium text-blue-700 hover:underline">Voltar ao catálogo</a>
 
             <div class="mt-4 grid grid-cols-1 gap-5 md:grid-cols-[180px_1fr]">
                 <div>
@@ -73,6 +75,9 @@ $podeSolicitar = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id']
                             <?php if ($podeSolicitar): ?>
                                 <form action="/biblioteca/solicitar" method="POST">
                                     <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
+                                    <?php if ($lojaIdDetalhe > 0): ?>
+                                        <input type="hidden" name="loja_id" value="<?= (int) $lojaIdDetalhe ?>">
+                                    <?php endif; ?>
                                     <button type="submit" class="w-full rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 sm:w-auto">Solicitar emprestimo</button>
                                 </form>
                             <?php endif; ?>

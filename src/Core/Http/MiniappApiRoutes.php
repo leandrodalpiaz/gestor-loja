@@ -6,8 +6,10 @@ use App\Core\Authorization\PermissionMap;
 use App\Models\Balaustre;
 use App\Models\AssistenteTelemetria;
 use App\Models\EfemerideRegistro;
+use App\Models\HistoriaMaconica;
 use App\Models\MensagemComplementar;
 use App\Models\Obreiro;
+use App\Models\PalavraDia;
 use App\Models\Sessao;
 use App\Services\AssistenteFluxoService;
 
@@ -50,7 +52,7 @@ class MiniappApiRoutes
             str_starts_with($requestUri, '/api/miniapp/mestre-banquetes') => ['mestre_banquetes', 'veneravel', 'admin'],
             str_starts_with($requestUri, '/api/miniapp/mestre-harmonia') => ['mestre_harmonia', 'veneravel', 'admin'],
             str_starts_with($requestUri, '/api/miniapp/tesouraria') => ['tesoureiro', 'veneravel', 'admin'],
-            str_starts_with($requestUri, '/api/miniapp/biblioteca') => ['bibliotecario', 'primeiro_vigilante', 'segundo_vigilante', 'veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/biblioteca') => ['obreiro', 'bibliotecario', 'primeiro_vigilante', 'segundo_vigilante', 'veneravel', 'admin'],
             str_starts_with($requestUri, '/api/miniapp/admin') => ['admin', 'veneravel'],
             str_starts_with($requestUri, '/api/miniapp/orador') => ['orador', 'veneravel', 'admin'],
             str_starts_with($requestUri, '/api/miniapp/veneravel') => ['veneravel', 'admin'],
@@ -97,6 +99,9 @@ class MiniappApiRoutes
                 $normalizeRole,
                 $rolesSource
             ))));
+            if (!in_array('obreiro', $roles, true)) {
+                $roles[] = 'obreiro';
+            }
             $temPermissaoMiniapp = false;
             foreach ($miniappAllowedRoles as $allowedRole) {
                 if (in_array($allowedRole, $roles, true)) {
@@ -147,6 +152,9 @@ class MiniappApiRoutes
             }
 
             $roles = array_values(array_unique(array_filter(array_map($normalizeRole, $rolesSource))));
+            if (!in_array('obreiro', $roles, true)) {
+                $roles[] = 'obreiro';
+            }
             $permissions = $permissionMap->permissionsForRoles($roles);
 
             return in_array('*', $permissions, true) || in_array($permission, $permissions, true);
@@ -230,11 +238,72 @@ class MiniappApiRoutes
         }
 
         if ($requestUri === '/api/miniapp/historico/listar' && $method === 'GET') {
-            $registros = $resolveEfemerideModel()->buscarComFiltros(['tipo' => 'História', 'ativo' => 'all'], 300);
-            if ($registros === []) {
-                $registros = $resolveEfemerideModel()->buscarComFiltros(['tipo' => 'Historia', 'ativo' => 'all'], 300);
+            $historias = (new HistoriaMaconica())->listar(['ativo' => 'all'], 300);
+            JsonResponse::send(['ok' => true, 'registros' => $historias]);
+        }
+
+        if ($requestUri === '/api/miniapp/historico/salvar' && $method === 'POST') {
+            $id = (int) ($body['id'] ?? 0);
+            $titulo = trim((string) ($body['titulo'] ?? ''));
+            $texto = trim((string) ($body['texto'] ?? ''));
+            $dia = (int) ($body['dia'] ?? 0);
+            $mes = (int) ($body['mes'] ?? 0);
+            if ($titulo === '' || $texto === '' || $dia <= 0 || $mes <= 0) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Dados inválidos para salvar histórico.']);
             }
-            JsonResponse::send(['ok' => true, 'registros' => $registros]);
+
+            $model = new HistoriaMaconica();
+            if ($id > 0) {
+                $ok = $model->atualizar($id, $body);
+            } else {
+                $createdBy = isset($miniappObreiro['id']) ? (int) $miniappObreiro['id'] : (isset($session['usuario_id']) ? (int) $session['usuario_id'] : null);
+                $ok = $model->create($body, $createdBy > 0 ? $createdBy : null);
+            }
+
+            JsonResponse::send(['ok' => $ok]);
+        }
+
+        if ($requestUri === '/api/miniapp/historico/toggle' && $method === 'POST') {
+            $id = (int) ($body['id'] ?? 0);
+            JsonResponse::send(['ok' => $id > 0 ? (new HistoriaMaconica())->toggleAtivo($id) : false]);
+        }
+
+        if ($requestUri === '/api/miniapp/historico/excluir' && $method === 'POST') {
+            $id = (int) ($body['id'] ?? 0);
+            JsonResponse::send(['ok' => $id > 0 ? (new HistoriaMaconica())->excluir($id) : false]);
+        }
+
+        if ($requestUri === '/api/miniapp/palavra-dia/listar' && $method === 'GET') {
+            $mensagens = (new PalavraDia())->listar(['ativo' => 'all'], 300);
+            JsonResponse::send(['ok' => true, 'mensagens' => $mensagens]);
+        }
+
+        if ($requestUri === '/api/miniapp/palavra-dia/salvar' && $method === 'POST') {
+            $id = (int) ($body['id'] ?? 0);
+            $mensagem = trim((string) ($body['mensagem'] ?? ''));
+            if ($mensagem === '') {
+                JsonResponse::send(['ok' => false, 'erro' => 'Mensagem vazia.']);
+            }
+
+            $model = new PalavraDia();
+            if ($id > 0) {
+                $ok = $model->atualizar($id, $body);
+            } else {
+                $createdBy = isset($miniappObreiro['id']) ? (int) $miniappObreiro['id'] : (isset($session['usuario_id']) ? (int) $session['usuario_id'] : null);
+                $ok = $model->create($body, $createdBy > 0 ? $createdBy : null);
+            }
+
+            JsonResponse::send(['ok' => $ok]);
+        }
+
+        if ($requestUri === '/api/miniapp/palavra-dia/toggle' && $method === 'POST') {
+            $id = (int) ($body['id'] ?? 0);
+            JsonResponse::send(['ok' => $id > 0 ? (new PalavraDia())->toggleAtivo($id) : false]);
+        }
+
+        if ($requestUri === '/api/miniapp/palavra-dia/excluir' && $method === 'POST') {
+            $id = (int) ($body['id'] ?? 0);
+            JsonResponse::send(['ok' => $id > 0 ? (new PalavraDia())->excluir($id) : false]);
         }
 
         if ($requestUri === '/api/miniapp/fallback/listar' && $method === 'GET') {
@@ -529,14 +598,26 @@ class MiniappApiRoutes
         if ($requestUri === '/api/miniapp/biblioteca/dashboard' && $method === 'GET') {
             $controller = new \App\Controllers\BibliotecaController();
             $acervoId = (int) ($_GET['acervo_id'] ?? 0);
+            $scope = (string) ($_GET['scope'] ?? $_GET['acervo'] ?? 'minha');
+            $lojaId = (int) ($_GET['loja_id'] ?? 0);
             $obreiroId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
-            JsonResponse::send(['ok' => true, 'dados' => $controller->montarPayloadMiniapp($obreiroId !== '' ? $obreiroId : null, $acervoId > 0 ? $acervoId : null)]);
+            JsonResponse::send(['ok' => true, 'dados' => $controller->montarPayloadMiniapp(
+                $obreiroId !== '' ? $obreiroId : null,
+                $acervoId > 0 ? $acervoId : null,
+                $scope,
+                $lojaId > 0 ? $lojaId : null
+            )]);
         }
 
         if ($requestUri === '/api/miniapp/biblioteca/solicitar' && $method === 'POST') {
             $controller = new \App\Controllers\BibliotecaController();
             $obreiroId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
-            JsonResponse::send($controller->solicitarMiniapp((int) ($body['acervo_id'] ?? 0), $obreiroId));
+            JsonResponse::send($controller->solicitarMiniapp(
+                (int) ($body['acervo_id'] ?? 0),
+                $obreiroId,
+                isset($body['loja_id']) ? (int) $body['loja_id'] : null,
+                (string) ($body['scope'] ?? 'minha')
+            ));
         }
 
         if ($requestUri === '/api/miniapp/biblioteca/comentar' && $method === 'POST') {

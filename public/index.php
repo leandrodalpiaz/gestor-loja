@@ -460,6 +460,8 @@ $syncSessionRoles = static function (?array $usuario = null) use ($normalizeRole
     $_SESSION['is_system_admin'] = $isSystemAdmin;
 
     $slugsEfetivos = array_values(array_unique($slugs));
+
+    // Obs.: não forçar papel-base aqui para não ampliar permissões além do necessário.
     if ($isSystemAdmin) {
         if (!in_array('admin', $slugsEfetivos, true)) {
             $slugsEfetivos[] = 'admin';
@@ -785,6 +787,9 @@ if (!function_exists('requireMiniappAuth')) {
             $normalizeRole,
             $_SESSION['usuario_cargos'] ?? [$_SESSION['usuario_cargo'] ?? '']
         ))));
+        if (!in_array('obreiro', $sessionRoles, true)) {
+            $sessionRoles[] = 'obreiro';
+        }
 
         $hasRoleAccess = false;
         foreach ($allowedRoles as $allowedRole) {
@@ -830,6 +835,9 @@ if (!function_exists('requireMiniappAuth')) {
             $normalizeRole,
             $miniappObreiro['cargos'] ?? [$miniappObreiro['cargo_principal'] ?? $miniappObreiro['cargo'] ?? '']
         ))));
+        if (!in_array('obreiro', $miniappRoles, true)) {
+            $miniappRoles[] = 'obreiro';
+        }
 
         $temPermissaoMiniapp = false;
         foreach ($allowedRoles as $allowedRole) {

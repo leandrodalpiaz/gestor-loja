@@ -53,6 +53,13 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                 <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Catálogo</div>
                 <h2 class="mt-1 text-2xl font-semibold text-blue-900">Catálogo</h2>
                 <p class="mt-1 text-sm text-slate-700">Web e mobile usam o mesmo fluxo de biblioteca.</p>
+                <?php if (!empty($bibliotecaRedeHabilitada)): ?>
+                    <div class="mt-3 inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1 text-sm">
+                        <a href="/biblioteca?acervo=minha" class="rounded-md px-3 py-1.5 <?= ($catalogScope ?? 'minha') === 'minha' ? 'bg-white shadow-sm font-semibold text-slate-900' : 'text-slate-700 hover:bg-white/60' ?>">Minha loja</a>
+                        <a href="/biblioteca?acervo=rede" class="rounded-md px-3 py-1.5 <?= ($catalogScope ?? 'minha') === 'rede' ? 'bg-white shadow-sm font-semibold text-slate-900' : 'text-slate-700 hover:bg-white/60' ?>">Rede</a>
+                    </div>
+                    <div class="mt-1 text-xs text-slate-500">A rede aparece apenas se esta loja optou por compartilhar o acervo.</div>
+                <?php endif; ?>
             </div>
             <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <a href="/biblioteca/meus-emprestimos" class="w-full rounded-lg bg-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-300 sm:w-auto">Meus empréstimos</a>
@@ -115,6 +122,9 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                                     <?php endif; ?>
                                 </div>
                                 <p class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($item['autor'] ?? '-')) ?></p>
+                                <?php if (($catalogScope ?? 'minha') === 'rede' && !empty($item['loja_nome'])): ?>
+                                    <div class="mt-1 text-xs text-slate-500">Loja: <?= htmlspecialchars((string) ($item['loja_nome'] ?? '')) ?> (<?= htmlspecialchars((string) ($item['numero_loja'] ?? '')) ?><?= !empty($item['loja_sigla']) ? '-' . htmlspecialchars((string) $item['loja_sigla']) : '' ?>)</div>
+                                <?php endif; ?>
                                 <div class="mt-2 space-y-1 text-xs text-slate-700">
                                     <div>Código: <span class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></span></div>
                                     <div>ISBN: <?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></div>
@@ -130,7 +140,8 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                         </div>
 
                         <div class="mt-4 flex flex-col gap-2">
-                            <a href="/biblioteca/detalhes?id=<?= (int) ($item['id'] ?? 0) ?>" class="w-full rounded-lg bg-blue-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-blue-800">Ver detalhes</a>
+                            <?php $detalhesHref = '/biblioteca/detalhes?id=' . (int) ($item['id'] ?? 0) . ((($catalogScope ?? 'minha') === 'rede') ? '&loja_id=' . (int) ($item['loja_id'] ?? 0) : ''); ?>
+                            <a href="<?= htmlspecialchars($detalhesHref) ?>" class="w-full rounded-lg bg-blue-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-blue-800">Ver detalhes</a>
                             <div class="flex flex-wrap gap-2">
                                 <?php if ($podeGerenciar): ?>
                                     <a href="/biblioteca/editar?id=<?= (int) ($item['id'] ?? 0) ?>" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-center text-sm text-slate-700 hover:bg-slate-50">Editar</a>
@@ -158,6 +169,9 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                             <th class="text-left px-4 py-3">Código</th>
                             <th class="text-left px-4 py-3">Título</th>
                             <th class="text-left px-4 py-3">Autor</th>
+                            <?php if (($catalogScope ?? 'minha') === 'rede'): ?>
+                                <th class="text-left px-4 py-3">Loja</th>
+                            <?php endif; ?>
                             <th class="text-left px-4 py-3">Disponibilidade</th>
                             <th class="text-left px-4 py-3">Reação</th>
                             <th class="text-right px-4 py-3">Ações</th>
@@ -180,6 +194,12 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                                         <div class="text-xs text-slate-700">ISBN: <?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></div>
                                     </td>
                                     <td class="px-4 py-3"><?= htmlspecialchars((string) ($item['autor'] ?? '-')) ?></td>
+                                    <?php if (($catalogScope ?? 'minha') === 'rede'): ?>
+                                        <td class="px-4 py-3 text-xs text-slate-700">
+                                            <?= htmlspecialchars((string) ($item['numero_loja'] ?? '')) ?><?= !empty($item['loja_sigla']) ? '-' . htmlspecialchars((string) $item['loja_sigla']) : '' ?>
+                                            <div class="text-[11px] text-slate-500"><?= htmlspecialchars((string) ($item['loja_nome'] ?? '')) ?></div>
+                                        </td>
+                                    <?php endif; ?>
                                     <td class="px-4 py-3">
                                         <?php if ((bool) ($item['disponivel'] ?? false)): ?>
                                             <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">Disponível (<?= (int) ($item['quantidade_disponivel'] ?? 0) ?>)</span>
@@ -193,7 +213,8 @@ $podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.
                                         <div>Comentários: <?= (int) ($item['total_comentarios'] ?? 0) ?></div>
                                     </td>
                                     <td class="px-4 py-3 text-right">
-                                        <a href="/biblioteca/detalhes?id=<?= (int) ($item['id'] ?? 0) ?>" class="text-blue-700 hover:underline mr-3">Detalhes</a>
+                                        <?php $detalhesHref = '/biblioteca/detalhes?id=' . (int) ($item['id'] ?? 0) . ((($catalogScope ?? 'minha') === 'rede') ? '&loja_id=' . (int) ($item['loja_id'] ?? 0) : ''); ?>
+                                        <a href="<?= htmlspecialchars($detalhesHref) ?>" class="text-blue-700 hover:underline mr-3">Detalhes</a>
                                         <?php if ($podeGerenciar): ?>
                                             <a href="/biblioteca/editar?id=<?= (int) ($item['id'] ?? 0) ?>" class="text-indigo-700 hover:underline mr-3">Editar</a>
                                         <?php endif; ?>

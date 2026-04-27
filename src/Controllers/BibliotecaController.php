@@ -3,8 +3,10 @@
 namespace App\Controllers;
 
 use App\Models\Acervo;
+use App\Models\BibliotecaLojaConfig;
 use App\Models\ComentarioBiblioteca;
 use App\Models\Emprestimo;
+use App\Models\EmprestimoInterloja;
 use App\Models\ReacaoBiblioteca;
 
 class BibliotecaController
@@ -24,8 +26,27 @@ class BibliotecaController
 
     public function index(): void
     {
-        $itens = $this->acervoModel->listarTodos();
+        $redeConfig = (new BibliotecaLojaConfig())->obterDaLojaAtual();
+        $redeHabilitada = !empty($redeConfig['compartilhar_acervo']);
+        $scope = strtolower(trim((string) ($_GET['acervo'] ?? $_GET['scope'] ?? 'minha')));
+        if (!$redeHabilitada) {
+            $scope = 'minha';
+        }
+
+        $lojasRede = $redeHabilitada ? (new BibliotecaLojaConfig())->listarLojasCompartilhadas() : [];
+        $lojasIds = null;
+        if ($scope === 'rede') {
+            $lojasIds = array_values(array_unique(array_map(
+                static fn (array $l): int => (int) ($l['id'] ?? 0),
+                $lojasRede
+            )));
+        }
+
+        $itens = $this->acervoModel->listarTodos($lojasIds);
         $bibliotecaPermissions = $this->resolverPermissoes();
+        $catalogScope = $scope;
+        $bibliotecaRedeHabilitada = $redeHabilitada;
+        $bibliotecaLojasRede = $lojasRede;
         require_once __DIR__ . '/../Views/biblioteca/index.php';
     }
 
@@ -114,7 +135,14 @@ class BibliotecaController
     public function detalhes(int $id): void
     {
         $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-        $item = $this->acervoModel->buscarDetalhes($id, $obreiroId !== '' ? $obreiroId : null);
+        $redeConfig = (new BibliotecaLojaConfig())->obterDaLojaAtual();
+        $redeHabilitada = !empty($redeConfig['compartilhar_acervo']);
+        $lojaId = $redeHabilitada ? (int) ($_GET['loja_id'] ?? 0) : 0;
+        $item = $this->acervoModel->buscarDetalhes(
+            $id,
+            $obreiroId !== '' ? $obreiroId : null,
+            $lojaId > 0 ? $lojaId : null
+        );
         if (!$item) {
             http_response_code(404);
             echo 'Livro não encontrado.';
@@ -129,6 +157,28 @@ class BibliotecaController
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $acervoId <= 0 || trim($obreiroId) === '') {
             header('Location: /biblioteca?erro=1');
+            exit;
+        }
+
+        $lojaOrigemId = (int) ($_POST['loja_id'] ?? 0);
+        $scope = strtolower(trim((string) ($_POST['scope'] ?? '')));
+        $redeConfig = (new BibliotecaLojaConfig())->obterDaLojaAtual();
+        $redeHabilitada = !empty($redeConfig['compartilhar_acervo']);
+        $emprestimoCruzado = $redeHabilitada && !empty($redeConfig['permitir_emprestimo_cruzado']);
+        $solicitacaoRede = $scope === 'rede' || $lojaOrigemId > 0;
+
+        if ($solicitacaoRede) {
+            if ($lojaOrigemId <= 0) {
+                header('Location: /biblioteca/detalhes?id=' . $acervoId . '&erro=1');
+                exit;
+            }
+            if (!$emprestimoCruzado) {
+                header('Location: /biblioteca/detalhes?id=' . $acervoId . '&loja_id=' . $lojaOrigemId . '&erro=1');
+                exit;
+            }
+
+            $ok = (new EmprestimoInterloja())->solicitar($acervoId, $lojaOrigemId, $obreiroId);
+            header('Location: /biblioteca/detalhes?id=' . $acervoId . '&loja_id=' . $lojaOrigemId . ($ok ? '&pedido=1' : '&erro=1'));
             exit;
         }
 
@@ -189,17 +239,40 @@ class BibliotecaController
         }
     }
 
-    public function montarPayloadMiniapp(?string $obreiroId, ?int $acervoId = null): array
+    public function montarPayloadMiniapp(
+        ?string $obreiroId,
+        ?int $acervoId = null,
+        string $scope = 'minha',
+        ?int $lojaId = null
+    ): array
     {
-        $itens = $this->acervoModel->listarTodos();
+        $redeConfig = (new BibliotecaLojaConfig())->obterDaLojaAtual();
+        $redeHabilitada = !empty($redeConfig['compartilhar_acervo']);
+        $emprestimoCruzado = $redeHabilitada && !empty($redeConfig['permitir_emprestimo_cruzado']);
+
+        $scope = strtolower(trim($scope));
+        if (!$redeHabilitada) {
+            $scope = 'minha';
+        }
+
+        $lojasRede = $redeHabilitada ? (new BibliotecaLojaConfig())->listarLojasCompartilhadas() : [];
+        $lojasIds = null;
+        if ($scope === 'rede') {
+            $lojasIds = array_values(array_unique(array_map(
+                static fn (array $l): int => (int) ($l['id'] ?? 0),
+                $lojasRede
+            )));
+        }
+
+        $itens = $this->acervoModel->listarTodos($lojasIds);
         $itemFoco = null;
         if ($acervoId !== null && $acervoId > 0) {
-            $itemFoco = $this->acervoModel->buscarDetalhes($acervoId, $obreiroId);
+            $itemFoco = $this->acervoModel->buscarDetalhes($acervoId, $obreiroId, $scope === 'rede' ? $lojaId : null);
         }
         if (!$itemFoco && $itens !== []) {
             $primeiroId = (int) ($itens[0]['id'] ?? 0);
             if ($primeiroId > 0) {
-                $itemFoco = $this->acervoModel->buscarDetalhes($primeiroId, $obreiroId);
+                $itemFoco = $this->acervoModel->buscarDetalhes($primeiroId, $obreiroId, $scope === 'rede' ? (int) ($itens[0]['loja_id'] ?? 0) : null);
             }
         }
 
@@ -208,9 +281,26 @@ class BibliotecaController
         $emprestimosPendentes = $this->emprestimoModel->listarPendentes();
 
         return [
+            'rede' => [
+                'habilitada' => $redeHabilitada,
+                'emprestimo_cruzado' => $emprestimoCruzado,
+                'scope' => $scope,
+                'lojas' => array_map(static function (array $l): array {
+                    return [
+                        'id' => (int) ($l['id'] ?? 0),
+                        'numero_loja' => (string) ($l['numero_loja'] ?? ''),
+                        'sigla' => (string) ($l['sigla'] ?? ''),
+                        'nome' => (string) ($l['nome'] ?? ''),
+                    ];
+                }, $lojasRede),
+            ],
             'acervo' => array_map(static function (array $item): array {
                 return [
                     'id' => (int) ($item['id'] ?? 0),
+                    'loja_id' => (int) ($item['loja_id'] ?? 0),
+                    'loja_nome' => (string) ($item['loja_nome'] ?? ''),
+                    'loja_sigla' => (string) ($item['loja_sigla'] ?? ''),
+                    'numero_loja' => (string) ($item['numero_loja'] ?? ''),
                     'codigo_acervo' => (string) ($item['codigo_acervo'] ?? ''),
                     'titulo' => (string) ($item['titulo'] ?? ''),
                     'autor' => (string) ($item['autor'] ?? ''),
@@ -225,6 +315,10 @@ class BibliotecaController
             }, $itens),
             'item_foco' => $itemFoco ? [
                 'id' => (int) ($itemFoco['id'] ?? 0),
+                'loja_id' => (int) ($itemFoco['loja_id'] ?? 0),
+                'loja_nome' => (string) ($itemFoco['loja_nome'] ?? ''),
+                'loja_sigla' => (string) ($itemFoco['loja_sigla'] ?? ''),
+                'numero_loja' => (string) ($itemFoco['numero_loja'] ?? ''),
                 'codigo_acervo' => (string) ($itemFoco['codigo_acervo'] ?? ''),
                 'titulo' => (string) ($itemFoco['titulo'] ?? ''),
                 'autor' => (string) ($itemFoco['autor'] ?? ''),
@@ -269,10 +363,32 @@ class BibliotecaController
         ];
     }
 
-    public function solicitarMiniapp(int $acervoId, string $obreiroId): array
+    public function solicitarMiniapp(int $acervoId, string $obreiroId, ?int $lojaOrigemId = null, string $scope = 'minha'): array
     {
         if ($acervoId <= 0 || trim($obreiroId) === '') {
             return ['ok' => false, 'erro' => 'Livro ou obreiro inválido para solicitação.'];
+        }
+
+        $scope = strtolower(trim($scope));
+        $lojaOrigemId = $lojaOrigemId !== null ? (int) $lojaOrigemId : 0;
+        $redeConfig = (new BibliotecaLojaConfig())->obterDaLojaAtual();
+        $redeHabilitada = !empty($redeConfig['compartilhar_acervo']);
+        $emprestimoCruzado = $redeHabilitada && !empty($redeConfig['permitir_emprestimo_cruzado']);
+        $solicitacaoRede = $scope === 'rede' || $lojaOrigemId > 0;
+
+        if ($solicitacaoRede) {
+            if ($lojaOrigemId <= 0) {
+                return ['ok' => false, 'erro' => 'Loja de origem inválida para solicitação na rede.'];
+            }
+            if (!$emprestimoCruzado) {
+                return ['ok' => false, 'erro' => 'Empréstimo entre lojas está desativado.'];
+            }
+
+            $ok = (new EmprestimoInterloja())->solicitar($acervoId, $lojaOrigemId, $obreiroId);
+            return [
+                'ok' => $ok,
+                'erro' => $ok ? null : 'Não foi possível registrar o pedido entre lojas.',
+            ];
         }
 
         $ok = $this->emprestimoModel->solicitar($acervoId, $obreiroId);

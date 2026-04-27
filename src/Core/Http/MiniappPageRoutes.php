@@ -97,7 +97,7 @@ class MiniappPageRoutes
 
             case '/miniapp/biblioteca':
                 requireMiniappAuth(
-                    ['bibliotecario', 'primeiro_vigilante', 'segundo_vigilante', 'veneravel', 'admin'],
+                    ['obreiro', 'bibliotecario', 'primeiro_vigilante', 'segundo_vigilante', 'veneravel', 'admin'],
                     'biblioteca.self'
                 );
                 require __DIR__ . '/../../Views/miniapp/biblioteca.php';
