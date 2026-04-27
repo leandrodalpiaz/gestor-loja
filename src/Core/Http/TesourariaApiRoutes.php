@@ -57,20 +57,46 @@ class TesourariaApiRoutes
 
         if ($requestUri === '/api/tesouraria/lancamento/criar' && $method === 'POST') {
             $body = RequestBody::json();
+            $tipo = trim((string) ($body['tipo'] ?? 'entrada'));
+            $valor = (float) ($body['valor'] ?? 0);
+            $mes = (int) ($body['mes_ref'] ?? date('n'));
+            $ano = (int) ($body['ano_ref'] ?? date('Y'));
+
+            // Validações
+            if (!in_array($tipo, ['entrada', 'saida'], true)) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Tipo deve ser "entrada" ou "saida"']);
+                return true;
+            }
+
+            if ($valor <= 0) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Valor deve ser maior que zero']);
+                return true;
+            }
+
+            if ($mes < 1 || $mes > 12) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Mês deve estar entre 1 e 12']);
+                return true;
+            }
+
+            if ($ano < (int) date('Y') - 1) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Ano inválido']);
+                return true;
+            }
+
             $lancModel = new LancamentoFinanceiro();
             $ok = $lancModel->criar([
-                'tipo' => $body['tipo'] ?? 'entrada',
-                'categoria_id' => (int) ($body['categoria_id'] ?? 0),
-                'valor' => (float) ($body['valor'] ?? 0),
+                'tipo' => $tipo,
+                'categoria_id' => (int) ($body['categoria_id'] ?? 0) ?: null,
+                'valor' => $valor,
                 'data_lancamento' => $body['data_lancamento'] ?? date('Y-m-d'),
                 'descricao' => trim((string) ($body['descricao'] ?? '')) ?: null,
                 'obreiro_id' => trim((string) ($body['obreiro_id'] ?? '')) ?: null,
-                'mes_ref' => (int) ($body['mes_ref'] ?? date('n')),
-                'ano_ref' => (int) ($body['ano_ref'] ?? date('Y')),
+                'mes_ref' => $mes,
+                'ano_ref' => $ano,
                 'created_by' => $usuarioId,
             ]);
 
-            JsonResponse::send(['ok' => $ok]);
+            JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Falha ao criar lançamento']);
         }
 
         if (preg_match('~^/api/tesouraria/lancamento/(\d+)$~', $requestUri, $m) && $method === 'DELETE') {
@@ -98,51 +124,109 @@ class TesourariaApiRoutes
             $comproModel = new ComprovantePix();
             $lancModel = new LancamentoFinanceiro();
             $obrigacaoModel = new ObrigacaoFinanceira();
+            $db = Database::getConnection();
 
             $comprovante = $comproModel->obterPorId((int) ($body['id'] ?? 0));
             if (!$comprovante) {
-                JsonResponse::send(['ok' => false]);
+                JsonResponse::send(['ok' => false, 'erro' => 'Comprovante não encontrado']);
+                return true;
             }
 
-            $validacao = [
-                'valor' => (float) ($body['valor'] ?? 0),
-                'mes' => (int) ($body['mes'] ?? date('n')),
-                'ano' => (int) ($body['ano'] ?? date('Y')),
-                'rotulo_pagamento' => trim((string) ($body['rotulo_pagamento'] ?? '')) ?: null,
-                'categoria_id' => (int) ($body['categoria_id'] ?? 0) ?: null,
-                'obrigacao_parcela_id' => (int) ($body['obrigacao_parcela_id'] ?? 0) ?: null,
-                'validado_por' => $usuarioId,
-            ];
-            $comproModel->aprovar((int) ($body['id'] ?? 0), $validacao);
+            // Validações críticas
+            $valor = (float) ($body['valor'] ?? 0);
+            $mes = (int) ($body['mes'] ?? date('n'));
+            $ano = (int) ($body['ano'] ?? date('Y'));
+            $categoriaId = (int) ($body['categoria_id'] ?? 0) ?: null;
+            $obrigacaoParcelaId = (int) ($body['obrigacao_parcela_id'] ?? 0) ?: null;
 
-            if (!empty($validacao['obrigacao_parcela_id'])) {
-                $obrigacaoModel->quitarParcela((int) $validacao['obrigacao_parcela_id'], [
-                    'valor_pago' => $validacao['valor'],
-                    'pago_em' => date('Y-m-d'),
-                    'categoria_id' => $validacao['categoria_id'],
-                    'descricao' => $validacao['rotulo_pagamento'] ?: ('Comprovante PIX #' . (int) $body['id']),
-                    'observacao' => 'Baixa via comprovante PIX validado.',
-                ], $usuarioId);
-            } else {
-                $lancModel->criar([
-                    'tipo' => 'entrada',
-                    'categoria_id' => $validacao['categoria_id'] ?: 1,
-                    'valor' => $validacao['valor'],
-                    'data_lancamento' => date('Y-m-d'),
-                    'descricao' => $validacao['rotulo_pagamento'] ?: 'Comprovante PIX validado',
-                    'obreiro_id' => $comprovante['obreiro_id'],
-                    'mes_ref' => $validacao['mes'],
-                    'ano_ref' => $validacao['ano'],
-                    'created_by' => $usuarioId,
-                ]);
+            // Validar valor > 0
+            if ($valor <= 0) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Valor deve ser maior que zero']);
+                return true;
             }
 
-            if ($comprovante['obreiro_id'] && (($validacao['categoria_id'] ?? null) === null || (int) $validacao['categoria_id'] === 1)) {
-                $mensModel = new MensalidadeStatus();
-                $mensModel->registrar($comprovante['obreiro_id'], $validacao['mes'], $validacao['ano'], 'pago');
+            // Validar mês 1-12
+            if ($mes < 1 || $mes > 12) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Mês deve estar entre 1 e 12']);
+                return true;
             }
 
-            JsonResponse::send(['ok' => true]);
+            // Validar ano >= current year - 1
+            if ($ano < (int) date('Y') - 1) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Ano inválido']);
+                return true;
+            }
+
+            // Validar categoria existe (se informada)
+            if ($categoriaId !== null) {
+                $catStmt = $db->prepare('SELECT id FROM categorias_financeiras WHERE id = ?');
+                $catStmt->execute([$categoriaId]);
+                if (!$catStmt->fetch(PDO::FETCH_ASSOC)) {
+                    JsonResponse::send(['ok' => false, 'erro' => 'Categoria não encontrada']);
+                    return true;
+                }
+            }
+
+            // Validar parcela existe e pertence ao obreiro (se informada)
+            if ($obrigacaoParcelaId !== null) {
+                $parcStmt = $db->prepare('SELECT p.id, o.obreiro_id FROM obrigacao_financeira_parcelas p JOIN obrigacoes_financeiras o ON p.obrigacao_id = o.id WHERE p.id = ?');
+                $parcStmt->execute([$obrigacaoParcelaId]);
+                $parcela = $parcStmt->fetch(PDO::FETCH_ASSOC);
+                if (!$parcela || $parcela['obreiro_id'] !== $comprovante['obreiro_id']) {
+                    JsonResponse::send(['ok' => false, 'erro' => 'Parcela não encontrada ou não pertence ao obreiro']);
+                    return true;
+                }
+            }
+
+            // Envolver em transação
+            try {
+                $db->beginTransaction();
+
+                $validacao = [
+                    'valor' => $valor,
+                    'mes' => $mes,
+                    'ano' => $ano,
+                    'rotulo_pagamento' => trim((string) ($body['rotulo_pagamento'] ?? '')) ?: null,
+                    'categoria_id' => $categoriaId,
+                    'obrigacao_parcela_id' => $obrigacaoParcelaId,
+                    'validado_por' => $usuarioId,
+                ];
+                $comproModel->aprovar((int) ($body['id'] ?? 0), $validacao);
+
+                if (!empty($obrigacaoParcelaId)) {
+                    $obrigacaoModel->quitarParcela($obrigacaoParcelaId, [
+                        'valor_pago' => $valor,
+                        'pago_em' => date('Y-m-d'),
+                        'categoria_id' => $categoriaId,
+                        'descricao' => $validacao['rotulo_pagamento'] ?: ('Comprovante PIX #' . (int) $body['id']),
+                        'observacao' => 'Baixa via comprovante PIX validado.',
+                    ], $usuarioId);
+                } else {
+                    $lancModel->criar([
+                        'tipo' => 'entrada',
+                        'categoria_id' => $categoriaId ?: 1,
+                        'valor' => $valor,
+                        'data_lancamento' => date('Y-m-d'),
+                        'descricao' => $validacao['rotulo_pagamento'] ?: 'Comprovante PIX validado',
+                        'obreiro_id' => $comprovante['obreiro_id'],
+                        'mes_ref' => $mes,
+                        'ano_ref' => $ano,
+                        'created_by' => $usuarioId,
+                    ]);
+                }
+
+                if ($comprovante['obreiro_id'] && (($categoriaId ?? null) === null || (int) $categoriaId === 1)) {
+                    $mensModel = new MensalidadeStatus();
+                    $mensModel->registrar($comprovante['obreiro_id'], $mes, $ano, 'pago');
+                }
+
+                $db->commit();
+                JsonResponse::send(['ok' => true]);
+            } catch (\Throwable $e) {
+                $db->rollBack();
+                error_log('[tesouraria] Erro ao aprovar comprovante: ' . $e->getMessage());
+                JsonResponse::send(['ok' => false, 'erro' => 'Falha ao validar comprovante. Operação revertida.']);
+            }
         }
 
         if ($requestUri === '/api/tesouraria/obrigacoes-abertas' && $method === 'GET') {
@@ -218,16 +302,32 @@ class TesourariaApiRoutes
 
         if ($requestUri === '/api/tesouraria/regularidade/definir' && $method === 'POST') {
             $body = RequestBody::json();
+            $status = trim((string) ($body['status'] ?? 'irregular'));
+            $mes = (int) ($body['mes'] ?? 0);
+            $ano = (int) ($body['ano'] ?? 0);
+
+            // Validar status
+            if (!in_array($status, ['regular', 'irregular'], true)) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Status deve ser "regular" ou "irregular"']);
+                return true;
+            }
+
+            // Validar mês/ano
+            if ($mes < 1 || $mes > 12 || $ano < (int) date('Y') - 1) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Mês/ano inválido']);
+                return true;
+            }
+
             $regModel = new RegularidadeObreiro();
             $ok = $regModel->definir(
                 (string) ($body['obreiro_id'] ?? ''),
-                (int) ($body['mes'] ?? 0),
-                (int) ($body['ano'] ?? 0),
-                $body['status'] ?? 'irregular',
+                $mes,
+                $ano,
+                $status,
                 $body['observacao'] ?? null,
                 $usuarioId
             );
-            JsonResponse::send(['ok' => $ok]);
+            JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Falha ao definir regularidade']);
         }
 
         if ($requestUri === '/api/tesouraria/regularidade/definir-todos' && $method === 'POST') {
