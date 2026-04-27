@@ -2,6 +2,7 @@
 
 namespace App\Core\Http;
 
+use App\Config\Database;
 use App\Models\CategoriaFinanceira;
 use App\Models\ComprovantePix;
 use App\Models\FechamentoMensal;
@@ -10,6 +11,7 @@ use App\Models\MensalidadeStatus;
 use App\Models\ObrigacaoFinanceira;
 use App\Models\Obreiro;
 use App\Models\RegularidadeObreiro;
+use PDO;
 
 class TesourariaApiRoutes
 {
@@ -159,6 +161,53 @@ class TesourariaApiRoutes
             JsonResponse::send(['ok' => $ok]);
         }
 
+        if (preg_match('~^/api/tesouraria/comprovantes/(\d+)/cancelar$~', $requestUri, $m) && $method === 'POST') {
+            $body = RequestBody::json();
+            $id = (int) $m[1];
+            $motivo = trim((string) ($body['motivo'] ?? ''));
+            if ($motivo === '') {
+                JsonResponse::send(['ok' => false, 'erro' => 'Motivo do cancelamento é obrigatório']);
+                return true;
+            }
+
+            $comproModel = new ComprovantePix();
+            $comprovante = $comproModel->obterPorId($id);
+            if (!$comprovante) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Comprovante não encontrado']);
+                return true;
+            }
+
+            $db = Database::getConnection();
+            try {
+                $db->beginTransaction();
+
+                // Se houver lançamento vinculado, deletar
+                if (!empty($comprovante['lancamento_id'])) {
+                    $lancModel = new LancamentoFinanceiro();
+                    $lancModel->deletar((int) $comprovante['lancamento_id']);
+                }
+
+                // Se houver parcela vinculada, reverter status para pendente
+                if (!empty($comprovante['obrigacao_parcela_id'])) {
+                    $sql = "UPDATE obrigacao_financeira_parcelas SET status = 'pendente', pago_em = NULL, lancamento_id = NULL, quitado_por = NULL, quitado_em = NULL WHERE id = ?";
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute([(int) $comprovante['obrigacao_parcela_id']]);
+                }
+
+                // Marcar comprovante como cancelado
+                $cancelSql = "UPDATE comprovantes_pix SET status = 'cancelado', cancelado_por = ?, cancelado_em = CURRENT_TIMESTAMP, motivo_cancelamento = ? WHERE id = ?";
+                $cancelStmt = $db->prepare($cancelSql);
+                $cancelStmt->execute([$usuarioId, $motivo, $id]);
+
+                $db->commit();
+                JsonResponse::send(['ok' => true]);
+            } catch (\Throwable $e) {
+                $db->rollBack();
+                error_log('[tesouraria] Erro ao cancelar comprovante: ' . $e->getMessage());
+                JsonResponse::send(['ok' => false, 'erro' => 'Falha ao cancelar comprovante. Operação revertida.']);
+            }
+        }
+
         if ($requestUri === '/api/tesouraria/regularidade' && $method === 'GET') {
             $mes = (int) ($_GET['mes'] ?? date('n'));
             $ano = (int) ($_GET['ano'] ?? date('Y'));
@@ -220,7 +269,15 @@ class TesourariaApiRoutes
             JsonResponse::send(['ok' => true, 'fechamento' => $fechamento]);
         }
 
+        if ($requestUri === '/api/tesouraria/fechamento/saldo-inicial' && $method === 'POST') {
+            $body = RequestBody::json();
+            $fechModel = new FechamentoMensal();
+            $ok = $fechModel->atualizarSaldoInicial((int) ($body['fechamento_id'] ?? 0), (float) ($body['novo_saldo'] ?? 0), $body['justificativa'] ?? '', $usuarioId);
+            JsonResponse::send(['ok' => $ok]);
+        }
+
         if ($requestUri === '/api/tesouraria/fechamento/atualizar-saldo' && $method === 'POST') {
+            // DEPRECATED: Use /saldo-inicial instead
             $body = RequestBody::json();
             $fechModel = new FechamentoMensal();
             $ok = $fechModel->atualizarSaldoInicial((int) ($body['fechamento_id'] ?? 0), (float) ($body['novo_saldo'] ?? 0), $body['justificativa'] ?? '', $usuarioId);

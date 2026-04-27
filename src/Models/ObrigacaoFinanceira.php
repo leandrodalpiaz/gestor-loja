@@ -180,6 +180,8 @@ class ObrigacaoFinanceira
                     pago_em = :pago_em,
                     lancamento_id = :lancamento_id,
                     categoria_id = COALESCE(:categoria_id, categoria_id),
+                    quitado_por = :quitado_por,
+                    quitado_em = CURRENT_TIMESTAMP,
                     observacao = :observacao,
                     updated_at = NOW()
                 WHERE id = :id
@@ -194,6 +196,7 @@ class ObrigacaoFinanceira
                 'pago_em' => $dataPagamento->format('Y-m-d'),
                 'lancamento_id' => $lancamentoId,
                 'categoria_id' => $categoriaId,
+                'quitado_por' => $usuarioId,
                 'observacao' => trim((string) ($dados['observacao'] ?? '')) ?: null,
                 'id' => $parcelaId,
                 'loja_id' => $this->obterLojaAtualId(),
