@@ -295,6 +295,47 @@ class Obreiro
         return $this->hidratarListaCargosAtivos($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
+    public function buscarAtivosPorNome(string $nome, int $limite = 8): array
+    {
+        $nome = trim($nome);
+        if ($nome === '') {
+            return [];
+        }
+
+        $limite = max(1, min(20, $limite));
+        $params = ['busca' => '%' . $nome . '%'];
+
+        if ($this->suportaLojaId()) {
+            $sql = "SELECT *
+                    FROM obreiros
+                    WHERE ativo = true
+                      AND loja_id = :loja_id
+                      AND (
+                            nome ILIKE :busca
+                            OR COALESCE(nome_historico, '') ILIKE :busca
+                          )";
+            $params['loja_id'] = $this->obterLojaAtualId();
+        } else {
+            $sql = "SELECT *
+                    FROM obreiros
+                    WHERE ativo = true
+                      AND (
+                            nome ILIKE :busca
+                            OR COALESCE(nome_historico, '') ILIKE :busca
+                          )";
+        }
+
+        $this->aplicarExclusaoSystemAdminsEmSql($sql, $params);
+        $this->aplicarSanitizacaoObreirosEmSql($sql, $params);
+
+        $sql .= " ORDER BY nome ASC LIMIT " . (int) $limite;
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+
+        return $this->hidratarListaCargosAtivos($stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
     public function listarParaSecretaria(array $filtros = []): array
     {
         if ($this->suportaLojaId()) {

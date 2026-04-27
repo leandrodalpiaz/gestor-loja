@@ -62,6 +62,24 @@ class MiniappPageRoutes
                 require __DIR__ . '/../../Views/miniapp/hospitaleiro.php';
                 return true;
 
+            case '/miniapp/assistente':
+                requireMiniappAuth([
+                    'admin',
+                    'veneravel',
+                    'secretario',
+                    'tesoureiro',
+                    'chanceler',
+                    'orador',
+                    'hospitaleiro',
+                    'mestre_banquetes',
+                    'mestre_harmonia',
+                    'primeiro_vigilante',
+                    'segundo_vigilante',
+                    'bibliotecario',
+                ], 'dashboard.view');
+                require __DIR__ . '/../../Views/miniapp/assistente.php';
+                return true;
+
             case '/miniapp/chanceler':
                 requireMiniappAuth(['chanceler', 'veneravel', 'admin'], 'chancelaria.manage');
                 require __DIR__ . '/../../Views/miniapp/chanceler.php';

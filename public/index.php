@@ -38,7 +38,10 @@ use App\Core\Http\WebGuards;
 use App\Core\Authorization\Authorizer;
 use App\Core\Authorization\PermissionMap;
 use App\Core\Tenant\TenantContext;
+use App\Models\AssistenteTelemetria;
+use App\Models\Obreiro;
 use App\Models\Cargo;
+use App\Services\AssistenteFluxoService;
 
 require_once __DIR__ . "/../src/autoload.php";
 
@@ -956,6 +959,60 @@ if (MiniappApiRoutes::dispatch(
 }
 
 switch ($requestUri) {
+    case "/api/assistente/interpretar":
+        header('Content-Type: application/json; charset=utf-8');
+        WebGuards::requireJsonLogin($openTestAccess, $_SESSION);
+
+        if (!in_array($method, ['GET', 'POST'], true)) {
+            JsonResponse::error('Metodo nao suportado.', 405);
+        }
+
+        $body = $method === 'POST' ? RequestBody::json() : [];
+        $comando = trim((string) ($body['comando'] ?? $body['q'] ?? $_GET['q'] ?? ''));
+        $assistenteService = new AssistenteFluxoService();
+        $resultado = $assistenteService->interpretar($comando, $sessionHasPermission);
+
+        $obreiroModel = new Obreiro();
+        $resultado = $assistenteService->aplicarDesambiguacaoMensalidade(
+            $resultado,
+            $comando,
+            static function (string $nomeBusca) use ($obreiroModel): array {
+                $ativos = $obreiroModel->buscarAtivosPorNome($nomeBusca, 8);
+                return array_map(static function (array $item): array {
+                    return [
+                        'id' => (string) ($item['id'] ?? ''),
+                        'nome' => (string) ($item['nome_historico'] ?? $item['nome'] ?? ''),
+                        'cim' => (string) ($item['cim'] ?? ''),
+                    ];
+                }, $ativos);
+            }
+        );
+
+        try {
+            (new AssistenteTelemetria())->registrar([
+                'canal' => 'web',
+                'comando_original' => $comando,
+                'comando_normalizado' => preg_replace('/\s+/', ' ', strtolower(trim((string) iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $comando)))) ?: strtolower(trim($comando)),
+                'intent' => (string) ($resultado['intent'] ?? 'desconhecida'),
+                'confidence' => (float) ($resultado['confidence'] ?? 0),
+                'allowed' => !empty($resultado['allowed']),
+                'action_target' => (string) (($resultado['action']['target'] ?? null) ?: ''),
+                'user_id' => (string) ($_SESSION['usuario_id'] ?? ''),
+                'tenant_id' => (string) ($_SESSION['tenant_id'] ?? ''),
+                'metadata' => [
+                    'needs_disambiguation' => !empty($resultado['needs_disambiguation']),
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            error_log('[assistente.telemetria] falha ao registrar evento web: ' . $e->getMessage());
+        }
+
+        error_log('[assistente.web] user=' . (string) ($_SESSION['usuario_id'] ?? 'anon')
+            . ' intent=' . (string) ($resultado['intent'] ?? '-')
+            . ' allowed=' . ((bool) ($resultado['allowed'] ?? false) ? '1' : '0'));
+
+        JsonResponse::send(['ok' => true, 'resultado' => $resultado]);
+
     case "/health":
         header("Content-Type: application/json; charset=utf-8");
         echo json_encode([
@@ -1138,6 +1195,19 @@ switch ($requestUri) {
         WebGuards::requireLogin($openTestAccess, $_SESSION);
         if (empty($_SESSION['is_system_admin'])) {
             WebGuards::forbidHtml('Acesso restrito ao administrador técnico do sistema.');
+        }
+        $assistenteResumo = [
+            'dias' => 14,
+            'totais' => ['total' => 0, 'total_allowed' => 0, 'total_denied' => 0, 'total_unknown' => 0],
+            'top_intents' => [],
+            'top_comandos' => [],
+            'erros_frequentes' => [],
+            'top_telas' => [],
+        ];
+        try {
+            $assistenteResumo = (new AssistenteTelemetria())->resumo(14);
+        } catch (\Throwable $e) {
+            error_log('[assistente.metricas] falha ao gerar resumo: ' . $e->getMessage());
         }
         require_once __DIR__ . "/../src/Views/sistema/index.php";
         break;

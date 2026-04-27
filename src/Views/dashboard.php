@@ -616,6 +616,26 @@ require __DIR__ . '/partials/erp_head.php';
             <div class="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-800"><?= htmlspecialchars((string) $dashboardMensagemErro) ?></div>
         <?php endif; ?>
 
+        <section class="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-200 bg-slate-50 px-6 py-5">
+                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Assistente IA (beta)</div>
+                <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Comando curto em linguagem natural</h2>
+                <p class="mt-2 text-sm text-slate-600">Exemplos: "fechar mes", "mensalidade do leandro", "aniversario joao".</p>
+            </div>
+            <div class="px-6 py-5">
+                <form id="assistente-ia-form" class="grid gap-3 md:grid-cols-[1fr_auto]">
+                    <input id="assistente-ia-comando" type="text" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm" placeholder="Digite seu objetivo...">
+                    <button type="submit" class="rounded-xl bg-cobalto px-5 py-3 text-sm font-semibold text-white hover:bg-[#163761]">Interpretar</button>
+                </form>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <button type="button" data-assistente-exemplo="fechar mes" class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-cobalto hover:text-cobalto">fechar mes</button>
+                    <button type="button" data-assistente-exemplo="mensalidade do leandro" class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-cobalto hover:text-cobalto">mensalidade do leandro</button>
+                    <button type="button" data-assistente-exemplo="aniversario joao" class="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-cobalto hover:text-cobalto">aniversario joao</button>
+                </div>
+                <div id="assistente-ia-resposta" class="mt-4 hidden rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700"></div>
+            </div>
+        </section>
+
         <section id="sessoes-loja" class="mt-8 grid gap-6 xl:grid-cols-12">
             <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm xl:col-span-8 2xl:col-span-9">
                 <div class="border-b border-slate-200 bg-slate-50 px-6 py-6">
@@ -829,4 +849,67 @@ require __DIR__ . '/partials/erp_head.php';
     <?php endif; ?>
 </div>
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
+
+<script>
+(() => {
+    const form = document.getElementById('assistente-ia-form');
+    const input = document.getElementById('assistente-ia-comando');
+    const resposta = document.getElementById('assistente-ia-resposta');
+    const exemplos = document.querySelectorAll('[data-assistente-exemplo]');
+
+    if (!form || !input || !resposta) {
+        return;
+    }
+
+    const renderizarResultado = (resultado) => {
+        resposta.classList.remove('hidden');
+        const message = String(resultado?.message || 'Sem resposta do assistente.');
+        const action = resultado?.action && resultado.action.target ? resultado.action : null;
+
+        let html = '<div class="font-medium text-slate-800">' + message + '</div>';
+        if (action) {
+            const label = String(action.label || 'Abrir agora');
+            const target = String(action.target);
+            html += '<a href="' + target + '" class="mt-3 inline-flex rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-cobalto hover:text-cobalto">' + label + '</a>';
+        }
+
+        resposta.innerHTML = html;
+    };
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const comando = input.value.trim();
+        if (!comando) {
+            return;
+        }
+
+        resposta.classList.remove('hidden');
+        resposta.textContent = 'Interpretando...';
+
+        try {
+            const res = await fetch('/api/assistente/interpretar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ comando }),
+            });
+            const json = await res.json();
+            if (!json || !json.ok || !json.resultado) {
+                throw new Error('Resposta invalida do assistente.');
+            }
+            renderizarResultado(json.resultado);
+        } catch (error) {
+            resposta.classList.remove('hidden');
+            resposta.textContent = 'Nao foi possivel interpretar o comando agora.';
+        }
+    });
+
+    exemplos.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const valor = btn.getAttribute('data-assistente-exemplo') || '';
+            input.value = valor;
+            input.focus();
+        });
+    });
+})();
+</script>
 

@@ -67,6 +67,21 @@
         </div>
 
         <div class="card rounded-2xl p-4">
+            <div class="text-sm font-semibold">Assistente IA (beta)</div>
+            <div class="mt-1 text-xs text-gray-500">Comandos curtos: fechar mes, mensalidade do leandro, aniversario joao.</div>
+            <div class="mt-3 grid grid-cols-1 gap-2">
+                <input id="assistente-comando" type="text" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Digite seu objetivo">
+                <button id="btn-assistente" class="rounded-xl bg-indigo-700 px-3 py-3 text-sm font-medium text-white">Interpretar comando</button>
+            </div>
+            <div class="mt-3 grid grid-cols-3 gap-2">
+                <button type="button" data-assistente-exemplo="fechar mes" class="rounded-lg border border-gray-300 px-2 py-2 text-xs">fechar mes</button>
+                <button type="button" data-assistente-exemplo="mensalidade do leandro" class="rounded-lg border border-gray-300 px-2 py-2 text-xs">mensalidade</button>
+                <button type="button" data-assistente-exemplo="aniversario joao" class="rounded-lg border border-gray-300 px-2 py-2 text-xs">aniversario</button>
+            </div>
+            <div id="assistente-resposta" class="mt-3 hidden rounded-xl border border-gray-200 bg-white/70 p-3 text-sm"></div>
+        </div>
+
+        <div class="card rounded-2xl p-4">
             <div class="grid grid-cols-2 gap-2">
                 <button id="atalho-cargos" class="rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Gestão de cargos</button>
                 <button id="atalho-loja" class="rounded-xl bg-blue-700 px-3 py-3 text-sm font-medium text-white">Parametros da Loja</button>
@@ -269,6 +284,48 @@ document.getElementById('btn-salvar-config').addEventListener('click', async () 
     } catch (err) {
         tg.showAlert(err.message);
     }
+});
+
+document.getElementById('btn-assistente').addEventListener('click', async () => {
+    const comando = String(document.getElementById('assistente-comando').value || '').trim();
+    if (!comando) {
+        tg.showAlert('Digite um comando para o assistente.');
+        return;
+    }
+
+    const box = document.getElementById('assistente-resposta');
+    box.classList.remove('hidden');
+    box.textContent = 'Interpretando...';
+
+    try {
+        const json = await api('/api/miniapp/assistente/interpretar', {
+            method: 'POST',
+            body: { comando }
+        });
+
+        const resultado = json.resultado || {};
+        const message = String(resultado.message || 'Sem resposta do assistente.');
+        const action = resultado.action && resultado.action.target ? resultado.action : null;
+
+        if (action) {
+            box.innerHTML = `
+                <div class="font-medium">${esc(message)}</div>
+                <button id="assistente-abrir" class="mt-3 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm">${esc(action.label || 'Abrir')}</button>
+            `;
+            document.getElementById('assistente-abrir').addEventListener('click', () => abrirDestino(action.target));
+        } else {
+            box.textContent = message;
+        }
+    } catch (err) {
+        box.textContent = 'Nao foi possivel interpretar o comando agora.';
+    }
+});
+
+document.querySelectorAll('[data-assistente-exemplo]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+        document.getElementById('assistente-comando').value = btn.getAttribute('data-assistente-exemplo') || '';
+        document.getElementById('assistente-comando').focus();
+    });
 });
 
 carregar();

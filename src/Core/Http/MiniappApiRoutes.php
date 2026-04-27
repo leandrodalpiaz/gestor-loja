@@ -4,9 +4,12 @@ namespace App\Core\Http;
 
 use App\Core\Authorization\PermissionMap;
 use App\Models\Balaustre;
+use App\Models\AssistenteTelemetria;
 use App\Models\EfemerideRegistro;
 use App\Models\MensagemComplementar;
+use App\Models\Obreiro;
 use App\Models\Sessao;
+use App\Services\AssistenteFluxoService;
 
 class MiniappApiRoutes
 {
@@ -47,6 +50,7 @@ class MiniappApiRoutes
             str_starts_with($requestUri, '/api/miniapp/orador') => ['orador', 'veneravel', 'admin'],
             str_starts_with($requestUri, '/api/miniapp/veneravel') => ['veneravel', 'admin'],
             str_starts_with($requestUri, '/api/miniapp/hospitaleiro') => ['hospitaleiro', 'secretario', 'tesoureiro', 'veneravel', 'admin'],
+            str_starts_with($requestUri, '/api/miniapp/assistente') => ['admin', 'veneravel', 'secretario', 'tesoureiro', 'chanceler', 'orador', 'hospitaleiro', 'mestre_banquetes', 'mestre_harmonia', 'primeiro_vigilante', 'segundo_vigilante', 'bibliotecario'],
             default => ['chanceler', 'veneravel', 'admin'],
         };
 
@@ -120,6 +124,71 @@ class MiniappApiRoutes
 
             return $mensagensModel;
         };
+
+        $miniappCanPermission = static function (string $permission) use (
+            $authorizedBySession,
+            $sessionHasPermission,
+            $miniappObreiro,
+            $permissionMap,
+            $normalizeRole
+        ): bool {
+            if ($authorizedBySession) {
+                return $sessionHasPermission($permission);
+            }
+
+            $rolesSource = $miniappObreiro['cargos'] ?? null;
+            if (!is_array($rolesSource) || $rolesSource === []) {
+                $rolesSource = [$miniappObreiro['cargo_principal'] ?? $miniappObreiro['cargo'] ?? ''];
+            }
+
+            $roles = array_values(array_unique(array_filter(array_map($normalizeRole, $rolesSource))));
+            $permissions = $permissionMap->permissionsForRoles($roles);
+
+            return in_array('*', $permissions, true) || in_array($permission, $permissions, true);
+        };
+
+        if ($requestUri === '/api/miniapp/assistente/interpretar' && in_array($method, ['GET', 'POST'], true)) {
+            $comando = trim((string) ($body['comando'] ?? $body['q'] ?? $_GET['q'] ?? ''));
+            $assistenteService = new AssistenteFluxoService();
+            $resultado = $assistenteService->interpretar($comando, $miniappCanPermission);
+
+            $obreiroModel = new Obreiro();
+            $resultado = $assistenteService->aplicarDesambiguacaoMensalidade(
+                $resultado,
+                $comando,
+                static function (string $nomeBusca) use ($obreiroModel): array {
+                    $ativos = $obreiroModel->buscarAtivosPorNome($nomeBusca, 8);
+                    return array_map(static function (array $item): array {
+                        return [
+                            'id' => (string) ($item['id'] ?? ''),
+                            'nome' => (string) ($item['nome_historico'] ?? $item['nome'] ?? ''),
+                            'cim' => (string) ($item['cim'] ?? ''),
+                        ];
+                    }, $ativos);
+                }
+            );
+
+            try {
+                (new AssistenteTelemetria())->registrar([
+                    'canal' => 'miniapp',
+                    'comando_original' => $comando,
+                    'comando_normalizado' => preg_replace('/\s+/', ' ', strtolower(trim((string) iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $comando)))) ?: strtolower(trim($comando)),
+                    'intent' => (string) ($resultado['intent'] ?? 'desconhecida'),
+                    'confidence' => (float) ($resultado['confidence'] ?? 0),
+                    'allowed' => !empty($resultado['allowed']),
+                    'action_target' => (string) (($resultado['action']['target'] ?? null) ?: ''),
+                    'user_id' => (string) ($miniappObreiro['id'] ?? ''),
+                    'tenant_id' => (string) ($miniappObreiro['loja_id'] ?? ($session['tenant_id'] ?? '')),
+                    'metadata' => [
+                        'needs_disambiguation' => !empty($resultado['needs_disambiguation']),
+                    ],
+                ]);
+            } catch (\Throwable $e) {
+                error_log('[assistente.telemetria] falha ao registrar evento miniapp: ' . $e->getMessage());
+            }
+
+            JsonResponse::send(['ok' => true, 'resultado' => $resultado]);
+        }
 
         if ($requestUri === '/api/miniapp/efemeride/salvar' && $method === 'POST') {
             $id = (int) ($body['id'] ?? 0);
