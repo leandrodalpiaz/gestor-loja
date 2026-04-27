@@ -37,6 +37,7 @@ class TesourariaApiRoutes
                 ? $categoriaModel->obterPorTipo($tipo)
                 : $categoriaModel->obterTodas();
             JsonResponse::send(['ok' => true, 'categorias' => $categorias]);
+            return true;
         }
 
         if ($requestUri === '/api/tesouraria/caixa' && $method === 'GET') {
@@ -53,6 +54,7 @@ class TesourariaApiRoutes
                 'totais' => $totais,
                 'categorias' => $porCategoria,
             ]);
+            return true;
         }
 
         if ($requestUri === '/api/tesouraria/lancamento/criar' && $method === 'POST') {
@@ -97,12 +99,14 @@ class TesourariaApiRoutes
             ]);
 
             JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Falha ao criar lançamento']);
+            return true;
         }
 
         if (preg_match('~^/api/tesouraria/lancamento/(\d+)$~', $requestUri, $m) && $method === 'DELETE') {
             $lancModel = new LancamentoFinanceiro();
             $ok = $lancModel->deletar((int) $m[1]);
             JsonResponse::send(['ok' => $ok]);
+            return true;
         }
 
         if ($requestUri === '/api/tesouraria/comprovantes' && $method === 'GET') {
@@ -111,12 +115,14 @@ class TesourariaApiRoutes
             $comproModel = new ComprovantePix();
             $comprovantes = $comproModel->obterTodos($status);
             JsonResponse::send(['ok' => true, 'comprovantes' => $comprovantes]);
+            return true;
         }
 
         if (preg_match('~^/api/tesouraria/comprovantes/(\d+)$~', $requestUri, $m) && $method === 'GET') {
             $comproModel = new ComprovantePix();
             $comprovante = $comproModel->obterPorId((int) $m[1]);
             JsonResponse::send(['ok' => $comprovante !== null, 'comprovante' => $comprovante]);
+            return true;
         }
 
         if ($requestUri === '/api/tesouraria/comprovantes/aprovar' && $method === 'POST') {
@@ -227,15 +233,18 @@ class TesourariaApiRoutes
                 error_log('[tesouraria] Erro ao aprovar comprovante: ' . $e->getMessage());
                 JsonResponse::send(['ok' => false, 'erro' => 'Falha ao validar comprovante. Operação revertida.']);
             }
+            return true;
         }
 
         if ($requestUri === '/api/tesouraria/obrigacoes-abertas' && $method === 'GET') {
             $obreiroId = trim((string) ($_GET['obreiro_id'] ?? ''));
             if ($obreiroId === '') {
                 JsonResponse::send(['ok' => true, 'parcelas' => []]);
+                return true;
             }
             $parcelas = (new ObrigacaoFinanceira())->listarParcelasEmAbertoObreiro($obreiroId);
             JsonResponse::send(['ok' => true, 'parcelas' => $parcelas]);
+            return true;
         }
 
         if ($requestUri === '/api/tesouraria/comprovantes/rejeitar' && $method === 'POST') {
@@ -243,6 +252,7 @@ class TesourariaApiRoutes
             $comproModel = new ComprovantePix();
             $ok = $comproModel->rejeitar((int) ($body['id'] ?? 0), $body['motivo'] ?? '', $usuarioId);
             JsonResponse::send(['ok' => $ok]);
+            return true;
         }
 
         if (preg_match('~^/api/tesouraria/comprovantes/(\d+)/cancelar$~', $requestUri, $m) && $method === 'POST') {
@@ -311,6 +321,7 @@ class TesourariaApiRoutes
                 error_log('[tesouraria] Erro ao cancelar comprovante: ' . $e->getMessage());
                 JsonResponse::send(['ok' => false, 'erro' => 'Falha ao cancelar comprovante. Operação revertida.']);
             }
+            return true;
         }
 
         if ($requestUri === '/api/tesouraria/regularidade' && $method === 'GET') {
@@ -319,6 +330,7 @@ class TesourariaApiRoutes
             $regModel = new RegularidadeObreiro();
             $regularidade = $regModel->obterPorMes($mes, $ano);
             JsonResponse::send(['ok' => true, 'regularidade' => $regularidade]);
+            return true;
         }
 
         if ($requestUri === '/api/tesouraria/regularidade/definir' && $method === 'POST') {
@@ -349,6 +361,7 @@ class TesourariaApiRoutes
                 $usuarioId
             );
             JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Falha ao definir regularidade']);
+            return true;
         }
 
         if ($requestUri === '/api/tesouraria/regularidade/definir-todos' && $method === 'POST') {
@@ -361,6 +374,7 @@ class TesourariaApiRoutes
             }
 
             JsonResponse::send(['ok' => true]);
+            return true;
         }
 
         if ($requestUri === '/api/tesouraria/fechamento' && $method === 'GET') {
@@ -388,6 +402,7 @@ class TesourariaApiRoutes
             $fechamento = $fechModel->obter($mes, $ano);
 
             JsonResponse::send(['ok' => true, 'fechamento' => $fechamento]);
+            return true;
         }
 
         if ($requestUri === '/api/tesouraria/fechamento/saldo-inicial' && $method === 'POST') {
@@ -395,6 +410,7 @@ class TesourariaApiRoutes
             $fechModel = new FechamentoMensal();
             $ok = $fechModel->atualizarSaldoInicial((int) ($body['fechamento_id'] ?? 0), (float) ($body['novo_saldo'] ?? 0), $body['justificativa'] ?? '', $usuarioId);
             JsonResponse::send(['ok' => $ok]);
+            return true;
         }
 
         if ($requestUri === '/api/tesouraria/fechamento/atualizar-saldo' && $method === 'POST') {
@@ -403,6 +419,7 @@ class TesourariaApiRoutes
             $fechModel = new FechamentoMensal();
             $ok = $fechModel->atualizarSaldoInicial((int) ($body['fechamento_id'] ?? 0), (float) ($body['novo_saldo'] ?? 0), $body['justificativa'] ?? '', $usuarioId);
             JsonResponse::send(['ok' => $ok]);
+            return true;
         }
 
         if (preg_match('~^/api/tesouraria/fechamento/(\d+)/lancamentos$~', $requestUri, $m) && $method === 'GET') {
@@ -410,11 +427,13 @@ class TesourariaApiRoutes
             $fechamento = $fechModel->obterPorId((int) $m[1]);
             if (!$fechamento) {
                 JsonResponse::send(['ok' => false]);
+                return true;
             }
 
             $lancModel = new LancamentoFinanceiro();
             $lancamentos = $lancModel->obterPorMes($fechamento['mes_ref'], $fechamento['ano_ref']);
             JsonResponse::send(['ok' => true, 'lancamentos' => $lancamentos]);
+            return true;
         }
 
         if (preg_match('~^/api/tesouraria/fechamento/(\d+)/auditoria$~', $requestUri, $m) && $method === 'GET') {
@@ -422,8 +441,10 @@ class TesourariaApiRoutes
             $fechamento = $fechModel->obterComAuditoria((int) $m[1]);
             if (!$fechamento) {
                 JsonResponse::send(['ok' => false]);
+                return true;
             }
             JsonResponse::send(['ok' => true, 'auditoria' => $fechamento['auditoria']]);
+            return true;
         }
 
         if ($requestUri === '/api/tesouraria/fechamento/fechar' && $method === 'POST') {
@@ -444,8 +465,9 @@ class TesourariaApiRoutes
 
             $ok = ($mes > 0 && $ano > 0) ? $fechModel->fechar($mes, $ano, $usuarioId) : false;
             JsonResponse::send(['ok' => $ok]);
+            return true;
         }
 
-        JsonResponse::error('API nao encontrada.', 404);
+        return false;
     }
 }
