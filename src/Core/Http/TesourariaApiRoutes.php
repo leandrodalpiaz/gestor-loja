@@ -261,6 +261,15 @@ class TesourariaApiRoutes
                 return true;
             }
 
+            // Validar retroativo: não deixa cancelar comprovantes com mais de 30 dias
+            if (!empty($comprovante['criado_em'])) {
+                $diasAtras = (int) ((time() - strtotime($comprovante['criado_em'])) / 86400);
+                if ($diasAtras > 30) {
+                    JsonResponse::send(['ok' => false, 'erro' => 'Não é possível cancelar operações com mais de 30 dias. Entre em contato com a administração.']);
+                    return true;
+                }
+            }
+
             $db = Database::getConnection();
             try {
                 $db->beginTransaction();
@@ -276,6 +285,18 @@ class TesourariaApiRoutes
                     $sql = "UPDATE obrigacao_financeira_parcelas SET status = 'pendente', pago_em = NULL, lancamento_id = NULL, quitado_por = NULL, quitado_em = NULL WHERE id = ?";
                     $stmt = $db->prepare($sql);
                     $stmt->execute([(int) $comprovante['obrigacao_parcela_id']]);
+                }
+
+                // Revert MensalidadeStatus: se foi marcado pago e agora cancela, volta para pendente
+                // (apenas se não havia parcela vinculada e category_id era null ou 1)
+                if (empty($comprovante['obrigacao_parcela_id']) && !empty($comprovante['mes_ref_validado']) && !empty($comprovante['ano_ref_validado'])) {
+                    $mensModel = new MensalidadeStatus();
+                    $mensModel->registrar(
+                        $comprovante['obreiro_id'],
+                        (int) $comprovante['mes_ref_validado'],
+                        (int) $comprovante['ano_ref_validado'],
+                        'pendente'
+                    );
                 }
 
                 // Marcar comprovante como cancelado
