@@ -2,6 +2,8 @@
 
 namespace App\Core\Tenant;
 
+use App\Config\Env;
+
 class TenantContext
 {
     public function __construct(
@@ -14,9 +16,9 @@ class TenantContext
 
     public static function fromSessionAndEnv(array $session, array $env): self
     {
-        $tenantId = self::stringOrNull($session['tenant_id'] ?? $env['APP_DEFAULT_TENANT_ID'] ?? null);
-        $tenantSlug = self::stringOrNull($session['tenant_slug'] ?? $env['APP_DEFAULT_TENANT_SLUG'] ?? null);
-        $tenantName = self::stringOrNull($session['tenant_name'] ?? $env['APP_DEFAULT_TENANT_NAME'] ?? null);
+        $tenantId = self::stringOrNull($session['tenant_id'] ?? $env['APP_DEFAULT_TENANT_ID'] ?? Env::get('APP_DEFAULT_TENANT_ID'));
+        $tenantSlug = self::stringOrNull($session['tenant_slug'] ?? $env['APP_DEFAULT_TENANT_SLUG'] ?? Env::get('APP_DEFAULT_TENANT_SLUG'));
+        $tenantName = self::stringOrNull($session['tenant_name'] ?? $env['APP_DEFAULT_TENANT_NAME'] ?? Env::get('APP_DEFAULT_TENANT_NAME'));
 
         $resolvedFromSession = isset($session['tenant_id']) || isset($session['tenant_slug']) || isset($session['tenant_name']);
 

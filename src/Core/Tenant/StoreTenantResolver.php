@@ -2,6 +2,7 @@
 
 namespace App\Core\Tenant;
 
+use App\Config\Env;
 use PDO;
 use RuntimeException;
 
@@ -42,7 +43,7 @@ class StoreTenantResolver
             }
         }
 
-        $envLojaNumero = trim((string) ($this->env['APP_LOJA_NUMERO'] ?? ''));
+        $envLojaNumero = trim((string) ($this->env['APP_LOJA_NUMERO'] ?? Env::get('APP_LOJA_NUMERO', '')));
         if ($envLojaNumero !== '') {
             $loja = $this->findLojaByNumero($envLojaNumero);
             if ($loja) {
