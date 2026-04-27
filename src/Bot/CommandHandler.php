@@ -1420,9 +1420,10 @@ class CommandHandler
         $botoes = [
             [
                 ['text' => 'Painel Web da Secretaria', 'web_app' => ['url' => $this->buildAppUrl('/secretaria')]],
+                ['text' => 'Secretaria Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria')]],
             ],
             [
-                ['text' => 'Agendas e Sessões', 'callback_data' => 'sec_agendas'],
+                ['text' => 'Agendas e Sessões', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria')]],
             ],
         ];
 
@@ -1474,7 +1475,27 @@ class CommandHandler
 
     public function handleSecAgendas($chatId)
     {
-        $this->telegram->sendMessage($chatId, "Use o painel web da Secretaria para operar sessões, publicações e trabalhos da ordem do dia.");
+        if (!$this->ensureAppUrlConfigured($chatId)) {
+            return;
+        }
+
+        $this->telegram->sendMessage(
+            $chatId,
+            "Acesse diretamente o fluxo operacional da Secretaria:",
+            [
+                'reply_markup' => [
+                    'inline_keyboard' => [
+                        [
+                            ['text' => 'Secretaria Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria')]],
+                            ['text' => 'Painel Web', 'web_app' => ['url' => $this->buildAppUrl('/secretaria')]],
+                        ],
+                        [
+                            ['text' => 'Voltar', 'callback_data' => 'secretaria_menu'],
+                        ],
+                    ],
+                ],
+            ]
+        );
     }
 }
 

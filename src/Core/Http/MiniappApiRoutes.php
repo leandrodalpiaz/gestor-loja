@@ -493,6 +493,12 @@ class MiniappApiRoutes
             JsonResponse::send($controller->salvarTrabalhoMiniapp($body, $autorId !== '' ? $autorId : null));
         }
 
+        if ($requestUri === '/api/miniapp/secretaria/publicacao/salvar' && $method === 'POST') {
+            $controller = new \App\Controllers\SecretariaController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
+            JsonResponse::send($controller->salvarPublicacaoMiniapp($body, $autorId !== '' ? $autorId : null));
+        }
+
         if ($requestUri === '/api/miniapp/secretaria/balaustre/salvar' && $method === 'POST') {
             $controller = new \App\Controllers\SecretariaController();
             $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
@@ -515,6 +521,12 @@ class MiniappApiRoutes
         if ($requestUri === '/api/miniapp/secretaria/balaustre/encerrar-votacao' && $method === 'POST') {
             $balaustreId = (int) ($body['balaustre_id'] ?? 0);
             JsonResponse::send($balaustreId > 0 ? (new Balaustre())->encerrarVotacaoPorBalaustre($balaustreId) : ['ok' => false, 'erro' => 'Balaustre inválido.']);
+        }
+
+        if ($requestUri === '/api/miniapp/secretaria/balaustre/votar' && $method === 'POST') {
+            $controller = new \App\Controllers\SecretariaController();
+            $obreiroId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
+            JsonResponse::send($controller->votarBalaustreMiniapp($body, $obreiroId));
         }
 
         if ($requestUri === '/api/miniapp/chanceler/dashboard' && $method === 'GET') {

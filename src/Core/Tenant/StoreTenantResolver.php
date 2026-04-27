@@ -50,6 +50,29 @@ class StoreTenantResolver
             }
         }
 
+        // Fallback seguro: só assume automaticamente quando existir uma única loja.
+        $lojaUnica = $this->findSingleLojaWhenUnambiguous();
+        if ($lojaUnica) {
+            return $lojaUnica;
+        }
+
+        return null;
+    }
+
+    private function findSingleLojaWhenUnambiguous(): ?array
+    {
+        $stmt = $this->db->query(
+            "SELECT id, numero_loja, sigla, nome
+             FROM public.lojas
+             ORDER BY id
+             LIMIT 2"
+        );
+
+        $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        if (count($rows) === 1) {
+            return $rows[0];
+        }
+
         return null;
     }
 

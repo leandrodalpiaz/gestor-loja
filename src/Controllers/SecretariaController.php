@@ -767,6 +767,7 @@ class SecretariaController
         $presencaModel = new Presenca();
         $obreiroModel = new Obreiro();
         $trabalhoModel = new TrabalhoSessao();
+        $publicacaoModel = new PublicacaoSecretaria();
         $balaustreModel = new Balaustre();
         $configuracaoLoja = (new ConfiguracaoLoja())->obter();
         $relatorioAnual = (new RelatorioSecretariaAnual())->montar((int) date('Y'));
@@ -775,6 +776,7 @@ class SecretariaController
         $resumoCadastros = $obreiroModel->obterResumoSecretaria();
         $proximaSessao = $sessaoModel->obterProximaSessao();
         $trabalhosRecentes = $trabalhoModel->listarRecentes(5);
+        $publicacoesRecentes = $publicacaoModel->listarRecentes(5);
         $balaustresRecentes = $balaustreModel->listarRecentes(5);
 
         $sessaoFoco = null;
@@ -826,6 +828,17 @@ class SecretariaController
                     'status_envio_potencia' => (string) ($item['status_envio_potencia'] ?? ''),
                 ];
             }, $trabalhosRecentes),
+            'publicacoes_recentes' => array_map(static function (array $item): array {
+                return [
+                    'id' => (int) ($item['id'] ?? 0),
+                    'sessao_id' => (int) ($item['sessao_id'] ?? 0),
+                    'tipo_publicacao' => (string) ($item['tipo_publicacao'] ?? ''),
+                    'titulo' => (string) ($item['titulo'] ?? ''),
+                    'status_publicacao' => (string) ($item['status_publicacao'] ?? ''),
+                    'canal_destino' => (string) ($item['canal_destino'] ?? ''),
+                    'sessao_titulo' => (string) ($item['sessao_titulo'] ?? ''),
+                ];
+            }, $publicacoesRecentes),
             'balaustres_recentes' => array_map(static function (array $item): array {
                 return [
                     'id' => (int) ($item['id'] ?? 0),
@@ -867,9 +880,12 @@ class SecretariaController
             'data_hora_inicio' => trim((string) ($input['data_hora_inicio'] ?? '')),
             'data_hora_fim' => trim((string) ($input['data_hora_fim'] ?? '')),
             'grau_sessao' => trim((string) ($input['grau_sessao'] ?? '')),
+            'grau_personalizado' => trim((string) ($input['grau_personalizado'] ?? '')),
             'tipo_sessao_principal' => trim((string) ($input['tipo_sessao_principal'] ?? 'economica')),
             'tipo_sessao_subtipo' => trim((string) ($input['tipo_sessao_subtipo'] ?? 'economica_1')),
+            'tipo_sessao_personalizado' => trim((string) ($input['tipo_sessao_personalizado'] ?? '')),
             'traje_tipo' => trim((string) ($input['traje_tipo'] ?? 'maconico')),
+            'traje_personalizado' => trim((string) ($input['traje_personalizado'] ?? '')),
             'agape_modalidade' => trim((string) ($input['agape_modalidade'] ?? 'nao_havera')),
             'agape_modelo_financeiro' => trim((string) ($input['agape_modelo_financeiro'] ?? 'oficial_loja')),
             'agape_valor' => trim((string) ($input['agape_valor'] ?? '')),
@@ -880,6 +896,7 @@ class SecretariaController
             'titulo' => trim((string) ($input['titulo'] ?? '')),
             'ordem_dia' => trim((string) ($input['ordem_dia'] ?? '')),
             'observacao_interna' => trim((string) ($input['observacao_interna'] ?? '')),
+            'observacao_relatorio' => trim((string) ($input['observacao_relatorio'] ?? '')),
             'sessao_branca' => !empty($input['sessao_branca']),
             'sessao_a_campo' => !empty($input['sessao_a_campo']),
             'conta_relatorio_potencia' => array_key_exists('conta_relatorio_potencia', $input)
@@ -910,7 +927,30 @@ class SecretariaController
             'id' => (int) ($sessao['id'] ?? 0),
             'titulo' => (string) ($sessao['titulo'] ?? ''),
             'data_hora_inicio' => (string) ($sessao['data_hora_inicio'] ?? ''),
+            'data_hora_fim' => (string) ($sessao['data_hora_fim'] ?? ''),
             'status' => (string) ($sessao['status'] ?? ''),
+            'grau_sessao' => (string) ($sessao['grau_sessao'] ?? ''),
+            'grau_personalizado' => (string) ($sessao['grau_personalizado'] ?? ''),
+            'tipo_sessao_principal' => (string) ($sessao['tipo_sessao_principal'] ?? ''),
+            'tipo_sessao_subtipo' => (string) ($sessao['tipo_sessao_subtipo'] ?? ''),
+            'tipo_sessao_personalizado' => (string) ($sessao['tipo_sessao_personalizado'] ?? ''),
+            'traje_tipo' => (string) ($sessao['traje_tipo'] ?? ''),
+            'traje_personalizado' => (string) ($sessao['traje_personalizado'] ?? ''),
+            'agape_modalidade' => (string) ($sessao['agape_modalidade'] ?? ''),
+            'agape_modelo_financeiro' => (string) ($sessao['agape_modelo_financeiro'] ?? ''),
+            'agape_valor' => (string) ($sessao['agape_valor'] ?? ''),
+            'gestao_referencia' => (string) ($sessao['gestao_referencia'] ?? ''),
+            'natureza_sessao' => (string) ($sessao['natureza_sessao'] ?? ''),
+            'formato_sessao' => (string) ($sessao['formato_sessao'] ?? ''),
+            'finalidade_ritual' => (string) ($sessao['finalidade_ritual'] ?? ''),
+            'templo_local' => (string) ($sessao['templo_local'] ?? ''),
+            'ordem_dia' => (string) ($sessao['ordem_dia'] ?? ''),
+            'observacao_interna' => (string) ($sessao['observacao_interna'] ?? ''),
+            'observacao_relatorio' => (string) ($sessao['observacao_relatorio'] ?? ''),
+            'sessao_branca' => (bool) ($sessao['sessao_branca'] ?? false),
+            'sessao_a_campo' => (bool) ($sessao['sessao_a_campo'] ?? false),
+            'conta_relatorio_potencia' => !array_key_exists('conta_relatorio_potencia', $sessao)
+                || (bool) $sessao['conta_relatorio_potencia'],
             'tipo_descricao' => $sessaoModel->obterDescricaoTipoSessao($sessao),
             'agape_descricao' => $sessaoModel->obterDescricaoAgape($sessao),
             'total_confirmados' => (int) ($sessao['total_confirmados'] ?? 0),
@@ -954,5 +994,48 @@ class SecretariaController
 
         $ok = (new Balaustre())->salvarPorSessao($sessaoId, $payload, $autorId);
         return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível salvar o balaustre.'];
+    }
+
+    public function salvarPublicacaoMiniapp(array $input, ?string $autorId = null): array
+    {
+        $payload = [
+            'sessao_id' => (int) ($input['sessao_id'] ?? 0),
+            'tipo_publicacao' => trim((string) ($input['tipo_publicacao'] ?? 'comunicado')),
+            'titulo' => trim((string) ($input['titulo'] ?? '')),
+            'origem' => trim((string) ($input['origem'] ?? '')),
+            'conteudo' => trim((string) ($input['conteudo'] ?? '')),
+            'canal_destino' => trim((string) ($input['canal_destino'] ?? 'grupo')),
+            'status_publicacao' => trim((string) ($input['status_publicacao'] ?? 'rascunho')),
+            'observacao' => trim((string) ($input['observacao'] ?? '')),
+        ];
+
+        if ($payload['titulo'] === '') {
+            return ['ok' => false, 'erro' => 'Título é obrigatório para registrar a publicação.'];
+        }
+
+        if ($payload['sessao_id'] <= 0) {
+            unset($payload['sessao_id']);
+        }
+
+        $ok = (new PublicacaoSecretaria())->criar($payload, $autorId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar a publicação.'];
+    }
+
+    public function votarBalaustreMiniapp(array $input, string $obreiroId): array
+    {
+        $balaustreId = (int) ($input['balaustre_id'] ?? 0);
+        $voto = trim((string) ($input['voto'] ?? ''));
+        $justificativa = trim((string) ($input['justificativa'] ?? ''));
+
+        if ($balaustreId <= 0 || $obreiroId === '') {
+            return ['ok' => false, 'erro' => 'Dados insuficientes para registrar voto.'];
+        }
+
+        return (new Balaustre())->registrarVotoPorBalaustre(
+            $balaustreId,
+            $obreiroId,
+            $voto,
+            $justificativa !== '' ? $justificativa : null
+        );
     }
 }

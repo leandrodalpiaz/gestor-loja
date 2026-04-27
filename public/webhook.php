@@ -30,6 +30,18 @@ error_log("[webhook] recebido update_id={$updateId} message={$hasMessage} callba
 if ($update) {
     try {
         $client = new TelegramClient();
+
+        // Fallback: garante um tenant mínimo a partir de env quando não há sessão (webhook é stateless).
+        // Isso evita falhas quando o bot precisa consultar sessões/relatórios antes de identificar o obreiro.
+        if (
+            !isset($_SESSION['tenant_id'])
+            && !isset($_SESSION['tenant_slug'])
+            && !isset($_SESSION['tenant_name'])
+        ) {
+            $fallback = TenantContext::fromSessionAndEnv($_SESSION ?? [], $_ENV);
+            $_SESSION = array_merge($_SESSION ?? [], $fallback->toSessionPayload());
+        }
+
         $obreiroModel = new \App\Models\Obreiro();
         $telegramId = (int) ($update['message']['from']['id'] ?? $update['callback_query']['from']['id'] ?? 0);
         if ($telegramId > 0) {
@@ -50,6 +62,21 @@ if ($update) {
         error_log("[webhook] update processado com sucesso");
     } catch (\Throwable $e) {
         error_log("[webhook] erro ao processar update: " . $e->getMessage());
+
+        // Se falhar por tenant não resolvido, tenta responder com orientação em vez de "silêncio".
+        try {
+            $chatId = (string) ($update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'] ?? '');
+            if ($chatId !== '') {
+                $msg = 'Erro ao processar o bot: ' . $e->getMessage()
+                    . "\n\nSe for \"Loja não identificada\", configure no Render:"
+                    . "\n- APP_LOJA_NUMERO (ex.: 0001)"
+                    . "\n- (opcional) APP_DEFAULT_TENANT_SLUG / APP_DEFAULT_TENANT_ID"
+                    . "\nE mantenha APP_URL correto.";
+                (new TelegramClient())->sendMessage((int) $chatId, $msg);
+            }
+        } catch (\Throwable $ignored) {
+            // Evita loop de erros no webhook.
+        }
     }
 }
 

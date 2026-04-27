@@ -194,7 +194,10 @@ if ($requestTenantSlug !== null) {
     $tenantSessionInput['tenant_slug'] = $requestTenantSlug;
 }
 
-$allowEnvTenantFallback = filter_var($_ENV['APP_ALLOW_ENV_TENANT_FALLBACK'] ?? 'false', FILTER_VALIDATE_BOOL);
+// Em produção (Render), frequentemente o serviço é single-tenant e depende de variáveis de ambiente.
+// Mantemos a flag para permitir desligar explicitamente, mas por padrão habilitamos o fallback por env
+// para evitar 503 em health checks e webhooks quando o tenant não vem por sessão/host/header.
+$allowEnvTenantFallback = filter_var($_ENV['APP_ALLOW_ENV_TENANT_FALLBACK'] ?? 'true', FILTER_VALIDATE_BOOL);
 $tenantEnv = $_ENV;
 if (!$allowEnvTenantFallback) {
     unset(
