@@ -78,15 +78,38 @@ class CommandHandler
             return [];
         }
 
+        $normalizeRole = function ($role): string {
+            $normalized = strtolower(trim((string) $role));
+            $normalized = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $normalized) ?: $normalized;
+            $normalized = preg_replace('/[^a-z0-9_]+/', '', $normalized) ?? '';
+
+            $aliases = [
+                'administrador' => 'admin',
+                'administracao' => 'admin',
+                'adm' => 'admin',
+                'veneravelmestre' => 'veneravel',
+                'vm' => 'veneravel',
+                'mestredeharmonia' => 'mestre_harmonia',
+            ];
+
+            return $aliases[$normalized] ?? $normalized;
+        };
+
         if (!empty($obreiro['cargos']) && is_array($obreiro['cargos'])) {
-            return array_values(array_unique(array_map(
-                static fn ($role) => strtolower((string) $role),
-                $obreiro['cargos']
-            )));
+            $roles = array_values(array_unique(array_filter(array_map($normalizeRole, $obreiro['cargos']))));
+            if ($roles !== [] && !in_array('obreiro', $roles, true)) {
+                $roles[] = 'obreiro';
+            }
+
+            return $roles;
         }
 
-        $fallback = strtolower(trim((string) ($obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? '')));
-        return $fallback !== '' ? [$fallback] : [];
+        $fallback = $normalizeRole((string) ($obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? ''));
+        if ($fallback === '') {
+            return [];
+        }
+
+        return $fallback === 'obreiro' ? ['obreiro'] : [$fallback, 'obreiro'];
     }
 
     private function obreiroHasRole(?array $obreiro, string ...$roles): bool
@@ -351,7 +374,207 @@ class CommandHandler
                     ['text' => 'Secretaria', 'callback_data' => 'admin_secretaria'],
                 ],
                 [
+                    ['text' => 'Hospitaleiro', 'callback_data' => 'admin_hospitaleiro'],
+                    ['text' => '1º Vigilante', 'callback_data' => 'admin_primeiro_vigilante'],
+                ],
+                [
+                    ['text' => '2º Vigilante', 'callback_data' => 'admin_segundo_vigilante'],
+                    ['text' => 'Orador', 'callback_data' => 'admin_orador'],
+                ],
+                [
+                    ['text' => 'Mestre de Banquetes', 'callback_data' => 'admin_mestre_banquetes'],
+                    ['text' => 'Mestre de Harmonia', 'callback_data' => 'admin_mestre_harmonia'],
+                ],
+                [
+                    ['text' => 'Venerável', 'callback_data' => 'admin_veneravel'],
+                    ['text' => 'Assistente', 'callback_data' => 'admin_assistente'],
+                ],
+                [
                     ['text' => 'Admin Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/admin')]],
+                ],
+                [
+                    ['text' => 'Voltar', 'callback_data' => 'start_menu'],
+                ],
+            ],
+        ];
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);
+    }
+
+    private function handlePrimeiroVigilanteMenu($chatId, int $requesterTelegramId): void
+    {
+        $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
+        if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'vigilancia.primeiro.manage')) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao 1º Vigilante, Venerável Mestre ou Administrador.');
+            return;
+        }
+
+        $mensagem = "*Painel do 1º Vigilante*\n\nEscolha o modo de trabalho:";
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Aprendizado', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/aprendizado')]],
+                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/primeiro-vigilante')]],
+                ],
+                [
+                    ['text' => 'Voltar', 'callback_data' => 'start_menu'],
+                ],
+            ],
+        ];
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);
+    }
+
+    private function handleSegundoVigilanteMenu($chatId, int $requesterTelegramId): void
+    {
+        $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
+        if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'vigilancia.segundo.manage')) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao 2º Vigilante, Venerável Mestre ou Administrador.');
+            return;
+        }
+
+        $mensagem = "*Painel do 2º Vigilante*\n\nEscolha o modo de trabalho:";
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Companheirismo', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/companheirismo')]],
+                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/segundo-vigilante')]],
+                ],
+                [
+                    ['text' => 'Voltar', 'callback_data' => 'start_menu'],
+                ],
+            ],
+        ];
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);
+    }
+
+    private function handleOradorMenu($chatId, int $requesterTelegramId): void
+    {
+        $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
+        if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'orador.view')) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Orador, Venerável Mestre ou Administrador.');
+            return;
+        }
+
+        $mensagem = "*Painel do Orador*\n\nAcesse o painel operacional:";
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/orador')]],
+                ],
+                [
+                    ['text' => 'Voltar', 'callback_data' => 'start_menu'],
+                ],
+            ],
+        ];
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);
+    }
+
+    private function handleMestreBanquetesMenu($chatId, int $requesterTelegramId): void
+    {
+        $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
+        if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'mestre_banquetes.manage')) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Mestre de Banquetes, Venerável Mestre ou Administrador.');
+            return;
+        }
+
+        $mensagem = "*Painel do Mestre de Banquetes*\n\nAcesse o painel operacional:";
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/mestre-banquetes')]],
+                ],
+                [
+                    ['text' => 'Voltar', 'callback_data' => 'start_menu'],
+                ],
+            ],
+        ];
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);
+    }
+
+    private function handleMestreHarmoniaMenu($chatId, int $requesterTelegramId): void
+    {
+        $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
+        if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'mestre_harmonia.manage')) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Mestre de Harmonia, Venerável Mestre ou Administrador.');
+            return;
+        }
+
+        $mensagem = "*Painel do Mestre de Harmonia*\n\nAcesse o painel operacional:";
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/mestre-harmonia')]],
+                ],
+                [
+                    ['text' => 'Voltar', 'callback_data' => 'start_menu'],
+                ],
+            ],
+        ];
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);
+    }
+
+    private function handleVeneravelMenu($chatId, int $requesterTelegramId): void
+    {
+        $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
+        if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'veneravel.manage')) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Venerável Mestre ou Administrador.');
+            return;
+        }
+
+        $mensagem = "*Painel do Venerável Mestre*\n\nEscolha o modo de trabalho:";
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/veneravel')]],
+                    ['text' => 'Venerável Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
+                ],
+                [
+                    ['text' => 'Voltar', 'callback_data' => 'start_menu'],
+                ],
+            ],
+        ];
+
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'Markdown', 'reply_markup' => $teclado]);
+    }
+
+    private function handleAssistenteBotMenu($chatId, int $requesterTelegramId): void
+    {
+        $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
+        if (
+            !$this->isDev($requesterTelegramId)
+            && (!$obreiro || !$this->obreiroHasRole(
+                $obreiro,
+                'admin',
+                'veneravel',
+                'secretario',
+                'tesoureiro',
+                'chanceler',
+                'orador',
+                'hospitaleiro',
+                'mestre_banquetes',
+                'mestre_harmonia',
+                'primeiro_vigilante',
+                'segundo_vigilante',
+                'bibliotecario'
+            ))
+        ) {
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao painel de assistência operacional.');
+            return;
+        }
+
+        $mensagem = "*Assistente Operacional*\n\nAcesse o assistente por cargo:";
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Abrir Assistente', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/assistente')]],
+                ],
+                [
+                    ['text' => 'Voltar', 'callback_data' => 'start_menu'],
                 ],
             ],
         ];
@@ -396,6 +619,60 @@ class CommandHandler
         if ($isDev || $this->obreiroHasPermission($obreiro, 'chancelaria.manage')) {
             $teclado['inline_keyboard'][] = [
                 ['text' => 'Chancelaria', 'callback_data' => 'admin_chancelaria'],
+            ];
+        }
+
+        if ($isDev || $this->obreiroHasPermission($obreiro, 'tesouraria.manage')) {
+            $teclado['inline_keyboard'][] = [
+                ['text' => 'Tesouraria', 'callback_data' => 'tesouraria_menu'],
+            ];
+        }
+
+        if ($isDev || $this->obreiroHasPermission($obreiro, 'secretaria.manage')) {
+            $teclado['inline_keyboard'][] = [
+                ['text' => 'Secretaria', 'callback_data' => 'secretaria_menu'],
+            ];
+        }
+
+        if ($isDev || $this->obreiroHasPermission($obreiro, 'hospitaleiro.manage')) {
+            $teclado['inline_keyboard'][] = [
+                ['text' => 'Assistência', 'callback_data' => 'assistencia_menu'],
+            ];
+        }
+
+        if ($isDev || $this->obreiroHasPermission($obreiro, 'vigilancia.primeiro.manage')) {
+            $teclado['inline_keyboard'][] = [
+                ['text' => '1º Vigilante', 'callback_data' => 'admin_primeiro_vigilante'],
+            ];
+        }
+
+        if ($isDev || $this->obreiroHasPermission($obreiro, 'vigilancia.segundo.manage')) {
+            $teclado['inline_keyboard'][] = [
+                ['text' => '2º Vigilante', 'callback_data' => 'admin_segundo_vigilante'],
+            ];
+        }
+
+        if ($isDev || $this->obreiroHasPermission($obreiro, 'orador.view')) {
+            $teclado['inline_keyboard'][] = [
+                ['text' => 'Orador', 'callback_data' => 'admin_orador'],
+            ];
+        }
+
+        if ($isDev || $this->obreiroHasPermission($obreiro, 'mestre_banquetes.manage')) {
+            $teclado['inline_keyboard'][] = [
+                ['text' => 'Mestre de Banquetes', 'callback_data' => 'admin_mestre_banquetes'],
+            ];
+        }
+
+        if ($isDev || $this->obreiroHasPermission($obreiro, 'mestre_harmonia.manage')) {
+            $teclado['inline_keyboard'][] = [
+                ['text' => 'Mestre de Harmonia', 'callback_data' => 'admin_mestre_harmonia'],
+            ];
+        }
+
+        if ($isDev || $this->obreiroHasPermission($obreiro, 'veneravel.manage')) {
+            $teclado['inline_keyboard'][] = [
+                ['text' => 'Venerável', 'callback_data' => 'admin_veneravel'],
             ];
         }
 
@@ -1105,6 +1382,30 @@ class CommandHandler
                     case 'admin_secretaria':
                     case 'secretaria_menu':
                         $this->handleSecretariaMenu($chatId, $fromId);
+                        break;
+                    case 'admin_hospitaleiro':
+                        $this->handleAssistenciaMenu($chatId, $fromId);
+                        break;
+                    case 'admin_primeiro_vigilante':
+                        $this->handlePrimeiroVigilanteMenu($chatId, $fromId);
+                        break;
+                    case 'admin_segundo_vigilante':
+                        $this->handleSegundoVigilanteMenu($chatId, $fromId);
+                        break;
+                    case 'admin_orador':
+                        $this->handleOradorMenu($chatId, $fromId);
+                        break;
+                    case 'admin_mestre_banquetes':
+                        $this->handleMestreBanquetesMenu($chatId, $fromId);
+                        break;
+                    case 'admin_mestre_harmonia':
+                        $this->handleMestreHarmoniaMenu($chatId, $fromId);
+                        break;
+                    case 'admin_veneravel':
+                        $this->handleVeneravelMenu($chatId, $fromId);
+                        break;
+                    case 'admin_assistente':
+                        $this->handleAssistenteBotMenu($chatId, $fromId);
                         break;
                     case 'assistencia_menu':
                         $this->handleAssistenciaMenu($chatId, $fromId);
