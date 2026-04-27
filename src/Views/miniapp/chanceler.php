@@ -43,7 +43,7 @@
                     <div id="meta-confirmados" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Presentes</div>
+                    <div class="text-gray-500">Assinaram</div>
                     <div id="meta-presentes" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
@@ -56,7 +56,7 @@
                 </div>
             </div>
 
-            <a id="link-certificado" href="/chancelaria/certificado" class="mt-4 block w-full rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-medium text-white">Emitir certificado</a>
+            <a id="link-certificado" href="/chancelaria/certificado" class="mt-4 block w-full rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-medium text-white">Certificado de Visita</a>
         </div>
 
         <div class="card rounded-2xl p-4">
@@ -71,8 +71,8 @@
 
         <div class="card rounded-2xl p-4">
             <div class="flex items-center justify-between gap-3">
-                <div class="text-sm font-semibold">Check-in da nominata</div>
-                <div class="text-xs text-gray-500">Toque para alternar o status</div>
+                <div class="text-sm font-semibold">Livro do Quadro</div>
+                <div class="text-xs text-gray-500">Toque para marcar assinatura</div>
             </div>
             <div id="lista-presencas" class="mt-3 space-y-2 text-sm"></div>
         </div>
@@ -159,7 +159,7 @@ function renderFrequencias() {
                 <div class="font-medium">${esc(item.nome)}</div>
                 <div class="text-xs text-gray-500 mt-1">CIM ${esc(item.cim || '-')} Â· Grau ${esc(item.grau || '-')}</div>
             </div>
-            <div class="rounded-full px-2 py-1 text-xs font-medium ${item.presente ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'}">${item.presente ? 'Presente' : 'Ausente'}</div>
+            <div class="rounded-full px-2 py-1 text-xs font-medium ${item.presente ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'}">${item.presente ? 'Assinou' : 'Falta assinar o livro'}</div>
         </div>`;
         button.addEventListener('click', async () => {
             try {

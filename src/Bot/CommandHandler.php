@@ -578,35 +578,12 @@ class CommandHandler
             return;
         }
 
-        $mensagem = "*Painel da Chancelaria*\n\nSelecione uma opção:";
+        $mensagem = "*Painel do Chanceler*\n\nEscolha o modo de trabalho:";
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => 'Emitir Certificado', 'web_app' => ['url' => $this->buildAppUrl('/chancelaria/certificado')]],
-                ],
-                [
-                    ['text' => 'Certificado (Alternativo)', 'url' => $this->buildAppUrl('/chancelaria/certificado')],
-                ],
-                [
-                    ['text' => 'Miniapp do Chanceler', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/chanceler')]],
-                ],
-                [
-                    ['text' => 'Neste Dia', 'callback_data' => 'chancelaria_neste_dia'],
-                ],
-                [
-                    ['text' => 'Aniversários Hoje', 'callback_data' => 'chancelaria_aniversarios'],
-                    ['text' => 'Datas Maçônicas', 'callback_data' => 'chancelaria_datas'],
-                ],
-                [
-                    ['text' => 'Fatos Históricos', 'callback_data' => 'chancelaria_historico'],
-                ],
-                [
-                    ['text' => 'Miniapp Histórico', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/historico')]],
-                    ['text' => 'Miniapp Complementar', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/fallback')]],
-                ],
-                [
-                    ['text' => 'Miniapp Aniversário', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/aniversario')]],
-                    ['text' => 'Miniapp Data Maçônica', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/data-maconica')]],
+                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/chanceler')]],
+                    ['text' => 'Efemerides', 'callback_data' => 'chancelaria_neste_dia'],
                 ],
             ],
         ];
