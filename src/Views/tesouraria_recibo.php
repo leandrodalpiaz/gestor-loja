@@ -4,8 +4,8 @@ $configuracaoLoja = $configuracaoLoja ?? [];
 $formatCurrency = static function ($value): string {
     return number_format((float) $value, 2, ',', '.');
 };
-$nomeLoja = trim((string) ($configuracaoLoja['nome_loja'] ?? 'Renascença'));
-$numeroLoja = trim((string) ($configuracaoLoja['numero_loja'] ?? '270'));
+$nomeLoja = trim((string) ($configuracaoLoja['nome_loja'] ?? ($_SESSION['tenant_name'] ?? 'Loja')));
+$numeroLoja = trim((string) ($configuracaoLoja['numero_loja'] ?? ''));
 $tituloTratamento = trim((string) ($configuracaoLoja['titulo_tratamento'] ?? 'Aug Resp Loj Simb'));
 $oriente = trim((string) ($configuracaoLoja['oriente'] ?? (($configuracaoLoja['cidade'] ?? 'Arroio do Sal') . ' / ' . ($configuracaoLoja['uf'] ?? 'RS'))));
 $dataFundacao = !empty($configuracaoLoja['data_fundacao']) ? date('d/m/Y', strtotime((string) $configuracaoLoja['data_fundacao'])) : '';

@@ -64,21 +64,18 @@
     </style>
 </head>
 <?php
-$logoRenascencaLogin = null;
-foreach ([
-    '/assets/logo-renascenca.png',
-    '/assets/logo-renascenca.svg',
-    '/assets/logo-loja-renascenca.png',
-    '/assets/logo-loja-renascenca.svg',
-] as $logoPath) {
-    if (file_exists(__DIR__ . '/../../public' . $logoPath)) {
-        $logoRenascencaLogin = $logoPath;
-        break;
-    }
-}
+$tenantSlug = trim((string) ($tenantSlug ?? ($_SESSION['tenant_slug'] ?? '')));
+$tenantName = trim((string) ($tenantName ?? ($_SESSION['tenant_name'] ?? '')));
+$tenantResolved = !empty($tenantResolved) && $tenantSlug !== '';
+$tenantUnavailableMessage = trim((string) ($tenantUnavailableMessage ?? ''));
+$logoLogin = \App\Core\Tenant\TenantAssetResolver::resolveLogo($tenantSlug);
 
-$heroPortalImage = '/assets/portal/hero/capa-institucional.svg';
-if (!file_exists(__DIR__ . '/../../public' . $heroPortalImage)) {
+$heroPortalImage = \App\Core\Tenant\TenantAssetResolver::resolve(
+    $tenantSlug,
+    'portal/hero/capa-institucional.svg',
+    '/assets/portal/hero/capa-institucional.svg'
+);
+if ($heroPortalImage === '') {
     $heroPortalImage = null;
 }
 
@@ -89,12 +86,20 @@ $publicMedia = [
     [
         'tipo' => 'foto',
         'titulo' => 'Galeria de eventos publicos',
-        'arquivo' => '/assets/portal/galeria/fotos/foto-placeholder-01.svg',
+        'arquivo' => \App\Core\Tenant\TenantAssetResolver::resolve(
+            $tenantSlug,
+            'portal/galeria/fotos/foto-placeholder-01.svg',
+            '/assets/portal/galeria/fotos/foto-placeholder-01.svg'
+        ),
     ],
     [
         'tipo' => 'video',
         'titulo' => 'Video institucional da proposta',
-        'arquivo' => '/assets/portal/galeria/videos/video-placeholder-01.svg',
+        'arquivo' => \App\Core\Tenant\TenantAssetResolver::resolve(
+            $tenantSlug,
+            'portal/galeria/videos/video-placeholder-01.svg',
+            '/assets/portal/galeria/videos/video-placeholder-01.svg'
+        ),
     ],
 ];
 ?>
@@ -115,13 +120,15 @@ $publicMedia = [
                         <div class="mb-6 flex items-center justify-between gap-4">
                             <div class="flex items-center gap-3">
                                 <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-white/25 bg-white/10">
-                                    <?php if ($logoRenascencaLogin): ?>
-                                        <img src="<?= htmlspecialchars($logoRenascencaLogin) ?>" alt="Brasao da Loja" class="h-10 w-10 object-contain">
+                                    <?php if ($logoLogin): ?>
+                                        <img src="<?= htmlspecialchars($logoLogin) ?>" alt="Brasao da Loja" class="h-10 w-10 object-contain">
                                     <?php else: ?>
                                         <span class="text-lg font-semibold text-white">&#8756;</span>
                                     <?php endif; ?>
                                 </div>
-                                <div class="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-white/75">Portal Publico da Loja</div>
+                                <div class="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-white/75">
+                                    <?= htmlspecialchars($tenantResolved && $tenantName !== '' ? $tenantName : 'Portal Publico da Loja') ?>
+                                </div>
                             </div>
                             <a href="#acesso-restrito" class="inline-flex items-center rounded-xl border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20">
                                 Entrar
@@ -235,7 +242,14 @@ $publicMedia = [
                                     $adTitle = trim((string) ($ad['titulo'] ?? 'Espaco reservado para publicidade'));
                                     $adResumo = trim((string) ($ad['resumo'] ?? 'Sua marca pode apoiar projetos da Loja.'));
                                     $adLink = trim((string) ($ad['link_url'] ?? '#'));
-                                    $adImage = trim((string) ($ad['imagem_url'] ?? '/assets/portal/publicidade/cards/card-reservado-01.svg'));
+                                    $adImage = trim((string) ($ad['imagem_url'] ?? ''));
+                                    if ($adImage === '') {
+                                        $adImage = \App\Core\Tenant\TenantAssetResolver::resolve(
+                                            $tenantSlug,
+                                            'portal/publicidade/cards/card-reservado-01.svg',
+                                            '/assets/portal/publicidade/cards/card-reservado-01.svg'
+                                        );
+                                    }
                                     ?>
                                     <article class="rounded-2xl border border-erpBorder bg-slate-50 p-3">
                                         <div class="aspect-[4/3] overflow-hidden rounded-xl border border-erpBorder bg-white p-2">
@@ -263,8 +277,8 @@ $publicMedia = [
                             <div class="rounded-[1.7rem] border border-erpBorder bg-white px-5 py-6 shadow-sm">
                                 <div class="flex items-center gap-3">
                                     <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-erpBorder bg-slate-50">
-                                        <?php if ($logoRenascencaLogin): ?>
-                                            <img src="<?= htmlspecialchars($logoRenascencaLogin) ?>" alt="Brasao da Loja Renascenca" class="h-10 w-10 object-contain">
+                                        <?php if ($logoLogin): ?>
+                                            <img src="<?= htmlspecialchars($logoLogin) ?>" alt="Brasao da Loja" class="h-10 w-10 object-contain">
                                         <?php else: ?>
                                             <span class="text-lg font-semibold text-erpGold">&#8756;</span>
                                         <?php endif; ?>
@@ -278,12 +292,19 @@ $publicMedia = [
                                     Esta area e exclusiva para membros autorizados. Nenhum modulo interno e exibido antes do login.
                                 </p>
 
+                                <?php if (!$tenantResolved): ?>
+                                    <div class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+                                        <?= htmlspecialchars($tenantUnavailableMessage !== '' ? $tenantUnavailableMessage : 'Loja nao identificada. Verifique a configuracao do ambiente.') ?>
+                                    </div>
+                                <?php endif; ?>
+
                                 <form action="/login" method="POST" class="mt-5 space-y-4">
                                     <div>
                                         <label class="mb-2 block text-sm font-semibold text-erpText">CIM / Matricula</label>
                                         <input
                                             type="text"
                                             name="matricula"
+                                            <?= $tenantResolved ? '' : 'disabled' ?>
                                             class="block w-full rounded-xl border border-erpBorder bg-slate-50 px-4 py-3 text-base text-erpText placeholder-slate-400 focus:border-erpGold focus:bg-white focus:outline-none"
                                             placeholder="Digite seu CIM"
                                         >
@@ -293,6 +314,7 @@ $publicMedia = [
                                         <input
                                             type="password"
                                             name="password"
+                                            <?= $tenantResolved ? '' : 'disabled' ?>
                                             class="block w-full rounded-xl border border-erpBorder bg-slate-50 px-4 py-3 text-base text-erpText placeholder-slate-400 focus:border-erpGold focus:bg-white focus:outline-none"
                                             placeholder="Digite sua senha"
                                         >
@@ -304,10 +326,10 @@ $publicMedia = [
                                         </div>
                                     <?php endif; ?>
 
-                                    <button type="submit" name="acao" value="login" class="inline-flex w-full items-center justify-center rounded-xl border border-transparent bg-erpNavyDeep px-6 py-3 text-base font-semibold text-white transition hover:opacity-95">
+                                    <button type="submit" name="acao" value="login" <?= $tenantResolved ? '' : 'disabled' ?> class="inline-flex w-full items-center justify-center rounded-xl border border-transparent bg-erpNavyDeep px-6 py-3 text-base font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60">
                                         Entrar no sistema
                                     </button>
-                                    <button type="submit" name="acao" value="solicitar" class="inline-flex w-full items-center justify-center rounded-xl border border-erpBorder bg-white px-6 py-3 text-base font-semibold text-erpNavy transition hover:bg-erpBg">
+                                    <button type="submit" name="acao" value="solicitar" <?= $tenantResolved ? '' : 'disabled' ?> class="inline-flex w-full items-center justify-center rounded-xl border border-erpBorder bg-white px-6 py-3 text-base font-semibold text-erpNavy transition hover:bg-erpBg disabled:cursor-not-allowed disabled:opacity-60">
                                         Solicitar acesso
                                     </button>
                                 </form>

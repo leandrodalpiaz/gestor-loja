@@ -143,6 +143,8 @@ try {
         Add-Result 'Web Login Page' 'FAIL' $_.Exception.Message
     }
 
+    Add-Result 'Validacao multi-tenant' 'SKIP' 'Execute docs/validacao_multi_tenant.md para validar isolamento entre lojas.'
+
     try {
         $miniNovo = Invoke-WebRequest -Uri "$baseUrl/biblioteca/novo" -UseBasicParsing -TimeoutSec 25
         $miniScanner = Invoke-WebRequest -Uri "$baseUrl/biblioteca/scanner" -UseBasicParsing -TimeoutSec 25

@@ -297,10 +297,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         </div>
                         <div>
                             <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Beneficiário PIX</label>
-                            <input type="text" name="pix_beneficiario" value="<?= htmlspecialchars((string) ($configuracao['pix_beneficiario'] ?? 'Renascença nº 270')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
+                            <input type="text" name="pix_beneficiario" value="<?= htmlspecialchars((string) ($configuracao['pix_beneficiario'] ?? 'Nome da Loja')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div class="md:col-span-2 xl:col-span-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-900">
-                            Para a Renascença, a orientação é pagar até o dia 10, mas a mensalidade só entra como em aberto após o primeiro dia útil do mês seguinte. O valor padrão inicia em R$ 150,00 e continua editável aqui no admin.
+                            Configure aqui as regras financeiras padrao da Loja atual. O valor continua editavel no admin.
                         </div>
                     </div>
                 </section>
@@ -357,4 +357,5 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 </html>
 <?php endif; ?>
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+
 

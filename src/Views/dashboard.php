@@ -56,25 +56,14 @@ $dashboardMensagemErro = $dashboardMensagemErro ?? null;
 $dashboardConfiguracaoLoja = is_array($dashboardConfiguracaoLoja ?? null) ? $dashboardConfiguracaoLoja : [];
 $dashboardLogoUrl = $dashboardLogoUrl ?? null;
 if ($dashboardLogoUrl === null) {
-    foreach ([
-        '/assets/logo-renascenca.png',
-        '/assets/logo-renascenca.svg',
-        '/assets/logo-loja-renascenca.png',
-        '/assets/logo-loja-renascenca.svg',
-    ] as $_lp) {
-        if (file_exists(__DIR__ . '/../../public' . $_lp)) {
-            $dashboardLogoUrl = $_lp;
-            break;
-        }
-    }
-    unset($_lp);
+    $dashboardLogoUrl = \App\Core\Tenant\TenantAssetResolver::resolveLogo((string) ($_SESSION['tenant_slug'] ?? ''));
 }
 $dashboardSessoes = is_array($dashboardSessoes ?? null) ? $dashboardSessoes : [];
 $dashboardRecados = is_array($dashboardRecados ?? null) ? $dashboardRecados : [];
 $dashboardPalavraIrmao = trim((string) ($dashboardPalavraIrmao ?? ''));
 $dashboardOutrasLojas = is_array($dashboardOutrasLojas ?? null) ? $dashboardOutrasLojas : [];
 
-$dashboardNomeLoja = trim((string) ($dashboardConfiguracaoLoja['nome_loja'] ?? 'Loja Maçônica Renascença'));
+$dashboardNomeLoja = trim((string) ($dashboardConfiguracaoLoja['nome_loja'] ?? ($_SESSION['tenant_name'] ?? 'Loja Maçonica')));
 $dashboardNumeroLoja = trim((string) ($dashboardConfiguracaoLoja['numero_loja'] ?? ''));
 if ($dashboardNumeroLoja !== '') {
     $dashboardNomeLoja .= ' nº ' . $dashboardNumeroLoja;
@@ -449,7 +438,7 @@ require __DIR__ . '/partials/erp_head.php';
         <div class="flex items-center gap-3">
             <div class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/10 text-xl text-ouro">
                 <?php if ($dashboardLogoUrl): ?>
-                    <img src="<?= htmlspecialchars($dashboardLogoUrl) ?>" alt="Logotipo da Loja Renascença" class="h-full w-full object-cover">
+                    <img src="<?= htmlspecialchars($dashboardLogoUrl) ?>" alt="Logotipo da Loja" class="h-full w-full object-cover">
                 <?php else: ?>
                     <span>∴</span>
                 <?php endif; ?>
@@ -539,7 +528,7 @@ require __DIR__ . '/partials/erp_head.php';
                 <div class="flex min-w-0 gap-5 xl:col-span-8 2xl:col-span-9">
                     <div class="hidden h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-erp-border bg-white shadow-sm sm:flex sm:items-center sm:justify-center">
                         <?php if ($dashboardLogoUrl): ?>
-                            <img src="<?= htmlspecialchars((string) $dashboardLogoUrl) ?>" alt="Brasão da Loja Renascença" class="h-[5.5rem] w-[5.5rem] object-contain">
+                            <img src="<?= htmlspecialchars((string) $dashboardLogoUrl) ?>" alt="Brasao da Loja" class="h-[5.5rem] w-[5.5rem] object-contain">
                         <?php else: ?>
                             <div class="text-3xl font-semibold text-erp-gold">&#9651;</div>
                         <?php endif; ?>
@@ -765,7 +754,7 @@ require __DIR__ . '/partials/erp_head.php';
             <div class="border-b border-slate-200 bg-slate-50 px-6 py-6">
                 <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Sessões de outras Lojas</div>
                 <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Sessões de outras Lojas</h2>
-                <p class="mt-2 text-sm text-slate-600">Aqui ficam os convites e compromissos de outras Lojas, sem tirar o foco da agenda principal da Renascença.</p>
+                <p class="mt-2 text-sm text-slate-600">Aqui ficam os convites e compromissos de outras Lojas, sem tirar o foco da agenda principal da Loja atual.</p>
             </div>
             <div class="grid gap-4 px-6 py-6 md:grid-cols-2 xl:grid-cols-3">
                 <?php if ($dashboardOutrasLojas !== []): ?>

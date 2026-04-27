@@ -332,7 +332,7 @@ require __DIR__ . '/../partials/erp_head.php';
 
             <section class="rounded-2xl bg-[linear-gradient(180deg,#fffdf7,#f4efe4)] border border-amber-200 shadow-sm p-6">
                 <div class="text-xs uppercase tracking-[0.24em] text-erp-gold">História da Loja</div>
-                <h2 class="font-sans text-2xl text-erp-navy mt-2">Renascença em perspectiva</h2>
+                <h2 class="font-sans text-2xl text-erp-navy mt-2">Historia da Loja em perspectiva</h2>
                 <p class="mt-4 text-sm leading-7 text-slate-700 whitespace-pre-line">
                     <?= htmlspecialchars($historiaLoja) ?>
                 </p>

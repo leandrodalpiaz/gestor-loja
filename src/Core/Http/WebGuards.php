@@ -91,5 +91,10 @@ HTML;
             header('Content-Type: application/json; charset=utf-8');
             JsonResponse::error('Nao autenticado.', 401);
         }
+
+        if (trim((string) ($session['tenant_id'] ?? '')) === '') {
+            header('Content-Type: application/json; charset=utf-8');
+            JsonResponse::error('Loja nao identificada. Verifique a configuracao do ambiente.', 503);
+        }
     }
 }

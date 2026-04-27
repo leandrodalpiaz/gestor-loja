@@ -30,6 +30,11 @@ class MiniappApiRoutes
 
         header('Content-Type: application/json; charset=utf-8');
 
+        $tenantIdFromSession = trim((string) ($session['tenant_id'] ?? ''));
+        if ($tenantIdFromSession === '') {
+            JsonResponse::error('Loja não identificada. Verifique a configuração do ambiente.', 503);
+        }
+
         $body = RequestBody::json();
         $initData = trim((string) ($body['initData'] ?? $body['init_data'] ?? $_GET['initData'] ?? $_GET['init_data'] ?? ''));
         $miniappObreiro = null;

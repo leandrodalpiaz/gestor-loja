@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Config\Database;
+use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 
 class Cargo
 {
+    use ResolvesStoreTenant;
+
     private const ROTULOS_OFICIAIS = [
         'ADMINISTRADOR' => 'Administrador',
         'ARQUITETO' => 'Arquiteto',
@@ -35,11 +38,13 @@ class Cargo
 
     private PDO $db;
     private AuditoriaAdministrativa $auditoria;
+    private ?bool $suportaEscopoLoja = null;
 
     public function __construct()
     {
         $this->db = Database::getConnection();
         $this->auditoria = new AuditoriaAdministrativa();
+        $this->garantirEscopoLoja();
     }
 
     public function getCodigosAtivosDoObreiro(string $obreiroId): array
@@ -47,15 +52,23 @@ class Cargo
         $stmt = $this->db->prepare(
             "SELECT c.codigo
              FROM public.atribuicoes_cargo ac
-             JOIN public.cargos c ON c.id = ac.cargo_id
-             LEFT JOIN public.gestoes g ON g.id = ac.gestao_id
+             JOIN public.cargos c
+               ON c.id = ac.cargo_id
+              AND c.loja_id = :loja_id
+             LEFT JOIN public.gestoes g
+               ON g.id = ac.gestao_id
+              AND g.loja_id = :loja_id
              WHERE ac.obreiro_id = :obreiro_id
+               AND ac.loja_id = :loja_id
                AND ac.fim_em IS NULL
                AND (g.id IS NULL OR g.status = 'aberta')
                AND c.ativo = TRUE
              ORDER BY c.nome_exibicao ASC"
         );
-        $stmt->execute(['obreiro_id' => $obreiroId]);
+        $stmt->execute([
+            'obreiro_id' => $obreiroId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
 
         return array_values(array_unique(array_filter(array_map(
             static fn ($row) => strtoupper((string) ($row['codigo'] ?? '')),
@@ -66,15 +79,29 @@ class Cargo
     public function obreiroTemCargo(string $obreiroId, string $cargoCodigo): bool
     {
         $stmt = $this->db->prepare(
-            "SELECT public.tem_cargo(:obreiro_id, :cargo_codigo) AS possui"
+            "SELECT 1
+             FROM public.atribuicoes_cargo ac
+             JOIN public.cargos c
+               ON c.id = ac.cargo_id
+              AND c.loja_id = :loja_id
+             LEFT JOIN public.gestoes g
+               ON g.id = ac.gestao_id
+              AND g.loja_id = :loja_id
+             WHERE ac.obreiro_id = :obreiro_id
+               AND ac.loja_id = :loja_id
+               AND ac.fim_em IS NULL
+               AND c.ativo = TRUE
+               AND c.codigo = :cargo_codigo
+               AND (g.id IS NULL OR g.status = 'aberta')
+             LIMIT 1"
         );
         $stmt->execute([
             'obreiro_id' => $obreiroId,
             'cargo_codigo' => strtoupper(trim($cargoCodigo)),
+            'loja_id' => $this->obterLojaAtualId(),
         ]);
 
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return (bool) ($row['possui'] ?? false);
+        return (bool) $stmt->fetchColumn();
     }
 
     public function listarResumoCargos(?int $gestaoId = null): array
@@ -95,12 +122,15 @@ class Cargo
              FROM public.cargos c
              LEFT JOIN public.atribuicoes_cargo a
                ON a.cargo_id = c.id
+              AND a.loja_id = :loja_id
               AND a.fim_em IS NULL
              LEFT JOIN public.gestoes g
                ON g.id = a.gestao_id
+              AND g.loja_id = :loja_id
              LEFT JOIN public.obreiros o
                ON o.id = a.obreiro_id
-             WHERE c.ativo = TRUE";
+             WHERE c.ativo = TRUE
+               AND c.loja_id = :loja_id";
 
         if ($gestaoId !== null) {
             $sql .= " AND (g.id = :gestao_id OR (g.id IS NULL AND :gestao_id = 0))";
@@ -111,6 +141,7 @@ class Cargo
         $sql .= " ORDER BY c.nome_exibicao ASC";
 
         $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':loja_id', $this->obterLojaAtualId(), PDO::PARAM_INT);
         if ($gestaoId !== null) {
             $stmt->bindValue(':gestao_id', $gestaoId, PDO::PARAM_INT);
         }
@@ -132,12 +163,16 @@ class Cargo
                     ac.fim_em,
                     ac.observacao
                 FROM public.atribuicoes_cargo ac
-                JOIN public.cargos c ON c.id = ac.cargo_id
-                LEFT JOIN public.gestoes g ON g.id = ac.gestao_id
+                JOIN public.cargos c
+                  ON c.id = ac.cargo_id
+                 AND c.loja_id = :loja_id
+                LEFT JOIN public.gestoes g
+                  ON g.id = ac.gestao_id
+                 AND g.loja_id = :loja_id
                 JOIN public.obreiros o ON o.id = ac.obreiro_id";
 
-        $params = [];
-        $where = [];
+        $params = ['loja_id' => $this->obterLojaAtualId()];
+        $where = ['ac.loja_id = :loja_id'];
         if ($cargoCodigo !== null && trim($cargoCodigo) !== '') {
             $where[] = "c.codigo = :cargo_codigo";
             $params['cargo_codigo'] = strtoupper(trim($cargoCodigo));
@@ -165,9 +200,10 @@ class Cargo
     public function atribuirPorCodigo(string $cargoCodigo, string $obreiroId, ?string $observacao = null, ?int $gestaoId = null, ?string $inicioEm = null): void
     {
         $stmt = $this->db->prepare(
-            "SELECT public.atribuir_cargo(:cargo_codigo, :obreiro_id, :gestao_id, :inicio_em, :observacao)"
+            "SELECT public.atribuir_cargo(:loja_id, :cargo_codigo, :obreiro_id, :gestao_id, :inicio_em, :observacao)"
         );
         $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
             'cargo_codigo' => strtoupper(trim($cargoCodigo)),
             'obreiro_id' => $obreiroId,
             'gestao_id' => $gestaoId,
@@ -187,6 +223,7 @@ class Cargo
                 'gestao_id' => $gestaoId,
                 'inicio_em' => $inicioEm !== null && trim($inicioEm) !== '' ? $inicioEm : date('c'),
                 'observacao' => $observacao,
+                'loja_id' => $this->obterLojaAtualId(),
             ],
             isset($_SESSION['usuario_id']) ? (string) $_SESSION['usuario_id'] : null
         );
@@ -253,5 +290,38 @@ class Cargo
         }
 
         return $slugs[0] ?? '';
+    }
+
+    private function obterLojaAtualId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
+    }
+
+    private function garantirEscopoLoja(): void
+    {
+        if ($this->suportaEscopoLoja()) {
+            return;
+        }
+
+        throw new \RuntimeException('Escopo por loja ausente em cargos/atribuicoes_cargo/gestoes. Execute a migration de isolamento por loja.');
+    }
+
+    private function suportaEscopoLoja(): bool
+    {
+        if ($this->suportaEscopoLoja !== null) {
+            return $this->suportaEscopoLoja;
+        }
+
+        $stmt = $this->db->prepare(
+            "SELECT COUNT(*) AS total
+             FROM information_schema.columns
+             WHERE table_schema = 'public'
+               AND column_name = 'loja_id'
+               AND table_name IN ('cargos', 'atribuicoes_cargo', 'gestoes')"
+        );
+        $stmt->execute();
+        $this->suportaEscopoLoja = ((int) $stmt->fetchColumn()) === 3;
+
+        return $this->suportaEscopoLoja;
     }
 }

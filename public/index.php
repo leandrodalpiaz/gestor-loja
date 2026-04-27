@@ -38,6 +38,7 @@ use App\Core\Http\WebGuards;
 use App\Core\Authorization\Authorizer;
 use App\Core\Authorization\PermissionMap;
 use App\Core\Tenant\TenantContext;
+use App\Core\Tenant\StoreTenantResolver;
 use App\Models\AssistenteTelemetria;
 use App\Models\Obreiro;
 use App\Models\Cargo;
@@ -98,6 +99,12 @@ $testRole = trim((string) ($_ENV["APP_TEST_DEFAULT_ROLE"] ?? "tesoureiro"));
 $testDisplayName = trim((string) ($_ENV["APP_TEST_DEFAULT_NAME"] ?? "Modo Teste"));
 $isTestSession = isset($_SESSION["usuario_id"]) && (string) $_SESSION["usuario_id"] === '0';
 $bypassRoleChecks = $openTestAccess || $isTestSession || ($allowAllPanels && isset($_SESSION["usuario_logado"]));
+$appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? '')));
+if ($appEnv === '') {
+    $appUrlHost = strtolower(trim((string) parse_url((string) ($_ENV['APP_URL'] ?? ''), PHP_URL_HOST)));
+    $appEnv = in_array($appUrlHost, ['localhost', '127.0.0.1'], true) ? 'local' : 'production';
+}
+$isLocalEnvironment = in_array($appEnv, ['local', 'development', 'dev'], true);
 $resolveTelegramGroupId = static function (): string {
     $candidates = [
         trim((string) ($_ENV['TELEGRAM_CHAT_ID_GROUP'] ?? '')),
@@ -133,11 +140,124 @@ $normalizeRole = static function (?string $cargo): string {
     return $aliases[$cargo] ?? $cargo;
 };
 
-$tenantContext = TenantContext::fromSessionAndEnv($_SESSION, $_ENV);
-$_SESSION = array_merge($_SESSION, array_filter(
-    $tenantContext->toSessionPayload(),
-    static fn ($value) => $value !== null && $value !== ''
-));
+$buildTenantSlug = static function (array $loja): string {
+    $slugBase = trim((string) ($loja['sigla'] ?? ''));
+    if ($slugBase === '') {
+        $slugBase = trim((string) ($loja['numero_loja'] ?? ''));
+    }
+    if ($slugBase === '') {
+        $slugBase = trim((string) ($loja['nome'] ?? ''));
+    }
+
+    $slug = strtolower($slugBase);
+    $slug = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $slug) ?: $slug;
+    $slug = preg_replace('/[^a-z0-9]+/', '-', $slug) ?? '';
+    $slug = trim($slug, '-');
+
+    return $slug !== '' ? $slug : trim((string) ($loja['id'] ?? ''));
+};
+
+$normalizeTenantToken = static function (?string $value): ?string {
+    $value = trim((string) $value);
+    if ($value === '') {
+        return null;
+    }
+
+    $normalized = strtolower($value);
+    $normalized = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $normalized) ?: $normalized;
+    $normalized = preg_replace('/[^a-z0-9\-]+/', '-', $normalized) ?? '';
+    $normalized = trim($normalized, '-');
+
+    return $normalized !== '' ? $normalized : null;
+};
+
+$detectTenantFromRequest = static function () use ($normalizeTenantToken): ?string {
+    $headerTenant = $_SERVER['HTTP_X_TENANT_SLUG'] ?? null;
+    $queryTenant = $_GET['tenant'] ?? null;
+
+    $host = trim((string) ($_SERVER['HTTP_HOST'] ?? ''));
+    $host = preg_replace('/:\d+$/', '', $host) ?? $host;
+    $hostTenant = null;
+    if ($host !== '' && !in_array($host, ['localhost', '127.0.0.1'], true)) {
+        $parts = explode('.', $host);
+        if (count($parts) >= 3) {
+            $hostTenant = $parts[0] ?? null;
+        }
+    }
+
+    return $normalizeTenantToken((string) ($headerTenant ?? $queryTenant ?? $hostTenant ?? ''));
+};
+
+$tenantSessionInput = $_SESSION;
+$requestTenantSlug = $detectTenantFromRequest();
+if ($requestTenantSlug !== null) {
+    $tenantSessionInput['tenant_slug'] = $requestTenantSlug;
+}
+
+$allowEnvTenantFallback = filter_var($_ENV['APP_ALLOW_ENV_TENANT_FALLBACK'] ?? 'false', FILTER_VALIDATE_BOOL);
+$tenantEnv = $_ENV;
+if (!$allowEnvTenantFallback) {
+    unset(
+        $tenantEnv['APP_DEFAULT_TENANT_ID'],
+        $tenantEnv['APP_DEFAULT_TENANT_SLUG'],
+        $tenantEnv['APP_DEFAULT_TENANT_NAME'],
+        $tenantEnv['APP_LOJA_NUMERO']
+    );
+}
+
+$tenantContext = TenantContext::fromSessionAndEnv($tenantSessionInput, $tenantEnv);
+$tenantUnresolvedMessage = 'Loja não identificada. Verifique a configuração do ambiente.';
+$tenantResolved = false;
+$tenantResolutionFailed = false;
+$tenantResolutionError = null;
+
+try {
+    $tenantResolver = new StoreTenantResolver(Database::getConnection(), $tenantContext, $tenantEnv);
+    $tenantLoja = $tenantResolver->resolveLoja();
+    if (is_array($tenantLoja) && !empty($tenantLoja['id'])) {
+        $tenantResolved = true;
+        $_SESSION['tenant_id'] = (string) $tenantLoja['id'];
+        $_SESSION['tenant_slug'] = $buildTenantSlug($tenantLoja);
+        $_SESSION['tenant_name'] = trim((string) ($tenantLoja['nome'] ?? '')) !== ''
+            ? (string) $tenantLoja['nome']
+            : ('Loja ' . (string) ($tenantLoja['numero_loja'] ?? $tenantLoja['id']));
+    }
+} catch (\Throwable $e) {
+    $tenantResolutionError = $e;
+}
+
+if (!$tenantResolved) {
+    unset($_SESSION['tenant_id'], $_SESSION['tenant_slug'], $_SESSION['tenant_name']);
+    $tenantResolutionFailed = true;
+
+    if (!$isLocalEnvironment) {
+        if (str_starts_with($requestUri, '/api/')) {
+            header('Content-Type: application/json; charset=utf-8');
+            JsonResponse::error($tenantUnresolvedMessage, 503);
+        }
+
+        http_response_code(503);
+        echo $tenantUnresolvedMessage;
+        if ($tenantResolutionError) {
+            error_log('Falha ao resolver tenant: ' . $tenantResolutionError->getMessage());
+        }
+        exit;
+    }
+
+    $allowedWithoutTenant = in_array($requestUri, ['/login', '/health'], true);
+    if (!$allowedWithoutTenant) {
+        if (str_starts_with($requestUri, '/api/')) {
+            header('Content-Type: application/json; charset=utf-8');
+            JsonResponse::error($tenantUnresolvedMessage, 503);
+        }
+        http_response_code(503);
+        echo $tenantUnresolvedMessage;
+        if ($tenantResolutionError) {
+            error_log('Falha ao resolver tenant em ambiente local: ' . $tenantResolutionError->getMessage());
+        }
+        exit;
+    }
+}
 
 $currentUser = new CurrentUser($_SESSION, $normalizeRole);
 $permissionMap = new PermissionMap();
@@ -374,7 +494,7 @@ $syncSessionRoles = static function (?array $usuario = null) use ($normalizeRole
     return [$principal, $slugsEfetivos, $codigos];
 };
 
-$syncTenantSessionFromObreiro = static function (?array $usuario = null): void {
+$syncTenantSessionFromObreiro = static function (?array $usuario = null) use ($buildTenantSlug): void {
     $usuario = $usuario ?? ($_SESSION['usuario_logado'] ?? null);
     $lojaId = isset($usuario['loja_id']) ? (int) $usuario['loja_id'] : 0;
 
@@ -401,21 +521,8 @@ $syncTenantSessionFromObreiro = static function (?array $usuario = null): void {
         return;
     }
 
-    $slugBase = trim((string) ($loja['sigla'] ?? ''));
-    if ($slugBase === '') {
-        $slugBase = trim((string) ($loja['numero_loja'] ?? ''));
-    }
-    if ($slugBase === '') {
-        $slugBase = trim((string) ($loja['nome'] ?? ''));
-    }
-
-    $slug = strtolower($slugBase);
-    $slug = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $slug) ?: $slug;
-    $slug = preg_replace('/[^a-z0-9]+/', '-', $slug) ?? '';
-    $slug = trim($slug, '-');
-
     $_SESSION['tenant_id'] = (string) $loja['id'];
-    $_SESSION['tenant_slug'] = $slug !== '' ? $slug : (string) $loja['id'];
+    $_SESSION['tenant_slug'] = $buildTenantSlug($loja);
     $_SESSION['tenant_name'] = trim((string) ($loja['nome'] ?? '')) !== ''
         ? (string) $loja['nome']
         : 'Loja ' . (string) ($loja['numero_loja'] ?? $loja['id']);
@@ -1031,15 +1138,21 @@ switch ($requestUri) {
         $erroLogin = null;
         $publicConteudos = [];
         $publicAds = [];
+        $tenantSlug = trim((string) ($_SESSION['tenant_slug'] ?? ''));
+        $tenantName = trim((string) ($_SESSION['tenant_name'] ?? ''));
+        $tenantResolved = !$tenantResolutionFailed && $tenantSlug !== '';
+        $tenantUnavailableMessage = $tenantUnresolvedMessage;
         $publicAdsEnabled = filter_var($_ENV['PUBLIC_ADS_ENABLED'] ?? 'false', FILTER_VALIDATE_BOOL);
 
-        try {
-            $conteudoModel = new \App\Models\ConteudoPublico();
-            $publicConteudos = $conteudoModel->listarPublicos(null, 10);
-            $publicAds = $publicAdsEnabled ? $conteudoModel->listarAdsPublicos(3) : [];
-        } catch (\Throwable $e) {
-            $publicConteudos = [];
-            $publicAds = [];
+        if ($tenantResolved) {
+            try {
+                $conteudoModel = new \App\Models\ConteudoPublico();
+                $publicConteudos = $conteudoModel->listarPublicos(null, 10);
+                $publicAds = $publicAdsEnabled ? $conteudoModel->listarAdsPublicos(3) : [];
+            } catch (\Throwable $e) {
+                $publicConteudos = [];
+                $publicAds = [];
+            }
         }
 
         if ($publicConteudos === []) {
@@ -1097,6 +1210,12 @@ switch ($requestUri) {
                     'imagem_url' => '/assets/portal/publicidade/cards/card-reservado-01.svg',
                 ],
             ];
+        }
+
+        if ($tenantResolutionFailed) {
+            $erroLogin = $tenantUnresolvedMessage;
+            require_once __DIR__ . "/../src/Views/login.php";
+            break;
         }
 
         if ($method === "POST") {

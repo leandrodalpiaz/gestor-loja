@@ -7,6 +7,7 @@ use App\Controllers\MestreBanquetesController;
 use App\Controllers\OradorController;
 use App\Controllers\VeneravelController;
 use App\Core\Authorization\Authorizer;
+use App\Core\Tenant\TenantAssetResolver;
 use App\Models\ConfiguracaoLoja;
 use App\Models\Obreiro;
 use App\Models\Presenca;
@@ -181,20 +182,8 @@ class PainelRoutes
         ];
 
         $dashboardConfiguracaoLoja = (new ConfiguracaoLoja())->obter();
-        $dashboardLogoUrl = null;
-        foreach ([
-            '/assets/logo-renascenca.svg',
-            '/assets/logo-renascenca.png',
-            '/assets/logo-loja-renascenca.svg',
-            '/assets/logo-loja-renascenca.png',
-            '/assets/renascenca-logo.svg',
-            '/assets/renascenca-logo.png',
-        ] as $logoPath) {
-            if (file_exists(__DIR__ . '/../../../public' . $logoPath)) {
-                $dashboardLogoUrl = $logoPath;
-                break;
-            }
-        }
+        $dashboardTenantSlug = trim((string) ($session['tenant_slug'] ?? ''));
+        $dashboardLogoUrl = TenantAssetResolver::resolveLogo($dashboardTenantSlug);
 
         $dashboardUsuarioId = trim((string) ($session['usuario_id'] ?? ''));
         $dashboardObreiro = null;

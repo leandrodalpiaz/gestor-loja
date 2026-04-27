@@ -163,10 +163,16 @@ class ConviteAcesso
                 return ['ok' => false, 'erro' => 'Obreiro do convite não encontrado.'];
             }
 
+            $lojaAtual = $this->buscarLojaAtualId();
             $lojaObreiro = (int) ($obreiro['loja_id'] ?? 0);
             if ($lojaObreiro <= 0) {
                 $this->db->rollBack();
                 return ['ok' => false, 'erro' => 'Loja do obreiro inválida.'];
+            }
+
+            if ($lojaObreiro !== $lojaAtual) {
+                $this->db->rollBack();
+                return ['ok' => false, 'erro' => 'Convite nÃ£o pertence Ã  loja atual.'];
             }
 
             $statusObreiro = strtolower(trim((string) ($obreiro['acesso_status'] ?? '')));
@@ -198,11 +204,13 @@ class ConviteAcesso
                  SET telegram_id = :telegram_id,
                      acesso_status = 'ativo',
                      ativo = TRUE
-                 WHERE id = :id"
+                 WHERE id = :id
+                   AND loja_id = :loja_id"
             );
             $okUp = $stmtUp->execute([
                 'telegram_id' => $telegramId,
                 'id' => $obreiroId,
+                'loja_id' => $lojaAtual,
             ]);
             if (!$okUp) {
                 $this->db->rollBack();

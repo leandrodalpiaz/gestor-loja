@@ -391,17 +391,36 @@ class Obreiro
 
         $cargoCodigo = trim((string) ($filtros['cargo_codigo'] ?? ''));
         if ($cargoCodigo !== '') {
-            $sql .= " AND EXISTS (
-                SELECT 1
-                FROM public.atribuicoes_cargo ac
-                JOIN public.cargos c ON c.id = ac.cargo_id
-                LEFT JOIN public.gestoes g ON g.id = ac.gestao_id
-                WHERE ac.obreiro_id = obreiros.id
-                  AND ac.fim_em IS NULL
-                  AND c.ativo = TRUE
-                  AND c.codigo = :cargo_codigo
-                  AND (g.id IS NULL OR g.status = 'aberta')
-            )";
+            if ($this->suportaLojaId()) {
+                $sql .= " AND EXISTS (
+                    SELECT 1
+                    FROM public.atribuicoes_cargo ac
+                    JOIN public.cargos c
+                      ON c.id = ac.cargo_id
+                     AND c.loja_id = :loja_id
+                    LEFT JOIN public.gestoes g
+                      ON g.id = ac.gestao_id
+                     AND g.loja_id = :loja_id
+                    WHERE ac.obreiro_id = obreiros.id
+                      AND ac.loja_id = :loja_id
+                      AND ac.fim_em IS NULL
+                      AND c.ativo = TRUE
+                      AND c.codigo = :cargo_codigo
+                      AND (g.id IS NULL OR g.status = 'aberta')
+                )";
+            } else {
+                $sql .= " AND EXISTS (
+                    SELECT 1
+                    FROM public.atribuicoes_cargo ac
+                    JOIN public.cargos c ON c.id = ac.cargo_id
+                    LEFT JOIN public.gestoes g ON g.id = ac.gestao_id
+                    WHERE ac.obreiro_id = obreiros.id
+                      AND ac.fim_em IS NULL
+                      AND c.ativo = TRUE
+                      AND c.codigo = :cargo_codigo
+                      AND (g.id IS NULL OR g.status = 'aberta')
+                )";
+            }
             $params['cargo_codigo'] = strtoupper($cargoCodigo);
         }
 
@@ -1087,8 +1106,17 @@ class Obreiro
                   AND c.ativo = TRUE
                   AND ac.obreiro_id IN ($placeholders)";
 
+        $params = $ids;
+        if ($this->suportaLojaId()) {
+            $sql .= " AND ac.loja_id = ?
+                      AND c.loja_id = ?";
+            $lojaId = $this->obterLojaAtualId();
+            $params[] = $lojaId;
+            $params[] = $lojaId;
+        }
+
         $stmt = $this->db->prepare($sql);
-        $stmt->execute($ids);
+        $stmt->execute($params);
 
         $result = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
