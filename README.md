@@ -225,6 +225,10 @@ Para regras de negócio, separação entre cargos da Loja e Administrador do Sis
 
 - `docs/regras-de-negocio.md`
 - `docs/topico-ajuda-usuarios.md`
+- `docs/bot-operacao-manutencao.md`
+- `docs/faq-bot-miniapps.md`
+- `docs/textos-ia-assistente.md`
+- `docs/validacao-homologacao-bot-miniapps.md`
 
 ## 9) Operacao em producao (Render)
 
