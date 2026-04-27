@@ -37,18 +37,22 @@ class MiniappPageRoutes
                 return true;
 
             case '/miniapp/aprendizado':
+                requireMiniappAuth(['primeiro_vigilante', 'veneravel', 'admin'], 'vigilancia.primeiro.manage');
                 require __DIR__ . '/../../Views/miniapp/aprendizado.php';
                 return true;
 
             case '/miniapp/primeiro-vigilante':
+                requireMiniappAuth(['primeiro_vigilante', 'veneravel', 'admin'], 'vigilancia.primeiro.manage');
                 require __DIR__ . '/../../Views/miniapp/primeiro_vigilante.php';
                 return true;
 
             case '/miniapp/companheirismo':
+                requireMiniappAuth(['segundo_vigilante', 'veneravel', 'admin'], 'vigilancia.segundo.manage');
                 require __DIR__ . '/../../Views/miniapp/companheirismo.php';
                 return true;
 
             case '/miniapp/segundo-vigilante':
+                requireMiniappAuth(['segundo_vigilante', 'veneravel', 'admin'], 'vigilancia.segundo.manage');
                 require __DIR__ . '/../../Views/miniapp/segundo_vigilante.php';
                 return true;
 

@@ -122,14 +122,17 @@
                 </div>
                 <div id="lista-trabalhos" class="mt-3 space-y-2 text-sm"></div>
             </div>
-            <div class="card rounded-2xl p-4">
+            <div id="card-balaustre" class="card rounded-2xl p-4">
                 <div class="text-sm font-semibold">Balaustres recentes</div>
                 <div class="mt-3 space-y-2">
+                    <div class="rounded-xl border border-slate-200 bg-white/70 p-3 text-xs text-slate-600">
+                        Durante a sessão, salve em rascunho quantas vezes precisar. Só finalize quando estiver pronto para votação.
+                    </div>
                     <input id="balaustre-numero" type="text" class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="Número do balaústre">
                     <textarea id="balaustre-texto" rows="3" class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="Resumo do balaústre"></textarea>
-                    <button id="btn-salvar-balaustre" class="w-full rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Salvar balaústre</button>
+                    <button id="btn-salvar-balaustre" class="w-full rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Salvar rascunho do balaústre</button>
                     <div class="grid grid-cols-3 gap-2">
-                        <button id="btn-balaustre-apto" class="rounded-xl bg-amber-700 px-3 py-2 text-xs font-medium text-white">Apto</button>
+                        <button id="btn-balaustre-apto" class="rounded-xl bg-amber-700 px-3 py-2 text-xs font-medium text-white">Finalizar</button>
                         <button id="btn-balaustre-abrir" class="rounded-xl bg-emerald-700 px-3 py-2 text-xs font-medium text-white">Abrir votação</button>
                         <button id="btn-balaustre-encerrar" class="rounded-xl bg-rose-700 px-3 py-2 text-xs font-medium text-white">Encerrar</button>
                     </div>
@@ -375,11 +378,11 @@ document.getElementById('btn-salvar-balaustre').addEventListener('click', () => 
     sessao_id: sessaoAtualId,
     numero_balaustre: document.getElementById('balaustre-numero').value,
     texto_final: document.getElementById('balaustre-texto').value
-}, 'Balaústre salvo com sucesso.'));
+}, 'Rascunho do balaústre salvo com sucesso.'));
 
 document.getElementById('btn-balaustre-apto').addEventListener('click', () => acaoMiniapp('/api/miniapp/secretaria/balaustre/apto', {
     balaustre_id: dashboard?.balaustre_foco?.id || 0
-}, 'Balaústre marcado como apto.'));
+}, 'Balaústre finalizado e marcado como apto para votação.'));
 
 document.getElementById('btn-balaustre-abrir').addEventListener('click', () => acaoMiniapp('/api/miniapp/secretaria/balaustre/abrir-votacao', {
     balaustre_id: dashboard?.balaustre_foco?.id || 0
@@ -406,6 +409,16 @@ document.getElementById('btn-salvar-publicacao').addEventListener('click', () =>
 }, 'Publicação registrada com sucesso.'));
 
 carregar();
+
+const foco = new URLSearchParams(window.location.search).get('foco');
+if (foco === 'balaustre') {
+    setTimeout(() => {
+        const alvo = document.getElementById('card-balaustre');
+        if (alvo) {
+            alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 250);
+}
 </script>
 </body>
 </html>

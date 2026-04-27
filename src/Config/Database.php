@@ -24,7 +24,9 @@ class Database
                 self::$instance = new PDO($dsn, $user, $password, [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::ATTR_EMULATE_PREPARES => false,
+                    // Supabase pooler (transaction mode) pode invalidar prepared statements entre requests.
+                    // Emular prepares no cliente evita erro "prepared statement does not exist" em produção.
+                    PDO::ATTR_EMULATE_PREPARES => true,
                 ]);
             } catch (PDOException $e) {
                 // Registrar no log o motivo exato de o banco estar rejeitando

@@ -461,7 +461,7 @@ class CommandHandler
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/orador')]],
+                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/orador')]],
                 ],
                 [
                     ['text' => 'Voltar', 'callback_data' => 'start_menu'],
@@ -484,7 +484,7 @@ class CommandHandler
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/mestre-banquetes')]],
+                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/mestre-banquetes')]],
                 ],
                 [
                     ['text' => 'Voltar', 'callback_data' => 'start_menu'],
@@ -507,7 +507,7 @@ class CommandHandler
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/mestre-harmonia')]],
+                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/mestre-harmonia')]],
                 ],
                 [
                     ['text' => 'Voltar', 'callback_data' => 'start_menu'],
@@ -530,7 +530,7 @@ class CommandHandler
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/veneravel')]],
+                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
                     ['text' => 'Venerável Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
                 ],
                 [
@@ -1146,10 +1146,10 @@ class CommandHandler
                     ['text' => 'Aprovar e Enviar p/ Grupo', 'callback_data' => 'chancelaria_aprovar_efemeride'],
                 ],
                 [
-                    ['text' => 'Revisar Mensagem', 'web_app' => ['url' => $this->buildAppUrl('/chancelaria/efemerides?foco=mensagem')]],
+                    ['text' => 'Revisar Mensagem', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/chanceler?foco=mensagem')]],
                 ],
                 [
-                    ['text' => 'Corrigir Dados', 'web_app' => ['url' => $this->buildAppUrl('/chancelaria/efemerides?foco=dados')]],
+                    ['text' => 'Corrigir Dados', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/chanceler?foco=dados')]],
                 ],
                 [
                     ['text' => 'Voltar', 'callback_data' => 'admin_chancelaria'],
@@ -1720,17 +1720,18 @@ class CommandHandler
         $mensagem = "*Painel da Secretaria*\n\nSelecione uma opção para continuar:";
         $botoes = [
             [
-                ['text' => 'Painel Web da Secretaria', 'web_app' => ['url' => $this->buildAppUrl('/secretaria')]],
                 ['text' => 'Secretaria Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria')]],
+                ['text' => 'Sessão em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria?foco=balaustre')]],
             ],
             [
                 ['text' => 'Agendas e Sessões', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria')]],
+                ['text' => 'Publicações', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria')]],
             ],
         ];
 
         if ($this->isDev($fromId) || $this->obreiroHasRole($obreiro, 'admin', 'veneravel')) {
             $botoes[] = [
-                ['text' => 'Painel do Venerável Mestre', 'web_app' => ['url' => $this->buildAppUrl('/veneravel')]],
+                ['text' => 'Painel do Venerável Mestre', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
                 ['text' => 'Venerável Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
             ];
         }
@@ -1762,7 +1763,7 @@ class CommandHandler
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => 'Abrir painel de Assistencia', 'web_app' => ['url' => $this->buildAppUrl('/assistencia')]],
+                    ['text' => 'Assistência em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/hospitaleiro')]],
                     ['text' => 'Hospitaleiro Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/hospitaleiro')]],
                 ],
                 [
@@ -1788,7 +1789,7 @@ class CommandHandler
                     'inline_keyboard' => [
                         [
                             ['text' => 'Secretaria Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria')]],
-                            ['text' => 'Painel Web', 'web_app' => ['url' => $this->buildAppUrl('/secretaria')]],
+                            ['text' => 'Sessão em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria?foco=balaustre')]],
                         ],
                         [
                             ['text' => 'Voltar', 'callback_data' => 'secretaria_menu'],
