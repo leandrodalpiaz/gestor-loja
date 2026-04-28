@@ -5,6 +5,7 @@ namespace App\Core\Http;
 use App\Controllers\ChancelerSessaoController;
 use App\Controllers\MestreBanquetesController;
 use App\Controllers\OradorController;
+use App\Controllers\PwaBibliotecaController;
 use App\Controllers\PwaSessoesController;
 use App\Controllers\VeneravelController;
 use App\Core\Authorization\Authorizer;
@@ -110,6 +111,18 @@ class PainelRoutes
                     WebGuards::forbidHtml('Recurso indisponível.');
                 }
                 (new PwaSessoesController())->atualizar();
+                return true;
+
+            case '/pwa/biblioteca':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('biblioteca.self') || $authorizer->hasPermission('biblioteca.manage'),
+                    'Acesso restrito ao módulo Biblioteca.'
+                );
+                if (!FeatureFlags::pwaBiblioteca()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaBibliotecaController())->index();
                 return true;
 
             case '/veneravel/sessoes/publicar':
