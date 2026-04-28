@@ -31,7 +31,7 @@ class Presenca
         $statusNormalizado = $this->normalizarStatus($status);
 
         $stmt = $this->db->prepare("
-            INSERT INTO public.confirmacoes_sessao (
+            INSERT INTO confirmacoes_sessao (
                 sessao_id,
                 obreiro_id,
                 status_confirmacao,
@@ -48,7 +48,7 @@ class Presenca
                 :observacao,
                 NOW(),
                 NOW()
-            FROM public.sessoes s
+            FROM sessoes s
             WHERE s.id = :sessao_id
               AND s.loja_id = :loja_id
             ON CONFLICT (sessao_id, obreiro_id)
@@ -73,12 +73,12 @@ class Presenca
     public function cancelar(int $sessaoId, string $obreiroId, ?string $observacao = null): bool
     {
         $stmt = $this->db->prepare("
-            DELETE FROM public.confirmacoes_sessao
+            DELETE FROM confirmacoes_sessao
             WHERE sessao_id = :sessao_id
               AND obreiro_id = :obreiro_id
               AND EXISTS (
                   SELECT 1
-                  FROM public.sessoes s
+                  FROM sessoes s
                   WHERE s.id = :sessao_id
                     AND s.loja_id = :loja_id
               )
@@ -95,12 +95,12 @@ class Presenca
     {
         $stmt = $this->db->prepare("
             SELECT *
-            FROM public.confirmacoes_sessao
+            FROM confirmacoes_sessao
             WHERE sessao_id = :sessao_id
               AND obreiro_id = :obreiro_id
               AND EXISTS (
                   SELECT 1
-                  FROM public.sessoes s
+                  FROM sessoes s
                   WHERE s.id = :sessao_id
                     AND s.loja_id = :loja_id
               )
@@ -129,9 +129,9 @@ class Presenca
                 cs.respondido_em,
                 COALESCE(o.nome_historico, o.nome) AS nome,
                 o.cim
-            FROM public.confirmacoes_sessao cs
-            JOIN public.sessoes s ON s.id = cs.sessao_id
-            JOIN public.obreiros o ON o.id = cs.obreiro_id
+            FROM confirmacoes_sessao cs
+            JOIN sessoes s ON s.id = cs.sessao_id
+            JOIN obreiros o ON o.id = cs.obreiro_id
             WHERE cs.sessao_id = :sessao_id
               AND s.loja_id = :loja_id
               AND cs.status_confirmacao = 'confirmado'
@@ -149,8 +149,8 @@ class Presenca
     {
         $stmt = $this->db->prepare("
             SELECT COUNT(*)
-            FROM public.confirmacoes_sessao cs
-            JOIN public.sessoes s ON s.id = cs.sessao_id
+            FROM confirmacoes_sessao cs
+            JOIN sessoes s ON s.id = cs.sessao_id
             WHERE cs.sessao_id = :sessao_id
               AND s.loja_id = :loja_id
               AND status_confirmacao = 'ausente'
@@ -174,9 +174,9 @@ class Presenca
                 cs.respondido_em,
                 COALESCE(o.nome_historico, o.nome) AS nome,
                 o.cim
-            FROM public.confirmacoes_sessao cs
-            JOIN public.sessoes s ON s.id = cs.sessao_id
-            JOIN public.obreiros o ON o.id = cs.obreiro_id
+            FROM confirmacoes_sessao cs
+            JOIN sessoes s ON s.id = cs.sessao_id
+            JOIN obreiros o ON o.id = cs.obreiro_id
             WHERE cs.sessao_id = :sessao_id
               AND s.loja_id = :loja_id
               AND cs.status_confirmacao = 'confirmado'
@@ -195,8 +195,8 @@ class Presenca
     {
         $stmt = $this->db->prepare("
             SELECT COUNT(*)
-            FROM public.confirmacoes_sessao cs
-            JOIN public.sessoes s ON s.id = cs.sessao_id
+            FROM confirmacoes_sessao cs
+            JOIN sessoes s ON s.id = cs.sessao_id
             WHERE cs.sessao_id = :sessao_id
               AND s.loja_id = :loja_id
               AND status_confirmacao = 'confirmado'
@@ -214,8 +214,8 @@ class Presenca
     {
         $stmt = $this->db->prepare("
             SELECT COUNT(*)
-            FROM public.confirmacoes_sessao cs
-            JOIN public.sessoes s ON s.id = cs.sessao_id
+            FROM confirmacoes_sessao cs
+            JOIN sessoes s ON s.id = cs.sessao_id
             WHERE cs.sessao_id = :sessao_id
               AND s.loja_id = :loja_id
               AND status_confirmacao = 'confirmado'

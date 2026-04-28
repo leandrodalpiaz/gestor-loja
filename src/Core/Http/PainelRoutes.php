@@ -5,9 +5,11 @@ namespace App\Core\Http;
 use App\Controllers\ChancelerSessaoController;
 use App\Controllers\MestreBanquetesController;
 use App\Controllers\OradorController;
+use App\Controllers\PwaSessoesController;
 use App\Controllers\VeneravelController;
 use App\Core\Authorization\Authorizer;
 use App\Core\Tenant\TenantAssetResolver;
+use App\Config\FeatureFlags;
 use App\Models\ConfiguracaoLoja;
 use App\Models\Obreiro;
 use App\Models\Presenca;
@@ -92,6 +94,22 @@ class PainelRoutes
             case '/chanceler/sessao/presenca':
                 self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
                 (new ChancelerSessaoController())->registrarPresenca();
+                return true;
+
+            case '/pwa/sessoes':
+                WebGuards::requireLogin($openTestAccess, $session);
+                if (!FeatureFlags::pwaSessoes()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaSessoesController())->index();
+                return true;
+
+            case '/pwa/sessoes/atualizar':
+                WebGuards::requireLogin($openTestAccess, $session);
+                if (!FeatureFlags::pwaSessoes()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaSessoesController())->atualizar();
                 return true;
 
             case '/veneravel/sessoes/publicar':

@@ -47,21 +47,21 @@ class Sessao
                 COALESCE(confirmados.total_ausentes, 0) AS total_ausentes,
                 COALESCE(confirmados.total_agape, 0) AS total_agape,
                 COALESCE(presentes.total_presentes, 0) AS total_presentes
-            FROM public.sessoes s
+            FROM sessoes s
             LEFT JOIN (
                 SELECT
                     sessao_id,
                     COUNT(*) FILTER (WHERE status_confirmacao = 'confirmado') AS total_confirmados,
                     COUNT(*) FILTER (WHERE status_confirmacao = 'ausente') AS total_ausentes,
                     COUNT(*) FILTER (WHERE status_confirmacao = 'confirmado' AND participara_agape = TRUE) AS total_agape
-                FROM public.confirmacoes_sessao
+                FROM confirmacoes_sessao
                 GROUP BY sessao_id
             ) confirmados ON confirmados.sessao_id = s.id
             LEFT JOIN (
                 SELECT
                     sessao_id,
                     COUNT(*) FILTER (WHERE presente = TRUE) AS total_presentes
-                FROM public.presencas_sessao
+                FROM presencas_sessao
                 GROUP BY sessao_id
             ) presentes ON presentes.sessao_id = s.id
             WHERE s.id = :id
@@ -106,7 +106,7 @@ class Sessao
                 status,
                 agape_ativo,
                 publicada_em
-            FROM public.sessoes
+            FROM sessoes
             WHERE data_hora_inicio >= NOW()
               AND loja_id = :loja_id
               AND status IN ('planejada', 'publicada', 'alterada')
@@ -149,13 +149,13 @@ class Sessao
                 s.agape_ativo,
                 COALESCE(confirmados.total_confirmados, 0) AS total_confirmados,
                 COALESCE(confirmados.total_agape, 0) AS total_agape
-            FROM public.sessoes s
+            FROM sessoes s
             LEFT JOIN (
                 SELECT
                     sessao_id,
                     COUNT(*) FILTER (WHERE status_confirmacao = 'confirmado') AS total_confirmados,
                     COUNT(*) FILTER (WHERE status_confirmacao = 'confirmado' AND participara_agape = TRUE) AS total_agape
-                FROM public.confirmacoes_sessao
+                FROM confirmacoes_sessao
                 GROUP BY sessao_id
             ) confirmados ON confirmados.sessao_id = s.id
             WHERE s.data_hora_inicio >= NOW()
@@ -175,7 +175,7 @@ class Sessao
     {
         $payload = $this->normalizarPayload($data);
         $sql = "
-            INSERT INTO public.sessoes (
+            INSERT INTO sessoes (
                 loja_id,
                 data,
                 grau,
@@ -313,7 +313,7 @@ class Sessao
         $status = $anterior['status'] === 'publicada' ? 'alterada' : ($payload['status'] ?? $anterior['status']);
 
         $stmt = $this->db->prepare("
-            UPDATE public.sessoes
+            UPDATE sessoes
                SET data = :data_legado,
                    grau = :grau_legado,
                    tipo = :tipo_legado,
@@ -406,7 +406,7 @@ class Sessao
         }
 
         $stmt = $this->db->prepare("
-            UPDATE public.sessoes
+            UPDATE sessoes
                SET status = 'cancelada',
                    cancelada_em = NOW(),
                    atualizada_por = :atualizada_por,
@@ -436,7 +436,7 @@ class Sessao
         }
 
         $stmt = $this->db->prepare("
-            UPDATE public.sessoes
+            UPDATE sessoes
                SET status = CASE WHEN publicada_em IS NULL THEN 'planejada' ELSE 'alterada' END,
                    cancelada_em = NULL,
                    atualizada_por = :atualizada_por,
@@ -466,7 +466,7 @@ class Sessao
         }
 
         $stmt = $this->db->prepare("
-            UPDATE public.sessoes
+            UPDATE sessoes
                SET status = 'publicada',
                    publicada_em = COALESCE(publicada_em, NOW()),
                    publicado_por = COALESCE(publicado_por, :publicado_por),
@@ -498,7 +498,7 @@ class Sessao
         }
 
         $stmt = $this->db->prepare("
-            UPDATE public.sessoes
+            UPDATE sessoes
                SET status = 'realizada',
                    realizada_em = NOW(),
                    atualizada_por = :atualizada_por,
@@ -543,9 +543,9 @@ class Sessao
             SELECT
                 h.*,
                 COALESCE(o.nome_historico, o.nome) AS autor_nome
-            FROM public.historico_sessao h
-            JOIN public.sessoes s ON s.id = h.sessao_id
-            LEFT JOIN public.obreiros o ON o.id = h.autor_id
+            FROM historico_sessao h
+            JOIN sessoes s ON s.id = h.sessao_id
+            LEFT JOIN obreiros o ON o.id = h.autor_id
             WHERE h.sessao_id = :sessao_id
               AND s.loja_id = :loja_id
             ORDER BY h.created_at DESC, h.id DESC
@@ -572,7 +572,7 @@ class Sessao
 
         $stmt = $this->db->prepare("
             SELECT id, titulo, data_hora_inicio, status
-            FROM public.sessoes
+            FROM sessoes
             WHERE COALESCE(status, 'planejada') <> 'cancelada'
               AND loja_id = :loja_id
               AND DATE(data_hora_inicio AT TIME ZONE 'America/Sao_Paulo') = :dia
@@ -716,7 +716,7 @@ class Sessao
     ): void {
         try {
             $stmt = $this->db->prepare("
-                INSERT INTO public.historico_sessao (
+                INSERT INTO historico_sessao (
                     sessao_id,
                     acao,
                     valor_anterior,
