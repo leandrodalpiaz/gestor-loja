@@ -28,12 +28,24 @@ if (!is_file(__DIR__ . $iconSvg)) {
 echo json_encode([
     'name' => $name,
     'short_name' => $shortName,
-    'start_url' => '/dashboard',
+    'start_url' => '/pwa',
     'scope' => '/',
     'display' => 'standalone',
     'theme_color' => $themeColor,
     'background_color' => $backgroundColor,
     'icons' => [
+        [
+            'src' => '/assets/pwa/icon-192.png',
+            'sizes' => '192x192',
+            'type' => 'image/png',
+            'purpose' => 'any maskable',
+        ],
+        [
+            'src' => '/assets/pwa/icon-512.png',
+            'sizes' => '512x512',
+            'type' => 'image/png',
+            'purpose' => 'any maskable',
+        ],
         [
             'src' => $iconSvg,
             'sizes' => 'any',
