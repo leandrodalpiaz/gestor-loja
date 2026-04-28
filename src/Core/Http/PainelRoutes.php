@@ -6,6 +6,7 @@ use App\Controllers\ChancelerSessaoController;
 use App\Controllers\MestreBanquetesController;
 use App\Controllers\OradorController;
 use App\Controllers\PwaBibliotecaController;
+use App\Controllers\PwaComunicacaoController;
 use App\Controllers\PwaSessoesController;
 use App\Controllers\VeneravelController;
 use App\Core\Authorization\Authorizer;
@@ -123,6 +124,24 @@ class PainelRoutes
                     WebGuards::forbidHtml('Recurso indisponível.');
                 }
                 (new PwaBibliotecaController())->index();
+                return true;
+
+            case '/pwa/comunicacao':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Acesso restrito ao painel.');
+                if (!FeatureFlags::pwaComunicacao()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaComunicacaoController())->index();
+                return true;
+
+            case '/pwa/comunicacao/ler':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Acesso restrito ao painel.');
+                if (!FeatureFlags::pwaComunicacao()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaComunicacaoController())->ler();
                 return true;
 
             case '/veneravel/sessoes/publicar':
