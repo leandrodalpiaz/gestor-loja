@@ -603,8 +603,8 @@ class CommandHandler
                 'text' => '/painel',
             ],
         ], $this->getAppBaseUrl());
-                \ = "Bem-vindo ao painel da Loja, meu Irmão!" . \->privateMenuHint();
-        \ = [
+                $mensagem = "Bem-vindo ao painel da Loja, meu Irmão!" . $this->privateMenuHint();
+        $teclado = [
             'inline_keyboard' => [
                 [
                     ['text' => 'Meu cadastro', 'callback_data' => 'menu_meu_cadastro'],
@@ -614,21 +614,21 @@ class CommandHandler
                     ['text' => 'Abrir PWA', 'web_app' => ['url' => $this->buildAppUrl('/pwa')]],
                 ],
                 array_values(array_filter([
-                    \App\Config\FeatureFlags::pwaSessoes() ? ['text' => 'Sessões (PWA)', 'web_app' => ['url' => \->buildAppUrl('/pwa/sessoes')]] : null,
-                    \App\Config\FeatureFlags::pwaBiblioteca() ? ['text' => 'Biblioteca (PWA)', 'web_app' => ['url' => \->buildAppUrl('/pwa/biblioteca')]] : null,
+                    \App\Config\FeatureFlags::pwaSessoes() ? ['text' => 'Sessões (PWA)', 'web_app' => ['url' => $this->buildAppUrl('/pwa/sessoes')]] : null,
+                    \App\Config\FeatureFlags::pwaBiblioteca() ? ['text' => 'Biblioteca (PWA)', 'web_app' => ['url' => $this->buildAppUrl('/pwa/biblioteca')]] : null,
                 ])),
                 array_values(array_filter([
-                    \App\Config\FeatureFlags::pwaComunicacao() ? ['text' => 'Comunicados (PWA)', 'web_app' => ['url' => \->buildAppUrl('/pwa/comunicacao')]] : null,
+                    \App\Config\FeatureFlags::pwaComunicacao() ? ['text' => 'Comunicados (PWA)', 'web_app' => ['url' => $this->buildAppUrl('/pwa/comunicacao')]] : null,
+                    \App\Config\FeatureFlags::pwaAdminCrud() ? ['text' => 'Admin (PWA)', 'web_app' => ['url' => $this->buildAppUrl('/pwa/admin')]] : null,
                 ])),
                 [
                     ['text' => 'Ajuda / contato', 'callback_data' => 'menu_ajuda_contato'],
                 ],
             ],
         ];
-
-        \['inline_keyboard'] = array_values(array_filter(
-            \['inline_keyboard'],
-            static fn (\): bool => is_array(\) && \ !== []
+        $teclado['inline_keyboard'] = array_values(array_filter(
+            $teclado['inline_keyboard'],
+            static fn ($row): bool => is_array($row) && $row !== []
         ));
 
         if ($isDev || $this->obreiroHasPermission($obreiro, 'chancelaria.manage')) {
