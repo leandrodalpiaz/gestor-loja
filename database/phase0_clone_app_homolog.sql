@@ -1,23 +1,14 @@
--- Phase 0 helper: clonar estrutura do schema `public` para um schema de ambiente (ex.: app_dev/app_homolog/app_prod).
--- Uso recomendado:
--- 1) Rode o isolamento (`database/phase0_isolation.sql`)
--- 2) Crie/copiar estrutura para o schema alvo (este arquivo)
--- 3) Aponte a aplicação para o schema via `DB_SCHEMA`
---
--- IMPORTANTE:
--- - Este script clona APENAS estrutura (tabelas, sequences, defaults), não copia dados.
--- - Edite a variável `target_schema` antes de executar.
--- - Execute como owner/admin no Supabase SQL Editor.
+-- Clona estrutura do schema `public` para `app_homolog`.
+-- Execute no Supabase SQL Editor após phase0_isolation.sql.
 
 do $$
 declare
-  target_schema text := 'app_dev'; -- <-- TROQUE AQUI: app_dev | app_homolog | app_prod
+  target_schema text := 'app_homolog';
   src_schema text := 'public';
   rec record;
 begin
   execute format('create schema if not exists %I', target_schema);
 
-  -- Sequences
   for rec in
     select sequence_name
     from information_schema.sequences
@@ -26,7 +17,6 @@ begin
     execute format('create sequence if not exists %I.%I', target_schema, rec.sequence_name);
   end loop;
 
-  -- Tables (structure, constraints, indexes, defaults)
   for rec in
     select tablename
     from pg_tables
@@ -39,7 +29,6 @@ begin
     );
   end loop;
 
-  -- Fix default sequence ownership for serial/bigserial columns cloned above
   for rec in
     select
       n.nspname as seq_schema,
@@ -57,11 +46,9 @@ begin
       and s.relkind = 'S'
       and t.relkind = 'r'
   loop
-    -- try to rebind the sequence in target schema to the target table/column if both exist
     execute format(
       'alter sequence if exists %I.%I owned by %I.%I.%I',
       target_schema, rec.seq_name, target_schema, rec.tbl_name, rec.col_name
     );
   end loop;
 end $$;
-

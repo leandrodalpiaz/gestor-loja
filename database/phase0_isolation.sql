@@ -28,24 +28,6 @@ begin
   end if;
 end $$;
 
--- Usuários de aplicação (login). Troque as senhas.
-do $$
-begin
-  if not exists (select 1 from pg_roles where rolname = 'user_prod_app') then
-    create role user_prod_app login password 'TROQUE_ESTA_SENHA';
-  end if;
-  if not exists (select 1 from pg_roles where rolname = 'user_homolog_app') then
-    create role user_homolog_app login password 'TROQUE_ESTA_SENHA';
-  end if;
-  if not exists (select 1 from pg_roles where rolname = 'user_dev_app') then
-    create role user_dev_app login password 'TROQUE_ESTA_SENHA';
-  end if;
-end $$;
-
-grant role_prod_app to user_prod_app;
-grant role_homolog_app to user_homolog_app;
-grant role_dev_app to user_dev_app;
-
 -- Permissões por schema: uso + objetos futuros
 grant usage on schema app_prod to role_prod_app;
 grant usage on schema app_homolog to role_homolog_app;
