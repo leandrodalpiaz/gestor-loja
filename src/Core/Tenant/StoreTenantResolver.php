@@ -64,7 +64,7 @@ class StoreTenantResolver
     {
         $stmt = $this->db->query(
             "SELECT id, numero_loja, sigla, nome
-             FROM public.lojas
+             FROM lojas
              ORDER BY id
              LIMIT 2"
         );
@@ -85,7 +85,7 @@ class StoreTenantResolver
 
         $stmt = $this->db->prepare(
             "SELECT id, numero_loja, sigla, nome
-             FROM public.lojas
+             FROM lojas
              WHERE id = :id
              LIMIT 1"
         );
@@ -109,7 +109,7 @@ class StoreTenantResolver
 
         $stmt = $this->db->prepare(
             "SELECT id, numero_loja, sigla, nome
-             FROM public.lojas
+             FROM lojas
              WHERE LOWER(sigla) = LOWER(:slug)
                 OR LOWER(numero_loja) = LOWER(:slug)
                 OR LOWER(REPLACE(nome, ' ', '-')) = LOWER(:slug)
@@ -136,7 +136,7 @@ class StoreTenantResolver
 
         $stmt = $this->db->prepare(
             "SELECT id, numero_loja, sigla, nome
-             FROM public.lojas
+             FROM lojas
              WHERE numero_loja = :numero
              LIMIT 1"
         );
