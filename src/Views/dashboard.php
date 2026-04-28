@@ -155,14 +155,15 @@ if ($canChancelaria || $canVeneravel || $adminLivre) {
 if ($canSecretaria || $canVeneravel || $adminLivre) {
     $secoes[] = [
         'titulo' => 'Secretaria',
-        'descricao' => 'Sessões, votações e acompanhamento administrativo.',
+        'descricao' => 'Cadastros, sessões, balaústres e relatórios sob responsabilidade da Secretaria.',
         'itens' => [
-            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
-            ['label' => 'Central de obreiros', 'href' => '/obreiros'],
-            ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
-            ['label' => 'Acessos', 'href' => '/admin/acessos'],
-            ['label' => 'Sessões', 'href' => '/secretaria'],
+            ['label' => 'Painel da Secretaria', 'href' => '/secretaria'],
             ['label' => 'Balaústres / votação', 'href' => '/secretaria/votacao'],
+            ['label' => 'Relatório anual', 'href' => '/secretaria/relatorio-anual'],
+            ['label' => 'Central de obreiros', 'href' => '/obreiros'],
+            ['label' => 'Nominata oficial (cargos)', 'href' => '/admin/cargos'],
+            ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
+            ['label' => 'Acessos e permissões', 'href' => '/admin/acessos'],
         ],
     ];
 }
@@ -801,11 +802,18 @@ require __DIR__ . '/partials/erp_head.php';
             </section>
         <?php endif; ?>
 
-        <section class="mt-8 grid gap-6 xl:grid-cols-12">
+        <section class="mt-8">
+            <div class="rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
+                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Perfis e rotinas</div>
+                <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Menus por cargo</h2>
+                <p class="mt-2 text-sm text-slate-600">Cada seção agrupa as rotinas do respectivo cargo. Se você acumula permissões (admin/venerável), verá mais seções.</p>
+            </div>
+
+            <div class="mt-6 grid gap-6 xl:grid-cols-12">
             <?php foreach ($secoes as $secao): ?>
                     <article class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm xl:col-span-6 2xl:col-span-4">
                         <div class="border-b border-slate-100 bg-slate-50 px-6 py-5">
-                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"><?= htmlspecialchars($secao['titulo']) ?></div>
+                            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Cargo</div>
                             <h2 class="mt-2 text-2xl font-semibold text-erp-navy"><?= htmlspecialchars($secao['titulo']) ?></h2>
                         <p class="mt-2 text-sm leading-6 text-slate-600"><?= htmlspecialchars($secao['descricao']) ?></p>
                     </div>
@@ -819,6 +827,7 @@ require __DIR__ . '/partials/erp_head.php';
                     </div>
                 </article>
             <?php endforeach; ?>
+            </div>
         </section>
 
         <section class="mt-8 rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
