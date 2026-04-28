@@ -107,6 +107,14 @@ if ($appEnv === '') {
     $appEnv = in_array($appUrlHost, ['localhost', '127.0.0.1'], true) ? 'local' : 'production';
 }
 $isLocalEnvironment = in_array($appEnv, ['local', 'development', 'dev'], true);
+
+// Guardrail: evita rodar ambientes não-prod apontando para schema de produção.
+$dbSchema = strtolower(trim((string) ($_ENV['DB_SCHEMA'] ?? '')));
+if ($dbSchema !== '' && $appEnv !== 'production' && $dbSchema === 'app_prod') {
+    http_response_code(500);
+    echo 'Configuração insegura: APP_ENV=' . htmlspecialchars($appEnv) . ' não pode usar DB_SCHEMA=app_prod.';
+    exit;
+}
 $resolveTelegramGroupId = static function (): string {
     $candidates = [
         trim((string) ($_ENV['TELEGRAM_CHAT_ID_GROUP'] ?? '')),
