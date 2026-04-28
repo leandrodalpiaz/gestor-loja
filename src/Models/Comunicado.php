@@ -116,5 +116,49 @@ class Comunicado
 
         return (bool) $stmt->fetchColumn();
     }
-}
 
+    public function criar(array $dados, ?string $autorId = null): ?int
+    {
+        $titulo = trim((string) ($dados['titulo'] ?? ''));
+        $conteudo = trim((string) ($dados['conteudo'] ?? ''));
+        $categoria = trim((string) ($dados['categoria'] ?? 'geral'));
+
+        if ($titulo === '' || $conteudo === '') {
+            return null;
+        }
+
+        $stmt = $this->db->prepare("
+            INSERT INTO comunicados (
+                loja_id,
+                titulo,
+                conteudo,
+                categoria,
+                publicado,
+                publicado_em,
+                criado_por,
+                updated_at
+            ) VALUES (
+                :loja_id,
+                :titulo,
+                :conteudo,
+                :categoria,
+                TRUE,
+                NOW(),
+                :criado_por,
+                NOW()
+            )
+            RETURNING id
+        ");
+
+        $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
+            'titulo' => $titulo,
+            'conteudo' => $conteudo,
+            'categoria' => $categoria !== '' ? $categoria : 'geral',
+            'criado_por' => $autorId,
+        ]);
+
+        $id = $stmt->fetchColumn();
+        return $id !== false ? (int) $id : null;
+    }
+}

@@ -31,6 +31,12 @@ $usuarioCargo = (string) ($_SESSION['usuario_cargo'] ?? '');
     </header>
 
     <main class="mx-auto max-w-3xl px-4 py-6 space-y-4">
+        <?php if (!empty($_SESSION['usuario_cargo']) && in_array((string) $_SESSION['usuario_cargo'], ['secretario', 'admin', 'veneravel'], true)): ?>
+            <a href="/pwa/comunicacao/novo" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700">
+                Novo comunicado
+            </a>
+        <?php endif; ?>
+
         <?php if ($erroDb): ?>
             <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
                 <?= htmlspecialchars((string) $erroDb) ?>

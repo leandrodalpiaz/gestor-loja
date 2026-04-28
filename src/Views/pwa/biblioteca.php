@@ -102,10 +102,14 @@ $usuarioCargo = (string) ($_SESSION['usuario_cargo'] ?? '');
                                class="w-full rounded-lg bg-blue-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-blue-700">
                                 Ver detalhes
                             </a>
-                            <a href="/biblioteca"
-                               class="w-full rounded-lg bg-slate-100 px-4 py-3 text-center text-sm font-semibold text-slate-800 hover:bg-slate-200">
-                                Abrir módulo completo
-                            </a>
+                            <form method="post" action="/biblioteca/solicitar" class="w-full">
+                                <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
+                                <input type="hidden" name="scope" value="<?= htmlspecialchars($catalogScope) ?>">
+                                <input type="hidden" name="loja_id" value="<?= (int) ($item['loja_id'] ?? 0) ?>">
+                                <button class="w-full rounded-lg bg-emerald-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-emerald-700" <?= $disponivel ? '' : 'disabled' ?>>
+                                    <?= $disponivel ? 'Solicitar empréstimo' : 'Indisponível' ?>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 <?php endforeach; ?>

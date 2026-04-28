@@ -59,5 +59,50 @@ class PwaComunicacaoController
 
         require __DIR__ . '/../Views/pwa/comunicacao_ler.php';
     }
-}
 
+    public function novo(): void
+    {
+        if (!FeatureFlags::pwaComunicacao()) {
+            http_response_code(404);
+            echo 'Recurso indisponível.';
+            return;
+        }
+
+        $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
+        $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
+        unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
+
+        $erroDb = null;
+        $payload = [
+            'titulo' => '',
+            'categoria' => 'geral',
+            'conteudo' => '',
+        ];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $payload = [
+                'titulo' => trim((string) ($_POST['titulo'] ?? '')),
+                'categoria' => trim((string) ($_POST['categoria'] ?? 'geral')),
+                'conteudo' => trim((string) ($_POST['conteudo'] ?? '')),
+            ];
+
+            try {
+                $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+                $id = (new Comunicado())->criar($payload, $autorId !== '' && $autorId !== '0' ? $autorId : null);
+                if ($id) {
+                    $_SESSION['mensagem_sucesso'] = 'Comunicado publicado com sucesso.';
+                    header('Location: /pwa/comunicacao/ler?id=' . urlencode((string) $id));
+                    exit;
+                }
+
+                $mensagemErro = 'Preencha título e conteúdo.';
+            } catch (\Throwable $e) {
+                $erroDb = 'Módulo ainda não inicializado no banco deste ambiente.';
+                error_log('Falha ao criar comunicado: ' . $e->getMessage());
+                $mensagemErro = 'Não foi possível publicar agora.';
+            }
+        }
+
+        require __DIR__ . '/../Views/pwa/comunicacao_novo.php';
+    }
+}

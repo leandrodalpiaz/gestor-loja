@@ -145,6 +145,18 @@ class PainelRoutes
                 (new PwaComunicacaoController())->ler();
                 return true;
 
+            case '/pwa/comunicacao/novo':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('secretaria.manage') || $authorizer->hasPermission('admin.cargos.view'),
+                    'Acesso restrito à publicação de comunicados.'
+                );
+                if (!FeatureFlags::pwaComunicacao()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaComunicacaoController())->novo();
+                return true;
+
             case '/pwa':
                 WebGuards::requireLogin($openTestAccess, $session);
                 WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Acesso restrito ao painel.');
