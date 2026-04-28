@@ -3,6 +3,7 @@
 namespace App\Bot;
 
 use App\Config\Env;
+use App\Config\AppEnv;
 
 class TelegramClient
 {
@@ -63,6 +64,11 @@ class TelegramClient
 
     public function sendMessage(int|string $chatId, string $text, array $options = []): bool
     {
+        if (AppEnv::telegramDryRun()) {
+            error_log('[telegram][dry-run] sendMessage chat_id=' . $chatId . ' text_len=' . strlen($text));
+            return true;
+        }
+
         $text = $this->normalizeMojibake($text);
         $options = $this->normalizeArrayStrings($options);
 
@@ -112,6 +118,11 @@ class TelegramClient
 
     public function answerCallbackQuery(string $callbackQueryId, string $text = ''): bool
     {
+        if (AppEnv::telegramDryRun()) {
+            error_log('[telegram][dry-run] answerCallbackQuery id=' . $callbackQueryId . ' text_len=' . strlen($text));
+            return true;
+        }
+
         $data = [
             'callback_query_id' => $callbackQueryId
         ];
@@ -140,6 +151,11 @@ class TelegramClient
     }
 
     public function sendPhoto($chatId, $photoPath, $caption = '') {
+        if (AppEnv::telegramDryRun()) {
+            error_log('[telegram][dry-run] sendPhoto chat_id=' . $chatId . ' photo=' . (string) $photoPath);
+            return true;
+        }
+
         $url = "https://api.telegram.org/bot" . $this->botToken . "/sendPhoto";
 
         if (!file_exists($photoPath)) {

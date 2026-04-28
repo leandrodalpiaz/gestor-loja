@@ -17,6 +17,7 @@ class Database
             $dbName = Env::get('DB_NAME', 'postgres');
             $user = Env::get('DB_USER', 'postgres');
             $password = Env::get('DB_PASS', '');
+            $schema = trim((string) Env::get('DB_SCHEMA', ''));
 
             $dsn = "pgsql:host={$host};port={$port};dbname={$dbName};options='--client_encoding=UTF8'";
 
@@ -28,6 +29,10 @@ class Database
                     // Emular prepares no cliente evita erro "prepared statement does not exist" em produção.
                     PDO::ATTR_EMULATE_PREPARES => true,
                 ]);
+
+                if ($schema !== '') {
+                    self::$instance->exec("SET search_path TO " . self::quoteIdentifier($schema) . ", public");
+                }
             } catch (PDOException $e) {
                 // Registrar no log o motivo exato de o banco estar rejeitando
                 error_log("FALHA CRÍTICA NO PDO: " . $e->getMessage() . " | DSN: " . $dsn);
@@ -36,5 +41,10 @@ class Database
         }
 
         return self::$instance;
+    }
+
+    private static function quoteIdentifier(string $identifier): string
+    {
+        return '"' . str_replace('"', '""', $identifier) . '"';
     }
 }

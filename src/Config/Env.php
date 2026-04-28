@@ -36,4 +36,23 @@ class Env
         }
         return $value;
     }
+
+    public static function bool(string $key, bool $default = false): bool
+    {
+        $raw = self::get($key, null);
+        if ($raw === null) {
+            return $default;
+        }
+
+        if (is_bool($raw)) {
+            return $raw;
+        }
+
+        $value = strtolower(trim((string) $raw));
+        if ($value === '') {
+            return $default;
+        }
+
+        return in_array($value, ['1', 'true', 'yes', 'y', 'on'], true);
+    }
 }
