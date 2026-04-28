@@ -127,6 +127,18 @@ class PainelRoutes
                 (new PwaBibliotecaController())->index();
                 return true;
 
+            case '/pwa/biblioteca/meus-emprestimos':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('biblioteca.self') || $authorizer->hasPermission('biblioteca.manage'),
+                    'Acesso restrito ao módulo Biblioteca.'
+                );
+                if (!FeatureFlags::pwaBiblioteca()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaBibliotecaController())->meusEmprestimos();
+                return true;
+
             case '/pwa/comunicacao':
                 WebGuards::requireLogin($openTestAccess, $session);
                 WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Acesso restrito ao painel.');

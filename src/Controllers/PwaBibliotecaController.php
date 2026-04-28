@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Config\FeatureFlags;
 use App\Models\Acervo;
 use App\Models\BibliotecaLojaConfig;
+use App\Models\Emprestimo;
 
 class PwaBibliotecaController
 {
@@ -58,5 +59,33 @@ class PwaBibliotecaController
 
         require __DIR__ . '/../Views/pwa/biblioteca.php';
     }
-}
 
+    public function meusEmprestimos(): void
+    {
+        if (!FeatureFlags::pwaBiblioteca()) {
+            http_response_code(404);
+            echo 'Recurso indisponível.';
+            return;
+        }
+
+        $usuarioId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        if ($usuarioId === '' || $usuarioId === '0') {
+            $_SESSION['mensagem_erro'] = 'Faça login como obreiro real para ver empréstimos.';
+            header('Location: /pwa/biblioteca');
+            exit;
+        }
+
+        $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
+        unset($_SESSION['mensagem_erro']);
+
+        $emprestimos = [];
+        try {
+            $emprestimos = (new Emprestimo())->listarPendentesPorObreiro($usuarioId);
+        } catch (\Throwable $e) {
+            error_log('Falha ao listar emprestimos PWA: ' . $e->getMessage());
+            $mensagemErro = 'Não foi possível carregar seus empréstimos.';
+        }
+
+        require __DIR__ . '/../Views/pwa/biblioteca_meus_emprestimos.php';
+    }
+}

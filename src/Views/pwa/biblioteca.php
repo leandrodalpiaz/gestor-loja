@@ -33,6 +33,12 @@ $usuarioCargo = (string) ($_SESSION['usuario_cargo'] ?? '');
     </header>
 
     <main class="mx-auto max-w-3xl px-4 py-6 space-y-4">
+        <div class="flex flex-wrap gap-2">
+            <a href="/pwa/biblioteca/meus-emprestimos" class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-800 border border-slate-200 hover:bg-slate-50">
+                Meus empréstimos
+            </a>
+        </div>
+
         <form method="get" action="/pwa/biblioteca" class="space-y-3">
             <div class="flex gap-2">
                 <input type="text" name="q" value="<?= htmlspecialchars($q) ?>"
