@@ -30,6 +30,7 @@ $statusBadge = match ($statusConfirmacao) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sessões</title>
+    <link rel="manifest" href="/manifest.php">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
@@ -130,6 +131,11 @@ $statusBadge = match ($statusConfirmacao) {
             Dica: se você veio pelo Telegram, ele agora serve como atalho e notificação. A fonte de verdade é este painel.
         </div>
     </main>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+    </script>
 </body>
 </html>
-
