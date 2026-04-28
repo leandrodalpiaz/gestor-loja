@@ -16,11 +16,13 @@ Operacional mobile-first; administrativo desktop-first responsivo.
 - Schemas: `app_prod`, `app_homolog`, `app_dev`
 - Roles/usuários separados por ambiente, com acesso apenas ao schema do ambiente
 - Script base: `database/phase0_isolation.sql`
+- Clonar estrutura (sem dados) do `public` para o schema do ambiente: `database/phase0_clone_public_to_schema.sql`
 
 3) Guardrails no código
 - `APP_ENV` governa integrações
 - `TELEGRAM_DRY_RUN` (default seguro): em não-produção não envia Telegram real
 - Feature flags por domínio: `FEATURE_PWA_*`
+- Guardrail de segurança: `APP_ENV!=production` não pode usar `DB_SCHEMA=app_prod`
 
 4) Rollback testado
 - Software: desligar feature flags e validar fluxo antigo/bot
@@ -31,4 +33,3 @@ Operacional mobile-first; administrativo desktop-first responsivo.
 2) Biblioteca
 3) Comunicação oficial
 4) CRUDs administrativos
-
