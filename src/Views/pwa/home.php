@@ -39,6 +39,13 @@ $usuarioCargo = (string) ($_SESSION['usuario_cargo'] ?? '');
         </div>
 
         <div class="grid gap-3">
+            <?php if (!empty($_ENV['FEATURE_PWA_ADMIN_CRUD']) && filter_var((string) $_ENV['FEATURE_PWA_ADMIN_CRUD'], FILTER_VALIDATE_BOOL)): ?>
+                <a href="/pwa/admin" class="block rounded-xl border border-slate-200 bg-white p-4 hover:border-slate-300">
+                    <div class="text-base font-semibold">Admin (atalhos)</div>
+                    <div class="text-sm text-slate-600">Atalhos para módulos administrativos existentes.</div>
+                </a>
+            <?php endif; ?>
+
             <?php if (!empty($links['sessoes'])): ?>
                 <a href="/pwa/sessoes" class="block rounded-xl border border-slate-200 bg-white p-4 hover:border-slate-300">
                     <div class="text-base font-semibold">Sessões</div>
@@ -75,4 +82,3 @@ $usuarioCargo = (string) ($_SESSION['usuario_cargo'] ?? '');
     </script>
 </body>
 </html>
-
