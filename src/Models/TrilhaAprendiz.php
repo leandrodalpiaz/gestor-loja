@@ -48,7 +48,7 @@ class TrilhaAprendiz
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO public.trilha_aprendiz (
+            INSERT INTO trilha_aprendiz (
                 aprendiz_id,
                 etapa_ordem,
                 titulo_etapa,
@@ -103,7 +103,7 @@ class TrilhaAprendiz
                 t.data_disponibilizacao,
                 t.data_entrega,
                 t.data_revisao
-            FROM public.trilha_aprendiz t
+            FROM trilha_aprendiz t
             JOIN (
                 SELECT
                     aprendiz_id,
@@ -113,7 +113,7 @@ class TrilhaAprendiz
                         ),
                         MAX(etapa_ordem)
                     ) AS etapa_atual
-                FROM public.trilha_aprendiz
+                FROM trilha_aprendiz
                 WHERE aprendiz_id IN ($placeholders)
                 GROUP BY aprendiz_id
             ) atual
@@ -150,7 +150,7 @@ class TrilhaAprendiz
         $placeholders = implode(', ', array_fill(0, count($aprendizIds), '?'));
         $sql = "
             SELECT COUNT(DISTINCT aprendiz_id)
-            FROM public.trilha_aprendiz
+            FROM trilha_aprendiz
             WHERE aprendiz_id IN ($placeholders)
               AND status = ?
         ";
@@ -188,7 +188,7 @@ class TrilhaAprendiz
                 revisado_por,
                 created_at,
                 updated_at
-            FROM public.trilha_aprendiz
+            FROM trilha_aprendiz
             WHERE aprendiz_id = :aprendiz_id
             ORDER BY etapa_ordem ASC
         ");
@@ -290,7 +290,7 @@ class TrilhaAprendiz
         }
 
         $sql = "
-            UPDATE public.trilha_aprendiz
+            UPDATE trilha_aprendiz
                SET " . implode(",\n                   ", $campos) . "
              WHERE aprendiz_id = :aprendiz_id
                AND etapa_ordem = :etapa_ordem
@@ -307,7 +307,7 @@ class TrilhaAprendiz
         }
 
         try {
-            $stmt = $this->db->query("SELECT to_regclass('public.trilha_aprendiz')");
+            $stmt = $this->db->query("SELECT to_regclass('trilha_aprendiz')");
             $valor = $stmt ? (string) $stmt->fetchColumn() : '';
             $this->trilhaDisponivelCache = $valor !== '';
             return $this->trilhaDisponivelCache;

@@ -25,7 +25,7 @@ class ConteudoPublico
     {
         $stmt = $this->db->query(
             "SELECT *
-             FROM public.conteudos_publicos
+             FROM conteudos_publicos
              ORDER BY publicado DESC, prioridade DESC, created_at DESC"
         );
 
@@ -46,7 +46,7 @@ class ConteudoPublico
         }
 
         $sql = "SELECT *
-                FROM public.conteudos_publicos
+                FROM conteudos_publicos
                 WHERE {$where}
                   AND (inicio_em IS NULL OR inicio_em <= CURRENT_DATE)
                   AND (fim_em IS NULL OR fim_em >= CURRENT_DATE)
@@ -68,7 +68,7 @@ class ConteudoPublico
 
         $stmt = $this->db->prepare(
             "SELECT *
-             FROM public.conteudos_publicos
+             FROM conteudos_publicos
              WHERE publicado = TRUE
                AND tipo = 'ad'
                AND (inicio_em IS NULL OR inicio_em <= CURRENT_DATE)
@@ -115,7 +115,7 @@ class ConteudoPublico
         if ($id > 0) {
             $payload['id'] = $id;
             $stmt = $this->db->prepare(
-                "UPDATE public.conteudos_publicos
+                "UPDATE conteudos_publicos
                  SET tipo = :tipo,
                      titulo = :titulo,
                      resumo = :resumo,
@@ -134,7 +134,7 @@ class ConteudoPublico
         }
 
         $stmt = $this->db->prepare(
-            "INSERT INTO public.conteudos_publicos
+            "INSERT INTO conteudos_publicos
                 (tipo, titulo, resumo, corpo, link_url, imagem_url, prioridade, publicado, inicio_em, fim_em)
              VALUES
                 (:tipo, :titulo, :resumo, :corpo, :link_url, :imagem_url, :prioridade, :publicado, :inicio_em, :fim_em)
@@ -151,7 +151,7 @@ class ConteudoPublico
             return;
         }
 
-        $stmt = $this->db->prepare("DELETE FROM public.conteudos_publicos WHERE id = :id");
+        $stmt = $this->db->prepare("DELETE FROM conteudos_publicos WHERE id = :id");
         $stmt->execute(['id' => $id]);
     }
 }

@@ -60,7 +60,7 @@ class RegularidadeObreiro
             WHERE ro.obreiro_id = :obreiro_id 
               AND EXISTS (
                   SELECT 1
-                  FROM public.obreiros alvo
+                  FROM obreiros alvo
                   WHERE alvo.id = ro.obreiro_id
                     AND alvo.loja_id = :loja_id
               )
@@ -138,7 +138,7 @@ class RegularidadeObreiro
             WHERE mes_ref = :mes AND ano_ref = :ano
               AND EXISTS (
                   SELECT 1
-                  FROM public.obreiros o
+                  FROM obreiros o
                   WHERE o.id = ro.obreiro_id
                     AND o.loja_id = :loja_id
               )

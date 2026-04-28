@@ -62,7 +62,7 @@ class ConviteAcesso
 
         try {
             $stmt = $this->db->prepare(
-                "INSERT INTO public.convites_acesso (obreiro_id, token, expira_em)
+                "INSERT INTO convites_acesso (obreiro_id, token, expira_em)
                  VALUES (:obreiro_id, :token, :expira_em)"
             );
             $ok = $stmt->execute([
@@ -99,8 +99,8 @@ class ConviteAcesso
                 c.criado_em,
                 o.nome,
                 o.cim
-             FROM public.convites_acesso c
-             JOIN public.obreiros o ON o.id = c.obreiro_id
+             FROM convites_acesso c
+             JOIN obreiros o ON o.id = c.obreiro_id
              WHERE o.loja_id = :loja_id
              ORDER BY c.criado_em DESC
              LIMIT :limite"
@@ -123,7 +123,7 @@ class ConviteAcesso
 
             $stmt = $this->db->prepare(
                 "SELECT *
-                 FROM public.convites_acesso
+                 FROM convites_acesso
                  WHERE token = :token
                  LIMIT 1
                  FOR UPDATE"
@@ -188,7 +188,7 @@ class ConviteAcesso
 
             $stmtCheck = $this->db->prepare(
                 "SELECT id
-                 FROM public.obreiros
+                 FROM obreiros
                  WHERE telegram_id = :telegram_id
                  LIMIT 1"
             );
@@ -200,7 +200,7 @@ class ConviteAcesso
             }
 
             $stmtUp = $this->db->prepare(
-                "UPDATE public.obreiros
+                "UPDATE obreiros
                  SET telegram_id = :telegram_id,
                      acesso_status = 'ativo',
                      ativo = TRUE
@@ -218,7 +218,7 @@ class ConviteAcesso
             }
 
             $stmtUse = $this->db->prepare(
-                "UPDATE public.convites_acesso
+                "UPDATE convites_acesso
                  SET usado_em = NOW()
                  WHERE token = :token"
             );

@@ -32,8 +32,8 @@ class SegundoVigilanteAcompanhamento
                 sva.*,
                 a.titulo AS leitura_titulo,
                 a.autor AS leitura_autor
-            FROM public.segundo_vigilante_acompanhamentos sva
-            LEFT JOIN public.acervo a ON a.id = sva.leitura_acervo_id
+            FROM segundo_vigilante_acompanhamentos sva
+            LEFT JOIN acervo a ON a.id = sva.leitura_acervo_id
             WHERE sva.companheiro_id = :companheiro_id
             LIMIT 1
         ");
@@ -60,7 +60,7 @@ class SegundoVigilanteAcompanhamento
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO public.segundo_vigilante_acompanhamentos (
+            INSERT INTO segundo_vigilante_acompanhamentos (
                 companheiro_id,
                 leitura_acervo_id,
                 leitura_titulo_snapshot,
@@ -106,7 +106,7 @@ class SegundoVigilanteAcompanhamento
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO public.segundo_vigilante_acompanhamentos (
+            INSERT INTO segundo_vigilante_acompanhamentos (
                 companheiro_id,
                 certificado_status,
                 certificado_observacao,
@@ -154,7 +154,7 @@ class SegundoVigilanteAcompanhamento
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO public.segundo_vigilante_acompanhamentos (
+            INSERT INTO segundo_vigilante_acompanhamentos (
                 companheiro_id,
                 exaltacao_status,
                 exaltacao_observacao,
@@ -266,7 +266,7 @@ class SegundoVigilanteAcompanhamento
 
         try {
             $this->db->exec("
-                CREATE TABLE IF NOT EXISTS public.segundo_vigilante_acompanhamentos (
+                CREATE TABLE IF NOT EXISTS segundo_vigilante_acompanhamentos (
                     id SERIAL PRIMARY KEY,
                     companheiro_id VARCHAR(50) NOT NULL UNIQUE,
                     leitura_acervo_id INTEGER NULL,

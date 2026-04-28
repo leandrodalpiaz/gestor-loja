@@ -20,11 +20,11 @@ class VisitaExternaSessao
     public function substituirPorSessao(int $sessaoId, array $visitas, ?string $autorId = null): bool
     {
         $delete = $this->db->prepare("
-            DELETE FROM public.visitas_externas_sessao
+            DELETE FROM visitas_externas_sessao
             WHERE sessao_id = :sessao_id
               AND EXISTS (
                   SELECT 1
-                  FROM public.sessoes s
+                  FROM sessoes s
                   WHERE s.id = :sessao_id
                     AND s.loja_id = :loja_id
               )
@@ -42,7 +42,7 @@ class VisitaExternaSessao
         }
 
         $insert = $this->db->prepare("
-            INSERT INTO public.visitas_externas_sessao (
+            INSERT INTO visitas_externas_sessao (
                 sessao_id,
                 obreiro_id,
                 obreiro_nome_livre,
@@ -68,7 +68,7 @@ class VisitaExternaSessao
                 :created_by,
                 :updated_by,
                 NOW()
-            FROM public.sessoes s
+            FROM sessoes s
             WHERE s.id = :sessao_id
               AND s.loja_id = :loja_id
         ");

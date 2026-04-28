@@ -20,7 +20,7 @@ class TrabalhoSessao
     public function criar(array $data, ?string $autorRegistroId = null): bool
     {
         $stmt = $this->db->prepare("
-            INSERT INTO public.trabalhos_sessao (
+            INSERT INTO trabalhos_sessao (
                 sessao_id,
                 tipo_trabalho,
                 titulo,
@@ -44,7 +44,7 @@ class TrabalhoSessao
                 :criado_por,
                 :observacao,
                 NOW()
-            FROM public.sessoes s
+            FROM sessoes s
             WHERE s.id = :sessao_id
               AND s.loja_id = :loja_id
         ");
@@ -76,9 +76,9 @@ class TrabalhoSessao
                 s.titulo AS sessao_titulo,
                 s.data_hora_inicio,
                 COALESCE(o.nome_historico, o.nome) AS autor_nome
-            FROM public.trabalhos_sessao ts
-            JOIN public.sessoes s ON s.id = ts.sessao_id
-            LEFT JOIN public.obreiros o ON o.id = ts.autor_id
+            FROM trabalhos_sessao ts
+            JOIN sessoes s ON s.id = ts.sessao_id
+            LEFT JOIN obreiros o ON o.id = ts.autor_id
             WHERE s.loja_id = :loja_id
             ORDER BY ts.created_at DESC, ts.id DESC
             LIMIT :limite

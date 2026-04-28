@@ -49,7 +49,7 @@ class BibliotecaLojaConfig
 
         $stmt = $this->db->prepare(
             "SELECT compartilhar_acervo, permitir_emprestimo_cruzado
-             FROM public.biblioteca_loja_config
+             FROM biblioteca_loja_config
              WHERE loja_id = :loja_id
              LIMIT 1"
         );
@@ -72,8 +72,8 @@ class BibliotecaLojaConfig
         }
 
         $sql = "SELECT l.id, l.numero_loja, l.sigla, l.nome, l.oriente
-                FROM public.biblioteca_loja_config c
-                JOIN public.lojas l ON l.id = c.loja_id
+                FROM biblioteca_loja_config c
+                JOIN lojas l ON l.id = c.loja_id
                 WHERE c.compartilhar_acervo = TRUE
                   AND l.ativo = TRUE
                 ORDER BY l.numero_loja ASC, l.nome ASC";

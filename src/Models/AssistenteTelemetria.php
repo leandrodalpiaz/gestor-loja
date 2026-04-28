@@ -17,7 +17,7 @@ class AssistenteTelemetria
     public function registrar(array $evento): void
     {
         $stmt = $this->db->prepare(
-            "INSERT INTO public.assistente_telemetria
+            "INSERT INTO assistente_telemetria
                 (canal, comando_original, comando_normalizado, intent, confidence, allowed, action_target, user_id, tenant_id, metadata, created_at)
              VALUES
                 (:canal, :comando_original, :comando_normalizado, :intent, :confidence, :allowed, :action_target, :user_id, :tenant_id, :metadata, NOW())"
@@ -69,7 +69,7 @@ class AssistenteTelemetria
                 SUM(CASE WHEN allowed THEN 1 ELSE 0 END) AS total_allowed,
                 SUM(CASE WHEN allowed THEN 0 ELSE 1 END) AS total_denied,
                 SUM(CASE WHEN intent = 'desconhecida' THEN 1 ELSE 0 END) AS total_unknown
-             FROM public.assistente_telemetria
+             FROM assistente_telemetria
              WHERE created_at >= NOW() - ((:dias::text || ' days')::interval)"
         );
         $totaisStmt->execute(['dias' => $dias]);
@@ -77,7 +77,7 @@ class AssistenteTelemetria
 
         $topIntentsStmt = $this->db->prepare(
             "SELECT intent, COUNT(*) AS total
-             FROM public.assistente_telemetria
+             FROM assistente_telemetria
              WHERE created_at >= NOW() - ((:dias::text || ' days')::interval)
              GROUP BY intent
              ORDER BY total DESC, intent ASC
@@ -87,7 +87,7 @@ class AssistenteTelemetria
 
         $topComandosStmt = $this->db->prepare(
             "SELECT comando_normalizado, COUNT(*) AS total
-             FROM public.assistente_telemetria
+             FROM assistente_telemetria
              WHERE created_at >= NOW() - ((:dias::text || ' days')::interval)
                AND COALESCE(comando_normalizado, '') <> ''
              GROUP BY comando_normalizado
@@ -98,7 +98,7 @@ class AssistenteTelemetria
 
         $errosStmt = $this->db->prepare(
             "SELECT intent, COUNT(*) AS total
-             FROM public.assistente_telemetria
+             FROM assistente_telemetria
              WHERE created_at >= NOW() - ((:dias::text || ' days')::interval)
                AND (allowed = FALSE OR intent = 'desconhecida')
              GROUP BY intent
@@ -109,7 +109,7 @@ class AssistenteTelemetria
 
         $topTelasStmt = $this->db->prepare(
             "SELECT action_target, COUNT(*) AS total
-             FROM public.assistente_telemetria
+             FROM assistente_telemetria
              WHERE created_at >= NOW() - ((:dias::text || ' days')::interval)
                AND COALESCE(action_target, '') <> ''
              GROUP BY action_target

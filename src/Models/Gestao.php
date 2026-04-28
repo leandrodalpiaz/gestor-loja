@@ -25,7 +25,7 @@ class Gestao
     {
         $stmt = $this->db->prepare("
             SELECT *
-            FROM public.gestoes
+            FROM gestoes
             WHERE loja_id = :loja_id
               AND status = 'aberta'
             ORDER BY inicio_em DESC, id DESC
@@ -41,7 +41,7 @@ class Gestao
     {
         $stmt = $this->db->prepare("
             SELECT *
-            FROM public.gestoes
+            FROM gestoes
             WHERE loja_id = :loja_id
             ORDER BY
                 CASE WHEN status = 'aberta' THEN 0 ELSE 1 END,
@@ -61,7 +61,7 @@ class Gestao
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO public.gestoes (loja_id, titulo, inicio_em, status, observacao, created_at, updated_at)
+            INSERT INTO gestoes (loja_id, titulo, inicio_em, status, observacao, created_at, updated_at)
             VALUES (:loja_id, :titulo, :inicio_em, 'aberta', :observacao, NOW(), NOW())
         ");
         $stmt->execute([
@@ -90,7 +90,7 @@ class Gestao
     public function encerrar(int $gestaoId, ?string $encerradaEm = null): void
     {
         $stmt = $this->db->prepare("
-            UPDATE public.gestoes
+            UPDATE gestoes
                SET status = 'encerrada',
                    encerrada_em = COALESCE(:encerrada_em, CURRENT_DATE),
                    updated_at = NOW()
@@ -126,7 +126,7 @@ class Gestao
     private function garantirEscopoLoja(): void
     {
         if (!$this->suportaLojaId()) {
-            throw new \RuntimeException('Tabela public.gestoes sem coluna loja_id. Execute a migration de isolamento por loja.');
+            throw new \RuntimeException('Tabela gestoes sem coluna loja_id. Execute a migration de isolamento por loja.');
         }
     }
 

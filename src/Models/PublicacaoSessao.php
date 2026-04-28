@@ -25,7 +25,7 @@ class PublicacaoSessao
         ?string $publicadoPor = null
     ): bool {
         $stmt = $this->db->prepare("
-            INSERT INTO public.publicacoes_sessao (
+            INSERT INTO publicacoes_sessao (
                 sessao_id,
                 tipo_publicacao,
                 canal,
@@ -37,7 +37,7 @@ class PublicacaoSessao
                 :canal,
                 :conteudo,
                 :publicado_por
-            FROM public.sessoes s
+            FROM sessoes s
             WHERE s.id = :sessao_id
               AND s.loja_id = :loja_id
         ");
@@ -56,8 +56,8 @@ class PublicacaoSessao
     {
         $stmt = $this->db->prepare("
             SELECT *
-            FROM public.publicacoes_sessao ps
-            JOIN public.sessoes s ON s.id = ps.sessao_id
+            FROM publicacoes_sessao ps
+            JOIN sessoes s ON s.id = ps.sessao_id
             WHERE ps.sessao_id = :sessao_id
               AND s.loja_id = :loja_id
             ORDER BY publicado_em DESC, id DESC

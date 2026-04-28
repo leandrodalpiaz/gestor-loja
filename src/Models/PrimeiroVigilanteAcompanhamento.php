@@ -32,8 +32,8 @@ class PrimeiroVigilanteAcompanhamento
                 pva.*,
                 a.titulo AS leitura_titulo,
                 a.autor AS leitura_autor
-            FROM public.primeiro_vigilante_acompanhamentos pva
-            LEFT JOIN public.acervo a ON a.id = pva.leitura_acervo_id
+            FROM primeiro_vigilante_acompanhamentos pva
+            LEFT JOIN acervo a ON a.id = pva.leitura_acervo_id
             WHERE pva.aprendiz_id = :aprendiz_id
             LIMIT 1
         ");
@@ -60,7 +60,7 @@ class PrimeiroVigilanteAcompanhamento
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO public.primeiro_vigilante_acompanhamentos (
+            INSERT INTO primeiro_vigilante_acompanhamentos (
                 aprendiz_id,
                 leitura_acervo_id,
                 leitura_titulo_snapshot,
@@ -106,7 +106,7 @@ class PrimeiroVigilanteAcompanhamento
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO public.primeiro_vigilante_acompanhamentos (
+            INSERT INTO primeiro_vigilante_acompanhamentos (
                 aprendiz_id,
                 certificado_status,
                 certificado_observacao,
@@ -210,7 +210,7 @@ class PrimeiroVigilanteAcompanhamento
 
         try {
             $this->db->exec("
-                CREATE TABLE IF NOT EXISTS public.primeiro_vigilante_acompanhamentos (
+                CREATE TABLE IF NOT EXISTS primeiro_vigilante_acompanhamentos (
                     id SERIAL PRIMARY KEY,
                     aprendiz_id VARCHAR(50) NOT NULL UNIQUE,
                     leitura_acervo_id INTEGER NULL,

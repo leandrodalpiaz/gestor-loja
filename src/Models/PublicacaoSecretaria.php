@@ -26,7 +26,7 @@ class PublicacaoSecretaria
         $lojaId = $this->obterLojaAtualId();
         if ($sessaoId !== '') {
             $stmt = $this->db->prepare("
-                INSERT INTO public.publicacoes_secretaria (
+                INSERT INTO publicacoes_secretaria (
                     sessao_id,
                     tipo_publicacao,
                     titulo,
@@ -50,13 +50,13 @@ class PublicacaoSecretaria
                     :publicado_em,
                     :observacao,
                     NOW()
-                FROM public.sessoes s
+                FROM sessoes s
                 WHERE s.id = :sessao_id
                   AND s.loja_id = :loja_id
             ");
         } else {
             $stmt = $this->db->prepare("
-                INSERT INTO public.publicacoes_secretaria (
+                INSERT INTO publicacoes_secretaria (
                     sessao_id,
                     tipo_publicacao,
                     titulo,
@@ -106,8 +106,8 @@ class PublicacaoSecretaria
             SELECT
                 ps.*,
                 s.titulo AS sessao_titulo
-            FROM public.publicacoes_secretaria ps
-            LEFT JOIN public.sessoes s ON s.id = ps.sessao_id
+            FROM publicacoes_secretaria ps
+            LEFT JOIN sessoes s ON s.id = ps.sessao_id
             WHERE (ps.sessao_id IS NULL OR s.loja_id = :loja_id)
             ORDER BY ps.created_at DESC, ps.id DESC
             LIMIT :limite

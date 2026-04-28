@@ -39,7 +39,7 @@ class TrilhaCompanheiro
         }
 
         try {
-            $stmt = $this->db->query("SELECT to_regclass('public.trilha_companheiro')");
+            $stmt = $this->db->query("SELECT to_regclass('trilha_companheiro')");
             $valor = $stmt ? (string) $stmt->fetchColumn() : '';
             $this->trilhaDisponivelCache = $valor !== '';
             return $this->trilhaDisponivelCache;
@@ -65,7 +65,7 @@ class TrilhaCompanheiro
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO public.trilha_companheiro (
+            INSERT INTO trilha_companheiro (
                 companheiro_id,
                 etapa_ordem,
                 titulo_etapa,
@@ -120,7 +120,7 @@ class TrilhaCompanheiro
                 t.data_disponibilizacao,
                 t.data_entrega,
                 t.data_revisao
-            FROM public.trilha_companheiro t
+            FROM trilha_companheiro t
             JOIN (
                 SELECT
                     companheiro_id,
@@ -130,7 +130,7 @@ class TrilhaCompanheiro
                         ),
                         MAX(etapa_ordem)
                     ) AS etapa_atual
-                FROM public.trilha_companheiro
+                FROM trilha_companheiro
                 WHERE companheiro_id IN ($placeholders)
                 GROUP BY companheiro_id
             ) atual
@@ -167,7 +167,7 @@ class TrilhaCompanheiro
         $placeholders = implode(', ', array_fill(0, count($companheiroIds), '?'));
         $sql = "
             SELECT COUNT(DISTINCT companheiro_id)
-            FROM public.trilha_companheiro
+            FROM trilha_companheiro
             WHERE companheiro_id IN ($placeholders)
               AND status = ?
         ";
@@ -205,7 +205,7 @@ class TrilhaCompanheiro
                 revisado_por,
                 created_at,
                 updated_at
-            FROM public.trilha_companheiro
+            FROM trilha_companheiro
             WHERE companheiro_id = :companheiro_id
             ORDER BY etapa_ordem ASC
         ");
@@ -309,7 +309,7 @@ class TrilhaCompanheiro
         }
 
         $sql = "
-            UPDATE public.trilha_companheiro
+            UPDATE trilha_companheiro
                SET " . implode(",\n                   ", $campos) . "
              WHERE companheiro_id = :companheiro_id
                AND etapa_ordem = :etapa_ordem

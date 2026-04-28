@@ -51,11 +51,11 @@ class Cargo
     {
         $stmt = $this->db->prepare(
             "SELECT c.codigo
-             FROM public.atribuicoes_cargo ac
-             JOIN public.cargos c
+             FROM atribuicoes_cargo ac
+             JOIN cargos c
                ON c.id = ac.cargo_id
               AND c.loja_id = :loja_id
-             LEFT JOIN public.gestoes g
+             LEFT JOIN gestoes g
                ON g.id = ac.gestao_id
               AND g.loja_id = :loja_id
              WHERE ac.obreiro_id = :obreiro_id
@@ -80,11 +80,11 @@ class Cargo
     {
         $stmt = $this->db->prepare(
             "SELECT 1
-             FROM public.atribuicoes_cargo ac
-             JOIN public.cargos c
+             FROM atribuicoes_cargo ac
+             JOIN cargos c
                ON c.id = ac.cargo_id
               AND c.loja_id = :loja_id
-             LEFT JOIN public.gestoes g
+             LEFT JOIN gestoes g
                ON g.id = ac.gestao_id
               AND g.loja_id = :loja_id
              WHERE ac.obreiro_id = :obreiro_id
@@ -119,15 +119,15 @@ class Cargo
                 g.encerrada_em AS gestao_encerrada_em,
                 a.inicio_em,
                 a.observacao
-             FROM public.cargos c
-             LEFT JOIN public.atribuicoes_cargo a
+             FROM cargos c
+             LEFT JOIN atribuicoes_cargo a
                ON a.cargo_id = c.id
               AND a.loja_id = :loja_id
               AND a.fim_em IS NULL
-             LEFT JOIN public.gestoes g
+             LEFT JOIN gestoes g
                ON g.id = a.gestao_id
               AND g.loja_id = :loja_id
-             LEFT JOIN public.obreiros o
+             LEFT JOIN obreiros o
                ON o.id = a.obreiro_id
              WHERE c.ativo = TRUE
                AND c.loja_id = :loja_id";
@@ -162,14 +162,14 @@ class Cargo
                     ac.inicio_em,
                     ac.fim_em,
                     ac.observacao
-                FROM public.atribuicoes_cargo ac
-                JOIN public.cargos c
+                FROM atribuicoes_cargo ac
+                JOIN cargos c
                   ON c.id = ac.cargo_id
                  AND c.loja_id = :loja_id
-                LEFT JOIN public.gestoes g
+                LEFT JOIN gestoes g
                   ON g.id = ac.gestao_id
                  AND g.loja_id = :loja_id
-                JOIN public.obreiros o ON o.id = ac.obreiro_id";
+                JOIN obreiros o ON o.id = ac.obreiro_id";
 
         $params = ['loja_id' => $this->obterLojaAtualId()];
         $where = ['ac.loja_id = :loja_id'];
@@ -200,7 +200,7 @@ class Cargo
     public function atribuirPorCodigo(string $cargoCodigo, string $obreiroId, ?string $observacao = null, ?int $gestaoId = null, ?string $inicioEm = null): void
     {
         $stmt = $this->db->prepare(
-            "SELECT public.atribuir_cargo(:loja_id, :cargo_codigo, :obreiro_id, :gestao_id, :inicio_em, :observacao)"
+            "SELECT atribuir_cargo(:loja_id, :cargo_codigo, :obreiro_id, :gestao_id, :inicio_em, :observacao)"
         );
         $stmt->execute([
             'loja_id' => $this->obterLojaAtualId(),

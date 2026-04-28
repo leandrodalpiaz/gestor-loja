@@ -25,7 +25,7 @@ class PresencaSessao
         ?string $observacao = null
     ): bool {
         $stmt = $this->db->prepare("
-            INSERT INTO public.presencas_sessao (
+            INSERT INTO presencas_sessao (
                 sessao_id,
                 obreiro_id,
                 presente,
@@ -42,7 +42,7 @@ class PresencaSessao
                 :registrado_por,
                 NOW(),
                 NOW()
-            FROM public.sessoes s
+            FROM sessoes s
             WHERE s.id = :sessao_id
               AND s.loja_id = :loja_id
             ON CONFLICT (sessao_id, obreiro_id)
@@ -76,9 +76,9 @@ class PresencaSessao
                 ps.registrado_em,
                 COALESCE(o.nome_historico, o.nome) AS nome,
                 o.cim
-            FROM public.presencas_sessao ps
-            JOIN public.sessoes s ON s.id = ps.sessao_id
-            JOIN public.obreiros o ON o.id = ps.obreiro_id
+            FROM presencas_sessao ps
+            JOIN sessoes s ON s.id = ps.sessao_id
+            JOIN obreiros o ON o.id = ps.obreiro_id
             WHERE ps.sessao_id = :sessao_id
               AND s.loja_id = :loja_id
               AND ps.presente = TRUE
@@ -102,11 +102,11 @@ class PresencaSessao
                 o.grau,
                 COALESCE(ps.presente, FALSE) AS presente,
                 ps.observacao
-            FROM public.obreiros o
-            LEFT JOIN public.presencas_sessao ps
+            FROM obreiros o
+            LEFT JOIN presencas_sessao ps
               ON ps.sessao_id = :sessao_id
              AND ps.obreiro_id = o.id
-            JOIN public.sessoes s
+            JOIN sessoes s
               ON s.id = :sessao_id
             WHERE o.ativo = TRUE
               AND o.loja_id = s.loja_id

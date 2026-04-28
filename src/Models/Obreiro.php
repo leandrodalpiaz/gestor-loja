@@ -340,12 +340,12 @@ class Obreiro
     {
         if ($this->suportaLojaId()) {
             $sql = "SELECT *
-                    FROM public.obreiros
+                    FROM obreiros
                     WHERE loja_id = :loja_id";
             $params = ['loja_id' => $this->obterLojaAtualId()];
         } else {
             $sql = "SELECT *
-                    FROM public.obreiros
+                    FROM obreiros
                     WHERE 1 = 1";
             $params = [];
         }
@@ -394,11 +394,11 @@ class Obreiro
             if ($this->suportaLojaId()) {
                 $sql .= " AND EXISTS (
                     SELECT 1
-                    FROM public.atribuicoes_cargo ac
-                    JOIN public.cargos c
+                    FROM atribuicoes_cargo ac
+                    JOIN cargos c
                       ON c.id = ac.cargo_id
                      AND c.loja_id = :loja_id
-                    LEFT JOIN public.gestoes g
+                    LEFT JOIN gestoes g
                       ON g.id = ac.gestao_id
                      AND g.loja_id = :loja_id
                     WHERE ac.obreiro_id = obreiros.id
@@ -411,9 +411,9 @@ class Obreiro
             } else {
                 $sql .= " AND EXISTS (
                     SELECT 1
-                    FROM public.atribuicoes_cargo ac
-                    JOIN public.cargos c ON c.id = ac.cargo_id
-                    LEFT JOIN public.gestoes g ON g.id = ac.gestao_id
+                    FROM atribuicoes_cargo ac
+                    JOIN cargos c ON c.id = ac.cargo_id
+                    LEFT JOIN gestoes g ON g.id = ac.gestao_id
                     WHERE ac.obreiro_id = obreiros.id
                       AND ac.fim_em IS NULL
                       AND c.ativo = TRUE
@@ -1100,8 +1100,8 @@ class Obreiro
 
         $placeholders = implode(', ', array_fill(0, count($ids), '?'));
         $sql = "SELECT ac.obreiro_id, c.codigo
-                FROM public.atribuicoes_cargo ac
-                JOIN public.cargos c ON c.id = ac.cargo_id
+                FROM atribuicoes_cargo ac
+                JOIN cargos c ON c.id = ac.cargo_id
                 WHERE ac.fim_em IS NULL
                   AND c.ativo = TRUE
                   AND ac.obreiro_id IN ($placeholders)";

@@ -40,7 +40,7 @@ class Balaustre
 
             if ($atual) {
                 $stmt = $this->db->prepare("
-                UPDATE public.balaustres
+                UPDATE balaustres
                    SET numero_balaustre = :numero_balaustre,
                        template_versao = :template_versao,
                        texto_final = :texto_final,
@@ -55,7 +55,7 @@ class Balaustre
                  WHERE sessao_id = :sessao_id
                    AND EXISTS (
                        SELECT 1
-                       FROM public.sessoes s
+                       FROM sessoes s
                        WHERE s.id = :sessao_id
                          AND s.loja_id = :loja_id
                    )
@@ -72,7 +72,7 @@ class Balaustre
                 ]);
             } else {
                 $stmt = $this->db->prepare("
-            INSERT INTO public.balaustres (
+            INSERT INTO balaustres (
                 sessao_id,
                 numero_balaustre,
                 template_versao,
@@ -472,7 +472,7 @@ class Balaustre
     public function marcarAptoVotacao(int $balaustreId, ?string $autorId = null): bool
     {
         $stmt = $this->db->prepare("
-            UPDATE public.balaustres
+            UPDATE balaustres
               SET apto_votacao = TRUE,
                    apto_votacao_em = NOW(),
                    apto_votacao_por = :autor_id,
@@ -481,8 +481,8 @@ class Balaustre
              WHERE id = :id
                AND EXISTS (
                    SELECT 1
-                   FROM public.balaustres b
-                   JOIN public.sessoes s ON s.id = b.sessao_id
+                   FROM balaustres b
+                   JOIN sessoes s ON s.id = b.sessao_id
                    WHERE b.id = :id
                      AND s.loja_id = :loja_id
                )
@@ -512,7 +512,7 @@ class Balaustre
         $this->db->beginTransaction();
         try {
             $votacaoStmt = $this->db->prepare("
-                INSERT INTO public.balaustre_votacoes (
+                INSERT INTO balaustre_votacoes (
                     balaustre_id,
                     aberta_por,
                     aberta_em,
@@ -533,8 +533,8 @@ class Balaustre
 
             $presentesStmt = $this->db->prepare("
                 SELECT obreiro_id
-                FROM public.presencas_sessao ps
-                JOIN public.sessoes s ON s.id = ps.sessao_id
+                FROM presencas_sessao ps
+                JOIN sessoes s ON s.id = ps.sessao_id
                 WHERE ps.sessao_id = :sessao_id
                   AND s.loja_id = :loja_id
                   AND presente = TRUE
@@ -551,7 +551,7 @@ class Balaustre
             }
 
             $votanteStmt = $this->db->prepare("
-                INSERT INTO public.balaustre_votantes (
+                INSERT INTO balaustre_votantes (
                     votacao_id,
                     obreiro_id,
                     elegivel
@@ -569,14 +569,14 @@ class Balaustre
             }
 
             $this->db->prepare("
-                UPDATE public.balaustres
+                UPDATE balaustres
                    SET status = 'em_votacao',
                        updated_at = NOW()
                  WHERE id = :id
                    AND EXISTS (
                        SELECT 1
-                       FROM public.balaustres b
-                       JOIN public.sessoes s ON s.id = b.sessao_id
+                       FROM balaustres b
+                       JOIN sessoes s ON s.id = b.sessao_id
                        WHERE b.id = :id
                          AND s.loja_id = :loja_id
                    )
@@ -609,13 +609,13 @@ class Balaustre
                 s.data_hora_inicio,
                 (
                     SELECT COUNT(*)
-                    FROM public.balaustre_votantes bv
-                    JOIN public.balaustre_votacoes v ON v.id = bv.votacao_id
+                    FROM balaustre_votantes bv
+                    JOIN balaustre_votacoes v ON v.id = bv.votacao_id
                     WHERE v.balaustre_id = b.id
                       AND v.status = 'aberta'
                 ) AS total_votantes_abertos
-            FROM public.balaustres b
-            JOIN public.sessoes s ON s.id = b.sessao_id
+            FROM balaustres b
+            JOIN sessoes s ON s.id = b.sessao_id
             WHERE s.loja_id = :loja_id
             ORDER BY b.updated_at DESC, b.id DESC
             LIMIT :limite
@@ -638,10 +638,10 @@ class Balaustre
             SELECT
                 v.balaustre_id,
                 bv.elegivel
-            FROM public.balaustre_votacoes v
-            JOIN public.balaustres b ON b.id = v.balaustre_id
-            JOIN public.sessoes s ON s.id = b.sessao_id
-            JOIN public.balaustre_votantes bv ON bv.votacao_id = v.id
+            FROM balaustre_votacoes v
+            JOIN balaustres b ON b.id = v.balaustre_id
+            JOIN sessoes s ON s.id = b.sessao_id
+            JOIN balaustre_votantes bv ON bv.votacao_id = v.id
             WHERE v.status = 'aberta'
               AND s.loja_id = ?
               AND v.balaustre_id IN ({$placeholders})
@@ -680,10 +680,10 @@ class Balaustre
                     WHEN bv.obreiro_id IS NULL THEN FALSE
                     ELSE COALESCE(bv.elegivel, FALSE)
                 END AS elegivel
-            FROM public.balaustres b
-            JOIN public.sessoes s ON s.id = b.sessao_id
-            JOIN public.balaustre_votacoes v ON v.balaustre_id = b.id AND v.status = 'aberta'
-            LEFT JOIN public.balaustre_votantes bv ON bv.votacao_id = v.id
+            FROM balaustres b
+            JOIN sessoes s ON s.id = b.sessao_id
+            JOIN balaustre_votacoes v ON v.balaustre_id = b.id AND v.status = 'aberta'
+            LEFT JOIN balaustre_votantes bv ON bv.votacao_id = v.id
             " . ($uuidValido ? "AND bv.obreiro_id = :obreiro_id" : "AND 1 = 0") . "
             WHERE b.status = 'em_votacao'
               AND s.loja_id = :loja_id
@@ -718,7 +718,7 @@ class Balaustre
 
         $elegivelStmt = $this->db->prepare("
             SELECT elegivel
-            FROM public.balaustre_votantes
+            FROM balaustre_votantes
             WHERE votacao_id = :votacao_id
               AND obreiro_id = :obreiro_id
             LIMIT 1
@@ -733,7 +733,7 @@ class Balaustre
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO public.balaustre_votos (
+            INSERT INTO balaustre_votos (
                 votacao_id,
                 obreiro_id,
                 voto,
@@ -775,7 +775,7 @@ class Balaustre
                 COUNT(*) FILTER (WHERE voto = 'aprovar') AS total_aprovar,
                 COUNT(*) FILTER (WHERE voto = 'pedir_correcao') AS total_correcao,
                 COUNT(*) FILTER (WHERE voto = 'rejeitar') AS total_rejeitar
-            FROM public.balaustre_votos
+            FROM balaustre_votos
             WHERE votacao_id = :votacao_id
         ");
         $stmt->execute(['votacao_id' => (int) $votacao['id']]);
@@ -802,21 +802,21 @@ class Balaustre
         $this->db->beginTransaction();
         try {
             $this->db->prepare("
-                UPDATE public.balaustre_votacoes
+                UPDATE balaustre_votacoes
                    SET status = 'encerrada',
                        encerrada_em = NOW()
                  WHERE id = :id
             ")->execute(['id' => (int) $votacao['id']]);
 
             $this->db->prepare("
-                UPDATE public.balaustres
+                UPDATE balaustres
                    SET status = :status,
                        updated_at = NOW()
                  WHERE id = :id
                    AND EXISTS (
                        SELECT 1
-                       FROM public.balaustres b
-                       JOIN public.sessoes s ON s.id = b.sessao_id
+                       FROM balaustres b
+                       JOIN sessoes s ON s.id = b.sessao_id
                        WHERE b.id = :id
                          AND s.loja_id = :loja_id
                    )
@@ -840,11 +840,11 @@ class Balaustre
     {
         $stmt = $this->db->prepare("
             SELECT *
-            FROM public.balaustres
+            FROM balaustres
             WHERE sessao_id = :sessao_id
               AND EXISTS (
                   SELECT 1
-                  FROM public.sessoes s
+                  FROM sessoes s
                   WHERE s.id = :sessao_id
                     AND s.loja_id = :loja_id
               )
@@ -914,8 +914,8 @@ class Balaustre
     {
         $stmt = $this->db->prepare("
             SELECT *
-            FROM public.balaustres b
-            JOIN public.sessoes s ON s.id = b.sessao_id
+            FROM balaustres b
+            JOIN sessoes s ON s.id = b.sessao_id
             WHERE b.id = :id
               AND s.loja_id = :loja_id
             LIMIT 1
@@ -932,9 +932,9 @@ class Balaustre
     {
         $stmt = $this->db->prepare("
             SELECT *
-            FROM public.balaustre_votacoes v
-            JOIN public.balaustres b ON b.id = v.balaustre_id
-            JOIN public.sessoes s ON s.id = b.sessao_id
+            FROM balaustre_votacoes v
+            JOIN balaustres b ON b.id = v.balaustre_id
+            JOIN sessoes s ON s.id = b.sessao_id
             WHERE v.balaustre_id = :balaustre_id
               AND s.loja_id = :loja_id
               AND status = 'aberta'

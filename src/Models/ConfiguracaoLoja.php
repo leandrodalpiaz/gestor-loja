@@ -46,7 +46,7 @@ class ConfiguracaoLoja
     public function obter(): array
     {
         if ($this->suportaLojaId()) {
-            $stmt = $this->db->prepare("SELECT * FROM public.configuracoes_loja WHERE loja_id = :loja_id LIMIT 1");
+            $stmt = $this->db->prepare("SELECT * FROM configuracoes_loja WHERE loja_id = :loja_id LIMIT 1");
             $stmt->execute(['loja_id' => $this->obterLojaIdAtual()]);
             $config = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -55,7 +55,7 @@ class ConfiguracaoLoja
             }
         }
 
-        $stmtLegado = $this->db->query("SELECT * FROM public.configuracoes_loja WHERE id = 1 LIMIT 1");
+        $stmtLegado = $this->db->query("SELECT * FROM configuracoes_loja WHERE id = 1 LIMIT 1");
         $configLegado = $stmtLegado->fetch(PDO::FETCH_ASSOC);
         if ($configLegado !== false) {
             $configLegado['loja_id'] = $configLegado['loja_id'] ?? $this->obterLojaIdAtual();
@@ -113,7 +113,7 @@ class ConfiguracaoLoja
     {
         $anterior = $this->obter();
         if ($this->suportaLojaId()) {
-            $sql = "INSERT INTO public.configuracoes_loja (
+            $sql = "INSERT INTO configuracoes_loja (
                     id, loja_id, nome_loja, numero_loja, titulo_tratamento, cidade, uf, oriente,
                     potencia_nome, potencia_sigla, grande_secretaria, rito,
                     data_fundacao, decreto_fundacao, data_reconhecimento, data_instalacao,
@@ -187,7 +187,7 @@ class ConfiguracaoLoja
                     historia_loja = EXCLUDED.historia_loja,
                     updated_at = NOW()";
         } else {
-            $sql = "INSERT INTO public.configuracoes_loja (
+            $sql = "INSERT INTO configuracoes_loja (
                     id, nome_loja, numero_loja, titulo_tratamento, cidade, uf, oriente,
                     potencia_nome, potencia_sigla, grande_secretaria, rito,
                     data_fundacao, decreto_fundacao, data_reconhecimento, data_instalacao,

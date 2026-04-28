@@ -18,9 +18,9 @@ class BanqueteOperacao
     private function ensureTable(): void
     {
         $this->db->exec("
-            CREATE TABLE IF NOT EXISTS public.banquete_operacoes (
+            CREATE TABLE IF NOT EXISTS banquete_operacoes (
                 id SERIAL PRIMARY KEY,
-                sessao_id INT NOT NULL UNIQUE REFERENCES public.sessoes(id) ON DELETE CASCADE,
+                sessao_id INT NOT NULL UNIQUE REFERENCES sessoes(id) ON DELETE CASCADE,
                 status_operacional VARCHAR(30) NOT NULL DEFAULT 'planejamento',
                 observacoes TEXT NULL,
                 previsao_participantes INT NULL,
@@ -37,7 +37,7 @@ class BanqueteOperacao
     {
         $stmt = $this->db->prepare("
             SELECT *
-            FROM public.banquete_operacoes
+            FROM banquete_operacoes
             WHERE sessao_id = :sessao_id
             LIMIT 1
         ");
@@ -60,7 +60,7 @@ class BanqueteOperacao
             : null;
 
         $stmt = $this->db->prepare("
-            INSERT INTO public.banquete_operacoes (
+            INSERT INTO banquete_operacoes (
                 sessao_id,
                 status_operacional,
                 observacoes,

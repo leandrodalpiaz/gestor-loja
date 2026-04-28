@@ -18,7 +18,7 @@ class AuditoriaAdministrativa
     private function ensureTable(): void
     {
         $this->db->exec("
-            CREATE TABLE IF NOT EXISTS public.auditoria_administrativa (
+            CREATE TABLE IF NOT EXISTS auditoria_administrativa (
                 id SERIAL PRIMARY KEY,
                 origem VARCHAR(50) NOT NULL,
                 entidade VARCHAR(50) NOT NULL,
@@ -42,7 +42,7 @@ class AuditoriaAdministrativa
         ?string $criadoPor = null
     ): bool {
         $stmt = $this->db->prepare("
-            INSERT INTO public.auditoria_administrativa (
+            INSERT INTO auditoria_administrativa (
                 origem,
                 entidade,
                 entidade_id,
@@ -77,8 +77,8 @@ class AuditoriaAdministrativa
         $stmt = $this->db->prepare("
             SELECT aa.*,
                    COALESCE(o.nome_historico, o.nome) AS criado_por_nome
-            FROM public.auditoria_administrativa aa
-            LEFT JOIN public.obreiros o ON o.id::text = aa.criado_por
+            FROM auditoria_administrativa aa
+            LEFT JOIN obreiros o ON o.id::text = aa.criado_por
             ORDER BY aa.created_at DESC, aa.id DESC
             LIMIT :limite
         ");

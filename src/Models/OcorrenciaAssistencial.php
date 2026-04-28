@@ -20,7 +20,7 @@ class OcorrenciaAssistencial
     public function criar(array $payload): bool
     {
         $stmt = $this->db->prepare("
-            INSERT INTO public.ocorrencias_assistenciais (
+            INSERT INTO ocorrencias_assistenciais (
                 loja_id,
                 tipo_ocorrencia,
                 status,
@@ -93,9 +93,9 @@ class OcorrenciaAssistencial
                 COALESCE(o.nome_historico, o.nome) AS obreiro_nome,
                 o.cim AS obreiro_cim,
                 COALESCE(criador.nome_historico, criador.nome) AS criado_por_nome
-            FROM public.ocorrencias_assistenciais oa
-            LEFT JOIN public.obreiros o ON o.id = oa.obreiro_id
-            LEFT JOIN public.obreiros criador ON criador.id = oa.created_by
+            FROM ocorrencias_assistenciais oa
+            LEFT JOIN obreiros o ON o.id = oa.obreiro_id
+            LEFT JOIN obreiros criador ON criador.id = oa.created_by
             WHERE oa.loja_id = :loja_id
             ORDER BY oa.created_at DESC
             LIMIT :limite
@@ -116,7 +116,7 @@ class OcorrenciaAssistencial
                 COUNT(*) FILTER (WHERE status = 'em_acompanhamento') AS em_acompanhamento,
                 COUNT(*) FILTER (WHERE status = 'concluida') AS concluidas,
                 COUNT(*) FILTER (WHERE necessita_apoio_financeiro = TRUE) AS com_apoio_financeiro
-            FROM public.ocorrencias_assistenciais
+            FROM ocorrencias_assistenciais
             WHERE loja_id = :loja_id
         ");
         $stmt->execute(['loja_id' => $this->obterLojaAtualId()]);
@@ -141,7 +141,7 @@ class OcorrenciaAssistencial
         $observacao = $this->limparTexto($observacao);
 
         $stmt = $this->db->prepare("
-            UPDATE public.ocorrencias_assistenciais
+            UPDATE ocorrencias_assistenciais
                SET status = :status,
                    observacao_status = CASE
                        WHEN :observacao IS NULL OR :observacao = '' THEN observacao_status
@@ -169,7 +169,7 @@ class OcorrenciaAssistencial
         }
 
         $stmt = $this->db->prepare("
-            UPDATE public.ocorrencias_assistenciais
+            UPDATE ocorrencias_assistenciais
                SET status = 'em_acompanhamento',
                    necessita_visita = FALSE,
                    observacao_status = CASE
@@ -201,8 +201,8 @@ class OcorrenciaAssistencial
                 oa.*,
                 COALESCE(o.nome_historico, o.nome) AS obreiro_nome,
                 o.cim AS obreiro_cim
-            FROM public.ocorrencias_assistenciais oa
-            LEFT JOIN public.obreiros o ON o.id = oa.obreiro_id
+            FROM ocorrencias_assistenciais oa
+            LEFT JOIN obreiros o ON o.id = oa.obreiro_id
             WHERE oa.loja_id = :loja_id
               AND (
                   oa.necessita_visita = TRUE

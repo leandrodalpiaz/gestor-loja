@@ -20,11 +20,11 @@ class EventoSessao
     public function substituirPorSessao(int $sessaoId, array $eventos, ?string $autorId = null): bool
     {
         $delete = $this->db->prepare("
-            DELETE FROM public.eventos_sessao
+            DELETE FROM eventos_sessao
             WHERE sessao_id = :sessao_id
               AND EXISTS (
                   SELECT 1
-                  FROM public.sessoes s
+                  FROM sessoes s
                   WHERE s.id = :sessao_id
                     AND s.loja_id = :loja_id
               )
@@ -42,7 +42,7 @@ class EventoSessao
         }
 
         $insert = $this->db->prepare("
-            INSERT INTO public.eventos_sessao (
+            INSERT INTO eventos_sessao (
                 sessao_id,
                 tipo_evento,
                 titulo,
@@ -70,7 +70,7 @@ class EventoSessao
                 :created_by,
                 :updated_by,
                 NOW()
-            FROM public.sessoes s
+            FROM sessoes s
             WHERE s.id = :sessao_id
               AND s.loja_id = :loja_id
         ");

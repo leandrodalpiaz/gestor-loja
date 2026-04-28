@@ -74,7 +74,7 @@ class RelatorioTesourariaGestao
     {
         $stmt = $this->db->prepare("
             SELECT COALESCE(SUM(CASE WHEN l.tipo = 'entrada' THEN l.valor ELSE -l.valor END), 0) AS saldo
-            FROM public.lancamentos_financeiros l
+            FROM lancamentos_financeiros l
             WHERE l.data_lancamento < :data_limite
               AND l.loja_id = :loja_id
         ");
@@ -91,7 +91,7 @@ class RelatorioTesourariaGestao
             SELECT
                 COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) AS entradas,
                 COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) AS saidas
-            FROM public.lancamentos_financeiros
+            FROM lancamentos_financeiros
             WHERE data_lancamento BETWEEN :inicio AND :fim
               AND loja_id = :loja_id
         ");
@@ -110,8 +110,8 @@ class RelatorioTesourariaGestao
                 COALESCE(c.bloco_relatorio, 'outros') AS bloco_relatorio,
                 l.tipo,
                 COALESCE(SUM(l.valor), 0) AS total
-            FROM public.lancamentos_financeiros l
-            JOIN public.categorias_financeiras c ON c.id = l.categoria_id
+            FROM lancamentos_financeiros l
+            JOIN categorias_financeiras c ON c.id = l.categoria_id
             WHERE l.data_lancamento BETWEEN :inicio AND :fim
               AND l.loja_id = :loja_id
             GROUP BY COALESCE(c.bloco_relatorio, 'outros'), l.tipo
@@ -151,8 +151,8 @@ class RelatorioTesourariaGestao
                 l.tipo,
                 COUNT(l.id) AS quantidade,
                 COALESCE(SUM(l.valor), 0) AS total
-            FROM public.lancamentos_financeiros l
-            JOIN public.categorias_financeiras c ON c.id = l.categoria_id
+            FROM lancamentos_financeiros l
+            JOIN categorias_financeiras c ON c.id = l.categoria_id
             WHERE l.data_lancamento BETWEEN :inicio AND :fim
               AND l.loja_id = :loja_id
             GROUP BY 1, 2, c.bloco_relatorio, l.tipo
@@ -173,8 +173,8 @@ class RelatorioTesourariaGestao
                 COALESCE(NULLIF(TRIM(l.entidade_auxiliada), ''), 'Não informada') AS entidade,
                 COUNT(l.id) AS quantidade,
                 COALESCE(SUM(l.valor), 0) AS total
-            FROM public.lancamentos_financeiros l
-            JOIN public.categorias_financeiras c ON c.id = l.categoria_id
+            FROM lancamentos_financeiros l
+            JOIN categorias_financeiras c ON c.id = l.categoria_id
             WHERE l.data_lancamento BETWEEN :inicio AND :fim
               AND l.loja_id = :loja_id
               AND c.exige_entidade_auxiliada = TRUE
@@ -203,9 +203,9 @@ class RelatorioTesourariaGestao
                 c.nome AS categoria_nome,
                 c.bloco_relatorio,
                 COALESCE(o.nome_historico, o.nome) AS obreiro_nome
-            FROM public.lancamentos_financeiros l
-            JOIN public.categorias_financeiras c ON c.id = l.categoria_id
-            LEFT JOIN public.obreiros o ON o.id = l.obreiro_id
+            FROM lancamentos_financeiros l
+            JOIN categorias_financeiras c ON c.id = l.categoria_id
+            LEFT JOIN obreiros o ON o.id = l.obreiro_id
             WHERE l.data_lancamento BETWEEN :inicio AND :fim
               AND l.loja_id = :loja_id
             ORDER BY l.data_lancamento DESC, l.id DESC
@@ -225,7 +225,7 @@ class RelatorioTesourariaGestao
             SELECT
                 COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) AS entradas,
                 COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) AS saidas
-            FROM public.tronco_solidariedade
+            FROM tronco_solidariedade
             WHERE data_mov BETWEEN :inicio AND :fim
               AND loja_id = :loja_id
         ");

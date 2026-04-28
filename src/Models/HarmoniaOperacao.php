@@ -18,7 +18,7 @@ class HarmoniaOperacao
     private function ensureTable(): void
     {
         $this->db->exec("
-            CREATE TABLE IF NOT EXISTS public.harmonia_operacoes (
+            CREATE TABLE IF NOT EXISTS harmonia_operacoes (
                 id SERIAL PRIMARY KEY,
                 sessao_path TEXT NOT NULL UNIQUE,
                 sessao_nome VARCHAR(255) NOT NULL,
@@ -38,7 +38,7 @@ class HarmoniaOperacao
     {
         $stmt = $this->db->prepare("
             SELECT *
-            FROM public.harmonia_operacoes
+            FROM harmonia_operacoes
             WHERE sessao_path = :sessao_path
             LIMIT 1
         ");
@@ -51,7 +51,7 @@ class HarmoniaOperacao
     public function salvarEstado(string $sessaoPath, string $sessaoNome, array $dados): bool
     {
         $stmt = $this->db->prepare("
-            INSERT INTO public.harmonia_operacoes (
+            INSERT INTO harmonia_operacoes (
                 sessao_path,
                 sessao_nome,
                 operador_nome,

@@ -55,8 +55,8 @@ class RelatorioSecretariaAnual
     {
         $stmt = $this->db->prepare("
             SELECT COUNT(*) AS total
-            FROM public.balaustres b
-            JOIN public.sessoes s ON s.id = b.sessao_id
+            FROM balaustres b
+            JOIN sessoes s ON s.id = b.sessao_id
             LEFT JOIN LATERAL jsonb_array_elements(
                 COALESCE(b.dados_capturados -> 'palavra_bem_ordem' -> 'visitantes', '[]'::jsonb)
             ) AS visitante ON TRUE
@@ -77,8 +77,8 @@ class RelatorioSecretariaAnual
             SELECT
                 NULLIF(TRIM(COALESCE(visitante ->> 'loja', '')), '') AS loja,
                 COUNT(*) AS total
-            FROM public.balaustres b
-            JOIN public.sessoes s ON s.id = b.sessao_id
+            FROM balaustres b
+            JOIN sessoes s ON s.id = b.sessao_id
             LEFT JOIN LATERAL jsonb_array_elements(
                 COALESCE(b.dados_capturados -> 'palavra_bem_ordem' -> 'visitantes', '[]'::jsonb)
             ) AS visitante ON TRUE
@@ -110,7 +110,7 @@ class RelatorioSecretariaAnual
             SELECT
                 COALESCE(NULLIF(TRIM(grau_sessao), ''), 'Não informado') AS grau_sessao,
                 COUNT(*) AS total
-            FROM public.sessoes
+            FROM sessoes
             WHERE data_hora_inicio >= :inicio
               AND data_hora_inicio < :fim_exclusivo
               AND loja_id = :loja_id
@@ -150,8 +150,8 @@ class RelatorioSecretariaAnual
     {
         $stmt = $this->db->prepare("
             SELECT COUNT(*) AS total
-            FROM public.visitas_externas_sessao v
-            JOIN public.sessoes s ON s.id = v.sessao_id
+            FROM visitas_externas_sessao v
+            JOIN sessoes s ON s.id = v.sessao_id
             WHERE s.data_hora_inicio >= :inicio
               AND s.data_hora_inicio < :fim_exclusivo
               AND s.loja_id = :loja_id
@@ -167,8 +167,8 @@ class RelatorioSecretariaAnual
             SELECT
                 NULLIF(TRIM(COALESCE(v.loja_visitada, '')), '') AS loja,
                 COUNT(*) AS total
-            FROM public.visitas_externas_sessao v
-            JOIN public.sessoes s ON s.id = v.sessao_id
+            FROM visitas_externas_sessao v
+            JOIN sessoes s ON s.id = v.sessao_id
             WHERE s.data_hora_inicio >= :inicio
               AND s.data_hora_inicio < :fim_exclusivo
               AND s.loja_id = :loja_id
@@ -195,8 +195,8 @@ class RelatorioSecretariaAnual
     {
         $stmt = $this->db->prepare("
             SELECT COUNT(*) AS total
-            FROM public.balaustres b
-            JOIN public.sessoes s ON s.id = b.sessao_id
+            FROM balaustres b
+            JOIN sessoes s ON s.id = b.sessao_id
             LEFT JOIN LATERAL jsonb_array_elements(
                 COALESCE(b.dados_capturados -> 'saco_propostas' -> 'visitas_externas', '[]'::jsonb)
             ) AS visita ON TRUE
@@ -215,8 +215,8 @@ class RelatorioSecretariaAnual
             SELECT
                 NULLIF(TRIM(COALESCE(visita ->> 'loja', '')), '') AS loja,
                 COUNT(*) AS total
-            FROM public.balaustres b
-            JOIN public.sessoes s ON s.id = b.sessao_id
+            FROM balaustres b
+            JOIN sessoes s ON s.id = b.sessao_id
             LEFT JOIN LATERAL jsonb_array_elements(
                 COALESCE(b.dados_capturados -> 'saco_propostas' -> 'visitas_externas', '[]'::jsonb)
             ) AS visita ON TRUE
@@ -258,8 +258,8 @@ class RelatorioSecretariaAnual
         $tipoEvento = $tipo === 'congressos' ? 'congresso' : 'palestra';
         $stmt = $this->db->prepare("
             SELECT COUNT(*) AS total
-            FROM public.eventos_sessao e
-            JOIN public.sessoes s ON s.id = e.sessao_id
+            FROM eventos_sessao e
+            JOIN sessoes s ON s.id = e.sessao_id
             WHERE s.data_hora_inicio >= :inicio
               AND s.data_hora_inicio < :fim_exclusivo
               AND s.loja_id = :loja_id
@@ -283,8 +283,8 @@ class RelatorioSecretariaAnual
     {
         $stmt = $this->db->prepare("
             SELECT COUNT(*) AS total
-            FROM public.balaustres b
-            JOIN public.sessoes s ON s.id = b.sessao_id
+            FROM balaustres b
+            JOIN sessoes s ON s.id = b.sessao_id
             LEFT JOIN LATERAL jsonb_array_elements(
                 COALESCE(b.dados_capturados -> 'eventos_realizados' -> :tipo, '[]'::jsonb)
             ) AS evento ON TRUE
@@ -324,7 +324,7 @@ class RelatorioSecretariaAnual
     private function obterPanoramaQuadroPorTrilhaFormal(DateTimeImmutable $inicio, DateTimeImmutable $fimExclusivo): array
     {
         $sqlBase = "
-            FROM public.obreiros
+            FROM obreiros
             WHERE COALESCE(
                     data_reintegracao,
                     data_regularizacao,
@@ -359,7 +359,7 @@ class RelatorioSecretariaAnual
                 COUNT(*) FILTER (WHERE data_suspensao >= :inicio AND data_suspensao < :fim) AS suspensoes,
                 COUNT(*) FILTER (WHERE data_desligamento >= :inicio AND data_desligamento < :fim) AS desligamentos,
                 COUNT(*) FILTER (WHERE data_oriente_eterno >= :inicio AND data_oriente_eterno < :fim) AS oriente_eterno
-            FROM public.obreiros
+            FROM obreiros
             WHERE loja_id = :loja_id
         ");
         $movStmt->execute([
@@ -392,7 +392,7 @@ class RelatorioSecretariaAnual
         }
 
         $sqlBase = "
-            FROM public.obreiros
+            FROM obreiros
             WHERE created_at < :limite
               AND loja_id = :loja_id
               AND (
@@ -428,7 +428,7 @@ class RelatorioSecretariaAnual
     private function obterPerfilQuadro(DateTimeImmutable $inicio, DateTimeImmutable $fimExclusivo): array
     {
         $sqlBase = "
-            FROM public.obreiros
+            FROM obreiros
             WHERE COALESCE(
                     data_reintegracao,
                     data_regularizacao,
