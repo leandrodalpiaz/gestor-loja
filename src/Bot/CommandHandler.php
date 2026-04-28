@@ -604,17 +604,29 @@ class CommandHandler
             ],
         ], $this->getAppBaseUrl());
         $mensagem = "Bem-vindo ao painel da Loja, meu Irmão!" . $this->privateMenuHint();
-        $teclado = [
+         = [
             'inline_keyboard' => [
                 [
                     ['text' => 'Meu cadastro', 'callback_data' => 'menu_meu_cadastro'],
                     ['text' => 'Minhas informações', 'callback_data' => 'menu_minhas_info'],
                 ],
+                array_values(array_filter([
+                    \App\Config\FeatureFlags::pwaSessoes() ? ['text' => 'Sessões (PWA)', 'web_app' => ['url' => $this->buildAppUrl('/pwa/sessoes')]] : null,
+                    \App\Config\FeatureFlags::pwaBiblioteca() ? ['text' => 'Biblioteca (PWA)', 'web_app' => ['url' => $this->buildAppUrl('/pwa/biblioteca')]] : null,
+                ])),
+                array_values(array_filter([
+                    \App\Config\FeatureFlags::pwaComunicacao() ? ['text' => 'Comunicados (PWA)', 'web_app' => ['url' => $this->buildAppUrl('/pwa/comunicacao')]] : null,
+                ])),
                 [
                     ['text' => 'Ajuda / contato', 'callback_data' => 'menu_ajuda_contato'],
                 ],
             ],
         ];
+
+        ['inline_keyboard'] = array_values(array_filter(
+            ['inline_keyboard'],
+            static fn (): bool => is_array() &&  !== []
+        ));
 
         if ($isDev || $this->obreiroHasPermission($obreiro, 'chancelaria.manage')) {
             $teclado['inline_keyboard'][] = [
