@@ -92,7 +92,9 @@ if ($shouldNormalizeHtmlOutput) {
     });
 }
 $openTestAccess = filter_var($_ENV["APP_TEST_OPEN_ACCESS"] ?? "false", FILTER_VALIDATE_BOOL);
-$allowAllPanels = filter_var($_ENV["APP_TEST_ALLOW_ALL_PANELS"] ?? "true", FILTER_VALIDATE_BOOL);
+// Segurança: por padrão NÃO liberar todos os painéis. Em produção isso deve ser false.
+// Use APP_TEST_ALLOW_ALL_PANELS=true apenas para ambiente de teste.
+$allowAllPanels = filter_var($_ENV["APP_TEST_ALLOW_ALL_PANELS"] ?? "false", FILTER_VALIDATE_BOOL);
 $testLogin = trim((string) ($_ENV["APP_TEST_DEFAULT_LOGIN"] ?? ""));
 $testPassword = (string) ($_ENV["APP_TEST_DEFAULT_PASSWORD"] ?? "");
 $testRole = trim((string) ($_ENV["APP_TEST_DEFAULT_ROLE"] ?? "tesoureiro"));
@@ -1238,8 +1240,18 @@ switch ($requestUri) {
                 $erroLogin = "Informe CIM e senha para acessar.";
             } else {
                 // Login técnico (admin do sistema) - não é membro da Loja e não entra em nominata/listas.
-                $systemAdminLogin = trim((string) ($_ENV['SYSTEM_ADMIN_WEB_LOGIN'] ?? 'adm'));
-                $systemAdminPassword = trim((string) ($_ENV['SYSTEM_ADMIN_WEB_PASSWORD'] ?? ''));
+                // Admin técnico (web): por padrão exige senha via env.
+                // Aceita chaves WEB_* e, se ausentes, faz fallback para SYSTEM_ADMIN_* (compat/legacy).
+                $systemAdminLogin = trim((string) (
+                    $_ENV['SYSTEM_ADMIN_WEB_LOGIN']
+                    ?? $_ENV['SYSTEM_ADMIN_LOGIN']
+                    ?? 'adm'
+                ));
+                $systemAdminPassword = trim((string) (
+                    $_ENV['SYSTEM_ADMIN_WEB_PASSWORD']
+                    ?? $_ENV['SYSTEM_ADMIN_PASSWORD']
+                    ?? ''
+                ));
                 if ($systemAdminPassword !== '' && $acao !== 'solicitar' && (string) $matricula === $systemAdminLogin && hash_equals($systemAdminPassword, (string) $password)) {
                     $_SESSION['force_system_admin'] = true;
                     $_SESSION['usuario_logado'] = [

@@ -22,7 +22,7 @@ if (in_array($usuarioNomeNormalizado, ['admin', 'administrador'], true)) {
 $usuarioCargos = $_SESSION['usuario_cargos'] ?? [$usuarioCargo];
 $isSystemAdmin = (bool) ($_SESSION['is_system_admin'] ?? false);
 $isTestSession = isset($_SESSION['usuario_id']) && (string) $_SESSION['usuario_id'] === '0';
-$allowAllPanels = filter_var($_ENV['APP_TEST_ALLOW_ALL_PANELS'] ?? 'true', FILTER_VALIDATE_BOOL);
+$allowAllPanels = filter_var($_ENV['APP_TEST_ALLOW_ALL_PANELS'] ?? 'false', FILTER_VALIDATE_BOOL);
 $showAllPanels = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VALIDATE_BOOL) || $isTestSession || $allowAllPanels;
 $dashboardPermissions = is_array($dashboardPermissions ?? null) ? $dashboardPermissions : [];
 $dashboardCan = static function (string $permission) use ($dashboardPermissions, $showAllPanels): bool {

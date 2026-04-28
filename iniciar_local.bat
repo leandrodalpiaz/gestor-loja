@@ -11,7 +11,7 @@ echo Pressione Ctrl+C para encerrar quando terminar.
 echo ===========================================================
 echo.
 
-powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File ".\scripts\dev_start.ps1" -Port 8000 -ChecklistPort 8090 -OpenAccess -WithPolling -WithTunnel -TunnelProvider cloudflared
+powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File ".\scripts\dev_start.ps1" -Port 8000 -ChecklistPort 8090 -WithPolling -WithTunnel -TunnelProvider cloudflared
 set "EXIT_CODE=%ERRORLEVEL%"
 
 echo.
