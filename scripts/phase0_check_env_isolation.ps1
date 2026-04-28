@@ -17,11 +17,18 @@ Get-Content $EnvFile | ForEach-Object {
   $kv[$parts[0].Trim()] = $parts[1].Trim()
 }
 
-$appEnv = ($kv["APP_ENV"] ?? "").ToLower()
+$appEnvRaw = ""
+if ($kv.ContainsKey("APP_ENV")) { $appEnvRaw = $kv["APP_ENV"] }
+$appEnv = ($appEnvRaw + "").ToLower()
 if ($appEnv -eq "") { $appEnv = "local" }
 
-$dbSchema = ($kv["DB_SCHEMA"] ?? "").ToLower()
-$tgDryRun = ($kv["TELEGRAM_DRY_RUN"] ?? "").ToLower()
+$dbSchemaRaw = ""
+if ($kv.ContainsKey("DB_SCHEMA")) { $dbSchemaRaw = $kv["DB_SCHEMA"] }
+$dbSchema = ($dbSchemaRaw + "").ToLower()
+
+$tgDryRunRaw = ""
+if ($kv.ContainsKey("TELEGRAM_DRY_RUN")) { $tgDryRunRaw = $kv["TELEGRAM_DRY_RUN"] }
+$tgDryRun = ($tgDryRunRaw + "").ToLower()
 
 Write-Host "APP_ENV=$appEnv"
 Write-Host "DB_SCHEMA=$dbSchema"
@@ -32,4 +39,3 @@ if ($appEnv -ne "production" -and $dbSchema -eq "app_prod") {
 }
 
 Write-Host "OK: isolamento básico validado."
-
