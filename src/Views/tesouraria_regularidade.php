@@ -14,6 +14,8 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
 ?>
 
+<?php require __DIR__ . '/partials/erp_tesouraria_topbar.php'; ?>
+
 <!-- Filtros e Ações em Massa -->
 <div class="card mb-6">
     <div class="card-body">

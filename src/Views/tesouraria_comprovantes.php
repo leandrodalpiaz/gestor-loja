@@ -24,6 +24,8 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
 ?>
 
+<?php require __DIR__ . '/partials/erp_tesouraria_topbar.php'; ?>
+
 <div class="space-y-6">
     <!-- Info PIX -->
     <div class="card">
@@ -127,7 +129,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 </div>
 
-<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+<?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
 
 <script src="/assets/js/tesouraria_comprovantes.js"></script>
 

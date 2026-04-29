@@ -21,6 +21,8 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
 ?>
 
+<?php require __DIR__ . '/partials/erp_tesouraria_topbar.php'; ?>
+
 <div class="space-y-8">
     <!-- Filtros e Ações -->
     <div class="card">
@@ -58,10 +60,11 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 
     <!-- Métricas -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <div class="card-metric"><p class="card-metric-label">Total Entradas</p><p class="card-metric-value text-green-600 dark:text-green-400" id="total-entradas">R$ 0,00</p></div>
         <div class="card-metric"><p class="card-metric-label">Total Saídas</p><p class="card-metric-value text-red-600 dark:text-red-400" id="total-saidas">R$ 0,00</p></div>
-        <div class="card-metric"><p class="card-metric-label">Saldo Líquido</p><p class="card-metric-value" id="saldo-liquido">R$ 0,00</p></div>
+        <div class="card-metric"><p class="card-metric-label">Saldo do Período</p><p class="card-metric-value" id="saldo-liquido">R$ 0,00</p></div>
+        <div class="card-metric"><p class="card-metric-label">Saldo Acumulado</p><p class="card-metric-value" id="saldo-acumulado">R$ 0,00</p></div>
     </div>
 
     <!-- Lançamentos Rápidos -->
@@ -117,7 +120,13 @@ require __DIR__ . '/partials/erp_shell_open.php';
             <table class="table-default">
                 <thead>
                     <tr>
-                        <th>Data</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Obreiro</th><th class="text-right">Valor</th><th class="text-center">Ações</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-erp-muted">Data</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-erp-muted">Tipo</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-erp-muted">Categoria</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-erp-muted">Descrição</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-erp-muted">Obreiro</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-erp-muted">Valor</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-erp-muted">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="lancamentos-table" class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -152,7 +161,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 </div>
 
-<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+<?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script src="/assets/js/tesouraria_caixa.js"></script>

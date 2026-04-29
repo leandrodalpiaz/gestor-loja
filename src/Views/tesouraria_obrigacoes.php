@@ -124,6 +124,8 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
 ?>
 
+<?php require __DIR__ . '/partials/erp_tesouraria_topbar.php'; ?>
+
 <!-- Métricas Gerais -->
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
     <div class="card-metric"><p class="card-metric-label">Resumo do Passado</p><p class="card-metric-value"><?= $formatCurrency($totalPassado) ?></p><p class="card-metric-sublabel">Entradas antes de <?= htmlspecialchars($tituloMesAtual) ?></p></div>

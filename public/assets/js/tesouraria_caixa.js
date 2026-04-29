@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
         totalEntradas: document.getElementById('total-entradas'),
         totalSaidas: document.getElementById('total-saidas'),
         saldoLiquido: document.getElementById('saldo-liquido'),
+        saldoAcumulado: document.getElementById('saldo-acumulado'),
         lancamentosTable: document.getElementById('lancamentos-table'),
         lancamentosCards: document.getElementById('lancamentos-cards'),
         sugestoesPanel: document.getElementById('sugestoes-panel'),
@@ -123,13 +124,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    async function buscarFechamentoPeriodo(mes, ano) {
+        try {
+            const res = await fetch(`/api/tesouraria/fechamento?mes=${mes}&ano=${ano}`);
+            const json = await res.json();
+            return json.fechamento || null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     async function filtrarCaixa() {
         const mes = Number(ui.filterMes.value);
         const ano = Number(ui.filterAno.value);
         try {
             const res = await fetch(`/api/tesouraria/caixa?mes=${mes}&ano=${ano}`);
             const json = await res.json();
-            atualizarResumo(json.totais || {});
+            const fechamento = await buscarFechamentoPeriodo(mes, ano);
+            atualizarResumo(json.totais || {}, fechamento);
             atualizarTabela(json.lancamentos || []);
             await atualizarGraficos(mes, ano, json.totais || {});
         } catch (err) {
@@ -137,14 +149,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function atualizarResumo(totais) {
+    function atualizarResumo(totais, fechamento = null) {
         const totalEntradas = parseFloat(totais.entrada || 0);
         const totalSaidas = parseFloat(totais.saida || 0);
         const saldoLiquido = totalEntradas - totalSaidas;
+        const saldoAcumulado = fechamento && fechamento.saldo_final !== undefined
+            ? parseFloat(fechamento.saldo_final || 0)
+            : saldoLiquido;
 
         ui.totalEntradas.textContent = formatarMoeda(totalEntradas);
         ui.totalSaidas.textContent = formatarMoeda(totalSaidas);
         ui.saldoLiquido.textContent = formatarMoeda(saldoLiquido);
+        if (ui.saldoAcumulado) {
+            ui.saldoAcumulado.textContent = formatarMoeda(saldoAcumulado);
+        }
     }
 
     function renderLancamentoRow(l) {
@@ -158,8 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td class="px-4 py-3 text-right font-semibold ${l.tipo === 'entrada' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
                     ${l.tipo === 'entrada' ? '+' : '-'} ${formatarMoeda(l.valor)}
                 </td>
-                <td class="px-4 py-3 text-center space-x-2">
-                    <button onclick='abrirModalLancamento("${l.tipo}", ${l.categoria_id}, ${JSON.stringify(l)})' class="text-xs font-medium text-blue-600 hover:underline">Editar</button>
+                <td class="px-4 py-3 text-right">
                     <button onclick="deletarLancamento(${l.id})" class="text-xs font-medium text-red-600 hover:underline">Excluir</button>
                 </td>
             </tr>
@@ -179,10 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">${l.descricao || '-'}</p>
                 <div class="mt-3 flex items-end justify-between">
                     <p class="text-lg font-bold ${l.tipo === 'entrada' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">${formatarMoeda(l.valor)}</p>
-                    <div class="space-x-2">
-                        <button onclick='abrirModalLancamento("${l.tipo}", ${l.categoria_id}, ${JSON.stringify(l)})' class="text-xs font-medium text-blue-600 hover:underline">Editar</button>
-                        <button onclick="deletarLancamento(${l.id})" class="text-xs font-medium text-red-600 hover:underline">Excluir</button>
-                    </div>
+                    <button onclick="deletarLancamento(${l.id})" class="text-xs font-medium text-red-600 hover:underline">Excluir</button>
                 </div>
             </div>
         `;
@@ -190,9 +204,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function atualizarTabela(lancamentos) {
         if (lancamentos.length === 0) {
-            const placeholder = '<tr><td colspan="7" class="px-4 py-6 text-center text-gray-500 dark:text-gray-400">Nenhum lançamento neste período</td></tr>';
-            ui.lancamentosTable.innerHTML = placeholder;
-            ui.lancamentosCards.innerHTML = `<div class="text-center text-sm text-gray-500 dark:text-gray-400 py-4">Nenhum lançamento neste período.</div>`;
+            ui.lancamentosTable.innerHTML = `
+                <tr>
+                    <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                        <div class="font-medium">Nenhum lançamento encontrado para esta competência.</div>
+                        <div class="mt-1 text-sm">Use <button type="button" class="font-semibold text-erp-navy underline underline-offset-4" onclick="abrirModalLancamento('entrada')">Novo lançamento</button> para registrar uma entrada ou saída.</div>
+                    </td>
+                </tr>
+            `;
+            ui.lancamentosCards.innerHTML = `
+                <div class="rounded-xl border border-erp-border bg-erp-surface p-4 text-center text-sm text-erp-muted">
+                    <div class="font-semibold text-erp-text">Nenhum lançamento encontrado para esta competência.</div>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-success w-full" onclick="abrirModalLancamento('entrada')">Novo lançamento</button>
+                    </div>
+                </div>
+            `;
             return;
         }
         ui.lancamentosTable.innerHTML = lancamentos.map(renderLancamentoRow).join('');
@@ -211,14 +238,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const projecaoEntrada = (entradaAnterior + entradaAtual) / 2;
         const projecaoSaida = (saidaAnterior + saidaAtual) / 2;
 
+        const pizzaVazio = entradaAtual === 0 && saidaAtual === 0;
         const pizzaOptions = {
-            series: [entradaAtual, saidaAtual],
+            series: pizzaVazio ? [1, 1] : [entradaAtual, saidaAtual],
             chart: { type: 'donut', height: 208, sparkline: { enabled: true } },
-            colors: ['#16a34a', '#dc2626'],
+            colors: pizzaVazio ? ['#e5e7eb', '#e5e7eb'] : ['#16a34a', '#dc2626'],
             stroke: { width: 0 },
             legend: { show: false },
             tooltip: { enabled: false },
             dataLabels: { enabled: false },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        labels: {
+                            show: pizzaVazio,
+                            name: { show: false },
+                            value: { show: false },
+                            total: {
+                                show: pizzaVazio,
+                                label: 'Sem dados',
+                                formatter: function () { return ''; }
+                            }
+                        }
+                    }
+                }
+            }
         };
         if (chartPizza) {
             chartPizza.updateOptions(pizzaOptions);
@@ -267,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.deletarLancamento = async function(id) {
         if (confirm('Tem certeza que deseja excluir este lançamento?')) {
             try {
-                const res = await fetch(`/api/tesouraria/caixa/${id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/tesouraria/lancamento/${id}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error('Falha ao excluir');
                 filtrarCaixa();
             } catch (err) {
@@ -286,13 +330,18 @@ document.addEventListener('DOMContentLoaded', function() {
             valor: ui.valorInput.value,
             data_lancamento: ui.dataLancamentoInput.value,
             descricao: ui.descricaoInput.value,
+            mes_ref: parseInt(ui.filterMes?.value || (new Date().getMonth() + 1)),
+            ano_ref: parseInt(ui.filterAno?.value || new Date().getFullYear()),
         };
 
         try {
-            const url = id ? `/api/tesouraria/caixa/${id}` : '/api/tesouraria/caixa';
-            const method = id ? 'PUT' : 'POST';
-            const res = await fetch(url, {
-                method: method,
+            if (id) {
+                alert('Edição de lançamento ainda não está habilitada neste painel. Exclua e recrie o lançamento, se necessário.');
+                return;
+            }
+
+            const res = await fetch('/api/tesouraria/lancamento/criar', {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
