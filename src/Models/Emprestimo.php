@@ -20,6 +20,10 @@ class Emprestimo
 
     public function listarPendentesPorObreiro(string $obreiroId): array
     {
+        if (!$this->isUuid($obreiroId)) {
+            return [];
+        }
+
         $sql = "SELECT
                     e.*,
                     a.titulo,
@@ -40,6 +44,10 @@ class Emprestimo
 
     public function solicitar(int $acervoId, string $obreiroId): bool
     {
+        if (!$this->isUuid($obreiroId)) {
+            return false;
+        }
+
         try {
             $this->db->beginTransaction();
 
@@ -113,6 +121,10 @@ class Emprestimo
 
     public function listarPorObreiro(string $obreiroId): array
     {
+        if (!$this->isUuid($obreiroId)) {
+            return [];
+        }
+
         $sql = "SELECT
                     e.*,
                     a.titulo,
@@ -215,5 +227,18 @@ class Emprestimo
     private function buscarLojaAtualId(): int
     {
         return $this->resolveCurrentStoreId($this->db);
+    }
+
+    private function isUuid(string $value): bool
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return false;
+        }
+
+        return (bool) preg_match(
+            '/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/',
+            $value
+        );
     }
 }

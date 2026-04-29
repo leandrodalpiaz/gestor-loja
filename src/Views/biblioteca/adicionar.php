@@ -2,12 +2,12 @@
 declare(strict_types=1);
 
 // #############################################################################
-// CONFIGURAÇÃO DO APP SHELL
+// CONFIGURAÃ‡ÃƒO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Biblioteca';
-$appShellTitle = 'Adicionar Novo Título';
-$appShellDescription = 'Cadastre um novo item no acervo da Loja, com busca automática de capa e resumo por ISBN.';
+$appShellTitle = 'Adicionar Novo TÃ­tulo';
+$appShellDescription = 'Cadastre um novo item no acervo da Loja, com busca automÃ¡tica de capa e resumo por ISBN.';
 $appShellActiveHref = '/biblioteca';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
@@ -19,7 +19,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <!-- Coluna 1 -->
             <div class="space-y-6">
                 <div>
-                    <label for="titulo" class="form-label">Título *</label>
+                    <label for="titulo" class="form-label">TÃ­tulo *</label>
                     <input type="text" id="titulo" name="titulo" required class="form-input">
                 </div>
                 <div>
@@ -32,7 +32,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 </div>
                 <div>
                     <label for="capa_url" class="form-label">URL da Capa</label>
-                    <input type="url" id="capa_url" name="capa_url" class="form-input" placeholder="Opcional, se não usar ISBN">
+                    <input type="url" id="capa_url" name="capa_url" class="form-input" placeholder="Opcional, se nÃ£o usar ISBN">
                 </div>
             </div>
 
@@ -41,13 +41,13 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <div>
                     <label for="tipo" class="form-label">Tipo de Item *</label>
                     <select id="tipo" name="tipo" required class="form-select">
-                        <option value="Livro Fisico">Livro Físico</option>
+                        <option value="Livro Fisico">Livro FÃ­sico</option>
                         <option value="Digital (PDF)">Digital (PDF)</option>
                         <option value="Ritual">Ritual</option>
                     </select>
                 </div>
                 <div>
-                    <label for="quantidade_disponivel" class="form-label">Quantidade Disponível *</label>
+                    <label for="quantidade_disponivel" class="form-label">Quantidade DisponÃ­vel *</label>
                     <input type="number" id="quantidade_disponivel" name="quantidade_disponivel" min="1" value="1" required class="form-input">
                 </div>
                 <div>
@@ -60,8 +60,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </select>
                 </div>
                 <div>
-                    <label for="nota_instrucao" class="form-label">Nota de Instrução</label>
-                    <input type="text" id="nota_instrucao" name="nota_instrucao" class="form-input" placeholder="Ex: Leitura obrigatória para o Grau 2">
+                    <label for="nota_instrucao" class="form-label">Nota de InstruÃ§Ã£o</label>
+                    <input type="text" id="nota_instrucao" name="nota_instrucao" class="form-input" placeholder="Ex: Leitura obrigatÃ³ria para o Grau 2">
                 </div>
             </div>
         </div>
@@ -74,26 +74,15 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             </div>
         </div>
 
-        <!-- Ações do Formulário -->
+        <!-- AÃ§Ãµes do FormulÃ¡rio -->
         <div class="pt-4 flex justify-end gap-3">
             <a href="/biblioteca" class="btn btn-secondary">Cancelar</a>
-            <button type="submit" class="btn btn-primary">Salvar Título</button>
+            <button type="submit" class="btn btn-primary">Salvar TÃ­tulo</button>
         </div>
     </form>
 </div>
 
-<style>
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
-    .card-body { @apply p-6; }
-
-    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
-    .form-input, .form-select, .form-textarea { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
-    
-    .btn { @apply px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900; }
-    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
-    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
-</style>
-
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+
 
 

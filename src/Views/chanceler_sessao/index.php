@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÓGICA DE NEGÓCIO E HELPERS
+// LÃ“GICA DE NEGÃ“CIO E HELPERS
 // #############################################################################
 
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
@@ -25,7 +25,7 @@ $formatarDataHoraExibicao = static function (?string $valor): string {
     try {
         return (new DateTimeImmutable($valor))
             ->setTimezone(new DateTimeZone('America/Sao_Paulo'))
-            ->format('d/m/Y \à\s H:i');
+            ->format('d/m/Y \Ã \s H:i');
     } catch (\Throwable $e) {
         return (string) $valor;
     }
@@ -35,12 +35,12 @@ $descricaoAgape = static fn (array $sessao): string =>
     match (strtolower(trim((string) ($sessao['agape_modalidade'] ?? 'nao_havera')))) {
         'gratuito' => 'Gratuito',
         'pago' => 'Pago',
-        default => 'Não haverá',
+        default => 'NÃ£o haverÃ¡',
     };
 
 $descricaoModeloTesourariaAgape = static function (array $sessao): string {
     if (strtolower(trim((string) ($sessao['agape_modalidade'] ?? 'nao_havera'))) === 'nao_havera') {
-        return 'Não se aplica';
+        return 'NÃ£o se aplica';
     }
     return match (strtolower(trim((string) ($sessao['agape_modelo_financeiro'] ?? 'oficial_loja')))) {
         'particular' => 'Particular',
@@ -60,12 +60,12 @@ if ($sessaoEmFoco && !empty($sessaoEmFoco['data_hora_inicio'])) {
 $urlCertificado = '/chancelaria/certificado' . ($paramsCertificado !== [] ? '?' . http_build_query($paramsCertificado) : '');
 
 // #############################################################################
-// CONFIGURAÇÃO DO APP SHELL
+// CONFIGURAÃ‡ÃƒO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Painel do Chanceler';
-$appShellTitle = 'Controle de Sessão';
-$appShellDescription = 'Realize o check-in, acompanhe a nominata e gerencie os visitantes para a sessão.';
+$appShellTitle = 'Controle de SessÃ£o';
+$appShellDescription = 'Realize o check-in, acompanhe a nominata e gerencie os visitantes para a sessÃ£o.';
 $appShellActiveHref = '/chanceler/sessao';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
@@ -78,47 +78,47 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div>
 <?php endif; ?>
 
-<!-- Métricas Principais -->
+<!-- MÃ©tricas Principais -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <div class="card-metric">
-        <span class="card-metric-label">Sessão Ativa</span>
+        <span class="card-metric-label">SessÃ£o Ativa</span>
         <span class="card-metric-value truncate"><?= htmlspecialchars((string) ($sessaoEmFoco['titulo'] ?? 'N/D')) ?></span>
         <span class="card-metric-context"><?= htmlspecialchars($formatarDataHoraExibicao($sessaoEmFoco['data_hora_inicio'] ?? null)) ?></span>
     </div>
     <div class="card-metric">
-        <span class="card-metric-label">Frequência Efetiva</span>
+        <span class="card-metric-label">FrequÃªncia Efetiva</span>
         <span class="card-metric-value"><?= count($presentesEfetivos) ?></span>
         <span class="card-metric-context">Obreiros presentes</span>
     </div>
     <div class="card-metric">
         <span class="card-metric-label">Visitantes</span>
         <span class="card-metric-value"><?= count($visitantesResumo) ?></span>
-        <span class="card-metric-context">Leitura rápida para apoio</span>
+        <span class="card-metric-context">Leitura rÃ¡pida para apoio</span>
     </div>
     <div class="card-metric">
-        <span class="card-metric-label">Confirmados (Ágape)</span>
+        <span class="card-metric-label">Confirmados (Ãgape)</span>
         <span class="card-metric-value"><?= count($confirmados) ?></span>
-        <span class="card-metric-context">Presença no ágape</span>
+        <span class="card-metric-context">PresenÃ§a no Ã¡gape</span>
     </div>
 </div>
 
-<!-- Seleção de Sessão e Detalhes -->
+<!-- SeleÃ§Ã£o de SessÃ£o e Detalhes -->
 <div class="card mb-8">
     <div class="card-header">
-        <h2 class="card-title">Contexto da Sessão</h2>
-        <p class="card-subtitle">Troque a sessão em foco para visualizar os dados correspondentes.</p>
+        <h2 class="card-title">Contexto da SessÃ£o</h2>
+        <p class="card-subtitle">Troque a sessÃ£o em foco para visualizar os dados correspondentes.</p>
     </div>
     <div class="card-body">
         <form method="GET" action="/chanceler/sessao" class="flex flex-col md:flex-row md:items-end md:gap-4">
             <div class="flex-grow">
-                <label for="sessao_id" class="form-label">Selecionar Sessão</label>
+                <label for="sessao_id" class="form-label">Selecionar SessÃ£o</label>
                 <select id="sessao_id" name="sessao_id" onchange="this.form.submit()" class="form-select">
                     <?php if (empty($sessoes)): ?>
-                        <option disabled selected>Nenhuma sessão disponível</option>
+                        <option disabled selected>Nenhuma sessÃ£o disponÃ­vel</option>
                     <?php else: ?>
                         <?php foreach ($sessoes as $sessaoOpcao): ?>
                             <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>" <?= !empty($sessaoEmFoco['id']) && (int) $sessaoEmFoco['id'] === (int) ($sessaoOpcao['id'] ?? 0) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars((string) (($sessaoOpcao['titulo'] ?? '') ?: (($sessaoOpcao['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
+                                <?= htmlspecialchars((string) (($sessaoOpcao['titulo'] ?? '') ?: (($sessaoOpcao['tipo_sessao'] ?? 'SessÃ£o') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
                                 (<?= htmlspecialchars($formatarDataHoraExibicao($sessaoOpcao['data_hora_inicio'] ?? null)) ?>)
                             </option>
                         <?php endforeach; ?>
@@ -133,11 +133,11 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <div class="info-badge"><span>Nominata Prevista</span><strong><?= count($mapaPresencas) ?></strong></div>
                 <div class="info-badge"><span>Presentes Efetivos</span><strong><?= count($presentesEfetivos) ?></strong></div>
                 <div class="info-badge"><span>Visitantes</span><strong><?= count($visitantesResumo) ?></strong></div>
-                <div class="info-badge"><span>Ágape</span><strong><?= htmlspecialchars($descricaoAgape($sessaoEmFoco)) ?></strong></div>
+                <div class="info-badge"><span>Ãgape</span><strong><?= htmlspecialchars($descricaoAgape($sessaoEmFoco)) ?></strong></div>
                 <div class="info-badge"><span>Modelo Financeiro</span><strong><?= htmlspecialchars($descricaoModeloTesourariaAgape($sessaoEmFoco)) ?></strong></div>
             </div>
         <?php else: ?>
-            <div class="alert alert-info mt-6">Nenhuma sessão futura cadastrada.</div>
+            <div class="alert alert-info mt-6">Nenhuma sessÃ£o futura cadastrada.</div>
         <?php endif; ?>
     </div>
 </div>
@@ -148,7 +148,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         <div class="card">
             <div class="card-header">
                 <h2 class="card-title">Check-in do Quadro da Loja</h2>
-                <p class="card-subtitle">Marque os presentes para compor a lista final da sessão.</p>
+                <p class="card-subtitle">Marque os presentes para compor a lista final da sessÃ£o.</p>
             </div>
             <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
                 <?php if (!empty($mapaPresencas)): ?>
@@ -169,7 +169,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         </form>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="alert alert-info md:col-span-2">Nenhuma nominata prevista para esta sessão.</div>
+                    <div class="alert alert-info md:col-span-2">Nenhuma nominata prevista para esta sessÃ£o.</div>
                 <?php endif; ?>
             </div>
         </div>
@@ -177,7 +177,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         <div class="card">
             <div class="card-header">
                 <h2 class="card-title">Lista Final de Presentes (<?= count($presentesEfetivos) ?>)</h2>
-                <p class="card-subtitle">Conferência rápida da nominata efetiva da sessão.</p>
+                <p class="card-subtitle">ConferÃªncia rÃ¡pida da nominata efetiva da sessÃ£o.</p>
             </div>
             <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
                 <?php if (!empty($presentesEfetivos)): ?>
@@ -190,7 +190,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="alert alert-info md:col-span-2">Ainda não há presentes efetivos marcados.</div>
+                    <div class="alert alert-info md:col-span-2">Ainda nÃ£o hÃ¡ presentes efetivos marcados.</div>
                 <?php endif; ?>
             </div>
         </div>
@@ -212,68 +212,32 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="alert alert-info">Nenhum visitante registrado para esta sessão.</div>
+                    <div class="alert alert-info">Nenhum visitante registrado para esta sessÃ£o.</div>
                 <?php endif; ?>
             </div>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">Confirmados para o Ágape (<?= count($confirmados) ?>)</h2>
-                <p class="card-subtitle">Lista de presença no ágape.</p>
+                <h2 class="card-title">Confirmados para o Ãgape (<?= count($confirmados) ?>)</h2>
+                <p class="card-subtitle">Lista de presenÃ§a no Ã¡gape.</p>
             </div>
             <div class="card-body space-y-3">
                 <?php if (!empty($confirmados)): ?>
                     <?php foreach ($confirmados as $confirmado): ?>
                         <div class="list-item-condensed">
                             <div class="font-medium text-gray-800 dark:text-gray-100"><?= htmlspecialchars((string) ($confirmado['nome'] ?? 'Obreiro')) ?></div>
-                            <div class="text-sm text-gray-600 dark:text-gray-400"><?= !empty($confirmado['participara_agape']) ? 'Confirmado com ágape' : 'Confirmado sem ágape' ?></div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400"><?= !empty($confirmado['participara_agape']) ? 'Confirmado com Ã¡gape' : 'Confirmado sem Ã¡gape' ?></div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="alert alert-info">Nenhum irmão confirmado para o ágape.</div>
+                    <div class="alert alert-info">Nenhum irmÃ£o confirmado para o Ã¡gape.</div>
                 <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
-    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
-    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
-    .card-subtitle { @apply text-sm text-gray-500 dark:text-gray-400 mt-1; }
-    .card-body { @apply p-5; }
-
-    .card-metric { @apply bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md flex flex-col; }
-    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
-    .card-metric-value { @apply text-2xl font-bold text-gray-900 dark:text-white mt-1; }
-    .card-metric-context { @apply text-sm text-gray-500 dark:text-gray-400 mt-1; }
-
-    .alert { @apply p-4 rounded-md text-sm; }
-    .alert-success { @apply bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300; }
-    .alert-danger { @apply bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300; }
-    .alert-info { @apply bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300; }
-
-    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
-    .form-select { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
-
-    .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900; }
-    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
-
-    .info-badge { @apply bg-gray-100 dark:bg-gray-700 p-3 rounded-md flex flex-col items-start; }
-    .info-badge span { @apply text-xs text-gray-500 dark:text-gray-400; }
-    .info-badge strong { @apply text-base font-bold text-gray-900 dark:text-white; }
-
-    .checkin-card { @apply bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between; }
-    .btn-checkin { @apply px-3 py-1.5 text-sm rounded-md border transition-colors; }
-    .btn-checkin.presente { @apply bg-green-600 text-white border-green-600; }
-    .btn-checkin:not(.presente) { @apply bg-transparent text-green-700 border-green-300 hover:bg-green-50 dark:text-green-300 dark:border-green-700 dark:hover:bg-green-900/30; }
-    .btn-checkin.ausente { @apply bg-gray-600 text-white border-gray-600; }
-    .btn-checkin:not(.ausente) { @apply bg-transparent text-gray-700 border-gray-300 hover:bg-gray-200 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700; }
-
-    .list-item-condensed { @apply bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md; }
-</style>
-
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+
 

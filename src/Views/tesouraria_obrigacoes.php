@@ -2,21 +2,21 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÓGICA DE NEGÓCIO E CONSULTA DE DADOS
+// LÃ“GICA DE NEGÃ“CIO E CONSULTA DE DADOS
 // #############################################################################
 
-// Inicialização de variáveis e helpers
+// InicializaÃ§Ã£o de variÃ¡veis e helpers
 $db = \App\Config\Database::getConnection();
 $hoje = new DateTimeImmutable('today');
 $mesAtual = (int) $hoje->format('n');
 $anoAtual = (int) $hoje->format('Y');
 $competenciaAtual = sprintf('%02d/%04d', $mesAtual, $anoAtual);
-$meses = [1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril', 5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto', 9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'];
-$tituloMesAtual = ($meses[$mesAtual] ?? 'Mês') . ' ' . $anoAtual;
+$meses = [1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'MarÃ§o', 4 => 'Abril', 5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto', 9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'];
+$tituloMesAtual = ($meses[$mesAtual] ?? 'MÃªs') . ' ' . $anoAtual;
 $formatCurrency = static fn($value): string => 'R$ ' . number_format((float) $value, 2, ',', '.');
 $selectedObreiroId = (string) ($_GET['obreiro_id'] ?? '');
 
-// Carregar configurações da loja
+// Carregar configuraÃ§Ãµes da loja
 $stmtConfig = $db->query("SELECT chave, valor FROM configuracoes WHERE chave LIKE 'tesouraria_%' OR chave LIKE 'pix_%'");
 $configuracaoLoja = $stmtConfig->fetchAll(PDO::FETCH_KEY_PAIR);
 $mensalidadePadrao = (float) ($configuracaoLoja['tesouraria_mensalidade_valor_padrao'] ?? 150);
@@ -29,12 +29,12 @@ $pixValor = (string) ($configuracaoLoja['pix_chave_valor'] ?? '');
 $obreirosPainel = $db->query("SELECT id, nome FROM obreiros WHERE ativo = TRUE ORDER BY nome ASC")->fetchAll(PDO::FETCH_ASSOC);
 $categoriasEntrada = $db->query("SELECT id, nome FROM categorias_financeiras WHERE tipo = 'entrada' ORDER BY nome ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-// Buscar resumo do histórico financeiro
+// Buscar resumo do histÃ³rico financeiro
 $stmtHistorico = $db->prepare("SELECT COALESCE(SUM(valor), 0) AS total FROM lancamentos_financeiros WHERE tipo = 'entrada' AND (ano_ref < :ano OR (ano_ref = :ano AND mes_ref < :mes))");
 $stmtHistorico->execute(['ano' => $anoAtual, 'mes' => $mesAtual]);
 $totalPassado = (float) ($stmtHistorico->fetchColumn() ?: 0);
 
-// Buscar todas as parcelas do mês atual para todos os obreiros ativos
+// Buscar todas as parcelas do mÃªs atual para todos os obreiros ativos
 $stmtMesAtual = $db->prepare("
     SELECT o.id AS obreiro_id, o.nome, p.id AS parcela_id, f.titulo, f.tipo_obrigacao, p.valor_previsto, p.vencimento, p.status, p.pago_em
     FROM obrigacao_financeira_parcelas p
@@ -85,12 +85,12 @@ foreach ($painelGeral as &$registro) {
             $registro['atrasado'] += $mensalidadePadrao;
             $registro['vencidos']++;
         }
-        $registro['itens'][] = ['parcela_id' => 0, 'titulo' => 'Contribuição mensal da Loja', 'tipo_obrigacao' => 'mensalidade', 'valor_previsto' => $mensalidadePadrao, 'vencimento' => $vencimentoPadrao, 'status' => 'pendente', 'pago_em' => null, 'esta_vencido' => $estaVencidoPadrao];
+        $registro['itens'][] = ['parcela_id' => 0, 'titulo' => 'ContribuiÃ§Ã£o mensal da Loja', 'tipo_obrigacao' => 'mensalidade', 'valor_previsto' => $mensalidadePadrao, 'vencimento' => $vencimentoPadrao, 'status' => 'pendente', 'pago_em' => null, 'esta_vencido' => $estaVencidoPadrao];
     }
 }
 unset($registro);
 
-// Calcular totais do mês
+// Calcular totais do mÃªs
 $recebidoMes = array_sum(array_column($painelGeral, 'pago'));
 $faltanteMes = array_sum(array_column($painelGeral, 'aberto'));
 $irmaosAPrumo = count(array_filter($painelGeral, fn($r) => $r['aberto'] <= 0.01 && $r['pago'] > 0));
@@ -112,27 +112,27 @@ $itensSelecionadosAberto = $registroSelecionado ? array_values(array_filter($reg
 
 
 // #############################################################################
-// CONFIGURAÇÃO DO APP SHELL
+// CONFIGURAÃ‡ÃƒO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Tesouraria';
 $appShellTitle = 'Acompanhamento Financeiro';
-$appShellDescription = 'Panorama geral do passado e do mês vigente, com leitura de quem está a prumo e quem tem pendências.';
+$appShellDescription = 'Panorama geral do passado e do mÃªs vigente, com leitura de quem estÃ¡ a prumo e quem tem pendÃªncias.';
 $appShellActiveHref = '/tesouraria/obrigacoes';
 
 require __DIR__ . '/partials/erp_shell_open.php';
 ?>
 
-<!-- Métricas Gerais -->
+<!-- MÃ©tricas Gerais -->
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
     <div class="card-metric"><p class="card-metric-label">Resumo do Passado</p><p class="card-metric-value"><?= $formatCurrency($totalPassado) ?></p><p class="card-metric-sublabel">Entradas antes de <?= htmlspecialchars($tituloMesAtual) ?></p></div>
-    <div class="card-metric"><p class="card-metric-label">Pago no Mês</p><p class="card-metric-value text-green-600 dark:text-green-400"><?= $formatCurrency($recebidoMes) ?></p><p class="card-metric-sublabel">Competência: <?= htmlspecialchars($competenciaAtual) ?></p></div>
-    <div class="card-metric"><p class="card-metric-label">Falta no Mês</p><p class="card-metric-value text-red-600 dark:text-red-400"><?= $formatCurrency($faltanteMes) ?></p><p class="card-metric-sublabel">Obrigações em aberto do mês</p></div>
-    <div class="card-metric"><p class="card-metric-label">A Prumo</p><p class="card-metric-value text-blue-600 dark:text-blue-400"><?= $irmaosAPrumo ?></p><p class="card-metric-sublabel">Obreiros sem pendências no mês</p></div>
+    <div class="card-metric"><p class="card-metric-label">Pago no MÃªs</p><p class="card-metric-value text-green-600 dark:text-green-400"><?= $formatCurrency($recebidoMes) ?></p><p class="card-metric-sublabel">CompetÃªncia: <?= htmlspecialchars($competenciaAtual) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Falta no MÃªs</p><p class="card-metric-value text-red-600 dark:text-red-400"><?= $formatCurrency($faltanteMes) ?></p><p class="card-metric-sublabel">ObrigaÃ§Ãµes em aberto do mÃªs</p></div>
+    <div class="card-metric"><p class="card-metric-label">A Prumo</p><p class="card-metric-value text-blue-600 dark:text-blue-400"><?= $irmaosAPrumo ?></p><p class="card-metric-sublabel">Obreiros sem pendÃªncias no mÃªs</p></div>
 </div>
 
 <div class="grid grid-cols-1 xl:grid-cols-[420px_minmax(0,1fr)] gap-8">
-    <!-- Coluna da Esquerda: Lista de Obreiros e Parâmetros -->
+    <!-- Coluna da Esquerda: Lista de Obreiros e ParÃ¢metros -->
     <aside class="space-y-8">
         <div class="card">
             <div class="card-header"><h2 class="card-title">Panorama dos Obreiros</h2></div>
@@ -140,7 +140,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <form method="get" action="/tesouraria/obrigacoes">
                     <label for="select-obreiro" class="form-label">Selecionar obreiro</label>
                     <select name="obreiro_id" id="select-obreiro" class="form-select" onchange="this.form.submit()">
-                        <option value="">Visão geral</option>
+                        <option value="">VisÃ£o geral</option>
                         <?php foreach ($painelGeral as $reg): ?>
                             <option value="<?= htmlspecialchars($reg['obreiro_id']) ?>" <?= $selectedObreiroId === $reg['obreiro_id'] ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($reg['nome']) ?>
@@ -160,7 +160,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         <div>
                             <p class="font-semibold"><?= htmlspecialchars($reg['nome']) ?></p>
                             <p class="text-xs">
-                                <?= $formatCurrency($reg['pago']) ?> pago • <?= $formatCurrency($reg['aberto']) ?> aberto
+                                <?= $formatCurrency($reg['pago']) ?> pago â€¢ <?= $formatCurrency($reg['aberto']) ?> aberto
                             </p>
                         </div>
                         <?php if ($statusClass === 'danger'): ?><span class="badge badge-danger">Atraso</span><?php endif; ?>
@@ -171,7 +171,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
         </div>
 
         <div class="card">
-            <div class="card-header"><h2 class="card-title">Parâmetros da Loja</h2></div>
+            <div class="card-header"><h2 class="card-title">ParÃ¢metros da Loja</h2></div>
             <div class="card-body space-y-2">
                 <div class="list-item-param"><span class="text-gray-500">Mensalidade</span><span class="font-semibold"><?= $formatCurrency($mensalidadePadrao) ?></span></div>
                 <div class="list-item-param"><span class="text-gray-500">Biblioteca</span><span class="font-semibold"><?= $formatCurrency($bibliotecaPadrao) ?></span></div>
@@ -180,17 +180,17 @@ require __DIR__ . '/partials/erp_shell_open.php';
         </div>
     </aside>
 
-    <!-- Coluna da Direita: Detalhes e Formulários -->
+    <!-- Coluna da Direita: Detalhes e FormulÃ¡rios -->
     <main class="space-y-8">
         <?php if ($registroSelecionado): ?>
             <section id="detalhe-individual" class="card">
                 <div class="card-header"><h2 class="card-title">Detalhe de <?= htmlspecialchars($selectedObreiroNome) ?></h2></div>
                 <div class="card-body">
                     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 mb-6">
-                        <div class="card-metric-simple"><p class="card-metric-label">Já Pago</p><p class="card-metric-value text-green-600"><?= $formatCurrency($registroSelecionado['pago']) ?></p></div>
-                        <div class="card-metric-simple"><p class="card-metric-label">Falta no Mês</p><p class="card-metric-value text-red-600"><?= $formatCurrency($registroSelecionado['aberto']) ?></p></div>
+                        <div class="card-metric-simple"><p class="card-metric-label">JÃ¡ Pago</p><p class="card-metric-value text-green-600"><?= $formatCurrency($registroSelecionado['pago']) ?></p></div>
+                        <div class="card-metric-simple"><p class="card-metric-label">Falta no MÃªs</p><p class="card-metric-value text-red-600"><?= $formatCurrency($registroSelecionado['aberto']) ?></p></div>
                         <?php if (($registroSelecionado['vencidos'] ?? 0) > 0): ?>
-                            <div class="card-metric-simple border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20"><p class="card-metric-label text-red-600 dark:text-red-400">Atenção</p><p class="card-metric-value text-red-700 dark:text-red-300"><?= (int) $registroSelecionado['vencidos'] ?> pendência(s)</p></div>
+                            <div class="card-metric-simple border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20"><p class="card-metric-label text-red-600 dark:text-red-400">AtenÃ§Ã£o</p><p class="card-metric-value text-red-700 dark:text-red-300"><?= (int) $registroSelecionado['vencidos'] ?> pendÃªncia(s)</p></div>
                         <?php else: ?>
                             <div class="card-metric-simple border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20"><p class="font-semibold text-green-700 dark:text-green-300 text-center py-4">A Prumo com a Tesouraria</p></div>
                         <?php endif; ?>
@@ -198,7 +198,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
                     <div class="grid gap-6 xl:grid-cols-2">
                         <div class="space-y-3">
-                            <h4 class="font-semibold text-gray-800 dark:text-gray-100">Pago no Mês</h4>
+                            <h4 class="font-semibold text-gray-800 dark:text-gray-100">Pago no MÃªs</h4>
                             <?php if (empty($itensSelecionadosPago)): ?><p class="text-sm text-gray-500">Nenhum pagamento confirmado.</p><?php endif; ?>
                             <?php foreach ($itensSelecionadosPago as $item): ?>
                                 <div class="list-item-detail">
@@ -214,8 +214,8 @@ require __DIR__ . '/partials/erp_shell_open.php';
                             <?php endforeach; ?>
                         </div>
                         <div class="space-y-3">
-                            <h4 class="font-semibold text-gray-800 dark:text-gray-100">Aberto no Mês</h4>
-                            <?php if (empty($itensSelecionadosAberto)): ?><p class="text-sm text-gray-500">Nenhuma pendência no mês.</p><?php endif; ?>
+                            <h4 class="font-semibold text-gray-800 dark:text-gray-100">Aberto no MÃªs</h4>
+                            <?php if (empty($itensSelecionadosAberto)): ?><p class="text-sm text-gray-500">Nenhuma pendÃªncia no mÃªs.</p><?php endif; ?>
                             <?php foreach ($itensSelecionadosAberto as $item): ?>
                                 <div class="list-item-detail flex-col items-stretch gap-2 <?= !empty($item['esta_vencido']) ? 'border-red-300 dark:border-red-600' : '' ?>">
                                     <div class="flex justify-between items-start">
@@ -242,64 +242,29 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
         <section class="card">
             <div class="card-header">
-                <h2 class="card-title">Nova Obrigação Financeira</h2>
-                <p class="card-description">Lançamento para registrar mensalidades, contribuições e jóias.</p>
+                <h2 class="card-title">Nova ObrigaÃ§Ã£o Financeira</h2>
+                <p class="card-description">LanÃ§amento para registrar mensalidades, contribuiÃ§Ãµes e jÃ³ias.</p>
             </div>
             <form action="/tesouraria/obrigacoes/criar" method="post" class="card-body space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label for="obreiro_id_form" class="form-label">Obreiro *</label><select name="obreiro_id" id="obreiro_id_form" class="form-select" required><option value="">Selecione...</option><?php foreach ($obreirosPainel as $ob): ?><option value="<?= htmlspecialchars($ob['id']) ?>" <?= $selectedObreiroId === $ob['id'] ? 'selected' : '' ?>><?= htmlspecialchars($ob['nome']) ?></option><?php endforeach; ?></select></div>
-                    <div><label for="tipo_obrigacao" class="form-label">Tipo *</label><select name="tipo_obrigacao" id="tipo_obrigacao" class="form-select"><option value="mensalidade">Contribuição Mensal</option><option value="biblioteca">Biblioteca</option><option value="joia">Jóia</option><option value="doacao">Doação</option><option value="outra">Outra</option></select></div>
+                    <div><label for="tipo_obrigacao" class="form-label">Tipo *</label><select name="tipo_obrigacao" id="tipo_obrigacao" class="form-select"><option value="mensalidade">ContribuiÃ§Ã£o Mensal</option><option value="biblioteca">Biblioteca</option><option value="joia">JÃ³ia</option><option value="doacao">DoaÃ§Ã£o</option><option value="outra">Outra</option></select></div>
                 </div>
                 <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label for="titulo_obrigacao" class="form-label">Título da Obrigação *</label><input type="text" name="titulo" id="titulo_obrigacao" class="form-input" required></div>
-                        <div><label for="recorrencia" class="form-label">Forma de Cobrança</label><select name="recorrencia" id="recorrencia" class="form-select"><option value="mensal">Mensal</option><option value="anual">Anual</option><option value="parcelado">Parcelado</option><option value="avulsa">Avulsa</option></select></div>
+                        <div><label for="titulo_obrigacao" class="form-label">TÃ­tulo da ObrigaÃ§Ã£o *</label><input type="text" name="titulo" id="titulo_obrigacao" class="form-input" required></div>
+                        <div><label for="recorrencia" class="form-label">Forma de CobranÃ§a</label><select name="recorrencia" id="recorrencia" class="form-select"><option value="mensal">Mensal</option><option value="anual">Anual</option><option value="parcelado">Parcelado</option><option value="avulsa">Avulsa</option></select></div>
                         <div><label for="valor_base" class="form-label">Valor Total (R$)</label><input type="number" name="valor_base" id="valor_base" step="0.01" min="0.01" class="form-input" required></div>
-                        <div><label for="parcelas_total" class="form-label">Nº de Parcelas</label><input type="number" name="parcelas_total" id="parcelas_total" min="1" value="1" class="form-input"></div>
-                        <div><label for="inicio_competencia" class="form-label">Início da Competência</label><input type="date" name="inicio_competencia" id="inicio_competencia" value="<?= date('Y-m-d') ?>" class="form-input"></div>
-                        <div><label for="fim_competencia" class="form-label">Fim da Competência</label><input type="date" name="fim_competencia" id="fim_competencia" class="form-input"></div>
+                        <div><label for="parcelas_total" class="form-label">NÂº de Parcelas</label><input type="number" name="parcelas_total" id="parcelas_total" min="1" value="1" class="form-input"></div>
+                        <div><label for="inicio_competencia" class="form-label">InÃ­cio da CompetÃªncia</label><input type="date" name="inicio_competencia" id="inicio_competencia" value="<?= date('Y-m-d') ?>" class="form-input"></div>
+                        <div><label for="fim_competencia" class="form-label">Fim da CompetÃªncia</label><input type="date" name="fim_competencia" id="fim_competencia" class="form-input"></div>
                     </div>
                 </div>
-                <div class="flex justify-end pt-2"><button type="submit" class="btn btn-primary">Salvar Obrigação</button></div>
+                <div class="flex justify-end pt-2"><button type="submit" class="btn btn-primary">Salvar ObrigaÃ§Ã£o</button></div>
             </form>
         </section>
     </main>
 </div>
-
-<style>
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
-    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
-    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
-    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
-    .card-body { @apply p-5; }
-
-    .card-metric { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-5; }
-    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
-    .card-metric-value { @apply mt-1 text-3xl font-bold; }
-    .card-metric-sublabel { @apply mt-2 text-xs text-gray-500 dark:text-gray-400; }
-    
-    .card-metric-simple { @apply bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4; }
-
-    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
-    .form-select, .form-input { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
-    .form-input-sm { @apply rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm text-sm; }
-
-    .obreiro-card { @apply block border rounded-lg p-3 transition flex justify-between items-start; }
-    .obreiro-card.default { @apply bg-gray-50 border-gray-200 dark:bg-gray-700/50 dark:border-gray-700; }
-    .obreiro-card.danger { @apply bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-red-800; }
-    .obreiro-card.danger .font-semibold { @apply text-red-800 dark:text-red-200; }
-    .obreiro-card.success { @apply bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-800; }
-    .obreiro-card.success .font-semibold { @apply text-green-800 dark:text-green-200; }
-    .obreiro-card.selected { @apply ring-2 ring-offset-2 ring-blue-500; }
-    .obreiro-card .text-xs { @apply text-gray-500 dark:text-gray-400; }
-
-    .list-item-param { @apply flex justify-between bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md text-sm; }
-    .list-item-detail { @apply bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md text-sm flex flex-col border; }
-
-    .badge { @apply rounded-full px-2.5 py-0.5 text-xs font-medium; }
-    .badge-danger { @apply bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300; }
-    .badge-success { @apply bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300; }
-</style>
 
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
 
@@ -309,4 +274,5 @@ require __DIR__ . '/partials/erp_shell_open.php';
     window.BIBLIOTECA_PADRAO = <?= json_encode($bibliotecaPadrao) ?>;
 </script>
 <script src="/assets/js/tesouraria_obrigacoes.js"></script>
+
 

@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÓGICA DE NEGÓCIO E HELPERS
+// LÃ“GICA DE NEGÃ“CIO E HELPERS
 // #############################################################################
 
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
@@ -20,7 +20,7 @@ $badgeStatus = static function(string $status): string {
 };
 
 // #############################################################################
-// CONFIGURAÇÃO DO APP SHELL
+// CONFIGURAÃ‡ÃƒO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Primeiro Vigilante';
@@ -36,7 +36,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <?php if ($mensagemErro): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
 <?php if (!empty($avisoInfra)): ?><div class="alert alert-warning mb-6"><?= htmlspecialchars((string) $avisoInfra) ?></div><?php endif; ?>
 
-<!-- Métricas Rápidas -->
+<!-- MÃ©tricas RÃ¡pidas -->
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
     <div class="card-metric"><p class="card-metric-label">Aprendizes Ativos</p><p class="card-metric-value"><?= (int) ($resumo['aprendizes_ativos'] ?? 0) ?></p></div>
     <div class="card-metric"><p class="card-metric-label">Etapa Inicial</p><p class="card-metric-value"><?= (int) ($resumo['etapa_inicial'] ?? 0) ?></p></div>
@@ -58,7 +58,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <div class="list-item-action flex-col sm:flex-row items-start sm:items-center !py-4">
                             <div class="flex-grow">
                                 <p class="font-semibold"><?= htmlspecialchars((string) ($aprendiz['nome_historico'] ?? $aprendiz['nome'] ?? 'Aprendiz')) ?></p>
-                                <p class="text-sm text-gray-500">CIM <?= htmlspecialchars((string) ($aprendiz['cim'] ?? '-')) ?> &middot; Iniciação: <?= !empty($aprendiz['data_iniciacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $aprendiz['data_iniciacao']))) : 'Não informada' ?></p>
+                                <p class="text-sm text-gray-500">CIM <?= htmlspecialchars((string) ($aprendiz['cim'] ?? '-')) ?> &middot; IniciaÃ§Ã£o: <?= !empty($aprendiz['data_iniciacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $aprendiz['data_iniciacao']))) : 'NÃ£o informada' ?></p>
                                 <div class="mt-2 flex items-center gap-3 text-sm">
                                     <span class="font-semibold">Etapa <?= (int) ($aprendiz['trilha_etapa_atual'] ?? 1) ?>:</span>
                                     <span class="text-gray-600 dark:text-gray-400"><?= htmlspecialchars((string) ($aprendiz['trilha_titulo_atual'] ?? '')) ?></span>
@@ -83,7 +83,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <div class="list-item-report">
                     <p class="text-xs font-bold uppercase text-gray-500">PRIMEIRO VIGILANTE</p>
                     <p class="mt-1 text-lg font-semibold"><?= htmlspecialchars(trim((string) ($titularCargo['titular_nome'] ?? '')) ?: 'A definir') ?></p>
-                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Cargo orientado à instrução, revisão de trabalhos e incentivo ao estudo dos Aprendizes.</p>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Cargo orientado Ã  instruÃ§Ã£o, revisÃ£o de trabalhos e incentivo ao estudo dos Aprendizes.</p>
                 </div>
             </div>
         </div>
@@ -102,34 +102,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     </div>
 </div>
 
-<style>
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
-    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
-    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
-    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
-    .card-body { @apply p-5; }
-
-    .card-metric { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-5; }
-    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
-    .card-metric-value { @apply mt-1 text-3xl font-bold; }
-
-    .list-item-report { @apply p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg; }
-    .list-item-action { @apply block bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-700 transition; }
-
-    .alert { @apply px-4 py-3 rounded-lg; }
-    .alert-success { @apply bg-green-100 dark:bg-green-900/20 border border-green-400 text-green-700 dark:text-green-300; }
-    .alert-danger { @apply bg-red-100 dark:bg-red-900/20 border border-red-400 text-red-700 dark:text-red-300; }
-    .alert-warning { @apply bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 text-yellow-700 dark:text-yellow-300; }
-
-    .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize; }
-    .badge-success { @apply bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-200; }
-    .badge-danger { @apply bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-200; }
-    .badge-warning { @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-800/30 dark:text-yellow-200; }
-    .badge-info { @apply bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-200; }
-    .badge-secondary { @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200; }
-</style>
-
 <?php
 require_once __DIR__ . '/../partials/erp_shell_close.php';
 ?>
+
 

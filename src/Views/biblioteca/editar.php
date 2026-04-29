@@ -2,12 +2,12 @@
 declare(strict_types=1);
 
 // #############################################################################
-// CONFIGURAÇÃO DO APP SHELL
+// CONFIGURAÃ‡ÃƒO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Biblioteca';
-$appShellTitle = 'Editar Título';
-$appShellDescription = 'Atualize as informações de um item existente no acervo da Loja.';
+$appShellTitle = 'Editar TÃ­tulo';
+$appShellDescription = 'Atualize as informaÃ§Ãµes de um item existente no acervo da Loja.';
 $appShellActiveHref = '/biblioteca';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
@@ -21,7 +21,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <!-- Coluna 1 -->
             <div class="space-y-6">
                 <div>
-                    <label for="titulo" class="form-label">Título *</label>
+                    <label for="titulo" class="form-label">TÃ­tulo *</label>
                     <input type="text" id="titulo" name="titulo" required value="<?= htmlspecialchars((string) ($item['titulo'] ?? '')) ?>" class="form-input">
                 </div>
                 <div>
@@ -44,13 +44,13 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <label for="tipo" class="form-label">Tipo de Item *</label>
                     <select id="tipo" name="tipo" required class="form-select">
                         <?php $tipo = (string) ($item['tipo'] ?? 'Livro Fisico'); ?>
-                        <option value="Livro Fisico" <?= $tipo === 'Livro Fisico' ? 'selected' : '' ?>>Livro Físico</option>
+                        <option value="Livro Fisico" <?= $tipo === 'Livro Fisico' ? 'selected' : '' ?>>Livro FÃ­sico</option>
                         <option value="Digital (PDF)" <?= $tipo === 'Digital (PDF)' ? 'selected' : '' ?>>Digital (PDF)</option>
                         <option value="Ritual" <?= $tipo === 'Ritual' ? 'selected' : '' ?>>Ritual</option>
                     </select>
                 </div>
                 <div>
-                    <label for="quantidade_disponivel" class="form-label">Quantidade Disponível *</label>
+                    <label for="quantidade_disponivel" class="form-label">Quantidade DisponÃ­vel *</label>
                     <input type="number" id="quantidade_disponivel" name="quantidade_disponivel" min="0" value="<?= (int) ($item['quantidade_disponivel'] ?? 0) ?>" required class="form-input">
                 </div>
                 <div>
@@ -64,7 +64,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </select>
                 </div>
                 <div>
-                    <label for="nota_instrucao" class="form-label">Nota de Instrução</label>
+                    <label for="nota_instrucao" class="form-label">Nota de InstruÃ§Ã£o</label>
                     <input type="text" id="nota_instrucao" name="nota_instrucao" value="<?= htmlspecialchars((string) ($item['nota_instrucao'] ?? '')) ?>" class="form-input">
                 </div>
             </div>
@@ -76,25 +76,14 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <textarea id="resumo" name="resumo" rows="4" class="form-textarea"><?= htmlspecialchars((string) ($item['resumo'] ?? '')) ?></textarea>
         </div>
 
-        <!-- Ações do Formulário -->
+        <!-- AÃ§Ãµes do FormulÃ¡rio -->
         <div class="pt-4 flex justify-end gap-3">
             <a href="/biblioteca" class="btn btn-secondary">Cancelar</a>
-            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            <button type="submit" class="btn btn-primary">Salvar AlteraÃ§Ãµes</button>
         </div>
     </form>
 </div>
 
-<style>
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
-    .card-body { @apply p-6; }
-
-    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
-    .form-input, .form-select, .form-textarea { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
-    
-    .btn { @apply px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900; }
-    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
-    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
-</style>
-
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+
 

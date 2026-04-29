@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÓGICA DE NEGÓCIO E HELPERS
+// LÃ“GICA DE NEGÃ“CIO E HELPERS
 // #############################################################################
 
 $defaults = [
@@ -11,46 +11,46 @@ $defaults = [
     'grau_sessao' => trim((string) ($_GET['grau_sessao'] ?? '')),
 ];
 
-$formatDate = static fn($dateStr) => !empty($dateStr) ? (new DateTime($dateStr))->format('d/m/Y') : 'Não definida';
+$formatDate = static fn($dateStr) => !empty($dateStr) ? (new DateTime($dateStr))->format('d/m/Y') : 'NÃ£o definida';
 
 // #############################################################################
-// CONFIGURAÇÃO DO APP SHELL
+// CONFIGURAÃ‡ÃƒO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Chancelaria';
-$appShellTitle = 'Emitir Certificado de Presença';
-$appShellDescription = 'Gere e envie certificados para visitantes com os dados oficiais da sessão.';
+$appShellTitle = 'Emitir Certificado de PresenÃ§a';
+$appShellDescription = 'Gere e envie certificados para visitantes com os dados oficiais da sessÃ£o.';
 $appShellActiveHref = '/chancelaria/efemerides';
 
 require __DIR__ . '/partials/erp_shell_open.php';
 ?>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <!-- Coluna de Informações -->
+    <!-- Coluna de InformaÃ§Ãµes -->
     <div class="lg:col-span-1 space-y-6">
         <div class="card">
-            <div class="card-header"><h2 class="card-title">Dados da Sessão</h2></div>
+            <div class="card-header"><h2 class="card-title">Dados da SessÃ£o</h2></div>
             <div class="card-body space-y-4">
                 <div class="list-item-param"><span>Data</span><strong><?= $formatDate($defaults['data_sessao']) ?></strong></div>
-                <div class="list-item-param"><span>Tipo</span><strong><?= htmlspecialchars($defaults['tipo_sessao'] ?: 'Não definido') ?></strong></div>
-                <div class="list-item-param"><span>Grau</span><strong><?= htmlspecialchars($defaults['grau_sessao'] ?: 'Não definido') ?></strong></div>
+                <div class="list-item-param"><span>Tipo</span><strong><?= htmlspecialchars($defaults['tipo_sessao'] ?: 'NÃ£o definido') ?></strong></div>
+                <div class="list-item-param"><span>Grau</span><strong><?= htmlspecialchars($defaults['grau_sessao'] ?: 'NÃ£o definido') ?></strong></div>
             </div>
         </div>
         <div class="card">
             <div class="card-header"><h2 class="card-title">Fluxo de Trabalho</h2></div>
             <ul class="card-body space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">1.</span> <span>Preencha os dados do visitante e da sessão no formulário.</span></li>
-                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">2.</span> <span>Se estiver no Telegram, o certificado será enviado diretamente no chat.</span></li>
-                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">3.</span> <span>Caso contrário, o download do certificado será iniciado no navegador.</span></li>
-                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">4.</span> <span>Os dados da sessão podem ser pré-preenchidos a partir da tela de efemérides.</span></li>
+                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">1.</span> <span>Preencha os dados do visitante e da sessÃ£o no formulÃ¡rio.</span></li>
+                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">2.</span> <span>Se estiver no Telegram, o certificado serÃ¡ enviado diretamente no chat.</span></li>
+                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">3.</span> <span>Caso contrÃ¡rio, o download do certificado serÃ¡ iniciado no navegador.</span></li>
+                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">4.</span> <span>Os dados da sessÃ£o podem ser prÃ©-preenchidos a partir da tela de efemÃ©rides.</span></li>
             </ul>
         </div>
     </div>
 
-    <!-- Coluna do Formulário -->
+    <!-- Coluna do FormulÃ¡rio -->
     <div class="lg:col-span-2">
         <div class="card">
-            <div class="card-header"><h2 class="card-title">Formulário de Emissão</h2></div>
+            <div class="card-header"><h2 class="card-title">FormulÃ¡rio de EmissÃ£o</h2></div>
             <form method="POST" action="/chancelaria/certificado/gerar" class="card-body">
                 <input type="hidden" id="chat_id" name="chat_id">
                 <input type="hidden" id="init_data" name="init_data">
@@ -58,36 +58,36 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="md:col-span-2">
                         <label for="nome_visitante" class="form-label">Nome do Visitante *</label>
-                        <input type="text" id="nome_visitante" name="nome_visitante" placeholder="Ex: João da Silva" required class="form-input">
+                        <input type="text" id="nome_visitante" name="nome_visitante" placeholder="Ex: JoÃ£o da Silva" required class="form-input">
                     </div>
                     <div class="md:col-span-2">
                         <label for="loja_visitante" class="form-label">Loja do Visitante *</label>
-                        <input type="text" id="loja_visitante" name="loja_visitante" placeholder="Ex: ARLS Luz e Verdade nº 123" required class="form-input">
+                        <input type="text" id="loja_visitante" name="loja_visitante" placeholder="Ex: ARLS Luz e Verdade nÂº 123" required class="form-input">
                     </div>
                     <div>
                         <label for="oriente" class="form-label">Oriente *</label>
-                        <input type="text" id="oriente" name="oriente" placeholder="Ex: São Paulo - SP" required class="form-input">
+                        <input type="text" id="oriente" name="oriente" placeholder="Ex: SÃ£o Paulo - SP" required class="form-input">
                     </div>
                     <div>
-                        <label for="data_sessao" class="form-label">Data da Sessão *</label>
+                        <label for="data_sessao" class="form-label">Data da SessÃ£o *</label>
                         <input type="date" id="data_sessao" name="data_sessao" value="<?= htmlspecialchars($defaults['data_sessao']) ?>" required class="form-input">
                     </div>
                     <div>
-                        <label for="tipo_sessao" class="form-label">Tipo de Sessão *</label>
+                        <label for="tipo_sessao" class="form-label">Tipo de SessÃ£o *</label>
                         <select id="tipo_sessao" name="tipo_sessao" required class="form-select">
-                            <option value="Ordinaria" <?= $defaults['tipo_sessao'] === 'Ordinaria' ? 'selected' : '' ?>>Ordinária</option>
+                            <option value="Ordinaria" <?= $defaults['tipo_sessao'] === 'Ordinaria' ? 'selected' : '' ?>>OrdinÃ¡ria</option>
                             <option value="Magna" <?= $defaults['tipo_sessao'] === 'Magna' ? 'selected' : '' ?>>Magna</option>
-                            <option value="Magna de Iniciacao" <?= $defaults['tipo_sessao'] === 'Magna de Iniciacao' ? 'selected' : '' ?>>Magna de Iniciação</option>
-                            <option value="Magna de Elevacao" <?= $defaults['tipo_sessao'] === 'Magna de Elevacao' ? 'selected' : '' ?>>Magna de Elevação</option>
-                            <option value="Magna de Exaltacao" <?= $defaults['tipo_sessao'] === 'Magna de Exaltacao' ? 'selected' : '' ?>>Magna de Exaltação</option>
+                            <option value="Magna de Iniciacao" <?= $defaults['tipo_sessao'] === 'Magna de Iniciacao' ? 'selected' : '' ?>>Magna de IniciaÃ§Ã£o</option>
+                            <option value="Magna de Elevacao" <?= $defaults['tipo_sessao'] === 'Magna de Elevacao' ? 'selected' : '' ?>>Magna de ElevaÃ§Ã£o</option>
+                            <option value="Magna de Exaltacao" <?= $defaults['tipo_sessao'] === 'Magna de Exaltacao' ? 'selected' : '' ?>>Magna de ExaltaÃ§Ã£o</option>
                         </select>
                     </div>
                     <div>
-                        <label for="grau_sessao" class="form-label">Grau da Sessão *</label>
+                        <label for="grau_sessao" class="form-label">Grau da SessÃ£o *</label>
                         <select id="grau_sessao" name="grau_sessao" required class="form-select">
-                            <option value="Aprendiz Macom" <?= $defaults['grau_sessao'] === 'Aprendiz Macom' ? 'selected' : '' ?>>Aprendiz Maçom (Grau 1)</option>
-                            <option value="Companheiro Macom" <?= $defaults['grau_sessao'] === 'Companheiro Macom' ? 'selected' : '' ?>>Companheiro Maçom (Grau 2)</option>
-                            <option value="Mestre Macom" <?= $defaults['grau_sessao'] === 'Mestre Macom' ? 'selected' : '' ?>>Mestre Maçom (Grau 3)</option>
+                            <option value="Aprendiz Macom" <?= $defaults['grau_sessao'] === 'Aprendiz Macom' ? 'selected' : '' ?>>Aprendiz MaÃ§om (Grau 1)</option>
+                            <option value="Companheiro Macom" <?= $defaults['grau_sessao'] === 'Companheiro Macom' ? 'selected' : '' ?>>Companheiro MaÃ§om (Grau 2)</option>
+                            <option value="Mestre Macom" <?= $defaults['grau_sessao'] === 'Mestre Macom' ? 'selected' : '' ?>>Mestre MaÃ§om (Grau 3)</option>
                         </select>
                     </div>
                 </div>
@@ -113,19 +113,5 @@ require __DIR__ . '/partials/erp_shell_open.php';
     });
 </script>
 
-<style>
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
-    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
-    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
-    .card-body { @apply p-5; }
-
-    .list-item-param { @apply flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md text-sm; }
-
-    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
-    .form-input, .form-select { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
-
-    .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900; }
-    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
-</style>
-
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
+

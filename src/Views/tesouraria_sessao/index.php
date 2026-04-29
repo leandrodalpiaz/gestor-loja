@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÓGICA DE NEGÓCIO E HELPERS
+// LÃ“GICA DE NEGÃ“CIO E HELPERS
 // #############################################################################
 
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
@@ -13,12 +13,12 @@ $formatCurrency = static fn(?float $valor): string => 'R$ ' . number_format($val
 $sessaoFormatter = new \App\Models\Sessao();
 
 // #############################################################################
-// CONFIGURAÇÃO DO APP SHELL
+// CONFIGURAÃ‡ÃƒO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Tesouraria';
-$appShellTitle = 'Tesouraria e Sessões';
-$appShellDescription = 'Acompanhe o reflexo financeiro dos ágapes e eventos das sessões.';
+$appShellTitle = 'Tesouraria e SessÃµes';
+$appShellDescription = 'Acompanhe o reflexo financeiro dos Ã¡gapes e eventos das sessÃµes.';
 $appShellActiveHref = '/tesouraria/sessoes';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
@@ -35,40 +35,40 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Coluna Principal -->
     <div class="lg:col-span-2 space-y-8">
-        <!-- Próxima Sessão -->
+        <!-- PrÃ³xima SessÃ£o -->
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">Próxima Sessão com Leitura Financeira</h2>
+                <h2 class="card-title">PrÃ³xima SessÃ£o com Leitura Financeira</h2>
             </div>
             <?php if ($proximaSessao): ?>
                 <div class="card-body">
                     <div class="mb-6">
-                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400"><?= htmlspecialchars($proximaSessao['titulo'] ?: (($proximaSessao['tipo_sessao'] ?? 'Sessão') . ' - ' . ($proximaSessao['grau_sessao'] ?? ''))) ?></p>
+                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400"><?= htmlspecialchars($proximaSessao['titulo'] ?: (($proximaSessao['tipo_sessao'] ?? 'SessÃ£o') . ' - ' . ($proximaSessao['grau_sessao'] ?? ''))) ?></p>
                         <p class="text-sm text-gray-500 dark:text-gray-400"><?= htmlspecialchars((string) ($proximaSessao['data_hora_inicio'] ?? '')) ?></p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="list-item-param"><span>Loja</span><strong><?= htmlspecialchars(trim((string) (($configuracaoLoja['nome_loja'] ?? '') . ((string) ($configuracaoLoja['numero_loja'] ?? '') !== '' ? ' nº ' . $configuracaoLoja['numero_loja'] : '')))) ?></strong></div>
-                        <div class="list-item-param"><span>Ágape</span><strong><?= htmlspecialchars($sessaoFormatter->obterDescricaoAgape($proximaSessao)) ?></strong></div>
+                        <div class="list-item-param"><span>Loja</span><strong><?= htmlspecialchars(trim((string) (($configuracaoLoja['nome_loja'] ?? '') . ((string) ($configuracaoLoja['numero_loja'] ?? '') !== '' ? ' nÂº ' . $configuracaoLoja['numero_loja'] : '')))) ?></strong></div>
+                        <div class="list-item-param"><span>Ãgape</span><strong><?= htmlspecialchars($sessaoFormatter->obterDescricaoAgape($proximaSessao)) ?></strong></div>
                         <div class="list-item-param"><span>Modelo Financeiro</span><strong><?= htmlspecialchars($sessaoFormatter->obterDescricaoModeloTesourariaAgape($proximaSessao)) ?></strong></div>
-                        <div class="card-metric-simple"><p class="card-metric-label">Confirmados com Ágape</p><p class="card-metric-value text-xl"><?= count($participantesAgape) ?></p></div>
-                        <div class="card-metric-simple md:col-span-2"><p class="card-metric-label">Estimativa de Arrecadação</p><p class="card-metric-value text-xl text-green-600 dark:text-green-400"><?= $formatCurrency($estimativaArrecadacao) ?></p></div>
+                        <div class="card-metric-simple"><p class="card-metric-label">Confirmados com Ãgape</p><p class="card-metric-value text-xl"><?= count($participantesAgape) ?></p></div>
+                        <div class="card-metric-simple md:col-span-2"><p class="card-metric-label">Estimativa de ArrecadaÃ§Ã£o</p><p class="card-metric-value text-xl text-green-600 dark:text-green-400"><?= $formatCurrency($estimativaArrecadacao) ?></p></div>
                     </div>
                     <?php if (empty($proximaSessao['reflete_financeiro_oficial'])): ?>
-                        <div class="alert alert-warning mt-6">Esta sessão não gera reflexo automático no financeiro oficial da Loja.</div>
+                        <div class="alert alert-warning mt-6">Esta sessÃ£o nÃ£o gera reflexo automÃ¡tico no financeiro oficial da Loja.</div>
                     <?php endif; ?>
                 </div>
             <?php else: ?>
                 <div class="card-body text-center text-gray-500 dark:text-gray-400 py-10">
-                    <p>Nenhuma sessão futura cadastrada.</p>
+                    <p>Nenhuma sessÃ£o futura cadastrada.</p>
                 </div>
             <?php endif; ?>
         </div>
 
-        <!-- Participantes do Ágape -->
+        <!-- Participantes do Ãgape -->
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">Participantes do Ágape</h2>
-                <p class="card-description">Conferência financeira da próxima sessão.</p>
+                <h2 class="card-title">Participantes do Ãgape</h2>
+                <p class="card-description">ConferÃªncia financeira da prÃ³xima sessÃ£o.</p>
             </div>
             <div class="card-body">
                 <?php if (!empty($participantesAgape)): ?>
@@ -82,7 +82,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </ul>
                 <?php else: ?>
                     <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-                        <p>Ainda não há confirmações com ágape.</p>
+                        <p>Ainda nÃ£o hÃ¡ confirmaÃ§Ãµes com Ã¡gape.</p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -98,22 +98,22 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <?php if (!empty($sessoesFinanceiras)): ?>
                     <?php foreach ($sessoesFinanceiras as $sessao): ?>
                         <div class="list-item-report">
-                            <p class="font-semibold"><?= htmlspecialchars($sessao['titulo'] ?: ($sessao['descricao_tipo'] ?: 'Sessão')) ?></p>
+                            <p class="font-semibold"><?= htmlspecialchars($sessao['titulo'] ?: ($sessao['descricao_tipo'] ?: 'SessÃ£o')) ?></p>
                             <p class="text-sm text-gray-500 mb-2"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?></p>
                             <div class="text-xs space-y-1 text-gray-600 dark:text-gray-300">
-                                <p><strong>Ágape:</strong> <?= htmlspecialchars((string) ($sessao['descricao_agape'] ?? '-')) ?></p>
+                                <p><strong>Ãgape:</strong> <?= htmlspecialchars((string) ($sessao['descricao_agape'] ?? '-')) ?></p>
                                 <p><strong>Modelo:</strong> <?= htmlspecialchars((string) ($sessao['descricao_modelo_financeiro_agape'] ?? '-')) ?></p>
                                 <p><strong>Confirmados:</strong> <?= (int) ($sessao['total_agape'] ?? 0) ?></p>
                                 <p><strong>Estimativa:</strong> <span class="font-bold"><?= $formatCurrency((float) ($sessao['estimativa_arrecadacao'] ?? 0)) ?></span></p>
                             </div>
                             <?php if (empty($sessao['reflete_financeiro_oficial'])): ?>
-                                <div class="alert alert-warning text-xs mt-2">Sem reflexo automático.</div>
+                                <div class="alert alert-warning text-xs mt-2">Sem reflexo automÃ¡tico.</div>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-                        <p>Nenhuma sessão futura disponível.</p>
+                        <p>Nenhuma sessÃ£o futura disponÃ­vel.</p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -123,36 +123,16 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         <div class="card">
             <div class="card-header"><h2 class="card-title">Fluxo de Trabalho</h2></div>
             <ul class="card-body space-y-3 text-sm text-gray-700 dark:text-gray-300">
-                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">1.</span> <span>O Secretário publica a sessão e define o modelo financeiro do ágape.</span></li>
-                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">2.</span> <span>Os membros confirmam presença, com ou sem ágape.</span></li>
+                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">1.</span> <span>O SecretÃ¡rio publica a sessÃ£o e define o modelo financeiro do Ã¡gape.</span></li>
+                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">2.</span> <span>Os membros confirmam presenÃ§a, com ou sem Ã¡gape.</span></li>
                 <li class="flex items-start gap-3"><span class="font-bold text-blue-500">3.</span> <span>A Tesouraria consome automaticamente os valores com reflexo oficial.</span></li>
-                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">4.</span> <span>O lançamento detalhado é feito no Livro-Caixa, mantendo a rastreabilidade.</span></li>
+                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">4.</span> <span>O lanÃ§amento detalhado Ã© feito no Livro-Caixa, mantendo a rastreabilidade.</span></li>
             </ul>
         </div>
     </div>
 </div>
 
-<style>
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
-    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
-    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
-    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
-    .card-body { @apply p-5; }
-
-    .card-metric-simple { @apply bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4; }
-    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
-    .card-metric-value { @apply mt-1 text-2xl font-bold; }
-
-    .list-item-param { @apply flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md text-sm; }
-    .list-item-detail { @apply flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg; }
-    .list-item-report { @apply p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg; }
-
-    .alert { @apply px-4 py-3 rounded-lg relative text-sm; }
-    .alert-success { @apply bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-300; }
-    .alert-danger { @apply bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-300; }
-    .alert-warning { @apply bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-300; }
-</style>
-
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+
 
 

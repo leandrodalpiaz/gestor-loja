@@ -2,39 +2,39 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÓGICA DE NEGÓCIO E HELPERS
+// LÃ“GICA DE NEGÃ“CIO E HELPERS
 // #############################################################################
 
-$usuarioNome = (string) ($_SESSION['usuario_nome'] ?? 'Irmão');
+$usuarioNome = (string) ($_SESSION['usuario_nome'] ?? 'IrmÃ£o');
 $operadorEmExercicio = (string) ($operadorEmExercicio ?? '');
 $basePathValue = (string) ($payload['base_path'] ?? '');
 $selectedSessionPath = (string) (($payload['selected_session']['path'] ?? ''));
 
 // #############################################################################
-// RENDERIZAÇÃO
+// RENDERIZAÃ‡ÃƒO
 // #############################################################################
 
 ob_start();
 ?>
 <div class="min-h-screen bg-gray-900 text-gray-200 font-sans p-4 lg:p-6 flex flex-col" id="app-container">
 
-    <!-- Cabeçalho -->
+    <!-- CabeÃ§alho -->
     <header class="bg-gray-800/50 rounded-xl p-4 lg:p-5 flex flex-wrap justify-between items-center gap-4 border border-gray-700/50">
         <div>
             <h1 class="text-xl lg:text-2xl font-bold text-white">MESTRE DE HARMONIA</h1>
-            <p class="text-sm text-gray-400">Responsável: <?= htmlspecialchars($usuarioNome) ?></p>
-            <div class="text-sm text-gray-400 mt-1">Irmão em exercício: <strong id="operatorNameDisplay" class="text-white">Não informado</strong> <button type="button" id="btnChangeOperator" class="ml-2 text-blue-400 hover:text-blue-300 text-xs font-semibold">[Alterar]</button></div>
+            <p class="text-sm text-gray-400">ResponsÃ¡vel: <?= htmlspecialchars($usuarioNome) ?></p>
+            <div class="text-sm text-gray-400 mt-1">IrmÃ£o em exercÃ­cio: <strong id="operatorNameDisplay" class="text-white">NÃ£o informado</strong> <button type="button" id="btnChangeOperator" class="ml-2 text-blue-400 hover:text-blue-300 text-xs font-semibold">[Alterar]</button></div>
         </div>
         <div class="text-right">
-            <div id="sessionLabel" class="font-semibold text-lg text-white">Sessão não carregada</div>
-            <div id="globalStatus" class="text-sm text-yellow-400">Aguardando a escolha da sessão</div>
+            <div id="sessionLabel" class="font-semibold text-lg text-white">SessÃ£o nÃ£o carregada</div>
+            <div id="globalStatus" class="text-sm text-yellow-400">Aguardando a escolha da sessÃ£o</div>
             <a href="/miniapp/mestre-harmonia" target="_blank" class="mt-2 inline-block bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded-lg">
                 Abrir MiniApp
             </a>
         </div>
     </header>
 
-    <!-- Configuração -->
+    <!-- ConfiguraÃ§Ã£o -->
     <form class="bg-gray-800/50 rounded-xl p-3 my-4 border border-gray-700/50" method="get" action="/mestre-harmonia">
         <div class="flex flex-wrap items-center gap-3">
             <input type="text" name="base_path" value="<?= htmlspecialchars($basePathValue) ?>" placeholder="Pasta base das playlists" class="flex-grow bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500">
@@ -48,11 +48,11 @@ ob_start();
         <!-- Playlist -->
         <aside class="lg:col-span-1 bg-gray-800/50 rounded-xl p-4 flex flex-col border border-gray-700/50">
             <div class="flex justify-between items-center mb-3">
-                <h2 class="text-lg font-semibold text-white">Roteiro da sessão</h2>
+                <h2 class="text-lg font-semibold text-white">Roteiro da sessÃ£o</h2>
                 <span id="playlistCount" class="text-gray-400 text-sm">0 etapas</span>
             </div>
             <div class="flex-grow overflow-y-auto pr-2" id="stepsList">
-                <!-- Itens da playlist serão inseridos aqui via JS -->
+                <!-- Itens da playlist serÃ£o inseridos aqui via JS -->
             </div>
             <div id="summaryText" class="mt-3 text-xs text-gray-500 border-t border-gray-700 pt-2">Principais 0 | Transicao 0 | Extras 0</div>
         </aside>
@@ -86,16 +86,16 @@ ob_start();
                 <button type="button" class="ctrl-btn bg-red-700 hover:bg-red-800 text-white" id="btnStop">Parar</button>
                 <button type="button" class="ctrl-btn" id="btnRestart">Reiniciar</button>
                 <button type="button" class="ctrl-btn" id="btnPrev">Anterior</button>
-                <button type="button" class="ctrl-btn bg-blue-600 hover:bg-blue-700 text-white col-span-1 md:col-span-1" id="btnNext">Próxima</button>
-                <button type="button" class="ctrl-btn bg-purple-600 hover:bg-purple-700 text-white" id="btnSilence">Silêncio</button>
+                <button type="button" class="ctrl-btn bg-blue-600 hover:bg-blue-700 text-white col-span-1 md:col-span-1" id="btnNext">PrÃ³xima</button>
+                <button type="button" class="ctrl-btn bg-purple-600 hover:bg-purple-700 text-white" id="btnSilence">SilÃªncio</button>
             </section>
 
-            <!-- Próxima Etapa e Apoio -->
+            <!-- PrÃ³xima Etapa e Apoio -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <article class="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
-                    <h3 class="font-semibold text-white">Próxima etapa</h3>
+                    <h3 class="font-semibold text-white">PrÃ³xima etapa</h3>
                     <div id="nextStepCode" class="text-blue-400 font-bold text-xl mt-1">--</div>
-                    <div id="nextStepTitle" class="text-gray-300 mt-1 truncate">Sem próxima etapa</div>
+                    <div id="nextStepTitle" class="text-gray-300 mt-1 truncate">Sem prÃ³xima etapa</div>
                 </article>
                 <article class="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
                     <h3 class="font-semibold text-white">Apoio Ritual (Alternativas)</h3>
@@ -118,12 +118,12 @@ ob_start();
     <audio id="audioPlayer" preload="metadata"></audio>
 </div>
 
-<!-- Modal de Identificação -->
+<!-- Modal de IdentificaÃ§Ã£o -->
 <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" id="operatorOverlay">
     <div class="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-700">
-        <h2 class="text-2xl font-bold text-white mb-2">Identificação da Sessão</h2>
-        <p class="text-gray-400 mb-6">Informe o nome do irmão que está exercendo a função. Este dado é salvo para referência futura.</p>
-        <input type="text" id="operatorInput" placeholder="Nome do irmão em exercício" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-blue-500 focus:border-blue-500">
+        <h2 class="text-2xl font-bold text-white mb-2">IdentificaÃ§Ã£o da SessÃ£o</h2>
+        <p class="text-gray-400 mb-6">Informe o nome do irmÃ£o que estÃ¡ exercendo a funÃ§Ã£o. Este dado Ã© salvo para referÃªncia futura.</p>
+        <input type="text" id="operatorInput" placeholder="Nome do irmÃ£o em exercÃ­cio" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-blue-500 focus:border-blue-500">
         <div id="operatorError" class="text-red-400 text-sm mt-2"></div>
         <div class="mt-6">
             <button type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg" id="btnSaveOperator">Confirmar e Abrir Player</button>
@@ -131,34 +131,10 @@ ob_start();
     </div>
 </div>
 
-<style>
-    .ctrl-btn {
-        @apply w-full h-full px-3 py-3 rounded-lg text-xs font-bold text-gray-200 bg-gray-700/60 hover:bg-gray-600/80 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900;
-    }
-    #stepsList .step-item {
-        @apply p-3 rounded-lg cursor-pointer border-2 border-transparent transition-all;
-    }
-    #stepsList .step-item:hover {
-        @apply bg-gray-700/50;
-    }
-    #stepsList .step-item.active {
-        @apply bg-blue-600/30 border-blue-500 text-white;
-    }
-    #stepsList .step-item.played {
-        @apply opacity-50;
-    }
-    #stepsList .step-code { @apply font-bold text-blue-400 text-sm; }
-    #stepsList .step-title { @apply font-semibold; }
-    #stepsList .step-type { @apply text-xs text-gray-400; }
-
-    #alternativesList .alt-item {
-        @apply p-2 rounded-md hover:bg-gray-700/50 cursor-pointer flex justify-between items-center;
-    }
-</style>
-
 <?php
 $content = ob_get_clean();
 
 // Utiliza o player_shell, mas agora o estilo principal vem do Tailwind embutido.
 require_once __DIR__ . '/../layouts/player_shell.php';
 ?>
+

@@ -3,23 +3,23 @@ $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
-// Configuração do App Shell
-$appShellEyebrow = 'Painel Estratégico';
-$appShellTitle = 'Venerável Mestre';
-$appShellDescription = 'Visão analítica e de governança da Loja. Acompanhe os indicadores chave e tome ações de gestão.';
+// ConfiguraÃ§Ã£o do App Shell
+$appShellEyebrow = 'Painel EstratÃ©gico';
+$appShellTitle = 'VenerÃ¡vel Mestre';
+$appShellDescription = 'VisÃ£o analÃ­tica e de governanÃ§a da Loja. Acompanhe os indicadores chave e tome aÃ§Ãµes de gestÃ£o.';
 $appShellActiveHref = '/veneravel';
 $appShellActions = [
     ['label' => 'Painel da Loja', 'href' => '/dashboard'],
-    ['label' => 'Painel de Votação', 'href' => '/secretaria/votacao', 'primary' => true],
+    ['label' => 'Painel de VotaÃ§Ã£o', 'href' => '/secretaria/votacao', 'primary' => true],
 ];
 
-// Os dados para o sidebar são passados diretamente para o erp_shell_open
+// Os dados para o sidebar sÃ£o passados diretamente para o erp_shell_open
 $appShellSidebarSections = [
     [
-        'title' => 'Governança',
+        'title' => 'GovernanÃ§a',
         'items' => [
-            ['label' => 'Painel Estratégico', 'href' => '/veneravel', 'active' => true],
-            ['label' => 'Balaústres / Votação', 'href' => '/secretaria/votacao'],
+            ['label' => 'Painel EstratÃ©gico', 'href' => '/veneravel', 'active' => true],
+            ['label' => 'BalaÃºstres / VotaÃ§Ã£o', 'href' => '/secretaria/votacao'],
         ],
     ],
     [
@@ -47,61 +47,61 @@ require_once __DIR__ . '/../partials/erp_shell_open.php';
     <?php if ($mensagemSucesso): ?><div class="alert alert-success mb-6"><?= htmlspecialchars($mensagemSucesso) ?></div><?php endif; ?>
     <?php if ($mensagemErro): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
 
-    <!-- Métricas Principais -->
+    <!-- MÃ©tricas Principais -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="card-metric"><p class="card-metric-label">Obreiros Ativos</p><p class="card-metric-value"><?= (int) ($indicadores['obreiros_ativos'] ?? 0) ?></p></div>
         <div class="card-metric"><p class="card-metric-label">Quadro Total</p><p class="card-metric-value"><?= (int) ($indicadores['quadro_total'] ?? 0) ?></p></div>
-        <div class="card-metric"><p class="card-metric-label">Frequência Média</p><p class="card-metric-value"><?= htmlspecialchars((string) ($indicadores['frequencia_media'] ?? '0%')) ?></p></div>
-        <div class="card-metric"><p class="card-metric-label">Inadimplência</p><p class="card-metric-value"><?= htmlspecialchars((string) ($indicadores['inadimplencia_percentual'] ?? '0%')) ?></p></div>
+        <div class="card-metric"><p class="card-metric-label">FrequÃªncia MÃ©dia</p><p class="card-metric-value"><?= htmlspecialchars((string) ($indicadores['frequencia_media'] ?? '0%')) ?></p></div>
+        <div class="card-metric"><p class="card-metric-label">InadimplÃªncia</p><p class="card-metric-value"><?= htmlspecialchars((string) ($indicadores['inadimplencia_percentual'] ?? '0%')) ?></p></div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Coluna Esquerda -->
         <div class="lg:col-span-2 space-y-8">
-            <!-- Balaústres e Votações -->
+            <!-- BalaÃºstres e VotaÃ§Ãµes -->
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Balaústres e Votações</h2>
-                    <p class="card-description">Gestão de propostas e deliberações da Loja.</p>
+                    <h2 class="card-title">BalaÃºstres e VotaÃ§Ãµes</h2>
+                    <p class="card-description">GestÃ£o de propostas e deliberaÃ§Ãµes da Loja.</p>
                 </div>
                 <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <h3 class="font-semibold text-gray-700 dark:text-gray-300">Aptos para Votação</h3>
+                        <h3 class="font-semibold text-gray-700 dark:text-gray-300">Aptos para VotaÃ§Ã£o</h3>
                         <div class="mt-3 space-y-3">
                             <?php if (empty($balaustresAptos)): ?>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Nenhum balaústre apto no momento.</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Nenhum balaÃºstre apto no momento.</p>
                             <?php else: ?>
                                 <?php foreach ($balaustresAptos as $balaustre): ?>
                                     <div class="list-item">
-                                        <span class="font-medium"><?= htmlspecialchars((string) ($balaustre['titulo'] ?? 'Balaústre')) ?></span>
+                                        <span class="font-medium"><?= htmlspecialchars((string) ($balaustre['titulo'] ?? 'BalaÃºstre')) ?></span>
                                         <span class="badge badge-secondary"><?= htmlspecialchars((string) ($balaustre['status'] ?? 'Apto')) ?></span>
                                     </div>
                                 <?php endforeach; ?>
                                 <?php if (!empty($balaustresAptos[0]['id'])): ?>
                                     <form method="POST" action="/veneravel/balaustres/abrir-votacao" class="pt-2">
                                         <input type="hidden" name="balaustre_id" value="<?= (int) $balaustresAptos[0]['id'] ?>">
-                                        <button type="submit" class="btn btn-primary w-full">Abrir Votação do Próximo</button>
+                                        <button type="submit" class="btn btn-primary w-full">Abrir VotaÃ§Ã£o do PrÃ³ximo</button>
                                     </form>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </div>
                     <div>
-                        <h3 class="font-semibold text-gray-700 dark:text-gray-300">Em Votação</h3>
+                        <h3 class="font-semibold text-gray-700 dark:text-gray-300">Em VotaÃ§Ã£o</h3>
                         <div class="mt-3 space-y-3">
                             <?php if (empty($balaustresEmVotacao)): ?>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Nenhuma votação em andamento.</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Nenhuma votaÃ§Ã£o em andamento.</p>
                             <?php else: ?>
                                 <?php foreach ($balaustresEmVotacao as $balaustre): ?>
                                     <div class="list-item">
-                                        <span class="font-medium"><?= htmlspecialchars((string) ($balaustre['titulo'] ?? 'Balaústre')) ?></span>
-                                        <span class="badge badge-warning"><?= htmlspecialchars((string) ($balaustre['status'] ?? 'Em Votação')) ?></span>
+                                        <span class="font-medium"><?= htmlspecialchars((string) ($balaustre['titulo'] ?? 'BalaÃºstre')) ?></span>
+                                        <span class="badge badge-warning"><?= htmlspecialchars((string) ($balaustre['status'] ?? 'Em VotaÃ§Ã£o')) ?></span>
                                     </div>
                                 <?php endforeach; ?>
                                 <?php if (!empty($balaustresEmVotacao[0]['id'])): ?>
                                     <form method="POST" action="/veneravel/balaustres/encerrar-votacao" class="pt-2">
                                         <input type="hidden" name="balaustre_id" value="<?= (int) $balaustresEmVotacao[0]['id'] ?>">
-                                        <button type="submit" class="btn btn-danger w-full">Encerrar Votação</button>
+                                        <button type="submit" class="btn btn-danger w-full">Encerrar VotaÃ§Ã£o</button>
                                     </form>
                                 <?php endif; ?>
                             <?php endif; ?>
@@ -110,17 +110,17 @@ require_once __DIR__ . '/../partials/erp_shell_open.php';
                 </div>
             </div>
 
-            <!-- Próximas Sessões -->
+            <!-- PrÃ³ximas SessÃµes -->
             <div class="card">
                 <div class="card-header"><h2 class="card-title">Agenda da Loja</h2></div>
                 <div class="card-body space-y-3">
                     <?php if (empty($sessoes)): ?>
-                        <p class="text-center text-gray-500 dark:text-gray-400 py-4">Nenhuma sessão futura na agenda.</p>
+                        <p class="text-center text-gray-500 dark:text-gray-400 py-4">Nenhuma sessÃ£o futura na agenda.</p>
                     <?php else: ?>
                         <?php foreach ($sessoes as $sessao): ?>
                             <div class="list-item">
                                 <div>
-                                    <p class="font-semibold"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Sessão')) ?></p>
+                                    <p class="font-semibold"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'SessÃ£o')) ?></p>
                                     <p class="text-sm text-gray-500 dark:text-gray-400"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?></p>
                                 </div>
                                 <span class="badge badge-secondary"><?= htmlspecialchars((string) ($sessao['status'] ?? 'Agendada')) ?></span>
@@ -135,10 +135,10 @@ require_once __DIR__ . '/../partials/erp_shell_open.php';
         <div class="space-y-8">
             <!-- Aniversariantes -->
             <div class="card">
-                <div class="card-header"><h2 class="card-title">Aniversariantes do Mês</h2></div>
+                <div class="card-header"><h2 class="card-title">Aniversariantes do MÃªs</h2></div>
                 <div class="card-body space-y-3">
                     <?php if (empty($aniversariantes)): ?>
-                        <p class="text-center text-gray-500 dark:text-gray-400 py-4">Nenhum aniversariante este mês.</p>
+                        <p class="text-center text-gray-500 dark:text-gray-400 py-4">Nenhum aniversariante este mÃªs.</p>
                     <?php else: ?>
                         <?php foreach ($aniversariantes as $aniversariante): ?>
                             <div class="list-item">
@@ -170,19 +170,8 @@ require_once __DIR__ . '/../partials/erp_shell_open.php';
     </div>
 </div>
 
-<style>
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
-    .card-header { @apply p-6 border-b border-gray-200 dark:border-gray-700; }
-    .card-title { @apply text-xl font-bold text-gray-800 dark:text-gray-100; }
-    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
-    .card-body { @apply p-6; }
-    .card-metric { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-5; }
-    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
-    .card-metric-value { @apply mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100; }
-    .list-item { @apply flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md text-sm; }
-</style>
-
 <?php
 require_once __DIR__ . '/../partials/erp_shell_close.php';
 ?>
+
 

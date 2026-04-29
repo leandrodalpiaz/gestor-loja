@@ -2,11 +2,11 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÓGICA DE NEGÓCIO E HELPERS
+// LÃ“GICA DE NEGÃ“CIO E HELPERS
 // #############################################################################
 
 $lista = $itens ?? [];
-$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
+$usuarioNome = $_SESSION['usuario_nome'] ?? 'IrmÃ£o';
 
 $podeGerenciar = $auth->isGranted('biblioteca.manage');
 $podeClassificar = $auth->isGranted('biblioteca.classificar');
@@ -14,18 +14,18 @@ $podeClassificar = $auth->isGranted('biblioteca.classificar');
 $formatGrau = static fn($grau) => $grau ? ucfirst(strtolower($grau)) : 'Livre';
 
 // #############################################################################
-// CONFIGURAÇÃO DO APP SHELL
+// CONFIGURAÃ‡ÃƒO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Biblioteca';
-$appShellTitle = 'Catálogo da Loja';
-$appShellDescription = 'Consulte o acervo, verifique a disponibilidade e gerencie os empréstimos.';
+$appShellTitle = 'CatÃ¡logo da Loja';
+$appShellDescription = 'Consulte o acervo, verifique a disponibilidade e gerencie os emprÃ©stimos.';
 $appShellActiveHref = '/biblioteca';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
 
-<!-- Cabeçalho com Ações e Filtros -->
+<!-- CabeÃ§alho com AÃ§Ãµes e Filtros -->
 <div class="card mb-6">
     <div class="card-body">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -40,12 +40,12 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 </div>
             <?php endif; ?>
 
-            <!-- Botões de Ação -->
+            <!-- BotÃµes de AÃ§Ã£o -->
             <div class="flex flex-wrap items-center gap-2">
-                <a href="/biblioteca/meus-emprestimos" class="btn btn-secondary">Meus empréstimos</a>
+                <a href="/biblioteca/meus-emprestimos" class="btn btn-secondary">Meus emprÃ©stimos</a>
                 <?php if ($podeGerenciar): ?>
-                    <a href="/biblioteca/emprestimos" class="btn btn-secondary-amber">Gerenciar empréstimos</a>
-                    <a href="/biblioteca/adicionar" class="btn btn-primary">Novo Título</a>
+                    <a href="/biblioteca/emprestimos" class="btn btn-secondary-amber">Gerenciar emprÃ©stimos</a>
+                    <a href="/biblioteca/adicionar" class="btn btn-primary">Novo TÃ­tulo</a>
                 <?php endif; ?>
             </div>
         </div>
@@ -55,7 +55,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <!-- Lista de Itens (Cards para Mobile) -->
 <div class="space-y-4 md:hidden">
     <?php if (empty($lista)): ?>
-        <div class="card-placeholder">Nenhum título cadastrado no acervo.</div>
+        <div class="card-placeholder">Nenhum tÃ­tulo cadastrado no acervo.</div>
     <?php else: ?>
         <?php foreach ($lista as $item): ?>
             <div class="card">
@@ -72,16 +72,16 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <div class="flex justify-between items-start gap-2">
                                 <h3 class="font-bold text-base flex-1 leading-tight"><?= htmlspecialchars((string) ($item['titulo'] ?? '')) ?></h3>
                                 <?php if ((bool) ($item['disponivel'] ?? false)): ?>
-                                    <span class="badge-status success">Disponível</span>
+                                    <span class="badge-status success">DisponÃ­vel</span>
                                 <?php else: ?>
-                                    <span class="badge-status danger">Indisponível</span>
+                                    <span class="badge-status danger">IndisponÃ­vel</span>
                                 <?php endif; ?>
                             </div>
                             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1"><?= htmlspecialchars((string) ($item['autor'] ?? '-')) ?></p>
                             <?php if (($catalogScope ?? 'minha') === 'rede' && !empty($item['loja_nome'])): ?>
                                 <p class="text-xs text-gray-500 mt-1">Loja: <?= htmlspecialchars((string) ($item['loja_nome'] ?? '')) ?></p>
                             <?php endif; ?>
-                            <p class="text-xs text-gray-500 mt-2">Código: <span class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></span></p>
+                            <p class="text-xs text-gray-500 mt-2">CÃ³digo: <span class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></span></p>
                         </div>
                     </div>
                     <div class="mt-4 flex flex-col gap-2">
@@ -109,18 +109,18 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <thead>
                 <tr>
                     <th class="w-20">Capa</th>
-                    <th>Título</th>
+                    <th>TÃ­tulo</th>
                     <th>Autor</th>
                     <?php if (($catalogScope ?? 'minha') === 'rede'): ?><th>Loja</th><?php endif; ?>
                     <th>Status</th>
                     <th>Grau</th>
-                    <th class="w-40">Ações</th>
+                    <th class="w-40">AÃ§Ãµes</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($lista)): ?>
                     <tr>
-                        <td colspan="7" class="text-center py-10 text-gray-500">Nenhum título cadastrado no acervo.</td>
+                        <td colspan="7" class="text-center py-10 text-gray-500">Nenhum tÃ­tulo cadastrado no acervo.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($lista as $item): ?>
@@ -140,14 +140,14 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <?php if (($catalogScope ?? 'minha') === 'rede'): ?>
                                 <td>
                                     <div class="font-medium"><?= htmlspecialchars((string) ($item['loja_nome'] ?? '')) ?></div>
-                                    <div class="text-xs text-gray-500">Nº <?= htmlspecialchars((string) ($item['numero_loja'] ?? '')) ?></div>
+                                    <div class="text-xs text-gray-500">NÂº <?= htmlspecialchars((string) ($item['numero_loja'] ?? '')) ?></div>
                                 </td>
                             <?php endif; ?>
                             <td>
                                 <?php if ((bool) ($item['disponivel'] ?? false)): ?>
-                                    <span class="badge-status success">Disponível (<?= (int) ($item['quantidade_disponivel'] ?? 0) ?>)</span>
+                                    <span class="badge-status success">DisponÃ­vel (<?= (int) ($item['quantidade_disponivel'] ?? 0) ?>)</span>
                                 <?php else: ?>
-                                    <span class="badge-status danger">Indisponível</span>
+                                    <span class="badge-status danger">IndisponÃ­vel</span>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -173,7 +173,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     </div>
 </div>
 
-<!-- Modal de Classificação -->
+<!-- Modal de ClassificaÃ§Ã£o -->
 <div id="modalClassificacao" class="modal-container hidden">
     <div class="modal-content">
         <form action="/biblioteca/classificar" method="POST">
@@ -193,13 +193,13 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </select>
                 </div>
                 <div>
-                    <label for="modal-nota" class="form-label">Nota de Instrução</label>
+                    <label for="modal-nota" class="form-label">Nota de InstruÃ§Ã£o</label>
                     <textarea name="nota_instrucao" id="modal-nota" rows="3" class="form-textarea"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" onclick="fecharModal()" class="btn btn-secondary">Cancelar</button>
-                <button type="submit" class="btn btn-primary-purple">Salvar Classificação</button>
+                <button type="submit" class="btn btn-primary-purple">Salvar ClassificaÃ§Ã£o</button>
             </div>
         </form>
     </div>
@@ -221,51 +221,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     }
 </script>
 
-<style>
-    /* Componentes Gerais */
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
-    .card-body { @apply p-5; }
-    .card-placeholder { @apply text-center py-12 px-6 bg-white dark:bg-gray-800 rounded-lg shadow-md text-gray-500; }
-
-    /* Botões */
-    .btn { @apply px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900; }
-    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
-    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
-    .btn-secondary-amber { @apply bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:hover:bg-amber-900 focus:ring-amber-500; }
-    .btn-secondary-purple { @apply bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:hover:bg-purple-900 focus:ring-purple-500; }
-    .btn-primary-purple { @apply bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500; }
-    .btn-action { @apply px-3 py-1.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600; }
-    .btn-tab { @apply rounded-md px-3 py-1.5; }
-    .btn-tab.active { @apply bg-white dark:bg-gray-700 shadow-sm font-semibold text-gray-900 dark:text-gray-100; }
-
-    /* Badges */
-    .badge-status { @apply inline-block px-2.5 py-1 text-xs font-medium rounded-full; }
-    .badge-status.success { @apply bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300; }
-    .badge-status.danger { @apply bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300; }
-    .badge-grau { @apply inline-block px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300; }
-
-    /* Tabela */
-    .table-base { @apply min-w-full text-sm text-left text-gray-700 dark:text-gray-300; }
-    .table-base thead { @apply bg-gray-50 dark:bg-gray-700/50 text-xs uppercase tracking-wider font-medium text-gray-500 dark:text-gray-400; }
-    .table-base th, .table-base td { @apply px-5 py-4; }
-    .table-base tbody tr { @apply border-b border-gray-100 dark:border-gray-700; }
-    .table-base tbody tr:last-child { @apply border-b-0; }
-    .table-base tbody tr:hover { @apply bg-gray-50 dark:bg-gray-800/50; }
-
-    /* Modal */
-    .modal-container { @apply fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50; }
-    .modal-content { @apply bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg; }
-    .modal-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
-    .modal-title { @apply text-lg font-bold text-gray-900 dark:text-gray-100; }
-    .modal-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
-    .modal-body { @apply p-5 space-y-4; }
-    .modal-footer { @apply px-5 py-4 bg-gray-50 dark:bg-gray-800/50 flex justify-end gap-3 rounded-b-lg; }
-
-    /* Formulários */
-    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
-    .form-select, .form-textarea { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
-</style>
-
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+
 
 

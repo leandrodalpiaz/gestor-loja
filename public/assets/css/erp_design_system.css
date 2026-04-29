@@ -128,6 +128,340 @@ input, textarea, [contenteditable="true"], .allow-select {
     filter: brightness(0.98);
 }
 
+/* Componentes semanticos globais para estabilizar as views ERP. */
+.card,
+.metric-card,
+.card-metric,
+.card-metric-simple {
+    background: var(--erp-surface);
+    border: 1px solid var(--erp-border);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.card-header,
+.card-footer,
+.card-body,
+.card-metric,
+.metric-card,
+.card-metric-simple {
+    padding: 1rem;
+}
+
+.card-header {
+    border-bottom: 1px solid var(--erp-border);
+}
+
+.card-footer {
+    border-top: 1px solid var(--erp-border);
+    background: var(--erp-surface-2);
+}
+
+.card-title {
+    margin: 0;
+    color: var(--erp-text);
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.card-subtitle,
+.card-description,
+.card-metric-label,
+.metric-label,
+.form-hint {
+    color: var(--erp-muted);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
+.card-subtitle,
+.card-description,
+.form-hint {
+    margin-top: 0.25rem;
+}
+
+.card-metric,
+.metric-card,
+.card-metric-simple {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.card-metric-value,
+.metric-value {
+    color: var(--erp-text);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.15;
+}
+
+.card-metric-context,
+.metric-meta {
+    color: var(--erp-muted);
+    font-size: 0.8125rem;
+}
+
+.alert {
+    border-radius: 10px;
+    border: 1px solid var(--erp-border);
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+}
+
+.alert-success {
+    background: #ecfdf3;
+    border-color: #86efac;
+    color: #166534;
+}
+
+.alert-danger {
+    background: #fff1f2;
+    border-color: #fecdd3;
+    color: #9f1239;
+}
+
+.alert-warning {
+    background: #fff8e8;
+    border-color: #f2cf84;
+    color: #6d4700;
+}
+
+.alert-info {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1e40af;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 40px;
+    border-radius: 10px;
+    padding: 0.625rem 0.95rem;
+    border: 1px solid transparent;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--erp-brand);
+    color: #fff;
+}
+
+.btn-secondary {
+    background: var(--erp-surface-2);
+    color: var(--erp-text);
+    border-color: var(--erp-border);
+}
+
+.btn-primary:hover,
+.btn-secondary:hover {
+    filter: brightness(0.98);
+}
+
+.btn[disabled],
+button[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.375rem;
+    color: var(--erp-muted);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.form-input,
+.form-select,
+.form-textarea,
+.form-static-field {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid var(--erp-border);
+    background: var(--erp-surface);
+    color: var(--erp-text);
+    border-radius: 10px;
+    padding: 0.7rem 0.85rem;
+    font-size: 0.875rem;
+    line-height: 1.35;
+}
+
+.form-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-static-field {
+    background: var(--erp-surface-2);
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--erp-focus);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--erp-focus) 22%, transparent);
+}
+
+.form-checkbox {
+    width: 1rem;
+    height: 1rem;
+}
+
+.form-checkbox-label,
+.form-check-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--erp-text);
+    font-size: 0.875rem;
+}
+
+.badge,
+.badge-status,
+.badge-status-success,
+.badge-status-danger,
+.badge-status-warning,
+.badge-status-neutral,
+.badge-status-info,
+.badge-success,
+.badge-danger,
+.badge-warning,
+.badge-info,
+.badge-primary,
+.badge-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    padding: 0.22rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.badge-secondary,
+.badge-status-neutral,
+.badge-status {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.badge-primary,
+.badge-info,
+.badge-status-info {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.badge-success,
+.badge-status-success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-danger,
+.badge-status-danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-warning,
+.badge-status-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.list-item,
+.list-item-detail,
+.list-item-param,
+.list-item-action,
+.list-item-report,
+.list-item-condensed {
+    border: 1px solid var(--erp-border);
+    border-radius: 10px;
+    background: var(--erp-surface-2);
+    padding: 0.875rem;
+}
+
+.list-item,
+.list-item-detail,
+.list-item-param {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.list-item-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: var(--erp-text);
+    font-weight: 600;
+}
+
+.list-item-action svg {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    flex: 0 0 16px;
+}
+
+.list-item-report,
+.list-item-condensed {
+    display: block;
+}
+
+.table-base {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.table-base thead th {
+    padding: 0.75rem 0.875rem;
+    border-bottom: 1px solid var(--erp-border);
+    color: var(--erp-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.table-base tbody td {
+    padding: 0.875rem;
+    border-bottom: 1px solid var(--erp-border);
+    color: var(--erp-text);
+    font-size: 0.875rem;
+}
+
+.table-base tbody tr:hover {
+    background: color-mix(in srgb, var(--erp-surface-2) 75%, white);
+}
+
+.link {
+    color: var(--erp-info);
+    text-decoration: none;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+
 /* Skeleton de carregamento */
 .erp-skeleton {
     position: relative;

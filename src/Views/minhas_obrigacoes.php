@@ -2,12 +2,12 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÓGICA DE NEGÓCIO E HELPERS
+// LÃ“GICA DE NEGÃ“CIO E HELPERS
 // #############################################################################
 
 if (!isset($obreiroTesouraria) || !$obreiroTesouraria) {
     http_response_code(401);
-    echo 'Acesso não autorizado.';
+    echo 'Acesso nÃ£o autorizado.';
     exit;
 }
 
@@ -26,7 +26,7 @@ $hoje = date('Y-m-d');
 $mesAtualChave = date('Y-m');
 $anoPainel = 2026; // Ano fixo para o painel de ajuste
 
-// Simulação de dados da biblioteca
+// SimulaÃ§Ã£o de dados da biblioteca
 $bibliotecaPorMes = [];
 try {
     $dbTesouraria = \App\Config\Database::getConnection();
@@ -43,14 +43,14 @@ try {
         $bibliotecaPorMes[(int) ($linhaBiblioteca['mes_ref'] ?? 0)] = (float) ($linhaBiblioteca['valor_previsto'] ?? 0);
     }
 } catch (\Throwable $e) {
-    // Silencia o erro se a tabela não existir ou houver outro problema
+    // Silencia o erro se a tabela nÃ£o existir ou houver outro problema
     $bibliotecaPorMes = [];
 }
 
-$nomesMeses = [1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril', 5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto', 9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'];
+$nomesMeses = [1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'MarÃ§o', 4 => 'Abril', 5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto', 9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'];
 $mesesTesourarias = [];
 
-// Processamento de obrigações
+// Processamento de obrigaÃ§Ãµes
 foreach ($obrigacoesObreiro as $obrigacao) {
     foreach (($obrigacao['parcelas'] ?? []) as $parcela) {
         $parcela['obrigacao_titulo'] = (string) ($parcela['obrigacao_titulo'] ?? $obrigacao['titulo'] ?? 'Obrigacao');
@@ -63,7 +63,7 @@ foreach ($obrigacoesObreiro as $obrigacao) {
             if (!isset($mesesTesourarias[$chaveMes])) {
                 $mesesTesourarias[$chaveMes] = [
                     'chave' => $chaveMes,
-                    'rotulo' => ($nomesMeses[$mesCompetencia] ?? 'Mês') . ' ' . $anoCompetencia,
+                    'rotulo' => ($nomesMeses[$mesCompetencia] ?? 'MÃªs') . ' ' . $anoCompetencia,
                     'total_pago' => 0.0, 'total_previsto' => 0.0, 'total_aberto' => 0.0,
                     'pagos' => 0, 'abertos' => 0, 'atrasados' => 0, 'itens' => [],
                 ];
@@ -104,18 +104,18 @@ usort($parcelasAguardandoConfirmacao, $sortFn);
 usort($parcelasProgramadas, $sortFn);
 usort($parcelasAtrasadas, $sortFn);
 
-$nomeObreiro = (string) ($obreiroTesouraria['nome_historico'] ?? $obreiroTesouraria['nome'] ?? 'Irmão');
+$nomeObreiro = (string) ($obreiroTesouraria['nome_historico'] ?? $obreiroTesouraria['nome'] ?? 'IrmÃ£o');
 $totalPago = array_reduce($parcelasPagas, static fn ($c, $p) => $c + ($p['valor_previsto'] ?? 0), 0.0);
 $totalAberto = array_reduce(array_merge($parcelasAguardandoConfirmacao, $parcelasProgramadas, $parcelasAtrasadas), static fn ($c, $p) => $c + ($p['valor_previsto'] ?? 0), 0.0);
 $totalAtrasado = array_reduce($parcelasAtrasadas, static fn ($c, $p) => $c + ($p['valor_previsto'] ?? 0), 0.0);
 $proximaObrigacao = $parcelasAguardandoConfirmacao[0] ?? $parcelasProgramadas[0] ?? null;
 
 // #############################################################################
-// CONFIGURAÇÃO DO APP SHELL
+// CONFIGURAÃ‡ÃƒO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Tesouraria';
-$appShellTitle = 'Minhas Obrigações';
+$appShellTitle = 'Minhas ObrigaÃ§Ãµes';
 $appShellDescription = 'Painel financeiro pessoal do obreiro ' . htmlspecialchars($nomeObreiro);
 $appShellActiveHref = '/minhas-obrigacoes';
 $appShellActions = [['label' => 'Voltar ao Painel', 'href' => '/dashboard']];
@@ -124,16 +124,16 @@ require __DIR__ . '/partials/erp_shell_open.php';
 ?>
 
 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 xl:gap-8">
-    <!-- Métricas Principais -->
+    <!-- MÃ©tricas Principais -->
     <div class="metric-card bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
         <div class="metric-label">Total Pago</div>
         <div class="metric-value text-green-700 dark:text-green-300"><?= $formatCurrency($totalPago) ?></div>
         <div class="metric-meta"><?= count($parcelasPagas) ?> compromissos quitados</div>
     </div>
     <div class="metric-card bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
-        <div class="metric-label">Próxima Obrigação</div>
+        <div class="metric-label">PrÃ³xima ObrigaÃ§Ã£o</div>
         <div class="metric-value text-yellow-700 dark:text-yellow-300"><?= $formatCurrency($proximaObrigacao['valor_previsto'] ?? 0) ?></div>
-        <div class="metric-meta"><?= $proximaObrigacao ? htmlspecialchars($proximaObrigacao['obrigacao_titulo']) . ' em ' . $formatDate($proximaObrigacao['vencimento']) : 'Nenhuma obrigação futura' ?></div>
+        <div class="metric-meta"><?= $proximaObrigacao ? htmlspecialchars($proximaObrigacao['obrigacao_titulo']) . ' em ' . $formatDate($proximaObrigacao['vencimento']) : 'Nenhuma obrigaÃ§Ã£o futura' ?></div>
     </div>
     <div class="metric-card bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
         <div class="metric-label">Total em Aberto</div>
@@ -143,7 +143,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
     <div class="metric-card bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800">
         <div class="metric-label">Em Atraso</div>
         <div class="metric-value text-red-700 dark:text-red-300"><?= $formatCurrency($totalAtrasado) ?></div>
-        <div class="metric-meta"><?= count($parcelasAtrasadas) ?> pendências</div>
+        <div class="metric-meta"><?= count($parcelasAtrasadas) ?> pendÃªncias</div>
     </div>
 </div>
 
@@ -153,7 +153,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <div>
             <h3 class="font-semibold text-gray-800 dark:text-gray-200">Pagamento via PIX</h3>
             <p class="text-sm text-gray-600 dark:text-gray-400">
-                Chave <?= htmlspecialchars($pixTipo) ?>: <strong class="font-mono"><?= htmlspecialchars($pixValor ?: 'Não informada') ?></strong>
+                Chave <?= htmlspecialchars($pixTipo) ?>: <strong class="font-mono"><?= htmlspecialchars($pixValor ?: 'NÃ£o informada') ?></strong>
                 (<?= htmlspecialchars($pixBeneficiario) ?>)
             </p>
         </div>
@@ -163,15 +163,15 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 </div>
 
-<!-- Painel de Obrigações Mensais -->
+<!-- Painel de ObrigaÃ§Ãµes Mensais -->
 <div class="card mt-6 xl:mt-8">
     <div class="card-header">
-        <h2 class="card-title">Painel Mensal de Obrigações</h2>
-        <p class="card-subtitle">Detalhes de cada competência, incluindo o que foi pago e o que está pendente.</p>
+        <h2 class="card-title">Painel Mensal de ObrigaÃ§Ãµes</h2>
+        <p class="card-subtitle">Detalhes de cada competÃªncia, incluindo o que foi pago e o que estÃ¡ pendente.</p>
     </div>
     <div class="card-body space-y-4">
         <?php if (empty($mesesTesourarias)): ?>
-            <div class="text-center py-10 text-gray-500">Nenhuma obrigação encontrada para este período.</div>
+            <div class="text-center py-10 text-gray-500">Nenhuma obrigaÃ§Ã£o encontrada para este perÃ­odo.</div>
         <?php endif; ?>
 
         <?php foreach ($mesesTesourarias as $mes): ?>
@@ -235,27 +235,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 </div>
 
-<style>
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm; }
-    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
-    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
-    .card-subtitle { @apply text-sm text-gray-500 dark:text-gray-400 mt-1; }
-    .card-body { @apply p-5; }
-
-    .metric-card { @apply p-5 rounded-lg border; }
-    .metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
-    .metric-value { @apply text-3xl font-bold mt-1; }
-    .metric-meta { @apply text-sm text-gray-600 dark:text-gray-400 mt-1; }
-
-    .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 transition-colors; }
-    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
-
-    .badge-status { @apply inline-block px-2 py-0.5 text-xs font-semibold rounded-full; }
-    .badge-status-success { @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300; }
-    .badge-status-warning { @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300; }
-    .badge-status-danger { @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300; }
-</style>
-
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
+
 
 

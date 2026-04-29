@@ -4,7 +4,7 @@ declare(strict_types=1);
 use App\Models\Cargo;
 
 // #############################################################################
-// SEGURANÇA E PREPARAÇÃO
+// SEGURANÃ‡A E PREPARAÃ‡ÃƒO
 // #############################################################################
 
 if (!isset($_SESSION["usuario_logado"])) {
@@ -13,7 +13,7 @@ if (!isset($_SESSION["usuario_logado"])) {
 }
 
 // #############################################################################
-// LÓGICA DE NEGÓCIO E HELPERS
+// LÃ“GICA DE NEGÃ“CIO E HELPERS
 // #############################################################################
 
 $filtrosObreiros = $filtrosObreiros ?? ['busca' => '', 'situacao' => '', 'grau' => '', 'alerta' => '', 'cargo_codigo' => '', 'ordenacao' => 'nome'];
@@ -31,19 +31,19 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro'], $_SESSION['conv
 $rotulosAlerta = [
     'sem_nascimento' => 'Nascimento ausente',
     'sem_escolaridade' => 'Escolaridade ausente',
-    'sem_profissao' => 'Profissão ausente',
-    'sem_situacao' => 'Situação do quadro ausente',
+    'sem_profissao' => 'ProfissÃ£o ausente',
+    'sem_situacao' => 'SituaÃ§Ã£o do quadro ausente',
     'sem_data_ingresso' => 'Data de ingresso ausente',
-    'sem_potencia' => 'Potência ausente',
+    'sem_potencia' => 'PotÃªncia ausente',
 ];
 
 // #############################################################################
-// CONFIGURAÇÃO DO APP SHELL
+// CONFIGURAÃ‡ÃƒO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Secretaria';
 $appShellTitle = 'Central de Obreiros';
-$appShellDescription = 'Registro administrativo, filtros operacionais e organização do quadro da Loja.';
+$appShellDescription = 'Registro administrativo, filtros operacionais e organizaÃ§Ã£o do quadro da Loja.';
 $appShellActiveHref = '/obreiros';
 $appShellActions = [['label' => 'Somente com Alertas', 'href' => '/obreiros?alerta=cadastro']];
 if ($podeGerenciarObreiros) {
@@ -53,7 +53,7 @@ if ($podeGerenciarObreiros) {
 require __DIR__ . '/partials/erp_shell_open.php';
 ?>
 
-<!-- Notificações -->
+<!-- NotificaÃ§Ãµes -->
 <?php if ($mensagemSucesso): ?>
     <div class="alert alert-success mb-6"><?= htmlspecialchars($mensagemSucesso) ?></div>
 <?php endif; ?>
@@ -71,7 +71,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 <?php endif; ?>
 
-<!-- Métricas -->
+<!-- MÃ©tricas -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
     <div class="metric-card"><div class="metric-label">Total Filtrado</div><div class="metric-value"><?= (int) $resumoObreiros['total'] ?></div></div>
     <div class="metric-card"><div class="metric-label">Regulares</div><div class="metric-value"><?= (int) $resumoObreiros['ativos'] ?></div></div>
@@ -89,7 +89,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <input id="filtro-busca" type="text" name="busca" value="<?= htmlspecialchars($filtrosObreiros['busca']) ?>" class="form-input" placeholder="Nome, CIM, cargo...">
             </div>
             <div>
-                <label for="filtro-situacao" class="form-label">Situação</label>
+                <label for="filtro-situacao" class="form-label">SituaÃ§Ã£o</label>
                 <select id="filtro-situacao" name="situacao" class="form-select">
                     <option value="">Todas</option>
                     <?php foreach (\App\Models\Obreiro::SITUACOES_QUADRO as $situacao): ?>
@@ -127,7 +127,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <select id="filtro-ordenacao" name="ordenacao" class="form-select">
                     <option value="nome" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'nome' ? 'selected' : '' ?>>Nome</option>
                     <option value="grau" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'grau' ? 'selected' : '' ?>>Grau</option>
-                    <option value="situacao" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'situacao' ? 'selected' : '' ?>>Situação</option>
+                    <option value="situacao" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'situacao' ? 'selected' : '' ?>>SituaÃ§Ã£o</option>
                 </select>
             </div>
         </div>
@@ -151,9 +151,9 @@ require __DIR__ . '/partials/erp_shell_open.php';
             <thead>
                 <tr>
                     <th>Obreiro</th>
-                    <th>Situação</th>
+                    <th>SituaÃ§Ã£o</th>
                     <th>Cargos</th>
-                    <th>Ações</th>
+                    <th>AÃ§Ãµes</th>
                 </tr>
             </thead>
             <tbody>
@@ -225,7 +225,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         <h4 class="text-sm font-semibold mb-2">Cargos</h4>
                         <div class="flex flex-wrap gap-1">
                             <?php if (empty($cargosAtuais)): ?>
-                                <span class="text-xs text-gray-500">Nenhum cargo oficial em exercício.</span>
+                                <span class="text-xs text-gray-500">Nenhum cargo oficial em exercÃ­cio.</span>
                             <?php else: ?>
                                 <?php foreach ($cargosAtuais as $codigo): ?>
                                     <span class="badge-status badge-status-neutral"><?= htmlspecialchars(Cargo::rotuloOficial($codigo)) ?></span>
@@ -251,36 +251,6 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 <?php endif; ?>
 
-<style>
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm; }
-    .card-body { @apply p-5; }
-
-    .metric-card { @apply bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700; }
-    .metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
-    .metric-value { @apply text-3xl font-bold mt-1 text-gray-800 dark:text-gray-100; }
-
-    .alert { @apply p-4 rounded-md text-sm; }
-    .alert-success { @apply bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300; }
-    .alert-danger { @apply bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300; }
-    .alert-info { @apply bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300; }
-
-    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
-    .form-input, .form-select { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
-
-    .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 transition-colors; }
-    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
-    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
-
-    .table-base { @apply min-w-full divide-y divide-gray-200 dark:divide-gray-700; }
-    .table-base thead th { @apply px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-700/50; }
-    .table-base tbody tr:hover { @apply bg-gray-50 dark:bg-gray-900/20; }
-    .table-base tbody td { @apply px-4 py-4 text-sm text-gray-700 dark:text-gray-300 align-top; }
-
-    .badge-status { @apply inline-block px-2 py-0.5 text-xs font-semibold rounded-full; }
-    .badge-status-info { @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300; }
-    .badge-status-warning { @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300; }
-    .badge-status-neutral { @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300; }
-</style>
-
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
+
 

@@ -2,18 +2,18 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÓGICA DE NEGÓCIO E HELPERS
+// LÃ“GICA DE NEGÃ“CIO E HELPERS
 // #############################################################################
 
 $formatDate = static fn(?string $val): string => !empty(trim((string) $val)) ? (new DateTimeImmutable(trim((string) $val)))->format('d/m/Y') : '-';
 
 // #############################################################################
-// CONFIGURAÇÃO DO APP SHELL
+// CONFIGURAÃ‡ÃƒO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Secretaria';
-$appShellTitle = 'Relatório Anual';
-$appShellDescription = 'Consolidação anual da atividade da Loja sob responsabilidade da Secretaria.';
+$appShellTitle = 'RelatÃ³rio Anual';
+$appShellDescription = 'ConsolidaÃ§Ã£o anual da atividade da Loja sob responsabilidade da Secretaria.';
 $appShellActiveHref = '/secretaria/relatorio-anual';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
@@ -24,7 +24,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     <div class="card-body">
         <form method="GET" action="/secretaria/relatorio-anual" class="flex flex-col sm:flex-row sm:items-end sm:gap-4">
             <div>
-                <label for="ano" class="form-label">Ano de referência</label>
+                <label for="ano" class="form-label">Ano de referÃªncia</label>
                 <select name="ano" id="ano" class="form-select">
                     <?php foreach ($anosDisponiveis as $anoOpcao): ?>
                         <option value="<?= (int) $anoOpcao ?>" <?= (int) $anoOpcao === (int) $relatorio['ano'] ? 'selected' : '' ?>>
@@ -33,58 +33,58 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <?php endforeach; ?>
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary mt-4 sm:mt-0">Atualizar Relatório</button>
+            <button type="submit" class="btn btn-primary mt-4 sm:mt-0">Atualizar RelatÃ³rio</button>
         </form>
     </div>
 </div>
 
-<!-- Identificação Institucional -->
+<!-- IdentificaÃ§Ã£o Institucional -->
 <div class="card mb-8">
     <div class="card-body">
         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
             <div>
                 <h2 class="text-xl font-bold">
-                    <?= htmlspecialchars((string) (($relatorio['loja']['nome_loja'] ?? '') ?: 'Loja não configurada')) ?>
+                    <?= htmlspecialchars((string) (($relatorio['loja']['nome_loja'] ?? '') ?: 'Loja nÃ£o configurada')) ?>
                 </h2>
                 <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                    <p><strong>Potência:</strong> <?= htmlspecialchars(trim((string) (($relatorio['loja']['potencia_nome'] ?? 'não informada') . (!empty($relatorio['loja']['potencia_sigla']) ? ' (' . $relatorio['loja']['potencia_sigla'] . ')' : '')))) ?></p>
-                    <p><strong>Oriente:</strong> <?= htmlspecialchars((string) (($relatorio['loja']['oriente'] ?? '') ?: 'não informado')) ?></p>
+                    <p><strong>PotÃªncia:</strong> <?= htmlspecialchars(trim((string) (($relatorio['loja']['potencia_nome'] ?? 'nÃ£o informada') . (!empty($relatorio['loja']['potencia_sigla']) ? ' (' . $relatorio['loja']['potencia_sigla'] . ')' : '')))) ?></p>
+                    <p><strong>Oriente:</strong> <?= htmlspecialchars((string) (($relatorio['loja']['oriente'] ?? '') ?: 'nÃ£o informado')) ?></p>
                     <p><strong>Cidade/UF:</strong> <?= htmlspecialchars(trim((string) (($relatorio['loja']['cidade'] ?? '') . ' / ' . ($relatorio['loja']['uf'] ?? '')), ' /')) ?></p>
-                    <p><strong>Rito:</strong> <?= htmlspecialchars((string) (($relatorio['loja']['rito'] ?? '') ?: 'não informado')) ?></p>
-                    <p><strong>Fundação:</strong> <?= $formatDate($relatorio['loja']['data_fundacao'] ?? null) ?></p>
-                    <p><strong>Instalação:</strong> <?= $formatDate($relatorio['loja']['data_instalacao'] ?? null) ?></p>
+                    <p><strong>Rito:</strong> <?= htmlspecialchars((string) (($relatorio['loja']['rito'] ?? '') ?: 'nÃ£o informado')) ?></p>
+                    <p><strong>FundaÃ§Ã£o:</strong> <?= $formatDate($relatorio['loja']['data_fundacao'] ?? null) ?></p>
+                    <p><strong>InstalaÃ§Ã£o:</strong> <?= $formatDate($relatorio['loja']['data_instalacao'] ?? null) ?></p>
                 </div>
             </div>
             <?php if (!empty($relatorio['loja']['observacao_relatorios'])): ?>
                 <div class="max-w-md alert alert-warning">
-                    <strong>Observação:</strong> <?= htmlspecialchars((string) $relatorio['loja']['observacao_relatorios']) ?>
+                    <strong>ObservaÃ§Ã£o:</strong> <?= htmlspecialchars((string) $relatorio['loja']['observacao_relatorios']) ?>
                 </div>
             <?php endif; ?>
         </div>
     </div>
 </div>
 
-<!-- Métricas Principais -->
+<!-- MÃ©tricas Principais -->
 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
     <div class="card-metric"><p class="card-metric-label">Visitantes</p><p class="card-metric-value"><?= (int) ($relatorio['visitantes']['total'] ?? 0) ?></p></div>
     <div class="card-metric"><p class="card-metric-label">Visitas Externas</p><p class="card-metric-value"><?= (int) ($relatorio['visitas_externas']['total'] ?? 0) ?></p></div>
     <div class="card-metric"><p class="card-metric-label">Congressos</p><p class="card-metric-value"><?= (int) ($relatorio['congressos']['total'] ?? 0) ?></p></div>
     <div class="card-metric"><p class="card-metric-label">Palestras</p><p class="card-metric-value"><?= (int) ($relatorio['palestras']['total'] ?? 0) ?></p></div>
-    <div class="card-metric"><p class="card-metric-label">Sessões</p><p class="card-metric-value"><?= (int) ($relatorio['sessoes_por_grau']['total'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">SessÃµes</p><p class="card-metric-value"><?= (int) ($relatorio['sessoes_por_grau']['total'] ?? 0) ?></p></div>
 </div>
 
-<!-- Métricas do Quadro -->
+<!-- MÃ©tricas do Quadro -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
     <div class="card-metric"><p class="card-metric-label">Obreiros no Quadro</p><p class="card-metric-value"><?= (int) ($relatorio['perfil_quadro']['total'] ?? 0) ?></p></div>
-    <div class="card-metric"><p class="card-metric-label">Idade Média</p><p class="card-metric-value"><?= ($relatorio['perfil_quadro']['idade_media'] ?? null) !== null ? round((float)$relatorio['perfil_quadro']['idade_media']) . ' anos' : '-' ?></p></div>
-    <div class="card-metric"><p class="card-metric-label">Situação Predominante</p><p class="card-metric-value !text-2xl"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($relatorio['perfil_quadro']['situacoes'][0]['categoria'] ?? 'N/A')))) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Idade MÃ©dia</p><p class="card-metric-value"><?= ($relatorio['perfil_quadro']['idade_media'] ?? null) !== null ? round((float)$relatorio['perfil_quadro']['idade_media']) . ' anos' : '-' ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">SituaÃ§Ã£o Predominante</p><p class="card-metric-value !text-2xl"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($relatorio['perfil_quadro']['situacoes'][0]['categoria'] ?? 'N/A')))) ?></p></div>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Coluna Esquerda -->
     <div class="space-y-8">
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Visitantes e Visitas Externas</h3><p class="card-description">Frequência de visitantes na Loja e de obreiros em outras Lojas.</p></div>
+            <div class="card-header"><h3 class="card-title">Visitantes e Visitas Externas</h3><p class="card-description">FrequÃªncia de visitantes na Loja e de obreiros em outras Lojas.</p></div>
             <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <h4 class="font-semibold mb-3">Lojas mais frequentes (Visitantes)</h4>
@@ -116,13 +116,13 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         </div>
 
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Sessões e Eventos</h3><p class="card-description">Distribuição de sessões por grau e total de eventos.</p></div>
+            <div class="card-header"><h3 class="card-title">SessÃµes e Eventos</h3><p class="card-description">DistribuiÃ§Ã£o de sessÃµes por grau e total de eventos.</p></div>
             <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <h4 class="font-semibold mb-3">Sessões por Grau</h4>
+                    <h4 class="font-semibold mb-3">SessÃµes por Grau</h4>
                     <div class="space-y-2">
                         <?php if (empty($relatorio['sessoes_por_grau']['itens'])): ?>
-                            <p class="text-sm text-gray-500">Nenhuma sessão no período.</p>
+                            <p class="text-sm text-gray-500">Nenhuma sessÃ£o no perÃ­odo.</p>
                         <?php else: ?>
                             <?php foreach ($relatorio['sessoes_por_grau']['itens'] as $linha): ?>
                                 <div class="list-item"><span><?= htmlspecialchars((string) ($linha['grau_sessao'] ?? 'N/A')) ?></span><strong><?= (int) ($linha['total'] ?? 0) ?></strong></div>
@@ -142,10 +142,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         </div>
 
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Amostra Cadastral</h3><p class="card-description">Leitura rápida para apoio ao saneamento e conferências.</p></div>
+            <div class="card-header"><h3 class="card-title">Amostra Cadastral</h3><p class="card-description">Leitura rÃ¡pida para apoio ao saneamento e conferÃªncias.</p></div>
             <div class="card-body space-y-3 max-h-96 overflow-y-auto">
                 <?php if (empty($relatorio['perfil_quadro']['amostra_cadastral'])): ?>
-                    <p class="text-sm text-gray-500 text-center py-4">Não há obreiros elegíveis no período.</p>
+                    <p class="text-sm text-gray-500 text-center py-4">NÃ£o hÃ¡ obreiros elegÃ­veis no perÃ­odo.</p>
                 <?php else: ?>
                     <?php foreach ($relatorio['perfil_quadro']['amostra_cadastral'] as $item): ?>
                         <div class="list-item-report">
@@ -155,7 +155,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             </div>
                             <div class="mt-2 text-xs grid grid-cols-2 gap-1">
                                 <p><strong>Grau:</strong> <?= htmlspecialchars((string) ($item['grau'] ?? 'N/A')) ?></p>
-                                <p><strong>Profissão:</strong> <?= htmlspecialchars((string) ($item['profissao'] ?? 'N/A')) ?></p>
+                                <p><strong>ProfissÃ£o:</strong> <?= htmlspecialchars((string) ($item['profissao'] ?? 'N/A')) ?></p>
                                 <p><strong>Escolaridade:</strong> <?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($item['escolaridade'] ?? 'N/A')))) ?></p>
                             </div>
                         </div>
@@ -168,10 +168,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     <!-- Coluna Direita -->
     <div class="space-y-8">
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Movimentação do Quadro</h3><p class="card-description">Panorama anual da composição do quadro.</p></div>
+            <div class="card-header"><h3 class="card-title">MovimentaÃ§Ã£o do Quadro</h3><p class="card-description">Panorama anual da composiÃ§Ã£o do quadro.</p></div>
             <div class="card-body">
                 <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="card-metric-simple"><p class="card-metric-label">Início do ano</p><p class="card-metric-value text-2xl"><?= ($relatorio['quadro']['inicio_ano'] ?? null) !== null ? $relatorio['quadro']['inicio_ano'] : '-' ?></p></div>
+                    <div class="card-metric-simple"><p class="card-metric-label">InÃ­cio do ano</p><p class="card-metric-value text-2xl"><?= ($relatorio['quadro']['inicio_ano'] ?? null) !== null ? $relatorio['quadro']['inicio_ano'] : '-' ?></p></div>
                     <div class="card-metric-simple"><p class="card-metric-label">Fim do ano</p><p class="card-metric-value text-2xl"><?= ($relatorio['quadro']['fim_ano'] ?? null) !== null ? $relatorio['quadro']['fim_ano'] : '-' ?></p></div>
                 </div>
                 <?php if (!empty($relatorio['quadro']['observacao'])): ?>
@@ -179,7 +179,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <?php endif; ?>
                 <?php if (!empty($relatorio['quadro']['movimentacao'])): ?>
                     <div class="grid grid-cols-2 gap-3">
-                        <?php foreach (['filiacoes' => 'Filiações', 'regularizacoes' => 'Regularizações', 'reintegracoes' => 'Reintegrações', 'suspensoes' => 'Suspensões', 'desligamentos' => 'Desligamentos', 'oriente_eterno' => 'Oriente Eterno'] as $chave => $label): ?>
+                        <?php foreach (['filiacoes' => 'FiliaÃ§Ãµes', 'regularizacoes' => 'RegularizaÃ§Ãµes', 'reintegracoes' => 'ReintegraÃ§Ãµes', 'suspensoes' => 'SuspensÃµes', 'desligamentos' => 'Desligamentos', 'oriente_eterno' => 'Oriente Eterno'] as $chave => $label): ?>
                             <div class="list-item !py-2 !px-3"><span><?= htmlspecialchars($label) ?></span><strong><?= (int) ($relatorio['quadro']['movimentacao'][$chave] ?? 0) ?></strong></div>
                         <?php endforeach; ?>
                     </div>
@@ -188,7 +188,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         </div>
 
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Perfil do Quadro</h3><p class="card-description">Recorte estatístico do cadastro de obreiros.</p></div>
+            <div class="card-header"><h3 class="card-title">Perfil do Quadro</h3><p class="card-description">Recorte estatÃ­stico do cadastro de obreiros.</p></div>
             <div class="card-body space-y-6">
                 <div>
                     <h4 class="font-semibold mb-3 text-sm">Escolaridade</h4>
@@ -199,7 +199,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </div>
                 </div>
                 <div>
-                    <h4 class="font-semibold mb-3 text-sm">Situação no Quadro</h4>
+                    <h4 class="font-semibold mb-3 text-sm">SituaÃ§Ã£o no Quadro</h4>
                     <div class="space-y-2">
                         <?php foreach (($relatorio['perfil_quadro']['situacoes'] ?? []) as $linha): ?>
                             <div class="list-item"><span><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($linha['categoria'] ?? 'N/A')))) ?></span><strong><?= (int) ($linha['total'] ?? 0) ?></strong></div>
@@ -207,7 +207,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </div>
                 </div>
                 <div>
-                    <h4 class="font-semibold mb-3 text-sm">Distribuição por Grau</h4>
+                    <h4 class="font-semibold mb-3 text-sm">DistribuiÃ§Ã£o por Grau</h4>
                     <div class="space-y-2">
                         <?php foreach (($relatorio['perfil_quadro']['graus'] ?? []) as $linha): ?>
                             <div class="list-item"><span><?= htmlspecialchars((string) ($linha['categoria'] ?? 'N/A')) ?></span><strong><?= (int) ($linha['total'] ?? 0) ?></strong></div>
@@ -223,46 +223,17 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <ul class="list-disc pl-5 space-y-2 text-sm text-gray-500">
                     <li>Visitantes refletem os registros estruturados no balaustre.</li>
                     <li>Visitas externas refletem os registros feitos no saco de propostas.</li>
-                    <li>Congressos e palestras são contabilizados a partir dos eventos informados no balaustre.</li>
-                    <li>Sessões por grau usam as sessões do período com status diferente de 'cancelada'.</li>
-                    <li>O quadro anual depende da trilha cadastral dos obreiros; a precisão do indicador melhora com a disciplina de cadastro.</li>
+                    <li>Congressos e palestras sÃ£o contabilizados a partir dos eventos informados no balaustre.</li>
+                    <li>SessÃµes por grau usam as sessÃµes do perÃ­odo com status diferente de 'cancelada'.</li>
+                    <li>O quadro anual depende da trilha cadastral dos obreiros; a precisÃ£o do indicador melhora com a disciplina de cadastro.</li>
                 </ul>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
-    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
-    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
-    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
-    .card-body { @apply p-5; }
-
-    .card-metric { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-5; }
-    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
-    .card-metric-value { @apply mt-1 text-3xl font-bold; }
-
-    .card-metric-simple { @apply bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4; }
-    .card-metric-simple .card-metric-label { @apply text-xs uppercase tracking-wider; }
-    .card-metric-simple .card-metric-value { @apply text-xl; }
-
-    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
-    .form-select { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
-
-    .list-item { @apply flex items-center justify-between bg-gray-100 dark:bg-gray-700/50 p-3 rounded-md text-sm; }
-    .list-item span { @apply text-gray-800 dark:text-gray-200; }
-    .list-item strong { @apply font-semibold text-gray-900 dark:text-gray-100; }
-    .list-item-report { @apply p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg; }
-
-    .alert { @apply px-4 py-3 rounded-lg text-sm; }
-    .alert-warning { @apply bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 text-yellow-700 dark:text-yellow-300; }
-
-    .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold; }
-    .badge-secondary { @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200; }
-</style>
-
 <?php
 require_once __DIR__ . '/../partials/erp_shell_close.php';
 ?>
+
 

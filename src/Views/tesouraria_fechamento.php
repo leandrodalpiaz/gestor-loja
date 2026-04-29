@@ -2,19 +2,19 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÓGICA DE NEGÓCIO E HELPERS
+// LÃ“GICA DE NEGÃ“CIO E HELPERS
 // #############################################################################
 
 $mesAtual = (int) date('n');
 $anoAtual = (int) date('Y');
 
 // #############################################################################
-// CONFIGURAÇÃO DO APP SHELL
+// CONFIGURAÃ‡ÃƒO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Tesouraria';
 $appShellTitle = 'Fechamento Mensal';
-$appShellDescription = 'Conferência final do período com leitura clara de saldos e movimentos.';
+$appShellDescription = 'ConferÃªncia final do perÃ­odo com leitura clara de saldos e movimentos.';
 $appShellActiveHref = '/tesouraria/fechamento';
 
 require_once __DIR__ . '/../partials/erp_shell_open.php';
@@ -26,10 +26,10 @@ require_once __DIR__ . '/../partials/erp_shell_open.php';
         <div class="card-body">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                 <div>
-                    <label for="filter-mes" class="form-label">Mês</label>
+                    <label for="filter-mes" class="form-label">MÃªs</label>
                     <select id="filter-mes" class="form-select">
                         <?php
-                        $mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+                        $mesesPT = ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                         for ($m = 1; $m <= 12; $m++) {
                             $selected = ($m === $mesAtual) ? 'selected' : '';
                             echo "<option value=\"$m\" $selected>{$mesesPT[$m - 1]}</option>";
@@ -67,7 +67,7 @@ require_once __DIR__ . '/../partials/erp_shell_open.php';
             <p class="card-metric-value text-green-600 dark:text-green-400" id="total-entradas">R$ 0,00</p>
         </div>
         <div class="card-metric">
-            <p class="card-metric-label">Total Saídas</p>
+            <p class="card-metric-label">Total SaÃ­das</p>
             <p class="card-metric-value text-red-600 dark:text-red-400" id="total-saidas">R$ 0,00</p>
         </div>
         <div class="card-metric">
@@ -76,19 +76,19 @@ require_once __DIR__ . '/../partials/erp_shell_open.php';
         </div>
     </div>
 
-    <!-- Ação de Fechamento -->
+    <!-- AÃ§Ã£o de Fechamento -->
     <div class="card">
         <div class="card-body flex flex-col md:flex-row items-start md:items-center justify-between">
             <div>
-                <h2 class="card-title">Ação de Fechamento</h2>
-                <p class="card-description">Após conferir todos os lançamentos, efetue o fechamento do mês.</p>
+                <h2 class="card-title">AÃ§Ã£o de Fechamento</h2>
+                <p class="card-description">ApÃ³s conferir todos os lanÃ§amentos, efetue o fechamento do mÃªs.</p>
             </div>
             <button id="btn-fechar-mes" onclick="fecharMes()" class="btn btn-primary mt-4 md:mt-0">
-                Fechar Mês
+                Fechar MÃªs
             </button>
         </div>
         <div id="fechamento-content" class="border-t border-gray-200 dark:border-gray-700 p-6 hidden">
-            <!-- Conteúdo carregado via JS -->
+            <!-- ConteÃºdo carregado via JS -->
         </div>
     </div>
 </div>
@@ -113,31 +113,10 @@ require_once __DIR__ . '/../partials/erp_shell_open.php';
     </div>
 </div>
 
-<style>
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
-    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
-    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
-    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
-    .card-body { @apply p-6; }
-    
-    .card-metric { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-5; }
-    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
-    .card-metric-value { @apply mt-2 text-3xl font-bold; }
-
-    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
-    .form-select, .form-input { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
-
-    .modal-content { @apply w-full rounded-xl bg-white dark:bg-gray-800 shadow-xl; }
-    .modal-header { @apply flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-700; }
-    .modal-title { @apply text-lg font-bold text-gray-900 dark:text-gray-100; }
-    .modal-close { @apply text-2xl text-gray-500 hover:text-gray-800 dark:hover:text-gray-200; }
-    .modal-body { @apply p-5 space-y-4; }
-    .modal-footer { @apply flex justify-end gap-3 p-5 border-t border-gray-200 dark:border-gray-700; }
-</style>
-
 <?php require_once __DIR__ . '/../partials/erp_shell_close.php'; ?>
 
 <script src="/assets/js/tesouraria_fechamento.js"></script>
+
 
 
 
