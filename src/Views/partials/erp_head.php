@@ -17,33 +17,8 @@ $appleTouchIcon = $tenantLogo !== '' ? $tenantLogo : '/assets/pwa/icon-192.png';
     <meta name="apple-mobile-web-app-title" content="Gestor Loja">
     <link rel="manifest" href="/manifest.php">
     <link rel="apple-touch-icon" href="<?= htmlspecialchars($appleTouchIcon) ?>">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <link rel="stylesheet" href="/assets/css/erp_design_system.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'erp-navy': 'var(--erp-navy)',
-                        'erp-gold': 'var(--erp-gold)',
-                        'erp-accent': 'var(--erp-accent)',
-                        'erp-brand': 'var(--erp-brand)',
-                        'erp-accent-strong': 'var(--erp-accent-strong)',
-                        'erp-bg': 'var(--erp-bg)',
-                        'erp-surface': 'var(--erp-surface)',
-                        'erp-surface-2': 'var(--erp-surface-2)',
-                        'erp-border': 'var(--erp-border)',
-                        'erp-text': 'var(--erp-text)',
-                        'erp-muted': 'var(--erp-muted)',
-                        'erp-success': 'var(--erp-success)',
-                        'erp-warning': 'var(--erp-warning)',
-                        'erp-danger': 'var(--erp-danger)',
-                        'erp-info': 'var(--erp-info)',
-                    }
-                }
-            }
-        }
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">

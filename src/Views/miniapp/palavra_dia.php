@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Palavra do Dia</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
         body { background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #222); }
         input, textarea { background: var(--tg-theme-secondary-bg-color, #f3f4f6); color: var(--tg-theme-text-color, #222); border-color: var(--tg-theme-hint-color, #d1d5db); }
@@ -15,7 +15,7 @@
 <div class="max-w-2xl mx-auto space-y-4">
     <div>
         <h1 class="text-xl font-bold">Palavra do Dia</h1>
-        <p class="text-sm text-gray-500">Mensagens editoriais diárias com gestão própria.</p>
+        <p class="text-sm text-gray-500">Mensagens editoriais diÃ¡rias com gestÃ£o prÃ³pria.</p>
     </div>
 
     <div class="rounded-2xl border border-slate-200 p-4">
@@ -23,7 +23,7 @@
         <form id="form-palavra" class="space-y-3">
             <input type="hidden" name="id" value="">
             <div>
-                <label class="block text-sm mb-1">Título opcional</label>
+                <label class="block text-sm mb-1">TÃ­tulo opcional</label>
                 <input name="titulo" class="w-full rounded-lg border px-3 py-2 text-sm">
             </div>
             <div>
@@ -31,7 +31,7 @@
                 <textarea name="mensagem" required rows="5" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
             <div>
-                <label class="block text-sm mb-1">Observação editorial</label>
+                <label class="block text-sm mb-1">ObservaÃ§Ã£o editorial</label>
                 <input name="observacao" class="w-full rounded-lg border px-3 py-2 text-sm">
             </div>
             <div class="flex gap-2">

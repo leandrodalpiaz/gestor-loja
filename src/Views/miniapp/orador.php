@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Orador Mobile</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
         body { background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #222); }
         .card { background: var(--tg-theme-secondary-bg-color, #f8fafc); }
@@ -28,7 +28,7 @@
 
     <div id="conteudo" class="hidden space-y-4">
         <div class="card rounded-2xl p-4 space-y-3">
-            <div class="text-sm font-semibold">SessÃ£o em foco</div>
+            <div class="text-sm font-semibold">SessÃƒÂ£o em foco</div>
             <select id="sessao_id" class="w-full rounded-lg border px-3 py-2 text-sm"></select>
             <div class="rounded-xl bg-white/70 p-3">
                 <div id="sessao-titulo" class="font-semibold"></div>
@@ -51,7 +51,7 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Cargos da sessÃ£o</div>
+            <div class="text-sm font-semibold">Cargos da sessÃƒÂ£o</div>
             <div id="lista-cargos" class="mt-3 space-y-2 text-sm"></div>
         </div>
 
@@ -83,7 +83,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'NÃ£o conseguimos carregar este painel no momento. Atualize a tela e tente novamente.');
+    if (!json.ok) throw new Error(json.erro || 'NÃƒÂ£o conseguimos carregar este painel no momento. Atualize a tela e tente novamente.');
     return json;
 }
 
@@ -108,7 +108,7 @@ function preencherSessoes() {
     (dashboard.sessoes || []).forEach(sessao => {
         const option = document.createElement('option');
         option.value = sessao.id;
-        option.textContent = `${sessao.titulo || `${sessao.tipo_sessao || 'SessÃ£o'} - ${sessao.grau_sessao || ''}`} Â· ${sessao.data_hora_inicio || ''}`;
+        option.textContent = `${sessao.titulo || `${sessao.tipo_sessao || 'SessÃƒÂ£o'} - ${sessao.grau_sessao || ''}`} Ã‚Â· ${sessao.data_hora_inicio || ''}`;
         if (dashboard.sessao_foco && Number(dashboard.sessao_foco.id) === Number(sessao.id)) {
             option.selected = true;
         }
@@ -122,7 +122,7 @@ function render() {
 
     preencherSessoes();
     const sessao = dashboard.sessao_foco || {};
-    document.getElementById('sessao-titulo').textContent = sessao.titulo || `${sessao.tipo_sessao || 'SessÃ£o'} - ${sessao.grau_sessao || ''}`;
+    document.getElementById('sessao-titulo').textContent = sessao.titulo || `${sessao.tipo_sessao || 'SessÃƒÂ£o'} - ${sessao.grau_sessao || ''}`;
     document.getElementById('sessao-data').textContent = sessao.data_hora_inicio || 'Sem data';
     document.getElementById('resumo-ritual').textContent = sessao.ordem_dia || sessao.resumo_publico || 'Sem resumo ritual registrado.';
     document.getElementById('visitantes-total').textContent = `${(dashboard.visitantes || []).length} visitante(s)`;
@@ -132,18 +132,18 @@ function render() {
         <span class="rounded-full bg-amber-100 px-3 py-1">${esc(sessao.status || '-')}</span>
     `;
 
-    renderLista('lista-visitantes', dashboard.visitantes, 'Nenhum visitante resumido nesta sessÃ£o.', item => `
+    renderLista('lista-visitantes', dashboard.visitantes, 'Nenhum visitante resumido nesta sessÃƒÂ£o.', item => `
         <div class="font-medium">${esc(item.nome || 'Visitante')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.linha_resumida || '')}</div>
     `);
 
-    renderLista('lista-cargos', dashboard.cargos_sessao, 'Sem composiÃ§Ã£o de cargos registrada.', item => `
+    renderLista('lista-cargos', dashboard.cargos_sessao, 'Sem composiÃƒÂ§ÃƒÂ£o de cargos registrada.', item => `
         <div class="font-medium">${esc(item.cargo_nome || 'Cargo')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.ocupante_nome || 'Sem ocupante')}</div>
         <div class="mt-2 text-[11px] uppercase tracking-wide text-gray-400">${esc(item.tipo_ocupacao || 'regular')}</div>
     `);
 
-    renderLista('lista-eventos', dashboard.eventos_sessao, 'Nenhum evento registrado nesta sessÃ£o.', item => `
+    renderLista('lista-eventos', dashboard.eventos_sessao, 'Nenhum evento registrado nesta sessÃƒÂ£o.', item => `
         <div class="flex items-center justify-between gap-2">
             <div class="font-medium">${esc(item.titulo || 'Atividade')}</div>
             <div class="rounded-full bg-slate-100 px-2 py-1 text-[11px] uppercase tracking-wide">${esc(item.tipo || 'evento')}</div>

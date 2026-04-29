@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Tesouraria Mobile</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
         body { background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #222); }
         .card { background: var(--tg-theme-secondary-bg-color, #f8fafc); }
@@ -15,7 +15,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">Tesouraria</h1>
-        <p class="mt-1 text-sm text-gray-500">Caixa, comprovantes, regularidade, fechamento e obrigações.</p>
+        <p class="mt-1 text-sm text-gray-500">Caixa, comprovantes, regularidade, fechamento e obrigaÃ§Ãµes.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -29,11 +29,11 @@
                     <div id="meta-entradas" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Saídas</div>
+                    <div class="text-gray-500">SaÃ­das</div>
                     <div id="meta-saidas" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Saldo líquido</div>
+                    <div class="text-gray-500">Saldo lÃ­quido</div>
                     <div id="meta-saldo" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
@@ -71,11 +71,11 @@
         <div class="card rounded-2xl p-4">
             <div class="text-sm font-semibold">Fechamento mensal</div>
             <div id="fechamento" class="mt-3 rounded-xl bg-white/70 p-3 text-sm"></div>
-            <button id="btn-fechar-competencia" class="mt-3 w-full rounded-xl bg-emerald-700 px-3 py-3 text-sm font-medium text-white">Fechar competência atual</button>
+            <button id="btn-fechar-competencia" class="mt-3 w-full rounded-xl bg-emerald-700 px-3 py-3 text-sm font-medium text-white">Fechar competÃªncia atual</button>
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Obrigações em alerta</div>
+            <div class="text-sm font-semibold">ObrigaÃ§Ãµes em alerta</div>
             <div id="lista-obrigacoes" class="mt-3 space-y-2 text-sm"></div>
         </div>
 
@@ -106,7 +106,7 @@ function abrirDestino(dest) {
         url.searchParams.set('init_data', tg.initData);
         window.location.href = url.pathname + url.search;
     } catch (err) {
-        tg.showAlert('Não foi possível abrir o atalho.');
+        tg.showAlert('NÃ£o foi possÃ­vel abrir o atalho.');
     }
 }
 
@@ -122,7 +122,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não conseguimos carregar este painel no momento. Atualize a tela e tente novamente.');
+    if (!json.ok) throw new Error(json.erro || 'NÃ£o conseguimos carregar este painel no momento. Atualize a tela e tente novamente.');
     return json;
 }
 
@@ -172,7 +172,7 @@ function render() {
         </div>
     `);
 
-    renderLista('lista-regularidade-alertas', dashboard.regularidade_alertas || [], 'Nenhum alerta de regularidade no período.', item => `
+    renderLista('lista-regularidade-alertas', dashboard.regularidade_alertas || [], 'Nenhum alerta de regularidade no perÃ­odo.', item => `
         <div class="font-medium">${esc(item.obreiro_nome || 'Obreiro')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.status || 'irregular')}</div>
         <div class="mt-3">
@@ -192,11 +192,11 @@ function render() {
         <div class="mt-2 text-sm text-gray-700">Saldo em aberto ${esc(moeda(item.saldo_em_aberto))}</div>
     `);
 
-    renderLista('lista-sessoes', dashboard.sessoes_financeiras, 'Nenhuma sessão financeira futura.', item => `
-        <div class="font-medium">${esc(item.titulo || item.descricao_tipo || 'Sessão')}</div>
+    renderLista('lista-sessoes', dashboard.sessoes_financeiras, 'Nenhuma sessÃ£o financeira futura.', item => `
+        <div class="font-medium">${esc(item.titulo || item.descricao_tipo || 'SessÃ£o')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.data_hora_inicio || '')}</div>
-        <div class="mt-2 text-sm text-gray-700">${esc(item.descricao_agape || '-')} · ${esc(item.descricao_modelo || '-')}</div>
-        <div class="mt-2 text-xs text-gray-500">${esc(item.confirmados_agape || 0)} com ágape · estimativa ${esc(moeda(item.estimativa_arrecadacao))}</div>
+        <div class="mt-2 text-sm text-gray-700">${esc(item.descricao_agape || '-')} Â· ${esc(item.descricao_modelo || '-')}</div>
+        <div class="mt-2 text-xs text-gray-500">${esc(item.confirmados_agape || 0)} com Ã¡gape Â· estimativa ${esc(moeda(item.estimativa_arrecadacao))}</div>
     `);
 }
 
@@ -235,7 +235,7 @@ async function aprovarComprovante(id) {
 }
 
 async function rejeitarComprovante(id) {
-    const motivo = window.prompt('Informe o motivo da rejeição:');
+    const motivo = window.prompt('Informe o motivo da rejeiÃ§Ã£o:');
     if (!motivo) return;
     try {
         await api('/api/miniapp/tesouraria/comprovante/rejeitar', {
@@ -273,7 +273,7 @@ document.getElementById('btn-fechar-competencia').addEventListener('click', asyn
             method: 'POST',
             body: { mes: dashboard?.mes_ref, ano: dashboard?.ano_ref }
         });
-        tg.showAlert('Competência fechada com sucesso.');
+        tg.showAlert('CompetÃªncia fechada com sucesso.');
         await carregar();
     } catch (err) {
         tg.showAlert(err.message);

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>1o Vigilante Mobile</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
         body { background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #222); }
         .card { background: var(--tg-theme-secondary-bg-color, #f8fafc); }
@@ -44,7 +44,7 @@
                     <div id="meta-etapa" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Conclusão</div>
+                    <div class="text-gray-500">ConclusÃ£o</div>
                     <div id="meta-percentual" class="mt-1 text-lg font-semibold"></div>
                 </div>
             </div>
@@ -105,7 +105,7 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Histórico formativo</div>
+            <div class="text-sm font-semibold">HistÃ³rico formativo</div>
             <div id="lista-historico" class="mt-3 space-y-2 text-sm"></div>
         </div>
     </div>
@@ -132,7 +132,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não conseguimos concluir sua solicitação agora. Tente novamente em alguns minutos.');
+    if (!json.ok) throw new Error(json.erro || 'NÃ£o conseguimos concluir sua solicitaÃ§Ã£o agora. Tente novamente em alguns minutos.');
     return json;
 }
 
@@ -155,7 +155,7 @@ function renderLista(id, itens, vazio, mapper) {
 function renderEtapas() {
     const etapas = dashboard?.aprendiz_foco?.etapas || [];
     renderLista('lista-etapas', etapas, 'Sem etapas registradas.', item => ({
-        nome: `Etapa ${item.ordem} · ${item.titulo}`,
+        nome: `Etapa ${item.ordem} Â· ${item.titulo}`,
         linha: item.status
     }));
 }
@@ -167,7 +167,7 @@ function render() {
     const foco = dashboard.aprendiz_foco;
     const aprendiz = foco?.aprendiz;
     document.getElementById('aprendiz-nome').textContent = aprendiz?.nome || 'Sem Aprendiz';
-    document.getElementById('aprendiz-meta').textContent = `CIM ${aprendiz?.cim || '-'} · Iniciação ${aprendiz?.data_iniciacao || '-'}`;
+    document.getElementById('aprendiz-meta').textContent = `CIM ${aprendiz?.cim || '-'} Â· IniciaÃ§Ã£o ${aprendiz?.data_iniciacao || '-'}`;
     document.getElementById('meta-etapa').textContent = foco?.resumo?.etapa_atual ? `${foco.resumo.etapa_atual.ordem}` : '-';
     document.getElementById('meta-percentual').textContent = `${foco?.resumo?.percentual_conclusao || 0}%`;
 
@@ -176,7 +176,7 @@ function render() {
     (dashboard.aprendizes || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.nome} · CIM ${item.cim || '-'}`;
+        option.textContent = `${item.nome} Â· CIM ${item.cim || '-'}`;
         if (aprendiz && item.id === aprendiz.id) option.selected = true;
         select.appendChild(option);
     });
@@ -208,9 +208,9 @@ function render() {
     document.getElementById('observacao_vigilante').value = etapaAtual?.observacao_vigilante || '';
 
     renderEtapas();
-    renderLista('lista-historico', foco?.historico_formativo || [], 'Sem histórico formativo registrado.', item => ({
+    renderLista('lista-historico', foco?.historico_formativo || [], 'Sem histÃ³rico formativo registrado.', item => ({
         nome: item.titulo || item.tipo,
-        linha: `${item.momento || '-'} · ${item.descricao || ''}`
+        linha: `${item.momento || '-'} Â· ${item.descricao || ''}`
     }));
 }
 

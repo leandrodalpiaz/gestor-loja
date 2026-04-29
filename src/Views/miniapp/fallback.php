@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Mensagens Fallback</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
         body { background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #222); }
         input, textarea {
@@ -21,7 +21,7 @@
     <h1 class="text-lg font-bold mb-1">Mensagens fallback</h1>
     <p class="text-sm text-gray-500 mb-4">Frases enviadas nos dias sem nenhum evento. Ative, desative, edite ou exclua.</p>
 
-    <!-- BotÃ£o nova mensagem -->
+    <!-- BotÃƒÂ£o nova mensagem -->
     <button onclick="abrirModal(null)"
             class="w-full mb-5 py-2.5 rounded-xl border-2 border-dashed border-blue-400 text-blue-600 text-sm font-medium hover:bg-blue-50 transition-colors">
         + Nova mensagem fallback
@@ -30,12 +30,12 @@
     <div id="lista-loading" class="text-sm text-gray-400 py-4 text-center">Carregando...</div>
     <div id="lista" class="space-y-3"></div>
 
-    <!-- Modal ediÃ§Ã£o / criaÃ§Ã£o -->
+    <!-- Modal ediÃƒÂ§ÃƒÂ£o / criaÃƒÂ§ÃƒÂ£o -->
     <div id="modal" class="hidden fixed inset-0 bg-black/40 flex items-end justify-center z-50 p-4">
         <div class="bg-white rounded-2xl w-full max-w-lg p-5 shadow-xl" style="background: var(--tg-theme-bg-color, #fff);">
             <h2 class="font-semibold text-base mb-3" id="modal-title">Nova mensagem</h2>
             <textarea id="modal-text" rows="5"
-                      placeholder="Digite a frase de reflexÃ£o maÃ§Ã´nica..."
+                      placeholder="Digite a frase de reflexÃƒÂ£o maÃƒÂ§ÃƒÂ´nica..."
                       class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"></textarea>
             <div id="modal-err" class="hidden mb-3 rounded p-2 bg-red-100 text-red-800 text-xs"></div>
             <div class="flex gap-2">
@@ -91,7 +91,7 @@ async function carregarLista() {
             container.appendChild(div);
         });
     } catch {
-        document.getElementById('lista-loading').textContent = 'NÃ£o conseguimos carregar os dados agora. Atualize a tela e tente novamente.';
+        document.getElementById('lista-loading').textContent = 'NÃƒÂ£o conseguimos carregar os dados agora. Atualize a tela e tente novamente.';
     }
 }
 
@@ -113,7 +113,7 @@ async function salvarModal() {
     const texto = document.getElementById('modal-text').value.trim();
     if (!texto) {
         const el = document.getElementById('modal-err');
-        el.textContent = 'O texto nÃ£o pode estar vazio.';
+        el.textContent = 'O texto nÃƒÂ£o pode estar vazio.';
         el.classList.remove('hidden');
         return;
     }
@@ -136,7 +136,7 @@ async function salvarModal() {
             fecharModal();
             carregarLista();
         } else {
-            throw new Error(json.erro || 'NÃ£o foi possÃ­vel salvar agora. Revise os dados e tente novamente.');
+            throw new Error(json.erro || 'NÃƒÂ£o foi possÃƒÂ­vel salvar agora. Revise os dados e tente novamente.');
         }
     } catch (err) {
         const el = document.getElementById('modal-err');

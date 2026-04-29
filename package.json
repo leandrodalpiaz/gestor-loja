@@ -1,0 +1,11 @@
+{
+  "name": "gestor-loja-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.js -i ./src/Styles/tailwind.source.css -o ./public/assets/css/tailwind.generated.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

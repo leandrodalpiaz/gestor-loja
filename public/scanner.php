@@ -10,9 +10,9 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <!-- TailwindCSS CDN (modo JIT) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
 
-    <!-- html5-qrcode (versão minificada estável) -->
+    <!-- html5-qrcode (versÃ£o minificada estÃ¡vel) -->
     <script src="https://unpkg.com/html5-qrcode@2.3.9/minified/html5-qrcode.min.js"></script>
 </head>
 <body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
@@ -21,10 +21,10 @@
 
         <button id="btn-camera"
                 class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-lg mb-4 w-full text-lg shadow-md transition-colors">
-            📸 Abrir Câmera
+            ðŸ“¸ Abrir CÃ¢mera
         </button>
 
-        <!-- Área do scanner (inicia oculta) -->
+        <!-- Ãrea do scanner (inicia oculta) -->
         <div id="scanner"
              class="w-full min-h-[300px] rounded overflow-hidden"
              style="display:none;"></div>
@@ -38,14 +38,14 @@
         Telegram.WebApp.expand();
 
         /* ------------------------------------------------------------------
-           2. Referências de DOM
+           2. ReferÃªncias de DOM
         ------------------------------------------------------------------ */
         const btnCamera  = document.getElementById('btn-camera');
         const scannerDiv = document.getElementById('scanner');
-        let html5QrCode; // instância do leitor
+        let html5QrCode; // instÃ¢ncia do leitor
 
         /* ------------------------------------------------------------------
-           3. Clique no botão: abre câmera e inicia leitura
+           3. Clique no botÃ£o: abre cÃ¢mera e inicia leitura
         ------------------------------------------------------------------ */
         btnCamera.addEventListener('click', () => {
             // UI
@@ -61,7 +61,7 @@
             };
 
             html5QrCode.start(
-                { facingMode: "environment" },  // câmera traseira
+                { facingMode: "environment" },  // cÃ¢mera traseira
                 config,
                 onScanSuccess,
                 /* onScanFailure */ () => {}
@@ -90,7 +90,7 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.ok) {
-                        Telegram.WebApp.showAlert('✅ Livro cadastrado!');
+                        Telegram.WebApp.showAlert('âœ… Livro cadastrado!');
                         Telegram.WebApp.close();
                     } else {
                         Telegram.WebApp.HapticFeedback.notificationOccurred('error');
@@ -105,11 +105,11 @@
         }
 
         /* ------------------------------------------------------------------
-           5. Tratamento de falha ao abrir a câmera
+           5. Tratamento de falha ao abrir a cÃ¢mera
         ------------------------------------------------------------------ */
         function onCameraError(err) {
             Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-            alert('⚠️ Não foi possível acessar a câmera.\nVerifique as permissões do Telegram.');
+            alert('âš ï¸ NÃ£o foi possÃ­vel acessar a cÃ¢mera.\nVerifique as permissÃµes do Telegram.');
             scannerDiv.style.display = 'none';
             btnCamera.style.display = 'block';
         }

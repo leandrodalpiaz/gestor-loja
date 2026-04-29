@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Meu Acompanhamento</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
         body { background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #222); }
         .card { background: var(--tg-theme-secondary-bg-color, #f8fafc); }
@@ -14,7 +14,7 @@
 <body class="min-h-screen p-4">
 <div class="mx-auto max-w-lg">
     <h1 class="text-xl font-bold">Meu acompanhamento</h1>
-    <p class="mt-1 text-sm text-gray-500">Acompanhe sua trilha de Companheiro e veja em que etapa você está.</p>
+    <p class="mt-1 text-sm text-gray-500">Acompanhe sua trilha de Companheiro e veja em que etapa vocÃª estÃ¡.</p>
 
     <div id="loading" class="mt-6 text-sm text-gray-400">Carregando acompanhamento...</div>
     <div id="erro" class="mt-6 hidden rounded-lg bg-red-50 p-3 text-sm text-red-700"></div>
@@ -55,15 +55,15 @@ async function carregar() {
         const json = await res.json();
         document.getElementById('loading').classList.add('hidden');
         if (!json.ok) {
-            throw new Error(json.erro || 'Não conseguimos carregar o acompanhamento agora. Tente novamente em alguns minutos.');
+            throw new Error(json.erro || 'NÃ£o conseguimos carregar o acompanhamento agora. Tente novamente em alguns minutos.');
         }
 
         const dados = json.dados;
         document.getElementById('conteudo').classList.remove('hidden');
         document.getElementById('nome').innerHTML = esc(dados.companheiro.nome);
-        document.getElementById('resumo').innerHTML = `${dados.resumo.total_concluidas} de ${dados.resumo.total_etapas} etapas concluídas`;
+        document.getElementById('resumo').innerHTML = `${dados.resumo.total_concluidas} de ${dados.resumo.total_etapas} etapas concluÃ­das`;
         document.getElementById('etapa-atual').innerHTML = dados.resumo.etapa_atual
-            ? `Etapa ${dados.resumo.etapa_atual.ordem} · ${esc(dados.resumo.etapa_atual.titulo)}`
+            ? `Etapa ${dados.resumo.etapa_atual.ordem} Â· ${esc(dados.resumo.etapa_atual.titulo)}`
             : 'Sem etapa atual';
         document.getElementById('percentual').innerHTML = `${dados.resumo.percentual_conclusao}%`;
 

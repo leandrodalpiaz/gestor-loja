@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>2o Vigilante Mobile</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
         body { background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #222); }
         .card { background: var(--tg-theme-secondary-bg-color, #f8fafc); }
@@ -20,7 +20,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">2o Vigilante</h1>
-        <p class="mt-1 text-sm text-gray-500">Trilha, docência e recomendação de exaltação dos Companheiros.</p>
+        <p class="mt-1 text-sm text-gray-500">Trilha, docÃªncia e recomendaÃ§Ã£o de exaltaÃ§Ã£o dos Companheiros.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -44,7 +44,7 @@
                     <div id="meta-etapa" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Conclusão</div>
+                    <div class="text-gray-500">ConclusÃ£o</div>
                     <div id="meta-percentual" class="mt-1 text-lg font-semibold"></div>
                 </div>
             </div>
@@ -72,7 +72,7 @@
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Observação do vigilante</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">ObservaÃ§Ã£o do vigilante</label>
                 <textarea id="observacao_vigilante" rows="4" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
             <button type="submit" class="w-full rounded-xl bg-emerald-700 px-4 py-3 text-sm font-medium text-white">Salvar andamento da trilha</button>
@@ -85,7 +85,7 @@
                 <select id="acervo_id" class="w-full rounded-lg border px-3 py-2 text-sm"></select>
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Orientação</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">OrientaÃ§Ã£o</label>
                 <textarea id="observacao_leitura" rows="4" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
             <button type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white">Salvar leitura sugerida</button>
@@ -95,20 +95,20 @@
             <div class="text-sm font-semibold">Certificado</div>
             <div id="certificado-status" class="rounded-xl bg-white/70 px-3 py-3 text-sm text-slate-700"></div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Observação do certificado</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">ObservaÃ§Ã£o do certificado</label>
                 <textarea id="observacao_certificado" rows="4" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
             <button type="submit" class="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-medium text-slate-900">Solicitar certificado</button>
         </form>
 
         <form id="form-exaltacao" class="card rounded-2xl p-4 space-y-3">
-            <div class="text-sm font-semibold">Exaltação</div>
+            <div class="text-sm font-semibold">ExaltaÃ§Ã£o</div>
             <div id="exaltacao-status" class="rounded-xl bg-white/70 px-3 py-3 text-sm text-slate-700"></div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Observação da recomendação</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">ObservaÃ§Ã£o da recomendaÃ§Ã£o</label>
                 <textarea id="observacao_exaltacao" rows="4" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
-            <button type="submit" class="w-full rounded-xl bg-indigo-700 px-4 py-3 text-sm font-medium text-white">Recomendar exaltação</button>
+            <button type="submit" class="w-full rounded-xl bg-indigo-700 px-4 py-3 text-sm font-medium text-white">Recomendar exaltaÃ§Ã£o</button>
         </form>
 
         <div class="card rounded-2xl p-4">
@@ -117,7 +117,7 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Histórico formativo</div>
+            <div class="text-sm font-semibold">HistÃ³rico formativo</div>
             <div id="lista-historico" class="mt-3 space-y-2 text-sm"></div>
         </div>
     </div>
@@ -144,7 +144,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não conseguimos concluir sua solicitação agora. Tente novamente em alguns minutos.');
+    if (!json.ok) throw new Error(json.erro || 'NÃ£o conseguimos concluir sua solicitaÃ§Ã£o agora. Tente novamente em alguns minutos.');
     return json;
 }
 
@@ -171,7 +171,7 @@ function render() {
     const foco = dashboard.companheiro_foco;
     const companheiro = foco?.companheiro;
     document.getElementById('companheiro-nome').textContent = companheiro?.nome || 'Sem Companheiro';
-    document.getElementById('companheiro-meta').textContent = `CIM ${companheiro?.cim || '-'} · Elevação ${companheiro?.data_elevacao || '-'}`;
+    document.getElementById('companheiro-meta').textContent = `CIM ${companheiro?.cim || '-'} Â· ElevaÃ§Ã£o ${companheiro?.data_elevacao || '-'}`;
     document.getElementById('meta-etapa').textContent = foco?.resumo?.etapa_atual ? `${foco.resumo.etapa_atual.ordem}` : '-';
     document.getElementById('meta-percentual').textContent = `${foco?.resumo?.percentual_conclusao || 0}%`;
 
@@ -180,13 +180,13 @@ function render() {
     (dashboard.companheiros || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.nome} · CIM ${item.cim || '-'}`;
+        option.textContent = `${item.nome} Â· CIM ${item.cim || '-'}`;
         if (companheiro && item.id === companheiro.id) option.selected = true;
         select.appendChild(option);
     });
 
     const acervo = document.getElementById('acervo_id');
-    acervo.innerHTML = '<option value="">Sem vincular livro específico</option>';
+    acervo.innerHTML = '<option value="">Sem vincular livro especÃ­fico</option>';
     (dashboard.leituras_disponiveis || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
@@ -215,12 +215,12 @@ function render() {
     document.getElementById('exaltacao-status').textContent = `Status atual: ${foco?.exaltacao?.status || 'nao_recomendada'}`;
 
     renderLista('lista-etapas', foco?.etapas || [], 'Sem etapas registradas.', item => ({
-        nome: `Etapa ${item.ordem} · ${item.titulo}`,
+        nome: `Etapa ${item.ordem} Â· ${item.titulo}`,
         linha: item.status
     }));
-    renderLista('lista-historico', foco?.historico_formativo || [], 'Sem histórico formativo registrado.', item => ({
+    renderLista('lista-historico', foco?.historico_formativo || [], 'Sem histÃ³rico formativo registrado.', item => ({
         nome: item.titulo || item.tipo,
-        linha: `${item.momento || '-'} · ${item.descricao || ''}`
+        linha: `${item.momento || '-'} Â· ${item.descricao || ''}`
     }));
 }
 
@@ -304,7 +304,7 @@ document.getElementById('form-exaltacao').addEventListener('submit', async (even
                 observacao_exaltacao: document.getElementById('observacao_exaltacao').value
             }
         });
-        tg.showAlert('Recomendação de exaltação registrada.');
+        tg.showAlert('RecomendaÃ§Ã£o de exaltaÃ§Ã£o registrada.');
         await carregar(companheiroAtualId);
     } catch (err) {
         tg.showAlert(err.message);

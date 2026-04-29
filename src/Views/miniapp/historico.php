@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Hoje na História Maçônica</title>
+    <title>Hoje na HistÃ³ria MaÃ§Ã´nica</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
         body { background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #222); }
         input, textarea, select { background: var(--tg-theme-secondary-bg-color, #f3f4f6); color: var(--tg-theme-text-color, #222); border-color: var(--tg-theme-hint-color, #d1d5db); }
@@ -14,16 +14,16 @@
 <body class="min-h-screen p-4">
 <div class="max-w-2xl mx-auto space-y-4">
     <div>
-        <h1 class="text-xl font-bold">Hoje na História Maçônica</h1>
-        <p class="text-sm text-gray-500">Registros históricos independentes do calendário de efemérides.</p>
+        <h1 class="text-xl font-bold">Hoje na HistÃ³ria MaÃ§Ã´nica</h1>
+        <p class="text-sm text-gray-500">Registros histÃ³ricos independentes do calendÃ¡rio de efemÃ©rides.</p>
     </div>
 
     <div class="rounded-2xl border border-slate-200 p-4">
-        <h2 class="font-semibold mb-3">Nova história</h2>
+        <h2 class="font-semibold mb-3">Nova histÃ³ria</h2>
         <form id="form-historia" class="space-y-3">
             <input type="hidden" name="id" value="">
             <div>
-                <label class="block text-sm mb-1">Título do fato</label>
+                <label class="block text-sm mb-1">TÃ­tulo do fato</label>
                 <input name="titulo" required class="w-full rounded-lg border px-3 py-2 text-sm">
             </div>
             <div class="grid grid-cols-3 gap-3">
@@ -32,7 +32,7 @@
                     <input type="number" name="dia" min="1" max="31" required class="w-full rounded-lg border px-3 py-2 text-sm">
                 </div>
                 <div>
-                    <label class="block text-sm mb-1">Mês</label>
+                    <label class="block text-sm mb-1">MÃªs</label>
                     <input type="number" name="mes" min="1" max="12" required class="w-full rounded-lg border px-3 py-2 text-sm">
                 </div>
                 <div>
@@ -56,7 +56,7 @@
     </div>
 
     <div class="rounded-2xl border border-slate-200 p-4">
-        <h2 class="font-semibold mb-3">Histórias cadastradas</h2>
+        <h2 class="font-semibold mb-3">HistÃ³rias cadastradas</h2>
         <div id="lista" class="space-y-3"></div>
     </div>
 </div>
@@ -111,7 +111,7 @@ async function carregar() {
             <div class="flex items-start justify-between gap-3">
                 <div class="flex-1">
                     <div class="font-medium">${esc(item.titulo || item.nome)}</div>
-                    <div class="mt-1 text-xs text-slate-500">${String(item.dia).padStart(2, '0')}/${String(item.mes).padStart(2, '0')} ${item.ano_ref ? '· ' + esc(item.ano_ref) : ''} · ${item.ativo ? 'Ativa' : 'Inativa'}</div>
+                    <div class="mt-1 text-xs text-slate-500">${String(item.dia).padStart(2, '0')}/${String(item.mes).padStart(2, '0')} ${item.ano_ref ? 'Â· ' + esc(item.ano_ref) : ''} Â· ${item.ativo ? 'Ativa' : 'Inativa'}</div>
                     <div class="mt-2 text-slate-700">${esc(item.texto || '')}</div>
                 </div>
                 <div class="flex gap-2 text-xs">
@@ -126,7 +126,7 @@ async function carregar() {
             await carregar();
         });
         card.querySelector('[data-act="delete"]').addEventListener('click', async () => {
-            if (!confirm('Excluir esta história?')) return;
+            if (!confirm('Excluir esta histÃ³ria?')) return;
             await request('/api/miniapp/historico/excluir', {method: 'POST', body: {id: item.id}});
             await carregar();
         });

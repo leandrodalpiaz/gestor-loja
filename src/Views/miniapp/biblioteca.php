@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Biblioteca Mobile</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
         body { background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #222); }
         .card { background: var(--tg-theme-secondary-bg-color, #f8fafc); }
@@ -15,7 +15,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">Biblioteca</h1>
-        <p class="mt-1 text-sm text-gray-500">Acervo, leitura em foco, comentários e operação do bibliotecário.</p>
+        <p class="mt-1 text-sm text-gray-500">Acervo, leitura em foco, comentÃ¡rios e operaÃ§Ã£o do bibliotecÃ¡rio.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -33,7 +33,7 @@
             <div class="grid grid-cols-3 gap-2">
                 <button id="btn-solicitar" class="rounded-xl bg-emerald-700 px-3 py-3 text-sm font-medium text-white">Solicitar</button>
                 <button id="btn-gostei" class="rounded-xl bg-blue-700 px-3 py-3 text-sm font-medium text-white">Gostei</button>
-                <button id="btn-nao-gostei" class="rounded-xl bg-rose-700 px-3 py-3 text-sm font-medium text-white">Não gostei</button>
+                <button id="btn-nao-gostei" class="rounded-xl bg-rose-700 px-3 py-3 text-sm font-medium text-white">NÃ£o gostei</button>
             </div>
             <textarea id="novo-comentario" rows="3" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Compartilhe sua opiniao sobre a leitura..."></textarea>
             <button id="btn-comentar" class="w-full rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Publicar comentario</button>
@@ -64,7 +64,7 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Operação do bibliotecário</div>
+            <div class="text-sm font-semibold">OperaÃ§Ã£o do bibliotecÃ¡rio</div>
             <div id="lista-pendentes" class="mt-3 space-y-2 text-sm"></div>
             <div class="mt-3 grid grid-cols-2 gap-2">
                 <button id="atalho-catalogo" class="rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Abrir catalogo web</button>
@@ -110,7 +110,7 @@ function abrirDestino(dest) {
         url.searchParams.set('init_data', tg.initData);
         window.location.href = url.pathname + url.search;
     } catch (err) {
-        tg.showAlert('Não foi possível abrir o destino.');
+        tg.showAlert('NÃ£o foi possÃ­vel abrir o destino.');
     }
 }
 
@@ -126,7 +126,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não conseguimos carregar os dados da biblioteca agora. Atualize a tela e tente novamente.');
+    if (!json.ok) throw new Error(json.erro || 'NÃ£o conseguimos carregar os dados da biblioteca agora. Atualize a tela e tente novamente.');
     return json;
 }
 
@@ -155,9 +155,9 @@ function render() {
         const option = document.createElement('option');
         option.value = `${item.id}:${item.loja_id || 0}`;
         const prefixLoja = (scopeAtual === 'rede' && (item.numero_loja || item.loja_sigla))
-            ? `${item.numero_loja || ''}${item.loja_sigla ? '-' + item.loja_sigla : ''} · `
+            ? `${item.numero_loja || ''}${item.loja_sigla ? '-' + item.loja_sigla : ''} Â· `
             : '';
-        option.textContent = `${item.titulo} · ${item.autor}`;
+        option.textContent = `${item.titulo} Â· ${item.autor}`;
         option.textContent = prefixLoja + option.textContent;
         if (Number(dashboard.item_foco?.id || 0) === Number(item.id)) {
             option.selected = true;
@@ -184,11 +184,11 @@ function render() {
     document.getElementById('livro-foco').innerHTML = `
         <div class="font-medium">${esc(foco.titulo || 'Sem livro selecionado')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(foco.autor || '')}</div>
-        ${(scopeAtual === 'rede' && (foco.loja_nome || foco.numero_loja)) ? `<div class="mt-1 text-xs text-gray-500">Loja ${esc(foco.numero_loja || '')}${foco.loja_sigla ? '-' + esc(foco.loja_sigla) : ''} · ${esc(foco.loja_nome || '')}</div>` : ''}
-        <div class="mt-2 text-xs text-gray-500">Codigo ${esc(foco.codigo_acervo || '-')} · ISBN ${esc(foco.isbn || '-')}</div>
+        ${(scopeAtual === 'rede' && (foco.loja_nome || foco.numero_loja)) ? `<div class="mt-1 text-xs text-gray-500">Loja ${esc(foco.numero_loja || '')}${foco.loja_sigla ? '-' + esc(foco.loja_sigla) : ''} Â· ${esc(foco.loja_nome || '')}</div>` : ''}
+        <div class="mt-2 text-xs text-gray-500">Codigo ${esc(foco.codigo_acervo || '-')} Â· ISBN ${esc(foco.isbn || '-')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(foco.resumo || 'Sem resumo informado.')}</div>
-        <div class="mt-2 text-xs text-gray-500">Grau ${esc(foco.grau_recomendado || 'Livre')} · ${esc(foco.quantidade_disponivel || 0)} exemplar(es)</div>
-        <div class="mt-2 text-xs text-gray-500">${esc(foco.total_gostei_sim || 0)} gostei · ${esc(foco.total_gostei_nao || 0)} não gostei</div>
+        <div class="mt-2 text-xs text-gray-500">Grau ${esc(foco.grau_recomendado || 'Livre')} Â· ${esc(foco.quantidade_disponivel || 0)} exemplar(es)</div>
+        <div class="mt-2 text-xs text-gray-500">${esc(foco.total_gostei_sim || 0)} gostei Â· ${esc(foco.total_gostei_nao || 0)} nÃ£o gostei</div>
     `;
     const podeSolicitar = !!foco.id && !!foco.pode_solicitar;
     const bloquearCross = scopeAtual === 'rede' && !rede.emprestimo_cruzado;
@@ -196,20 +196,20 @@ function render() {
     document.getElementById('btn-solicitar').classList.toggle('opacity-50', !podeSolicitar || bloquearCross);
 
     renderLista('lista-comentarios', dashboard.comentarios, 'Nenhum comentario recente para o livro em foco.', item => `
-        <div class="font-medium">${esc(item.obreiro_nome || 'Irmão')}</div>
+        <div class="font-medium">${esc(item.obreiro_nome || 'IrmÃ£o')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.criado_em || '')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(item.comentario || '')}</div>
     `);
 
     renderLista('lista-meus-emprestimos', dashboard.meus_emprestimos, 'Nenhum emprestimo registrado.', item => `
         <div class="font-medium">${esc(item.titulo || 'Livro')}</div>
-        <div class="mt-1 text-xs text-gray-500">Codigo ${esc(item.codigo_acervo || '-')} · ${esc(item.status || '-')}</div>
+        <div class="mt-1 text-xs text-gray-500">Codigo ${esc(item.codigo_acervo || '-')} Â· ${esc(item.status || '-')}</div>
         <div class="mt-2 text-sm text-gray-700">Previsto para ${esc(item.data_devolucao_prevista || '-')}</div>
     `);
 
     renderLista('lista-pendentes', dashboard.emprestimos_pendentes, 'Nenhum emprestimo pendente ou atrasado.', item => `
         <div class="font-medium">${esc(item.titulo || 'Livro')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(item.obreiro_nome || 'Obreiro')} · ${esc(item.status || '-')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.obreiro_nome || 'Obreiro')} Â· ${esc(item.status || '-')}</div>
         <div class="mt-2 text-sm text-gray-700">Devolucao prevista ${esc(item.data_devolucao_prevista || '-')}</div>
     `);
 }
@@ -265,8 +265,8 @@ document.getElementById('atalho-gerenciar').addEventListener('click', () => abri
 document.getElementById('atalho-cadastrar').addEventListener('click', () => abrirDestino('/biblioteca/novo'));
 document.getElementById('atalho-isbn').addEventListener('click', () => abrirDestino('/biblioteca/scanner'));
 document.getElementById('btn-solicitar').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/solicitar', { acervo_id: dashboard?.item_foco?.id || 0, loja_id: dashboard?.item_foco?.loja_id || 0, scope: scopeAtual }, 'Emprestimo solicitado com sucesso.'));
-document.getElementById('btn-gostei').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/reagir', { acervo_id: dashboard?.item_foco?.id || 0, gostei: true }, 'Reação registrada.'));
-document.getElementById('btn-nao-gostei').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/reagir', { acervo_id: dashboard?.item_foco?.id || 0, gostei: false }, 'Reação registrada.'));
+document.getElementById('btn-gostei').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/reagir', { acervo_id: dashboard?.item_foco?.id || 0, gostei: true }, 'ReaÃ§Ã£o registrada.'));
+document.getElementById('btn-nao-gostei').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/reagir', { acervo_id: dashboard?.item_foco?.id || 0, gostei: false }, 'ReaÃ§Ã£o registrada.'));
 document.getElementById('btn-comentar').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/comentar', { acervo_id: dashboard?.item_foco?.id || 0, comentario: document.getElementById('novo-comentario').value }, 'Comentario publicado.'));
 
 carregar();

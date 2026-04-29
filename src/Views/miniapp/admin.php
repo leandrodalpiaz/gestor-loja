@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Administracao Mobile</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
         body { background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #222); }
         .card { background: var(--tg-theme-secondary-bg-color, #f8fafc); }
@@ -23,12 +23,12 @@
 
     <div id="conteudo" class="hidden space-y-4">
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Gestão atual</div>
+            <div class="text-sm font-semibold">GestÃ£o atual</div>
             <div id="gestao-atual" class="mt-3 rounded-xl bg-white/70 p-3 text-sm"></div>
             <div class="mt-3 grid grid-cols-2 gap-2">
-                <input id="nova-gestao-titulo" type="text" class="col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Título da nova gestão">
+                <input id="nova-gestao-titulo" type="text" class="col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="TÃ­tulo da nova gestÃ£o">
                 <input id="nova-gestao-inicio" type="date" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                <button id="btn-abrir-gestao" class="rounded-xl bg-emerald-700 px-3 py-3 text-sm font-medium text-white">Abrir gestão</button>
+                <button id="btn-abrir-gestao" class="rounded-xl bg-emerald-700 px-3 py-3 text-sm font-medium text-white">Abrir gestÃ£o</button>
                 <input id="encerrar-gestao-data" type="date" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                 <button id="btn-encerrar-gestao" class="rounded-xl bg-amber-700 px-3 py-3 text-sm font-medium text-white">Encerrar atual</button>
             </div>
@@ -46,7 +46,7 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Cargos da gestão</div>
+            <div class="text-sm font-semibold">Cargos da gestÃ£o</div>
             <div class="mt-3 grid grid-cols-2 gap-2">
                 <select id="cargo-codigo" class="rounded-lg border border-gray-300 px-3 py-2 text-sm"></select>
                 <select id="cargo-obreiro" class="rounded-lg border border-gray-300 px-3 py-2 text-sm"></select>
@@ -83,7 +83,7 @@
 
         <div class="card rounded-2xl p-4">
             <div class="grid grid-cols-2 gap-2">
-                <button id="atalho-cargos" class="rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Gestão de cargos</button>
+                <button id="atalho-cargos" class="rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">GestÃ£o de cargos</button>
                 <button id="atalho-loja" class="rounded-xl bg-blue-700 px-3 py-3 text-sm font-medium text-white">Parametros da Loja</button>
                 <button id="atalho-auditoria" class="rounded-xl bg-amber-700 px-3 py-3 text-sm font-medium text-white">Auditoria</button>
                 <button id="atalho-dashboard" class="rounded-xl bg-slate-700 px-3 py-3 text-sm font-medium text-white">Painel</button>
@@ -108,7 +108,7 @@ function abrirDestino(dest) {
         url.searchParams.set('init_data', tg.initData);
         window.location.href = url.pathname + url.search;
     } catch (err) {
-        tg.showAlert('Não foi possível abrir o destino.');
+        tg.showAlert('NÃ£o foi possÃ­vel abrir o destino.');
     }
 }
 
@@ -124,7 +124,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não conseguimos carregar o painel administrativo no momento. Atualize a tela e tente novamente.');
+    if (!json.ok) throw new Error(json.erro || 'NÃ£o conseguimos carregar o painel administrativo no momento. Atualize a tela e tente novamente.');
     return json;
 }
 
@@ -148,13 +148,13 @@ function render() {
     document.getElementById('conteudo').classList.remove('hidden');
 
     document.getElementById('gestao-atual').innerHTML = dashboard.gestao_atual ? `
-        <div class="font-medium">${esc(dashboard.gestao_atual.titulo || 'Gestão')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(dashboard.gestao_atual.status || '')} · ${esc(dashboard.gestao_atual.inicio_em || '')}</div>
-    ` : `<div class="text-gray-500">Nenhuma gestão aberta.</div>`;
+        <div class="font-medium">${esc(dashboard.gestao_atual.titulo || 'GestÃ£o')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(dashboard.gestao_atual.status || '')} Â· ${esc(dashboard.gestao_atual.inicio_em || '')}</div>
+    ` : `<div class="text-gray-500">Nenhuma gestÃ£o aberta.</div>`;
 
     document.getElementById('configuracao').innerHTML = `
         <div class="font-medium">${esc(dashboard.configuracao?.nome_loja || 'Loja')} ${esc(dashboard.configuracao?.numero_loja || '')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(dashboard.configuracao?.cidade || '')}/${esc(dashboard.configuracao?.uf || '')} · ${esc(dashboard.configuracao?.rito || '')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(dashboard.configuracao?.cidade || '')}/${esc(dashboard.configuracao?.uf || '')} Â· ${esc(dashboard.configuracao?.rito || '')}</div>
         <div class="mt-2 text-sm text-gray-700">Contribuicao mensal ${esc(Number(dashboard.configuracao?.mensalidade_valor_padrao || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))}</div>
         <div class="mt-1 text-xs text-gray-500">PIX ${esc(dashboard.configuracao?.pix_chave_tipo || '')} ${esc(dashboard.configuracao?.pix_chave_valor || '')}</div>
     `;
@@ -176,23 +176,23 @@ function render() {
     (dashboard.obreiros || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.nome} · CIM ${item.cim || '-'}`;
+        option.textContent = `${item.nome} Â· CIM ${item.cim || '-'}`;
         obreiroSelect.appendChild(option);
     });
 
-    renderLista('lista-cargos', dashboard.cargos, 'Nenhum cargo encontrado para a gestão atual.', item => `
+    renderLista('lista-cargos', dashboard.cargos, 'Nenhum cargo encontrado para a gestÃ£o atual.', item => `
         <div class="font-medium">${esc(item.nome_exibicao || item.codigo || 'Cargo')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(item.titular_nome || 'Sem titular')} · CIM ${esc(item.titular_cim || '-')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.titular_nome || 'Sem titular')} Â· CIM ${esc(item.titular_cim || '-')}</div>
     `);
 
-    renderLista('lista-gestoes', dashboard.gestoes, 'Nenhuma gestão cadastrada.', item => `
-        <div class="font-medium">${esc(item.titulo || 'Gestão')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(item.status || '')} · inicio ${esc(item.inicio_em || '')}</div>
+    renderLista('lista-gestoes', dashboard.gestoes, 'Nenhuma gestÃ£o cadastrada.', item => `
+        <div class="font-medium">${esc(item.titulo || 'GestÃ£o')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.status || '')} Â· inicio ${esc(item.inicio_em || '')}</div>
     `);
 
     renderLista('lista-auditoria', dashboard.auditoria, 'Nenhum registro critico de auditoria.', item => `
         <div class="font-medium">${esc(item.resumo || 'Registro')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(item.entidade || '')} · ${esc(item.acao || '')} · ${esc(item.created_at || '')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.entidade || '')} Â· ${esc(item.acao || '')} Â· ${esc(item.created_at || '')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(item.criado_por_nome || 'Sistema')}</div>
     `);
 }
@@ -224,7 +224,7 @@ document.getElementById('btn-abrir-gestao').addEventListener('click', async () =
                 inicio_em: document.getElementById('nova-gestao-inicio').value
             }
         });
-        tg.showAlert('Gestão aberta com sucesso.');
+        tg.showAlert('GestÃ£o aberta com sucesso.');
         await carregar();
     } catch (err) {
         tg.showAlert(err.message);
@@ -233,7 +233,7 @@ document.getElementById('btn-abrir-gestao').addEventListener('click', async () =
 
 document.getElementById('btn-encerrar-gestao').addEventListener('click', async () => {
     if (!dashboard?.gestao_atual?.id) {
-        tg.showAlert('Não existe gestão aberta.');
+        tg.showAlert('NÃ£o existe gestÃ£o aberta.');
         return;
     }
     try {
@@ -244,7 +244,7 @@ document.getElementById('btn-encerrar-gestao').addEventListener('click', async (
                 encerrada_em: document.getElementById('encerrar-gestao-data').value
             }
         });
-        tg.showAlert('Gestão encerrada com sucesso.');
+        tg.showAlert('GestÃ£o encerrada com sucesso.');
         await carregar();
     } catch (err) {
         tg.showAlert(err.message);

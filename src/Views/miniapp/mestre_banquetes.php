@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Mestre de Banquetes Mobile</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
         body { background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #222); }
         .card { background: var(--tg-theme-secondary-bg-color, #f8fafc); }
@@ -20,7 +20,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">Mestre de Banquetes</h1>
-        <p class="mt-1 text-sm text-gray-500">Gestão do ágape por sessão, com previsão e acompanhamento logístico.</p>
+        <p class="mt-1 text-sm text-gray-500">GestÃ£o do Ã¡gape por sessÃ£o, com previsÃ£o e acompanhamento logÃ­stico.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -28,11 +28,11 @@
 
     <div id="conteudo" class="hidden space-y-4">
         <div class="card rounded-2xl p-4">
-            <div class="text-xs uppercase tracking-wide text-gray-400">Sessão em foco</div>
+            <div class="text-xs uppercase tracking-wide text-gray-400">SessÃ£o em foco</div>
             <div id="sessao-titulo" class="mt-1 text-base font-semibold"></div>
             <div id="sessao-meta" class="mt-1 text-sm text-gray-600"></div>
             <div class="mt-4">
-                <label class="mb-1 block text-sm font-medium text-gray-700">Trocar sessão</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Trocar sessÃ£o</label>
                 <select id="sessao-select" class="w-full rounded-lg border px-3 py-2 text-sm"></select>
             </div>
             <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
@@ -41,11 +41,11 @@
                     <div id="meta-confirmados" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Ágape</div>
+                    <div class="text-gray-500">Ãgape</div>
                     <div id="meta-agape" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Previsão</div>
+                    <div class="text-gray-500">PrevisÃ£o</div>
                     <div id="meta-previsao" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
@@ -56,7 +56,7 @@
         </div>
 
         <form id="form-operacao" class="card rounded-2xl p-4 space-y-3">
-            <div class="text-sm font-semibold">Operação do banquete</div>
+            <div class="text-sm font-semibold">OperaÃ§Ã£o do banquete</div>
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700">Status operacional</label>
                 <select id="status_operacional" class="w-full rounded-lg border px-3 py-2 text-sm">
@@ -67,23 +67,23 @@
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Previsão de participantes</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">PrevisÃ£o de participantes</label>
                 <input id="previsao_participantes" type="number" min="0" class="w-full rounded-lg border px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700">Observacoes logisticas</label>
                 <textarea id="observacoes" rows="4" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
-            <button type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white">Salvar operação</button>
+            <button type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white">Salvar operaÃ§Ã£o</button>
         </form>
 
         <div class="grid gap-4 md:grid-cols-2">
             <div class="card rounded-2xl p-4">
-                <div class="text-sm font-semibold">Participantes do ágape</div>
+                <div class="text-sm font-semibold">Participantes do Ã¡gape</div>
                 <div id="lista-agape" class="mt-3 space-y-2 text-sm"></div>
             </div>
             <div class="card rounded-2xl p-4">
-                <div class="text-sm font-semibold">Confirmados sem ágape</div>
+                <div class="text-sm font-semibold">Confirmados sem Ã¡gape</div>
                 <div id="lista-sem-agape" class="mt-3 space-y-2 text-sm"></div>
             </div>
         </div>
@@ -110,7 +110,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'Não conseguimos concluir sua solicitação agora. Tente novamente em alguns minutos.');
+    if (!json.ok) throw new Error(json.erro || 'NÃ£o conseguimos concluir sua solicitaÃ§Ã£o agora. Tente novamente em alguns minutos.');
     return json;
 }
 
@@ -134,8 +134,8 @@ function render() {
     document.getElementById('conteudo').classList.remove('hidden');
     const sessao = dashboard.sessao_foco;
     const operacao = dashboard.operacao || {};
-    document.getElementById('sessao-titulo').textContent = sessao ? (sessao.titulo || 'Sessão') : 'Sem sessão em foco';
-    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} · ${sessao.descricao_agape || ''}` : 'Sem dados';
+    document.getElementById('sessao-titulo').textContent = sessao ? (sessao.titulo || 'SessÃ£o') : 'Sem sessÃ£o em foco';
+    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} Â· ${sessao.descricao_agape || ''}` : 'Sem dados';
     document.getElementById('meta-confirmados').textContent = dashboard.confirmados?.length || 0;
     document.getElementById('meta-agape').textContent = dashboard.participantes_agape?.length || 0;
     document.getElementById('meta-previsao').textContent = operacao.previsao_participantes ?? '-';
@@ -146,7 +146,7 @@ function render() {
     (dashboard.sessoes || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.titulo || 'Sessão'} · ${item.status || ''}`;
+        option.textContent = `${item.titulo || 'SessÃ£o'} Â· ${item.status || ''}`;
         if (sessao && item.id === sessao.id) option.selected = true;
         select.appendChild(option);
     });
@@ -155,8 +155,8 @@ function render() {
     document.getElementById('previsao_participantes').value = operacao.previsao_participantes ?? '';
     document.getElementById('observacoes').value = operacao.observacoes || '';
 
-    renderLista('lista-agape', dashboard.participantes_agape, 'Sem participantes do ágape.');
-    renderLista('lista-sem-agape', dashboard.confirmados_sem_agape, 'Sem confirmados sem ágape.');
+    renderLista('lista-agape', dashboard.participantes_agape, 'Sem participantes do Ã¡gape.');
+    renderLista('lista-sem-agape', dashboard.confirmados_sem_agape, 'Sem confirmados sem Ã¡gape.');
 }
 
 async function carregar(sessaoId = null) {
@@ -187,7 +187,7 @@ document.getElementById('form-operacao').addEventListener('submit', async (event
                 observacoes: document.getElementById('observacoes').value
             }
         });
-        tg.showAlert('Dados da operação salvos com sucesso.');
+        tg.showAlert('Dados da operaÃ§Ã£o salvos com sucesso.');
         await carregar(sessaoAtualId);
     } catch (err) {
         tg.showAlert(err.message);

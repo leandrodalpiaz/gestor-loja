@@ -40,7 +40,7 @@ $formatarDataHoraExibicao = static function (?string $valor): string {
     try {
         return (new DateTimeImmutable($valor))
             ->setTimezone(new DateTimeZone('America/Sao_Paulo'))
-            ->format('d-m-Y \à\s H:i');
+            ->format('d-m-Y \Ã \s H:i');
     } catch (\Throwable $e) {
         return $valor;
     }
@@ -61,12 +61,12 @@ foreach ($cargosResumo as $cargo) {
 
 $gruposNominata = [
     'Eleitos' => [
-        'descricao' => 'Ofícios definidos em pleito e usados como referência central da gestão.',
+        'descricao' => 'OfÃ­cios definidos em pleito e usados como referÃªncia central da gestÃ£o.',
         'classe' => 'border-amber-200 bg-amber-50',
         'cargos' => $cargosEleitos,
     ],
     'Nomeados' => [
-        'descricao' => 'Ofícios administrativos providos para sustentar o trabalho ritual e executivo da Loja.',
+        'descricao' => 'OfÃ­cios administrativos providos para sustentar o trabalho ritual e executivo da Loja.',
         'classe' => 'border-slate-200 bg-slate-50',
         'cargos' => $cargosNomeados,
     ],
@@ -75,10 +75,10 @@ $gruposNominata = [
 $erpPageTitle = 'Nominata Oficial';
 $appShellEyebrow = 'Secretaria';
 $appShellTitle = 'Nominata oficial';
-$appShellDescription = 'Fonte institucional dos cargos da Loja (base para acessos e permissões).';
+$appShellDescription = 'Fonte institucional dos cargos da Loja (base para acessos e permissÃµes).';
 $appShellActiveHref = '/admin/cargos';
 $appShellActions = [
-    ['label' => 'Parâmetros da Loja', 'href' => '/admin/loja'],
+    ['label' => 'ParÃ¢metros da Loja', 'href' => '/admin/loja'],
     ['label' => 'Voltar ao painel', 'href' => '/dashboard', 'primary' => true],
 ];
 $appShellSidebarSections = [
@@ -89,9 +89,9 @@ $appShellSidebarSections = [
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
             ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
             ['label' => 'Acessos', 'href' => '/admin/acessos'],
-            ['label' => 'Sessões', 'href' => '/secretaria'],
-            ['label' => 'Balaústres / votação', 'href' => '/secretaria/votacao'],
-            ['label' => 'Relatório anual', 'href' => '/secretaria/relatorio-anual'],
+            ['label' => 'SessÃµes', 'href' => '/secretaria'],
+            ['label' => 'BalaÃºstres / votaÃ§Ã£o', 'href' => '/secretaria/votacao'],
+            ['label' => 'RelatÃ³rio anual', 'href' => '/secretaria/relatorio-anual'],
             ['label' => 'Painel', 'href' => '/dashboard'],
         ],
     ],
@@ -102,7 +102,7 @@ if (!empty($_SESSION['is_system_admin'])) {
         'title' => 'Sistema',
         'items' => [
             ['label' => 'Painel do sistema', 'href' => '/sistema'],
-            ['label' => 'Parâmetros da Loja', 'href' => '/admin/loja'],
+            ['label' => 'ParÃ¢metros da Loja', 'href' => '/admin/loja'],
         ],
     ];
 }
@@ -116,8 +116,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nominata Oficial e Gestões</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Nominata Oficial e GestÃµes</title>
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -153,18 +153,18 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <section class="overflow-hidden rounded-[2rem] border border-white/50 bg-[linear-gradient(135deg,_rgba(16,35,63,0.96),_rgba(21,40,72,0.92)_52%,_rgba(199,161,75,0.28)_100%)] px-6 py-8 text-white shadow-dignidade sm:px-8 lg:px-10 lg:py-10">
                 <div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
                     <div class="max-w-3xl">
-                        <div class="text-[0.72rem] uppercase tracking-[0.34em] text-amber-200/90">Secretaria • Nominata Oficial</div>
-                        <h1 class="mt-3 font-display text-5xl leading-none text-white sm:text-6xl">Gestão, ofícios e continuidade administrativa.</h1>
+                        <div class="text-[0.72rem] uppercase tracking-[0.34em] text-amber-200/90">Secretaria â€¢ Nominata Oficial</div>
+                        <h1 class="mt-3 font-display text-5xl leading-none text-white sm:text-6xl">GestÃ£o, ofÃ­cios e continuidade administrativa.</h1>
                         <p class="mt-4 max-w-2xl text-sm leading-6 text-slate-200 sm:text-base">
-                            Esta é a base oficial que sustenta validações de cargo, conferência de relatórios e a leitura formal da gestão em exercício.
+                            Esta Ã© a base oficial que sustenta validaÃ§Ãµes de cargo, conferÃªncia de relatÃ³rios e a leitura formal da gestÃ£o em exercÃ­cio.
                         </p>
                     </div>
 
                     <div class="flex flex-wrap gap-3">
-                        <a href="/admin/loja" class="rounded-full border border-white/20 px-4 py-2 text-sm text-white/90 transition hover:bg-white/10">Parâmetros da Loja</a>
+                        <a href="/admin/loja" class="rounded-full border border-white/20 px-4 py-2 text-sm text-white/90 transition hover:bg-white/10">ParÃ¢metros da Loja</a>
                         <a href="/dashboard" class="rounded-full border border-white/20 px-4 py-2 text-sm text-white/90 transition hover:bg-white/10">Voltar ao painel</a>
                         <span class="rounded-full border border-amber-300/35 bg-white/10 px-4 py-2 text-sm text-amber-100">
-                            <?= !empty($gestaoAtual['titulo']) ? htmlspecialchars((string) $gestaoAtual['titulo']) : 'Sem gestão aberta' ?>
+                            <?= !empty($gestaoAtual['titulo']) ? htmlspecialchars((string) $gestaoAtual['titulo']) : 'Sem gestÃ£o aberta' ?>
                         </span>
                     </div>
                 </div>
@@ -199,27 +199,27 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <article class="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm xl:col-span-8 2xl:col-span-9">
                     <div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                         <div>
-                            <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Gestão ativa</div>
+                            <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">GestÃ£o ativa</div>
                             <?php if (!empty($gestaoAtual)): ?>
-                                <h2 class="mt-3 text-3xl font-semibold leading-tight text-erp-navy"><?= htmlspecialchars((string) ($gestaoAtual['titulo'] ?? 'Gestão atual')) ?></h2>
+                                <h2 class="mt-3 text-3xl font-semibold leading-tight text-erp-navy"><?= htmlspecialchars((string) ($gestaoAtual['titulo'] ?? 'GestÃ£o atual')) ?></h2>
                                 <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                                    A gestão permanece aberta até o encerramento formal ou até a consolidação final do relatório, preservando a flexibilidade administrativa da Loja.
+                                    A gestÃ£o permanece aberta atÃ© o encerramento formal ou atÃ© a consolidaÃ§Ã£o final do relatÃ³rio, preservando a flexibilidade administrativa da Loja.
                                 </p>
                             <?php else: ?>
-                                <h2 class="mt-3 text-3xl font-semibold leading-tight text-erp-navy">Nenhuma gestão aberta</h2>
-                                <p class="mt-3 text-sm leading-6 text-slate-600">Abra uma nova gestão para habilitar a nominata oficial e o controle dos ofícios.</p>
+                                <h2 class="mt-3 text-3xl font-semibold leading-tight text-erp-navy">Nenhuma gestÃ£o aberta</h2>
+                                <p class="mt-3 text-sm leading-6 text-slate-600">Abra uma nova gestÃ£o para habilitar a nominata oficial e o controle dos ofÃ­cios.</p>
                             <?php endif; ?>
                         </div>
 
                         <?php if (!empty($gestaoAtual)): ?>
                             <div class="grid min-w-[20rem] gap-3 rounded-[1.5rem] border border-slate-200 bg-slate-50/90 p-4">
                                 <div>
-                                    <div class="text-xs uppercase tracking-[0.26em] text-slate-500">Início</div>
+                                    <div class="text-xs uppercase tracking-[0.26em] text-slate-500">InÃ­cio</div>
                                     <div class="mt-1 text-lg font-semibold text-tinta"><?= htmlspecialchars((string) ($gestaoAtual['inicio_em'] ?? '-')) ?></div>
                                 </div>
                                 <div>
                                     <div class="text-xs uppercase tracking-[0.26em] text-slate-500">Encerramento</div>
-                                    <div class="mt-1 text-sm text-slate-600">Solicitado no fechamento da gestão ou na geração do relatório final.</div>
+                                    <div class="mt-1 text-sm text-slate-600">Solicitado no fechamento da gestÃ£o ou na geraÃ§Ã£o do relatÃ³rio final.</div>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -230,34 +230,34 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <input type="hidden" name="gestao_id" value="<?= (int) ($gestaoAtual['id'] ?? 0) ?>">
                             <input type="date" name="encerrada_em" class="w-full rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm text-slate-700 focus:border-dourado focus:outline-none">
                             <button type="submit" class="rounded-xl bg-marinho px-5 py-3 text-sm font-medium text-white transition hover:bg-tinta">
-                                Encerrar gestão
+                                Encerrar gestÃ£o
                             </button>
                         </form>
                     <?php endif; ?>
                 </article>
 
                 <article class="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm xl:col-span-4 2xl:col-span-3">
-                    <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Abertura de gestão</div>
+                    <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Abertura de gestÃ£o</div>
                     <h2 class="mt-3 text-3xl font-semibold leading-tight text-erp-navy">Registrar um novo ciclo.</h2>
                     <p class="mt-3 text-sm leading-6 text-slate-600">
-                        O período nasce com o início da gestão e pode ser encerrado depois, sem travar a rotina do Secretário.
+                        O perÃ­odo nasce com o inÃ­cio da gestÃ£o e pode ser encerrado depois, sem travar a rotina do SecretÃ¡rio.
                     </p>
 
                     <form action="/admin/cargos/gestao/salvar" method="POST" class="mt-6 grid gap-3">
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Título da gestão</label>
-                            <input type="text" name="titulo" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-dourado focus:bg-white focus:outline-none" placeholder="Ex.: Gestão 2026/2027">
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">TÃ­tulo da gestÃ£o</label>
+                            <input type="text" name="titulo" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-dourado focus:bg-white focus:outline-none" placeholder="Ex.: GestÃ£o 2026/2027">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Data de início</label>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Data de inÃ­cio</label>
                             <input type="date" name="inicio_em" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Observação</label>
-                            <input type="text" name="observacao" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-dourado focus:bg-white focus:outline-none" placeholder="Informações administrativas opcionais">
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">ObservaÃ§Ã£o</label>
+                            <input type="text" name="observacao" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-dourado focus:bg-white focus:outline-none" placeholder="InformaÃ§Ãµes administrativas opcionais">
                         </div>
                         <button type="submit" class="mt-2 rounded-xl bg-erp-navy px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95">
-                            Abrir gestão
+                            Abrir gestÃ£o
                         </button>
                     </form>
                 </article>
@@ -266,11 +266,11 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <section class="mt-10">
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Nominata da gestão atual</div>
-                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Leitura operacional da gestão.</h2>
+                        <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Nominata da gestÃ£o atual</div>
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Leitura operacional da gestÃ£o.</h2>
                     </div>
                     <p class="max-w-xl text-sm leading-6 text-slate-600">
-                        Os ofícios permanecem organizados por bloco e podem ser atualizados individualmente sem perder o histórico da gestão.
+                        Os ofÃ­cios permanecem organizados por bloco e podem ser atualizados individualmente sem perder o histÃ³rico da gestÃ£o.
                     </p>
                 </div>
 
@@ -300,7 +300,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                                     </h4>
                                                 </div>
                                                 <div class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[0.68rem] uppercase tracking-[0.22em] text-amber-800">
-                                                    <?= $tituloGrupo === 'Eleitos' ? 'Pleito' : 'Nomeação' ?>
+                                                    <?= $tituloGrupo === 'Eleitos' ? 'Pleito' : 'NomeaÃ§Ã£o' ?>
                                                 </div>
                                             </div>
 
@@ -311,7 +311,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                                         <div class="mt-2 text-lg font-semibold text-slate-900"><?= htmlspecialchars((string) $cargo['titular_nome']) ?></div>
                                                         <div class="mt-1 text-sm text-slate-600">CIM <?= htmlspecialchars((string) ($cargo['titular_cim'] ?? '-')) ?></div>
                                                     <?php else: ?>
-                                                        <div class="mt-2 text-sm text-slate-500">Titular ainda não definido.</div>
+                                                        <div class="mt-2 text-sm text-slate-500">Titular ainda nÃ£o definido.</div>
                                                     <?php endif; ?>
                                                 </div>
                                                 <div>
@@ -320,7 +320,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                                         <?= !empty($cargo['inicio_em']) ? htmlspecialchars($formatarDataHoraExibicao((string) $cargo['inicio_em'])) : 'Data a definir' ?>
                                                     </div>
                                                     <div class="mt-2 text-xs leading-5 text-slate-500">
-                                                        <?= !empty($cargo['observacao']) ? htmlspecialchars((string) $cargo['observacao']) : 'Sem observação complementar.' ?>
+                                                        <?= !empty($cargo['observacao']) ? htmlspecialchars((string) $cargo['observacao']) : 'Sem observaÃ§Ã£o complementar.' ?>
                                                     </div>
                                                 </div>
                                             </div>
@@ -343,11 +343,11 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
                                                 <div class="grid gap-3 sm:grid-cols-[0.92fr_1.08fr]">
                                                     <div>
-                                                        <label class="mb-2 block text-[0.68rem] uppercase tracking-[0.24em] text-slate-500">Início da titularidade</label>
+                                                        <label class="mb-2 block text-[0.68rem] uppercase tracking-[0.24em] text-slate-500">InÃ­cio da titularidade</label>
                                                         <input type="datetime-local" name="inicio_em" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-dourado focus:bg-white focus:outline-none">
                                                     </div>
                                                     <div>
-                                                        <label class="mb-2 block text-[0.68rem] uppercase tracking-[0.24em] text-slate-500">Observação</label>
+                                                        <label class="mb-2 block text-[0.68rem] uppercase tracking-[0.24em] text-slate-500">ObservaÃ§Ã£o</label>
                                                         <input type="text" name="observacao" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-dourado focus:bg-white focus:outline-none" placeholder="Motivo ou nota administrativa">
                                                     </div>
                                                 </div>
@@ -369,8 +369,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <article class="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm xl:col-span-5 2xl:col-span-4">
                     <div class="flex items-end justify-between gap-3 border-b border-slate-200 pb-4">
                         <div>
-                            <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Histórico</div>
-                    <h2 class="mt-2 text-2xl font-semibold leading-tight text-erp-navy">Movimentações da gestão atual</h2>
+                            <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">HistÃ³rico</div>
+                    <h2 class="mt-2 text-2xl font-semibold leading-tight text-erp-navy">MovimentaÃ§Ãµes da gestÃ£o atual</h2>
                         </div>
                     </div>
                     <div class="mt-5 space-y-3 max-h-[42rem] overflow-y-auto pr-1">
@@ -381,18 +381,18 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                         <div class="text-sm font-semibold text-tinta">
                                             <?= htmlspecialchars(Cargo::rotuloOficial((string) ($item['codigo'] ?? ''), (string) ($item['nome_exibicao'] ?? ''))) ?>
                                         </div>
-                                        <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($item['obreiro_nome'] ?? '')) ?> • CIM <?= htmlspecialchars((string) ($item['cim'] ?? '-')) ?></div>
+                                        <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($item['obreiro_nome'] ?? '')) ?> â€¢ CIM <?= htmlspecialchars((string) ($item['cim'] ?? '-')) ?></div>
                                     </div>
                                     <div class="text-xs uppercase tracking-[0.22em] text-slate-500">
-                                        <?= !empty($item['fim_em']) ? 'Concluído' : 'Regular' ?>
+                                        <?= !empty($item['fim_em']) ? 'ConcluÃ­do' : 'Regular' ?>
                                     </div>
                                 </div>
                                 <div class="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
-                                    <div>Início: <?= htmlspecialchars($formatarDataHoraExibicao((string) ($item['inicio_em'] ?? ''))) ?></div>
+                                    <div>InÃ­cio: <?= htmlspecialchars($formatarDataHoraExibicao((string) ($item['inicio_em'] ?? ''))) ?></div>
                                     <div>Fim: <?= !empty($item['fim_em']) ? htmlspecialchars($formatarDataHoraExibicao((string) $item['fim_em'])) : 'Regular' ?></div>
                                 </div>
                                 <div class="mt-2 text-xs leading-5 text-slate-500">
-                                    <?= !empty($item['observacao']) ? htmlspecialchars((string) $item['observacao']) : 'Sem observação complementar.' ?>
+                                    <?= !empty($item['observacao']) ? htmlspecialchars((string) $item['observacao']) : 'Sem observaÃ§Ã£o complementar.' ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -403,24 +403,24 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <div class="flex items-end justify-between gap-3 border-b border-slate-200 pb-4">
                         <div>
                             <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Arquivo administrativo</div>
-                    <h2 class="mt-2 text-2xl font-semibold leading-tight text-erp-navy">Gestões cadastradas</h2>
+                    <h2 class="mt-2 text-2xl font-semibold leading-tight text-erp-navy">GestÃµes cadastradas</h2>
                         </div>
                     </div>
                     <div class="mt-5 space-y-3">
                         <?php foreach ($gestoes as $gestao): ?>
                             <div class="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
                                 <div class="flex items-center justify-between gap-3">
-                                    <div class="text-lg font-semibold text-tinta"><?= htmlspecialchars((string) ($gestao['titulo'] ?? 'Gestão')) ?></div>
+                                    <div class="text-lg font-semibold text-tinta"><?= htmlspecialchars((string) ($gestao['titulo'] ?? 'GestÃ£o')) ?></div>
                                     <div class="rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.22em] <?= ($gestao['status'] ?? '') === 'aberta' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200' ?>">
                                         <?= htmlspecialchars((string) ($gestao['status'] ?? '')) ?>
                                     </div>
                                 </div>
                                 <div class="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
-                                    <div>Início: <?= htmlspecialchars(!empty($gestao['inicio_em']) ? $formatarDataExibicao((string) $gestao['inicio_em']) : 'Data a definir') ?></div>
+                                    <div>InÃ­cio: <?= htmlspecialchars(!empty($gestao['inicio_em']) ? $formatarDataExibicao((string) $gestao['inicio_em']) : 'Data a definir') ?></div>
                                     <div>Encerramento: <?= htmlspecialchars(!empty($gestao['encerrada_em']) ? $formatarDataExibicao((string) $gestao['encerrada_em']) : '-') ?></div>
                                 </div>
                                 <div class="mt-2 text-xs leading-5 text-slate-500">
-                                    <?= htmlspecialchars((string) ($gestao['observacao'] ?? 'Sem observações.')) ?>
+                                    <?= htmlspecialchars((string) ($gestao['observacao'] ?? 'Sem observaÃ§Ãµes.')) ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
