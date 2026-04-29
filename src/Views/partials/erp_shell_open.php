@@ -54,6 +54,16 @@ foreach ($appShellSidebarSections as $section) {
             padding-bottom: 96px;
         }
         nav a, aside a { text-decoration: none; }
+        aside svg { width: 20px; height: 20px; flex: 0 0 20px; }
+        aside a { display: flex; align-items: center; gap: 10px; }
+        aside a span { line-height: 1.25; }
+        aside nav { padding: 12px 10px; overflow-y: auto; }
+        aside nav h3 { margin: 0 0 8px 0; font-size: 11px; color: var(--erp-muted); text-transform: uppercase; letter-spacing: .08em; }
+        aside nav > div { margin-bottom: 14px; }
+        aside nav a { padding: 8px 10px; border-radius: 8px; color: var(--erp-text); }
+        aside nav a:hover { background: var(--erp-surface-2); }
+        aside nav a[class*="bg-erp-navy"] { background: var(--erp-brand); color: #fff; }
+        header svg { width: 22px; height: 22px; }
         @media (max-width: 1023px) {
             body > div[x-data] > aside { transform: translateX(-100%); }
             body > div[x-data] > div { margin-left: 0; }
@@ -92,7 +102,7 @@ foreach ($appShellSidebarSections as $section) {
                                     <a href="<?= htmlspecialchars((string) ($item['href'] ?? '#')) ?>" 
                                        class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors <?= $isActive ? 'bg-erp-navy text-white' : 'text-erp-text hover:bg-erp-bg' ?>">
                                         <!-- Icon placeholder -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                         <span><?= htmlspecialchars((string) ($item['label'] ?? 'Item')) ?></span>
                                     </a>
                                 <?php endforeach; ?>
@@ -120,7 +130,7 @@ foreach ($appShellSidebarSections as $section) {
                 <div class="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
                     <!-- Mobile sidebar toggle -->
                     <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                     </button>
                     
                     <div class="flex-1"></div>
