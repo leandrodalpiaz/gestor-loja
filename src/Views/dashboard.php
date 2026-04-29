@@ -76,6 +76,7 @@ $appShellSidebarSections = array_merge(
 );
 
 require __DIR__ . '/partials/erp_shell_open.php';
+
 ?>
 
 <?php if (isset($dashboardMensagemSucesso)): ?>

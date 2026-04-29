@@ -7,7 +7,7 @@ $activity = is_array($dashboardActivity ?? null) ? $dashboardActivity : [];
         <div class="mt-3 space-y-2">
             <?php foreach ($activity as $item): ?>
                 <article class="rounded-md border border-slate-200 px-3 py-2">
-                    <div class="text-sm text-slate-800"><?= htmlspecialchars((string) ($item['item'] ?? 'Atualizacao')) ?></div>
+                    <div class="text-sm text-slate-800"><?= htmlspecialchars((string) ($item['item'] ?? 'Atualização')) ?></div>
                     <?php if (!empty($item['meta'])): ?>
                         <div class="mt-1 text-xs text-slate-600"><?= htmlspecialchars((string) $item['meta']) ?></div>
                     <?php endif; ?>

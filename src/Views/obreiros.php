@@ -4,7 +4,7 @@ declare(strict_types=1);
 use App\Models\Cargo;
 
 // #############################################################################
-// SEGURANÃ‡A E PREPARAÃ‡ÃƒO
+// SEGURANÇA E PREPARAÇÃO
 // #############################################################################
 
 if (!isset($_SESSION["usuario_logado"])) {
@@ -13,7 +13,7 @@ if (!isset($_SESSION["usuario_logado"])) {
 }
 
 // #############################################################################
-// LÃ“GICA DE NEGÃ“CIO E HELPERS
+// LÓGICA DE NEGÓCIO E HELPERS
 // #############################################################################
 
 $filtrosObreiros = $filtrosObreiros ?? ['busca' => '', 'situacao' => '', 'grau' => '', 'alerta' => '', 'cargo_codigo' => '', 'ordenacao' => 'nome'];
@@ -31,19 +31,19 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro'], $_SESSION['conv
 $rotulosAlerta = [
     'sem_nascimento' => 'Nascimento ausente',
     'sem_escolaridade' => 'Escolaridade ausente',
-    'sem_profissao' => 'ProfissÃ£o ausente',
-    'sem_situacao' => 'SituaÃ§Ã£o do quadro ausente',
+    'sem_profissao' => 'Profissão ausente',
+    'sem_situacao' => 'Situação do quadro ausente',
     'sem_data_ingresso' => 'Data de ingresso ausente',
-    'sem_potencia' => 'PotÃªncia ausente',
+    'sem_potencia' => 'Potência ausente',
 ];
 
 // #############################################################################
-// CONFIGURAÃ‡ÃƒO DO APP SHELL
+// CONFIGURAÇÃO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Secretaria';
 $appShellTitle = 'Central de Obreiros';
-$appShellDescription = 'Registro administrativo, filtros operacionais e organizaÃ§Ã£o do quadro da Loja.';
+$appShellDescription = 'Registro administrativo, filtros operacionais e organização do quadro da Loja.';
 $appShellActiveHref = '/obreiros';
 $appShellActions = [['label' => 'Somente com Alertas', 'href' => '/obreiros?alerta=cadastro']];
 if ($podeGerenciarObreiros) {
@@ -51,9 +51,10 @@ if ($podeGerenciarObreiros) {
 }
 
 require __DIR__ . '/partials/erp_shell_open.php';
+
 ?>
 
-<!-- NotificaÃ§Ãµes -->
+<!-- Notificações -->
 <?php if ($mensagemSucesso): ?>
     <div class="alert alert-success mb-6"><?= htmlspecialchars($mensagemSucesso) ?></div>
 <?php endif; ?>
@@ -71,7 +72,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 <?php endif; ?>
 
-<!-- MÃ©tricas -->
+<!-- Métricas -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
     <div class="metric-card"><div class="metric-label">Total Filtrado</div><div class="metric-value"><?= (int) $resumoObreiros['total'] ?></div></div>
     <div class="metric-card"><div class="metric-label">Regulares</div><div class="metric-value"><?= (int) $resumoObreiros['ativos'] ?></div></div>
@@ -89,7 +90,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <input id="filtro-busca" type="text" name="busca" value="<?= htmlspecialchars($filtrosObreiros['busca']) ?>" class="form-input" placeholder="Nome, CIM, cargo...">
             </div>
             <div>
-                <label for="filtro-situacao" class="form-label">SituaÃ§Ã£o</label>
+                <label for="filtro-situacao" class="form-label">Situação</label>
                 <select id="filtro-situacao" name="situacao" class="form-select">
                     <option value="">Todas</option>
                     <?php foreach (\App\Models\Obreiro::SITUACOES_QUADRO as $situacao): ?>
@@ -127,7 +128,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <select id="filtro-ordenacao" name="ordenacao" class="form-select">
                     <option value="nome" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'nome' ? 'selected' : '' ?>>Nome</option>
                     <option value="grau" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'grau' ? 'selected' : '' ?>>Grau</option>
-                    <option value="situacao" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'situacao' ? 'selected' : '' ?>>SituaÃ§Ã£o</option>
+                    <option value="situacao" <?= ($filtrosObreiros['ordenacao'] ?? '') === 'situacao' ? 'selected' : '' ?>>Situação</option>
                 </select>
             </div>
         </div>
@@ -151,9 +152,9 @@ require __DIR__ . '/partials/erp_shell_open.php';
             <thead>
                 <tr>
                     <th>Obreiro</th>
-                    <th>SituaÃ§Ã£o</th>
+                    <th>Situação</th>
                     <th>Cargos</th>
-                    <th>AÃ§Ãµes</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -225,7 +226,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         <h4 class="text-sm font-semibold mb-2">Cargos</h4>
                         <div class="flex flex-wrap gap-1">
                             <?php if (empty($cargosAtuais)): ?>
-                                <span class="text-xs text-gray-500">Nenhum cargo oficial em exercÃ­cio.</span>
+                                <span class="text-xs text-gray-500">Nenhum cargo oficial em exercício.</span>
                             <?php else: ?>
                                 <?php foreach ($cargosAtuais as $codigo): ?>
                                     <span class="badge-status badge-status-neutral"><?= htmlspecialchars(Cargo::rotuloOficial($codigo)) ?></span>

@@ -15,7 +15,7 @@
 <div class="max-w-2xl mx-auto space-y-4">
     <div>
         <h1 class="text-xl font-bold">Palavra do Dia</h1>
-        <p class="text-sm text-gray-500">Mensagens editoriais diÃ¡rias com gestÃ£o prÃ³pria.</p>
+        <p class="text-sm text-gray-500">Mensagens editoriais diárias com gestão própria.</p>
     </div>
 
     <div class="rounded-2xl border border-slate-200 p-4">
@@ -23,7 +23,7 @@
         <form id="form-palavra" class="space-y-3">
             <input type="hidden" name="id" value="">
             <div>
-                <label class="block text-sm mb-1">TÃ­tulo opcional</label>
+                <label class="block text-sm mb-1">Título opcional</label>
                 <input name="titulo" class="w-full rounded-lg border px-3 py-2 text-sm">
             </div>
             <div>
@@ -31,7 +31,7 @@
                 <textarea name="mensagem" required rows="5" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
             <div>
-                <label class="block text-sm mb-1">ObservaÃ§Ã£o editorial</label>
+                <label class="block text-sm mb-1">Observação editorial</label>
                 <input name="observacao" class="w-full rounded-lg border px-3 py-2 text-sm">
             </div>
             <div class="flex gap-2">

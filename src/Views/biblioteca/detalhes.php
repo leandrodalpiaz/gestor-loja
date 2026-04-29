@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÃ“GICA DE NEGÃ“CIO E HELPERS
+// LÓGICA DE NEGÓCIO E HELPERS
 // #############################################################################
 
 $podeSolicitar = $auth->isLoggedIn();
@@ -13,26 +13,27 @@ $formatDate = static fn($dateStr) => !empty($dateStr) ? (new DateTime($dateStr))
 $formatGrau = static fn($grau) => $grau ? ucfirst(strtolower($grau)) : 'Livre';
 
 // #############################################################################
-// CONFIGURAÃ‡ÃƒO DO APP SHELL
+// CONFIGURAÇÃO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Biblioteca';
-$appShellTitle = 'Detalhes do TÃ­tulo';
-$appShellDescription = 'Veja informaÃ§Ãµes completas, solicite emprÃ©stimos e participe das discussÃµes.';
+$appShellTitle = 'Detalhes do Título';
+$appShellDescription = 'Veja informações completas, solicite empréstimos e participe das discussões.';
 $appShellActiveHref = '/biblioteca';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
+
 ?>
 
 <div class="mb-4">
     <a href="<?= htmlspecialchars($voltarHref) ?>" class="btn btn-secondary">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
-        Voltar ao CatÃ¡logo
+        Voltar ao Catálogo
     </a>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <!-- Coluna da Capa e AÃ§Ãµes -->
+    <!-- Coluna da Capa e Ações -->
     <div class="lg:col-span-1 space-y-6">
         <div class="card">
             <div class="card-body text-center">
@@ -47,7 +48,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         </div>
 
         <div class="card">
-            <div class="card-header"><h2 class="card-title">AÃ§Ãµes</h2></div>
+            <div class="card-header"><h2 class="card-title">Ações</h2></div>
             <div class="card-body space-y-3">
                 <?php if ($podeSolicitar): ?>
                     <form action="/biblioteca/solicitar" method="POST">
@@ -55,7 +56,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <?php if ($lojaIdDetalhe > 0): ?>
                             <input type="hidden" name="loja_id" value="<?= (int) $lojaIdDetalhe ?>">
                         <?php endif; ?>
-                        <button type="submit" class="btn btn-primary w-full">Solicitar EmprÃ©stimo</button>
+                        <button type="submit" class="btn btn-primary w-full">Solicitar Empréstimo</button>
                     </form>
                 <?php endif; ?>
                 <div class="grid grid-cols-2 gap-3">
@@ -67,14 +68,14 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <form action="/biblioteca/reagir" method="POST">
                         <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
                         <input type="hidden" name="gostei" value="nao">
-                        <button type="submit" class="btn btn-secondary-red w-full">NÃ£o Gostei (<?= (int) ($item['total_gostei_nao'] ?? 0) ?>)</button>
+                        <button type="submit" class="btn btn-secondary-red w-full">Não Gostei (<?= (int) ($item['total_gostei_nao'] ?? 0) ?>)</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Coluna de Detalhes e ComentÃ¡rios -->
+    <!-- Coluna de Detalhes e Comentários -->
     <div class="lg:col-span-2 space-y-8">
         <div class="card">
             <div class="card-header">
@@ -84,15 +85,15 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <p class="card-description text-lg"><?= htmlspecialchars((string) ($item['autor'] ?? '')) ?></p>
                     </div>
                     <?php if ((int) ($item['quantidade_disponivel'] ?? 0) > 0): ?>
-                        <span class="badge-status success">DisponÃ­vel</span>
+                        <span class="badge-status success">Disponível</span>
                     <?php else: ?>
-                        <span class="badge-status danger">IndisponÃ­vel</span>
+                        <span class="badge-status danger">Indisponível</span>
                     <?php endif; ?>
                 </div>
             </div>
             <div class="card-body">
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-6">
-                    <div class="list-item-param"><span>CÃ³digo</span><strong class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></strong></div>
+                    <div class="list-item-param"><span>Código</span><strong class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></strong></div>
                     <div class="list-item-param"><span>ISBN</span><strong><?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></strong></div>
                     <div class="list-item-param"><span>Exemplares</span><strong><?= (int) ($item['quantidade_disponivel'] ?? 0) ?></strong></div>
                     <div class="list-item-param col-span-2 md:col-span-1"><span>Grau Sugerido</span><strong class="badge-grau"><?= $formatGrau((string) ($item['grau_recomendado'] ?? '')) ?></strong></div>
@@ -101,25 +102,25 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <?php endif; ?>
                 </div>
                 <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-2">Resumo</h3>
-                <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed whitespace-pre-wrap"><?= htmlspecialchars((string) ($item['resumo'] ?? 'Resumo ainda nÃ£o informado.')) ?></p>
+                <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed whitespace-pre-wrap"><?= htmlspecialchars((string) ($item['resumo'] ?? 'Resumo ainda não informado.')) ?></p>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header"><h2 class="card-title">ComentÃ¡rios (<?= (int) ($item['total_comentarios'] ?? 0) ?>)</h2></div>
+            <div class="card-header"><h2 class="card-title">Comentários (<?= (int) ($item['total_comentarios'] ?? 0) ?>)</h2></div>
             <div class="card-body">
                 <form action="/biblioteca/comentar" method="POST" class="mb-6">
                     <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
-                    <label for="comentario" class="form-label sr-only">Novo comentÃ¡rio</label>
-                    <textarea id="comentario" name="comentario" rows="3" required class="form-textarea" placeholder="Compartilhe sua opiniÃ£o sobre a leitura..."></textarea>
+                    <label for="comentario" class="form-label sr-only">Novo comentário</label>
+                    <textarea id="comentario" name="comentario" rows="3" required class="form-textarea" placeholder="Compartilhe sua opinião sobre a leitura..."></textarea>
                     <div class="mt-3 flex justify-end">
-                        <button type="submit" class="btn btn-primary">Publicar ComentÃ¡rio</button>
+                        <button type="submit" class="btn btn-primary">Publicar Comentário</button>
                     </div>
                 </form>
 
                 <div class="space-y-4">
                     <?php if (empty($comentarios)): ?>
-                        <div class="card-placeholder-inner">Ainda nÃ£o hÃ¡ comentÃ¡rios para este livro.</div>
+                        <div class="card-placeholder-inner">Ainda não há comentários para este livro.</div>
                     <?php else: ?>
                         <?php foreach ($comentarios as $comentario): ?>
                             <div class="list-item-comment">
@@ -128,7 +129,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                         <?= strtoupper(substr((string) ($comentario['obreiro_nome'] ?? 'I'), 0, 1)) ?>
                                     </div>
                                     <div>
-                                        <p class="font-semibold text-sm"><?= htmlspecialchars((string) ($comentario['obreiro_nome'] ?? 'IrmÃ£o')) ?></p>
+                                        <p class="font-semibold text-sm"><?= htmlspecialchars((string) ($comentario['obreiro_nome'] ?? 'Irmão')) ?></p>
                                         <p class="text-xs text-gray-500"><?= $formatDate((string) ($comentario['criado_em'] ?? '')) ?></p>
                                     </div>
                                 </div>

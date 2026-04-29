@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>EfemÃƒÂ©rides</title>
+    <title>Efemérides</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
@@ -14,12 +14,12 @@
 <body class="min-h-screen p-4">
 <div class="max-w-2xl mx-auto space-y-4">
     <div>
-        <h1 class="text-xl font-bold">EfemÃƒÂ©rides</h1>
-        <p class="text-sm text-gray-500">Cadastre e mantenha datas do calendÃƒÂ¡rio da Loja.</p>
+        <h1 class="text-xl font-bold">Efemérides</h1>
+        <p class="text-sm text-gray-500">Cadastre e mantenha datas do calendário da Loja.</p>
     </div>
 
     <div class="rounded-2xl border border-slate-200 p-4">
-        <h2 class="font-semibold mb-3">Nova efemÃƒÂ©ride</h2>
+        <h2 class="font-semibold mb-3">Nova efeméride</h2>
         <form id="form-efemeride" class="space-y-3">
             <input type="hidden" name="id" value="">
             <div>
@@ -30,15 +30,15 @@
                 <div>
                     <label class="block text-sm mb-1">Tipo</label>
                     <select name="tipo" class="w-full rounded-lg border px-3 py-2 text-sm">
-                        <option>AniversÃƒÂ¡rio</option>
-                        <option>IniciaÃƒÂ§ÃƒÂ£o</option>
-                        <option>ElevaÃƒÂ§ÃƒÂ£o</option>
-                        <option>ExaltaÃƒÂ§ÃƒÂ£o</option>
-                        <option>InstalaÃƒÂ§ÃƒÂ£o</option>
+                        <option>Aniversário</option>
+                        <option>Iniciação</option>
+                        <option>Elevação</option>
+                        <option>Exaltação</option>
+                        <option>Instalação</option>
                         <option>Oriente Eterno</option>
-                        <option>Posse GrÃƒÂ£o Mestre</option>
-                        <option>ConcessÃƒÂ£o de Obreiro HonorÃƒÂ¡rio</option>
-                        <option>FiliaÃƒÂ§ÃƒÂ£o</option>
+                        <option>Posse Grão Mestre</option>
+                        <option>Concessão de Obreiro Honorário</option>
+                        <option>Filiação</option>
                     </select>
                 </div>
                 <div>
@@ -48,7 +48,7 @@
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-sm mb-1">VÃƒÂ­nculo</label>
+                    <label class="block text-sm mb-1">Vínculo</label>
                     <input name="vinculo" class="w-full rounded-lg border px-3 py-2 text-sm">
                 </div>
                 <div>
@@ -106,7 +106,7 @@ function resetForm() {
 function preencher(item) {
     form.id.value = item.id || '';
     form.nome.value = item.nome || '';
-    form.tipo.value = item.tipo || 'AniversÃƒÂ¡rio';
+    form.tipo.value = item.tipo || 'Aniversário';
     form.data_evento.value = item.data_evento || '';
     form.vinculo.value = item.vinculo || '';
     form.parentesco.value = item.parentesco || '';
@@ -128,7 +128,7 @@ async function carregar() {
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <div class="font-medium">${esc(item.nome)}</div>
-                    <div class="text-xs text-slate-500 mt-1">${esc(item.tipo)} Ã‚Â· ${esc(item.data_evento)} Ã‚Â· ${item.ativo ? 'Regular' : 'Afastado'}</div>
+                    <div class="text-xs text-slate-500 mt-1">${esc(item.tipo)} · ${esc(item.data_evento)} · ${item.ativo ? 'Regular' : 'Afastado'}</div>
                 </div>
                 <div class="flex gap-2 text-xs">
                     <button class="text-blue-600" data-act="edit">Editar</button>
@@ -142,7 +142,7 @@ async function carregar() {
             await carregar();
         });
         card.querySelector('[data-act="delete"]').addEventListener('click', async () => {
-            if (!confirm('Excluir esta efemÃƒÂ©ride?')) return;
+            if (!confirm('Excluir esta efeméride?')) return;
             await request('/api/miniapp/efemerides/excluir', {method: 'POST', body: {id: item.id}});
             await carregar();
         });

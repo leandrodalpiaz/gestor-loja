@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÃ“GICA DE NEGÃ“CIO E HELPERS
+// LÓGICA DE NEGÓCIO E HELPERS
 // #############################################################################
 
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
@@ -12,13 +12,13 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 $formatarData = static fn(?string $val): string => !empty(trim((string) $val)) ? (new DateTimeImmutable(trim((string) $val)))->format('d/m/Y H:i') : '-';
 
 $tituloSessao = static function (?array $sessao): string {
-    if (!$sessao) return 'Nenhuma sessÃ£o em foco';
+    if (!$sessao) return 'Nenhuma sessão em foco';
     $titulo = trim((string) ($sessao['titulo'] ?? ''));
-    return $titulo !== '' ? $titulo : trim(((string) ($sessao['tipo_sessao'] ?? 'SessÃ£o')) . ' - ' . ((string) ($sessao['grau_sessao'] ?? '')));
+    return $titulo !== '' ? $titulo : trim(((string) ($sessao['tipo_sessao'] ?? 'Sessão')) . ' - ' . ((string) ($sessao['grau_sessao'] ?? '')));
 };
 
 // #############################################################################
-// CONFIGURAÃ‡ÃƒO DO APP SHELL
+// CONFIGURAÇÃO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Orador';
@@ -27,20 +27,21 @@ $appShellDescription = 'Pauta ritual, leitura e visitantes para a palavra a bem 
 $appShellActiveHref = '/orador';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
+
 ?>
 
 <!-- Mensagens de Feedback -->
 <?php if ($mensagemSucesso): ?><div class="alert alert-success mb-6"><?= htmlspecialchars($mensagemSucesso) ?></div><?php endif; ?>
 <?php if ($mensagemErro): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
 
-<!-- Filtro de SessÃ£o -->
+<!-- Filtro de Sessão -->
 <div class="card mb-8">
     <div class="card-body">
         <form method="get" action="/orador" class="flex flex-col sm:flex-row sm:items-end sm:gap-4">
             <div class="flex-grow">
-                <label for="sessao_id" class="form-label">SessÃ£o em foco</label>
+                <label for="sessao_id" class="form-label">Sessão em foco</label>
                 <select id="sessao_id" name="sessao_id" class="form-select">
-                    <option value="">Usar prÃ³xima sessÃ£o publicada</option>
+                    <option value="">Usar próxima sessão publicada</option>
                     <?php foreach ($sessoes as $sessao): ?>
                         <option value="<?= (int) ($sessao['id'] ?? 0) ?>" <?= (int) ($sessaoEmFoco['id'] ?? 0) === (int) ($sessao['id'] ?? 0) ? 'selected' : '' ?>>
                             <?= htmlspecialchars($tituloSessao($sessao)) ?> &middot; <?= htmlspecialchars($formatarData($sessao['data_hora_inicio'] ?? null)) ?>
@@ -70,18 +71,18 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             </div>
             <div class="card-body">
                 <h3 class="font-semibold mb-2">Resumo Ritual</h3>
-                <p class="text-sm whitespace-pre-line"><?= nl2br(htmlspecialchars((string) ($sessaoEmFoco['ordem_dia'] ?? $sessaoEmFoco['resumo_publico'] ?? 'Sem resumo ritual registrado para esta sessÃ£o.'))) ?></p>
+                <p class="text-sm whitespace-pre-line"><?= nl2br(htmlspecialchars((string) ($sessaoEmFoco['ordem_dia'] ?? $sessaoEmFoco['resumo_publico'] ?? 'Sem resumo ritual registrado para esta sessão.'))) ?></p>
             </div>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <div><h2 class="card-title">Visitantes para Leitura</h2><p class="card-description">Nominata resumida para saudaÃ§Ã£o nominal.</p></div>
+                <div><h2 class="card-title">Visitantes para Leitura</h2><p class="card-description">Nominata resumida para saudação nominal.</p></div>
                 <span class="badge badge-primary"><?= count($visitantesResumo) ?> visitante(s)</span>
             </div>
             <div class="card-body">
                 <?php if (empty($visitantesResumo)): ?>
-                    <p class="text-center text-gray-500 py-4">Nenhum visitante resumido foi registrado para a sessÃ£o em foco.</p>
+                    <p class="text-center text-gray-500 py-4">Nenhum visitante resumido foi registrado para a sessão em foco.</p>
                 <?php else: ?>
                     <div class="grid md:grid-cols-2 gap-4">
                         <?php foreach ($visitantesResumo as $visitante): ?>
@@ -97,10 +98,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="card">
-                <div class="card-header"><h2 class="card-title">Cargos e ComposiÃ§Ã£o</h2><p class="card-description">OcupaÃ§Ã£o da sessÃ£o.</p></div>
+                <div class="card-header"><h2 class="card-title">Cargos e Composição</h2><p class="card-description">Ocupação da sessão.</p></div>
                 <div class="card-body space-y-3">
                     <?php if (empty($cargosSessao)): ?>
-                        <p class="text-center text-gray-500 py-4">Sem composiÃ§Ã£o de cargos capturada.</p>
+                        <p class="text-center text-gray-500 py-4">Sem composição de cargos capturada.</p>
                     <?php else: ?>
                         <?php foreach ($cargosSessao as $cargo): ?>
                             <div class="list-item">
@@ -115,10 +116,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 </div>
             </div>
             <div class="card">
-                <div class="card-header"><h2 class="card-title">Atividades Registradas</h2><p class="card-description">Eventos para menÃ§Ã£o.</p></div>
+                <div class="card-header"><h2 class="card-title">Atividades Registradas</h2><p class="card-description">Eventos para menção.</p></div>
                 <div class="card-body space-y-3">
                     <?php if (empty($eventosSessao)): ?>
-                        <p class="text-center text-gray-500 py-4">Sem eventos registrados para esta sessÃ£o.</p>
+                        <p class="text-center text-gray-500 py-4">Sem eventos registrados para esta sessão.</p>
                     <?php else: ?>
                         <?php foreach ($eventosSessao as $evento): ?>
                             <div class="list-item">
@@ -149,8 +150,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <div class="card-header"><h2 class="card-title">Uso do Cargo</h2></div>
             <div class="card-body">
                 <ul class="list-disc space-y-2 pl-5 text-sm text-gray-500">
-                    <li>Revisar a pauta resumida da sessÃ£o antes da leitura ritual.</li>
-                    <li>Conferir visitantes e cargos ad hoc para menÃ§Ã£o correta em Loja.</li>
+                    <li>Revisar a pauta resumida da sessão antes da leitura ritual.</li>
+                    <li>Conferir visitantes e cargos ad hoc para menção correta em Loja.</li>
                     <li>Usar os lembretes do painel como roteiro da palavra a bem.</li>
                     <li>Consultar o miniapp quando a leitura precisar ser feita pelo Telegram.</li>
                 </ul>
@@ -173,5 +174,3 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <?php
 require_once __DIR__ . '/../partials/erp_shell_close.php';
 ?>
-
-

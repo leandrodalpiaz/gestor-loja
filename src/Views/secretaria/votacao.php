@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÃ“GICA DE NEGÃ“CIO E HELPERS
+// LÓGICA DE NEGÓCIO E HELPERS
 // #############################################################################
 
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
@@ -10,27 +10,28 @@ $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
 // #############################################################################
-// CONFIGURAÃ‡ÃƒO DO APP SHELL
+// CONFIGURAÇÃO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Secretaria';
-$appShellTitle = 'BalaÃºstres e VotaÃ§Ã£o';
-$appShellDescription = 'Acompanhe e registre votos nos balaÃºstres das sessÃµes publicadas.';
+$appShellTitle = 'Balaústres e Votação';
+$appShellDescription = 'Acompanhe e registre votos nos balaústres das sessões publicadas.';
 $appShellActiveHref = '/secretaria/votacao';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
+
 ?>
 
 <!-- Mensagens de Feedback -->
 <?php if ($mensagemSucesso): ?><div class="alert alert-success mb-6"><?= htmlspecialchars($mensagemSucesso) ?></div><?php endif; ?>
 <?php if ($mensagemErro): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
 
-<!-- VotaÃ§Ãµes Abertas -->
+<!-- Votações Abertas -->
 <div class="space-y-6">
     <?php if (empty($votacoesAbertas)): ?>
         <div class="card">
             <div class="card-body text-center">
-                <p class="text-gray-500">No momento, nÃ£o hÃ¡ votaÃ§Ãµes abertas para o seu perfil.</p>
+                <p class="text-gray-500">No momento, não há votações abertas para o seu perfil.</p>
             </div>
         </div>
     <?php else: ?>
@@ -42,10 +43,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <div class="card">
                 <div class="card-header">
                     <div>
-                        <h2 class="card-title"><?= htmlspecialchars($balaustre['numero_balaustre'] ?: 'BalaÃºstre sem nÃºmero') ?></h2>
+                        <h2 class="card-title"><?= htmlspecialchars($balaustre['numero_balaustre'] ?: 'Balaústre sem número') ?></h2>
                         <p class="card-description">
-                            <?= htmlspecialchars($balaustre['sessao_titulo'] ?: (($balaustre['tipo_sessao'] ?? 'SessÃ£o') . ' - ' . ($balaustre['grau_sessao'] ?? ''))) ?>
-                            <span class="text-xs text-gray-500 ml-2">(SessÃ£o em: <?= htmlspecialchars((string) ($balaustre['data_hora_inicio'] ?? '')) ?>)</span>
+                            <?= htmlspecialchars($balaustre['sessao_titulo'] ?: (($balaustre['tipo_sessao'] ?? 'Sessão') . ' - ' . ($balaustre['grau_sessao'] ?? ''))) ?>
+                            <span class="text-xs text-gray-500 ml-2">(Sessão em: <?= htmlspecialchars((string) ($balaustre['data_hora_inicio'] ?? '')) ?>)</span>
                         </p>
                     </div>
                     <div>
@@ -67,7 +68,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                 <label for="voto-<?= $balaustreId ?>" class="sr-only">Seu voto</label>
                                 <select name="voto" id="voto-<?= $balaustreId ?>" class="form-select w-full">
                                     <option value="aprovar">Aprovar</option>
-                                    <option value="pedir_correcao">Pedir correÃ§Ã£o</option>
+                                    <option value="pedir_correcao">Pedir correção</option>
                                     <option value="rejeitar">Rejeitar</option>
                                 </select>
                             </div>
@@ -82,7 +83,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </div>
                 <?php else: ?>
                     <div class="card-footer">
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Seu nome nÃ£o consta na base congelada de votantes desta sessÃ£o.</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Seu nome não consta na base congelada de votantes desta sessão.</p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -93,5 +94,3 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <?php
 require_once __DIR__ . '/../partials/erp_shell_close.php';
 ?>
-
-

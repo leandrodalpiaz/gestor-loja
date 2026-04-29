@@ -172,7 +172,7 @@ class ConviteAcesso
 
             if ($lojaObreiro !== $lojaAtual) {
                 $this->db->rollBack();
-                return ['ok' => false, 'erro' => 'Convite nÃ£o pertence Ã  loja atual.'];
+                return ['ok' => false, 'erro' => 'Convite não pertence à loja atual.'];
             }
 
             $statusObreiro = strtolower(trim((string) ($obreiro['acesso_status'] ?? '')));

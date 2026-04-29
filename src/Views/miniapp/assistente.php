@@ -45,7 +45,7 @@ function abrirDestino(dest) {
         url.searchParams.set('init_data', tg.initData);
         window.location.href = url.pathname + url.search;
     } catch (err) {
-        tg.showAlert('NÃ£o foi possÃ­vel abrir o destino.');
+        tg.showAlert('Não foi possível abrir o destino.');
     }
 }
 
@@ -61,7 +61,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'NÃ£o foi possÃ­vel interpretar o comando agora.');
+    if (!json.ok) throw new Error(json.erro || 'Não foi possível interpretar o comando agora.');
     return json;
 }
 

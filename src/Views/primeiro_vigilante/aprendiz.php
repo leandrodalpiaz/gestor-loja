@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÃ“GICA DE NEGÃ“CIO E HELPERS
+// LÓGICA DE NEGÓCIO E HELPERS
 // #############################################################################
 
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
@@ -27,18 +27,19 @@ $badgeStatus = static function(string $status): string {
 };
 
 // #############################################################################
-// CONFIGURAÃ‡ÃƒO DO APP SHELL
+// CONFIGURAÇÃO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = $somenteProprio ? 'Autoacompanhamento' : 'Acompanhamento Formativo';
 $appShellTitle = htmlspecialchars($nomeAprendiz);
-$appShellDescription = $somenteProprio ? 'Acompanhe sua trilha, sua leitura orientada e a situaÃ§Ã£o do certificado formativo.' : 'Linha do tempo individual do Aprendiz com trilha, leitura sugerida, devolutivas e pedido formal de certificado.';
+$appShellDescription = $somenteProprio ? 'Acompanhe sua trilha, sua leitura orientada e a situação do certificado formativo.' : 'Linha do tempo individual do Aprendiz com trilha, leitura sugerida, devolutivas e pedido formal de certificado.';
 $appShellActiveHref = $somenteProprio ? '/dashboard' : '/primeiro-vigilante';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
+
 ?>
 
-<!-- BotÃµes de NavegaÃ§Ã£o -->
+<!-- Botões de Navegação -->
 <div class="mb-6 flex flex-wrap gap-3">
     <a href="<?= $somenteProprio ? '/dashboard' : '/primeiro-vigilante' ?>" class="btn btn-secondary">Voltar</a>
     <?php if (!$somenteProprio): ?>
@@ -52,19 +53,19 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <?php if ($mensagemErro): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
 <?php if (!empty($avisoInfra)): ?><div class="alert alert-warning mb-6"><?= htmlspecialchars((string) $avisoInfra) ?></div><?php endif; ?>
 
-<!-- MÃ©tricas RÃ¡pidas -->
+<!-- Métricas Rápidas -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
     <div class="card-metric"><p class="card-metric-label">Etapa Atual</p><p class="card-metric-value"><?= $etapaAtualOrdem ?></p><p class="card-metric-context"><?= htmlspecialchars($etapaAtualTitulo) ?></p></div>
     <div class="card-metric"><p class="card-metric-label">Status Atual</p><p class="card-metric-value text-2xl capitalize"><?= str_replace('_', ' ', htmlspecialchars($etapaAtualStatus)) ?></p></div>
-    <div class="card-metric"><p class="card-metric-label">Etapas ConcluÃ­das</p><p class="card-metric-value"><?= (int) ($resumoTrilha['total_concluidas'] ?? 0) ?> / <?= (int) ($resumoTrilha['total_etapas'] ?? 0) ?></p></div>
-    <div class="card-metric"><p class="card-metric-label">ConclusÃ£o da Trilha</p><p class="card-metric-value"><?= $percentual ?>%</p></div>
+    <div class="card-metric"><p class="card-metric-label">Etapas Concluídas</p><p class="card-metric-value"><?= (int) ($resumoTrilha['total_concluidas'] ?? 0) ?> / <?= (int) ($resumoTrilha['total_etapas'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Conclusão da Trilha</p><p class="card-metric-value"><?= $percentual ?>%</p></div>
 </div>
 
-<!-- FormulÃ¡rios de GestÃ£o (Apenas para 1Âº Vigilante) -->
+<!-- Formulários de Gestão (Apenas para 1º Vigilante) -->
 <?php if (!$somenteProprio): ?>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <div class="card">
-            <div class="card-header"><h2 class="card-title">Atualizar Etapa da Trilha</h2><p class="card-description">Registre andamento, recebimento, revisÃ£o e devolutiva.</p></div>
+            <div class="card-header"><h2 class="card-title">Atualizar Etapa da Trilha</h2><p class="card-description">Registre andamento, recebimento, revisão e devolutiva.</p></div>
             <div class="card-body">
                 <form action="/primeiro-vigilante/trilha/atualizar" method="POST" class="space-y-4">
                     <input type="hidden" name="aprendiz_id" value="<?= htmlspecialchars((string) ($aprendiz['id'] ?? '')) ?>">
@@ -72,7 +73,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <div><label for="etapa_ordem" class="form-label">Etapa</label><select name="etapa_ordem" id="etapa_ordem" class="form-select"><?php foreach ($etapas as $etapa): ?><option value="<?= (int) ($etapa['etapa_ordem'] ?? 0) ?>" <?= (int) ($etapa['etapa_ordem'] ?? 0) === $etapaAtualOrdem ? 'selected' : '' ?>>Etapa <?= (int) ($etapa['etapa_ordem'] ?? 0) ?> - <?= htmlspecialchars((string) ($etapa['titulo_etapa'] ?? '')) ?></option><?php endforeach; ?></select></div>
                         <div><label for="status" class="form-label">Status</label><select name="status" id="status" class="form-select"><?php foreach ($statusDisponiveis as $codigo => $rotulo): ?><option value="<?= htmlspecialchars($codigo) ?>" <?= $codigo === $etapaAtualStatus ? 'selected' : '' ?>><?= htmlspecialchars($rotulo) ?></option><?php endforeach; ?></select></div>
                     </div>
-                    <div><label for="observacao_vigilante" class="form-label">ObservaÃ§Ã£o do 1Âº Vigilante</label><textarea name="observacao_vigilante" id="observacao_vigilante" rows="3" class="form-textarea" placeholder="Registre orientaÃ§Ãµes, devolutivas e o prÃ³ximo encaminhamento."><?= htmlspecialchars((string) ($etapaAtual['observacao_vigilante'] ?? '')) ?></textarea></div>
+                    <div><label for="observacao_vigilante" class="form-label">Observação do 1º Vigilante</label><textarea name="observacao_vigilante" id="observacao_vigilante" rows="3" class="form-textarea" placeholder="Registre orientações, devolutivas e o próximo encaminhamento."><?= htmlspecialchars((string) ($etapaAtual['observacao_vigilante'] ?? '')) ?></textarea></div>
                     <div class="text-right"><button type="submit" class="btn btn-primary">Salvar Andamento</button></div>
                 </form>
             </div>
@@ -82,8 +83,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <div class="card-body">
                 <form action="/primeiro-vigilante/leitura/salvar" method="POST" class="space-y-4">
                     <input type="hidden" name="aprendiz_id" value="<?= htmlspecialchars((string) ($aprendiz['id'] ?? '')) ?>">
-                    <div><label for="acervo_id" class="form-label">Item do Acervo</label><select name="acervo_id" id="acervo_id" class="form-select"><option value="">Sem vincular livro especÃ­fico</option><?php foreach ($leiturasDisponiveis as $livro): ?><option value="<?= (int) ($livro['id'] ?? 0) ?>" <?= ((int) ($acompanhamento['leitura_acervo_id'] ?? 0) === (int) ($livro['id'] ?? 0)) ? 'selected' : '' ?>><?= htmlspecialchars((string) ($livro['titulo'] ?? 'Livro') . ' - ' . (string) ($livro['autor'] ?? '')) ?></option><?php endforeach; ?></select></div>
-                    <div><label for="observacao_leitura" class="form-label">OrientaÃ§Ã£o de Leitura</label><textarea name="observacao_leitura" id="observacao_leitura" rows="3" class="form-textarea" placeholder="Explique o motivo da leitura, o foco da instruÃ§Ã£o ou o capÃ­tulo recomendado."><?= htmlspecialchars((string) ($acompanhamento['leitura_observacao'] ?? '')) ?></textarea></div>
+                    <div><label for="acervo_id" class="form-label">Item do Acervo</label><select name="acervo_id" id="acervo_id" class="form-select"><option value="">Sem vincular livro específico</option><?php foreach ($leiturasDisponiveis as $livro): ?><option value="<?= (int) ($livro['id'] ?? 0) ?>" <?= ((int) ($acompanhamento['leitura_acervo_id'] ?? 0) === (int) ($livro['id'] ?? 0)) ? 'selected' : '' ?>><?= htmlspecialchars((string) ($livro['titulo'] ?? 'Livro') . ' - ' . (string) ($livro['autor'] ?? '')) ?></option><?php endforeach; ?></select></div>
+                    <div><label for="observacao_leitura" class="form-label">Orientação de Leitura</label><textarea name="observacao_leitura" id="observacao_leitura" rows="3" class="form-textarea" placeholder="Explique o motivo da leitura, o foco da instrução ou o capítulo recomendado."><?= htmlspecialchars((string) ($acompanhamento['leitura_observacao'] ?? '')) ?></textarea></div>
                     <div class="text-right"><button type="submit" class="btn btn-primary">Salvar Leitura</button></div>
                 </form>
             </div>
@@ -118,9 +119,9 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                 <?php if (!empty($etapa['observacao_vigilante'])): ?><p class="mt-2 text-sm text-gray-600 dark:text-gray-400"><?= nl2br(htmlspecialchars((string) $etapa['observacao_vigilante'])) ?></p><?php endif; ?>
                             </div>
                             <div class="text-xs text-gray-500 dark:text-gray-400 md:text-right space-y-1 flex-shrink-0">
-                                <p>DisponibilizaÃ§Ã£o: <?= !empty($etapa['data_disponibilizacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_disponibilizacao']))) : '-' ?></p>
+                                <p>Disponibilização: <?= !empty($etapa['data_disponibilizacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_disponibilizacao']))) : '-' ?></p>
                                 <p>Entrega: <?= !empty($etapa['data_entrega']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_entrega']))) : '-' ?></p>
-                                <p>RevisÃ£o: <?= !empty($etapa['data_revisao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_revisao']))) : '-' ?></p>
+                                <p>Revisão: <?= !empty($etapa['data_revisao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_revisao']))) : '-' ?></p>
                             </div>
                         </div>
                          <?php if (!$somenteProprio && !empty($acoesRapidasPorEtapa[$ordem])): ?>
@@ -128,7 +129,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                 <?php foreach ($acoesRapidasPorEtapa[$ordem] as $acao): ?>
                                     <form action="/primeiro-vigilante/trilha/acao-rapida" method="POST">
                                         <input type="hidden" name="aprendiz_id" value="<?= htmlspecialchars((string) ($aprendiz['id'] ?? '')) ?>"><input type="hidden" name="etapa_ordem" value="<?= $ordem ?>"><input type="hidden" name="status" value="<?= htmlspecialchars((string) ($acao['status'] ?? '')) ?>">
-                                        <button type="submit" class="btn btn-sm btn-dark"><?= htmlspecialchars((string) ($acao['label'] ?? 'AvanÃ§ar')) ?></button>
+                                        <button type="submit" class="btn btn-sm btn-dark"><?= htmlspecialchars((string) ($acao['label'] ?? 'Avançar')) ?></button>
                                     </form>
                                 <?php endforeach; ?>
                             </div>
@@ -141,7 +142,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
     <div class="space-y-8">
         <div class="card">
-            <div class="card-header"><h2 class="card-title">Certificado Formativo</h2><p class="card-description">SolicitaÃ§Ã£o formal da conclusÃ£o da docÃªncia.</p></div>
+            <div class="card-header"><h2 class="card-title">Certificado Formativo</h2><p class="card-description">Solicitação formal da conclusão da docência.</p></div>
             <div class="card-body">
                 <div class="list-item-report mb-4">
                     <p class="text-xs font-bold uppercase text-gray-500">Status</p>
@@ -151,17 +152,17 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <?php if (!$somenteProprio): ?>
                     <form action="/primeiro-vigilante/certificado/solicitar" method="POST" class="space-y-4">
                         <input type="hidden" name="aprendiz_id" value="<?= htmlspecialchars((string) ($aprendiz['id'] ?? '')) ?>">
-                        <div><label for="observacao_certificado" class="form-label">ObservaÃ§Ã£o da SolicitaÃ§Ã£o</label><textarea name="observacao_certificado" id="observacao_certificado" rows="3" class="form-textarea" placeholder="Registre as condiÃ§Ãµes para conclusÃ£o, avaliaÃ§Ã£o final ou pendÃªncias."><?= htmlspecialchars((string) ($acompanhamento['certificado_observacao'] ?? '')) ?></textarea></div>
+                        <div><label for="observacao_certificado" class="form-label">Observação da Solicitação</label><textarea name="observacao_certificado" id="observacao_certificado" rows="3" class="form-textarea" placeholder="Registre as condições para conclusão, avaliação final ou pendências."><?= htmlspecialchars((string) ($acompanhamento['certificado_observacao'] ?? '')) ?></textarea></div>
                         <div class="text-right"><button type="submit" class="btn btn-primary">Solicitar Certificado</button></div>
                     </form>
                 <?php endif; ?>
             </div>
         </div>
         <div class="card">
-            <div class="card-header"><h2 class="card-title">HistÃ³rico Formativo</h2><p class="card-description">Marcos da trilha, leitura e certificado.</p></div>
+            <div class="card-header"><h2 class="card-title">Histórico Formativo</h2><p class="card-description">Marcos da trilha, leitura e certificado.</p></div>
             <div class="card-body space-y-3">
                 <?php if (empty($historicoFormativo)): ?>
-                    <p class="text-center text-gray-500 py-4">Ainda nÃ£o hÃ¡ marcos registrados.</p>
+                    <p class="text-center text-gray-500 py-4">Ainda não há marcos registrados.</p>
                 <?php else: ?>
                     <?php foreach ($historicoFormativo as $evento): ?>
                         <div class="list-item-report">
@@ -180,5 +181,3 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <?php
 require_once __DIR__ . '/../partials/erp_shell_close.php';
 ?>
-
-

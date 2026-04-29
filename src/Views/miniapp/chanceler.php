@@ -20,7 +20,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">Chanceler Mobile</h1>
-        <p class="mt-1 text-sm text-gray-500">Check-in da sessÃƒÂ£o, controle da nominata e leitura objetiva de visitantes.</p>
+        <p class="mt-1 text-sm text-gray-500">Check-in da sessão, controle da nominata e leitura objetiva de visitantes.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -28,12 +28,12 @@
 
     <div id="conteudo" class="hidden space-y-4">
         <div class="card rounded-2xl p-4">
-            <div class="text-xs uppercase tracking-wide text-gray-400">SessÃƒÂ£o em foco</div>
+            <div class="text-xs uppercase tracking-wide text-gray-400">Sessão em foco</div>
             <div id="sessao-titulo" class="mt-1 text-base font-semibold"></div>
             <div id="sessao-meta" class="mt-1 text-sm text-gray-600"></div>
 
             <div class="mt-4">
-                <label class="mb-1 block text-sm font-medium text-gray-700">Trocar sessÃƒÂ£o</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Trocar sessão</label>
                 <select id="sessao-select" class="w-full rounded-lg border px-3 py-2 text-sm"></select>
             </div>
 
@@ -51,7 +51,7 @@
                     <div id="meta-visitantes" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">ÃƒÂgape</div>
+                    <div class="text-gray-500">Ágape</div>
                     <div id="meta-agape" class="mt-1 text-lg font-semibold"></div>
                 </div>
             </div>
@@ -63,9 +63,9 @@
             <div class="text-sm font-semibold">Atalhos da Chancelaria</div>
             <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
                 <a class="rounded-xl bg-white/70 px-3 py-3 text-center font-medium text-slate-700" href="/miniapp/aniversario">Aniversarios</a>
-                <a class="rounded-xl bg-white/70 px-3 py-3 text-center font-medium text-slate-700" href="/miniapp/data-maconica">Datas maÃƒÂ§ÃƒÂ´nicas</a>
-                <a class="rounded-xl bg-white/70 px-3 py-3 text-center font-medium text-slate-700" href="/miniapp/historico">HistÃƒÂ³rico</a>
-                <a class="rounded-xl bg-white/70 px-3 py-3 text-center font-medium text-slate-700" href="/miniapp/fallback">ConteÃƒÂºdo complementar</a>
+                <a class="rounded-xl bg-white/70 px-3 py-3 text-center font-medium text-slate-700" href="/miniapp/data-maconica">Datas maçônicas</a>
+                <a class="rounded-xl bg-white/70 px-3 py-3 text-center font-medium text-slate-700" href="/miniapp/historico">Histórico</a>
+                <a class="rounded-xl bg-white/70 px-3 py-3 text-center font-medium text-slate-700" href="/miniapp/fallback">Conteúdo complementar</a>
             </div>
         </div>
 
@@ -118,7 +118,7 @@ async function api(url, options = {}) {
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
     if (!json.ok) {
-        throw new Error(json.erro || 'NÃƒÂ£o conseguimos concluir sua solicitaÃƒÂ§ÃƒÂ£o agora. Tente novamente em alguns minutos.');
+        throw new Error(json.erro || 'Não conseguimos concluir sua solicitação agora. Tente novamente em alguns minutos.');
     }
     return json;
 }
@@ -146,7 +146,7 @@ function renderFrequencias() {
     root.innerHTML = '';
     const presencas = dashboard?.presencas || [];
     if (presencas.length === 0) {
-        root.innerHTML = '<div class="rounded-xl border border-dashed border-gray-300 px-3 py-3 text-gray-500">Nenhuma nominata prevista para esta sessÃƒÂ£o.</div>';
+        root.innerHTML = '<div class="rounded-xl border border-dashed border-gray-300 px-3 py-3 text-gray-500">Nenhuma nominata prevista para esta sessão.</div>';
         return;
     }
 
@@ -157,7 +157,7 @@ function renderFrequencias() {
         button.innerHTML = `<div class="flex items-start justify-between gap-3">
             <div>
                 <div class="font-medium">${esc(item.nome)}</div>
-                <div class="text-xs text-gray-500 mt-1">CIM ${esc(item.cim || '-')} Ã‚Â· Grau ${esc(item.grau || '-')}</div>
+                <div class="text-xs text-gray-500 mt-1">CIM ${esc(item.cim || '-')} · Grau ${esc(item.grau || '-')}</div>
             </div>
             <div class="rounded-full px-2 py-1 text-xs font-medium ${item.presente ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'}">${item.presente ? 'Assinou' : 'Falta assinar o livro'}</div>
         </div>`;
@@ -186,8 +186,8 @@ function render() {
     document.getElementById('conteudo').classList.remove('hidden');
 
     const sessao = dashboard.sessao_foco;
-    document.getElementById('sessao-titulo').textContent = sessao ? (sessao.titulo || 'SessÃƒÂ£o') : 'Sem sessÃƒÂ£o em foco';
-    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} Ã‚Â· ${sessao.status || ''}` : 'Sem dados';
+    document.getElementById('sessao-titulo').textContent = sessao ? (sessao.titulo || 'Sessão') : 'Sem sessão em foco';
+    document.getElementById('sessao-meta').textContent = sessao ? `${sessao.data_hora_inicio || ''} · ${sessao.status || ''}` : 'Sem dados';
     document.getElementById('meta-confirmados').textContent = dashboard.confirmados?.length || 0;
     document.getElementById('meta-presentes').textContent = (dashboard.presencas || []).filter(item => item.presente).length;
     document.getElementById('meta-visitantes').textContent = dashboard.visitantes?.length || 0;
@@ -198,7 +198,7 @@ function render() {
     (dashboard.sessoes || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.titulo || 'SessÃƒÂ£o'} Ã‚Â· ${item.status || ''}`;
+        option.textContent = `${item.titulo || 'Sessão'} · ${item.status || ''}`;
         if (sessao && item.id === sessao.id) option.selected = true;
         select.appendChild(option);
     });
@@ -207,19 +207,19 @@ function render() {
     if (sessao) {
         const params = new URLSearchParams({
             data_sessao: (sessao.data_hora_inicio || '').slice(0, 10),
-            tipo_sessao: sessao.tipo_sessao || 'OrdinÃƒÂ¡ria',
-            grau_sessao: sessao.grau_sessao || 'Mestre MaÃƒÂ§om',
+            tipo_sessao: sessao.tipo_sessao || 'Ordinária',
+            grau_sessao: sessao.grau_sessao || 'Mestre Maçom',
             init_data: tg.initData
         });
         certificado.href = '/chancelaria/certificado?' + params.toString();
     }
 
     renderFrequencias();
-    renderLista('lista-confirmados', dashboard.confirmados, 'Sem confirmados nesta sessÃƒÂ£o.', item => ({
+    renderLista('lista-confirmados', dashboard.confirmados, 'Sem confirmados nesta sessão.', item => ({
         nome: item.nome,
-        linha: item.participara_agape ? 'Confirmado com ÃƒÂ¡gape' : 'Confirmado sem ÃƒÂ¡gape'
+        linha: item.participara_agape ? 'Confirmado com ágape' : 'Confirmado sem ágape'
     }));
-    renderLista('lista-visitantes', dashboard.visitantes, 'Sem visitantes resumidos nesta sessÃƒÂ£o.', item => ({
+    renderLista('lista-visitantes', dashboard.visitantes, 'Sem visitantes resumidos nesta sessão.', item => ({
         nome: item.nome,
         linha: item.linha_resumida
     }));

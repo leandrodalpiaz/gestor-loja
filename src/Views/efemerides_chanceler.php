@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÃ“GICA DE NEGÃ“CIO E HELPERS
+// LÓGICA DE NEGÓCIO E HELPERS
 // #############################################################################
 
 $focoTela = trim((string) ($focoEfemeride ?? ''));
@@ -26,12 +26,12 @@ $previewRaw = (string) ($mensagemPreview ?? '');
 $previewRender = nl2br(strip_tags($previewRaw, '<b><i><u><strong><em>'), false);
 
 // #############################################################################
-// CONFIGURAÃ‡ÃƒO DO APP SHELL
+// CONFIGURAÇÃO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Chancelaria';
-$appShellTitle = 'EfemÃ©rides e Mensagem do Dia';
-$appShellDescription = 'OperaÃ§Ã£o de mensagem diÃ¡ria, cadastro de eventos e manutenÃ§Ã£o de registros da Loja.';
+$appShellTitle = 'Efemérides e Mensagem do Dia';
+$appShellDescription = 'Operação de mensagem diária, cadastro de eventos e manutenção de registros da Loja.';
 $appShellActiveHref = '/chancelaria/efemerides';
 $appShellActions = [
     ['label' => 'Voltar ao Painel', 'href' => '/dashboard'],
@@ -39,6 +39,7 @@ $appShellActions = [
 ];
 
 require __DIR__ . '/partials/erp_shell_open.php';
+
 ?>
 
 <?php if (!empty($sucessoMensagem)): ?>
@@ -55,37 +56,37 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <div class="card" id="secao-mensagem">
             <div class="card-header">
                 <h2 class="card-title">Revisar Mensagem do Dia</h2>
-                <p class="card-subtitle">Esta ediÃ§Ã£o altera somente a mensagem de hoje. Os registros oficiais nÃ£o sÃ£o modificados aqui.</p>
+                <p class="card-subtitle">Esta edição altera somente a mensagem de hoje. Os registros oficiais não são modificados aqui.</p>
             </div>
             <div class="card-body">
                 <div class="telegram-format mb-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
                     <?= $previewRender ?>
                 </div>
                 <form method="POST" action="/chancelaria/efemerides/salvar-previa">
-                    <textarea name="mensagem_preview" class="form-input h-60" placeholder="A mensagem gerada aparecerÃ¡ aqui para revisÃ£o..."><?= htmlspecialchars($previewRaw) ?></textarea>
-                    <p class="form-hint">MantÃ©m tags HTML do Telegram (ex: &lt;b&gt; e &lt;i&gt;).</p>
+                    <textarea name="mensagem_preview" class="form-input h-60" placeholder="A mensagem gerada aparecerá aqui para revisão..."><?= htmlspecialchars($previewRaw) ?></textarea>
+                    <p class="form-hint">Mantém tags HTML do Telegram (ex: &lt;b&gt; e &lt;i&gt;).</p>
                     <div class="mt-4 flex flex-wrap gap-3">
                         <button type="submit" class="btn btn-primary">Salvar Mensagem</button>
                         <button type="button" onclick="copiarPreview('<?= htmlspecialchars($previewRaw, ENT_QUOTES) ?>')" class="btn btn-secondary">Copiar Texto</button>
                     </div>
                 </form>
                 <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-3">
-                    <form method="POST" action="/chancelaria/efemerides/enviar-previa" onsubmit="return confirm('Enviar a prÃ©via para o Telegram privado do chanceler?');">
-                        <button type="submit" class="btn btn-secondary bg-indigo-600 text-white hover:bg-indigo-700">Enviar PrÃ©via no Privado</button>
+                    <form method="POST" action="/chancelaria/efemerides/enviar-previa" onsubmit="return confirm('Enviar a prévia para o Telegram privado do chanceler?');">
+                        <button type="submit" class="btn btn-secondary bg-indigo-600 text-white hover:bg-indigo-700">Enviar Prévia no Privado</button>
                     </form>
                     <form method="POST" action="/chancelaria/efemerides/enviar-grupo" onsubmit="return confirm('Confirmar envio da mensagem no grupo oficial?');">
                         <button type="submit" class="btn btn-primary bg-green-600 hover:bg-green-700">Enviar no Grupo Oficial</button>
                     </form>
                 </div>
-                <p class="form-hint mt-2">SugestÃ£o: revise, envie no privado para conferÃªncia e, sÃ³ entÃ£o, publique no grupo.</p>
+                <p class="form-hint mt-2">Sugestão: revise, envie no privado para conferência e, só então, publique no grupo.</p>
             </div>
         </div>
 
         <!-- Lista de Registros -->
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">Registros de EfemÃ©rides (<?= count($registrosRecentes) ?>)</h2>
-                <p class="card-subtitle">Consulte e gerencie os registros que alimentam as mensagens automÃ¡ticas.</p>
+                <h2 class="card-title">Registros de Efemérides (<?= count($registrosRecentes) ?>)</h2>
+                <p class="card-subtitle">Consulte e gerencie os registros que alimentam as mensagens automáticas.</p>
             </div>
             <div class="card-body">
                 <!-- Filtros -->
@@ -93,10 +94,10 @@ require __DIR__ . '/partials/erp_shell_open.php';
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
                             <label for="filtro-termo" class="form-label">Pesquisar</label>
-                            <input id="filtro-termo" type="text" name="termo" value="<?= htmlspecialchars($filtroTermo) ?>" class="form-input" placeholder="Nome, vÃ­nculo...">
+                            <input id="filtro-termo" type="text" name="termo" value="<?= htmlspecialchars($filtroTermo) ?>" class="form-input" placeholder="Nome, vínculo...">
                         </div>
                         <div>
-                            <label for="filtro-irmao" class="form-label">IrmÃ£o</label>
+                            <label for="filtro-irmao" class="form-label">Irmão</label>
                             <select id="filtro-irmao" name="irmao_ref" class="form-select">
                                 <option value="">Todos</option>
                                 <?php foreach ($obreirosFiltro as $obreiro): ?>
@@ -128,9 +129,9 @@ require __DIR__ . '/partials/erp_shell_open.php';
                                 <th>Data</th>
                                 <th>Nome</th>
                                 <th>Tipo</th>
-                                <th>VÃ­nculo</th>
+                                <th>Vínculo</th>
                                 <th>Status</th>
-                                <th>AÃ§Ãµes</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -200,30 +201,30 @@ require __DIR__ . '/partials/erp_shell_open.php';
                     </div>
                 </div>
                 <div>
-                    <label for="form-vinculo" class="form-label">VÃ­nculo</label>
+                    <label for="form-vinculo" class="form-label">Vínculo</label>
                     <select id="form-vinculo" name="vinculo" class="form-select">
-                        <option value="">Sem vÃ­nculo</option>
+                        <option value="">Sem vínculo</option>
                         <?php foreach ($vinculosPadrao as $vinculo): ?>
                             <option value="<?= htmlspecialchars($vinculo['nome']) ?>" <?= ($registroEdicao['vinculo'] ?? '') === $vinculo['nome'] ? 'selected' : '' ?>><?= htmlspecialchars($vinculo['nome']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div>
-                    <label for="form-parentesco" class="form-label">IrmÃ£o Relacionado (Parentesco)</label>
+                    <label for="form-parentesco" class="form-label">Irmão Relacionado (Parentesco)</label>
                     <input id="form-parentesco" type="text" name="parentesco" value="<?= htmlspecialchars($registroEdicao['parentesco'] ?? '') ?>" class="form-input" placeholder="Ex: Leandro Dalpiaz">
                 </div>
                 <div>
                     <label for="form-local" class="form-label">Local</label>
-                    <input id="form-local" type="text" name="local" value="<?= htmlspecialchars($registroEdicao['local'] ?? '') ?>" class="form-input" placeholder="Ex: Loja RenascenÃ§a nÂº 270">
+                    <input id="form-local" type="text" name="local" value="<?= htmlspecialchars($registroEdicao['local'] ?? '') ?>" class="form-input" placeholder="Ex: Loja Renascença nº 270">
                 </div>
                 <div>
                     <label for="form-mensagem" class="form-label">Mensagem Complementar</label>
-                    <textarea id="form-mensagem" name="mensagem_custom" rows="3" class="form-input" placeholder="Para 'HistÃ³ria', informe o texto completo aqui."><?= htmlspecialchars($registroEdicao['mensagem_custom'] ?? '') ?></textarea>
+                    <textarea id="form-mensagem" name="mensagem_custom" rows="3" class="form-input" placeholder="Para 'História', informe o texto completo aqui."><?= htmlspecialchars($registroEdicao['mensagem_custom'] ?? '') ?></textarea>
                 </div>
                 <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <button type="submit" class="btn btn-primary"><?= $registroEdicao ? 'Salvar AlteraÃ§Ãµes' : 'Adicionar Registro' ?></button>
+                    <button type="submit" class="btn btn-primary"><?= $registroEdicao ? 'Salvar Alterações' : 'Adicionar Registro' ?></button>
                     <?php if ($registroEdicao): ?>
-                        <a href="/chancelaria/efemerides" class="btn btn-secondary">Cancelar EdiÃ§Ã£o</a>
+                        <a href="/chancelaria/efemerides" class="btn btn-secondary">Cancelar Edição</a>
                     <?php endif; ?>
                 </div>
             </form>
@@ -234,7 +235,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
 <script>
     function copiarPreview(text) {
         navigator.clipboard.writeText(text).then(() => {
-            alert('Texto copiado para a Ã¡rea de transferÃªncia.');
+            alert('Texto copiado para a área de transferência.');
         }).catch(err => {
             console.error('Erro ao copiar texto: ', err);
         });

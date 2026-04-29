@@ -2,15 +2,16 @@
 declare(strict_types=1);
 
 // #############################################################################
-// CONFIGURAÃ‡ÃƒO DO APP SHELL
+// CONFIGURAÇÃO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Biblioteca';
-$appShellTitle = 'Editar TÃ­tulo';
-$appShellDescription = 'Atualize as informaÃ§Ãµes de um item existente no acervo da Loja.';
+$appShellTitle = 'Editar Título';
+$appShellDescription = 'Atualize as informações de um item existente no acervo da Loja.';
 $appShellActiveHref = '/biblioteca';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
+
 ?>
 
 <div class="card">
@@ -21,7 +22,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <!-- Coluna 1 -->
             <div class="space-y-6">
                 <div>
-                    <label for="titulo" class="form-label">TÃ­tulo *</label>
+                    <label for="titulo" class="form-label">Título *</label>
                     <input type="text" id="titulo" name="titulo" required value="<?= htmlspecialchars((string) ($item['titulo'] ?? '')) ?>" class="form-input">
                 </div>
                 <div>
@@ -44,13 +45,13 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <label for="tipo" class="form-label">Tipo de Item *</label>
                     <select id="tipo" name="tipo" required class="form-select">
                         <?php $tipo = (string) ($item['tipo'] ?? 'Livro Fisico'); ?>
-                        <option value="Livro Fisico" <?= $tipo === 'Livro Fisico' ? 'selected' : '' ?>>Livro FÃ­sico</option>
+                        <option value="Livro Fisico" <?= $tipo === 'Livro Fisico' ? 'selected' : '' ?>>Livro Físico</option>
                         <option value="Digital (PDF)" <?= $tipo === 'Digital (PDF)' ? 'selected' : '' ?>>Digital (PDF)</option>
                         <option value="Ritual" <?= $tipo === 'Ritual' ? 'selected' : '' ?>>Ritual</option>
                     </select>
                 </div>
                 <div>
-                    <label for="quantidade_disponivel" class="form-label">Quantidade DisponÃ­vel *</label>
+                    <label for="quantidade_disponivel" class="form-label">Quantidade Disponível *</label>
                     <input type="number" id="quantidade_disponivel" name="quantidade_disponivel" min="0" value="<?= (int) ($item['quantidade_disponivel'] ?? 0) ?>" required class="form-input">
                 </div>
                 <div>
@@ -64,7 +65,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </select>
                 </div>
                 <div>
-                    <label for="nota_instrucao" class="form-label">Nota de InstruÃ§Ã£o</label>
+                    <label for="nota_instrucao" class="form-label">Nota de Instrução</label>
                     <input type="text" id="nota_instrucao" name="nota_instrucao" value="<?= htmlspecialchars((string) ($item['nota_instrucao'] ?? '')) ?>" class="form-input">
                 </div>
             </div>
@@ -76,10 +77,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <textarea id="resumo" name="resumo" rows="4" class="form-textarea"><?= htmlspecialchars((string) ($item['resumo'] ?? '')) ?></textarea>
         </div>
 
-        <!-- AÃ§Ãµes do FormulÃ¡rio -->
+        <!-- Ações do Formulário -->
         <div class="pt-4 flex justify-end gap-3">
             <a href="/biblioteca" class="btn btn-secondary">Cancelar</a>
-            <button type="submit" class="btn btn-primary">Salvar AlteraÃ§Ãµes</button>
+            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
         </div>
     </form>
 </div>

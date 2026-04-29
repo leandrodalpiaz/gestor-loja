@@ -1,72 +1,104 @@
 <?php
+declare(strict_types=1);
+
 /**
- * Fix mojibake in PHP view/bot files.
+ * Repairs common UTF-8 mojibake in project text files.
  *
- * Cause: UTF-8 bytes were treated as individual Latin-1 chars and re-encoded as UTF-8,
- * turning 2-byte UTF-8 sequences (e.g., ã = C3 A3) into 4-byte sequences (Ã£ = C3 83 C2 A3).
+ * Usage:
+ *   php scripts/fix_mojibake.php          # dry run
+ *   php scripts/fix_mojibake.php --write  # update files
  */
 
 $projectRoot = dirname(__DIR__);
+$write = in_array('--write', $argv, true);
+$extensions = ['php', 'css', 'js', 'json', 'md'];
+$ignoredDirs = ['.git', 'vendor', 'node_modules'];
 
-$files = [
-    $projectRoot . '/src/Bot/CommandHandler.php',
-    $projectRoot . '/src/Views/hospitaleiro/index.php',
-    $projectRoot . '/src/Views/tesouraria_sessao/index.php',
-    $projectRoot . '/src/Views/efemerides_chanceler.php',
-    $projectRoot . '/src/Views/miniapp/data-maconica.php',
-    $projectRoot . '/src/Views/tesouraria_relatorio_gestao.php',
-    $projectRoot . '/src/Views/tesouraria_recibo.php',
-    $projectRoot . '/src/Views/miniapp/admin.php',
-    $projectRoot . '/src/Views/biblioteca/adicionar.php',
-];
-
-// Build replacement pairs for 2-byte UTF-8 mojibake (Latin-1 supplement U+0080-U+00FF).
-// Each byte N was treated as Unicode code point N (= Latin-1 value) and encoded as UTF-8.
-// So the mojibake of char U+00XY (UTF-8 bytes [B1, B2]) is:
-//   mb_chr(B1) . mb_chr(B2)  (each byte interpreted as a Unicode code point)
 $from = [];
-$to   = [];
+$to = [];
+
+if (!function_exists('mb_chr')) {
+    fwrite(STDERR, "mbstring is required.\n");
+    exit(1);
+}
 
 for ($byte = 0x80; $byte <= 0xFF; $byte++) {
-    $correct    = mb_chr($byte, 'UTF-8');         // e.g., 'ã' for 0xE3
-    $utf8Bytes  = array_values(unpack('C*', $correct)); // raw UTF-8 bytes
-    $moji       = '';
-    foreach ($utf8Bytes as $b) {
-        $moji .= mb_chr($b, 'UTF-8');             // byte value → Unicode code point → UTF-8 char
+    $correct = mb_chr($byte, 'UTF-8');
+    $utf8Bytes = array_values(unpack('C*', $correct));
+    $mojibake = '';
+
+    foreach ($utf8Bytes as $value) {
+        $mojibake .= mb_chr($value, 'UTF-8');
     }
-    if ($moji !== $correct) {
-        $from[] = $moji;
-        $to[]   = $correct;
+
+    if ($mojibake !== $correct) {
+        $from[] = $mojibake;
+        $to[] = $correct;
     }
 }
 
-// Handle 3-byte char mojibake (Windows-1252 0x80 = € U+20AC used for UTF-8 0x80 byte).
-// • U+2022 (E2 80 A2) → â (U+00E2) + € (U+20AC) + ¢ (U+00A2) = "â€¢"
-$from[] = "\xC3\xA2\xE2\x82\xAC\xC2\xA2"; $to[] = "\xE2\x80\xA2"; // â€¢ → •
-$from[] = "\xC3\xA2\xE2\x82\xAC\xC2\x9C"; $to[] = "\xE2\x80\x9C"; // â€œ → "
-$from[] = "\xC3\xA2\xE2\x82\xAC\xC2\x9D"; $to[] = "\xE2\x80\x9D"; // â€  → "
-$from[] = "\xC3\xA2\xE2\x82\xAC\xC2\x99"; $to[] = "\xE2\x80\x99"; // â€™ → '
-$from[] = "\xC3\xA2\xE2\x82\xAC\xC2\x93"; $to[] = "\xE2\x80\x93"; // â€" → –
-$from[] = "\xC3\xA2\xE2\x82\xAC\xC2\x94"; $to[] = "\xE2\x80\x94"; // â€" → —
+$specialPairs = [
+    "\xC3\xA2\xE2\x82\xAC\xC2\xA2" => "\xE2\x80\xA2",
+    "\xC3\xA2\xE2\x82\xAC\xC2\x9C" => "\xE2\x80\x9C",
+    "\xC3\xA2\xE2\x82\xAC\xC2\x9D" => "\xE2\x80\x9D",
+    "\xC3\xA2\xE2\x82\xAC\xC2\x99" => "\xE2\x80\x99",
+    "\xC3\xA2\xE2\x82\xAC\xC2\x93" => "\xE2\x80\x93",
+    "\xC3\xA2\xE2\x82\xAC\xC2\x94" => "\xE2\x80\x94",
+    "\xC3\xA2\xE2\x82\xAC\xC2\xA6" => "\xE2\x80\xA6",
+];
 
-$totalFixed = 0;
+foreach ($specialPairs as $bad => $good) {
+    $from[] = $bad;
+    $to[] = $good;
+}
 
-foreach ($files as $file) {
-    if (!file_exists($file)) {
-        echo "NOT FOUND: $file\n";
+$iterator = new RecursiveIteratorIterator(
+    new RecursiveCallbackFilterIterator(
+        new RecursiveDirectoryIterator($projectRoot, FilesystemIterator::SKIP_DOTS),
+        static function (SplFileInfo $current) use ($ignoredDirs): bool {
+            return !$current->isDir() || !in_array($current->getFilename(), $ignoredDirs, true);
+        }
+    )
+);
+
+$changed = [];
+
+foreach ($iterator as $file) {
+    if (!$file instanceof SplFileInfo || !$file->isFile()) {
         continue;
     }
 
-    $original = file_get_contents($file);
-    $fixed    = str_replace($from, $to, $original);
+    $extension = strtolower($file->getExtension());
+    if (!in_array($extension, $extensions, true)) {
+        continue;
+    }
+
+    $path = $file->getPathname();
+    $original = file_get_contents($path);
+    if ($original === false) {
+        continue;
+    }
+
+    $fixed = $original;
+    for ($pass = 0; $pass < 4; $pass++) {
+        $next = str_replace($from, $to, $fixed);
+        if ($next === $fixed) {
+            break;
+        }
+        $fixed = $next;
+    }
 
     if ($fixed !== $original) {
-        file_put_contents($file, $fixed);
-        echo "FIXED  : " . str_replace($projectRoot . '/', '', $file) . "\n";
-        $totalFixed++;
-    } else {
-        echo "ok     : " . str_replace($projectRoot . '/', '', $file) . "\n";
+        $relative = str_replace($projectRoot . DIRECTORY_SEPARATOR, '', $path);
+        $changed[] = $relative;
+        if ($write) {
+            file_put_contents($path, $fixed);
+        }
     }
 }
 
-echo "\n$totalFixed file(s) updated.\n";
+foreach ($changed as $file) {
+    echo ($write ? 'FIXED  ' : 'WOULD  ') . $file . PHP_EOL;
+}
+
+echo PHP_EOL . count($changed) . ' file(s) ' . ($write ? 'updated' : 'would be updated') . '.' . PHP_EOL;

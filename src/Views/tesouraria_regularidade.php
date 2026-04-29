@@ -2,26 +2,27 @@
 declare(strict_types=1);
 
 // #############################################################################
-// CONFIGURAÃ‡ÃƒO DO APP SHELL
+// CONFIGURAÇÃO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Tesouraria';
 $appShellTitle = 'Regularidade de Obreiros';
-$appShellDescription = 'Leitura clara do perÃ­odo e ediÃ§Ã£o rÃ¡pida da situaÃ§Ã£o financeira de cada obreiro.';
+$appShellDescription = 'Leitura clara do período e edição rápida da situação financeira de cada obreiro.';
 $appShellActiveHref = '/tesouraria/regularidade';
 
 require __DIR__ . '/partials/erp_shell_open.php';
+
 ?>
 
-<!-- Filtros e AÃ§Ãµes em Massa -->
+<!-- Filtros e Ações em Massa -->
 <div class="card mb-6">
     <div class="card-body">
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:items-end">
             <div>
-                <label for="filter-mes" class="form-label">MÃªs</label>
+                <label for="filter-mes" class="form-label">Mês</label>
                 <select id="filter-mes" class="form-select">
                     <?php
-                    $mesesPT = ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+                    $mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                     $mesAtual = (int) date('n');
                     for ($m = 1; $m <= 12; $m++) {
                         $selected = ($m === $mesAtual) ? 'selected' : '';
@@ -50,28 +51,28 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 </div>
 
-<!-- MÃ©tricas de Resumo -->
+<!-- Métricas de Resumo -->
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
     <div class="card-metric"><p class="card-metric-label">Regulares</p><p id="count-regular" class="card-metric-value text-green-600 dark:text-green-400">0</p></div>
     <div class="card-metric"><p class="card-metric-label">Irregulares</p><p id="count-irregular" class="card-metric-value text-red-600 dark:text-red-400">0</p></div>
 </div>
 
-<!-- ConteÃºdo Principal: Tabela e Cards -->
+<!-- Conteúdo Principal: Tabela e Cards -->
 <div class="card">
     <div class="card-body p-0">
-        <!-- VisÃ£o em Cards para Mobile -->
+        <!-- Visão em Cards para Mobile -->
         <div id="regularidade-cards" class="space-y-4 p-4 md:hidden">
             <div class="text-center text-gray-500 py-4">Carregando...</div>
         </div>
-        <!-- VisÃ£o em Tabela para Desktop -->
+        <!-- Visão em Tabela para Desktop -->
         <div class="hidden md:block overflow-x-auto">
             <table class="table-default">
                 <thead>
                     <tr>
                         <th class="text-left">Obreiro</th>
                         <th class="text-left">Status</th>
-                        <th class="text-left">ObservaÃ§Ã£o</th>
-                        <th class="text-center">AÃ§Ã£o</th>
+                        <th class="text-left">Observação</th>
+                        <th class="text-center">Ação</th>
                     </tr>
                 </thead>
                 <tbody id="regularidade-table-body">
@@ -84,7 +85,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 </div>
 
-<!-- Modal para EdiÃ§Ã£o -->
+<!-- Modal para Edição -->
 <div id="modal-regularidade" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4" x-cloak>
     <div class="modal-content max-w-md" @click.away="fecharModalRegularidade()">
         <div class="modal-header">
@@ -101,7 +102,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 </div>
             </div>
             <div>
-                <label for="observacao" class="form-label">ObservaÃ§Ã£o</label>
+                <label for="observacao" class="form-label">Observação</label>
                 <textarea id="observacao" rows="3" class="form-textarea"></textarea>
             </div>
             <div class="modal-footer">

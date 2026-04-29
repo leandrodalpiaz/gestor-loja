@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../partials/erp_shell_open.php';
+
 
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
@@ -14,12 +14,12 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
 
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <!-- CabeÃ§alho do Companheiro -->
+    <!-- Cabeçalho do Companheiro -->
     <div class="bg-gradient-to-r from-gray-800 to-blue-900 text-white rounded-lg shadow-lg p-6 mb-8">
         <p class="text-sm font-semibold uppercase tracking-wider text-blue-300"><?= $somenteProprio ? 'Autoacompanhamento' : 'Acompanhamento Formativo' ?></p>
         <h1 class="text-4xl font-bold mt-2"><?= htmlspecialchars($nomeCompanheiro) ?></h1>
         <p class="mt-2 text-blue-200 max-w-3xl">
-            <?= $somenteProprio ? 'Acompanhe sua trilha, leitura, certificado e recomendaÃ§Ã£o de exaltaÃ§Ã£o.' : 'Linha do tempo individual do Companheiro com trilha, leitura, docÃªncia e recomendaÃ§Ã£o de exaltaÃ§Ã£o.' ?>
+            <?= $somenteProprio ? 'Acompanhe sua trilha, leitura, certificado e recomendação de exaltação.' : 'Linha do tempo individual do Companheiro com trilha, leitura, docência e recomendação de exaltação.' ?>
         </p>
         <div class="mt-5 flex flex-wrap gap-3">
             <a href="<?= $somenteProprio ? '/dashboard' : '/segundo-vigilante' ?>" class="btn btn-secondary">Voltar</a>
@@ -35,19 +35,19 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
     <?php if ($mensagemErro): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
     <?php if (!empty($avisoInfra)): ?><div class="alert alert-warning mb-6"><?= htmlspecialchars((string) $avisoInfra) ?></div><?php endif; ?>
 
-    <!-- MÃ©tricas RÃ¡pidas -->
+    <!-- Métricas Rápidas -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="card-metric"><p class="card-metric-label">Etapa Atual</p><p class="card-metric-value"><?= $etapaAtualOrdem ?></p><p class="text-sm text-gray-500 dark:text-gray-400 mt-1"><?= htmlspecialchars($etapaAtualTitulo) ?></p></div>
         <div class="card-metric"><p class="card-metric-label">Status Atual</p><p class="card-metric-value text-2xl"><?= htmlspecialchars($etapaAtualStatus) ?></p></div>
-        <div class="card-metric"><p class="card-metric-label">Etapas ConcluÃ­das</p><p class="card-metric-value"><?= (int) ($resumoTrilha['total_concluidas'] ?? 0) ?> / <?= (int) ($resumoTrilha['total_etapas'] ?? 0) ?></p></div>
-        <div class="card-metric"><p class="card-metric-label">ConclusÃ£o da Trilha</p><p class="card-metric-value"><?= $percentual ?>%</p></div>
+        <div class="card-metric"><p class="card-metric-label">Etapas Concluídas</p><p class="card-metric-value"><?= (int) ($resumoTrilha['total_concluidas'] ?? 0) ?> / <?= (int) ($resumoTrilha['total_etapas'] ?? 0) ?></p></div>
+        <div class="card-metric"><p class="card-metric-label">Conclusão da Trilha</p><p class="card-metric-value"><?= $percentual ?>%</p></div>
     </div>
 
-    <!-- FormulÃ¡rios de GestÃ£o (Apenas para 2Âº Vigilante) -->
+    <!-- Formulários de Gestão (Apenas para 2º Vigilante) -->
     <?php if (!$somenteProprio): ?>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <div class="card">
-                <div class="card-header"><h2 class="card-title">Atualizar Etapa da Trilha</h2><p class="card-description">Registre andamento, recebimento, revisÃ£o e devolutiva.</p></div>
+                <div class="card-header"><h2 class="card-title">Atualizar Etapa da Trilha</h2><p class="card-description">Registre andamento, recebimento, revisão e devolutiva.</p></div>
                 <div class="card-body">
                     <form action="/segundo-vigilante/trilha/atualizar" method="POST" class="space-y-4">
                         <input type="hidden" name="companheiro_id" value="<?= htmlspecialchars((string) ($companheiro['id'] ?? '')) ?>">
@@ -72,8 +72,8 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
                             </div>
                         </div>
                         <div>
-                            <label for="observacao_vigilante" class="form-label">ObservaÃ§Ã£o do 2Âº Vigilante</label>
-                            <textarea name="observacao_vigilante" id="observacao_vigilante" rows="3" class="form-textarea" placeholder="Registre orientaÃ§Ãµes, devolutivas e temas sugeridos."><?= htmlspecialchars((string) ($etapaAtual['observacao_vigilante'] ?? '')) ?></textarea>
+                            <label for="observacao_vigilante" class="form-label">Observação do 2º Vigilante</label>
+                            <textarea name="observacao_vigilante" id="observacao_vigilante" rows="3" class="form-textarea" placeholder="Registre orientações, devolutivas e temas sugeridos."><?= htmlspecialchars((string) ($etapaAtual['observacao_vigilante'] ?? '')) ?></textarea>
                         </div>
                         <div class="text-right"><button type="submit" class="btn btn-primary">Salvar Andamento</button></div>
                     </form>
@@ -87,7 +87,7 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
                         <div>
                             <label for="acervo_id" class="form-label">Item do Acervo</label>
                             <select name="acervo_id" id="acervo_id" class="form-select">
-                                <option value="">Sem vincular livro especÃ­fico</option>
+                                <option value="">Sem vincular livro específico</option>
                                 <?php foreach ($leiturasDisponiveis as $livro): ?>
                                     <option value="<?= (int) ($livro['id'] ?? 0) ?>" <?= ((int) ($acompanhamento['leitura_acervo_id'] ?? 0) === (int) ($livro['id'] ?? 0)) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars((string) ($livro['titulo'] ?? 'Livro') . ' - ' . (string) ($livro['autor'] ?? '')) ?>
@@ -96,8 +96,8 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
                             </select>
                         </div>
                         <div>
-                            <label for="observacao_leitura" class="form-label">OrientaÃ§Ã£o de Leitura</label>
-                            <textarea name="observacao_leitura" id="observacao_leitura" rows="3" class="form-textarea" placeholder="Explique o foco do estudo ou capÃ­tulo recomendado."><?= htmlspecialchars((string) ($acompanhamento['leitura_observacao'] ?? '')) ?></textarea>
+                            <label for="observacao_leitura" class="form-label">Orientação de Leitura</label>
+                            <textarea name="observacao_leitura" id="observacao_leitura" rows="3" class="form-textarea" placeholder="Explique o foco do estudo ou capítulo recomendado."><?= htmlspecialchars((string) ($acompanhamento['leitura_observacao'] ?? '')) ?></textarea>
                         </div>
                         <div class="text-right"><button type="submit" class="btn btn-primary">Salvar Leitura</button></div>
                     </form>
@@ -106,7 +106,7 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
         </div>
     <?php endif; ?>
 
-    <!-- Linha do Tempo e HistÃ³rico -->
+    <!-- Linha do Tempo e Histórico -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-2">
             <div class="card">
@@ -143,9 +143,9 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
                                     <?php endif; ?>
                                 </div>
                                 <div class="text-xs text-gray-500 dark:text-gray-400 md:text-right space-y-1 flex-shrink-0">
-                                    <p>DisponibilizaÃ§Ã£o: <?= !empty($etapa['data_disponibilizacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_disponibilizacao']))) : '-' ?></p>
+                                    <p>Disponibilização: <?= !empty($etapa['data_disponibilizacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_disponibilizacao']))) : '-' ?></p>
                                     <p>Entrega: <?= !empty($etapa['data_entrega']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_entrega']))) : '-' ?></p>
-                                    <p>RevisÃ£o: <?= !empty($etapa['data_revisao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_revisao']))) : '-' ?></p>
+                                    <p>Revisão: <?= !empty($etapa['data_revisao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_revisao']))) : '-' ?></p>
                                 </div>
                             </div>
                              <?php if (!$somenteProprio && !empty($acoesRapidasPorEtapa[$ordem])): ?>
@@ -155,7 +155,7 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
                                             <input type="hidden" name="companheiro_id" value="<?= htmlspecialchars((string) ($companheiro['id'] ?? '')) ?>">
                                             <input type="hidden" name="etapa_ordem" value="<?= $ordem ?>">
                                             <input type="hidden" name="status" value="<?= htmlspecialchars((string) ($acao['status'] ?? '')) ?>">
-                                            <button type="submit" class="btn btn-sm btn-dark"><?= htmlspecialchars((string) ($acao['label'] ?? 'AvanÃ§ar')) ?></button>
+                                            <button type="submit" class="btn btn-sm btn-dark"><?= htmlspecialchars((string) ($acao['label'] ?? 'Avançar')) ?></button>
                                         </form>
                                     <?php endforeach; ?>
                                 </div>
@@ -168,7 +168,7 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
 
         <div class="space-y-8">
             <div class="card">
-                <div class="card-header"><h2 class="card-title">Certificado de DocÃªncia</h2><p class="card-description">ConclusÃ£o da docÃªncia do Companheiro.</p></div>
+                <div class="card-header"><h2 class="card-title">Certificado de Docência</h2><p class="card-description">Conclusão da docência do Companheiro.</p></div>
                 <div class="card-body">
                     <div class="bg-gray-100 dark:bg-gray-700/50 p-4 rounded-lg mb-4">
                         <p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Status</p>
@@ -181,8 +181,8 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
                         <form action="/segundo-vigilante/certificado/solicitar" method="POST" class="space-y-4">
                             <input type="hidden" name="companheiro_id" value="<?= htmlspecialchars((string) ($companheiro['id'] ?? '')) ?>">
                             <div>
-                                <label for="observacao_certificado" class="form-label">ObservaÃ§Ã£o da SolicitaÃ§Ã£o</label>
-                                <textarea name="observacao_certificado" id="observacao_certificado" rows="3" class="form-textarea" placeholder="Registre a avaliaÃ§Ã£o final da docÃªncia."><?= htmlspecialchars((string) ($acompanhamento['certificado_observacao'] ?? '')) ?></textarea>
+                                <label for="observacao_certificado" class="form-label">Observação da Solicitação</label>
+                                <textarea name="observacao_certificado" id="observacao_certificado" rows="3" class="form-textarea" placeholder="Registre a avaliação final da docência."><?= htmlspecialchars((string) ($acompanhamento['certificado_observacao'] ?? '')) ?></textarea>
                             </div>
                             <div class="text-right"><button type="submit" class="btn btn-primary">Solicitar Certificado</button></div>
                         </form>
@@ -190,7 +190,7 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
                 </div>
             </div>
              <div class="card">
-                <div class="card-header"><h2 class="card-title">RecomendaÃ§Ã£o de ExaltaÃ§Ã£o</h2><p class="card-description">Encaminhamento para apreciaÃ§Ã£o da exaltaÃ§Ã£o.</p></div>
+                <div class="card-header"><h2 class="card-title">Recomendação de Exaltação</h2><p class="card-description">Encaminhamento para apreciação da exaltação.</p></div>
                 <div class="card-body">
                     <div class="bg-gray-100 dark:bg-gray-700/50 p-4 rounded-lg mb-4">
                         <p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Status</p>
@@ -203,19 +203,19 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
                         <form action="/segundo-vigilante/exaltacao/recomendar" method="POST" class="space-y-4">
                             <input type="hidden" name="companheiro_id" value="<?= htmlspecialchars((string) ($companheiro['id'] ?? '')) ?>">
                             <div>
-                                <label for="observacao_exaltacao" class="form-label">ObservaÃ§Ã£o da RecomendaÃ§Ã£o</label>
-                                <textarea name="observacao_exaltacao" id="observacao_exaltacao" rows="3" class="form-textarea" placeholder="Registre os fundamentos para a exaltaÃ§Ã£o."><?= htmlspecialchars((string) ($acompanhamento['exaltacao_observacao'] ?? '')) ?></textarea>
+                                <label for="observacao_exaltacao" class="form-label">Observação da Recomendação</label>
+                                <textarea name="observacao_exaltacao" id="observacao_exaltacao" rows="3" class="form-textarea" placeholder="Registre os fundamentos para a exaltação."><?= htmlspecialchars((string) ($acompanhamento['exaltacao_observacao'] ?? '')) ?></textarea>
                             </div>
-                            <div class="text-right"><button type="submit" class="btn btn-dark">Recomendar ExaltaÃ§Ã£o</button></div>
+                            <div class="text-right"><button type="submit" class="btn btn-dark">Recomendar Exaltação</button></div>
                         </form>
                     <?php endif; ?>
                 </div>
             </div>
             <div class="card">
-                <div class="card-header"><h2 class="card-title">HistÃ³rico Formativo</h2><p class="card-description">Marcos da trilha, leitura, certificado e exaltaÃ§Ã£o.</p></div>
+                <div class="card-header"><h2 class="card-title">Histórico Formativo</h2><p class="card-description">Marcos da trilha, leitura, certificado e exaltação.</p></div>
                 <div class="card-body space-y-3">
                     <?php if (empty($historicoFormativo)): ?>
-                        <p class="text-center text-gray-500 dark:text-gray-400 py-4">Ainda nÃ£o hÃ¡ marcos registrados.</p>
+                        <p class="text-center text-gray-500 dark:text-gray-400 py-4">Ainda não há marcos registrados.</p>
                     <?php else: ?>
                         <?php foreach ($historicoFormativo as $evento): ?>
                             <div class="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">

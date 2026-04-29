@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÃ“GICA DE NEGÃ“CIO E CONSULTA DE DADOS
+// LÓGICA DE NEGÓCIO E CONSULTA DE DADOS
 // #############################################################################
 
 $parcelaRecibo = $parcelaRecibo ?? [];
@@ -13,12 +13,12 @@ $formatDate = static fn($dateStr): string => !empty($dateStr) ? (new DateTime($d
 
 $nomeLoja = trim((string) ($configuracaoLoja['nome_loja'] ?? $_SESSION['tenant_name'] ?? 'Loja'));
 $numeroLoja = trim((string) ($configuracaoLoja['numero_loja'] ?? ''));
-$tituloTratamento = trim((string) ($configuracaoLoja['titulo_tratamento'] ?? 'Augâˆ´ Respâˆ´ Lojâˆ´ Simbâˆ´'));
+$tituloTratamento = trim((string) ($configuracaoLoja['titulo_tratamento'] ?? 'Aug∴ Resp∴ Loj∴ Simb∴'));
 $oriente = trim((string) ($configuracaoLoja['oriente'] ?? (($configuracaoLoja['cidade'] ?? 'Cidade') . ' / ' . ($configuracaoLoja['uf'] ?? 'UF'))));
 $dataFundacao = $formatDate($configuracaoLoja['data_fundacao'] ?? '');
 $tesoureiroNome = (string) ($_SESSION['user_name'] ?? 'Tesoureiro');
 
-$nomeIrmao = (string) ($parcelaRecibo['obreiro_nome'] ?? 'IrmÃ£o');
+$nomeIrmao = (string) ($parcelaRecibo['obreiro_nome'] ?? 'Irmão');
 $tituloContribuicao = (string) ($parcelaRecibo['titulo'] ?? 'Recebimento');
 $tipoObrigacao = strtolower((string) ($parcelaRecibo['tipo_obrigacao'] ?? 'outra'));
 $categoriaNome = (string) ($parcelaRecibo['categoria_nome'] ?? '');
@@ -29,31 +29,31 @@ $numeroRecibo = str_pad((string) ($parcelaRecibo['lancamento_id'] ?? $parcelaRec
 
 $discriminacao = ['titulo' => 'Outros recebimentos', 'descricao' => trim($tituloContribuicao . ($categoriaNome !== '' ? ' - ' . $categoriaNome : ''))];
 if ($tipoObrigacao === 'mensalidade') {
-    $discriminacao['titulo'] = 'ContribuiÃ§Ã£o mensal';
-    $discriminacao['descricao'] = $competencia !== '' ? 'Referente Ã  competÃªncia ' . $competencia : $tituloContribuicao;
+    $discriminacao['titulo'] = 'Contribuição mensal';
+    $discriminacao['descricao'] = $competencia !== '' ? 'Referente à competência ' . $competencia : $tituloContribuicao;
 } elseif (stripos($tituloContribuicao, 'Inicia') !== false) {
-    $discriminacao['titulo'] = 'Taxa de IniciaÃ§Ã£o';
+    $discriminacao['titulo'] = 'Taxa de Iniciação';
     $discriminacao['descricao'] = $tituloContribuicao;
 } elseif (stripos($tituloContribuicao, 'Eleva') !== false) {
-    $discriminacao['titulo'] = 'Taxa de ElevaÃ§Ã£o';
+    $discriminacao['titulo'] = 'Taxa de Elevação';
     $discriminacao['descricao'] = $tituloContribuicao;
 } elseif (stripos($tituloContribuicao, 'Exalta') !== false) {
-    $discriminacao['titulo'] = 'Taxa de ExaltaÃ§Ã£o';
+    $discriminacao['titulo'] = 'Taxa de Exaltação';
     $discriminacao['descricao'] = $tituloContribuicao;
 }
 
 // #############################################################################
-// CONFIGURAÃ‡ÃƒO DO APP SHELL E RENDERIZAÃ‡ÃƒO DA VIEW
+// CONFIGURAÇÃO DO APP SHELL E RENDERIZAÇÃO DA VIEW
 // #############################################################################
 
 $appShellEyebrow = 'Tesouraria';
-$appShellTitle = 'Recibo NÂº ' . htmlspecialchars($numeroRecibo);
-$appShellDescription = 'Recibo de pagamento para impressÃ£o ou arquivamento digital.';
+$appShellTitle = 'Recibo Nº ' . htmlspecialchars($numeroRecibo);
+$appShellDescription = 'Recibo de pagamento para impressão ou arquivamento digital.';
 $appShellActiveHref = '/tesouraria/caixa';
 $renderShell = ($_GET['print'] ?? 'false') !== 'true';
 
 if ($renderShell) {
-    require __DIR__ . '/partials/erp_shell_open.php';
+
 } else {
     ?>
     <!DOCTYPE html>
@@ -61,7 +61,7 @@ if ($renderShell) {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Recibo Tesouraria - NÂº <?= htmlspecialchars($numeroRecibo) ?></title>
+        <title>Recibo Tesouraria - Nº <?= htmlspecialchars($numeroRecibo) ?></title>
         <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -81,12 +81,14 @@ if ($renderShell) {
     <body class="bg-gray-100">
     <?php
 }
+require __DIR__ . '/partials/erp_shell_open.php';
+
 ?>
 
 <div class="max-w-4xl mx-auto" id="recibo-container">
     <?php if ($renderShell): ?>
     <div class="no-print mb-6 flex justify-between items-center">
-        <p class="text-sm text-gray-600 dark:text-gray-400">Pronto para impressÃ£o.</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Pronto para impressão.</p>
         <div class="flex gap-2">
             <a href="/tesouraria/obrigacoes" class="btn btn-secondary">Voltar</a>
             <button onclick="window.print()" class="btn btn-primary">Imprimir</button>
@@ -99,14 +101,14 @@ if ($renderShell) {
             <header class="grid grid-cols-[1fr_auto] gap-8 items-start mb-10">
                 <div>
                     <p class="font-serif text-lg font-bold text-gray-800 tracking-wide"><?= htmlspecialchars($tituloTratamento) ?></p>
-                    <h2 class="mt-1 text-2xl font-bold text-gray-900 uppercase"><?= htmlspecialchars($nomeLoja . ' NÂº ' . $numeroLoja) ?></h2>
+                    <h2 class="mt-1 text-2xl font-bold text-gray-900 uppercase"><?= htmlspecialchars($nomeLoja . ' Nº ' . $numeroLoja) ?></h2>
                     <p class="mt-2 text-xs text-gray-500">
                         Fundada em <?= htmlspecialchars($dataFundacao ?: '--/--/----') ?><br>
                         <?= htmlspecialchars($oriente) ?>
                     </p>
                 </div>
                 <div class="text-right">
-                    <p class="text-sm font-semibold text-gray-500">RECIBO NÂº</p>
+                    <p class="text-sm font-semibold text-gray-500">RECIBO Nº</p>
                     <p class="text-5xl font-bold text-blue-600 tracking-tighter"><?= htmlspecialchars($numeroRecibo) ?></p>
                 </div>
             </header>
@@ -114,7 +116,7 @@ if ($renderShell) {
             <div class="mb-10">
                 <p class="text-base leading-relaxed text-gray-700">
                     Recebemos de <strong class="font-semibold text-gray-900"><?= htmlspecialchars($nomeIrmao) ?></strong>,
-                    a importÃ¢ncia de <strong class="font-semibold text-gray-900"><?= $formatCurrency($valorPago) ?></strong>,
+                    a importância de <strong class="font-semibold text-gray-900"><?= $formatCurrency($valorPago) ?></strong>,
                     referente ao que se segue:
                 </p>
             </div>
@@ -190,5 +192,3 @@ if ($renderShell) {
     <?php
 }
 ?>
-
-

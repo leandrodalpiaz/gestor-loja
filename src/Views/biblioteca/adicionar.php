@@ -2,15 +2,16 @@
 declare(strict_types=1);
 
 // #############################################################################
-// CONFIGURAÃ‡ÃƒO DO APP SHELL
+// CONFIGURAÇÃO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Biblioteca';
-$appShellTitle = 'Adicionar Novo TÃ­tulo';
-$appShellDescription = 'Cadastre um novo item no acervo da Loja, com busca automÃ¡tica de capa e resumo por ISBN.';
+$appShellTitle = 'Adicionar Novo Título';
+$appShellDescription = 'Cadastre um novo item no acervo da Loja, com busca automática de capa e resumo por ISBN.';
 $appShellActiveHref = '/biblioteca';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
+
 ?>
 
 <div class="card">
@@ -19,7 +20,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <!-- Coluna 1 -->
             <div class="space-y-6">
                 <div>
-                    <label for="titulo" class="form-label">TÃ­tulo *</label>
+                    <label for="titulo" class="form-label">Título *</label>
                     <input type="text" id="titulo" name="titulo" required class="form-input">
                 </div>
                 <div>
@@ -32,7 +33,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 </div>
                 <div>
                     <label for="capa_url" class="form-label">URL da Capa</label>
-                    <input type="url" id="capa_url" name="capa_url" class="form-input" placeholder="Opcional, se nÃ£o usar ISBN">
+                    <input type="url" id="capa_url" name="capa_url" class="form-input" placeholder="Opcional, se não usar ISBN">
                 </div>
             </div>
 
@@ -41,13 +42,13 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <div>
                     <label for="tipo" class="form-label">Tipo de Item *</label>
                     <select id="tipo" name="tipo" required class="form-select">
-                        <option value="Livro Fisico">Livro FÃ­sico</option>
+                        <option value="Livro Fisico">Livro Físico</option>
                         <option value="Digital (PDF)">Digital (PDF)</option>
                         <option value="Ritual">Ritual</option>
                     </select>
                 </div>
                 <div>
-                    <label for="quantidade_disponivel" class="form-label">Quantidade DisponÃ­vel *</label>
+                    <label for="quantidade_disponivel" class="form-label">Quantidade Disponível *</label>
                     <input type="number" id="quantidade_disponivel" name="quantidade_disponivel" min="1" value="1" required class="form-input">
                 </div>
                 <div>
@@ -60,8 +61,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     </select>
                 </div>
                 <div>
-                    <label for="nota_instrucao" class="form-label">Nota de InstruÃ§Ã£o</label>
-                    <input type="text" id="nota_instrucao" name="nota_instrucao" class="form-input" placeholder="Ex: Leitura obrigatÃ³ria para o Grau 2">
+                    <label for="nota_instrucao" class="form-label">Nota de Instrução</label>
+                    <input type="text" id="nota_instrucao" name="nota_instrucao" class="form-input" placeholder="Ex: Leitura obrigatória para o Grau 2">
                 </div>
             </div>
         </div>
@@ -74,10 +75,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             </div>
         </div>
 
-        <!-- AÃ§Ãµes do FormulÃ¡rio -->
+        <!-- Ações do Formulário -->
         <div class="pt-4 flex justify-end gap-3">
             <a href="/biblioteca" class="btn btn-secondary">Cancelar</a>
-            <button type="submit" class="btn btn-primary">Salvar TÃ­tulo</button>
+            <button type="submit" class="btn btn-primary">Salvar Título</button>
         </div>
     </form>
 </div>

@@ -20,7 +20,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">Mestre Hospitaleiro</h1>
-        <p class="mt-1 text-sm text-gray-500">OcorrÃªncias, visitas e retornos no mobile.</p>
+        <p class="mt-1 text-sm text-gray-500">Ocorrências, visitas e retornos no mobile.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -38,7 +38,7 @@
                     <div id="meta-acompanhamento" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">ConcluÃ­das</div>
+                    <div class="text-gray-500">Concluídas</div>
                     <div id="meta-concluidas" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
@@ -49,12 +49,12 @@
         </div>
 
         <form id="form-ocorrencia" class="card rounded-2xl p-4 space-y-3">
-            <div class="text-sm font-semibold">Nova ocorrÃªncia</div>
+            <div class="text-sm font-semibold">Nova ocorrência</div>
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700">Tipo</label>
                 <select id="tipo_ocorrencia" class="w-full rounded-lg border px-3 py-2 text-sm">
-                    <option value="assistencia_geral">AssistÃªncia geral</option>
-                    <option value="saude">SaÃºde</option>
+                    <option value="assistencia_geral">Assistência geral</option>
+                    <option value="saude">Saúde</option>
                     <option value="nascimento">Nascimento</option>
                     <option value="falecimento">Falecimento</option>
                     <option value="solidariedade">Solidariedade</option>
@@ -70,14 +70,14 @@
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <select id="prioridade" class="rounded-lg border px-3 py-2 text-sm">
-                    <option value="media">MÃ©dia</option>
+                    <option value="media">Média</option>
                     <option value="baixa">Baixa</option>
                     <option value="alta">Alta</option>
                     <option value="urgente">Urgente</option>
                 </select>
                 <select id="encaminhar_para" class="rounded-lg border px-3 py-2 text-sm">
                     <option value="nenhum">Nenhum</option>
-                    <option value="veneravel">VenerÃ¡vel</option>
+                    <option value="veneravel">Venerável</option>
                     <option value="tesoureiro">Tesoureiro</option>
                     <option value="ambos">Ambos</option>
                 </select>
@@ -86,19 +86,19 @@
                 <input id="data_ocorrencia" type="date" class="rounded-lg border px-3 py-2 text-sm">
                 <input id="data_proxima_acao" type="date" class="rounded-lg border px-3 py-2 text-sm">
             </div>
-            <textarea id="descricao" rows="4" placeholder="DescriÃ§Ã£o da ocorrÃªncia" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
+            <textarea id="descricao" rows="4" placeholder="Descrição da ocorrência" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             <label class="flex items-center gap-2 text-sm"><input id="necessita_visita" type="checkbox"> Necessita visita</label>
             <label class="flex items-center gap-2 text-sm"><input id="necessita_apoio_financeiro" type="checkbox"> Necessita apoio financeiro</label>
-            <button type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white">Registrar ocorrÃªncia</button>
+            <button type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white">Registrar ocorrência</button>
         </form>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">PendÃªncias de visita</div>
+            <div class="text-sm font-semibold">Pendências de visita</div>
             <div id="lista-pendencias" class="mt-3 space-y-2 text-sm"></div>
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">OcorrÃªncias recentes</div>
+            <div class="text-sm font-semibold">Ocorrências recentes</div>
             <div id="lista-ocorrencias" class="mt-3 space-y-2 text-sm"></div>
         </div>
     </div>
@@ -123,7 +123,7 @@ async function api(url, options = {}) {
     const joiner = url.includes('?') ? '&' : '?';
     const response = await fetch(url + joiner + 'initData=' + encodeURIComponent(tg.initData), finalOptions);
     const json = await response.json();
-    if (!json.ok) throw new Error(json.erro || 'NÃ£o conseguimos concluir sua solicitaÃ§Ã£o agora. Tente novamente em alguns minutos.');
+    if (!json.ok) throw new Error(json.erro || 'Não conseguimos concluir sua solicitação agora. Tente novamente em alguns minutos.');
     return json;
 }
 
@@ -151,20 +151,20 @@ function render() {
     document.getElementById('meta-financeiro').textContent = dashboard.resumo?.com_apoio_financeiro || 0;
 
     const obreiroSelect = document.getElementById('obreiro_id');
-    obreiroSelect.innerHTML = '<option value="">NÃ£o vincular obreiro</option>';
+    obreiroSelect.innerHTML = '<option value="">Não vincular obreiro</option>';
     (dashboard.obreiros || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
-        option.textContent = `${item.nome} Â· CIM ${item.cim || '-'}`;
+        option.textContent = `${item.nome} · CIM ${item.cim || '-'}`;
         obreiroSelect.appendChild(option);
     });
 
-    renderLista('lista-pendencias', dashboard.pendencias_visita, 'Nenhuma pendÃªncia de visita.', item => `
+    renderLista('lista-pendencias', dashboard.pendencias_visita, 'Nenhuma pendência de visita.', item => `
         <div class="font-medium">${esc(item.obreiro_nome || 'Sem obreiro')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(item.tipo_ocorrencia || '')} Â· ${esc(item.prioridade || '')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.tipo_ocorrencia || '')} · ${esc(item.prioridade || '')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(item.descricao || '')}</div>
         <div class="mt-3 grid grid-cols-[1fr_140px_auto] gap-2">
-            <input data-obs="${item.id}" type="text" placeholder="ObservaÃ§Ã£o da visita" class="rounded-lg border px-2 py-2 text-sm">
+            <input data-obs="${item.id}" type="text" placeholder="Observação da visita" class="rounded-lg border px-2 py-2 text-sm">
             <input data-data="${item.id}" type="date" class="rounded-lg border px-2 py-2 text-sm">
             <button data-visita="${item.id}" class="rounded-lg bg-cobalto px-3 py-2 text-sm font-medium text-white">Registrar</button>
         </div>
@@ -190,9 +190,9 @@ function render() {
         });
     });
 
-    renderLista('lista-ocorrencias', dashboard.ocorrencias, 'Sem ocorrÃªncias recentes.', item => `
-        <div class="font-medium">${esc(item.obreiro_nome || item.nome_familiar || 'OcorrÃªncia')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(item.tipo_ocorrencia || '')} Â· ${esc(item.status || '')}</div>
+    renderLista('lista-ocorrencias', dashboard.ocorrencias, 'Sem ocorrências recentes.', item => `
+        <div class="font-medium">${esc(item.obreiro_nome || item.nome_familiar || 'Ocorrência')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.tipo_ocorrencia || '')} · ${esc(item.status || '')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(item.descricao || '')}</div>
     `);
 }
@@ -229,7 +229,7 @@ document.getElementById('form-ocorrencia').addEventListener('submit', async (eve
                 necessita_apoio_financeiro: document.getElementById('necessita_apoio_financeiro').checked
             }
         });
-        tg.showAlert('OcorrÃªncia registrada com sucesso.');
+        tg.showAlert('Ocorrência registrada com sucesso.');
         event.target.reset();
         await carregar();
     } catch (err) {

@@ -64,7 +64,7 @@ input, textarea, [contenteditable="true"], .allow-select {
     user-select: text;
 }
 
-/* Helpers básicos para evitar “cara de site” e manter densidade */
+/* Helpers básicos para evitar "cara de site" e manter densidade */
 .erp-container {
     max-width: 80rem; /* 1280px */
     margin-left: auto;

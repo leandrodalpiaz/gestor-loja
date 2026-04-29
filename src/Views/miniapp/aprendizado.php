@@ -14,7 +14,7 @@
 <body class="min-h-screen p-4">
 <div class="mx-auto max-w-lg">
     <h1 class="text-xl font-bold">Meu aprendizado</h1>
-    <p class="mt-1 text-sm text-gray-500">Acompanhe sua trilha de estudos e veja em que etapa vocÃª estÃ¡.</p>
+    <p class="mt-1 text-sm text-gray-500">Acompanhe sua trilha de estudos e veja em que etapa você está.</p>
 
     <div id="loading" class="mt-6 text-sm text-gray-400">Carregando acompanhamento...</div>
     <div id="erro" class="mt-6 hidden rounded-lg bg-red-50 p-3 text-sm text-red-700"></div>
@@ -55,15 +55,15 @@ async function carregar() {
         const json = await res.json();
         document.getElementById('loading').classList.add('hidden');
         if (!json.ok) {
-            throw new Error(json.erro || 'NÃ£o conseguimos carregar o acompanhamento agora. Tente novamente em alguns minutos.');
+            throw new Error(json.erro || 'Não conseguimos carregar o acompanhamento agora. Tente novamente em alguns minutos.');
         }
 
         const dados = json.dados;
         document.getElementById('conteudo').classList.remove('hidden');
         document.getElementById('nome').innerHTML = esc(dados.aprendiz.nome);
-        document.getElementById('resumo').innerHTML = `${dados.resumo.total_concluidas} de ${dados.resumo.total_etapas} etapas concluÃ­das`;
+        document.getElementById('resumo').innerHTML = `${dados.resumo.total_concluidas} de ${dados.resumo.total_etapas} etapas concluídas`;
         document.getElementById('etapa-atual').innerHTML = dados.resumo.etapa_atual
-            ? `Etapa ${dados.resumo.etapa_atual.ordem} Â· ${esc(dados.resumo.etapa_atual.titulo)}`
+            ? `Etapa ${dados.resumo.etapa_atual.ordem} · ${esc(dados.resumo.etapa_atual.titulo)}`
             : 'Sem etapa atual';
         document.getElementById('percentual').innerHTML = `${dados.resumo.percentual_conclusao}%`;
 

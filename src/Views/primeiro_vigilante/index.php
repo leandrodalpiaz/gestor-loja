@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÃ“GICA DE NEGÃ“CIO E HELPERS
+// LÓGICA DE NEGÓCIO E HELPERS
 // #############################################################################
 
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
@@ -20,7 +20,7 @@ $badgeStatus = static function(string $status): string {
 };
 
 // #############################################################################
-// CONFIGURAÃ‡ÃƒO DO APP SHELL
+// CONFIGURAÇÃO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Primeiro Vigilante';
@@ -29,6 +29,7 @@ $appShellDescription = 'Acompanhamento formativo dos Aprendizes, trilha de estud
 $appShellActiveHref = '/primeiro-vigilante';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
+
 ?>
 
 <!-- Mensagens de Feedback -->
@@ -36,7 +37,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <?php if ($mensagemErro): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
 <?php if (!empty($avisoInfra)): ?><div class="alert alert-warning mb-6"><?= htmlspecialchars((string) $avisoInfra) ?></div><?php endif; ?>
 
-<!-- MÃ©tricas RÃ¡pidas -->
+<!-- Métricas Rápidas -->
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
     <div class="card-metric"><p class="card-metric-label">Aprendizes Ativos</p><p class="card-metric-value"><?= (int) ($resumo['aprendizes_ativos'] ?? 0) ?></p></div>
     <div class="card-metric"><p class="card-metric-label">Etapa Inicial</p><p class="card-metric-value"><?= (int) ($resumo['etapa_inicial'] ?? 0) ?></p></div>
@@ -58,7 +59,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <div class="list-item-action flex-col sm:flex-row items-start sm:items-center !py-4">
                             <div class="flex-grow">
                                 <p class="font-semibold"><?= htmlspecialchars((string) ($aprendiz['nome_historico'] ?? $aprendiz['nome'] ?? 'Aprendiz')) ?></p>
-                                <p class="text-sm text-gray-500">CIM <?= htmlspecialchars((string) ($aprendiz['cim'] ?? '-')) ?> &middot; IniciaÃ§Ã£o: <?= !empty($aprendiz['data_iniciacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $aprendiz['data_iniciacao']))) : 'NÃ£o informada' ?></p>
+                                <p class="text-sm text-gray-500">CIM <?= htmlspecialchars((string) ($aprendiz['cim'] ?? '-')) ?> &middot; Iniciação: <?= !empty($aprendiz['data_iniciacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $aprendiz['data_iniciacao']))) : 'Não informada' ?></p>
                                 <div class="mt-2 flex items-center gap-3 text-sm">
                                     <span class="font-semibold">Etapa <?= (int) ($aprendiz['trilha_etapa_atual'] ?? 1) ?>:</span>
                                     <span class="text-gray-600 dark:text-gray-400"><?= htmlspecialchars((string) ($aprendiz['trilha_titulo_atual'] ?? '')) ?></span>
@@ -83,7 +84,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <div class="list-item-report">
                     <p class="text-xs font-bold uppercase text-gray-500">PRIMEIRO VIGILANTE</p>
                     <p class="mt-1 text-lg font-semibold"><?= htmlspecialchars(trim((string) ($titularCargo['titular_nome'] ?? '')) ?: 'A definir') ?></p>
-                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Cargo orientado Ã  instruÃ§Ã£o, revisÃ£o de trabalhos e incentivo ao estudo dos Aprendizes.</p>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Cargo orientado à instrução, revisão de trabalhos e incentivo ao estudo dos Aprendizes.</p>
                 </div>
             </div>
         </div>
@@ -105,5 +106,3 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <?php
 require_once __DIR__ . '/../partials/erp_shell_close.php';
 ?>
-
-

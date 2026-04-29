@@ -2,22 +2,23 @@
 declare(strict_types=1);
 
 // #############################################################################
-// LÃ“GICA DE NEGÃ“CIO E HELPERS
+// LÓGICA DE NEGÓCIO E HELPERS
 // #############################################################################
 
 $mesAtual = (int) date('n');
 $anoAtual = (int) date('Y');
 
 // #############################################################################
-// CONFIGURAÃ‡ÃƒO DO APP SHELL
+// CONFIGURAÇÃO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Tesouraria';
 $appShellTitle = 'Fechamento Mensal';
-$appShellDescription = 'ConferÃªncia final do perÃ­odo com leitura clara de saldos e movimentos.';
+$appShellDescription = 'Conferência final do período com leitura clara de saldos e movimentos.';
 $appShellActiveHref = '/tesouraria/fechamento';
 
-require_once __DIR__ . '/../partials/erp_shell_open.php';
+require __DIR__ . '/partials/erp_shell_open.php';
+
 ?>
 
 <div class="space-y-8">
@@ -26,10 +27,10 @@ require_once __DIR__ . '/../partials/erp_shell_open.php';
         <div class="card-body">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                 <div>
-                    <label for="filter-mes" class="form-label">MÃªs</label>
+                    <label for="filter-mes" class="form-label">Mês</label>
                     <select id="filter-mes" class="form-select">
                         <?php
-                        $mesesPT = ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+                        $mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                         for ($m = 1; $m <= 12; $m++) {
                             $selected = ($m === $mesAtual) ? 'selected' : '';
                             echo "<option value=\"$m\" $selected>{$mesesPT[$m - 1]}</option>";
@@ -67,7 +68,7 @@ require_once __DIR__ . '/../partials/erp_shell_open.php';
             <p class="card-metric-value text-green-600 dark:text-green-400" id="total-entradas">R$ 0,00</p>
         </div>
         <div class="card-metric">
-            <p class="card-metric-label">Total SaÃ­das</p>
+            <p class="card-metric-label">Total Saídas</p>
             <p class="card-metric-value text-red-600 dark:text-red-400" id="total-saidas">R$ 0,00</p>
         </div>
         <div class="card-metric">
@@ -76,19 +77,19 @@ require_once __DIR__ . '/../partials/erp_shell_open.php';
         </div>
     </div>
 
-    <!-- AÃ§Ã£o de Fechamento -->
+    <!-- Ação de Fechamento -->
     <div class="card">
         <div class="card-body flex flex-col md:flex-row items-start md:items-center justify-between">
             <div>
-                <h2 class="card-title">AÃ§Ã£o de Fechamento</h2>
-                <p class="card-description">ApÃ³s conferir todos os lanÃ§amentos, efetue o fechamento do mÃªs.</p>
+                <h2 class="card-title">Ação de Fechamento</h2>
+                <p class="card-description">Após conferir todos os lançamentos, efetue o fechamento do mês.</p>
             </div>
             <button id="btn-fechar-mes" onclick="fecharMes()" class="btn btn-primary mt-4 md:mt-0">
-                Fechar MÃªs
+                Fechar Mês
             </button>
         </div>
         <div id="fechamento-content" class="border-t border-gray-200 dark:border-gray-700 p-6 hidden">
-            <!-- ConteÃºdo carregado via JS -->
+            <!-- Conteúdo carregado via JS -->
         </div>
     </div>
 </div>
