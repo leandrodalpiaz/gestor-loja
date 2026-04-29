@@ -47,6 +47,13 @@ $appleTouchIcon = $tenantLogo !== '' ? $tenantLogo : '/assets/pwa/icon-192.png';
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Fallback crítico: evita layout quebrado quando utilitários Tailwind não carregam. */
+        html, body { margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; }
+        img, svg, video { max-width: 100%; height: auto; display: block; }
+        body { font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif; }
+    </style>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
         (function () {

@@ -65,7 +65,7 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
             <div class="erp-container py-4 flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3 min-w-0">
                     <?php if ($logoLogin): ?>
-                        <img src="<?= htmlspecialchars($logoLogin) ?>" alt="Brasão da Loja" class="h-10 w-10 object-contain">
+                        <img src="<?= htmlspecialchars($logoLogin) ?>" alt="Brasão da Loja" class="h-10 w-10 object-contain" width="40" height="40" style="width:40px;height:40px;object-fit:contain;">
                     <?php else: ?>
                         <div class="h-10 w-10 flex items-center justify-center rounded-full bg-erp-surface-2 border border-erp-border text-lg font-serif">∴</div>
                     <?php endif; ?>
@@ -93,7 +93,7 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
                                         <a href="<?= htmlspecialchars((string) ($ad['link_url'] ?? '#')) ?>" class="public-card hover:opacity-95 transition-opacity">
                                             <div class="flex gap-3">
                                                 <?php if (!empty($ad['imagem_url'])): ?>
-                                                    <img src="<?= htmlspecialchars((string) $ad['imagem_url']) ?>" alt="" class="h-12 w-12 rounded-lg border border-erp-border object-cover bg-erp-surface-2">
+                                                    <img src="<?= htmlspecialchars((string) $ad['imagem_url']) ?>" alt="" class="h-12 w-12 rounded-lg border border-erp-border object-cover bg-erp-surface-2" width="48" height="48" style="width:48px;height:48px;object-fit:cover;">
                                                 <?php endif; ?>
                                                 <div class="min-w-0">
                                                     <div class="text-sm font-semibold text-erp-text truncate"><?= htmlspecialchars((string) ($ad['titulo'] ?? 'Apoio')) ?></div>

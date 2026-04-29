@@ -25,6 +25,41 @@ foreach ($appShellSidebarSections as $section) {
 }
 ?>
 <body class="min-h-screen bg-erp-bg font-sans text-erp-text antialiased">
+    <style>
+        /* Estabilização local do shell ERP (fallback sem Tailwind). */
+        body { background: var(--erp-bg); color: var(--erp-text); }
+        body > div[x-data] { min-height: 100vh; }
+        body > div[x-data] > aside {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 280px;
+            background: var(--erp-surface);
+            border-right: 1px solid var(--erp-border);
+            overflow: hidden;
+            z-index: 30;
+        }
+        body > div[x-data] > aside > div { height: 100%; display: flex; flex-direction: column; }
+        body > div[x-data] > div { min-width: 0; margin-left: 280px; }
+        body > div[x-data] > div > header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--erp-surface);
+            border-bottom: 1px solid var(--erp-border);
+        }
+        body > div[x-data] > div > main {
+            padding: 24px;
+            padding-bottom: 96px;
+        }
+        nav a, aside a { text-decoration: none; }
+        @media (max-width: 1023px) {
+            body > div[x-data] > aside { transform: translateX(-100%); }
+            body > div[x-data] > div { margin-left: 0; }
+            body > div[x-data] > div > main { padding: 16px; padding-bottom: 96px; }
+        }
+    </style>
     <div x-data="{ sidebarOpen: false }" class="min-h-screen lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
         <!-- Sidebar -->
         <aside 
@@ -36,7 +71,7 @@ foreach ($appShellSidebarSections as $section) {
                     <div class="flex items-center gap-3">
                         <div class="flex h-10 w-10 items-center justify-center rounded-lg border border-erp-border bg-erp-surface-2 overflow-hidden">
                             <?php if ($tenantLogo !== ''): ?>
-                                <img src="<?= htmlspecialchars($tenantLogo) ?>" alt="Logo da Loja" class="h-9 w-9 object-contain">
+                                <img src="<?= htmlspecialchars($tenantLogo) ?>" alt="Logo da Loja" class="h-9 w-9 object-contain" width="36" height="36" style="width:36px;height:36px;object-fit:contain;">
                             <?php else: ?>
                                 <span class="text-sm font-semibold text-erp-navy">GL</span>
                             <?php endif; ?>

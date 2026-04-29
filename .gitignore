@@ -5,3 +5,10 @@ telegram_efemerides/ultima_mensagem_preview.txt
 telegram_efemerides/__pycache__/
 scripts/bin/
 scripts/tmp/
+
+# Root-level local temp artifacts
+.tmp_cookie*.txt
+.tmp_mini_cookie*.txt
+
+# Editor/backup artifacts
+*.bak
