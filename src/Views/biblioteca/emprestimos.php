@@ -1,165 +1,151 @@
 <?php
-$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
+declare(strict_types=1);
+
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
+$formatDate = static fn($dateStr) => !empty($dateStr) ? (new DateTime($dateStr))->format('d/m/Y') : '-';
+
+function getStatusInfo(string $status): array
+{
+    return match ($status) {
+        'atrasado' => ['label' => 'Atrasado', 'badge' => 'badge-status danger'],
+        'pendente' => ['label' => 'Pendente', 'badge' => 'badge-status warning'],
+        'devolvido' => ['label' => 'Devolvido', 'badge' => 'badge-status success'],
+        default => ['label' => ucfirst($status), 'badge' => 'badge-status neutral'],
+    };
+}
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
+$appShellEyebrow = 'Biblioteca';
+$appShellTitle = 'Controle de Empréstimos';
+$appShellDescription = 'Gerencie os empréstimos pendentes, atrasados e registre as devoluções.';
+$appShellActiveHref = '/biblioteca/emprestimos';
+
+require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emprestimos - Biblioteca</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @media (min-width: 1440px) {
-            .erp-readable {
-                font-size: 1.08rem;
-            }
-            .erp-readable .text-xs,
-            .erp-readable .text-\[11px\] {
-                font-size: 0.92rem !important;
-                line-height: 1.4rem !important;
-            }
-            .erp-readable .text-sm {
-                font-size: 1.03rem !important;
-                line-height: 1.58rem !important;
-            }
-        }
-    </style>
-</head>
-<body class="erp-readable bg-gray-100 min-h-screen">
-    <header class="bg-blue-900 text-white shadow-sm">
-        <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-            <div>
-                <div class="text-xs uppercase tracking-[0.18em] text-blue-100/80">Biblioteca</div>
-                <h1 class="text-lg font-semibold">Controle de Emprestimos</h1>
-            </div>
-            <div class="text-sm">
-                <?= htmlspecialchars($usuarioNome) ?> |
-                <a class="underline" href="/logout">Sair</a>
-            </div>
-        </div>
-    </header>
 
-    <main class="mx-auto max-w-6xl p-4 sm:p-6">
-        <div class="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Emprestimos</div>
-                    <h2 class="mt-1 text-xl font-semibold text-gray-800">Emprestimos pendentes/atrasados</h2>
-                </div>
-                <a href="/biblioteca" class="text-sm font-medium text-blue-700 hover:underline">Voltar ao catalogo</a>
-            </div>
-        </div>
+<div class="mb-6 flex justify-end">
+    <a href="/biblioteca" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+        Voltar ao Catálogo
+    </a>
+</div>
 
-        <div class="space-y-3 md:hidden">
-            <?php if (!empty($emprestimos)): ?>
-                <?php foreach ($emprestimos as $emp): ?>
-                    <?php
-                    $status = (string) ($emp['status'] ?? '-');
-                    $statusLabel = ucfirst($status);
-                    $statusClasses = 'border-slate-200 bg-slate-50 text-slate-700';
-                    if ($status === 'atrasado') {
-                        $statusClasses = 'border-rose-200 bg-rose-50 text-rose-700';
-                    } elseif ($status === 'pendente') {
-                        $statusClasses = 'border-amber-200 bg-amber-50 text-amber-700';
-                    } elseif ($status === 'devolvido') {
-                        $statusClasses = 'border-emerald-200 bg-emerald-50 text-emerald-700';
-                    }
-                    ?>
-                    <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0 flex-1">
-                                <div class="text-base font-semibold text-slate-900">
-                                    <?= htmlspecialchars((string) ($emp['titulo'] ?? $emp['acervo_id'] ?? '-')) ?>
-                                </div>
-                                <div class="mt-1 text-sm text-slate-700">
-                                    <?= htmlspecialchars((string) ($emp['obreiro_nome'] ?? $emp['obreiro_id'] ?? '-')) ?>
-                                </div>
-                            </div>
-                            <span class="shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium <?= $statusClasses ?>">
-                                <?= htmlspecialchars($statusLabel) ?>
-                            </span>
+<!-- Lista de Empréstimos (Cards para Mobile) -->
+<div class="space-y-4 md:hidden">
+    <?php if (empty($emprestimos)): ?>
+        <div class="card-placeholder">Nenhum empréstimo pendente ou atrasado.</div>
+    <?php else: ?>
+        <?php foreach ($emprestimos as $emp): ?>
+            <?php $statusInfo = getStatusInfo((string) ($emp['status'] ?? '-')); ?>
+            <div class="card">
+                <div class="p-4">
+                    <div class="flex justify-between items-start gap-3">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-base leading-tight"><?= htmlspecialchars((string) ($emp['titulo'] ?? $emp['acervo_id'] ?? '-')) ?></h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1"><?= htmlspecialchars((string) ($emp['obreiro_nome'] ?? $emp['obreiro_id'] ?? '-')) ?></p>
                         </div>
-
-                        <div class="mt-3 space-y-2 text-sm text-slate-700">
-                            <div><span class="font-medium text-slate-700">Data do emprestimo:</span> <?= htmlspecialchars((string) ($emp['data_emprestimo'] ?? '-')) ?></div>
-                            <div><span class="font-medium text-slate-700">Data prevista:</span> <?= htmlspecialchars((string) ($emp['data_devolucao_prevista'] ?? '-')) ?></div>
+                        <span class="<?= $statusInfo['badge'] ?>"><?= $statusInfo['label'] ?></span>
+                    </div>
+                    <div class="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Data do Empréstimo:</span>
+                            <strong><?= $formatDate((string) ($emp['data_emprestimo'] ?? '')) ?></strong>
                         </div>
-
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Devolução Prevista:</span>
+                            <strong><?= $formatDate((string) ($emp['data_devolucao_prevista'] ?? '')) ?></strong>
+                        </div>
+                    </div>
+                    <?php if (($emp['status'] ?? '') === 'pendente' || ($emp['status'] ?? '') === 'atrasado'): ?>
                         <div class="mt-4">
-                            <?php if ($status === 'pendente' || $status === 'atrasado'): ?>
-                                <form action="/biblioteca/devolver" method="POST">
-                                    <input type="hidden" name="id" value="<?= htmlspecialchars((string) ($emp['id'] ?? '')) ?>">
-                                    <button type="submit" class="w-full rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700">
-                                        Registrar devolucao
-                                    </button>
-                                </form>
-                            <?php else: ?>
-                                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-sm text-slate-700">
-                                    Nenhuma ação disponível
-                                </div>
-                            <?php endif; ?>
+                            <form action="/biblioteca/devolver" method="POST">
+                                <input type="hidden" name="id" value="<?= htmlspecialchars((string) ($emp['id'] ?? '')) ?>">
+                                <button type="submit" class="btn btn-primary w-full">Registrar Devolução</button>
+                            </form>
                         </div>
-                    </article>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-700 shadow-sm">
-                    Nenhum empréstimo pendente ou atrasado.
+                    <?php endif; ?>
                 </div>
-            <?php endif; ?>
-        </div>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</div>
 
-        <div class="hidden overflow-x-auto rounded shadow md:block">
-        <div class="bg-white">
-            <table class="min-w-full text-sm">
-                <thead class="bg-gray-50">
+<!-- Tabela de Empréstimos (Desktop) -->
+<div class="card hidden md:block">
+    <div class="overflow-x-auto">
+        <table class="table-base">
+            <thead>
+                <tr>
+                    <th>Livro</th>
+                    <th>Obreiro</th>
+                    <th>Empréstimo</th>
+                    <th>Devolução Prevista</th>
+                    <th>Status</th>
+                    <th class="w-48">Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($emprestimos)): ?>
                     <tr>
-                        <th class="px-4 py-3 text-left">ID</th>
-                        <th class="px-4 py-3 text-left">Código</th>
-                        <th class="px-4 py-3 text-left">Livro</th>
-                        <th class="px-4 py-3 text-left">Obreiro</th>
-                        <th class="px-4 py-3 text-left">Empréstimo</th>
-                        <th class="px-4 py-3 text-left">Prev. Devolução</th>
-                        <th class="px-4 py-3 text-left">Status</th>
-                        <th class="px-4 py-3 text-right">Ação</th>
+                        <td colspan="6" class="text-center py-10 text-gray-500">Nenhum empréstimo pendente ou atrasado.</td>
                     </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <?php if (!empty($emprestimos)): ?>
-                        <?php foreach ($emprestimos as $emp): ?>
-                            <tr>
-                                <td class="px-4 py-3"><?= htmlspecialchars((string) ($emp['id'] ?? '')) ?></td>
-                                <td class="px-4 py-3 font-mono text-xs"><?= htmlspecialchars((string) ($emp['codigo_acervo'] ?? '')) ?></td>
-                                <td class="px-4 py-3"><?= htmlspecialchars((string) ($emp['titulo'] ?? $emp['acervo_id'] ?? '-')) ?></td>
-                                <td class="px-4 py-3"><?= htmlspecialchars((string) ($emp['obreiro_nome'] ?? $emp['obreiro_id'] ?? '-')) ?></td>
-                                <td class="px-4 py-3"><?= htmlspecialchars((string) ($emp['data_emprestimo'] ?? '-')) ?></td>
-                                <td class="px-4 py-3"><?= htmlspecialchars((string) ($emp['data_devolucao_prevista'] ?? '-')) ?></td>
-                                <td class="px-4 py-3"><?= htmlspecialchars(ucfirst((string) ($emp['status'] ?? '-'))) ?></td>
-                                <td class="px-4 py-3 text-right">
-                                    <?php if (($emp['status'] ?? '') === 'pendente' || ($emp['status'] ?? '') === 'atrasado'): ?>
-                                        <form action="/biblioteca/devolver" method="POST" class="inline">
-                                            <input type="hidden" name="id" value="<?= htmlspecialchars((string) ($emp['id'] ?? '')) ?>">
-                                            <button type="submit" class="px-3 py-1 rounded bg-green-600 text-white hover:bg-green-700">
-                                                Registrar devolução
-                                            </button>
-                                        </form>
-                                    <?php else: ?>
-                                        <span class="text-gray-400">-</span>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
+                <?php else: ?>
+                    <?php foreach ($emprestimos as $emp): ?>
+                        <?php $statusInfo = getStatusInfo((string) ($emp['status'] ?? '-')); ?>
                         <tr>
-                            <td class="px-4 py-6 text-center text-gray-500" colspan="8">
-                                Nenhum emprestimo pendente ou atrasado.
+                            <td>
+                                <div class="font-bold"><?= htmlspecialchars((string) ($emp['titulo'] ?? $emp['acervo_id'] ?? '-')) ?></div>
+                                <div class="text-xs text-gray-500 font-mono"><?= htmlspecialchars((string) ($emp['codigo_acervo'] ?? '')) ?></div>
+                            </td>
+                            <td><?= htmlspecialchars((string) ($emp['obreiro_nome'] ?? $emp['obreiro_id'] ?? '-')) ?></td>
+                            <td><?= $formatDate((string) ($emp['data_emprestimo'] ?? '')) ?></td>
+                            <td><?= $formatDate((string) ($emp['data_devolucao_prevista'] ?? '')) ?></td>
+                            <td><span class="<?= $statusInfo['badge'] ?>"><?= $statusInfo['label'] ?></span></td>
+                            <td class="text-right">
+                                <?php if (($emp['status'] ?? '') === 'pendente' || ($emp['status'] ?? '') === 'atrasado'): ?>
+                                    <form action="/biblioteca/devolver" method="POST">
+                                        <input type="hidden" name="id" value="<?= htmlspecialchars((string) ($emp['id'] ?? '')) ?>">
+                                        <button type="submit" class="btn btn-primary">Registrar Devolução</button>
+                                    </form>
+                                <?php else: ?>
+                                    <span class="text-gray-400 dark:text-gray-500">-</span>
+                                <?php endif; ?>
                             </td>
                         </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-        </div>
-    </main>
-</body>
-</html>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-placeholder { @apply text-center py-12 px-6 bg-white dark:bg-gray-800 rounded-lg shadow-md text-gray-500; }
+
+    .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900; }
+    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
+    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
+
+    .badge-status { @apply inline-block px-2.5 py-1 text-xs font-medium rounded-full; }
+    .badge-status.success { @apply bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300; }
+    .badge-status.danger { @apply bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300; }
+    .badge-status.warning { @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300; }
+    .badge-status.neutral { @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200; }
+
+    .table-base { @apply min-w-full text-sm text-left text-gray-700 dark:text-gray-300; }
+    .table-base thead { @apply bg-gray-50 dark:bg-gray-700/50 text-xs uppercase tracking-wider font-medium text-gray-500 dark:text-gray-400; }
+    .table-base th, .table-base td { @apply px-5 py-4; }
+    .table-base tbody tr { @apply border-b border-gray-100 dark:border-gray-700; }
+    .table-base tbody tr:last-child { @apply border-b-0; }
+    .table-base tbody tr:hover { @apply bg-gray-50 dark:bg-gray-800/50; }
+</style>
+
+<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
 

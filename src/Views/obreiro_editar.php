@@ -1,352 +1,154 @@
 <?php
+declare(strict_types=1);
+
+// #############################################################################
+// SEGURANÇA E PREPARAÇÃO
+// #############################################################################
+
 if (!isset($_SESSION["usuario_logado"])) {
     header("Location: /login");
     exit;
 }
 
-$appTitle = "Editar Obreiro - Secretaria";
-$acessosStatus = [
-    'pendente' => 'Em análise',
-    'ativo' => 'Regular',
-    'inativo' => 'Afastado',
-];
-$estadosCivis = [
-    'solteiro' => 'Solteiro',
-    'casado' => 'Casado',
-    'divorciado' => 'Divorciado',
-    'separado' => 'Separado',
-    'viuvo' => 'Viúvo',
-    'uniao_estavel' => 'União estável',
-    'nao_informado' => 'Não informado',
-];
-$escolaridades = [
-    'fundamental_incompleto' => 'Fundamental incompleto',
-    'fundamental_completo' => 'Fundamental completo',
-    'medio_incompleto' => 'Médio incompleto',
-    'medio_completo' => 'Médio completo',
-    'tecnico' => 'Técnico',
-    'superior_incompleto' => 'Superior incompleto',
-    'superior_completo' => 'Superior completo',
-    'pos_graduacao' => 'Pós-graduação',
-    'mestrado' => 'Mestrado',
-    'doutorado' => 'Doutorado',
-    'nao_informado' => 'Não informado',
-];
-$faixasRenda = [
-    'ate_1_sm' => 'Até 1 salário mínimo',
-    'de_1_a_3_sm' => 'De 1 a 3 salários mínimos',
-    'de_3_a_5_sm' => 'De 3 a 5 salários mínimos',
-    'de_5_a_10_sm' => 'De 5 a 10 salários mínimos',
-    'acima_10_sm' => 'Acima de 10 salários mínimos',
-    'nao_informado' => 'Não informado',
-];
-$situacoesQuadro = [
-    'ativo' => 'Regular',
-    'licenciado' => 'Licenciado',
-    'suspenso' => 'Suspenso',
-    'desligado' => 'Desligado',
-    'falecido' => 'Falecido',
-    'oriente_eterno' => 'Oriente Eterno',
-    'inativo' => 'Afastado',
-];
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
+$obreiro = $obreiro ?? [];
+$acessosStatus = ['pendente' => 'Em análise', 'ativo' => 'Regular', 'inativo' => 'Afastado'];
+$estadosCivis = ['solteiro' => 'Solteiro', 'casado' => 'Casado', 'divorciado' => 'Divorciado', 'separado' => 'Separado', 'viuvo' => 'Viúvo', 'uniao_estavel' => 'União estável', 'nao_informado' => 'Não informado'];
+$escolaridades = ['fundamental_incompleto' => 'Fundamental incompleto', 'fundamental_completo' => 'Fundamental completo', 'medio_incompleto' => 'Médio incompleto', 'medio_completo' => 'Médio completo', 'tecnico' => 'Técnico', 'superior_incompleto' => 'Superior incompleto', 'superior_completo' => 'Superior completo', 'pos_graduacao' => 'Pós-graduação', 'mestrado' => 'Mestrado', 'doutorado' => 'Doutorado', 'nao_informado' => 'Não informado'];
+$faixasRenda = ['ate_1_sm' => 'Até 1 salário mínimo', 'de_1_a_3_sm' => 'De 1 a 3 salários mínimos', 'de_3_a_5_sm' => 'De 3 a 5 salários mínimos', 'de_5_a_10_sm' => 'De 5 a 10 salários mínimos', 'acima_10_sm' => 'Acima de 10 salários mínimos', 'nao_informado' => 'Não informado'];
+$situacoesQuadro = ['ativo' => 'Regular', 'licenciado' => 'Licenciado', 'suspenso' => 'Suspenso', 'desligado' => 'Desligado', 'falecido' => 'Falecido', 'oriente_eterno' => 'Oriente Eterno', 'inativo' => 'Afastado'];
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
+$appShellEyebrow = 'Secretaria';
+$appShellTitle = 'Editar Obreiro';
+$appShellDescription = 'Manutenção do cadastro de ' . htmlspecialchars($obreiro['nome_historico'] ?? $obreiro['nome'] ?? 'Obreiro');
+$appShellActiveHref = '/obreiros';
+$appShellActions = [['label' => 'Voltar para a Lista', 'href' => '/obreiros']];
+
+require __DIR__ . '/partials/erp_shell_open.php';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($appTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        cobalto: '#0a192f',
-                        ouro: '#cfa935',
-                        pedra: '#f3f4f6'
-                    },
-                    fontFamily: {
-                        serif: ['Merriweather', 'serif'],
-                        sans: ['Inter', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        @media (min-width: 1440px) {
-            .erp-readable {
-                font-size: 1.08rem;
-            }
-            .erp-readable .text-xs,
-            .erp-readable .text-\[11px\] {
-                font-size: 0.92rem !important;
-                line-height: 1.4rem !important;
-            }
-            .erp-readable .text-sm {
-                font-size: 1.03rem !important;
-                line-height: 1.58rem !important;
-            }
-        }
-    </style>
-</head>
-<body class="erp-readable bg-pedra font-sans text-gray-800 antialiased">
-    <header class="bg-cobalto text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-            <a href="/obreiros" class="text-gray-300 hover:text-white" title="Voltar">
-                <i class="fas fa-arrow-left text-lg"></i>
-            </a>
-            <h1 class="font-serif text-lg font-bold tracking-wider">
-                <i class="fas fa-user-check text-ouro mr-2"></i>Completar cadastro
-            </h1>
-        </div>
-    </header>
 
-    <main class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 mt-4 mb-20">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="p-6 border-b border-gray-100 bg-gray-50">
-                <h2 class="text-xl font-bold text-cobalto"><?= htmlspecialchars($obreiro['nome_historico'] ?? $obreiro['nome']) ?></h2>
-                <p class="text-sm text-gray-500 mt-1">Completar e manter o cadastro do obreiro existente (sem criar novo registro).</p>
+<?php if (isset($_GET['sucesso'])): ?>
+    <div class="alert alert-success mb-6">Ficha do Obreiro atualizada com sucesso.</div>
+<?php endif; ?>
+<?php if (isset($_GET['erro'])): ?>
+    <div class="alert alert-danger mb-6">Não foi possível salvar. Verifique se o CIM informado já existe para outro obreiro.</div>
+<?php endif; ?>
+
+<form action="/obreiros/atualizar" method="POST" class="space-y-8">
+    <input type="hidden" name="id" value="<?= htmlspecialchars($obreiro['id'] ?? '') ?>">
+
+    <!-- Card: Dados Civis -->
+    <div class="card" id="dados-civis">
+        <div class="card-header"><h2 class="card-title">Dados Civis</h2></div>
+        <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2"><label for="nome_completo" class="form-label">Nome Completo Civil</label><input id="nome_completo" type="text" name="nome_completo" required value="<?= htmlspecialchars($obreiro['nome'] ?? '') ?>" class="form-input"></div>
+            <div class="md:col-span-2"><label for="nome_historico" class="form-label">Nome Histórico</label><input id="nome_historico" type="text" name="nome_historico" value="<?= htmlspecialchars($obreiro['nome_historico'] ?? '') ?>" class="form-input"></div>
+            <div><label for="cpf" class="form-label">CPF</label><input id="cpf" type="text" name="cpf" value="<?= htmlspecialchars($obreiro['cpf'] ?? '') ?>" class="form-input"></div>
+            <div><label for="data_nascimento_civil" class="form-label">Data de Nascimento</label><input id="data_nascimento_civil" type="date" name="data_nascimento_civil" value="<?= htmlspecialchars($obreiro['data_nascimento_civil'] ?? '') ?>" class="form-input"></div>
+            <div><label for="estado_civil" class="form-label">Estado Civil</label><select id="estado_civil" name="estado_civil" class="form-select"><?php foreach ($estadosCivis as $v => $r) echo "<option value=\"$v\" " . (($obreiro['estado_civil'] ?? '') === $v ? 'selected' : '') . ">$r</option>"; ?></select></div>
+            <div><label for="telefone" class="form-label">Telefone</label><input id="telefone" type="text" name="telefone" value="<?= htmlspecialchars($obreiro['telefone'] ?? '') ?>" class="form-input"></div>
+            <div class="md:col-span-2"><label for="email" class="form-label">E-mail</label><input id="email" type="email" name="email" value="<?= htmlspecialchars($obreiro['email'] ?? '') ?>" class="form-input"></div>
+        </div>
+    </div>
+
+    <!-- Card: Dados Maçônicos -->
+    <div class="card" id="dados-maconicos">
+        <div class="card-header"><h2 class="card-title">Dados Maçônicos</h2></div>
+        <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div><label for="cim" class="form-label">CIM</label><input id="cim" type="text" name="cim" value="<?= htmlspecialchars($obreiro['cim'] ?? '') ?>" class="form-input"></div>
+            <div><label for="grau" class="form-label">Grau</label><select id="grau" name="grau" required class="form-select"><?php foreach (['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'] as $g) echo "<option value=\"$g\" " . (($obreiro['grau'] ?? '') === $g ? 'selected' : '') . ">$g</option>"; ?></select></div>
+            <div><label for="acesso_status" class="form-label">Status de Acesso</label><select id="acesso_status" name="acesso_status" class="form-select"><?php $acessoAtual = strtolower(trim($obreiro['acesso_status'] ?? '')); if (!in_array($acessoAtual, ['pendente', 'ativo', 'inativo'], true)) $acessoAtual = !empty($obreiro['ativo']) ? 'ativo' : 'inativo'; foreach ($acessosStatus as $v => $r) echo "<option value=\"$v\" " . ($acessoAtual === $v ? 'selected' : '') . ">$r</option>"; ?></select></div>
+            <div><label for="cargo" class="form-label">Cargo (Legado)</label><input id="cargo" type="text" name="cargo" value="<?= htmlspecialchars($obreiro['cargo'] ?? '') ?>" class="form-input"></div>
+            <div class="md:col-span-2"><label class="form-label">Cargos Oficiais (Nominata)</label><div class="form-static-field"><?= !empty($obreiro['cargos_codigos']) ? htmlspecialchars(implode(', ', (array) $obreiro['cargos_codigos'])) : 'Sem cargo oficial ativo' ?> <a href="/admin/cargos" class="link ml-2">Abrir Nominata</a></div></div>
+            <div><label for="loja_origem" class="form-label">Loja de Origem</label><input id="loja_origem" type="text" name="loja_origem" value="<?= htmlspecialchars($obreiro['loja_origem'] ?? '') ?>" class="form-input"></div>
+            <div><label for="data_iniciacao" class="form-label">Data de Iniciação</label><input id="data_iniciacao" type="date" name="data_iniciacao" value="<?= htmlspecialchars($obreiro['data_iniciacao'] ?? '') ?>" class="form-input"></div>
+            <div><label for="data_elevacao" class="form-label">Data de Elevação</label><input id="data_elevacao" type="date" name="data_elevacao" value="<?= htmlspecialchars($obreiro['data_elevacao'] ?? '') ?>" class="form-input"></div>
+            <div><label for="data_exaltacao" class="form-label">Data de Exaltação</label><input id="data_exaltacao" type="date" name="data_exaltacao" value="<?= htmlspecialchars($obreiro['data_exaltacao'] ?? '') ?>" class="form-input"></div>
+            <div><label for="data_filiacao" class="form-label">Data de Filiação</label><input id="data_filiacao" type="date" name="data_filiacao" value="<?= htmlspecialchars($obreiro['data_filiacao'] ?? '') ?>" class="form-input"></div>
+        </div>
+    </div>
+
+    <!-- Card: Perfil Estatístico -->
+    <div class="card" id="perfil-estatistico">
+        <div class="card-header"><h2 class="card-title">Perfil Estatístico</h2></div>
+        <div class="card-body grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div><label for="profissao" class="form-label">Profissão</label><input id="profissao" type="text" name="profissao" value="<?= htmlspecialchars($obreiro['profissao'] ?? '') ?>" class="form-input"></div>
+            <div><label for="escolaridade" class="form-label">Escolaridade</label><select id="escolaridade" name="escolaridade" class="form-select"><?php foreach ($escolaridades as $v => $r) echo "<option value=\"$v\" " . (($obreiro['escolaridade'] ?? '') === $v ? 'selected' : '') . ">$r</option>"; ?></select></div>
+            <div><label for="faixa_renda" class="form-label">Faixa de Renda</label><select id="faixa_renda" name="faixa_renda" class="form-select"><?php foreach ($faixasRenda as $v => $r) echo "<option value=\"$v\" " . (($obreiro['faixa_renda'] ?? '') === $v ? 'selected' : '') . ">$r</option>"; ?></select></div>
+        </div>
+    </div>
+
+    <!-- Card: Situação no Quadro -->
+    <div class="card" id="situacao-quadro">
+        <div class="card-header"><h2 class="card-title">Situação no Quadro</h2></div>
+        <div class="card-body grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div><label for="situacao_quadro" class="form-label">Situação</label><select id="situacao_quadro" name="situacao_quadro" class="form-select"><?php foreach ($situacoesQuadro as $v => $r) echo "<option value=\"$v\" " . (($obreiro['situacao_quadro'] ?? 'ativo') === $v ? 'selected' : '') . ">$r</option>"; ?></select></div>
+            <div><label for="data_regularizacao" class="form-label">Data de Regularização</label><input id="data_regularizacao" type="date" name="data_regularizacao" value="<?= htmlspecialchars($obreiro['data_regularizacao'] ?? '') ?>" class="form-input"></div>
+            <div><label for="data_reintegracao" class="form-label">Data de Reintegração</label><input id="data_reintegracao" type="date" name="data_reintegracao" value="<?= htmlspecialchars($obreiro['data_reintegracao'] ?? '') ?>" class="form-input"></div>
+            <div><label for="data_quite_placet" class="form-label">Data de Quite-Placet</label><input id="data_quite_placet" type="date" name="data_quite_placet" value="<?= htmlspecialchars($obreiro['data_quite_placet'] ?? '') ?>" class="form-input"></div>
+            <div><label for="data_suspensao" class="form-label">Data de Suspensão</label><input id="data_suspensao" type="date" name="data_suspensao" value="<?= htmlspecialchars($obreiro['data_suspensao'] ?? '') ?>" class="form-input"></div>
+            <div><label for="data_desligamento" class="form-label">Data de Desligamento</label><input id="data_desligamento" type="date" name="data_desligamento" value="<?= htmlspecialchars($obreiro['data_desligamento'] ?? '') ?>" class="form-input"></div>
+            <div><label for="data_oriente_eterno" class="form-label">Data de Oriente Eterno</label><input id="data_oriente_eterno" type="date" name="data_oriente_eterno" value="<?= htmlspecialchars($obreiro['data_oriente_eterno'] ?? '') ?>" class="form-input"></div>
+        </div>
+    </div>
+
+    <!-- Card: Vínculos e Gestão -->
+    <div class="card" id="vinculos-gestao">
+        <div class="card-header"><h2 class="card-title">Vínculos e Gestão</h2></div>
+        <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div><label for="potencia_nome" class="form-label">Potência</label><input id="potencia_nome" type="text" name="potencia_nome" value="<?= htmlspecialchars($obreiro['potencia_nome'] ?? '') ?>" class="form-input"></div>
+            <div><label for="potencia_sigla" class="form-label">Sigla da Potência</label><input id="potencia_sigla" type="text" name="potencia_sigla" value="<?= htmlspecialchars($obreiro['potencia_sigla'] ?? '') ?>" class="form-input"></div>
+            <div><label for="numero_quadro" class="form-label">Número no Quadro</label><input id="numero_quadro" type="text" name="numero_quadro" value="<?= htmlspecialchars($obreiro['numero_quadro'] ?? '') ?>" class="form-input"></div>
+            <div><label class="form-label">Telegram ID</label><div class="form-static-field"><?= htmlspecialchars($obreiro['telegram_id'] ?? 'Não vinculado') ?></div><p class="form-hint">Vínculo controlado apenas pelo bot (não editável aqui).</p></div>
+            <div><label for="potencia_login" class="form-label">Login na Potência</label><input id="potencia_login" type="text" name="potencia_login" value="<?= htmlspecialchars($obreiro['potencia_login'] ?? '') ?>" class="form-input"></div>
+            <div class="flex items-center"><label class="form-checkbox-label"><input type="checkbox" name="acesso_potencia_liberado" value="1" <?= !empty($obreiro['acesso_potencia_liberado']) ? 'checked' : '' ?> class="form-checkbox"> Acesso na plataforma da Potência liberado</label></div>
+            <div class="md:col-span-2"><label for="observacao_secretaria" class="form-label">Observação da Secretaria</label><textarea id="observacao_secretaria" name="observacao_secretaria" rows="3" class="form-textarea"><?= htmlspecialchars($obreiro['observacao_secretaria'] ?? '') ?></textarea></div>
+        </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="card">
+        <div class="card-body flex flex-col sm:flex-row justify-between items-center gap-4">
+            <label class="form-checkbox-label"><input type="hidden" name="ativo" value="0"><input type="checkbox" id="ativo" name="ativo" value="1" <?= ($obreiro['ativo'] ?? true) ? 'checked' : '' ?> class="form-checkbox"> Registro habilitado no sistema</label>
+            <div class="flex gap-3">
+                <a href="/obreiros" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
             </div>
-
-            <?php if (isset($_GET['sucesso'])): ?>
-                <div class="mx-6 mt-6 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">Ficha atualizada com sucesso.</div>
-            <?php endif; ?>
-
-            <?php if (isset($_GET['erro'])): ?>
-                <div class="mx-6 mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">NÃ£o foi possÃ­vel salvar. Verifique se o CIM informado jÃ¡ existe para outro obreiro.</div>
-            <?php endif; ?>
-
-            <form action="/obreiros/atualizar" method="POST" class="p-6 space-y-8">
-                <input type="hidden" name="id" value="<?= htmlspecialchars($obreiro['id']) ?>">
-
-                <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-ouro uppercase tracking-wider border-b border-gray-200 pb-2">Dados civis</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="md:col-span-2" id="cargos-oficiais">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome completo civil</label>
-                            <input type="text" name="nome_completo" required value="<?= htmlspecialchars($obreiro['nome'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome historico</label>
-                            <input type="text" name="nome_historico" value="<?= htmlspecialchars($obreiro['nome_historico'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-                            <input type="text" name="cpf" value="<?= htmlspecialchars($obreiro['cpf'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de nascimento civil</label>
-                            <input type="date" name="data_nascimento_civil" value="<?= htmlspecialchars($obreiro['data_nascimento_civil'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado civil</label>
-                            <select name="estado_civil" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <option value="">Selecione</option>
-                                <?php foreach ($estadosCivis as $valor => $rotulo): ?>
-                                    <option value="<?= htmlspecialchars($valor) ?>" <?= ($obreiro['estado_civil'] ?? '') === $valor ? 'selected' : '' ?>><?= htmlspecialchars($rotulo) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-                            <input type="text" name="telefone" value="<?= htmlspecialchars($obreiro['telefone'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-                            <input type="email" name="email" value="<?= htmlspecialchars($obreiro['email'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-ouro uppercase tracking-wider border-b border-gray-200 pb-2">Dados maconicos</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">CIM</label>
-                            <input type="text" name="cim" value="<?= htmlspecialchars($obreiro['cim'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md" inputmode="numeric" autocomplete="off">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Grau</label>
-                            <select name="grau" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <?php foreach (['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'] as $grau): ?>
-                                    <option value="<?= htmlspecialchars($grau) ?>" <?= ($obreiro['grau'] ?? '') === $grau ? 'selected' : '' ?>><?= htmlspecialchars($grau) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status de acesso</label>
-                            <select name="acesso_status" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <?php
-                                $acessoAtual = strtolower(trim((string) ($obreiro['acesso_status'] ?? '')));
-                                if (!in_array($acessoAtual, ['pendente', 'ativo', 'inativo'], true)) {
-                                    $acessoAtual = !empty($obreiro['ativo']) ? 'ativo' : 'inativo';
-                                }
-                                ?>
-                                <?php foreach ($acessosStatus as $valor => $rotulo): ?>
-                                    <option value="<?= htmlspecialchars($valor) ?>" <?= $acessoAtual === $valor ? 'selected' : '' ?>><?= htmlspecialchars($rotulo) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Cargo legado</label>
-                            <input type="text" name="cargo" value="<?= htmlspecialchars($obreiro['cargo'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div class="md:col-span-2">
-                            <div class="text-xs uppercase tracking-wide text-gray-500 mb-2">Cargos oficiais (nominata)</div>
-                            <div class="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                                <?= !empty($obreiro['cargos_codigos']) ? htmlspecialchars(implode(', ', (array) $obreiro['cargos_codigos'])) : 'Sem cargo oficial ativo' ?>
-                                <span class="text-gray-400">Â·</span>
-                                <a href="/admin/cargos" class="text-cobalto underline">Abrir nominata</a>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Loja de origem</label>
-                            <input type="text" name="loja_origem" value="<?= htmlspecialchars($obreiro['loja_origem'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de iniciacao</label>
-                            <input type="date" name="data_iniciacao" value="<?= htmlspecialchars($obreiro['data_iniciacao'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de elevacao</label>
-                            <input type="date" name="data_elevacao" value="<?= htmlspecialchars($obreiro['data_elevacao'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de exaltacao</label>
-                            <input type="date" name="data_exaltacao" value="<?= htmlspecialchars($obreiro['data_exaltacao'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de filiacao</label>
-                            <input type="date" name="data_filiacao" value="<?= htmlspecialchars($obreiro['data_filiacao'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-ouro uppercase tracking-wider border-b border-gray-200 pb-2">Perfil estatistico</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Profissao</label>
-                            <input type="text" name="profissao" value="<?= htmlspecialchars($obreiro['profissao'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Escolaridade</label>
-                            <select name="escolaridade" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <option value="">Selecione</option>
-                                <?php foreach ($escolaridades as $valor => $rotulo): ?>
-                                    <option value="<?= htmlspecialchars($valor) ?>" <?= ($obreiro['escolaridade'] ?? '') === $valor ? 'selected' : '' ?>><?= htmlspecialchars($rotulo) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Faixa de renda</label>
-                            <select name="faixa_renda" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <option value="">Selecione</option>
-                                <?php foreach ($faixasRenda as $valor => $rotulo): ?>
-                                    <option value="<?= htmlspecialchars($valor) ?>" <?= ($obreiro['faixa_renda'] ?? '') === $valor ? 'selected' : '' ?>><?= htmlspecialchars($rotulo) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-ouro uppercase tracking-wider border-b border-gray-200 pb-2">Situacao no quadro</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Situacao</label>
-                            <select name="situacao_quadro" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <?php foreach ($situacoesQuadro as $valor => $rotulo): ?>
-                                    <option value="<?= htmlspecialchars($valor) ?>" <?= ($obreiro['situacao_quadro'] ?? 'ativo') === $valor ? 'selected' : '' ?>><?= htmlspecialchars($rotulo) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de regularizacao</label>
-                            <input type="date" name="data_regularizacao" value="<?= htmlspecialchars($obreiro['data_regularizacao'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de reintegracao</label>
-                            <input type="date" name="data_reintegracao" value="<?= htmlspecialchars($obreiro['data_reintegracao'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de quite-placet</label>
-                            <input type="date" name="data_quite_placet" value="<?= htmlspecialchars($obreiro['data_quite_placet'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de suspensao</label>
-                            <input type="date" name="data_suspensao" value="<?= htmlspecialchars($obreiro['data_suspensao'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de desligamento</label>
-                            <input type="date" name="data_desligamento" value="<?= htmlspecialchars($obreiro['data_desligamento'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de Oriente Eterno</label>
-                            <input type="date" name="data_oriente_eterno" value="<?= htmlspecialchars($obreiro['data_oriente_eterno'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-ouro uppercase tracking-wider border-b border-gray-200 pb-2">Vinculos com Potencia e gestao</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Potencia</label>
-                            <input type="text" name="potencia_nome" value="<?= htmlspecialchars($obreiro['potencia_nome'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Sigla da Potencia</label>
-                            <input type="text" name="potencia_sigla" value="<?= htmlspecialchars($obreiro['potencia_sigla'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Numero no quadro</label>
-                            <input type="text" name="numero_quadro" value="<?= htmlspecialchars($obreiro['numero_quadro'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Telegram ID</label>
-                            <input type="text" value="<?= htmlspecialchars($obreiro['telegram_id'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" readonly>
-                            <div class="mt-1 text-xs text-gray-500">VÃ­nculo controlado apenas pelo bot/onboarding (nÃ£o editÃ¡vel aqui).</div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Login na Potencia</label>
-                            <input type="text" name="potencia_login" value="<?= htmlspecialchars($obreiro['potencia_login'] ?? '') ?>" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div class="flex items-end">
-                            <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                                <input type="checkbox" name="acesso_potencia_liberado" value="1" <?= !empty($obreiro['acesso_potencia_liberado']) ? 'checked' : '' ?> class="rounded border-gray-300">
-                                Acesso na plataforma da Potencia liberado
-                            </label>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Observacao da Secretaria</label>
-                            <textarea name="observacao_secretaria" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md"><?= htmlspecialchars($obreiro['observacao_secretaria'] ?? '') ?></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center">
-                    <input type="hidden" name="ativo" value="0">
-                    <input type="checkbox" id="ativo" name="ativo" value="1" <?= ($obreiro['ativo'] ?? true) ? 'checked' : '' ?> class="h-4 w-4 text-cobalto border-gray-300 rounded">
-                    <label for="ativo" class="ml-2 block text-sm text-gray-900 font-medium">Registro habilitado no sistema</label>
-                </div>
-
-                <div class="border-t border-gray-100 bg-gray-50 -my-6 -mx-6 mt-2 p-6 flex justify-end gap-3 flex-col sm:flex-row rounded-b-xl">
-                    <a href="/obreiros" class="w-full sm:w-auto text-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                        Voltar
-                    </a>
-                    <button type="submit" class="w-full sm:w-auto flex justify-center py-2 px-6 text-sm font-medium rounded-md text-white bg-cobalto hover:bg-blue-900 gap-2 items-center">
-                        <i class="fas fa-save text-ouro"></i>Atualizar dados
-                    </button>
-                </div>
-            </form>
         </div>
-    </main>
-</body>
-</html>
+    </div>
+</form>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm; }
+    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
+    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
+    .card-body { @apply p-5; }
+
+    .alert { @apply p-4 rounded-md text-sm; }
+    .alert-success { @apply bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300; }
+    .alert-danger { @apply bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300; }
+
+    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
+    .form-input, .form-select, .form-textarea { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
+    .form-static-field { @apply w-full px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600/50; }
+    .form-hint { @apply text-xs text-gray-500 dark:text-gray-400 mt-1; }
+    .form-checkbox { @apply h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500; }
+    .form-checkbox-label { @apply flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300; }
+    
+    .link { @apply text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline; }
+
+    .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 transition-colors; }
+    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
+    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
+</style>
+
+<?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
 
 

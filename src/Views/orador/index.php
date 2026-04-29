@@ -1,231 +1,202 @@
 <?php
+declare(strict_types=1);
+
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
-$formatarData = static function (?string $valor): string {
-    if (!$valor) {
-        return '-';
-    }
-    $timestamp = strtotime($valor);
-    if ($timestamp === false) {
-        return (string) $valor;
-    }
-    return date('d/m/Y H:i', $timestamp);
-};
+$formatarData = static fn(?string $val): string => !empty(trim((string) $val)) ? (new DateTimeImmutable(trim((string) $val)))->format('d/m/Y H:i') : '-';
 
 $tituloSessao = static function (?array $sessao): string {
-    if (!$sessao) {
-        return 'Nenhuma sessÃ£o em foco';
-    }
+    if (!$sessao) return 'Nenhuma sessão em foco';
     $titulo = trim((string) ($sessao['titulo'] ?? ''));
-    if ($titulo !== '') {
-        return $titulo;
-    }
-    return trim(((string) ($sessao['tipo_sessao'] ?? 'Sessao')) . ' - ' . ((string) ($sessao['grau_sessao'] ?? '')));
+    return $titulo !== '' ? $titulo : trim(((string) ($sessao['tipo_sessao'] ?? 'Sessão')) . ' - ' . ((string) ($sessao['grau_sessao'] ?? '')));
 };
-?>
-<?php
-$erpPageTitle = 'Orador - Gestor de Loja';
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
 $appShellEyebrow = 'Orador';
-$appShellTitle = 'Pauta ritual, leitura e visitantes';
-$appShellDescription = 'Painel consolidado para apoiar a palavra a bem da ordem, a leitura ritual e a menÃ§Ã£o correta de visitantes, cargos e eventos registrados na sessÃ£o.';
+$appShellTitle = 'Painel do Orador';
+$appShellDescription = 'Pauta ritual, leitura e visitantes para a palavra a bem da ordem.';
 $appShellActiveHref = '/orador';
-$appShellActions = [
-    ['label' => 'Abrir miniapp', 'href' => '/miniapp/orador'],
-];
-$appShellSidebarSections = [
-    [
-        'title' => 'Orador',
-        'items' => [
-            ['label' => 'Painel do Orador', 'href' => '/orador'],
-        ],
-    ],
-    [
-        'title' => 'Navegacao',
-        'items' => [
-            ['label' => 'Painel', 'href' => '/dashboard'],
-        ],
-    ],
-];
-require __DIR__ . '/../partials/erp_head.php';
+
+require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
-<?php require __DIR__ . '/../partials/erp_shell_open.php'; ?>
 
-        <?php if ($mensagemSucesso): ?>
-            <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700"><?= htmlspecialchars($mensagemSucesso) ?></div>
-        <?php endif; ?>
-        <?php if ($mensagemErro): ?>
-            <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700"><?= htmlspecialchars($mensagemErro) ?></div>
-        <?php endif; ?>
+<!-- Mensagens de Feedback -->
+<?php if ($mensagemSucesso): ?><div class="alert alert-success mb-6"><?= htmlspecialchars($mensagemSucesso) ?></div><?php endif; ?>
+<?php if ($mensagemErro): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
 
-        <?php
-        $dashboard = [
-            'title' => 'Painel do Orador',
-            'subtitle' => 'Painel especifico do cargo com integracao ao miniapp.',
-            'meta' => ['Perfil: operacional de sessao', 'Miniapp como extensao do cargo'],
-            'actions' => [
-                ['label' => 'Abrir painel do orador', 'href' => '/orador'],
-                ['label' => 'Abrir miniapp', 'href' => '/miniapp/orador'],
-            ],
-            'blocks' => [
-                ['title' => 'Painel do orador', 'subtitle' => 'Sessao, pauta ritual e leitura.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'Visitantes resumidos', 'value' => (string) count($visitantesResumo)],
-                    ['label' => 'Cargos capturados', 'value' => (string) count($cargosSessao)],
-                ], 'list' => array_map(static fn (array $v): array => ['item' => (string) ($v['nome'] ?? 'Visitante'), 'meta' => (string) ($v['linha_resumida'] ?? ''), 'status' => 'Leitura'], array_slice($visitantesResumo, 0, 4))],
-                ['title' => 'Resumo operacional', 'subtitle' => 'Atividades, lembretes e apoio ritual.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'Atividades da sessao', 'value' => (string) count($eventosSessao)],
-                    ['label' => 'Lembretes', 'value' => (string) count($lembretes)],
-                ], 'list' => array_map(static fn (string $l): array => ['item' => $l, 'meta' => 'Roteiro do cargo', 'status' => 'Regular'], array_slice($lembretes, 0, 4))],
-            ],
-            'alerts' => [['title' => 'Miniapp contextual', 'text' => 'O miniapp permanece como extensao do perfil do Orador.', 'tone' => 'success']],
-            'activity' => array_map(static fn (array $s): array => ['item' => 'Sessao: ' . $tituloSessao($s), 'meta' => $formatarData($s['data_hora_inicio'] ?? null)], array_slice($sessoes, 0, 4)),
-            'links' => [['label' => 'API miniapp dashboard', 'href' => '/api/miniapp/orador/dashboard']],
-        ];
-        $dashboardRenderers = [
-            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
-            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
-        ];
-        require __DIR__ . '/../layouts/dashboard.php';
-        ?>
-
-        <form method="get" action="/orador" class="mb-6 rounded-2xl border border-erp-border bg-white p-5 shadow-sm">
-            <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                <div class="w-full lg:max-w-md">
-                    <label for="sessao_id" class="mb-2 block text-sm font-medium text-erp-text">SessÃ£o em foco</label>
-                    <select id="sessao_id" name="sessao_id" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-erp-text">
-                        <option value="">Usar proxima sessao publicada</option>
-                        <?php foreach ($sessoes as $sessao): ?>
-                            <option value="<?= (int) ($sessao['id'] ?? 0) ?>" <?= (int) ($sessaoEmFoco['id'] ?? 0) === (int) ($sessao['id'] ?? 0) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($tituloSessao($sessao)) ?> Â· <?= htmlspecialchars($formatarData($sessao['data_hora_inicio'] ?? null)) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <button type="submit" class="rounded-xl bg-erp-navy px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">Atualizar contexto</button>
+<!-- Filtro de Sessão -->
+<div class="card mb-8">
+    <div class="card-body">
+        <form method="get" action="/orador" class="flex flex-col sm:flex-row sm:items-end sm:gap-4">
+            <div class="flex-grow">
+                <label for="sessao_id" class="form-label">Sessão em foco</label>
+                <select id="sessao_id" name="sessao_id" class="form-select">
+                    <option value="">Usar próxima sessão publicada</option>
+                    <?php foreach ($sessoes as $sessao): ?>
+                        <option value="<?= (int) ($sessao['id'] ?? 0) ?>" <?= (int) ($sessaoEmFoco['id'] ?? 0) === (int) ($sessao['id'] ?? 0) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($tituloSessao($sessao)) ?> &middot; <?= htmlspecialchars($formatarData($sessao['data_hora_inicio'] ?? null)) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
+            <button type="submit" class="btn btn-primary mt-4 sm:mt-0">Atualizar Contexto</button>
         </form>
+    </div>
+</div>
 
-        <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-            <section class="space-y-6">
-                <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div class="flex flex-wrap items-start justify-between gap-4">
-                        <div>
-                            <p class="text-xs uppercase tracking-[0.22em] text-erp-gold">SessÃ£o em foco</p>
-                            <h2 class="mt-2 font-sans text-2xl text-erp-navy"><?= htmlspecialchars($tituloSessao($sessaoEmFoco)) ?></h2>
-                            <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($formatarData($sessaoEmFoco['data_hora_inicio'] ?? null)) ?></p>
-                        </div>
-                        <div class="flex flex-wrap gap-2 text-xs">
-                            <span class="rounded-full bg-slate-100 px-3 py-1 text-slate-700">Grau: <?= htmlspecialchars((string) ($sessaoEmFoco['grau_sessao'] ?? '-')) ?></span>
-                            <span class="rounded-full bg-slate-100 px-3 py-1 text-slate-700">Tipo: <?= htmlspecialchars((string) ($sessaoEmFoco['tipo_sessao'] ?? '-')) ?></span>
-                            <span class="rounded-full bg-amber-100 px-3 py-1 text-amber-900">Status: <?= htmlspecialchars((string) ($sessaoEmFoco['status'] ?? '-')) ?></span>
-                        </div>
-                    </div>
-                    <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <div class="text-sm font-semibold text-erp-navy">Resumo ritual</div>
-                        <p class="mt-2 text-sm leading-6 text-slate-700"><?= nl2br(htmlspecialchars((string) ($sessaoEmFoco['ordem_dia'] ?? $sessaoEmFoco['resumo_publico'] ?? 'Sem resumo ritual registrado para esta sessao.'))) ?></p>
-                    </div>
-                </article>
-
-                <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <h2 class="font-sans text-2xl text-erp-navy">Visitantes para leitura</h2>
-                            <p class="mt-2 text-sm text-slate-700">Nominata resumida para saudacao nominal durante a palavra a bem.</p>
-                        </div>
-                        <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-900"><?= count($visitantesResumo) ?> visitante(s)</span>
-                    </div>
-
-                    <?php if ($visitantesResumo !== []): ?>
-                        <div class="mt-4 grid gap-3">
-                            <?php foreach ($visitantesResumo as $visitante): ?>
-                                <div class="rounded-2xl border border-amber-200 bg-[linear-gradient(135deg,#fffdf7,#f7f0df)] p-4">
-                                    <div class="font-semibold text-erp-navy"><?= htmlspecialchars((string) ($visitante['nome'] ?? 'Visitante')) ?></div>
-                                    <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($visitante['linha_resumida'] ?? 'Sem linha resumida registrada.')) ?></div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php else: ?>
-                        <div class="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">Nenhum visitante resumido foi registrado para a sessÃ£o em foco.</div>
-                    <?php endif; ?>
-                </article>
-
-                <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div class="grid gap-6 lg:grid-cols-2">
-                        <div>
-                            <h2 class="font-sans text-2xl text-erp-navy">Cargos e composiÃ§Ã£o</h2>
-                            <p class="mt-2 text-sm text-slate-700">Apoio rapido para leitura coerente da ocupacao da sessao.</p>
-                            <?php if ($cargosSessao !== []): ?>
-                                <div class="mt-4 space-y-3">
-                                    <?php foreach ($cargosSessao as $cargo): ?>
-                                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                            <div class="font-semibold text-erp-navy"><?= htmlspecialchars((string) ($cargo['cargo_nome'] ?? $cargo['codigo'] ?? 'Cargo')) ?></div>
-                                            <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($cargo['ocupante_nome'] ?? 'Sem ocupante definido')) ?></div>
-                                            <div class="mt-2 text-xs text-slate-700">Tipo: <?= htmlspecialchars((string) ($cargo['tipo_ocupacao'] ?? 'regular')) ?></div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php else: ?>
-                                <div class="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">Sem composiÃ§Ã£o de cargos capturada no balaustre.</div>
-                            <?php endif; ?>
-                        </div>
-
-                        <div>
-                            <h2 class="font-sans text-2xl text-erp-navy">Atividades registrados</h2>
-                            <p class="mt-2 text-sm text-slate-700">Congressos, palestras e outros registros que podem merecer mencao.</p>
-                            <?php if ($eventosSessao !== []): ?>
-                                <div class="mt-4 space-y-3">
-                                    <?php foreach ($eventosSessao as $evento): ?>
-                                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                            <div class="flex items-center justify-between gap-2">
-                                                <div class="font-semibold text-erp-navy"><?= htmlspecialchars((string) ($evento['titulo'] ?? 'Atividade')) ?></div>
-                                                <span class="rounded-full bg-rose-800/10 px-3 py-1 text-xs font-medium uppercase tracking-wide text-rose-800"><?= htmlspecialchars((string) ($evento['tipo'] ?? 'evento')) ?></span>
-                                            </div>
-                                            <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($evento['linha'] ?? '')) ?></div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php else: ?>
-                                <div class="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">Sem eventos ritualisticos registrados para esta sessao.</div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </article>
-            </section>
-
-            <aside class="space-y-6">
-                <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="font-sans text-2xl text-erp-navy">Lembretes do cargo</h2>
-                    <div class="mt-4 space-y-3">
-                        <?php foreach ($lembretes as $lembrete): ?>
-                            <div class="rounded-2xl border border-slate-200 bg-[linear-gradient(180deg,#fff,#f4efe3)] px-4 py-3 text-sm text-slate-700"><?= htmlspecialchars($lembrete) ?></div>
-                        <?php endforeach; ?>
-                    </div>
-                </article>
-
-                <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="font-sans text-2xl text-erp-navy">Uso do cargo</h2>
-                    <ul class="mt-4 space-y-2 text-sm text-slate-700">
-                        <li>Revisar a pauta resumida da sessao antes da leitura ritual.</li>
-                        <li>Conferir visitantes e cargos ad hoc para mencao correta em Loja.</li>
-                        <li>Usar os lembretes do painel como roteiro da palavra a bem.</li>
-                        <li>Consultar o miniapp quando a leitura precisar ser feita pelo Telegram.</li>
-                    </ul>
-                </article>
-
-                <article class="rounded-2xl border border-slate-200 bg-[linear-gradient(180deg,#fff,#f4efe3)] p-6 shadow-sm">
-                    <h2 class="font-sans text-2xl text-erp-navy">Agenda futura</h2>
-                    <div class="mt-4 space-y-3">
-                        <?php foreach ($sessoes as $sessao): ?>
-                            <a href="/orador?sessao_id=<?= (int) ($sessao['id'] ?? 0) ?>" class="block rounded-2xl border border-slate-200 bg-white px-4 py-3 transition hover:-translate-y-0.5 hover:shadow-sm">
-                                <div class="font-medium text-erp-navy"><?= htmlspecialchars($tituloSessao($sessao)) ?></div>
-                                <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars($formatarData($sessao['data_hora_inicio'] ?? null)) ?></div>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                </article>
-            </aside>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Coluna Principal (2/3) -->
+    <div class="lg:col-span-2 space-y-8">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title"><?= htmlspecialchars($tituloSessao($sessaoEmFoco)) ?></h2>
+                    <p class="card-description"><?= htmlspecialchars($formatarData($sessaoEmFoco['data_hora_inicio'] ?? null)) ?></p>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs">
+                    <span class="badge badge-secondary">Grau: <?= htmlspecialchars((string) ($sessaoEmFoco['grau_sessao'] ?? '-')) ?></span>
+                    <span class="badge badge-secondary">Tipo: <?= htmlspecialchars((string) ($sessaoEmFoco['tipo_sessao'] ?? '-')) ?></span>
+                    <span class="badge badge-warning">Status: <?= htmlspecialchars((string) ($sessaoEmFoco['status'] ?? '-')) ?></span>
+                </div>
+            </div>
+            <div class="card-body">
+                <h3 class="font-semibold mb-2">Resumo Ritual</h3>
+                <p class="text-sm whitespace-pre-line"><?= nl2br(htmlspecialchars((string) ($sessaoEmFoco['ordem_dia'] ?? $sessaoEmFoco['resumo_publico'] ?? 'Sem resumo ritual registrado para esta sessão.'))) ?></p>
+            </div>
         </div>
 
-<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+        <div class="card">
+            <div class="card-header">
+                <div><h2 class="card-title">Visitantes para Leitura</h2><p class="card-description">Nominata resumida para saudação nominal.</p></div>
+                <span class="badge badge-primary"><?= count($visitantesResumo) ?> visitante(s)</span>
+            </div>
+            <div class="card-body">
+                <?php if (empty($visitantesResumo)): ?>
+                    <p class="text-center text-gray-500 py-4">Nenhum visitante resumido foi registrado para a sessão em foco.</p>
+                <?php else: ?>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <?php foreach ($visitantesResumo as $visitante): ?>
+                            <div class="alert alert-warning !p-4">
+                                <p class="font-semibold"><?= htmlspecialchars((string) ($visitante['nome'] ?? 'Visitante')) ?></p>
+                                <p class="mt-1 text-sm"><?= htmlspecialchars((string) ($visitante['linha_resumida'] ?? 'Sem linha resumida.')) ?></p>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Cargos e Composição</h2><p class="card-description">Ocupação da sessão.</p></div>
+                <div class="card-body space-y-3">
+                    <?php if (empty($cargosSessao)): ?>
+                        <p class="text-center text-gray-500 py-4">Sem composição de cargos capturada.</p>
+                    <?php else: ?>
+                        <?php foreach ($cargosSessao as $cargo): ?>
+                            <div class="list-item">
+                                <div>
+                                    <p class="font-semibold"><?= htmlspecialchars((string) ($cargo['cargo_nome'] ?? $cargo['codigo'] ?? 'Cargo')) ?></p>
+                                    <p class="text-sm text-gray-500"><?= htmlspecialchars((string) ($cargo['ocupante_nome'] ?? 'Sem ocupante')) ?></p>
+                                </div>
+                                <span class="badge badge-secondary text-xs"><?= htmlspecialchars((string) ($cargo['tipo_ocupacao'] ?? 'regular')) ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Atividades Registradas</h2><p class="card-description">Eventos para menção.</p></div>
+                <div class="card-body space-y-3">
+                    <?php if (empty($eventosSessao)): ?>
+                        <p class="text-center text-gray-500 py-4">Sem eventos registrados para esta sessão.</p>
+                    <?php else: ?>
+                        <?php foreach ($eventosSessao as $evento): ?>
+                            <div class="list-item">
+                                <div>
+                                    <p class="font-semibold"><?= htmlspecialchars((string) ($evento['titulo'] ?? 'Atividade')) ?></p>
+                                    <p class="text-sm text-gray-500"><?= htmlspecialchars((string) ($evento['linha'] ?? '')) ?></p>
+                                </div>
+                                <span class="badge badge-info text-xs uppercase"><?= htmlspecialchars((string) ($evento['tipo'] ?? 'evento')) ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Lateral (1/3) -->
+    <div class="space-y-8">
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Lembretes do Cargo</h2></div>
+            <div class="card-body space-y-3">
+                <?php foreach ($lembretes as $lembrete): ?>
+                    <div class="list-item-report text-sm"><?= htmlspecialchars($lembrete) ?></div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Uso do Cargo</h2></div>
+            <div class="card-body">
+                <ul class="list-disc space-y-2 pl-5 text-sm text-gray-500">
+                    <li>Revisar a pauta resumida da sessão antes da leitura ritual.</li>
+                    <li>Conferir visitantes e cargos ad hoc para menção correta em Loja.</li>
+                    <li>Usar os lembretes do painel como roteiro da palavra a bem.</li>
+                    <li>Consultar o miniapp quando a leitura precisar ser feita pelo Telegram.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Agenda Futura</h2></div>
+            <div class="card-body space-y-3">
+                <?php foreach ($sessoes as $sessao): ?>
+                    <a href="/orador?sessao_id=<?= (int) ($sessao['id'] ?? 0) ?>" class="list-item-action">
+                        <p class="font-semibold"><?= htmlspecialchars($tituloSessao($sessao)) ?></p>
+                        <p class="mt-1 text-sm text-gray-500"><?= htmlspecialchars($formatarData($sessao['data_hora_inicio'] ?? null)) ?></p>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center justify-between gap-4; }
+    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
+    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
+    .card-body { @apply p-5; }
+
+    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
+    .form-select { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
+
+    .list-item { @apply flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md text-sm; }
+    .list-item-report { @apply p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg; }
+    .list-item-action { @apply block bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-700 transition; }
+
+    .alert { @apply px-4 py-3 rounded-lg; }
+    .alert-success { @apply bg-green-100 dark:bg-green-900/20 border border-green-400 text-green-700 dark:text-green-300; }
+    .alert-danger { @apply bg-red-100 dark:bg-red-900/20 border border-red-400 text-red-700 dark:text-red-300; }
+    .alert-warning { @apply bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 text-yellow-700 dark:text-yellow-300; }
+
+    .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold; }
+    .badge-primary { @apply bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-200; }
+    .badge-warning { @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-800/30 dark:text-yellow-200; }
+    .badge-info { @apply bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-200; }
+    .badge-secondary { @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200; }
+</style>
+
+<?php
+require_once __DIR__ . '/../partials/erp_shell_close.php';
+?>
 

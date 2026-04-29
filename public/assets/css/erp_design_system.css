@@ -1,0 +1,29 @@
+:root {
+    --erp-navy: #1E3A5F;
+    --erp-gold: #D4AF37;
+    --erp-accent: #FBBF24;
+    --erp-bg: #F4F7FB;
+    --erp-surface: #FFFFFF;
+    --erp-border: #E5E7EB;
+    --erp-text: #1F2937;
+    --erp-muted: #6B7280;
+
+    --erp-success: #10B981;
+    --erp-warning: #F59E0B;
+    --erp-danger: #EF4444;
+    --erp-info: #3B82F6;
+}
+
+body {
+    background-color: var(--erp-bg);
+    color: var(--erp-text);
+    font-family: 'Inter', sans-serif;
+}
+
+.erp-container {
+    max-width: 80rem; /* 1280px */
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem; /* 24px */
+    padding-right: 1.5rem; /* 24px */
+}

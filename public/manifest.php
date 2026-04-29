@@ -17,8 +17,8 @@ if ($tenantSlug === '') {
 
 $name = 'Gestor Loja';
 $shortName = 'Gestor';
-$themeColor = '#1e3a8a';
-$backgroundColor = '#0f172a';
+$themeColor = '#1E3A5F';
+$backgroundColor = '#F4F7FB';
 
 $iconSvg = "/assets/tenants/{$tenantSlug}/logo.svg";
 if (!is_file(__DIR__ . $iconSvg)) {

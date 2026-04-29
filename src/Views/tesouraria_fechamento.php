@@ -1,55 +1,35 @@
 <?php
-// src/Views/tesouraria_fechamento.php
-if (!isset($_SESSION["usuario_logado"])) {
-    header("Location: /login");
-    exit;
-}
-?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fechamento Mensal - Tesouraria</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @media (min-width: 1440px) {
-            .erp-readable {
-                font-size: 1.08rem;
-            }
-            .erp-readable .text-xs,
-            .erp-readable .text-\[11px\] {
-                font-size: 0.92rem !important;
-                line-height: 1.4rem !important;
-            }
-            .erp-readable .text-sm {
-                font-size: 1.03rem !important;
-                line-height: 1.58rem !important;
-            }
-        }
-    </style>
-</head>
-<body class="erp-readable bg-gray-50 min-h-screen text-gray-800">
-    <div class="max-w-4xl mx-auto px-4 py-8">
-        <header class="mb-6 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d6b672,transparent_30%),linear-gradient(135deg,#162033,#223145)] px-6 py-7 text-white shadow-xl">
-            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Tesouraria</p>
-                    <h1 class="mt-2 text-3xl font-semibold">Fechamento Mensal</h1>
-                    <p class="mt-2 max-w-3xl text-sm text-slate-200">Conferencia final do periodo com leitura mais clara para saldo inicial, movimento e saldo final.</p>
-                </div>
-                <a href="/dashboard" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar ao Painel</a>
-            </div>
-        </header>
+declare(strict_types=1);
 
-        <div class="mb-6 rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
+$mesAtual = (int) date('n');
+$anoAtual = (int) date('Y');
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
+$appShellEyebrow = 'Tesouraria';
+$appShellTitle = 'Fechamento Mensal';
+$appShellDescription = 'Conferência final do período com leitura clara de saldos e movimentos.';
+$appShellActiveHref = '/tesouraria/fechamento';
+
+require_once __DIR__ . '/../partials/erp_shell_open.php';
+?>
+
+<div class="space-y-8">
+    <!-- Filtros -->
+    <div class="card">
+        <div class="card-body">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Mes</label>
-                    <select id="filter-mes" class="w-full rounded border border-gray-300 px-3 py-2" onchange="carregarFechamento()">
+                    <label for="filter-mes" class="form-label">Mês</label>
+                    <select id="filter-mes" class="form-select">
                         <?php
-                        $mesesPT = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-                        $mesAtual = (int) date('n');
+                        $mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                         for ($m = 1; $m <= 12; $m++) {
                             $selected = ($m === $mesAtual) ? 'selected' : '';
                             echo "<option value=\"$m\" $selected>{$mesesPT[$m - 1]}</option>";
@@ -57,12 +37,10 @@ if (!isset($_SESSION["usuario_logado"])) {
                         ?>
                     </select>
                 </div>
-
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Ano</label>
-                    <select id="filter-ano" class="w-full rounded border border-gray-300 px-3 py-2" onchange="carregarFechamento()">
+                    <label for="filter-ano" class="form-label">Ano</label>
+                    <select id="filter-ano" class="form-select">
                         <?php
-                        $anoAtual = (int) date('Y');
                         for ($a = $anoAtual - 1; $a <= $anoAtual; $a++) {
                             $selected = ($a === $anoAtual) ? 'selected' : '';
                             echo "<option value=\"$a\" $selected>$a</option>";
@@ -70,176 +48,96 @@ if (!isset($_SESSION["usuario_logado"])) {
                         ?>
                     </select>
                 </div>
-
                 <div>
-                    <p class="mb-2 text-sm text-gray-600">Status: <span id="status-fechamento" class="font-bold text-blue-700">Aberto</span></p>
-                </div>
-            </div>
-        </div>
-
-        <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <p class="mb-1 text-sm font-medium text-blue-600">Saldo Inicial</p>
-                <p class="text-2xl font-bold text-blue-700" id="saldo-inicial">R$ 0,00</p>
-                <button onclick="editarSaldoInicial()" class="mt-2 text-xs text-blue-600 hover:underline">Editar</button>
-            </div>
-
-            <div class="rounded-lg border border-green-200 bg-green-50 p-4">
-                <p class="mb-1 text-sm font-medium text-green-600">Total Entradas</p>
-                <p class="text-2xl font-bold text-green-700" id="total-entradas">R$ 0,00</p>
-            </div>
-
-            <div class="rounded-lg border border-red-200 bg-red-50 p-4">
-                <p class="mb-1 text-sm font-medium text-red-600">Total Saidas</p>
-                <p class="text-2xl font-bold text-red-700" id="total-saidas">R$ 0,00</p>
-            </div>
-
-            <div class="rounded-lg border border-purple-200 bg-purple-50 p-4">
-                <p class="mb-1 text-sm font-medium text-purple-600">Saldo Final</p>
-                <p class="text-2xl font-bold text-purple-700" id="saldo-final">R$ 0,00</p>
-            </div>
-        </div>
-
-        <div class="mb-6 rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div class="mb-4 flex items-center justify-between">
-                <h2 class="text-lg font-semibold">Fechamento do periodo</h2>
-                <button id="btn-fechar-mes" onclick="fecharMes()" class="rounded bg-blue-700 px-4 py-2 text-white hover:bg-blue-800">
-                    Fechar Mes
-                </button>
-            </div>
-            <div id="fechamento-content" class="space-y-4">
-                <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center text-gray-500">
-                    Carregando dados do fechamento...
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Status: <span id="status-fechamento" class="font-bold text-blue-600 dark:text-blue-400">Aberto</span></p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="modal-saldo-inicial" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-40 p-4">
-        <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-            <h2 class="mb-4 text-lg font-bold">Definir Saldo Inicial</h2>
-            <div class="space-y-4">
-                <div>
-                    <label class="mb-1 block text-sm font-medium">Valor</label>
-                    <input type="number" id="saldo-inicial-input" step="0.01" min="0" class="w-full rounded border border-gray-300 px-3 py-2">
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="fecharModalSaldoInicial()" class="flex-1 rounded bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300">Cancelar</button>
-                    <button onclick="salvarSaldoInicial()" class="flex-1 rounded bg-blue-700 px-4 py-2 text-white hover:bg-blue-800">Salvar</button>
-                </div>
-            </div>
+    <!-- Cards de Resumo -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="card-metric">
+            <p class="card-metric-label">Saldo Inicial</p>
+            <p class="card-metric-value text-blue-600 dark:text-blue-400" id="saldo-inicial">R$ 0,00</p>
+            <button onclick="editarSaldoInicial()" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mt-2">EDITAR SALDO</button>
+        </div>
+        <div class="card-metric">
+            <p class="card-metric-label">Total Entradas</p>
+            <p class="card-metric-value text-green-600 dark:text-green-400" id="total-entradas">R$ 0,00</p>
+        </div>
+        <div class="card-metric">
+            <p class="card-metric-label">Total Saídas</p>
+            <p class="card-metric-value text-red-600 dark:text-red-400" id="total-saidas">R$ 0,00</p>
+        </div>
+        <div class="card-metric">
+            <p class="card-metric-label">Saldo Final</p>
+            <p class="card-metric-value text-purple-600 dark:text-purple-400" id="saldo-final">R$ 0,00</p>
         </div>
     </div>
 
-    <script>
-        function formatarMoeda(valor) {
-            return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        }
+    <!-- Ação de Fechamento -->
+    <div class="card">
+        <div class="card-body flex flex-col md:flex-row items-start md:items-center justify-between">
+            <div>
+                <h2 class="card-title">Ação de Fechamento</h2>
+                <p class="card-description">Após conferir todos os lançamentos, efetue o fechamento do mês.</p>
+            </div>
+            <button id="btn-fechar-mes" onclick="fecharMes()" class="btn btn-primary mt-4 md:mt-0">
+                Fechar Mês
+            </button>
+        </div>
+        <div id="fechamento-content" class="border-t border-gray-200 dark:border-gray-700 p-6 hidden">
+            <!-- Conteúdo carregado via JS -->
+        </div>
+    </div>
+</div>
 
-        async function carregarFechamento() {
-            const mes = parseInt(document.getElementById('filter-mes').value);
-            const ano = parseInt(document.getElementById('filter-ano').value);
+<!-- Modal Saldo Inicial -->
+<div id="modal-saldo-inicial" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
+    <div class="modal-content max-w-md">
+        <div class="modal-header">
+            <h2 class="modal-title">Definir Saldo Inicial</h2>
+            <button onclick="fecharModalSaldoInicial()" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div>
+                <label for="saldo-inicial-input" class="form-label">Valor (R$)</label>
+                <input type="number" id="saldo-inicial-input" step="0.01" min="0" class="form-input">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="fecharModalSaldoInicial()" class="btn btn-secondary">Cancelar</button>
+            <button onclick="salvarSaldoInicial()" class="btn btn-primary">Salvar</button>
+        </div>
+    </div>
+</div>
 
-            try {
-                const res = await fetch(`/api/tesouraria/fechamento?mes=${mes}&ano=${ano}`);
-                const json = await res.json();
-                const fechamento = json.fechamento || {};
-                const totais = json.totais || {};
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
+    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
+    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
+    .card-body { @apply p-6; }
+    
+    .card-metric { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-5; }
+    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
+    .card-metric-value { @apply mt-2 text-3xl font-bold; }
 
-                document.getElementById('status-fechamento').textContent = fechamento.status || 'Aberto';
-                document.getElementById('saldo-inicial').textContent = formatarMoeda(fechamento.saldo_inicial || 0);
-                document.getElementById('total-entradas').textContent = formatarMoeda(totais.entrada || 0);
-                document.getElementById('total-saidas').textContent = formatarMoeda(totais.saida || 0);
-                document.getElementById('saldo-final').textContent = formatarMoeda(fechamento.saldo_final || 0);
+    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
+    .form-select, .form-input { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
 
-                const btnFechar = document.getElementById('btn-fechar-mes');
-                btnFechar.disabled = fechamento.status === 'fechado';
-                btnFechar.className = fechamento.status === 'fechado'
-                    ? 'rounded bg-gray-300 px-4 py-2 text-gray-500 cursor-not-allowed'
-                    : 'rounded bg-blue-700 px-4 py-2 text-white hover:bg-blue-800';
-                btnFechar.textContent = fechamento.status === 'fechado' ? 'MÃªs Fechado' : 'Fechar MÃªs';
+    .modal-content { @apply w-full rounded-xl bg-white dark:bg-gray-800 shadow-xl; }
+    .modal-header { @apply flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-700; }
+    .modal-title { @apply text-lg font-bold text-gray-900 dark:text-gray-100; }
+    .modal-close { @apply text-2xl text-gray-500 hover:text-gray-800 dark:hover:text-gray-200; }
+    .modal-body { @apply p-5 space-y-4; }
+    .modal-footer { @apply flex justify-end gap-3 p-5 border-t border-gray-200 dark:border-gray-700; }
+</style>
 
-                document.getElementById('fechamento-content').innerHTML = `
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                            <h3 class="mb-2 font-semibold">Resumo do fechamento</h3>
-                            <p><strong>PerÃ­odo:</strong> ${String(mes).padStart(2, '0')}/${ano}</p>
-                            <p><strong>Status:</strong> ${fechamento.status || 'Aberto'}</p>
-                            <p><strong>Data de fechamento:</strong> ${fechamento.data_fechamento ? new Date(fechamento.data_fechamento).toLocaleString('pt-BR') : 'Ainda nÃ£o fechado'}</p>
-                        </div>
-                        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                            <h3 class="mb-2 font-semibold">ObservaÃ§Ãµes</h3>
-                            <p class="text-sm text-gray-600">Use esta tela para consolidar o perÃ­odo apÃ³s validar caixa, comprovantes e regularidade.</p>
-                        </div>
-                    </div>
-                `;
-            } catch (err) {
-                console.error('Erro ao carregar fechamento:', err);
-                document.getElementById('fechamento-content').innerHTML = '<div class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">Erro ao carregar dados do fechamento.</div>';
-            }
-        }
+<?php require_once __DIR__ . '/../partials/erp_shell_close.php'; ?>
 
-        function editarSaldoInicial() {
-            document.getElementById('saldo-inicial-input').value =
-                document.getElementById('saldo-inicial').textContent.replace(/[^\d,]/g, '').replace(',', '.');
-            const modal = document.getElementById('modal-saldo-inicial');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
+<script src="/assets/js/tesouraria_fechamento.js"></script>
 
-        function fecharModalSaldoInicial() {
-            const modal = document.getElementById('modal-saldo-inicial');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        async function salvarSaldoInicial() {
-            const mes = parseInt(document.getElementById('filter-mes').value);
-            const ano = parseInt(document.getElementById('filter-ano').value);
-            const saldoInicial = parseFloat(document.getElementById('saldo-inicial-input').value || '0');
-
-            try {
-                const res = await fetch('/api/tesouraria/fechamento/saldo-inicial', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mes, ano, saldo_inicial: saldoInicial })
-                });
-                const json = await res.json();
-                if (json.ok) {
-                    fecharModalSaldoInicial();
-                    carregarFechamento();
-                }
-            } catch (err) {
-                console.error('Erro ao salvar saldo inicial:', err);
-            }
-        }
-
-        async function fecharMes() {
-            if (!confirm('Confirma o fechamento deste mÃªs? A aÃ§Ã£o nÃ£o deve ser feita sem conferÃªncia final.')) return;
-
-            const mes = parseInt(document.getElementById('filter-mes').value);
-            const ano = parseInt(document.getElementById('filter-ano').value);
-
-            try {
-                const res = await fetch('/api/tesouraria/fechamento/fechar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mes, ano })
-                });
-                const json = await res.json();
-                if (json.ok) {
-                    carregarFechamento();
-                } else {
-                    alert(json.erro || 'NÃ£o foi possÃ­vel fechar o mÃªs.');
-                }
-            } catch (err) {
-                console.error('Erro ao fechar mÃªs:', err);
-            }
-        }
-
-        carregarFechamento();
-    </script>
-</body>
-</html>
 
 

@@ -6,5 +6,11 @@
   "files.associations": {
     "**/database/05_biblioteca_rede.sql": "sql",
     "**/database/06_biblioteca_emprestimo_interloja.sql": "plaintext"
-  }
+  },
+  "css.customData": [
+    ".vscode/tailwind.custom-data.json"
+  ],
+  "css.lint.unknownAtRules": "warning",
+  "scss.lint.unknownAtRules": "warning",
+  "less.lint.unknownAtRules": "warning"
 }

@@ -1,4 +1,10 @@
 <?php
+declare(strict_types=1);
+
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
@@ -8,204 +14,162 @@ $semAgape = array_values(array_filter(
     $confirmados,
     static fn (array $item): bool => empty($item['participara_agape'])
 ));
+
+$tituloSessao = static function (?array $sessao): string {
+    if (!$sessao) return 'N/A';
+    $titulo = trim((string) ($sessao['titulo'] ?? ''));
+    return $titulo !== '' ? $titulo : trim(((string) ($sessao['tipo_sessao'] ?? 'Sessão')) . ' - ' . ((string) ($sessao['grau_sessao'] ?? '')));
+};
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
+$appShellEyebrow = 'Mestre de Banquetes';
+$appShellTitle = 'Painel de Controle do Ágape';
+$appShellDescription = 'Controle do ágape, previsão de participantes e observações logísticas por sessão.';
+$appShellActiveHref = '/mestre-banquetes';
+
+require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mestre de Banquetes - Gestor da Loja</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        @media (min-width: 1440px) {
-            .erp-readable {
-                font-size: 1.08rem;
-            }
-            .erp-readable .text-xs,
-            .erp-readable .text-\[11px\] {
-                font-size: 0.92rem !important;
-                line-height: 1.4rem !important;
-            }
-            .erp-readable .text-sm {
-                font-size: 1.03rem !important;
-                line-height: 1.58rem !important;
-            }
-        }
-    </style>
-</head>
-<body class="erp-readable min-h-screen bg-[linear-gradient(180deg,#f8f4ea_0%,#eef2f7_100%)] font-sans text-slate-900">
-    <div class="mx-auto max-w-6xl px-4 py-8">
-        <header class="mb-8 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d3b269,transparent_28%),linear-gradient(135deg,#172030,#27364a)] px-6 py-7 text-white shadow-2xl">
-            <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Painel do Mestre de Banquetes</p>
-            <h1 class="mt-2 text-3xl font-semibold">Controle do ágape e confirmados</h1>
-            <p class="mt-2 max-w-2xl text-sm text-slate-200">O cargo agora trabalha por sessão em foco, com previsão de participantes, observações logísticas e status operacional do banquete.</p>
-            <div class="mt-4 flex flex-wrap gap-2">
-                <a href="/secretaria" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Ir para Secretaria</a>
-                <a href="/dashboard" class="rounded-md bg-amber-400 px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300">Voltar ao Painel</a>
-            </div>
-        </header>
 
-        <?php if ($mensagemSucesso): ?>
-            <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700"><?= htmlspecialchars($mensagemSucesso) ?></div>
-        <?php endif; ?>
-        <?php if ($mensagemErro): ?>
-            <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700"><?= htmlspecialchars($mensagemErro) ?></div>
-        <?php endif; ?>
+<!-- Mensagens de Feedback -->
+<?php if ($mensagemSucesso): ?><div class="alert alert-success mb-6"><?= htmlspecialchars($mensagemSucesso) ?></div><?php endif; ?>
+<?php if ($mensagemErro): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
 
-        <?php
-        $dashboard = [
-            'title' => 'Painel operacional do Mestre de Banquetes',
-            'subtitle' => 'Execução operacional e registro de operação do cargo.',
-            'meta' => ['Perfil: operação de sessão'],
-            'actions' => [
-                ['label' => 'Registrar operação', 'href' => '/mestre-banquetes/operacao/salvar'],
-            ],
-            'blocks' => [
-                ['title' => 'Operações recentes', 'subtitle' => 'Status e previsão de participantes.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'Confirmados', 'value' => (string) count($confirmados)],
-                    ['label' => 'Participantes do ágape', 'value' => (string) count($participantesAgape)],
-                ], 'list' => [['item' => 'Status operacional', 'meta' => (string) ($operacaoBanquete['status_operacional'] ?? 'planejamento'), 'status' => 'Regular']]],
-                ['title' => 'Sessões relacionadas e histórico', 'subtitle' => 'Leitura simples da agenda.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'Sessões na agenda', 'value' => (string) count($sessoes)],
-                    ['label' => 'Sem ágape', 'value' => (string) count($semAgape)],
-                ], 'list' => array_map(static fn (array $s): array => ['item' => (string) ($s['titulo'] ?: (($s['tipo_sessao'] ?? 'Sessão') . ' - ' . ($s['grau_sessao'] ?? ''))), 'meta' => (string) ($s['data_hora_inicio'] ?? ''), 'status' => (string) ($s['status'] ?? '-')], array_slice($sessoes, 0, 4))],
-            ],
-            'alerts' => [['title' => 'Operação de ágape', 'text' => 'Manter previsão e status alinhados com a sessão em foco.', 'tone' => 'warning']],
-            'activity' => array_map(static fn (array $p): array => ['item' => (string) ($p['nome'] ?? 'Participante'), 'meta' => 'CIM ' . (string) ($p['cim'] ?? '-')], array_slice($participantesAgape, 0, 4)),
-            'links' => [['label' => 'Painel do cargo', 'href' => '/mestre-banquetes/dashboard']],
-        ];
-        $dashboardRenderers = [
-            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
-            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
-        ];
-        require __DIR__ . '/../layouts/dashboard.php';
-        ?>
+<!-- Métricas Rápidas -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+    <div class="card-metric"><p class="card-metric-label">Sessão em Foco</p><p class="card-metric-value text-lg truncate" title="<?= htmlspecialchars($tituloSessao($sessaoEmFoco)) ?>"><?= htmlspecialchars($tituloSessao($sessaoEmFoco)) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Confirmados na Sessão</p><p class="card-metric-value"><?= count($confirmados) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Participantes do Ágape</p><p class="card-metric-value"><?= count($participantesAgape) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Status Operacional</p><p class="card-metric-value text-lg capitalize"><?= htmlspecialchars((string) ($operacaoBanquete['status_operacional'] ?? 'planejamento'))?></p></div>
+</div>
 
-        <div class="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <section class="space-y-6">
-                <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                        <div>
-                            <h2 class="text-2xl font-semibold text-slate-900">Sessão em foco</h2>
-                            <p class="mt-2 text-sm text-slate-700">O Mestre de Banquetes pode alternar a sessão de trabalho para ajustar previsão e operação do ágape.</p>
-                        </div>
-                        <form method="GET" action="/mestre-banquetes" class="w-full max-w-md">
-                            <label for="sessao_id" class="mb-1 block text-sm font-medium text-slate-700">Selecionar sessão</label>
-                            <select id="sessao_id" name="sessao_id" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">
-                                <?php foreach ($sessoes as $sessaoOpcao): ?>
-                                    <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>" <?= !empty($sessaoEmFoco['id']) && (int) $sessaoEmFoco['id'] === (int) ($sessaoOpcao['id'] ?? 0) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars((string) (($sessaoOpcao['titulo'] ?? '') !== '' ? $sessaoOpcao['titulo'] : (($sessaoOpcao['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </form>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Coluna Principal (2/3) -->
+    <div class="lg:col-span-2 space-y-8">
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Operação do Banquete</h2><p class="card-description">Ajuste a sessão de trabalho e registre a previsão e o status logístico do ágape.</p></div>
+            <div class="card-body space-y-6">
+                <form method="GET" action="/mestre-banquetes" class="flex flex-col sm:flex-row sm:items-end sm:gap-4">
+                    <div class="flex-grow">
+                        <label for="sessao_id" class="form-label">Selecionar Sessão</label>
+                        <select id="sessao_id" name="sessao_id" onchange="this.form.submit()" class="form-select">
+                            <?php foreach ($sessoes as $sessaoOpcao): ?>
+                                <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>" <?= !empty($sessaoEmFoco['id']) && (int) $sessaoEmFoco['id'] === (int) ($sessaoOpcao['id'] ?? 0) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($tituloSessao($sessaoOpcao)) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
+                    <a href="/miniapp/mestre-banquetes" class="btn btn-outline-secondary mt-4 sm:mt-0">Abrir Mobile</a>
+                </form>
 
-                    <?php if ($sessaoEmFoco): ?>
-                        <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-lg font-semibold text-slate-900"><?= htmlspecialchars($sessaoEmFoco['titulo'] ?: (($sessaoEmFoco['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessaoEmFoco['grau_sessao'] ?? ''))) ?></div>
-                            <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($sessaoEmFoco['data_hora_inicio'] ?? '')) ?></div>
-                            <div class="mt-3 flex flex-wrap gap-2 text-xs">
-                                <span class="rounded-full bg-white px-3 py-1 text-slate-700">Confirmados: <?= count($confirmados) ?></span>
-                                <span class="rounded-full bg-white px-3 py-1 text-slate-700">Ágape: <?= count($participantesAgape) ?></span>
-                                <span class="rounded-full bg-white px-3 py-1 text-slate-700">Status: <?= htmlspecialchars((string) ($sessaoEmFoco['status'] ?? '-')) ?></span>
-                            </div>
-                            <div class="mt-3 grid gap-2 text-xs text-slate-700">
-                                <div>Configuração do ágape: <?= htmlspecialchars((string) ($descricaoAgape ?? 'Não informado')) ?></div>
-                                <div>Modelo financeiro: <?= htmlspecialchars((string) ($descricaoModeloTesourariaAgape ?? 'Não informado')) ?></div>
-                            </div>
-                        </div>
-                    <?php else: ?>
-                        <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Nenhuma sessão futura cadastrada.</div>
-                    <?php endif; ?>
-                </article>
-
-                <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <h2 class="text-2xl font-semibold text-slate-900">Operação do banquete</h2>
-                            <p class="mt-2 text-sm text-slate-700">Registre previsão, observações e o status logístico do ágape.</p>
-                        </div>
-                        <a href="/miniapp/mestre-banquetes" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">Abrir mobile</a>
+                <?php if ($sessaoEmFoco): ?>
+                    <div class="list-item-report">
+                        <p class="text-sm">Configuração do ágape: <strong><?= htmlspecialchars((string) ($descricaoAgape ?? 'Não informado')) ?></strong></p>
+                        <p class="text-sm mt-1">Modelo financeiro: <strong><?= htmlspecialchars((string) ($descricaoModeloTesourariaAgape ?? 'Não informado')) ?></strong></p>
                     </div>
-                    <form method="POST" action="/mestre-banquetes/operacao/salvar" class="mt-4 space-y-3">
-                        <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoEmFoco['id'] ?? 0) ?>">
+                <?php endif; ?>
+
+                <form method="POST" action="/mestre-banquetes/operacao/salvar" class="space-y-4">
+                    <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoEmFoco['id'] ?? 0) ?>">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Status operacional</label>
-                            <select name="status_operacional" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">
-                                <?php
-                                $statusAtual = (string) ($operacaoBanquete['status_operacional'] ?? 'planejamento');
-                                foreach (['planejamento' => 'Planejamento', 'preparacao' => 'Preparacao', 'abastecimento' => 'Abastecimento', 'fechado' => 'Fechado'] as $valor => $label):
-                                ?>
+                            <label for="status_operacional" class="form-label">Status Operacional</label>
+                            <select name="status_operacional" id="status_operacional" class="form-select">
+                                <?php $statusAtual = (string) ($operacaoBanquete['status_operacional'] ?? 'planejamento'); ?>
+                                <?php foreach (['planejamento' => 'Planejamento', 'preparacao' => 'Preparação', 'abastecimento' => 'Abastecimento', 'fechado' => 'Fechado'] as $valor => $label): ?>
                                     <option value="<?= $valor ?>" <?= $statusAtual === $valor ? 'selected' : '' ?>><?= $label ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Previsão de participantes</label>
-                            <input type="number" min="0" name="previsao_participantes" value="<?= htmlspecialchars((string) ($operacaoBanquete['previsao_participantes'] ?? '')) ?>" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Observações logísticas</label>
-                            <textarea name="observacoes" rows="4" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"><?= htmlspecialchars((string) ($operacaoBanquete['observacoes'] ?? '')) ?></textarea>
-                        </div>
-                        <button type="submit" class="rounded-xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-500">Salvar operação</button>
-                    </form>
-                </article>
-
-                <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-2xl font-semibold text-slate-900">Participantes do ágape</h2>
-                    <p class="mt-2 text-sm text-slate-700">Lista prática dos confirmados que optaram por participar do ágape.</p>
-                    <div class="mt-4 space-y-3">
-                        <?php if ($participantesAgape !== []): ?>
-                            <?php foreach ($participantesAgape as $participante): ?>
-                                <div class="rounded-2xl border border-amber-200 bg-[linear-gradient(135deg,#fffdf7,#f7f0df)] px-4 py-3">
-                                    <div class="font-medium text-slate-900"><?= htmlspecialchars((string) ($participante['nome'] ?? 'Obreiro')) ?></div>
-                                    <div class="mt-1 text-sm text-slate-700">CIM: <?= htmlspecialchars((string) ($participante['cim'] ?? '-')) ?></div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Ainda não há participantes confirmados com ágape.</div>
-                        <?php endif; ?>
+                        <div><label for="previsao_participantes" class="form-label">Previsão de Participantes</label><input type="number" min="0" name="previsao_participantes" id="previsao_participantes" value="<?= htmlspecialchars((string) ($operacaoBanquete['previsao_participantes'] ?? '')) ?>" class="form-input"></div>
                     </div>
-                </article>
-            </section>
+                    <div><label for="observacoes" class="form-label">Observações Logísticas</label><textarea name="observacoes" id="observacoes" rows="3" class="form-textarea" placeholder="Ex: cardápio, restrições, equipe de apoio..."><?= htmlspecialchars((string) ($operacaoBanquete['observacoes'] ?? '')) ?></textarea></div>
+                    <div class="text-right"><button type="submit" class="btn btn-primary">Salvar Operação</button></div>
+                </form>
+            </div>
+        </div>
 
-            <aside class="space-y-6">
-                <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-2xl font-semibold text-slate-900">Confirmados sem ágape</h2>
-                    <div class="mt-4 space-y-3">
-                        <?php if ($semAgape !== []): ?>
-                            <?php foreach ($semAgape as $confirmado): ?>
-                                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                                    <div class="font-medium text-slate-900"><?= htmlspecialchars((string) ($confirmado['nome'] ?? 'Obreiro')) ?></div>
-                                    <div class="mt-1 text-sm text-slate-700">CIM: <?= htmlspecialchars((string) ($confirmado['cim'] ?? '-')) ?></div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Não há confirmados sem ágape neste momento.</div>
-                        <?php endif; ?>
-                    </div>
-                </article>
-
-                <article class="rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,#fff,#f4efe3)] p-6 shadow-sm">
-                    <h2 class="text-2xl font-semibold text-slate-900">Agenda futura</h2>
-                    <div class="mt-4 space-y-3">
-                        <?php foreach ($sessoes as $sessao): ?>
-                            <a href="/mestre-banquetes?sessao_id=<?= (int) ($sessao['id'] ?? 0) ?>" class="block rounded-2xl border border-slate-200 bg-white px-4 py-3 hover:border-amber-300">
-                                <div class="font-medium text-slate-900"><?= htmlspecialchars($sessao['titulo'] ?: (($sessao['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessao['grau_sessao'] ?? ''))) ?></div>
-                                <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?></div>
-                                <div class="mt-2 text-xs text-slate-700">Confirmados: <?= (int) ($sessao['total_confirmados'] ?? 0) ?> · Ágape: <?= (int) ($sessao['total_agape'] ?? 0) ?></div>
-                            </a>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Participantes do Ágape</h2></div>
+                <div class="card-body space-y-3">
+                    <?php if (empty($participantesAgape)): ?>
+                        <p class="text-center text-gray-500 py-4">Ainda não há participantes confirmados com ágape.</p>
+                    <?php else: ?>
+                        <?php foreach ($participantesAgape as $participante): ?>
+                            <div class="list-item">
+                                <p class="font-semibold"><?= htmlspecialchars((string) ($participante['nome'] ?? 'Obreiro')) ?></p>
+                                <p class="text-sm text-gray-500">CIM: <?= htmlspecialchars((string) ($participante['cim'] ?? '-')) ?></p>
+                            </div>
                         <?php endforeach; ?>
-                    </div>
-                </article>
-            </aside>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Confirmados sem Ágape</h2></div>
+                <div class="card-body space-y-3">
+                    <?php if (empty($semAgape)): ?>
+                        <p class="text-center text-gray-500 py-4">Não há confirmados sem ágape.</p>
+                    <?php else: ?>
+                        <?php foreach ($semAgape as $confirmado): ?>
+                            <div class="list-item">
+                                <p class="font-semibold"><?= htmlspecialchars((string) ($confirmado['nome'] ?? 'Obreiro')) ?></p>
+                                <p class="text-sm text-gray-500">CIM: <?= htmlspecialchars((string) ($confirmado['cim'] ?? '-')) ?></p>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
     </div>
-</body>
-</html>
+
+    <!-- Coluna Lateral (1/3) -->
+    <div class="space-y-8">
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Agenda Futura</h2></div>
+            <div class="card-body space-y-3">
+                <?php foreach ($sessoes as $sessao): ?>
+                    <a href="/mestre-banquetes?sessao_id=<?= (int) ($sessao['id'] ?? 0) ?>" class="list-item-action">
+                        <p class="font-semibold"><?= htmlspecialchars($tituloSessao($sessao))?></p>
+                        <p class="mt-1 text-sm text-gray-500"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?></p>
+                        <div class="mt-2 flex gap-4 text-xs text-gray-500">
+                            <span>Confirmados: <strong><?= (int) ($sessao['total_confirmados'] ?? 0) ?></strong></span>
+                            <span>Ágape: <strong><?= (int) ($sessao['total_agape'] ?? 0) ?></strong></span>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
+    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
+    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
+    .card-body { @apply p-5; }
+
+    .card-metric { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-5; }
+    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
+    .card-metric-value { @apply mt-1 text-3xl font-bold; }
+
+    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
+    .form-input, .form-select, .form-textarea { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
+
+    .list-item { @apply flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md text-sm; }
+    .list-item-report { @apply p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg; }
+    .list-item-action { @apply block bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-700 transition; }
+
+    .alert { @apply px-4 py-3 rounded-lg; }
+    .alert-success { @apply bg-green-100 dark:bg-green-900/20 border border-green-400 text-green-700 dark:text-green-300; }
+    .alert-danger { @apply bg-red-100 dark:bg-red-900/20 border border-red-400 text-red-700 dark:text-red-300; }
+</style>
+
+<?php
+require_once __DIR__ . '/../partials/erp_shell_close.php';
+?>
 

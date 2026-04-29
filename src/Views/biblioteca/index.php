@@ -1,287 +1,271 @@
 <?php
+declare(strict_types=1);
+
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
 $lista = $itens ?? [];
 $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
-$isTestSession = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id'] === 0;
-$allowAllPanels = filter_var($_ENV['APP_TEST_ALLOW_ALL_PANELS'] ?? 'true', FILTER_VALIDATE_BOOL);
-$showAllPanels = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VALIDATE_BOOL) || $isTestSession || $allowAllPanels;
-$bibliotecaPermissions = is_array($bibliotecaPermissions ?? null) ? $bibliotecaPermissions : [];
-$podeGerenciar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.manage'] ?? false);
-$podeClassificar = $showAllPanels || (bool) ($bibliotecaPermissions['biblioteca.classificar'] ?? false);
+
+$podeGerenciar = $auth->isGranted('biblioteca.manage');
+$podeClassificar = $auth->isGranted('biblioteca.classificar');
+
+$formatGrau = static fn($grau) => $grau ? ucfirst(strtolower($grau)) : 'Livre';
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
+$appShellEyebrow = 'Biblioteca';
+$appShellTitle = 'Catálogo da Loja';
+$appShellDescription = 'Consulte o acervo, verifique a disponibilidade e gerencie os empréstimos.';
+$appShellActiveHref = '/biblioteca';
+
+require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biblioteca</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @media (min-width: 1440px) {
-            .erp-readable {
-                font-size: 1.08rem;
-            }
-            .erp-readable .text-xs,
-            .erp-readable .text-\[11px\] {
-                font-size: 0.92rem !important;
-                line-height: 1.4rem !important;
-            }
-            .erp-readable .text-sm {
-                font-size: 1.03rem !important;
-                line-height: 1.58rem !important;
-            }
-        }
-    </style>
-</head>
-<body class="erp-readable bg-slate-50 min-h-screen text-slate-800">
-    <header class="bg-blue-900 text-white shadow-sm">
-        <div class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4">
-            <div>
-                <div class="text-xs uppercase tracking-[0.18em] text-blue-100/80">Biblioteca</div>
-                <h1 class="text-lg font-semibold">Biblioteca da Loja</h1>
-            </div>
-            <div class="text-sm">
-                <?= htmlspecialchars($usuarioNome) ?> |
-                <a href="/logout" class="underline">Sair</a>
-            </div>
-        </div>
-    </header>
 
-    <main class="max-w-7xl mx-auto p-4 md:p-6">
-        <div class="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-            <div>
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Catálogo</div>
-                <h2 class="mt-1 text-2xl font-semibold text-blue-900">Catálogo</h2>
-                <p class="mt-1 text-sm text-slate-700">Web e mobile usam o mesmo fluxo de biblioteca.</p>
-                <?php if (!empty($bibliotecaRedeHabilitada)): ?>
-                    <div class="mt-3 inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1 text-sm">
-                        <a href="/biblioteca?acervo=minha" class="rounded-md px-3 py-1.5 <?= ($catalogScope ?? 'minha') === 'minha' ? 'bg-white shadow-sm font-semibold text-slate-900' : 'text-slate-700 hover:bg-white/60' ?>">Minha loja</a>
-                        <a href="/biblioteca?acervo=rede" class="rounded-md px-3 py-1.5 <?= ($catalogScope ?? 'minha') === 'rede' ? 'bg-white shadow-sm font-semibold text-slate-900' : 'text-slate-700 hover:bg-white/60' ?>">Rede</a>
+<!-- Cabeçalho com Ações e Filtros -->
+<div class="card mb-6">
+    <div class="card-body">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <!-- Filtro de Acervo -->
+            <?php if (!empty($bibliotecaRedeHabilitada)): ?>
+                <div class="flex-shrink-0">
+                    <div class="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 p-1 text-sm">
+                        <a href="/biblioteca?acervo=minha" class="btn-tab <?= ($catalogScope ?? 'minha') === 'minha' ? 'active' : '' ?>">Minha loja</a>
+                        <a href="/biblioteca?acervo=rede" class="btn-tab <?= ($catalogScope ?? 'minha') === 'rede' ? 'active' : '' ?>">Rede</a>
                     </div>
-                    <div class="mt-1 text-xs text-slate-500">A rede aparece apenas se esta loja optou por compartilhar o acervo.</div>
-                <?php endif; ?>
-            </div>
-            <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                <a href="/biblioteca/meus-emprestimos" class="w-full rounded-lg bg-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-300 sm:w-auto">Meus empréstimos</a>
-                <?php if ($podeGerenciar): ?>
-                    <a href="/biblioteca/emprestimos" class="w-full rounded-lg bg-amber-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-amber-700 sm:w-auto">Gerenciar empréstimos</a>
-                    <a href="/biblioteca/adicionar" class="w-full rounded-lg bg-emerald-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-emerald-700 sm:w-auto">Novo título</a>
-                <?php endif; ?>
-            </div>
-            </div>
-        </div>
-
-        <?php
-        $dashboard = [
-            'title' => $podeGerenciar ? 'Painel do Bibliotecário' : 'Painel do Obreiro (Biblioteca)',
-            'subtitle' => $podeGerenciar ? 'Gestão completa do acervo, empréstimos e classificação.' : 'Consumo da biblioteca e interações pessoais.',
-            'meta' => [$podeGerenciar ? 'Perfil: bibliotecário' : 'Perfil: obreiro'],
-            'actions' => $podeGerenciar
-                ? [['label' => 'Adicionar item', 'href' => '/biblioteca/adicionar'], ['label' => 'Editar', 'href' => '/biblioteca/editar'], ['label' => 'Excluir', 'href' => '/biblioteca/editar'], ['label' => 'Registrar empréstimo', 'href' => '/biblioteca/emprestimos'], ['label' => 'Registrar devolução', 'href' => '/biblioteca/emprestimos'], ['label' => 'Classificar', 'href' => '/biblioteca/classificar']]
-                : [['label' => 'Ver obrigações', 'href' => '/financeiro/minhas-obrigacoes'], ['label' => 'Solicitar item', 'href' => '/biblioteca'], ['label' => 'Ver meus empréstimos', 'href' => '/biblioteca/meus-emprestimos']],
-            'blocks' => [
-                ['title' => 'Acervo / visão geral', 'subtitle' => 'Itens e disponibilidade.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'Itens no catálogo', 'value' => (string) count($lista)],
-                    ['label' => 'Disponíveis', 'value' => (string) count(array_filter($lista, static fn (array $i): bool => (bool) ($i['disponivel'] ?? false)))],
-                ], 'list' => array_map(static fn (array $i): array => ['item' => (string) ($i['titulo'] ?? 'Item'), 'meta' => (string) ($i['autor'] ?? '-'), 'status' => (bool) ($i['disponivel'] ?? false) ? 'Disponível' : 'Indisponível'], array_slice($lista, 0, 4))],
-                ['title' => $podeGerenciar ? 'Empréstimos e classificação' : 'Meus empréstimos e interações', 'subtitle' => 'Fluxo operacional da biblioteca.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'Comentários', 'value' => (string) array_sum(array_map(static fn (array $i): int => (int) ($i['total_comentarios'] ?? 0), $lista))],
-                    ['label' => 'Reações', 'value' => (string) array_sum(array_map(static fn (array $i): int => (int) ($i['total_gostei_sim'] ?? 0) + (int) ($i['total_gostei_nao'] ?? 0), $lista))],
-                ], 'list' => [['item' => 'Empréstimos', 'meta' => 'Operação de retirada e devolução', 'status' => 'Regular'], ['item' => 'Classificação', 'meta' => 'Recomendação por grau', 'status' => $podeClassificar ? 'Regular' : 'Somente leitura']]],
-            ],
-            'alerts' => [['title' => 'Fluxo único de biblioteca', 'text' => 'Web e mobile compartilham o mesmo fluxo e dados oficiais.', 'tone' => 'warning']],
-            'activity' => array_map(static fn (array $i): array => ['item' => (string) ($i['titulo'] ?? 'Item'), 'meta' => 'Comentários: ' . (int) ($i['total_comentarios'] ?? 0)], array_slice($lista, 0, 5)),
-            'links' => [['label' => 'Meus empréstimos', 'href' => '/biblioteca/meus-emprestimos'], ['label' => 'Detalhes', 'href' => '/biblioteca/detalhes']],
-        ];
-        $dashboardRenderers = [
-            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
-            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
-        ];
-        require __DIR__ . '/../layouts/dashboard.php';
-        ?>
-
-        <div class="space-y-3 md:hidden">
-            <?php if ($lista !== []): ?>
-                <?php foreach ($lista as $item): ?>
-                    <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <div class="flex gap-3">
-                            <div class="shrink-0">
-                                <?php if (!empty($item['capa_url'])): ?>
-                                    <img src="<?= htmlspecialchars((string) $item['capa_url']) ?>" alt="Capa" class="h-20 w-14 rounded border border-slate-200 object-cover">
-                                <?php else: ?>
-                                    <div class="h-20 w-14 rounded border border-slate-200 bg-slate-100"></div>
-                                <?php endif; ?>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <div class="flex flex-wrap items-start gap-2">
-                                    <h3 class="min-w-0 flex-1 text-base font-semibold text-slate-900"><?= htmlspecialchars((string) ($item['titulo'] ?? '')) ?></h3>
-                                    <?php if ((bool) ($item['disponivel'] ?? false)): ?>
-                                        <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">Disponível</span>
-                                    <?php else: ?>
-                                        <span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">Indisponível</span>
-                                    <?php endif; ?>
-                                </div>
-                                <p class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($item['autor'] ?? '-')) ?></p>
-                                <?php if (($catalogScope ?? 'minha') === 'rede' && !empty($item['loja_nome'])): ?>
-                                    <div class="mt-1 text-xs text-slate-500">Loja: <?= htmlspecialchars((string) ($item['loja_nome'] ?? '')) ?> (<?= htmlspecialchars((string) ($item['numero_loja'] ?? '')) ?><?= !empty($item['loja_sigla']) ? '-' . htmlspecialchars((string) $item['loja_sigla']) : '' ?>)</div>
-                                <?php endif; ?>
-                                <div class="mt-2 space-y-1 text-xs text-slate-700">
-                                    <div>Código: <span class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></span></div>
-                                    <div>ISBN: <?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></div>
-                                    <div>Exemplares livres: <?= (int) ($item['quantidade_disponivel'] ?? 0) ?></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-700">
-                            <span class="rounded-full bg-slate-100 px-2.5 py-1">Gostou: <?= (int) ($item['total_gostei_sim'] ?? 0) ?></span>
-                            <span class="rounded-full bg-slate-100 px-2.5 py-1">Não gostou: <?= (int) ($item['total_gostei_nao'] ?? 0) ?></span>
-                            <span class="rounded-full bg-slate-100 px-2.5 py-1">Comentários: <?= (int) ($item['total_comentarios'] ?? 0) ?></span>
-                        </div>
-
-                        <div class="mt-4 flex flex-col gap-2">
-                            <?php $detalhesHref = '/biblioteca/detalhes?id=' . (int) ($item['id'] ?? 0) . ((($catalogScope ?? 'minha') === 'rede') ? '&loja_id=' . (int) ($item['loja_id'] ?? 0) : ''); ?>
-                            <a href="<?= htmlspecialchars($detalhesHref) ?>" class="w-full rounded-lg bg-blue-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-blue-800">Ver detalhes</a>
-                            <div class="flex flex-wrap gap-2">
-                                <?php if ($podeGerenciar): ?>
-                                    <a href="/biblioteca/editar?id=<?= (int) ($item['id'] ?? 0) ?>" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-center text-sm text-slate-700 hover:bg-slate-50">Editar</a>
-                                <?php endif; ?>
-                                <?php if ($podeClassificar): ?>
-                                    <button onclick="abrirModalClassificacao(<?= (int) ($item['id'] ?? 0) ?>, '<?= addslashes((string) ($item['titulo'] ?? '')) ?>', '<?= addslashes((string) ($item['grau_recomendado'] ?? 'Livre')) ?>', '<?= addslashes((string) ($item['nota_instrucao'] ?? '')) ?>')" class="flex-1 rounded-lg border border-purple-300 px-3 py-2 text-sm text-purple-700 hover:bg-purple-50">Classificar</button>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </article>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-slate-700">
-                    Nenhum título cadastrado.
+                    <p class="mt-2 text-xs text-gray-500">A rede aparece se a loja optou por compartilhar o acervo.</p>
                 </div>
             <?php endif; ?>
-        </div>
 
-        <div class="hidden overflow-hidden rounded-lg border border-slate-200 bg-white md:block">
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-slate-100">
-                        <tr>
-                            <th class="text-left px-4 py-3">Capa</th>
-                            <th class="text-left px-4 py-3">Código</th>
-                            <th class="text-left px-4 py-3">Título</th>
-                            <th class="text-left px-4 py-3">Autor</th>
-                            <?php if (($catalogScope ?? 'minha') === 'rede'): ?>
-                                <th class="text-left px-4 py-3">Loja</th>
-                            <?php endif; ?>
-                            <th class="text-left px-4 py-3">Disponibilidade</th>
-                            <th class="text-left px-4 py-3">Reação</th>
-                            <th class="text-right px-4 py-3">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <?php if ($lista !== []): ?>
-                            <?php foreach ($lista as $item): ?>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-4 py-3">
-                                        <?php if (!empty($item['capa_url'])): ?>
-                                            <img src="<?= htmlspecialchars((string) $item['capa_url']) ?>" alt="Capa" class="h-16 w-12 object-cover rounded border border-slate-200">
-                                        <?php else: ?>
-                                            <div class="h-16 w-12 rounded border border-slate-200 bg-slate-100"></div>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="px-4 py-3 font-mono text-xs"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></td>
-                                    <td class="px-4 py-3">
-                                        <div class="font-medium"><?= htmlspecialchars((string) ($item['titulo'] ?? '')) ?></div>
-                                        <div class="text-xs text-slate-700">ISBN: <?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></div>
-                                    </td>
-                                    <td class="px-4 py-3"><?= htmlspecialchars((string) ($item['autor'] ?? '-')) ?></td>
-                                    <?php if (($catalogScope ?? 'minha') === 'rede'): ?>
-                                        <td class="px-4 py-3 text-xs text-slate-700">
-                                            <?= htmlspecialchars((string) ($item['numero_loja'] ?? '')) ?><?= !empty($item['loja_sigla']) ? '-' . htmlspecialchars((string) $item['loja_sigla']) : '' ?>
-                                            <div class="text-[11px] text-slate-500"><?= htmlspecialchars((string) ($item['loja_nome'] ?? '')) ?></div>
-                                        </td>
-                                    <?php endif; ?>
-                                    <td class="px-4 py-3">
-                                        <?php if ((bool) ($item['disponivel'] ?? false)): ?>
-                                            <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">Disponível (<?= (int) ($item['quantidade_disponivel'] ?? 0) ?>)</span>
-                                        <?php else: ?>
-                                            <span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">Indisponível</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="px-4 py-3 text-xs">
-                                        <div>Gostou: <?= (int) ($item['total_gostei_sim'] ?? 0) ?></div>
-                                        <div>Não gostou: <?= (int) ($item['total_gostei_nao'] ?? 0) ?></div>
-                                        <div>Comentários: <?= (int) ($item['total_comentarios'] ?? 0) ?></div>
-                                    </td>
-                                    <td class="px-4 py-3 text-right">
-                                        <?php $detalhesHref = '/biblioteca/detalhes?id=' . (int) ($item['id'] ?? 0) . ((($catalogScope ?? 'minha') === 'rede') ? '&loja_id=' . (int) ($item['loja_id'] ?? 0) : ''); ?>
-                                        <a href="<?= htmlspecialchars($detalhesHref) ?>" class="text-blue-700 hover:underline mr-3">Detalhes</a>
-                                        <?php if ($podeGerenciar): ?>
-                                            <a href="/biblioteca/editar?id=<?= (int) ($item['id'] ?? 0) ?>" class="text-indigo-700 hover:underline mr-3">Editar</a>
-                                        <?php endif; ?>
-                                        <?php if ($podeClassificar): ?>
-                                            <button onclick="abrirModalClassificacao(<?= (int) ($item['id'] ?? 0) ?>, '<?= addslashes((string) ($item['titulo'] ?? '')) ?>', '<?= addslashes((string) ($item['grau_recomendado'] ?? 'Livre')) ?>', '<?= addslashes((string) ($item['nota_instrucao'] ?? '')) ?>')" class="text-purple-700 hover:underline">Classificar</button>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-slate-700">Nenhum título cadastrado.</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+            <!-- Botões de Ação -->
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="/biblioteca/meus-emprestimos" class="btn btn-secondary">Meus empréstimos</a>
+                <?php if ($podeGerenciar): ?>
+                    <a href="/biblioteca/emprestimos" class="btn btn-secondary-amber">Gerenciar empréstimos</a>
+                    <a href="/biblioteca/adicionar" class="btn btn-primary">Novo Título</a>
+                <?php endif; ?>
             </div>
         </div>
-    </main>
-
-    <div id="modalClassificacao" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-lg w-full max-w-lg">
-            <form action="/biblioteca/classificar" method="POST">
-                <div class="p-4 border-b border-slate-200">
-                    <h3 class="font-semibold text-lg">Classificar leitura sugerida</h3>
-                    <p id="modal-livro-titulo" class="text-sm text-slate-700 mt-1"></p>
-                </div>
-                <div class="p-4 space-y-3">
-                    <input type="hidden" name="livro_id" id="modal-livro-id">
-                    <div>
-                        <label class="text-sm font-medium">Grau sugerido</label>
-                        <select name="grau_recomendado" id="modal-grau" class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
-                            <option value="Livre">Livre</option>
-                            <option value="Aprendiz">Aprendiz</option>
-                            <option value="Companheiro">Companheiro</option>
-                            <option value="Mestre">Mestre</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium">Nota de instrução</label>
-                        <textarea name="nota_instrucao" id="modal-nota" rows="3" class="mt-1 w-full border border-slate-300 rounded px-3 py-2"></textarea>
-                    </div>
-                </div>
-                <div class="p-4 border-t border-slate-200 flex justify-end gap-2">
-                    <button type="button" onclick="fecharModal()" class="px-3 py-2 rounded border border-slate-300">Cancelar</button>
-                    <button type="submit" class="px-3 py-2 rounded bg-purple-700 text-white">Salvar</button>
-                </div>
-            </form>
-        </div>
     </div>
+</div>
 
-    <script>
-        const modal = document.getElementById('modalClassificacao');
-        function abrirModalClassificacao(id, titulo, grauAtual, notaAtual) {
-            document.getElementById('modal-livro-id').value = id;
-            document.getElementById('modal-livro-titulo').innerText = titulo;
-            document.getElementById('modal-grau').value = grauAtual || 'Livre';
-            document.getElementById('modal-nota').value = notaAtual || '';
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-        function fecharModal() {
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
-        }
-    </script>
-</body>
-</html>
+<!-- Lista de Itens (Cards para Mobile) -->
+<div class="space-y-4 md:hidden">
+    <?php if (empty($lista)): ?>
+        <div class="card-placeholder">Nenhum título cadastrado no acervo.</div>
+    <?php else: ?>
+        <?php foreach ($lista as $item): ?>
+            <div class="card">
+                <div class="p-4">
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0">
+                            <?php if (!empty($item['capa_url'])): ?>
+                                <img src="<?= htmlspecialchars((string) $item['capa_url']) ?>" alt="Capa" class="h-24 w-16 rounded object-cover border border-gray-200 dark:border-gray-700">
+                            <?php else: ?>
+                                <div class="h-24 w-16 rounded bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-700"></div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start gap-2">
+                                <h3 class="font-bold text-base flex-1 leading-tight"><?= htmlspecialchars((string) ($item['titulo'] ?? '')) ?></h3>
+                                <?php if ((bool) ($item['disponivel'] ?? false)): ?>
+                                    <span class="badge-status success">Disponível</span>
+                                <?php else: ?>
+                                    <span class="badge-status danger">Indisponível</span>
+                                <?php endif; ?>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1"><?= htmlspecialchars((string) ($item['autor'] ?? '-')) ?></p>
+                            <?php if (($catalogScope ?? 'minha') === 'rede' && !empty($item['loja_nome'])): ?>
+                                <p class="text-xs text-gray-500 mt-1">Loja: <?= htmlspecialchars((string) ($item['loja_nome'] ?? '')) ?></p>
+                            <?php endif; ?>
+                            <p class="text-xs text-gray-500 mt-2">Código: <span class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></span></p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex flex-col gap-2">
+                        <?php $detalhesHref = '/biblioteca/detalhes?id=' . (int) ($item['id'] ?? 0) . ((($catalogScope ?? 'minha') === 'rede') ? '&loja_id=' . (int) ($item['loja_id'] ?? 0) : ''); ?>
+                        <a href="<?= htmlspecialchars($detalhesHref) ?>" class="btn btn-primary w-full">Ver Detalhes</a>
+                        <div class="flex gap-2">
+                            <?php if ($podeGerenciar): ?>
+                                <a href="/biblioteca/editar?id=<?= (int) ($item['id'] ?? 0) ?>" class="btn btn-secondary w-full">Editar</a>
+                            <?php endif; ?>
+                            <?php if ($podeClassificar): ?>
+                                <button onclick="abrirModalClassificacao(<?= (int) ($item['id'] ?? 0) ?>, '<?= addslashes((string) ($item['titulo'] ?? '')) ?>', '<?= addslashes((string) ($item['grau_recomendado'] ?? 'Livre')) ?>', '<?= addslashes((string) ($item['nota_instrucao'] ?? '')) ?>')" class="btn btn-secondary-purple w-full">Classificar</button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</div>
+
+<!-- Tabela de Itens (Desktop) -->
+<div class="card hidden md:block">
+    <div class="overflow-x-auto">
+        <table class="table-base">
+            <thead>
+                <tr>
+                    <th class="w-20">Capa</th>
+                    <th>Título</th>
+                    <th>Autor</th>
+                    <?php if (($catalogScope ?? 'minha') === 'rede'): ?><th>Loja</th><?php endif; ?>
+                    <th>Status</th>
+                    <th>Grau</th>
+                    <th class="w-40">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($lista)): ?>
+                    <tr>
+                        <td colspan="7" class="text-center py-10 text-gray-500">Nenhum título cadastrado no acervo.</td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($lista as $item): ?>
+                        <tr>
+                            <td>
+                                <?php if (!empty($item['capa_url'])): ?>
+                                    <img src="<?= htmlspecialchars((string) $item['capa_url']) ?>" alt="Capa" class="h-16 w-12 object-cover rounded border border-gray-200 dark:border-gray-700">
+                                <?php else: ?>
+                                    <div class="h-16 w-12 rounded bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-700"></div>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <div class="font-bold"><?= htmlspecialchars((string) ($item['titulo'] ?? '')) ?></div>
+                                <div class="text-xs text-gray-500 font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></div>
+                            </td>
+                            <td><?= htmlspecialchars((string) ($item['autor'] ?? '-')) ?></td>
+                            <?php if (($catalogScope ?? 'minha') === 'rede'): ?>
+                                <td>
+                                    <div class="font-medium"><?= htmlspecialchars((string) ($item['loja_nome'] ?? '')) ?></div>
+                                    <div class="text-xs text-gray-500">Nº <?= htmlspecialchars((string) ($item['numero_loja'] ?? '')) ?></div>
+                                </td>
+                            <?php endif; ?>
+                            <td>
+                                <?php if ((bool) ($item['disponivel'] ?? false)): ?>
+                                    <span class="badge-status success">Disponível (<?= (int) ($item['quantidade_disponivel'] ?? 0) ?>)</span>
+                                <?php else: ?>
+                                    <span class="badge-status danger">Indisponível</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <span class="badge-grau"><?= $formatGrau((string) ($item['grau_recomendado'] ?? '')) ?></span>
+                            </td>
+                            <td>
+                                <div class="flex items-center justify-end gap-2">
+                                    <?php $detalhesHref = '/biblioteca/detalhes?id=' . (int) ($item['id'] ?? 0) . ((($catalogScope ?? 'minha') === 'rede') ? '&loja_id=' . (int) ($item['loja_id'] ?? 0) : ''); ?>
+                                    <a href="<?= htmlspecialchars($detalhesHref) ?>" class="btn-action">Detalhes</a>
+                                    <?php if ($podeGerenciar): ?>
+                                        <a href="/biblioteca/editar?id=<?= (int) ($item['id'] ?? 0) ?>" class="btn-action">Editar</a>
+                                    <?php endif; ?>
+                                    <?php if ($podeClassificar): ?>
+                                        <button onclick="abrirModalClassificacao(<?= (int) ($item['id'] ?? 0) ?>, '<?= addslashes((string) ($item['titulo'] ?? '')) ?>', '<?= addslashes((string) ($item['grau_recomendado'] ?? 'Livre')) ?>', '<?= addslashes((string) ($item['nota_instrucao'] ?? '')) ?>')" class="btn-action">Classificar</button>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de Classificação -->
+<div id="modalClassificacao" class="modal-container hidden">
+    <div class="modal-content">
+        <form action="/biblioteca/classificar" method="POST">
+            <div class="modal-header">
+                <h3 class="modal-title">Classificar Leitura Sugerida</h3>
+                <p id="modal-livro-titulo" class="modal-description"></p>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="livro_id" id="modal-livro-id">
+                <div>
+                    <label for="modal-grau" class="form-label">Grau Sugerido</label>
+                    <select name="grau_recomendado" id="modal-grau" class="form-select">
+                        <option value="Livre">Livre</option>
+                        <option value="Aprendiz">Aprendiz</option>
+                        <option value="Companheiro">Companheiro</option>
+                        <option value="Mestre">Mestre</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="modal-nota" class="form-label">Nota de Instrução</label>
+                    <textarea name="nota_instrucao" id="modal-nota" rows="3" class="form-textarea"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="fecharModal()" class="btn btn-secondary">Cancelar</button>
+                <button type="submit" class="btn btn-primary-purple">Salvar Classificação</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('modalClassificacao');
+    function abrirModalClassificacao(id, titulo, grauAtual, notaAtual) {
+        document.getElementById('modal-livro-id').value = id;
+        document.getElementById('modal-livro-titulo').innerText = titulo;
+        document.getElementById('modal-grau').value = grauAtual || 'Livre';
+        document.getElementById('modal-nota').value = notaAtual || '';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+    function fecharModal() {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }
+</script>
+
+<style>
+    /* Componentes Gerais */
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-body { @apply p-5; }
+    .card-placeholder { @apply text-center py-12 px-6 bg-white dark:bg-gray-800 rounded-lg shadow-md text-gray-500; }
+
+    /* Botões */
+    .btn { @apply px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900; }
+    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
+    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
+    .btn-secondary-amber { @apply bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:hover:bg-amber-900 focus:ring-amber-500; }
+    .btn-secondary-purple { @apply bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:hover:bg-purple-900 focus:ring-purple-500; }
+    .btn-primary-purple { @apply bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500; }
+    .btn-action { @apply px-3 py-1.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600; }
+    .btn-tab { @apply rounded-md px-3 py-1.5; }
+    .btn-tab.active { @apply bg-white dark:bg-gray-700 shadow-sm font-semibold text-gray-900 dark:text-gray-100; }
+
+    /* Badges */
+    .badge-status { @apply inline-block px-2.5 py-1 text-xs font-medium rounded-full; }
+    .badge-status.success { @apply bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300; }
+    .badge-status.danger { @apply bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300; }
+    .badge-grau { @apply inline-block px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300; }
+
+    /* Tabela */
+    .table-base { @apply min-w-full text-sm text-left text-gray-700 dark:text-gray-300; }
+    .table-base thead { @apply bg-gray-50 dark:bg-gray-700/50 text-xs uppercase tracking-wider font-medium text-gray-500 dark:text-gray-400; }
+    .table-base th, .table-base td { @apply px-5 py-4; }
+    .table-base tbody tr { @apply border-b border-gray-100 dark:border-gray-700; }
+    .table-base tbody tr:last-child { @apply border-b-0; }
+    .table-base tbody tr:hover { @apply bg-gray-50 dark:bg-gray-800/50; }
+
+    /* Modal */
+    .modal-container { @apply fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50; }
+    .modal-content { @apply bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg; }
+    .modal-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
+    .modal-title { @apply text-lg font-bold text-gray-900 dark:text-gray-100; }
+    .modal-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
+    .modal-body { @apply p-5 space-y-4; }
+    .modal-footer { @apply px-5 py-4 bg-gray-50 dark:bg-gray-800/50 flex justify-end gap-3 rounded-b-lg; }
+
+    /* Formulários */
+    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
+    .form-select, .form-textarea { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
+</style>
+
+<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
 
 

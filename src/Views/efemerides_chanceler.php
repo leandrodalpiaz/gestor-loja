@@ -1,461 +1,288 @@
 <?php
-$erpPageTitle = 'Sessão do Chanceler - Efemérides';
+declare(strict_types=1);
+
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
+$focoTela = trim((string) ($focoEfemeride ?? ''));
+$vinculosPadrao = is_array($vinculosPadrao ?? null) ? $vinculosPadrao : [];
+$registrosRecentes = is_array($registrosRecentes ?? []) ? $registrosRecentes : [];
+$tiposEfemeride = is_array($tiposEfemeride ?? []) ? $tiposEfemeride : [];
+$obreirosFiltro = is_array($obreirosFiltro ?? []) ? $obreirosFiltro : [];
+
+$filtroIrmaoRef = trim((string) ($filtroIrmaoRef ?? ''));
+$filtroTermo = trim((string) ($filtroTermo ?? ''));
+$filtroTipo = trim((string) ($filtroTipo ?? ''));
+$filtroVinculo = trim((string) ($filtroVinculo ?? ''));
+$filtroRegular = trim((string) ($filtroRegular ?? '1'));
+$filtroDataIni = trim((string) ($filtroDataIni ?? ''));
+$filtroDataFim = trim((string) ($filtroDataFim ?? ''));
+
+$formatarDataVisual = static fn (?string $valor): string =>
+    empty(trim((string) $valor)) ? '-' : (new DateTimeImmutable(trim((string) $valor)))->format('d/m/Y');
+
+$previewRaw = (string) ($mensagemPreview ?? '');
+$previewRender = nl2br(strip_tags($previewRaw, '<b><i><u><strong><em>'), false);
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
 $appShellEyebrow = 'Chancelaria';
-$appShellTitle = 'Efemérides e mensagem do dia';
+$appShellTitle = 'Efemérides e Mensagem do Dia';
 $appShellDescription = 'Operação de mensagem diária, cadastro de eventos e manutenção de registros da Loja.';
 $appShellActiveHref = '/chancelaria/efemerides';
 $appShellActions = [
     ['label' => 'Voltar ao Painel', 'href' => '/dashboard'],
-    ['label' => 'Emitir certificado', 'href' => '/chancelaria/certificado', 'primary' => true],
+    ['label' => 'Emitir Certificado', 'href' => '/chancelaria/certificado', 'primary' => true],
 ];
-$appShellSidebarSections = [
-    [
-        'title' => 'Chancelaria',
-        'items' => [
-            ['label' => 'Efemérides', 'href' => '/chancelaria/efemerides'],
-            ['label' => 'Certificado', 'href' => '/chancelaria/certificado'],
-            ['label' => 'Sessão do Chanceler', 'href' => '/chanceler/sessao'],
-            ['label' => 'Painel', 'href' => '/dashboard'],
-        ],
-    ],
-];
-require __DIR__ . '/partials/erp_head.php';
+
 require __DIR__ . '/partials/erp_shell_open.php';
 ?>
-    <div class="space-y-6">
-        <?php $focoTela = trim((string) ($focoEfemeride ?? '')); ?>
-        <section class="rounded-3xl border border-erp-border bg-white px-6 py-5 shadow-sm">
-            <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-erp-gold">Acesso rápido</p>
-                    <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Tarefas da Chancelaria</h2>
-                    <p class="mt-2 text-sm text-erp-muted">Priorize mensagem do dia, correções de registro e envio oficial sem trocar de tela.</p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <a href="/chancelaria/efemerides?foco=mensagem" class="rounded-xl px-3 py-2 text-sm font-medium <?= $focoTela === 'mensagem' ? 'bg-erp-navy text-white' : 'border border-erp-border bg-slate-50 text-slate-700 hover:bg-white' ?>">Revisar mensagem</a>
-                    <a href="/chancelaria/efemerides?foco=dados" class="rounded-xl px-3 py-2 text-sm font-medium <?= $focoTela === 'dados' ? 'bg-emerald-700 text-white' : 'border border-erp-border bg-slate-50 text-slate-700 hover:bg-white' ?>">Corrigir dados</a>
-                    <a href="/chancelaria/efemerides" class="rounded-xl border border-erp-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Ver tudo</a>
-                </div>
-            </div>
-        </section>
 
-        <?php if (!empty($sucessoMensagem)): ?>
-            <div class="mb-4 rounded border border-green-200 bg-green-50 text-green-700 px-4 py-3">
-                <?= htmlspecialchars($sucessoMensagem) ?>
-            </div>
-        <?php endif; ?>
+<?php if (!empty($sucessoMensagem)): ?>
+<div class="alert alert-success mb-6"><?= htmlspecialchars($sucessoMensagem) ?></div>
+<?php endif; ?>
+<?php if (!empty($erroMensagem)): ?>
+<div class="alert alert-danger mb-6"><?= htmlspecialchars($erroMensagem) ?></div>
+<?php endif; ?>
 
-        <?php if (!empty($erroMensagem)): ?>
-            <div class="mb-4 rounded border border-red-200 bg-red-50 text-red-700 px-4 py-3">
-                <?= htmlspecialchars($erroMensagem) ?>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Coluna Principal: Mensagem e Registros -->
+    <div class="lg:col-span-2 space-y-8">
+        <!-- Mensagem do Dia -->
+        <div class="card" id="secao-mensagem">
+            <div class="card-header">
+                <h2 class="card-title">Revisar Mensagem do Dia</h2>
+                <p class="card-subtitle">Esta edição altera somente a mensagem de hoje. Os registros oficiais não são modificados aqui.</p>
             </div>
-        <?php endif; ?>
-        <?php $vinculosPadrao = is_array($vinculosPadrao ?? null) ? $vinculosPadrao : []; ?>
-        <?php $modoListaCompleta = (($filtroIrmaoRef ?? '') === '') && trim((string) ($filtroTermo ?? '')) === ''; ?>
-        <?php
-        $formatarDataVisual = static function (?string $valor): string {
-            $valor = trim((string) $valor);
-            if ($valor === '') {
-                return '-';
-            }
-
-            try {
-                return (new DateTimeImmutable($valor))->format('d-m-Y');
-            } catch (Throwable $e) {
-                return $valor;
-            }
-        };
-        ?>
-
-        <div class="hidden">
-            <div class="mb-4">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Acesso rápido</p>
-                <h2 class="mt-2 text-2xl font-semibold text-slate-900">Tarefas da Chancelaria</h2>
-                <p class="mt-1 text-sm text-slate-700">Aqui você encontra os atalhos mais usados: certificado, mensagem do dia e atualização dos registros.</p>
-            </div>
-            <div class="mb-4 flex flex-wrap gap-2">
-                <a href="/chancelaria/certificado" class="px-3 py-2 text-sm rounded bg-cobalto text-white hover:bg-blue-800">Emitir certificado</a>
-                <a href="/miniapp/aniversario" class="px-3 py-2 text-sm rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Aniversarios</a>
-                <a href="/miniapp/data-maconica" class="px-3 py-2 text-sm rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Datas maçônicas</a>
-                <a href="/miniapp/historico" class="px-3 py-2 text-sm rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Fatos históricos</a>
-                <a href="/miniapp/fallback" class="px-3 py-2 text-sm rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Fallback</a>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <a href="/chancelaria/efemerides?foco=mensagem" class="px-3 py-2 text-sm rounded <?= $focoTela === 'mensagem' ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' ?>">Revisar mensagem</a>
-                <a href="/chancelaria/efemerides?foco=dados" class="px-3 py-2 text-sm rounded <?= $focoTela === 'dados' ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' ?>">Corrigir dados</a>
-                <a href="/chancelaria/efemerides" class="px-3 py-2 text-sm rounded bg-slate-100 text-slate-700 hover:bg-slate-200">Ver tudo</a>
-            </div>
-                <p class="mt-3 text-sm text-gray-600">
-                <strong>Revisar mensagem:</strong> ajusta apenas o texto que será enviado hoje.
-                <strong class="ml-2">Corrigir dados:</strong> ajusta nome, data, vínculo, local e demais registros no banco.
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-            <section id="secao-mensagem" class="rounded-3xl border bg-white p-5 shadow-sm <?= $focoTela === 'mensagem' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-200' ?>">
-                <div class="flex items-center justify-between mb-2">
-                    <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Mensagem do dia</p>
-                        <h2 class="mt-2 text-xl font-semibold text-slate-900">Revisar mensagem do dia</h2>
-                    </div>
-                    <span class="text-xs text-gray-500">Gerada automaticamente após 00:01</span>
-                </div>
-                <p class="mb-3 text-sm text-gray-600">Esta edição altera somente a mensagem de hoje. Os registros oficiais da base não são modificados aqui.</p>
-                <?php
-                    $previewRaw = (string) ($mensagemPreview ?? '');
-                    $previewRender = strip_tags($previewRaw, '<b><i><u><strong><em>');
-                    $previewRender = nl2br($previewRender, false);
-                ?>
-                <style>
-                    .telegram-format b, .telegram-format strong { font-weight: bold; }
-                    .telegram-format i, .telegram-format em { font-style: italic; }
-                </style>
-                <div class="telegram-format mb-2 rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6">
+            <div class="card-body">
+                <div class="telegram-format mb-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
                     <?= $previewRender ?>
                 </div>
                 <form method="POST" action="/chancelaria/efemerides/salvar-previa">
-                    <textarea id="previewMsg" name="mensagem_preview" class="w-full h-72 p-3 text-sm border border-gray-300 rounded bg-white"><?= htmlspecialchars($mensagemPreview ?? '') ?></textarea>
-                    <p class="mt-2 text-xs text-gray-500">Mantém HTML do Telegram (ex.: <b> e <i>).</p>
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        <button type="submit" class="px-3 py-2 text-sm rounded bg-gray-800 text-white hover:bg-gray-900">Salvar mensagem</button>
-                        <button type="button" onclick="copiarPreview()" class="px-3 py-2 text-sm rounded bg-blue-700 text-white hover:bg-blue-800">Copiar texto</button>
+                    <textarea name="mensagem_preview" class="form-input h-60" placeholder="A mensagem gerada aparecerá aqui para revisão..."><?= htmlspecialchars($previewRaw) ?></textarea>
+                    <p class="form-hint">Mantém tags HTML do Telegram (ex: &lt;b&gt; e &lt;i&gt;).</p>
+                    <div class="mt-4 flex flex-wrap gap-3">
+                        <button type="submit" class="btn btn-primary">Salvar Mensagem</button>
+                        <button type="button" onclick="copiarPreview('<?= htmlspecialchars($previewRaw, ENT_QUOTES) ?>')" class="btn btn-secondary">Copiar Texto</button>
                     </div>
                 </form>
-                <div class="mt-3 flex flex-wrap gap-2">
+                <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-3">
                     <form method="POST" action="/chancelaria/efemerides/enviar-previa" onsubmit="return confirm('Enviar a prévia para o Telegram privado do chanceler?');">
-                        <button type="submit" class="px-3 py-2 text-sm rounded bg-indigo-700 text-white hover:bg-indigo-800">Enviar prévia no privado</button>
+                        <button type="submit" class="btn btn-secondary bg-indigo-600 text-white hover:bg-indigo-700">Enviar Prévia no Privado</button>
                     </form>
                     <form method="POST" action="/chancelaria/efemerides/enviar-grupo" onsubmit="return confirm('Confirmar envio da mensagem no grupo oficial?');">
-                        <button type="submit" class="px-3 py-2 text-sm rounded bg-emerald-700 text-white hover:bg-emerald-800">Enviar no grupo oficial</button>
+                        <button type="submit" class="btn btn-primary bg-green-600 hover:bg-green-700">Enviar no Grupo Oficial</button>
                     </form>
                 </div>
-                <p class="mt-2 text-xs text-gray-500">Sugestão de uso: revisar, enviar no privado e, depois da conferência, publicar no grupo.</p>
-            </section>
-
-            <section id="secao-dados" class="rounded-3xl border bg-white p-5 shadow-sm <?= $focoTela === 'dados' ? 'border-emerald-400 ring-2 ring-emerald-100' : 'border-slate-200' ?>">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Registro de efemérides</p>
-                <h2 class="mt-2 text-xl font-semibold text-slate-900">Atualizar registros da Loja</h2>
-                <p class="mb-3 text-sm text-slate-700">Os dados salvos aqui passam a valer também para os próximos envios.</p>
-                <form method="POST" action="/chancelaria/efemerides/salvar" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div class="md:col-span-2">
-                        <label class="text-sm block mb-1">Nome</label>
-                        <input type="text" name="nome" required class="w-full border border-gray-300 rounded px-3 py-2">
-                    </div>
-
-                    <div>
-                        <label class="text-sm block mb-1">Tipo</label>
-                        <select name="tipo" required class="w-full border border-gray-300 rounded px-3 py-2">
-                            <?php foreach (($tiposEfemeride ?? []) as $tipoOpcao): ?>
-                                <option value="<?= htmlspecialchars($tipoOpcao) ?>"><?= htmlspecialchars($tipoOpcao) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="text-sm block mb-1">Data do evento</label>
-                        <input type="date" name="data_evento" required class="w-full border border-gray-300 rounded px-3 py-2">
-                    </div>
-
-                    <div>
-                        <label class="text-sm block mb-1">Vínculo</label>
-                        <select name="vinculo" class="w-full border border-gray-300 rounded px-3 py-2">
-                            <option value="">Sem vínculo</option>
-                            <?php foreach ($vinculosPadrao as $itemVinculo): ?>
-                                <?php $nomeVinculo = trim((string) ($itemVinculo['nome'] ?? '')); ?>
-                                <?php if ($nomeVinculo === '') { continue; } ?>
-                                <option value="<?= htmlspecialchars($nomeVinculo) ?>"><?= htmlspecialchars($nomeVinculo) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <p class="text-xs text-gray-500 mt-1">Tratamento no texto é automático (sobrinho, sobrinha, cunhada).</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm block mb-1">Parentesco (irmão relacionado)</label>
-                        <input type="text" name="parentesco" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Ex.: Leandro Dalpiaz">
-                    </div>
-
-                    <div>
-                        <label class="text-sm block mb-1">Local</label>
-                        <input type="text" name="local" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Ex.: Loja Renascenca n 270">
-                    </div>
-
-                    <div class="md:col-span-2">
-                        <label class="text-sm block mb-1">Mensagem complementar/custom</label>
-                        <textarea name="mensagem_custom" rows="4" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Para História, informe o texto completo aqui."></textarea>
-                    </div>
-
-                    <div class="md:col-span-2 flex flex-wrap gap-2">
-                        <button type="submit" class="px-4 py-2 rounded bg-emerald-700 text-white hover:bg-emerald-800">Salvar registro</button>
-                        <a href="/chancelaria/certificado" class="px-4 py-2 rounded bg-cobalto text-white hover:bg-blue-800">Emitir certificado</a>
-                    </div>
-                </form>
-            </section>
+                <p class="form-hint mt-2">Sugestão: revise, envie no privado para conferência e, só então, publique no grupo.</p>
+            </div>
         </div>
 
-        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Consulta de registros</p>
-            <h2 class="mt-2 text-xl font-semibold text-slate-900">Buscar e atualizar registros</h2>
-            <p class="mb-4 text-sm text-slate-700">Escolha um irmão para ver apenas os registros dele. Se preferir, você também pode abrir a lista completa.</p>
-
-            <div class="mb-4 grid gap-3 md:grid-cols-[1.8fr_1.5fr_1fr_1fr_auto]">
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Modo recomendado</p>
-                    <p class="mt-2 text-sm text-slate-700">Selecione um irmão para visualizar apenas os registros vinculados a ele.</p>
-                </div>
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Lista completa</p>
-                    <p class="mt-2 text-sm text-slate-700"><?= $modoListaCompleta ? 'Ativa no momento.' : 'Use "Limpar filtros" para voltar a ver todos os registros.' ?></p>
-                </div>
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Registros</p>
-                    <p class="mt-2 text-lg font-semibold text-slate-900"><?= count($registrosRecentes ?? []) ?></p>
-                </div>
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Filtro atual</p>
-                    <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars((string) (($filtroIrmaoRef ?? '') !== '' ? ($filtroIrmaoRef ?? '') : 'Todos os irmãos')) ?></p>
-                </div>
-                <a href="/chancelaria/efemerides" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50">Ver lista completa</a>
+        <!-- Lista de Registros -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Registros de Efemérides (<?= count($registrosRecentes) ?>)</h2>
+                <p class="card-subtitle">Consulte e gerencie os registros que alimentam as mensagens automáticas.</p>
             </div>
-
-            <form method="GET" action="/chancelaria/efemerides" class="mb-5 grid grid-cols-1 gap-3 xl:grid-cols-[1.4fr_1.8fr_1fr_1fr_1fr_auto]">
-                <div>
-                    <label class="mb-1 block text-sm">Selecionar irmão</label>
-                    <select name="irmao_ref" class="w-full border border-gray-300 rounded px-3 py-2">
-                        <option value="">Todos os irmãos</option>
-                        <?php foreach (($obreirosFiltro ?? []) as $obreiroFiltro): ?>
-                            <?php
-                                $nomeFiltro = trim((string) ($obreiroFiltro['nome_historico'] ?? $obreiroFiltro['nome'] ?? ''));
-                                if ($nomeFiltro === '') { continue; }
-                            ?>
-                            <option value="<?= htmlspecialchars($nomeFiltro) ?>" <?= (($filtroIrmaoRef ?? '') === $nomeFiltro) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($nomeFiltro) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm">Pesquisar por irmão, nome ou vínculo</label>
-                    <input type="text" name="termo" value="<?= htmlspecialchars($filtroTermo ?? '') ?>" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Ex.: nome do irmão">
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm">Tipo de evento</label>
-                    <select name="tipo" class="w-full border border-gray-300 rounded px-3 py-2">
-                        <option value="">Todos</option>
-                        <?php foreach (($tiposEfemeride ?? []) as $tipoOpcao): ?>
-                            <option value="<?= htmlspecialchars($tipoOpcao) ?>" <?= (($filtroTipo ?? '') === $tipoOpcao) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($tipoOpcao) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm">Vínculo</label>
-                    <select name="vinculo" class="w-full border border-gray-300 rounded px-3 py-2">
-                        <option value="">Todos</option>
-                        <?php foreach ($vinculosPadrao as $itemVinculo): ?>
-                            <?php $nomeVinculo = trim((string) ($itemVinculo['nome'] ?? '')); ?>
-                            <?php if ($nomeVinculo === '') { continue; } ?>
-                            <option value="<?= htmlspecialchars($nomeVinculo) ?>" <?= (($filtroVinculo ?? '') === $nomeVinculo) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($nomeVinculo) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm">Status</label>
-                    <select name="ativo" class="w-full border border-gray-300 rounded px-3 py-2">
-                        <option value="1" <?= (($filtroRegular ?? '1') === '1') ? 'selected' : '' ?>>Regulars</option>
-                        <option value="0" <?= (($filtroRegular ?? '') === '0') ? 'selected' : '' ?>>Afastados</option>
-                        <option value="all" <?= (($filtroRegular ?? '') === 'all') ? 'selected' : '' ?>>Todos</option>
-                    </select>
-                </div>
-                <div class="flex items-end gap-2">
-                    <button type="submit" class="rounded bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800">Aplicar</button>
-                    <a href="/chancelaria/efemerides" class="rounded border border-slate-300 bg-white px-4 py-2 font-medium text-slate-700 hover:bg-slate-50">Limpar</a>
-                </div>
-            </form>
-
-            <details class="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <summary class="cursor-pointer text-sm font-medium text-slate-700">Filtrar por data</summary>
-                <div class="mt-4 grid gap-3 md:grid-cols-2">
-                    <div>
-                        <label class="text-sm block mb-1">Data inicial</label>
-                        <input form="filtro-avancado-efemerides" type="date" name="data_ini" value="<?= htmlspecialchars($filtroDataIni ?? '') ?>" class="w-full border border-gray-300 rounded px-3 py-2">
+            <div class="card-body">
+                <!-- Filtros -->
+                <form method="GET" action="/chancelaria/efemerides" class="space-y-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                            <label for="filtro-termo" class="form-label">Pesquisar</label>
+                            <input id="filtro-termo" type="text" name="termo" value="<?= htmlspecialchars($filtroTermo) ?>" class="form-input" placeholder="Nome, vínculo...">
+                        </div>
+                        <div>
+                            <label for="filtro-irmao" class="form-label">Irmão</label>
+                            <select id="filtro-irmao" name="irmao_ref" class="form-select">
+                                <option value="">Todos</option>
+                                <?php foreach ($obreirosFiltro as $obreiro): ?>
+                                    <option value="<?= htmlspecialchars($obreiro['nome']) ?>" <?= $filtroIrmaoRef === $obreiro['nome'] ? 'selected' : '' ?>><?= htmlspecialchars($obreiro['nome']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filtro-tipo" class="form-label">Tipo</label>
+                            <select id="filtro-tipo" name="tipo" class="form-select">
+                                <option value="">Todos</option>
+                                <?php foreach ($tiposEfemeride as $tipo): ?>
+                                    <option value="<?= htmlspecialchars($tipo) ?>" <?= $filtroTipo === $tipo ? 'selected' : '' ?>><?= htmlspecialchars($tipo) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-sm block mb-1">Data final</label>
-                        <input form="filtro-avancado-efemerides" type="date" name="data_fim" value="<?= htmlspecialchars($filtroDataFim ?? '') ?>" class="w-full border border-gray-300 rounded px-3 py-2">
+                    <div class="flex justify-end gap-3">
+                        <a href="/chancelaria/efemerides" class="btn btn-secondary">Limpar Filtros</a>
+                        <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
                     </div>
-                </div>
-                <form id="filtro-avancado-efemerides" method="GET" action="/chancelaria/efemerides" class="mt-4 flex flex-wrap gap-2">
-                    <input type="hidden" name="irmao_ref" value="<?= htmlspecialchars((string) ($filtroIrmaoRef ?? '')) ?>">
-                    <input type="hidden" name="termo" value="<?= htmlspecialchars((string) ($filtroTermo ?? '')) ?>">
-                    <input type="hidden" name="tipo" value="<?= htmlspecialchars((string) ($filtroTipo ?? '')) ?>">
-                    <input type="hidden" name="vinculo" value="<?= htmlspecialchars((string) ($filtroVinculo ?? '')) ?>">
-                    <input type="hidden" name="ativo" value="<?= htmlspecialchars((string) ($filtroRegular ?? '1')) ?>">
-                    <button type="submit" class="rounded bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800">Aplicar datas</button>
                 </form>
-            </details>
 
-            <div class="space-y-3 md:hidden">
-                <?php foreach (($registrosRecentes ?? []) as $r): ?>
-                    <?php $somenteLeitura = !empty($r['origem_fixa']); ?>
-                    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <div class="text-base font-semibold text-slate-900"><?= htmlspecialchars((string) ($r['nome'] ?? '')) ?></div>
-                                <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($r['tipo'] ?? '')) ?> • <?= htmlspecialchars($formatarDataVisual((string) ($r['data_evento'] ?? ''))) ?></div>
-                            </div>
-                            <span class="rounded-full px-3 py-1 text-xs font-semibold <?= !empty($r['ativo']) ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200 text-slate-700' ?>">
-                                <?= !empty($r['ativo']) ? 'Regular' : 'Afastado' ?>
-                            </span>
-                        </div>
-                        <div class="mt-3 text-sm text-slate-700">
-                            <div>Vínculo: <?= htmlspecialchars((string) ($r['vinculo'] ?? '-')) ?></div>
-                            <div>Parentesco: <?= htmlspecialchars((string) ($r['parentesco'] ?? '-')) ?></div>
-                        </div>
-                        <?php if ($somenteLeitura): ?>
-                            <div class="mt-4 text-sm text-slate-700">Registro fixo do sistema. Para alterar, edite o arquivo de históricos.</div>
-                        <?php elseif (!empty($r['ativo'])): ?>
-                            <details class="mt-4 rounded-2xl border border-slate-200 bg-white p-3">
-                                <summary class="cursor-pointer text-sm font-medium text-blue-700">Editar registro</summary>
-                                <form method="POST" action="/chancelaria/efemerides/atualizar" class="mt-3 space-y-2">
-                                    <input type="hidden" name="registro_id" value="<?= (int) ($r['id'] ?? 0) ?>">
-                                    <input type="text" name="nome" value="<?= htmlspecialchars((string) ($r['nome'] ?? '')) ?>" class="w-full rounded border border-gray-300 px-3 py-2" required>
-                                    <select name="tipo" class="w-full rounded border border-gray-300 px-3 py-2" required>
-                                        <?php foreach (($tiposEfemeride ?? []) as $tipoOpcao): ?>
-                                            <option value="<?= htmlspecialchars($tipoOpcao) ?>" <?= (($r['tipo'] ?? '') === $tipoOpcao) ? 'selected' : '' ?>><?= htmlspecialchars($tipoOpcao) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <input type="date" name="data_evento" value="<?= htmlspecialchars((string) ($r['data_evento'] ?? '')) ?>" class="w-full rounded border border-gray-300 px-3 py-2" required>
-                                    <input type="text" name="parentesco" value="<?= htmlspecialchars((string) ($r['parentesco'] ?? '')) ?>" class="w-full rounded border border-gray-300 px-3 py-2" placeholder="Nome do irmão relacionado">
-                                    <input type="text" name="local" value="<?= htmlspecialchars((string) ($r['local'] ?? '')) ?>" class="w-full rounded border border-gray-300 px-3 py-2" placeholder="Ex.: Loja Renascenca n 270">
-                                    <textarea name="mensagem_custom" rows="2" class="w-full rounded border border-gray-300 px-3 py-2" placeholder="Texto customizado para o envio"><?= htmlspecialchars((string) ($r['mensagem_custom'] ?? '')) ?></textarea>
-                                    <div class="flex gap-2">
-                                        <button type="submit" class="flex-1 rounded bg-blue-700 px-3 py-2 text-sm text-white hover:bg-blue-800">Salvar</button>
-                                        <button type="submit" formaction="/chancelaria/efemerides/desativar" name="id" value="<?= (int) ($r['id'] ?? 0) ?>" class="flex-1 rounded bg-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-300">Desativar</button>
-                                    </div>
-                                </form>
-                            </details>
-                        <?php endif; ?>
-                    </article>
-                <?php endforeach; ?>
+                <!-- Tabela de Registros -->
+                <div class="overflow-x-auto">
+                    <table class="table-base">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Nome</th>
+                                <th>Tipo</th>
+                                <th>Vínculo</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($registrosRecentes)): ?>
+                                <tr><td colspan="6" class="text-center py-10">Nenhum registro encontrado.</td></tr>
+                            <?php endif; ?>
+                            <?php foreach ($registrosRecentes as $r): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($formatarDataVisual($r['data_evento'] ?? null)) ?></td>
+                                    <td><?= htmlspecialchars($r['nome'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($r['tipo'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars(($r['vinculo'] ?? '-') . ($r['parentesco'] ? ' (' . $r['parentesco'] . ')' : '')) ?></td>
+                                    <td><span class="badge-status <?= !empty($r['ativo']) ? 'badge-status-success' : 'badge-status-danger' ?>"><?= !empty($r['ativo']) ? 'Regular' : 'Afastado' ?></span></td>
+                                    <td>
+                                        <?php if (empty($r['origem_fixa']) && !empty($r['ativo'])): ?>
+                                            <a href="/chancelaria/efemerides?foco=dados&editar=<?= (int)($r['id'] ?? 0) ?>#secao-dados" class="btn btn-secondary text-xs">Editar</a>
+                                        <?php else: ?>
+                                            <span class="text-xs text-gray-400">N/A</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-
-            <div class="hidden overflow-x-auto md:block">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
-                        <tr>
-                            <th class="text-left px-3 py-3">Data</th>
-                            <th class="text-left px-3 py-3">Nome</th>
-                            <th class="text-left px-3 py-3">Tipo</th>
-                            <th class="text-left px-3 py-3">Vínculo/Parentesco</th>
-                            <th class="text-left px-3 py-3">Status</th>
-                            <th class="text-left px-3 py-3">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach (($registrosRecentes ?? []) as $r): ?>
-                        <?php $somenteLeitura = !empty($r['origem_fixa']); ?>
-                        <tr class="border-t align-top hover:bg-slate-50/70">
-                            <td class="px-3 py-2.5"><?= htmlspecialchars($formatarDataVisual((string) ($r['data_evento'] ?? ''))) ?></td>
-                            <td class="px-3 py-2.5"><?= htmlspecialchars((string) ($r['nome'] ?? '')) ?></td>
-                            <td class="px-3 py-2.5"><?= htmlspecialchars((string) ($r['tipo'] ?? '')) ?></td>
-                            <td class="px-3 py-2.5">
-                                <div><?= htmlspecialchars((string) ($r['vinculo'] ?? '-')) ?></div>
-                                <div class="text-xs text-gray-500"><?= htmlspecialchars((string) ($r['parentesco'] ?? '-')) ?></div>
-                            </td>
-                            <td class="px-3 py-2.5">
-                                <span class="inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold <?= !empty($r['ativo']) ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-slate-300 bg-slate-100 text-slate-700' ?>">
-                                    <?= !empty($r['ativo']) ? 'Regular' : 'Afastado' ?>
-                                </span>
-                            </td>
-                            <td class="px-3 py-2.5">
-                                <?php if ($somenteLeitura): ?>
-                                    <span class="text-gray-500">Registro fixo</span>
-                                <?php elseif (!empty($r['ativo'])): ?>
-                                    <details class="rounded-xl border border-gray-200 bg-gray-50 p-3">
-                                        <summary class="cursor-pointer text-sm font-medium text-blue-700">Editar</summary>
-                                        <form method="POST" action="/chancelaria/efemerides/atualizar" class="mt-3 space-y-2">
-                                            <input type="hidden" name="registro_id" value="<?= (int) ($r['id'] ?? 0) ?>">
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">Nome</label>
-                                                <input type="text" name="nome" value="<?= htmlspecialchars((string) ($r['nome'] ?? '')) ?>" class="w-full border border-gray-300 rounded px-2 py-1" required>
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">Tipo de evento</label>
-                                                <select name="tipo" class="w-full border border-gray-300 rounded px-2 py-1" required>
-                                                <?php foreach (($tiposEfemeride ?? []) as $tipoOpcao): ?>
-                                                    <option value="<?= htmlspecialchars($tipoOpcao) ?>" <?= (($r['tipo'] ?? '') === $tipoOpcao) ? 'selected' : '' ?>>
-                                                        <?= htmlspecialchars($tipoOpcao) ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">Data do evento</label>
-                                                <input type="date" name="data_evento" value="<?= htmlspecialchars((string) ($r['data_evento'] ?? '')) ?>" class="w-full border border-gray-300 rounded px-2 py-1" required>
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">Vínculo</label>
-                                                <select name="vinculo" class="w-full border border-gray-300 rounded px-2 py-1">
-                                                    <option value="">Sem vínculo</option>
-                                                    <?php foreach ($vinculosPadrao as $itemVinculo): ?>
-                                                        <?php $nomeVinculo = trim((string) ($itemVinculo['nome'] ?? '')); ?>
-                                                        <?php if ($nomeVinculo === '') { continue; } ?>
-                                                        <option value="<?= htmlspecialchars($nomeVinculo) ?>" <?= (strcasecmp((string) ($r['vinculo'] ?? ''), $nomeVinculo) === 0) ? 'selected' : '' ?>>
-                                                            <?= htmlspecialchars($nomeVinculo) ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">Irmão relacionado (parentesco)</label>
-                                                <input type="text" name="parentesco" value="<?= htmlspecialchars((string) ($r['parentesco'] ?? '')) ?>" class="w-full border border-gray-300 rounded px-2 py-1" placeholder="Nome do irmão relacionado">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">Local/Loja</label>
-                                                <input type="text" name="local" value="<?= htmlspecialchars((string) ($r['local'] ?? '')) ?>" class="w-full border border-gray-300 rounded px-2 py-1" placeholder="Ex.: Loja Renascença nº 270">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1">Mensagem customizada (opcional)</label>
-                                                <textarea name="mensagem_custom" rows="2" class="w-full border border-gray-300 rounded px-2 py-1" placeholder="Texto customizado para o envio"><?= htmlspecialchars((string) ($r['mensagem_custom'] ?? '')) ?></textarea>
-                                            </div>
-                                            <div class="flex gap-2">
-                                                <button type="submit" class="flex-1 rounded bg-blue-700 px-3 py-2 text-sm text-white hover:bg-blue-800">Salvar edição</button>
-                                                <button type="submit" formaction="/chancelaria/efemerides/desativar" name="id" value="<?= (int) ($r['id'] ?? 0) ?>" class="flex-1 rounded bg-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-300">Desativar</button>
-                                            </div>
-                                        </form>
-                                    </details>
-                                <?php else: ?>
-                                    <span class="text-gray-500">Sem ações para inativos</span>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+        </div>
     </div>
 
-    <script>
-        function copiarPreview() {
-            const el = document.getElementById('previewMsg');
-            el.select();
-            document.execCommand('copy');
-            alert('Texto copiado para a área de transferência.');
-        }
+    <!-- Coluna Lateral: Adicionar/Editar Registro -->
+    <div class="space-y-8">
+        <div class="card" id="secao-dados">
+            <div class="card-header">
+                <h2 class="card-title">Adicionar / Editar Registro</h2>
+                <p class="card-subtitle">Os dados salvos aqui atualizam a base para futuros envios.</p>
+            </div>
+            <form method="POST" action="/chancelaria/efemerides/salvar" class="card-body space-y-4">
+                <?php
+                $registroEdicao = null;
+                if (isset($_GET['editar'])) {
+                    foreach ($registrosRecentes as $reg) {
+                        if (($reg['id'] ?? null) == $_GET['editar']) {
+                            $registroEdicao = $reg;
+                            break;
+                        }
+                    }
+                }
+                ?>
+                <input type="hidden" name="id" value="<?= (int)($registroEdicao['id'] ?? 0) ?>">
 
-        (function () {
-            const foco = <?= json_encode($focoTela) ?>;
-            if (foco === 'mensagem') {
-                document.getElementById('secao-mensagem')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-            if (foco === 'dados') {
-                document.getElementById('secao-dados')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        })();
-    </script>
+                <div>
+                    <label for="form-nome" class="form-label">Nome *</label>
+                    <input id="form-nome" type="text" name="nome" value="<?= htmlspecialchars($registroEdicao['nome'] ?? '') ?>" required class="form-input">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="form-tipo" class="form-label">Tipo *</label>
+                        <select id="form-tipo" name="tipo" required class="form-select">
+                            <?php foreach ($tiposEfemeride as $tipo): ?>
+                                <option value="<?= htmlspecialchars($tipo) ?>" <?= ($registroEdicao['tipo'] ?? '') === $tipo ? 'selected' : '' ?>><?= htmlspecialchars($tipo) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="form-data" class="form-label">Data do Evento *</label>
+                        <input id="form-data" type="date" name="data_evento" value="<?= htmlspecialchars($registroEdicao['data_evento'] ?? '') ?>" required class="form-input">
+                    </div>
+                </div>
+                <div>
+                    <label for="form-vinculo" class="form-label">Vínculo</label>
+                    <select id="form-vinculo" name="vinculo" class="form-select">
+                        <option value="">Sem vínculo</option>
+                        <?php foreach ($vinculosPadrao as $vinculo): ?>
+                            <option value="<?= htmlspecialchars($vinculo['nome']) ?>" <?= ($registroEdicao['vinculo'] ?? '') === $vinculo['nome'] ? 'selected' : '' ?>><?= htmlspecialchars($vinculo['nome']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label for="form-parentesco" class="form-label">Irmão Relacionado (Parentesco)</label>
+                    <input id="form-parentesco" type="text" name="parentesco" value="<?= htmlspecialchars($registroEdicao['parentesco'] ?? '') ?>" class="form-input" placeholder="Ex: Leandro Dalpiaz">
+                </div>
+                <div>
+                    <label for="form-local" class="form-label">Local</label>
+                    <input id="form-local" type="text" name="local" value="<?= htmlspecialchars($registroEdicao['local'] ?? '') ?>" class="form-input" placeholder="Ex: Loja Renascença nº 270">
+                </div>
+                <div>
+                    <label for="form-mensagem" class="form-label">Mensagem Complementar</label>
+                    <textarea id="form-mensagem" name="mensagem_custom" rows="3" class="form-input" placeholder="Para 'História', informe o texto completo aqui."><?= htmlspecialchars($registroEdicao['mensagem_custom'] ?? '') ?></textarea>
+                </div>
+                <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button type="submit" class="btn btn-primary"><?= $registroEdicao ? 'Salvar Alterações' : 'Adicionar Registro' ?></button>
+                    <?php if ($registroEdicao): ?>
+                        <a href="/chancelaria/efemerides" class="btn btn-secondary">Cancelar Edição</a>
+                    <?php endif; ?>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
+    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
+    .card-subtitle { @apply text-sm text-gray-500 dark:text-gray-400 mt-1; }
+    .card-body { @apply p-5; }
+
+    .alert { @apply p-4 rounded-md text-sm; }
+    .alert-success { @apply bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300; }
+    .alert-danger { @apply bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300; }
+
+    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
+    .form-input, .form-select, .form-textarea { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
+    .form-hint { @apply text-xs text-gray-500 dark:text-gray-400 mt-1; }
+
+    .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 transition-colors; }
+    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
+    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
+
+    .telegram-format b, .telegram-format strong { font-weight: bold; }
+    .telegram-format i, .telegram-format em { font-style: italic; }
+
+    .table-base { @apply min-w-full divide-y divide-gray-200 dark:divide-gray-700; }
+    .table-base thead th { @apply px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider; }
+    .table-base tbody tr:hover { @apply bg-gray-50 dark:bg-gray-900/20; }
+    .table-base tbody td { @apply px-4 py-3 text-sm text-gray-700 dark:text-gray-300; }
+
+    .badge-status { @apply inline-block px-2 py-0.5 text-xs font-semibold rounded-full; }
+    .badge-status-success { @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300; }
+    .badge-status-danger { @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300; }
+</style>
+
+<script>
+    function copiarPreview(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Texto copiado para a área de transferência.');
+        }).catch(err => {
+            console.error('Erro ao copiar texto: ', err);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const foco = urlParams.get('foco');
+        const editarId = urlParams.get('editar');
+
+        if (foco === 'mensagem' || foco === 'dados' || editarId) {
+            const targetId = editarId ? 'secao-dados' : `secao-${foco}`;
+            document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+</script>
+
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
 

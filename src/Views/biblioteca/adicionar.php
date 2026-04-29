@@ -1,79 +1,58 @@
 <?php
-$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
+declare(strict_types=1);
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
+$appShellEyebrow = 'Biblioteca';
+$appShellTitle = 'Adicionar Novo Título';
+$appShellDescription = 'Cadastre um novo item no acervo da Loja, com busca automática de capa e resumo por ISBN.';
+$appShellActiveHref = '/biblioteca';
+
+require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novo livro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @media (min-width: 1440px) {
-            .erp-readable {
-                font-size: 1.08rem;
-            }
-            .erp-readable .text-xs,
-            .erp-readable .text-\[11px\] {
-                font-size: 0.92rem !important;
-                line-height: 1.4rem !important;
-            }
-            .erp-readable .text-sm {
-                font-size: 1.03rem !important;
-                line-height: 1.58rem !important;
-            }
-        }
-    </style>
-</head>
-<body class="erp-readable bg-slate-50 min-h-screen text-slate-800">
-    <header class="bg-blue-900 text-white">
-        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-            <h1 class="font-semibold">Biblioteca</h1>
-            <div class="text-sm"><?= htmlspecialchars($usuarioNome) ?></div>
-        </div>
-    </header>
 
-    <main class="max-w-4xl mx-auto p-4 md:p-6">
-        <h2 class="text-2xl font-semibold text-blue-900 mb-1">Cadastrar livro</h2>
-        <p class="text-sm text-slate-700 mb-4">Registro manual com apoio automatico por ISBN para capa e resumo.</p>
+<div class="card">
+    <form action="/biblioteca/adicionar" method="POST" class="card-body space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Coluna 1 -->
+            <div class="space-y-6">
+                <div>
+                    <label for="titulo" class="form-label">Título *</label>
+                    <input type="text" id="titulo" name="titulo" required class="form-input">
+                </div>
+                <div>
+                    <label for="autor" class="form-label">Autor *</label>
+                    <input type="text" id="autor" name="autor" required class="form-input">
+                </div>
+                <div>
+                    <label for="isbn" class="form-label">ISBN</label>
+                    <input type="text" id="isbn" name="isbn" class="form-input" placeholder="Opcional, para buscar dados">
+                </div>
+                <div>
+                    <label for="capa_url" class="form-label">URL da Capa</label>
+                    <input type="url" id="capa_url" name="capa_url" class="form-input" placeholder="Opcional, se não usar ISBN">
+                </div>
+            </div>
 
-        <form action="/biblioteca/adicionar" method="POST" class="bg-white border border-slate-200 rounded-lg p-4 md:p-6 space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Coluna 2 -->
+            <div class="space-y-6">
                 <div>
-                    <label class="text-sm font-medium">Titulo *</label>
-                    <input type="text" name="titulo" required class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
-                </div>
-                <div>
-                    <label class="text-sm font-medium">Autor *</label>
-                    <input type="text" name="autor" required class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
-                </div>
-                <div>
-                    <label class="text-sm font-medium">ISBN</label>
-                    <input type="text" name="isbn" class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
-                </div>
-                <div>
-                    <label class="text-sm font-medium">URL da capa</label>
-                    <input type="url" name="capa_url" class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="text-sm font-medium">Resumo</label>
-                    <textarea name="resumo" rows="4" class="mt-1 w-full border border-slate-300 rounded px-3 py-2"></textarea>
-                </div>
-                <div>
-                    <label class="text-sm font-medium">Tipo *</label>
-                    <select name="tipo" required class="mt-1 w-full border border-slate-300 rounded px-3 py-2 bg-white">
-                        <option value="Livro Fisico">Livro Fisico</option>
+                    <label for="tipo" class="form-label">Tipo de Item *</label>
+                    <select id="tipo" name="tipo" required class="form-select">
+                        <option value="Livro Fisico">Livro Físico</option>
                         <option value="Digital (PDF)">Digital (PDF)</option>
                         <option value="Ritual">Ritual</option>
                     </select>
                 </div>
                 <div>
-                    <label class="text-sm font-medium">Quantidade disponível *</label>
-                    <input type="number" name="quantidade_disponivel" min="1" value="1" required class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
+                    <label for="quantidade_disponivel" class="form-label">Quantidade Disponível *</label>
+                    <input type="number" id="quantidade_disponivel" name="quantidade_disponivel" min="1" value="1" required class="form-input">
                 </div>
                 <div>
-                    <label class="text-sm font-medium">Grau recomendado</label>
-                    <select name="grau_recomendado" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 bg-white">
+                    <label for="grau_recomendado" class="form-label">Grau Recomendado</label>
+                    <select id="grau_recomendado" name="grau_recomendado" class="form-select">
                         <option value="Livre">Livre</option>
                         <option value="Aprendiz">Aprendiz</option>
                         <option value="Companheiro">Companheiro</option>
@@ -81,18 +60,40 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
                     </select>
                 </div>
                 <div>
-                    <label class="text-sm font-medium">Nota de instrucao</label>
-                    <input type="text" name="nota_instrucao" class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
+                    <label for="nota_instrucao" class="form-label">Nota de Instrução</label>
+                    <input type="text" id="nota_instrucao" name="nota_instrucao" class="form-input" placeholder="Ex: Leitura obrigatória para o Grau 2">
                 </div>
             </div>
+        </div>
 
-            <div class="pt-2 flex justify-end gap-2">
-                <a href="/biblioteca" class="px-3 py-2 rounded border border-slate-300">Cancelar</a>
-                <button type="submit" class="px-3 py-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white">Salvar livro</button>
+        <!-- Campos de Texto Grandes -->
+        <div class="space-y-6">
+            <div>
+                <label for="resumo" class="form-label">Resumo</label>
+                <textarea id="resumo" name="resumo" rows="4" class="form-textarea" placeholder="Opcional, pode ser preenchido via ISBN"></textarea>
             </div>
-        </form>
-    </main>
-</body>
-</html>
+        </div>
+
+        <!-- Ações do Formulário -->
+        <div class="pt-4 flex justify-end gap-3">
+            <a href="/biblioteca" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Salvar Título</button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-body { @apply p-6; }
+
+    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
+    .form-input, .form-select, .form-textarea { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
+    
+    .btn { @apply px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900; }
+    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
+    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
+</style>
+
+<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
 
 

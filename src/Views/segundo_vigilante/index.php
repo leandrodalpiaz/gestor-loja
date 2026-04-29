@@ -1,200 +1,136 @@
 <?php
+declare(strict_types=1);
+
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
-$erpPageTitle = '2o Vigilante - Painel de InstruÃ§Ã£o';
-$appShellEyebrow = '2o Vigilante';
-$appShellTitle = 'Painel do 2o Vigilante';
-$appShellDescription = 'Acompanhamento formativo dos Companheiros com trilha, leitura orientada, docÃªncia, certificado e recomendaÃ§Ã£o de exaltaÃ§Ã£o.';
-$appShellActiveHref = '/segundo-vigilante';
-$appShellActions = [
-    ['label' => 'Voltar ao Painel', 'href' => '/dashboard'],
-    ['label' => 'Ver Companheiros', 'href' => '/obreiros', 'primary' => true],
-    ['label' => 'Biblioteca e classificaÃ§Ã£o', 'href' => '/biblioteca'],
-    ['label' => 'Abrir miniapp do cargo', 'href' => '/miniapp/segundo-vigilante'],
-];
-$appShellSidebarSections = [
-    [
-        'title' => 'VigilÃ¢ncia',
-        'items' => [
-            ['label' => 'Painel do 2o Vigilante', 'href' => '/segundo-vigilante'],
-            ['label' => 'Lista de obreiros', 'href' => '/obreiros'],
-            ['label' => 'Biblioteca e classificaÃ§Ã£o', 'href' => '/biblioteca'],
-            ['label' => 'Painel', 'href' => '/dashboard'],
-        ],
-    ],
-];
+$badgeStatus = static function(string $status): string {
+    return match ($status) {
+        'nao_iniciado' => 'badge-secondary',
+        'em_andamento' => 'badge-info',
+        'concluido' => 'badge-success',
+        'aguardando_devolutiva' => 'badge-warning',
+        default => 'badge-secondary',
+    };
+};
 
-require __DIR__ . '/../partials/erp_head.php';
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
+$appShellEyebrow = 'Segundo Vigilante';
+$appShellTitle = 'Painel de Acompanhamento';
+$appShellDescription = 'Acompanhamento formativo dos Companheiros, trilha, docência e recomendação de exaltação.';
+$appShellActiveHref = '/segundo-vigilante';
+
 require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
 
-        <?php if ($mensagemSucesso): ?>
-            <div class="rounded-erp-md border border-emerald-200 bg-emerald-50 px-5 py-4 text-base text-emerald-800">
-                <?= htmlspecialchars($mensagemSucesso) ?>
-            </div>
-        <?php endif; ?>
-        <?php if ($mensagemErro): ?>
-            <div class="rounded-erp-md border border-rose-200 bg-rose-50 px-5 py-4 text-base text-rose-800">
-                <?= htmlspecialchars($mensagemErro) ?>
-            </div>
-        <?php endif; ?>
-        <?php if (!empty($avisoInfra)): ?>
-            <div class="rounded-erp-md border border-amber-200 bg-amber-50 px-5 py-4 text-base text-amber-800">
-                <?= htmlspecialchars((string) $avisoInfra) ?>
-            </div>
-        <?php endif; ?>
+<!-- Mensagens de Feedback -->
+<?php if ($mensagemSucesso): ?><div class="alert alert-success mb-6"><?= htmlspecialchars($mensagemSucesso) ?></div><?php endif; ?>
+<?php if ($mensagemErro): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
+<?php if (!empty($avisoInfra)): ?><div class="alert alert-warning mb-6"><?= htmlspecialchars((string) $avisoInfra) ?></div><?php endif; ?>
 
-        <?php
-        $dashboard = [
-            'title' => 'Painel operacional do 2o Vigilante',
-            'subtitle' => 'GestÃ£o de Companheiros, trilhas, leituras, certificados e exaltaÃ§Ã£o.',
-            'meta' => ['Perfil: acompanhamento formativo', 'Obreiros: consulta em leitura'],
-            'actions' => [
-                ['label' => 'Atualizar trilha', 'href' => '/segundo-vigilante'],
-                ['label' => 'AÃ§Ã£o rÃ¡pida', 'href' => '/segundo-vigilante'],
-                ['label' => 'Registrar leitura', 'href' => '/segundo-vigilante'],
-                ['label' => 'Solicitar certificado', 'href' => '/segundo-vigilante'],
-                ['label' => 'Recomendar exaltaÃ§Ã£o', 'href' => '/segundo-vigilante'],
-                ['label' => 'Classificar', 'href' => '/biblioteca/classificar'],
-            ],
-            'blocks' => [
-                ['title' => 'Companheiros', 'subtitle' => 'Base ativa e situaÃ§Ã£o da trilha.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'Regulars', 'value' => (string) ($resumo['companheiros_ativos'] ?? 0)],
-                    ['label' => 'Aptos Ã  exaltaÃ§Ã£o', 'value' => (string) ($resumo['aptos_exaltacao'] ?? 0)],
-                ], 'list' => array_map(static fn (array $c): array => ['item' => (string) ($c['nome_historico'] ?? $c['nome'] ?? 'Companheiro'), 'meta' => 'Etapa ' . (int) ($c['trilha_etapa_atual'] ?? 1), 'status' => (string) ($c['trilha_status_atual'] ?? '-')], array_slice($companheiros, 0, 5))],
-                ['title' => 'Leituras, certificados e exaltaÃ§Ã£o', 'subtitle' => 'Fluxo de acompanhamento do cargo.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'Leituras sugeridas', 'value' => (string) ($resumo['leituras_sugeridas'] ?? 0)],
-                    ['label' => 'Aptos Ã  docÃªncia', 'value' => (string) ($resumo['aptos_docencia'] ?? 0)],
-                ], 'list' => [['item' => 'Meu companheirismo', 'meta' => 'Consulta individual', 'status' => 'Regular'], ['item' => 'Biblioteca/classificaÃ§Ã£o', 'meta' => 'Apoio pedagÃ³gico', 'status' => 'Regular']]],
-            ],
-            'alerts' => [['title' => 'Ritmo de exaltaÃ§Ã£o', 'text' => 'Monitorar companheiros aptos e pendÃªncias de trilha.', 'tone' => 'warning']],
-            'activity' => array_map(static fn (array $c): array => ['item' => 'Linha do tempo: ' . (string) ($c['nome_historico'] ?? $c['nome'] ?? 'Companheiro'), 'meta' => (string) ($c['trilha_proxima_acao'] ?? 'A definir')], array_slice($companheiros, 0, 4)),
-            'links' => [['label' => 'Meu companheirismo', 'href' => '/meu-companheirismo'], ['label' => 'Obreiros (leitura)', 'href' => '/obreiros']],
-        ];
-        $dashboardRenderers = [
-            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
-            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
-        ];
-        require __DIR__ . '/../layouts/dashboard.php';
-        ?>
+<!-- Métricas Rápidas -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
+    <div class="card-metric"><p class="card-metric-label">Companheiros Ativos</p><p class="card-metric-value"><?= (int) ($resumo['companheiros_ativos'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Etapa Inicial</p><p class="card-metric-value"><?= (int) ($resumo['etapa_inicial'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Aguardando Recebimento</p><p class="card-metric-value"><?= (int) ($resumo['trabalhos_aguardando_recebimento'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Aptos para Docência</p><p class="card-metric-value"><?= (int) ($resumo['aptos_docencia'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Aptos para Exaltação</p><p class="card-metric-value"><?= (int) ($resumo['aptos_exaltacao'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Leituras Sugeridas</p><p class="card-metric-value"><?= (int) ($resumo['leituras_sugeridas'] ?? 0) ?></p></div>
+</div>
 
-        <section class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-            <article class="rounded-erp-lg border border-erp-border bg-white px-5 py-5 shadow-erp">
-                <div class="text-xs font-semibold uppercase tracking-[0.22em] text-erp-muted">Companheiros ativos</div>
-                <div class="mt-2 text-4xl font-semibold text-erp-navy"><?= (int) ($resumo['companheiros_ativos'] ?? 0) ?></div>
-            </article>
-            <article class="rounded-erp-lg border border-erp-border bg-white px-5 py-5 shadow-erp">
-                <div class="text-xs font-semibold uppercase tracking-[0.22em] text-erp-muted">Na etapa inicial</div>
-                <div class="mt-2 text-4xl font-semibold text-erp-navy"><?= (int) ($resumo['etapa_inicial'] ?? 0) ?></div>
-            </article>
-            <article class="rounded-erp-lg border border-erp-border bg-white px-5 py-5 shadow-erp">
-                <div class="text-xs font-semibold uppercase tracking-[0.22em] text-erp-muted">Aguardando recebimento</div>
-                <div class="mt-2 text-4xl font-semibold text-erp-navy"><?= (int) ($resumo['trabalhos_aguardando_recebimento'] ?? 0) ?></div>
-            </article>
-            <article class="rounded-erp-lg border border-erp-border bg-white px-5 py-5 shadow-erp">
-                <div class="text-xs font-semibold uppercase tracking-[0.22em] text-erp-muted">Aptos para certificado</div>
-                <div class="mt-2 text-4xl font-semibold text-erp-navy"><?= (int) ($resumo['aptos_docencia'] ?? 0) ?></div>
-            </article>
-            <article class="rounded-erp-lg border border-erp-border bg-white px-5 py-5 shadow-erp">
-                <div class="text-xs font-semibold uppercase tracking-[0.22em] text-erp-muted">Aptos para exaltaÃ§Ã£o</div>
-                <div class="mt-2 text-4xl font-semibold text-erp-navy"><?= (int) ($resumo['aptos_exaltacao'] ?? 0) ?></div>
-            </article>
-            <article class="rounded-erp-lg border border-erp-border bg-white px-5 py-5 shadow-erp">
-                <div class="text-xs font-semibold uppercase tracking-[0.22em] text-erp-muted">Leituras sugeridas</div>
-                <div class="mt-2 text-4xl font-semibold text-erp-navy"><?= (int) ($resumo['leituras_sugeridas'] ?? 0) ?></div>
-            </article>
-        </section>
-
-        <section class="mt-6 grid gap-6 xl:grid-cols-12">
-            <article class="overflow-hidden rounded-erp-xl border border-erp-border bg-white shadow-erp xl:col-span-8 2xl:col-span-9">
-                <div class="flex flex-wrap items-start justify-between gap-4 border-b border-erp-border bg-slate-50 px-6 py-5">
-                    <div>
-                        <div class="text-xs font-semibold uppercase tracking-[0.22em] text-erp-muted">Fluxo operacional</div>
-                        <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Companheiros em acompanhamento</h2>
-                        <p class="mt-2 max-w-4xl text-sm leading-6 text-erp-muted">Painel central com trilha, docÃªncia, certificado e indicaÃ§Ã£o de exaltaÃ§Ã£o.</p>
-                    </div>
-                    <div class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
-                        Regular
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto px-2 py-2">
-                    <table class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-white">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">Companheiro</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">ElevaÃ§Ã£o</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">Etapa atual</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">PrÃ³xima aÃ§Ã£o</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 bg-white">
-                            <?php foreach ($companheiros as $companheiro): ?>
-                                <tr class="align-top">
-                                    <td class="px-4 py-3 text-sm text-slate-900">
-                                        <div class="font-semibold"><?= htmlspecialchars((string) ($companheiro['nome_historico'] ?? $companheiro['nome'] ?? 'Companheiro')) ?></div>
-                                        <div class="text-xs text-erp-muted">CIM <?= htmlspecialchars((string) ($companheiro['cim'] ?? '-')) ?></div>
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-slate-700">
-                                        <?= !empty($companheiro['data_elevacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $companheiro['data_elevacao']))) : 'NÃ£o informada' ?>
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-slate-700">
-                                        <div class="font-semibold">Etapa <?= (int) ($companheiro['trilha_etapa_atual'] ?? 1) ?></div>
-                                        <div class="text-xs text-erp-muted"><?= htmlspecialchars((string) ($companheiro['trilha_titulo_atual'] ?? '')) ?></div>
-                                    </td>
-                                    <td class="px-4 py-3 text-sm">
-                                        <span class="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                                            <?= htmlspecialchars((string) ($companheiro['trilha_status_atual'] ?? 'nao_iniciado')) ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-slate-700">
-                                        <?= htmlspecialchars((string) ($companheiro['trilha_proxima_acao'] ?? 'A definir')) ?>
-                                        <div class="mt-2">
-                                            <a href="/segundo-vigilante/companheiro?id=<?= urlencode((string) ($companheiro['id'] ?? '')) ?>" class="text-xs font-semibold text-erp-navy hover:underline">
-                                                Abrir linha do tempo
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                            <?php if ($companheiros === []): ?>
-                                <tr>
-                                    <td colspan="5" class="px-4 py-8 text-center text-sm text-erp-muted">Nenhum Companheiro ativo encontrado.</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </article>
-
-            <aside class="space-y-6 xl:col-span-4 2xl:col-span-3">
-                <article class="rounded-erp-xl border border-erp-border bg-white p-6 shadow-erp">
-                    <h2 class="text-2xl font-semibold text-erp-navy">Titular do cargo</h2>
-                    <div class="mt-4 rounded-erp-lg border border-slate-200 bg-slate-50 p-4">
-                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-erp-muted">SEGUNDO_VIGILANTE</div>
-                        <div class="mt-2 text-lg font-semibold text-slate-900">
-                            <?= htmlspecialchars(trim((string) ($titularCargo['titular_nome'] ?? '')) ?: 'A definir') ?>
-                        </div>
-                        <div class="mt-2 text-sm leading-6 text-erp-muted">Cargo orientado Ã  instruÃ§Ã£o dos Companheiros, revisÃ£o de trabalhos e preparo para exaltaÃ§Ã£o.</div>
-                    </div>
-                </article>
-
-                <article class="rounded-erp-xl border border-erp-border bg-white p-6 shadow-erp">
-                    <h2 class="text-2xl font-semibold text-erp-navy">Trilha de estudo</h2>
-                    <div class="mt-4 space-y-3">
-                        <?php foreach ($trilhaEstudo as $ordem => $titulo): ?>
-                            <div class="rounded-erp-md border border-slate-200 bg-slate-50 px-4 py-3">
-                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-erp-muted">Etapa <?= (int) $ordem ?></div>
-                                <div class="mt-1 text-sm font-semibold text-slate-800"><?= htmlspecialchars($titulo) ?></div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Coluna Principal (2/3) -->
+    <div class="lg:col-span-2">
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Companheiros em Acompanhamento</h2><p class="card-description">Painel central com trilha, docência, certificado e indicação de exaltação.</p></div>
+            <div class="card-body divide-y divide-gray-200 dark:divide-gray-700">
+                <?php if (empty($companheiros)): ?>
+                    <p class="text-center text-gray-500 py-10">Nenhum Companheiro ativo encontrado.</p>
+                <?php else: ?>
+                    <?php foreach ($companheiros as $companheiro): ?>
+                        <div class="list-item-action flex-col sm:flex-row items-start sm:items-center !py-4">
+                            <div class="flex-grow">
+                                <p class="font-semibold"><?= htmlspecialchars((string) ($companheiro['nome_historico'] ?? $companheiro['nome'] ?? 'Companheiro')) ?></p>
+                                <p class="text-sm text-gray-500">CIM <?= htmlspecialchars((string) ($companheiro['cim'] ?? '-')) ?> &middot; Elevação: <?= !empty($companheiro['data_elevacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $companheiro['data_elevacao']))) : 'Não informada' ?></p>
+                                <div class="mt-2 flex items-center gap-3 text-sm">
+                                    <span class="font-semibold">Etapa <?= (int) ($companheiro['trilha_etapa_atual'] ?? 1) ?>:</span>
+                                    <span class="text-gray-600 dark:text-gray-400"><?= htmlspecialchars((string) ($companheiro['trilha_titulo_atual'] ?? '')) ?></span>
+                                    <span class="badge <?= $badgeStatus((string) ($companheiro['trilha_status_atual'] ?? 'nao_iniciado')) ?>"><?= str_replace('_', ' ', (string) ($companheiro['trilha_status_atual'] ?? 'nao_iniciado')) ?></span>
+                                </div>
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-                </article>
-            </aside>
-        </section>
+                            <a href="/segundo-vigilante/companheiro?id=<?= urlencode((string) ($companheiro['id'] ?? '')) ?>" class="btn btn-sm btn-outline-primary mt-3 sm:mt-0">
+                                Ver Linha do Tempo
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
 
-<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+    <!-- Coluna Lateral (1/3) -->
+    <div class="space-y-8">
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Titular do Cargo</h2></div>
+            <div class="card-body">
+                <div class="list-item-report">
+                    <p class="text-xs font-bold uppercase text-gray-500">SEGUNDO VIGILANTE</p>
+                    <p class="mt-1 text-lg font-semibold"><?= htmlspecialchars(trim((string) ($titularCargo['titular_nome'] ?? '')) ?: 'A definir') ?></p>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Cargo orientado à instrução dos Companheiros, revisão de trabalhos e preparo para exaltação.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Trilha de Estudo</h2></div>
+            <div class="card-body space-y-3">
+                <?php foreach ($trilhaEstudo as $ordem => $titulo): ?>
+                    <div class="list-item-report">
+                        <p class="text-xs font-bold uppercase text-gray-500">Etapa <?= (int) $ordem ?></p>
+                        <p class="mt-1 font-semibold"><?= htmlspecialchars($titulo) ?></p>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
+    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
+    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
+    .card-body { @apply p-5; }
+
+    .card-metric { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-5; }
+    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
+    .card-metric-value { @apply mt-1 text-3xl font-bold; }
+
+    .list-item-report { @apply p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg; }
+    .list-item-action { @apply block bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-700 transition; }
+
+    .alert { @apply px-4 py-3 rounded-lg; }
+    .alert-success { @apply bg-green-100 dark:bg-green-900/20 border border-green-400 text-green-700 dark:text-green-300; }
+    .alert-danger { @apply bg-red-100 dark:bg-red-900/20 border border-red-400 text-red-700 dark:text-red-300; }
+    .alert-warning { @apply bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 text-yellow-700 dark:text-yellow-300; }
+
+    .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize; }
+    .badge-success { @apply bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-200; }
+    .badge-danger { @apply bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-200; }
+    .badge-warning { @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-800/30 dark:text-yellow-200; }
+    .badge-info { @apply bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-200; }
+    .badge-secondary { @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200; }
+</style>
+
+<?php
+require_once __DIR__ . '/../partials/erp_shell_close.php';
+?>
 

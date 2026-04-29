@@ -1,6 +1,8 @@
 <?php
-if (!headers_sent()) {
-    header('Content-Type: text/html; charset=UTF-8');
+declare(strict_types=1);
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    @session_start();
 }
 
 $sessao = is_array($sessao ?? null) ? $sessao : null;
@@ -10,8 +12,6 @@ $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
-$usuarioNome = (string) ($_SESSION['usuario_nome'] ?? 'Irmão');
-$usuarioCargo = (string) ($_SESSION['usuario_cargo'] ?? '');
 $isTestSession = isset($_SESSION['usuario_id']) && (string) $_SESSION['usuario_id'] === '0';
 
 $statusConfirmacao = (string) ($resposta['status_confirmacao'] ?? '');
@@ -19,123 +19,108 @@ $participaraAgape = (bool) ($resposta['participara_agape'] ?? false);
 $observacaoAtual = trim((string) ($resposta['observacao'] ?? ''));
 
 $statusBadge = match ($statusConfirmacao) {
-    'confirmado' => $participaraAgape ? ['Confirmado (com ágape)', 'bg-emerald-600'] : ['Confirmado', 'bg-emerald-600'],
-    'ausente' => ['Ausente', 'bg-rose-600'],
-    default => ['Sem resposta', 'bg-slate-500'],
+    'confirmado' => $participaraAgape ? ['Confirmado (com ágape)', 'bg-emerald-100 text-emerald-800 border-emerald-200'] : ['Confirmado', 'bg-emerald-100 text-emerald-800 border-emerald-200'],
+    'ausente' => ['Ausente', 'bg-rose-100 text-rose-800 border-rose-200'],
+    default => ['Sem resposta', 'bg-slate-100 text-slate-700 border-slate-200'],
 };
+
+$pwaPageTitle = 'Sessões';
+$pwaShowBackButton = true;
+
+ob_start();
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sessões</title>
-    <link rel="manifest" href="/manifest.php">
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-50 min-h-screen text-slate-800">
-    <header class="bg-blue-900 text-white shadow-sm">
-        <div class="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-4">
-            <div>
-                <div class="text-xs uppercase tracking-[0.18em] text-blue-100/80">Sessões</div>
-                <h1 class="text-lg font-semibold">Próxima sessão</h1>
-                <div class="text-xs text-blue-100/80"><?= htmlspecialchars($usuarioNome) ?><?= $usuarioCargo !== '' ? ' · ' . htmlspecialchars($usuarioCargo) : '' ?></div>
-            </div>
-            <a class="rounded-md bg-white/10 px-3 py-2 text-sm font-medium hover:bg-white/15" href="/dashboard">Painel</a>
+
+<div class="p-4 sm:p-6 space-y-4">
+    <?php if ($mensagemSucesso): ?>
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+            <?= htmlspecialchars((string) $mensagemSucesso) ?>
         </div>
-    </header>
+    <?php endif; ?>
+    <?php if ($mensagemErro): ?>
+        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">
+            <?= htmlspecialchars((string) $mensagemErro) ?>
+        </div>
+    <?php endif; ?>
 
-    <main class="mx-auto max-w-3xl px-4 py-6 space-y-4">
-        <?php if ($mensagemSucesso): ?>
-            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800">
-                <?= htmlspecialchars((string) $mensagemSucesso) ?>
+    <?php if (!$sessao): ?>
+        <div class="rounded-2xl border border-erpBorder bg-erpSurface p-5 text-center">
+            <div class="text-lg font-semibold text-erpNavy">Nenhuma sessão futura</div>
+            <p class="mt-1 text-sm text-erpMuted">Não há sessões publicadas para a Loja no momento.</p>
+        </div>
+    <?php else: ?>
+        <div class="rounded-2xl border border-erpBorder bg-erpSurface p-5 shadow-sm space-y-4">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h2 class="text-xl font-bold text-erpNavy"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Sessão')) ?></h2>
+                    <p class="mt-1 text-sm text-erpMuted">
+                        <?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?>
+                        <?php if (!empty($sessao['tipo_sessao'])): ?> · <?= htmlspecialchars((string) $sessao['tipo_sessao']) ?><?php endif; ?>
+                        <?php if (!empty($sessao['grau_sessao'])): ?> · <?= htmlspecialchars((string) $sessao['grau_sessao']) ?><?php endif; ?>
+                    </p>
+                </div>
+                <span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold <?= htmlspecialchars($statusBadge[1]) ?>">
+                    <?= htmlspecialchars($statusBadge[0]) ?>
+                </span>
             </div>
-        <?php endif; ?>
-        <?php if ($mensagemErro): ?>
-            <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800">
-                <?= htmlspecialchars((string) $mensagemErro) ?>
-            </div>
-        <?php endif; ?>
 
-        <?php if (!$sessao): ?>
-            <div class="rounded-xl border border-slate-200 bg-white p-4">
-                <div class="text-sm text-slate-600">Nenhuma sessão futura publicada para sua loja.</div>
-            </div>
-        <?php else: ?>
-            <div class="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <div class="text-base font-semibold"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Sessão')) ?></div>
-                        <div class="text-sm text-slate-600">
-                            <?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?>
-                            <?php if (!empty($sessao['tipo_sessao'])): ?> · <?= htmlspecialchars((string) $sessao['tipo_sessao']) ?><?php endif; ?>
-                            <?php if (!empty($sessao['grau_sessao'])): ?> · <?= htmlspecialchars((string) $sessao['grau_sessao']) ?><?php endif; ?>
-                        </div>
+            <?php if (!empty($sessao['resumo_publico'])): ?>
+                <div class="rounded-lg bg-erpBg p-3 text-sm text-erpText whitespace-pre-line">
+                    <?= htmlspecialchars((string) $sessao['resumo_publico']) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($sessao['ordem_dia'])): ?>
+                <details class="rounded-lg bg-erpBg p-3">
+                    <summary class="cursor-pointer text-sm font-semibold text-erpNavy">Ordem do dia</summary>
+                    <div class="mt-2 text-sm text-erpText whitespace-pre-line"><?= htmlspecialchars((string) $sessao['ordem_dia']) ?></div>
+                </details>
+            <?php endif; ?>
+
+            <form method="post" action="/pwa/sessoes/atualizar" class="space-y-4 pt-2">
+                <input type="hidden" name="sessao_id" value="<?= (int) ($sessao['id'] ?? 0) ?>">
+
+                <div class="space-y-3">
+                    <p class="text-sm font-semibold text-erpNavy">1. Confirmação de Presença</p>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <button name="acao" value="confirmar_agape" class="w-full rounded-lg bg-erpNavy px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90">
+                            Confirmar com Ágape
+                        </button>
+                        <button name="acao" value="confirmar_sem_agape" class="w-full rounded-lg border border-erpBorder bg-erpSurface px-4 py-3 text-sm font-semibold text-erpNavy transition hover:bg-erpBg">
+                            Confirmar sem Ágape
+                        </button>
                     </div>
-                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white <?= htmlspecialchars($statusBadge[1]) ?>">
-                        <?= htmlspecialchars($statusBadge[0]) ?>
-                    </span>
                 </div>
 
-                <?php if (!empty($sessao['resumo_publico'])): ?>
-                    <div class="rounded-lg bg-slate-50 p-3 text-sm text-slate-700 whitespace-pre-line">
-                        <?= htmlspecialchars((string) $sessao['resumo_publico']) ?>
+                <div class="space-y-3">
+                    <p class="text-sm font-semibold text-erpNavy">2. Justificar Ausência</p>
+                    <div class="rounded-lg border border-erpBorder p-3 space-y-3">
+                        <textarea name="observacao" rows="2" class="w-full rounded-lg border border-erpBorder bg-erpBg px-3 py-2 text-sm placeholder-erpMuted focus:border-erpNavy focus:outline-none" placeholder="Motivo: compromisso, viagem, saúde..."><?= htmlspecialchars($observacaoAtual) ?></textarea>
+                        <button name="acao" value="ausencia" class="w-full rounded-lg bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-700">
+                            Informar Ausência
+                        </button>
                     </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <p class="text-sm font-semibold text-erpNavy">3. Limpar Resposta</p>
+                     <button name="acao" value="cancelar" class="w-full rounded-lg border border-erpBorder bg-erpSurface px-4 py-3 text-sm font-semibold text-erpMuted transition hover:border-rose-500 hover:text-rose-600">
+                        Limpar minha resposta
+                    </button>
+                </div>
+
+                <?php if ($isTestSession): ?>
+                    <div class="text-xs text-erpMuted">Modo teste: algumas ações podem ser bloqueadas pela configuração da Loja.</div>
                 <?php endif; ?>
-
-                <?php if (!empty($sessao['ordem_dia'])): ?>
-                    <details class="rounded-lg bg-slate-50 p-3">
-                        <summary class="cursor-pointer text-sm font-semibold text-slate-800">Ordem do dia</summary>
-                        <div class="mt-2 text-sm text-slate-700 whitespace-pre-line"><?= htmlspecialchars((string) $sessao['ordem_dia']) ?></div>
-                    </details>
-                <?php endif; ?>
-
-                <form method="post" action="/pwa/sessoes/atualizar" class="space-y-3">
-                    <input type="hidden" name="sessao_id" value="<?= (int) ($sessao['id'] ?? 0) ?>">
-
-                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <button name="acao" value="confirmar" class="w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700">
-                            Confirmar presença
-                        </button>
-
-                        <button name="acao" value="cancelar" class="w-full rounded-lg bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-200">
-                            Cancelar resposta
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <button name="acao" value="confirmar_agape" class="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700">
-                            Confirmar com ágape
-                        </button>
-
-                        <button name="acao" value="confirmar_sem_agape" class="w-full rounded-lg bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-800 hover:bg-indigo-100">
-                            Confirmar sem ágape
-                        </button>
-                    </div>
-
-                    <div class="rounded-lg border border-slate-200 p-3 space-y-2">
-                        <div class="text-sm font-semibold text-slate-800">Justificar ausência</div>
-                        <textarea name="observacao" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none" placeholder="Ex.: compromisso, viagem, saúde..."><?= htmlspecialchars($observacaoAtual) ?></textarea>
-                        <button name="acao" value="ausencia" class="w-full rounded-lg bg-rose-600 px-4 py-3 text-sm font-semibold text-white hover:bg-rose-700">
-                            Marcar como ausente
-                        </button>
-                        <?php if ($isTestSession): ?>
-                            <div class="text-xs text-slate-500">Modo teste: algumas ações podem ser bloqueadas.</div>
-                        <?php endif; ?>
-                    </div>
-                </form>
-            </div>
-        <?php endif; ?>
-
-        <div class="text-xs text-slate-500">
-            Dica: se você veio pelo Telegram, ele agora serve como atalho e notificação. A fonte de verdade é este painel.
+            </form>
         </div>
-    </main>
+    <?php endif; ?>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(() => {});
-        }
-    </script>
-</body>
-</html>
+    <div class="text-center text-xs text-erpMuted">
+        O Telegram agora é um canal de notificação. Use este app para confirmar sua presença.
+    </div>
+</div>
+
+<?php
+$pwaContent = ob_get_clean();
+require __DIR__ . '/shell.php';
+?>

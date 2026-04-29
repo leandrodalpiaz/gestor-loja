@@ -1,288 +1,218 @@
 <?php
+declare(strict_types=1);
+
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
+
+$resumo = isset($resumo) && is_array($resumo) ? $resumo : [];
+$pendenciasVisita = isset($pendenciasVisita) && is_array($pendenciasVisita) ? $pendenciasVisita : [];
+$ocorrencias = isset($ocorrencias) && is_array($ocorrencias) ? $ocorrencias : [];
+$obreiros = isset($obreiros) && is_array($obreiros) ? $obreiros : [];
+$podeOperarOcorrencias = (bool) ($podeOperarOcorrencias ?? false);
+$podeTratarTesouraria = (bool) ($podeTratarTesouraria ?? false);
+
+$badgeStatus = static function(string $status): string {
+    return match ($status) {
+        'aberta' => 'badge-warning',
+        'em_acompanhamento' => 'badge-info',
+        'concluida' => 'badge-success',
+        'cancelada' => 'badge-danger',
+        default => 'badge-secondary',
+    };
+};
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
+$appShellEyebrow = 'Hospitalaria';
+$appShellTitle = 'Painel do Mestre Hospitaleiro';
+$appShellDescription = 'Ocorrências assistenciais, visitas, retornos e encaminhamentos.';
+$appShellActiveHref = '/hospitaleiro';
+
+require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospitalaria - Gestor da Loja</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        cobalto: '#17345c',
-                        marfim: '#f7f4ec',
-                        cobre: '#9d6f34',
-                        grafite: '#2f3a49'
-                    },
-                    fontFamily: {
-                        display: ['"Merriweather"', 'serif'],
-                        sans: ['"Inter"', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@700&display=swap" rel="stylesheet">
-    <style>
-        @media (min-width: 1440px) {
-            .erp-readable {
-                font-size: 1.08rem;
-            }
-            .erp-readable .text-xs,
-            .erp-readable .text-\[11px\] {
-                font-size: 0.92rem !important;
-                line-height: 1.4rem !important;
-            }
-            .erp-readable .text-sm {
-                font-size: 1.03rem !important;
-                line-height: 1.58rem !important;
-            }
-        }
-    </style>
-</head>
-<body class="erp-readable min-h-screen bg-marfim text-grafite font-sans">
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-                <p class="text-sm uppercase tracking-[0.24em] text-cobre">Hospitalaria</p>
-                <h1 class="font-display text-3xl text-cobalto">Painel do Mestre Hospitaleiro</h1>
-                <p class="mt-2 text-sm text-slate-700">Ocorrências assistenciais, visitas, retornos e encaminhamentos ao Venerável e à Tesouraria.</p>
-            </div>
-            <div class="flex gap-3">
-                <a href="/dashboard" class="rounded-lg bg-cobalto px-4 py-2 text-sm font-medium text-white">Voltar ao painel</a>
-                <a href="/miniapp/hospitaleiro" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium">Abrir miniapp</a>
-            </div>
-        </div>
 
-        <?php if ($mensagemSucesso): ?>
-            <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700"><?= htmlspecialchars($mensagemSucesso) ?></div>
-        <?php endif; ?>
-        <?php if ($mensagemErro): ?>
-            <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700"><?= htmlspecialchars($mensagemErro) ?></div>
-        <?php endif; ?>
+<!-- Mensagens de Feedback -->
+<?php if ($mensagemSucesso): ?><div class="alert alert-success mb-6"><?= htmlspecialchars($mensagemSucesso) ?></div><?php endif; ?>
+<?php if ($mensagemErro): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
 
-        <?php
-        $dashboard = [
-            'title' => 'Painel operacional do Hospitaleiro',
-            'subtitle' => 'Assistência, visitas e status das ocorrências.',
-            'meta' => ['Perfil: acompanhamento social', 'Encaminhamentos: Venerável/Tesouraria'],
-            'actions' => [
-                ['label' => 'Registrar ocorrência', 'href' => '/assistencia/ocorrencias/salvar'],
-                ['label' => 'Atualizar status', 'href' => '/assistencia/ocorrencias/status'],
-                ['label' => 'Registrar visita', 'href' => '/assistencia/ocorrencias/visita'],
-            ],
-            'blocks' => [
-                ['title' => 'Ocorrências abertas', 'subtitle' => 'Leitura operacional das pendências.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'Abertas', 'value' => (string) ($resumo['abertas'] ?? 0)],
-                    ['label' => 'Em acompanhamento', 'value' => (string) ($resumo['em_acompanhamento'] ?? 0)],
-                ], 'list' => array_map(static fn (array $o): array => ['item' => (string) ($o['obreiro_nome'] ?? 'Ocorrência'), 'meta' => (string) ($o['tipo_ocorrencia'] ?? 'assistencia_geral'), 'status' => (string) ($o['status'] ?? 'aberta')], array_slice($ocorrencias, 0, 4))],
-                ['title' => 'Visitas e atividade', 'subtitle' => 'Retornos e registro recente.', 'span' => 'half', 'metrics' => [
-                    ['label' => 'Pendências de visita', 'value' => (string) count($pendenciasVisita)],
-                    ['label' => 'Com apoio financeiro', 'value' => (string) ($resumo['com_apoio_financeiro'] ?? 0)],
-                ], 'list' => array_map(static fn (array $o): array => ['item' => (string) ($o['obreiro_nome'] ?? 'Ocorrência'), 'meta' => 'Prioridade ' . (string) ($o['prioridade'] ?? 'media'), 'status' => (string) ($o['status'] ?? '-')], array_slice($pendenciasVisita, 0, 4))],
-            ],
-            'alerts' => [['title' => 'Pendências sociais', 'text' => 'Priorizar ocorrências abertas com visita pendente.', 'tone' => 'warning']],
-            'activity' => array_map(static fn (array $o): array => ['item' => (string) ($o['tipo_ocorrencia'] ?? 'assistencia_geral'), 'meta' => (string) ($o['obreiro_nome'] ?? 'Sem obreiro')], array_slice($ocorrencias, 0, 5)),
-            'links' => [['label' => 'Miniapp Hospitaleiro', 'href' => '/miniapp/hospitaleiro']],
-        ];
-        $dashboardRenderers = [
-            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
-            static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/../components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/../components/dashboard_list.php'; echo '</div>'; },
-        ];
-        require __DIR__ . '/../layouts/dashboard.php';
-        ?>
+<!-- Métricas Rápidas -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
+    <div class="card-metric"><p class="card-metric-label">Total</p><p class="card-metric-value"><?= (int) ($resumo['total'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Abertas</p><p class="card-metric-value"><?= (int) ($resumo['abertas'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Em Acompanhamento</p><p class="card-metric-value"><?= (int) ($resumo['em_acompanhamento'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Concluídas</p><p class="card-metric-value"><?= (int) ($resumo['concluidas'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Apoio Financeiro</p><p class="card-metric-value"><?= (int) ($resumo['com_apoio_financeiro'] ?? 0) ?></p></div>
+</div>
 
-        <div class="mb-8 grid gap-4 md:grid-cols-5">
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Total de ocorrências</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) ($resumo['total'] ?? 0) ?></div>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Abertas</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) ($resumo['abertas'] ?? 0) ?></div>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Em acompanhamento</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) ($resumo['em_acompanhamento'] ?? 0) ?></div>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Concluídas</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) ($resumo['concluidas'] ?? 0) ?></div>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Com apoio financeiro</div>
-                <div class="mt-2 text-3xl font-semibold text-cobalto"><?= (int) ($resumo['com_apoio_financeiro'] ?? 0) ?></div>
-            </div>
-        </div>
-
-        <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-            <section class="space-y-6">
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="font-display text-xl text-cobalto">Pendências de visita e retorno</h2>
-                    <p class="mb-4 text-sm text-slate-700">Ocorrências que pedem presença em campo ou acompanhamento ativo.</p>
-                    <div class="space-y-3">
-                        <?php foreach ($pendenciasVisita as $ocorrencia): ?>
-                            <article class="rounded-xl border border-slate-200 p-4">
-                                <div class="flex flex-wrap items-start justify-between gap-3">
-                                    <div>
-                                        <div class="font-semibold text-cobalto"><?= htmlspecialchars((string) ($ocorrencia['obreiro_nome'] ?? 'Sem obreiro vinculado')) ?></div>
-                                        <div class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($ocorrencia['tipo_ocorrencia'] ?? 'assistencia_geral')) ?> · Prioridade <?= htmlspecialchars((string) ($ocorrencia['prioridade'] ?? 'media')) ?></div>
-                                    </div>
-                                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700"><?= htmlspecialchars((string) ($ocorrencia['status'] ?? 'aberta')) ?></span>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Coluna Principal (2/3) -->
+    <div class="lg:col-span-2 space-y-8">
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Pendências de Visita e Retorno</h2><p class="card-description">Ocorrências que pedem presença em campo ou acompanhamento ativo.</p></div>
+            <div class="card-body space-y-4">
+                <?php if (empty($pendenciasVisita)): ?>
+                    <p class="text-center text-gray-500 py-4">Nenhuma pendência de visita no momento.</p>
+                <?php else: ?>
+                    <?php foreach ($pendenciasVisita as $ocorrencia): ?>
+                        <div class="list-item-report">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <p class="font-semibold"><?= htmlspecialchars((string) ($ocorrencia['obreiro_nome'] ?? 'Sem obreiro vinculado')) ?></p>
+                                    <p class="text-sm text-gray-500"><?= htmlspecialchars((string) ($ocorrencia['tipo_ocorrencia'] ?? 'assistencia_geral')) ?> &middot; Prioridade <?= htmlspecialchars((string) ($ocorrencia['prioridade'] ?? 'media')) ?></p>
                                 </div>
-                                <p class="mt-3 text-sm text-slate-700"><?= nl2br(htmlspecialchars((string) ($ocorrencia['descricao'] ?? ''))) ?></p>
-                                <?php if ($podeOperarOcorrencias): ?>
-                                    <form method="POST" action="/assistencia/ocorrencias/visita" class="mt-4 grid gap-3 md:grid-cols-[1fr_180px_auto]">
-                                        <input type="hidden" name="ocorrencia_id" value="<?= (int) ($ocorrencia['id'] ?? 0) ?>">
-                                        <input type="text" name="observacao_visita" placeholder="Observação da visita ou retorno" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
-                                        <input type="date" name="data_proxima_acao" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
-                                        <button type="submit" class="rounded-md border border-cobalto px-3 py-2 text-sm text-cobalto">Registrar visita</button>
-                                    </form>
-                                <?php endif; ?>
-                            </article>
-                        <?php endforeach; ?>
-                        <?php if ($pendenciasVisita === []): ?>
-                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Nenhuma pendência de visita no momento.</div>
+                                <span class="badge <?= $badgeStatus((string) ($ocorrencia['status'] ?? 'aberta')) ?>"><?= htmlspecialchars((string) ($ocorrencia['status'] ?? 'aberta')) ?></span>
+                            </div>
+                            <p class="mt-3 text-sm"><?= nl2br(htmlspecialchars((string) ($ocorrencia['descricao'] ?? ''))) ?></p>
+                            <?php if ($podeOperarOcorrencias): ?>
+                                <form method="POST" action="/assistencia/ocorrencias/visita" class="mt-4 grid gap-3 md:grid-cols-[1fr_auto_auto]">
+                                    <input type="hidden" name="ocorrencia_id" value="<?= (int) ($ocorrencia['id'] ?? 0) ?>">
+                                    <input type="text" name="observacao_visita" placeholder="Observação da visita" class="form-input">
+                                    <input type="date" name="data_proxima_acao" class="form-input">
+                                    <button type="submit" class="btn btn-primary">Registrar Visita</button>
+                                </form>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Ocorrências Assistenciais Recentes</h2><p class="card-description">Fluxo assistencial de saúde, nascimento, falecimento, solidariedade e apoio geral.</p></div>
+            <div class="card-body space-y-4">
+                <?php foreach ($ocorrencias as $ocorrencia): ?>
+                    <div class="list-item-report">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <p class="font-semibold"><?= ucfirst(str_replace('_', ' ', (string) ($ocorrencia['tipo_ocorrencia'] ?? 'assistencia_geral'))) ?></p>
+                                <p class="text-sm text-gray-500"><?= htmlspecialchars((string) ($ocorrencia['obreiro_nome'] ?? 'Sem obreiro vinculado')) ?><?php if (!empty($ocorrencia['nome_familiar'])): ?> &middot; Familiar: <?= htmlspecialchars((string) $ocorrencia['nome_familiar']) ?><?php endif; ?></p>
+                            </div>
+                            <span class="badge <?= $badgeStatus((string) ($ocorrencia['status'] ?? 'aberta')) ?>"><?= htmlspecialchars((string) ($ocorrencia['status'] ?? 'aberta')) ?></span>
+                        </div>
+                        <p class="mt-3 text-sm"><?= nl2br(htmlspecialchars((string) ($ocorrencia['descricao'] ?? ''))) ?></p>
+                        <div class="mt-3 grid gap-2 text-xs text-gray-500 md:grid-cols-2">
+                            <span>Prioridade: <strong><?= htmlspecialchars((string) ($ocorrencia['prioridade'] ?? 'media')) ?></strong></span>
+                            <span>Encaminhar para: <strong><?= htmlspecialchars((string) ($ocorrencia['encaminhar_para'] ?? 'nenhum')) ?></strong></span>
+                            <span>Data da ocorrência: <strong><?= htmlspecialchars((string) ($ocorrencia['data_ocorrencia'] ?? '-')) ?></strong></span>
+                            <span>Próxima ação: <strong><?= htmlspecialchars((string) ($ocorrencia['data_proxima_acao'] ?? '-')) ?></strong></span>
+                        </div>
+                        <?php if ($podeOperarOcorrencias || $podeTratarTesouraria): ?>
+                            <form method="POST" action="/assistencia/ocorrencias/status" class="mt-4 flex flex-wrap items-end gap-3">
+                                <input type="hidden" name="ocorrencia_id" value="<?= (int) ($ocorrencia['id'] ?? 0) ?>">
+                                <div class="flex-grow">
+                                    <label for="status-<?= $ocorrencia['id'] ?>" class="form-label sr-only">Status</label>
+                                    <select name="status" id="status-<?= $ocorrencia['id'] ?>" class="form-select w-full">
+                                        <option value="aberta" <?= ($ocorrencia['status'] ?? '') === 'aberta' ? 'selected' : '' ?>>Aberta</option>
+                                        <option value="em_acompanhamento" <?= ($ocorrencia['status'] ?? '') === 'em_acompanhamento' ? 'selected' : '' ?>>Em acompanhamento</option>
+                                        <option value="concluida" <?= ($ocorrencia['status'] ?? '') === 'concluida' ? 'selected' : '' ?>>Concluída</option>
+                                        <option value="cancelada" <?= ($ocorrencia['status'] ?? '') === 'cancelada' ? 'selected' : '' ?>>Cancelada</option>
+                                    </select>
+                                </div>
+                                <div class="flex-grow-[2]">
+                                    <label for="obs-<?= $ocorrencia['id'] ?>" class="form-label sr-only">Observação</label>
+                                    <input type="text" name="observacao_status" id="obs-<?= $ocorrencia['id'] ?>" placeholder="Observação de status" class="form-input w-full">
+                                </div>
+                                <button type="submit" class="btn btn-secondary">Atualizar Status</button>
+                            </form>
                         <?php endif; ?>
                     </div>
-                </div>
-
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="font-display text-xl text-cobalto">Ocorrências assistenciais recentes</h2>
-                    <p class="mb-4 text-sm text-slate-700">Fluxo assistencial de saude, nascimento, falecimento, solidariedade e apoio geral.</p>
-
-                    <div class="space-y-3">
-                        <?php foreach ($ocorrencias as $ocorrencia): ?>
-                            <?php $status = (string) ($ocorrencia['status'] ?? 'aberta'); ?>
-                            <article class="rounded-xl border border-slate-200 p-4">
-                                <div class="flex flex-wrap items-start justify-between gap-3">
-                                    <div>
-                                        <div class="font-semibold text-cobalto"><?= htmlspecialchars((string) ($ocorrencia['tipo_ocorrencia'] ?? 'assistencia_geral')) ?></div>
-                                        <div class="mt-1 text-sm text-slate-700">
-                                            <?= htmlspecialchars((string) ($ocorrencia['obreiro_nome'] ?? 'Sem obreiro vinculado')) ?>
-                                            <?php if (!empty($ocorrencia['nome_familiar'])): ?>
-                                                · Familiar: <?= htmlspecialchars((string) $ocorrencia['nome_familiar']) ?>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700"><?= htmlspecialchars($status) ?></span>
-                                </div>
-                                <p class="mt-3 text-sm text-slate-700"><?= nl2br(htmlspecialchars((string) ($ocorrencia['descricao'] ?? ''))) ?></p>
-                                <div class="mt-3 grid gap-2 text-xs text-slate-700 md:grid-cols-2">
-                                    <div>Prioridade: <?= htmlspecialchars((string) ($ocorrencia['prioridade'] ?? 'media')) ?></div>
-                                    <div>Encaminhar para: <?= htmlspecialchars((string) ($ocorrencia['encaminhar_para'] ?? 'nenhum')) ?></div>
-                                    <div>Data da ocorrência: <?= htmlspecialchars((string) ($ocorrencia['data_ocorrencia'] ?? '-')) ?></div>
-                                    <div>Próxima ação: <?= htmlspecialchars((string) ($ocorrencia['data_proxima_acao'] ?? '-')) ?></div>
-                                </div>
-
-                                <?php if ($podeOperarOcorrencias || $podeTratarTesouraria): ?>
-                                    <form method="POST" action="/assistencia/ocorrencias/status" class="mt-4 flex flex-wrap items-center gap-2">
-                                        <input type="hidden" name="ocorrencia_id" value="<?= (int) ($ocorrencia['id'] ?? 0) ?>">
-                                        <select name="status" class="rounded-md border border-slate-300 px-2 py-1 text-sm">
-                                            <option value="aberta" <?= $status === 'aberta' ? 'selected' : '' ?>>Aberta</option>
-                                            <option value="em_acompanhamento" <?= $status === 'em_acompanhamento' ? 'selected' : '' ?>>Em acompanhamento</option>
-                                            <option value="concluida" <?= $status === 'concluida' ? 'selected' : '' ?>>Concluída</option>
-                                            <option value="cancelada" <?= $status === 'cancelada' ? 'selected' : '' ?>>Cancelada</option>
-                                        </select>
-                                        <input type="text" name="observacao_status" placeholder="Observação de status" class="min-w-[220px] flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm">
-                                        <button type="submit" class="rounded-md border border-cobalto px-3 py-1.5 text-sm text-cobalto">Atualizar status</button>
-                                    </form>
-                                <?php endif; ?>
-                            </article>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </section>
-
-            <section class="space-y-6">
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="font-display text-xl text-cobalto">Nova ocorrência assistencial</h2>
-                    <p class="mb-4 text-sm text-slate-700">Registro de ocorrência, visita, apoio financeiro e encaminhamento institucional.</p>
-
-                    <?php if ($podeOperarOcorrencias): ?>
-                        <form method="POST" action="/assistencia/ocorrencias/salvar" class="grid gap-4">
-                            <div>
-                                <label class="mb-1 block text-sm font-medium">Tipo de ocorrência</label>
-                                <select name="tipo_ocorrencia" class="w-full rounded-lg border border-slate-300 px-3 py-2">
-                                    <option value="assistencia_geral">Assistência geral</option>
-                                    <option value="saude">Saúde</option>
-                                    <option value="nascimento">Nascimento</option>
-                                    <option value="falecimento">Falecimento</option>
-                                    <option value="solidariedade">Solidariedade</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="mb-1 block text-sm font-medium">Obreiro vinculado</label>
-                                <select name="obreiro_id" class="w-full rounded-lg border border-slate-300 px-3 py-2">
-                                    <option value="">Não vincular obreiro</option>
-                                    <?php foreach ($obreiros as $obreiro): ?>
-                                        <option value="<?= htmlspecialchars((string) ($obreiro['id'] ?? '')) ?>">
-                                            <?= htmlspecialchars((string) ($obreiro['nome_historico'] ?? $obreiro['nome'] ?? '')) ?> - CIM <?= htmlspecialchars((string) ($obreiro['cim'] ?? '-')) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="grid gap-3 md:grid-cols-2">
-                                <input type="text" name="nome_familiar" placeholder="Nome do familiar" class="rounded-lg border border-slate-300 px-3 py-2">
-                                <input type="text" name="parentesco" placeholder="Parentesco" class="rounded-lg border border-slate-300 px-3 py-2">
-                            </div>
-                            <div class="grid gap-3 md:grid-cols-2">
-                                <select name="prioridade" class="rounded-lg border border-slate-300 px-3 py-2">
-                                    <option value="media">Media</option>
-                                    <option value="baixa">Baixa</option>
-                                    <option value="alta">Alta</option>
-                                    <option value="urgente">Urgente</option>
-                                </select>
-                                <select name="encaminhar_para" class="rounded-lg border border-slate-300 px-3 py-2">
-                                    <option value="nenhum">Nenhum</option>
-                                    <option value="veneravel">Venerável Mestre</option>
-                                    <option value="tesoureiro">Tesoureiro</option>
-                                    <option value="ambos">Venerável + Tesoureiro</option>
-                                </select>
-                            </div>
-                            <div class="grid gap-3 md:grid-cols-2">
-                                <input type="date" name="data_ocorrencia" class="rounded-lg border border-slate-300 px-3 py-2">
-                                <input type="date" name="data_proxima_acao" class="rounded-lg border border-slate-300 px-3 py-2">
-                            </div>
-                            <div class="grid gap-3 md:grid-cols-2">
-                                <input type="text" name="valor_solicitado" placeholder="Valor solicitado" class="rounded-lg border border-slate-300 px-3 py-2">
-                                <input type="text" name="valor_aprovado" placeholder="Valor aprovado" class="rounded-lg border border-slate-300 px-3 py-2">
-                            </div>
-                            <textarea name="descricao" rows="5" required class="w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="Descrição detalhada da ocorrência"></textarea>
-                            <label class="inline-flex items-center gap-2 text-sm">
-                                <input type="checkbox" name="necessita_visita" value="1">
-                                Necessita visita presencial
-                            </label>
-                            <label class="inline-flex items-center gap-2 text-sm">
-                                <input type="checkbox" name="necessita_apoio_financeiro" value="1">
-                                Necessita apoio financeiro
-                            </label>
-                            <button type="submit" class="rounded-lg bg-cobalto px-4 py-2 font-medium text-white">Registrar ocorrência</button>
-                        </form>
-                    <?php endif; ?>
-                </div>
-
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="font-display text-xl text-cobalto">Funções do cargo no painel</h2>
-                    <ul class="mt-4 list-disc space-y-2 pl-5 text-sm text-slate-700">
-                        <li>Registrar ocorrências assistenciais.</li>
-                        <li>Priorizar casos e marcar necessidade de visita.</li>
-                        <li>Controlar retorno e próxima ação.</li>
-                        <li>Encaminhar casos ao Venerável e à Tesouraria.</li>
-                        <li>Acompanhar apoio financeiro e status de resolução.</li>
-                    </ul>
-                </div>
-            </section>
+                <?php endforeach; ?>
+            </div>
         </div>
     </div>
-</body>
-</html>
+
+    <!-- Coluna Lateral (1/3) -->
+    <div class="space-y-8">
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Nova Ocorrência Assistencial</h2><p class="card-description">Registro de ocorrência, visita, apoio e encaminhamento.</p></div>
+            <div class="card-body">
+                <?php if ($podeOperarOcorrencias): ?>
+                    <form method="POST" action="/assistencia/ocorrencias/salvar" class="space-y-4">
+                        <div><label for="tipo_ocorrencia" class="form-label">Tipo de ocorrência</label><select name="tipo_ocorrencia" id="tipo_ocorrencia" class="form-select"><option value="assistencia_geral">Assistência geral</option><option value="saude">Saúde</option><option value="nascimento">Nascimento</option><option value="falecimento">Falecimento</option><option value="solidariedade">Solidariedade</option></select></div>
+                        <div><label for="obreiro_id" class="form-label">Obreiro vinculado</label><select name="obreiro_id" id="obreiro_id" class="form-select"><option value="">Não vincular obreiro</option><?php foreach ($obreiros as $obreiro): ?><option value="<?= htmlspecialchars((string) ($obreiro['id'] ?? '')) ?>"><?= htmlspecialchars((string) ($obreiro['nome_historico'] ?? $obreiro['nome'] ?? '')) ?> - CIM <?= htmlspecialchars((string) ($obreiro['cim'] ?? '-')) ?></option><?php endforeach; ?></select></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label for="nome_familiar" class="sr-only">Nome do Familiar</label><input type="text" name="nome_familiar" id="nome_familiar" placeholder="Nome do familiar" class="form-input"></div>
+                            <div><label for="parentesco" class="sr-only">Parentesco</label><input type="text" name="parentesco" id="parentesco" placeholder="Parentesco" class="form-input"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label for="prioridade" class="form-label">Prioridade</label><select name="prioridade" id="prioridade" class="form-select"><option value="media">Média</option><option value="baixa">Baixa</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select></div>
+                            <div><label for="encaminhar_para" class="form-label">Encaminhar para</label><select name="encaminhar_para" id="encaminhar_para" class="form-select"><option value="nenhum">Nenhum</option><option value="veneravel">Venerável Mestre</option><option value="tesoureiro">Tesoureiro</option><option value="ambos">Venerável + Tesoureiro</option></select></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label for="data_ocorrencia" class="form-label">Data da Ocorrência</label><input type="date" name="data_ocorrencia" id="data_ocorrencia" class="form-input"></div>
+                            <div><label for="data_proxima_acao" class="form-label">Próxima Ação</label><input type="date" name="data_proxima_acao" id="data_proxima_acao" class="form-input"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label for="valor_solicitado" class="sr-only">Valor Solicitado</label><input type="text" name="valor_solicitado" id="valor_solicitado" placeholder="Valor solicitado" class="form-input"></div>
+                            <div><label for="valor_aprovado" class="sr-only">Valor Aprovado</label><input type="text" name="valor_aprovado" id="valor_aprovado" placeholder="Valor aprovado" class="form-input"></div>
+                        </div>
+                        <div><label for="descricao" class="form-label">Descrição detalhada</label><textarea name="descricao" id="descricao" rows="4" required class="form-textarea" placeholder="Descrição detalhada da ocorrência"></textarea></div>
+                        <div class="space-y-2">
+                            <label class="form-check-label"><input type="checkbox" name="necessita_visita" value="1" class="form-checkbox"> Necessita visita presencial</label>
+                            <label class="form-check-label"><input type="checkbox" name="necessita_apoio_financeiro" value="1" class="form-checkbox"> Necessita apoio financeiro</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-full">Registrar Ocorrência</button>
+                    </form>
+                <?php else: ?>
+                    <p class="text-center text-gray-500 py-4">Você não tem permissão para registrar novas ocorrências.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Funções do Cargo</h2></div>
+            <div class="card-body">
+                <ul class="list-disc space-y-2 pl-5 text-sm text-gray-500">
+                    <li>Registrar ocorrências assistenciais.</li>
+                    <li>Priorizar casos e marcar necessidade de visita.</li>
+                    <li>Controlar retorno e próxima ação.</li>
+                    <li>Encaminhar casos ao Venerável e à Tesouraria.</li>
+                    <li>Acompanhar apoio financeiro e status de resolução.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
+    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
+    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
+    .card-body { @apply p-5; }
+
+    .card-metric { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-5; }
+    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
+    .card-metric-value { @apply mt-1 text-3xl font-bold; }
+
+    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
+    .form-input, .form-select, .form-textarea { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
+    .form-checkbox { @apply h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500; }
+    .form-check-label { @apply flex items-center text-sm text-gray-700 dark:text-gray-300; }
+    .form-check-label .form-checkbox { @apply mr-2; }
+
+    .list-item-report { @apply p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg; }
+
+    .alert { @apply px-4 py-3 rounded-lg; }
+    .alert-success { @apply bg-green-100 dark:bg-green-900/20 border border-green-400 text-green-700 dark:text-green-300; }
+    .alert-danger { @apply bg-red-100 dark:bg-red-900/20 border border-red-400 text-red-700 dark:text-red-300; }
+
+    .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold; }
+    .badge-success { @apply bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-200; }
+    .badge-danger { @apply bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-200; }
+    .badge-warning { @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-800/30 dark:text-yellow-200; }
+    .badge-info { @apply bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-200; }
+    .badge-secondary { @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200; }
+</style>
+
+<?php
+require_once __DIR__ . '/../partials/erp_shell_close.php';
+?>
 

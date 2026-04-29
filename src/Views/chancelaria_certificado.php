@@ -1,91 +1,80 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Certificado de Presença - Chancelaria</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        @media (min-width: 1440px) {
-            .erp-readable {
-                font-size: 1.06rem;
-            }
-            .erp-readable .text-xs,
-            .erp-readable .text-\[11px\] {
-                font-size: 0.92rem !important;
-                line-height: 1.4rem !important;
-            }
-            .erp-readable .text-sm {
-                font-size: 1.02rem !important;
-                line-height: 1.55rem !important;
-            }
-        }
-    </style>
-</head>
-<body class="erp-readable bg-gray-50 text-gray-800 p-4 antialiased">
-    <?php
-    $defaults = [
-        'data_sessao' => trim((string) ($_GET['data_sessao'] ?? '')),
-        'tipo_sessao' => trim((string) ($_GET['tipo_sessao'] ?? '')),
-        'grau_sessao' => trim((string) ($_GET['grau_sessao'] ?? '')),
-    ];
-    ?>
-    <div class="max-w-2xl mx-auto">
-        <div class="mb-6 rounded-3xl border border-white/40 bg-[radial-gradient(circle_at_top_left,#d6b672,transparent_30%),linear-gradient(135deg,#162033,#223145)] px-6 py-6 text-white shadow-xl">
-            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.24em] text-amber-300">Chancelaria</p>
-                    <h1 class="mt-2 text-3xl font-semibold">Emitir certificado</h1>
-                    <p class="mt-1 text-sm text-slate-200">Fluxo web da Chancelaria para gerar e enviar certificado de presença com os dados oficiais da sessão.</p>
-                </div>
-                <a href="/chancelaria/efemerides" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar para Chancelaria</a>
+<?php
+declare(strict_types=1);
+
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
+$defaults = [
+    'data_sessao' => trim((string) ($_GET['data_sessao'] ?? '')),
+    'tipo_sessao' => trim((string) ($_GET['tipo_sessao'] ?? '')),
+    'grau_sessao' => trim((string) ($_GET['grau_sessao'] ?? '')),
+];
+
+$formatDate = static fn($dateStr) => !empty($dateStr) ? (new DateTime($dateStr))->format('d/m/Y') : 'Não definida';
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
+$appShellEyebrow = 'Chancelaria';
+$appShellTitle = 'Emitir Certificado de Presença';
+$appShellDescription = 'Gere e envie certificados para visitantes com os dados oficiais da sessão.';
+$appShellActiveHref = '/chancelaria/efemerides';
+
+require __DIR__ . '/partials/erp_shell_open.php';
+?>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Coluna de Informações -->
+    <div class="lg:col-span-1 space-y-6">
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Dados da Sessão</h2></div>
+            <div class="card-body space-y-4">
+                <div class="list-item-param"><span>Data</span><strong><?= $formatDate($defaults['data_sessao']) ?></strong></div>
+                <div class="list-item-param"><span>Tipo</span><strong><?= htmlspecialchars($defaults['tipo_sessao'] ?: 'Não definido') ?></strong></div>
+                <div class="list-item-param"><span>Grau</span><strong><?= htmlspecialchars($defaults['grau_sessao'] ?: 'Não definido') ?></strong></div>
             </div>
         </div>
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Fluxo de Trabalho</h2></div>
+            <ul class="card-body space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">1.</span> <span>Preencha os dados do visitante e da sessão no formulário.</span></li>
+                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">2.</span> <span>Se estiver no Telegram, o certificado será enviado diretamente no chat.</span></li>
+                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">3.</span> <span>Caso contrário, o download do certificado será iniciado no navegador.</span></li>
+                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">4.</span> <span>Os dados da sessão podem ser pré-preenchidos a partir da tela de efemérides.</span></li>
+            </ul>
+        </div>
+    </div>
 
-        <form method="POST" action="/chancelaria/certificado/gerar">
-            <input type="hidden" id="chat_id" name="chat_id">
-            <input type="hidden" id="init_data" name="init_data">
+    <!-- Coluna do Formulário -->
+    <div class="lg:col-span-2">
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Formulário de Emissão</h2></div>
+            <form method="POST" action="/chancelaria/certificado/gerar" class="card-body">
+                <input type="hidden" id="chat_id" name="chat_id">
+                <input type="hidden" id="init_data" name="init_data">
 
-            <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="mb-5 grid gap-3 md:grid-cols-3">
-                    <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Data da sessão</p>
-                        <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($defaults['data_sessao'] !== '' ? $defaults['data_sessao'] : 'Definir no formulário') ?></p>
-                    </article>
-                    <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Tipo</p>
-                        <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($defaults['tipo_sessao'] !== '' ? $defaults['tipo_sessao'] : 'Definir no formulário') ?></p>
-                    </article>
-                    <article class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Grau</p>
-                        <p class="mt-2 text-sm text-slate-700"><?= htmlspecialchars($defaults['grau_sessao'] !== '' ? $defaults['grau_sessao'] : 'Definir no formulário') ?></p>
-                    </article>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="md:col-span-2">
-                        <label for="nome_visitante" class="block mb-2 font-semibold">Nome do visitante</label>
-                        <input type="text" id="nome_visitante" name="nome_visitante" placeholder="Ex: João da Silva" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700">
+                        <label for="nome_visitante" class="form-label">Nome do Visitante *</label>
+                        <input type="text" id="nome_visitante" name="nome_visitante" placeholder="Ex: João da Silva" required class="form-input">
                     </div>
-
                     <div class="md:col-span-2">
-                        <label for="loja_visitante" class="block mb-2 font-semibold">Loja do visitante</label>
-                        <input type="text" id="loja_visitante" name="loja_visitante" placeholder="Ex: ARLS Luz e Verdade nº 123" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700">
+                        <label for="loja_visitante" class="form-label">Loja do Visitante *</label>
+                        <input type="text" id="loja_visitante" name="loja_visitante" placeholder="Ex: ARLS Luz e Verdade nº 123" required class="form-input">
                     </div>
-
                     <div>
-                        <label for="oriente" class="block mb-2 font-semibold">Oriente</label>
-                        <input type="text" id="oriente" name="oriente" placeholder="Ex: São Paulo - SP" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700">
+                        <label for="oriente" class="form-label">Oriente *</label>
+                        <input type="text" id="oriente" name="oriente" placeholder="Ex: São Paulo - SP" required class="form-input">
                     </div>
-
                     <div>
-                        <label for="data_sessao" class="block mb-2 font-semibold">Data da sessão</label>
-                        <input type="date" id="data_sessao" name="data_sessao" value="<?= htmlspecialchars($defaults['data_sessao']) ?>" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700">
+                        <label for="data_sessao" class="form-label">Data da Sessão *</label>
+                        <input type="date" id="data_sessao" name="data_sessao" value="<?= htmlspecialchars($defaults['data_sessao']) ?>" required class="form-input">
                     </div>
-
                     <div>
-                        <label for="tipo_sessao" class="block mb-2 font-semibold">Tipo de sessão</label>
-                        <select id="tipo_sessao" name="tipo_sessao" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700 bg-white">
+                        <label for="tipo_sessao" class="form-label">Tipo de Sessão *</label>
+                        <select id="tipo_sessao" name="tipo_sessao" required class="form-select">
                             <option value="Ordinaria" <?= $defaults['tipo_sessao'] === 'Ordinaria' ? 'selected' : '' ?>>Ordinária</option>
                             <option value="Magna" <?= $defaults['tipo_sessao'] === 'Magna' ? 'selected' : '' ?>>Magna</option>
                             <option value="Magna de Iniciacao" <?= $defaults['tipo_sessao'] === 'Magna de Iniciacao' ? 'selected' : '' ?>>Magna de Iniciação</option>
@@ -93,23 +82,25 @@
                             <option value="Magna de Exaltacao" <?= $defaults['tipo_sessao'] === 'Magna de Exaltacao' ? 'selected' : '' ?>>Magna de Exaltação</option>
                         </select>
                     </div>
-
                     <div>
-                        <label for="grau_sessao" class="block mb-2 font-semibold">Grau da sessão</label>
-                        <select id="grau_sessao" name="grau_sessao" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-700 bg-white">
+                        <label for="grau_sessao" class="form-label">Grau da Sessão *</label>
+                        <select id="grau_sessao" name="grau_sessao" required class="form-select">
                             <option value="Aprendiz Macom" <?= $defaults['grau_sessao'] === 'Aprendiz Macom' ? 'selected' : '' ?>>Aprendiz Maçom (Grau 1)</option>
                             <option value="Companheiro Macom" <?= $defaults['grau_sessao'] === 'Companheiro Macom' ? 'selected' : '' ?>>Companheiro Maçom (Grau 2)</option>
                             <option value="Mestre Macom" <?= $defaults['grau_sessao'] === 'Mestre Macom' ? 'selected' : '' ?>>Mestre Maçom (Grau 3)</option>
                         </select>
                     </div>
                 </div>
-
-                <button type="submit" class="w-full bg-blue-700 text-white font-bold py-3 rounded-lg mt-6 hover:bg-blue-800">Gerar e enviar certificado</button>
-            </div>
-        </form>
+                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <button type="submit" class="btn btn-primary w-full">Gerar e Enviar Certificado</button>
+                </div>
+            </form>
+        </div>
     </div>
+</div>
 
-    <script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
         const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
         if (tg) {
             tg.ready();
@@ -119,6 +110,22 @@
                 document.getElementById('chat_id').value = tg.initDataUnsafe.user.id;
             }
         }
-    </script>
-</body>
-</html>
+    });
+</script>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
+    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
+    .card-body { @apply p-5; }
+
+    .list-item-param { @apply flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md text-sm; }
+
+    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
+    .form-input, .form-select { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
+
+    .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900; }
+    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
+</style>
+
+<?php require __DIR__ . '/partials/erp_shell_close.php'; ?>

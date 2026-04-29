@@ -1,140 +1,35 @@
 <?php
-// src/Views/tesouraria_caixa.php
-if (!isset($_SESSION["usuario_logado"])) {
-    header("Location: /login");
-    exit;
-}
+declare(strict_types=1);
 
-$erpPageTitle = 'Livro-Caixa';
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
+$mesAtual = (int) date('n');
+$anoAtual = (int) date('Y');
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
 $appShellEyebrow = 'Tesouraria';
 $appShellTitle = 'Livro-Caixa';
-$appShellDescription = 'Entradas, saÃ­das, saldo do perÃ­odo e aÃ§Ãµes operacionais da tesouraria em leitura administrativa direta.';
+$appShellDescription = 'Entradas, saídas, saldo do período e ações operacionais da tesouraria.';
 $appShellActiveHref = '/tesouraria/caixa';
-$appShellActions = [
-    ['label' => 'Voltar ao Painel', 'href' => '/dashboard'],
-    ['label' => 'ObrigaÃ§Ãµes', 'href' => '/tesouraria/obrigacoes', 'primary' => true],
-];
-$appShellSidebarSections = [
-    [
-        'title' => 'Tesouraria',
-        'items' => [
-            ['label' => 'Livro-Caixa', 'href' => '/tesouraria/caixa'],
-            ['label' => 'ObrigaÃ§Ãµes', 'href' => '/tesouraria/obrigacoes'],
-            ['label' => 'Comprovantes', 'href' => '/tesouraria/comprovantes'],
-            ['label' => 'Regularidade', 'href' => '/tesouraria/regularidade'],
-            ['label' => 'Painel', 'href' => '/dashboard'],
-        ],
-    ],
-];
 
-require __DIR__ . '/partials/erp_head.php';
-require __DIR__ . '/partials/erp_shell_open.php';
+require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
-        <?php
-        $dashboard = [
-            'title' => 'Painel financeiro operacional',
-            'subtitle' => 'Controle rigoroso da Tesouraria com foco em inadimplÃªncia e operaÃ§Ã£o rÃ¡pida.',
-            'meta' => [
-                'Perfil: tesoureiro',
-                'Fonte oficial: tesouraria',
-                'Miniapp alinhado ao cargo',
-            ],
-            'actions' => [
-                ['label' => 'Criar obrigaÃ§Ã£o', 'href' => '/tesouraria/obrigacoes'],
-                ['label' => 'Gerar mensalidades', 'href' => '/tesouraria/obrigacoes'],
-                ['label' => 'Quitar parcela', 'href' => '/tesouraria/obrigacoes'],
-                ['label' => 'Emitir recibo', 'href' => '/tesouraria/obrigacoes'],
-                ['label' => 'Criar isenÃ§Ã£o', 'href' => '/tesouraria/obrigacoes'],
-                ['label' => 'Abrir miniapp da tesouraria', 'href' => '/miniapp/tesouraria'],
-            ],
-            'blocks' => [
-                [
-                    'title' => 'Caixa e inadimplÃªncia',
-                    'subtitle' => 'Resumo operacional de caixa e risco financeiro.',
-                    'span' => 'half',
-                    'metrics' => [
-                        ['label' => 'Entradas', 'value' => 'R$ 0,00', 'hint' => 'Atualizado pelo periodo filtrado'],
-                        ['label' => 'SaÃ­das', 'value' => 'R$ 0,00', 'hint' => 'Atualizado pelo periodo filtrado'],
-                        ['label' => 'Saldo lÃ­quido', 'value' => 'R$ 0,00'],
-                    ],
-                    'list' => [
-                        ['item' => 'ObrigaÃ§Ãµes em atraso', 'meta' => 'Operar no mÃ³dulo de obrigaÃ§Ãµes', 'status' => 'PrioritÃ¡rio'],
-                        ['item' => 'Comprovantes pendentes', 'meta' => 'ValidaÃ§Ã£o diÃ¡ria', 'status' => 'PrioritÃ¡rio'],
-                    ],
-                ],
-                [
-                    'title' => 'SessÃµes e operaÃ§Ã£o financeira',
-                    'subtitle' => 'Impacto financeiro das sessÃµes e atalhos operacionais.',
-                    'span' => 'half',
-                    'metrics' => [
-                        ['label' => 'Comprovantes', 'value' => 'ValidaÃ§Ã£o ativa'],
-                        ['label' => 'RelatÃ³rios', 'value' => 'Fechamento e gestÃ£o'],
-                    ],
-                    'list' => [
-                        ['item' => 'SessÃµes com impacto financeiro', 'meta' => 'Acompanhar em /tesouraria/sessoes', 'status' => 'Regular'],
-                        ['item' => 'Minhas obrigaÃ§Ãµes', 'meta' => 'Consulta individual', 'status' => 'Regular'],
-                    ],
-                ],
-            ],
-            'alerts' => [
-                ['title' => 'InadimplÃªncia visÃ­vel', 'text' => 'Manter obrigaÃ§Ãµes atrasadas e comprovantes como prioridade diÃ¡ria.', 'tone' => 'danger'],
-            ],
-            'activity' => [
-                ['item' => 'Caixa da Loja em operaÃ§Ã£o', 'meta' => 'LanÃ§amentos e filtros por competÃªncia'],
-                ['item' => 'Comprovantes e obrigaÃ§Ãµes', 'meta' => 'Fluxo financeiro oficial da tesouraria'],
-            ],
-            'links' => [
-                ['label' => 'ObrigaÃ§Ãµes', 'href' => '/tesouraria/obrigacoes'],
-                ['label' => 'Comprovantes', 'href' => '/tesouraria/comprovantes'],
-                ['label' => 'Regularidade', 'href' => '/tesouraria/regularidade'],
-                ['label' => 'RelatÃ³rio de gestÃ£o', 'href' => '/tesouraria/relatorio-gestao'],
-            ],
-        ];
 
-        $dashboardRenderers = [
-            static function (array $block): void {
-                $dashboardMetrics = is_array($block['metrics'] ?? null) ? $block['metrics'] : [];
-                $dashboardListItems = is_array($block['list'] ?? null) ? $block['list'] : [];
-                require __DIR__ . '/components/dashboard_metrics.php';
-                echo '<div class="mt-3">';
-                require __DIR__ . '/components/dashboard_list.php';
-                echo '</div>';
-            },
-            static function (array $block): void {
-                $dashboardMetrics = is_array($block['metrics'] ?? null) ? $block['metrics'] : [];
-                $dashboardListItems = is_array($block['list'] ?? null) ? $block['list'] : [];
-                require __DIR__ . '/components/dashboard_metrics.php';
-                echo '<div class="mt-3">';
-                require __DIR__ . '/components/dashboard_list.php';
-                echo '</div>';
-            },
-        ];
-        require __DIR__ . '/layouts/dashboard.php';
-        ?>
-        <section class="mb-6 grid gap-3 md:grid-cols-3">
-            <article class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">MovimentaÃ§Ã£o do caixa</p>
-                <p class="mt-2 text-base font-semibold text-slate-900">Registre entradas e saÃ­das do perÃ­odo</p>
-                <p class="mt-1 text-sm text-slate-600">Os lanÃ§amentos rÃ¡pidos continuam disponÃ­veis logo abaixo.</p>
-            </article>
-            <article class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">Entradas</p>
-                <p class="mt-2 text-2xl font-semibold text-emerald-800" id="resumo-entradas-mobile">R$ 0,00</p>
-            </article>
-            <article class="rounded-2xl border border-red-200 bg-red-50 px-4 py-4 shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-red-700">SaÃ­das</p>
-                <p class="mt-2 text-2xl font-semibold text-red-800" id="resumo-saidas-mobile">R$ 0,00</p>
-            </article>
-        </section>
-
-        <div class="mb-6 rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-4 md:items-end">
+<div class="space-y-8">
+    <!-- Filtros e Ações -->
+    <div class="card">
+        <div class="card-body">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">MÃªs</label>
-                    <select id="filter-mes" class="w-full rounded border border-gray-300 px-3 py-2" onchange="filtrarCaixa()">
+                    <label for="filter-mes" class="form-label">Mês</label>
+                    <select id="filter-mes" class="form-select">
                         <?php
-                        $mesesPT = ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-                        $mesAtual = (int) date('n');
+                        $mesesPT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
                         for ($m = 1; $m <= 12; $m++) {
                             $selected = ($m === $mesAtual) ? 'selected' : '';
                             echo "<option value=\"$m\" $selected>{$mesesPT[$m - 1]}</option>";
@@ -142,12 +37,10 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         ?>
                     </select>
                 </div>
-
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Ano</label>
-                    <select id="filter-ano" class="w-full rounded border border-gray-300 px-3 py-2" onchange="filtrarCaixa()">
+                    <label for="filter-ano" class="form-label">Ano</label>
+                    <select id="filter-ano" class="form-select">
                         <?php
-                        $anoAtual = (int) date('Y');
                         for ($a = $anoAtual - 2; $a <= $anoAtual; $a++) {
                             $selected = ($a === $anoAtual) ? 'selected' : '';
                             echo "<option value=\"$a\" $selected>$a</option>";
@@ -155,491 +48,143 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         ?>
                     </select>
                 </div>
-
-                <div class="md:col-span-2 flex flex-col gap-2 sm:flex-row">
-                    <button onclick="abrirModalEntrada()" class="flex-1 rounded bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800">
-                        Nova Entrada
-                    </button>
-                    <button onclick="abrirModalSaida()" class="flex-1 rounded bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800">
-                        Nova SaÃ­da
-                    </button>
+                <div class="md:col-span-2 flex flex-col sm:flex-row gap-3 pt-4 sm:pt-0">
+                    <button onclick="abrirModalLancamento('entrada')" class="btn btn-success w-full">Nova Entrada</button>
+                    <button onclick="abrirModalLancamento('saida')" class="btn btn-danger w-full">Nova Saída</button>
                 </div>
-            </div>
-        </div>
-
-        <div class="mb-6 rounded-3xl border border-gray-200 bg-white shadow-sm">
-            <div class="flex cursor-pointer items-center justify-between border-b border-gray-200 p-4 select-none" onclick="toggleSugestoes()">
-                <h2 class="font-semibold text-gray-700">LanÃ§amentos rÃ¡pidos</h2>
-                <span id="sugestoes-toggle-icon" class="text-xs font-medium text-gray-400">Ocultar</span>
-            </div>
-            <div id="sugestoes-panel" class="p-4">
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-green-700">Entradas</p>
-                        <div id="sugestoes-entradas" class="flex flex-wrap gap-2">
-                            <span class="text-sm text-gray-400">Carregando...</span>
-                        </div>
-                    </div>
-                    <div>
-                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-red-700">SaÃ­das</p>
-                        <div id="sugestoes-saidas" class="flex flex-wrap gap-2">
-                            <span class="text-sm text-gray-400">Carregando...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div class="rounded-lg border border-green-200 bg-green-50 p-4">
-                <p class="text-sm font-medium text-green-600">Total Entradas</p>
-                <p class="text-2xl font-bold text-green-700" id="total-entradas">R$ 0,00</p>
-            </div>
-            <div class="rounded-lg border border-red-200 bg-red-50 p-4">
-                <p class="text-sm font-medium text-red-600">Total SaÃ­das</p>
-                <p class="text-2xl font-bold text-red-700" id="total-saidas">R$ 0,00</p>
-            </div>
-            <div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <p class="text-sm font-medium text-blue-600">Saldo LÃ­quido</p>
-                <p class="text-2xl font-bold text-blue-700" id="saldo-liquido">R$ 0,00</p>
-            </div>
-        </div>
-
-        <div class="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-5">
-            <div class="min-h-[320px] rounded-lg border border-gray-200 bg-white p-4 shadow-sm xl:col-span-2">
-                <h2 class="mb-4 font-semibold">ComposiÃ§Ã£o do perÃ­odo</h2>
-                <div class="flex h-72 flex-col items-center justify-center gap-4">
-                    <div id="chartCaixaPizza" class="h-52 w-52 rounded-full border border-gray-200" aria-label="GrÃ¡fico de composiÃ§Ã£o do perÃ­odo"></div>
-                    <div class="flex flex-wrap items-center justify-center gap-4 text-sm">
-                        <div class="flex items-center gap-2">
-                            <span class="inline-block h-3 w-3 rounded-full bg-green-600"></span>
-                            <span id="legenda-entradas">Entradas: R$ 0,00</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="inline-block h-3 w-3 rounded-full bg-red-600"></span>
-                            <span id="legenda-saidas">SaÃ­das: R$ 0,00</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="min-h-[320px] rounded-lg border border-gray-200 bg-white p-4 shadow-sm xl:col-span-3">
-                <h2 class="mb-1 font-semibold">EvoluÃ§Ã£o do caixa</h2>
-                <p class="mb-4 text-xs text-gray-500">Compara o mÃªs anterior, o mÃªs atual e uma estimativa simples do prÃ³ximo perÃ­odo.</p>
-                <div id="chartCaixaTendencia" class="h-72"></div>
-            </div>
-        </div>
-
-        <div class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
-            <div class="border-b border-gray-200 bg-gray-50 p-4">
-                <h2 class="font-semibold">LanÃ§amentos do perÃ­odo</h2>
-            </div>
-            <div id="lancamentos-cards" class="space-y-3 p-4 md:hidden">
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">Carregando...</div>
-            </div>
-            <div class="hidden overflow-x-auto md:block">
-                <table class="min-w-full text-sm">
-                    <thead class="border-b border-gray-200 bg-gray-100">
-                        <tr>
-                            <th class="px-4 py-2 text-left">Data</th>
-                            <th class="px-4 py-2 text-left">Tipo</th>
-                            <th class="px-4 py-2 text-left">Categoria</th>
-                            <th class="px-4 py-2 text-left">DescriÃ§Ã£o</th>
-                            <th class="px-4 py-2 text-left">Obreiro</th>
-                            <th class="px-4 py-2 text-right">Valor</th>
-                            <th class="px-4 py-2 text-center">AÃ§Ã£o</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lancamentos-table">
-                        <tr>
-                            <td colspan="7" class="px-4 py-4 text-center text-gray-500">Carregando...</td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
 
-    <div id="modal-lancamento" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-40 p-4">
-        <div class="w-full max-w-lg rounded-lg bg-white shadow-lg">
-            <div class="border-b border-gray-200 p-6">
-                <h2 class="text-lg font-bold" id="modal-title">Nova Entrada</h2>
+    <!-- Métricas -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div class="card-metric"><p class="card-metric-label">Total Entradas</p><p class="card-metric-value text-green-600 dark:text-green-400" id="total-entradas">R$ 0,00</p></div>
+        <div class="card-metric"><p class="card-metric-label">Total Saídas</p><p class="card-metric-value text-red-600 dark:text-red-400" id="total-saidas">R$ 0,00</p></div>
+        <div class="card-metric"><p class="card-metric-label">Saldo Líquido</p><p class="card-metric-value" id="saldo-liquido">R$ 0,00</p></div>
+    </div>
+
+    <!-- Lançamentos Rápidos -->
+    <div class="card">
+        <div class="card-header-subtle" onclick="toggleSugestoes()">
+            <h3 class="card-title-subtle">Lançamentos rápidos</h3>
+            <span id="sugestoes-toggle-icon" class="text-xs font-medium text-gray-500 dark:text-gray-400 cursor-pointer">Ocultar</span>
+        </div>
+        <div id="sugestoes-panel" class="card-body">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-green-600 dark:text-green-400">Sugestões de Entradas</p>
+                    <div id="sugestoes-entradas" class="flex flex-wrap gap-2"><span class="text-sm text-gray-500">Carregando...</span></div>
+                </div>
+                <div>
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">Sugestões de Saídas</p>
+                    <div id="sugestoes-saidas" class="flex flex-wrap gap-2"><span class="text-sm text-gray-500">Carregando...</span></div>
+                </div>
             </div>
-            <form id="form-lancamento" class="space-y-4 p-6">
-                <input type="hidden" id="tipo-lancamento" value="entrada">
-
-                <div>
-                    <label class="mb-1 block text-sm font-medium">Categoria *</label>
-                    <select id="categoria_id" class="w-full rounded border border-gray-300 px-3 py-2" required>
-                        <option value="">Selecione uma categoria</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="mb-1 block text-sm font-medium">Valor *</label>
-                    <input type="number" id="valor" step="0.01" min="0" class="w-full rounded border border-gray-300 px-3 py-2" required>
-                </div>
-
-                <div>
-                    <label class="mb-1 block text-sm font-medium">Data *</label>
-                    <input type="date" id="data_lancamento" class="w-full rounded border border-gray-300 px-3 py-2" required>
-                </div>
-
-                <div>
-                    <label class="mb-1 block text-sm font-medium">DescriÃ§Ã£o</label>
-                    <textarea id="descricao" rows="3" class="w-full rounded border border-gray-300 px-3 py-2"></textarea>
-                </div>
-
-                <div class="flex gap-2">
-                    <button type="button" onclick="fecharModalLancamento()" class="flex-1 rounded bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" class="flex-1 rounded bg-blue-700 px-4 py-2 text-white hover:bg-blue-800">Salvar</button>
-                </div>
-            </form>
         </div>
     </div>
 
-    <script>
-        const nomesMeses = ['Janeiro', 'Fevereiro', 'MarÃ§o', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-        document.getElementById('data_lancamento').valueAsDate = new Date();
+    <!-- Gráficos -->
+    <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
+        <div class="card xl:col-span-2">
+            <div class="card-header"><h2 class="card-title">Composição do período</h2></div>
+            <div class="card-body flex flex-col items-center justify-center h-80">
+                <div id="chartCaixaPizza" class="h-52 w-52"></div>
+                <div class="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
+                    <div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-green-500"></span><span id="legenda-entradas" class="text-gray-600 dark:text-gray-400">Entradas: R$ 0,00</span></div>
+                    <div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-red-500"></span><span id="legenda-saidas" class="text-gray-600 dark:text-gray-400">Saídas: R$ 0,00</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="card xl:col-span-3">
+            <div class="card-header">
+                <h2 class="card-title">Evolução do caixa</h2>
+                <p class="card-description">Comparativo entre o mês anterior, o atual e uma projeção para o próximo.</p>
+            </div>
+            <div class="card-body h-80">
+                <div id="chartCaixaTendencia" class="h-full w-full"></div>
+            </div>
+        </div>
+    </div>
 
-        function toggleSugestoes() {
-            const panel = document.getElementById('sugestoes-panel');
-            const icon = document.getElementById('sugestoes-toggle-icon');
-            if (panel.classList.contains('hidden')) {
-                panel.classList.remove('hidden');
-                icon.textContent = 'Ocultar';
-            } else {
-                panel.classList.add('hidden');
-                icon.textContent = 'Mostrar';
-            }
-        }
-
-        async function carregarSugestoes() {
-            try {
-                const [resEnt, resSai] = await Promise.all([
-                    fetch('/api/tesouraria/categorias?tipo=entrada'),
-                    fetch('/api/tesouraria/categorias?tipo=saida')
-                ]);
-                const entradas = (await resEnt.json()).categorias || [];
-                const saidas = (await resSai.json()).categorias || [];
-
-                const renderPills = (cats, tipo) => cats.map(c => `
-                    <button onclick="lancarRapido(${c.id}, '${tipo}')"
-                        class="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                            tipo === 'entrada'
-                                ? 'border-green-300 text-green-700 hover:bg-green-50'
-                                : 'border-red-300 text-red-700 hover:bg-red-50'
-                        }">
-                        ${c.nome}
-                    </button>
-                `).join('');
-
-                document.getElementById('sugestoes-entradas').innerHTML = renderPills(entradas, 'entrada') || '<span class="text-sm text-gray-400">Nenhuma categoria</span>';
-                document.getElementById('sugestoes-saidas').innerHTML = renderPills(saidas, 'saida') || '<span class="text-sm text-gray-400">Nenhuma categoria</span>';
-            } catch (err) {
-                console.error('Erro ao carregar sugestÃµes:', err);
-            }
-        }
-
-        async function lancarRapido(categoriaId, tipo) {
-            document.getElementById('tipo-lancamento').value = tipo;
-            document.getElementById('modal-title').textContent = tipo === 'entrada' ? 'Nova Entrada' : 'Nova SaÃ­da';
-            await carregarCategorias(tipo);
-            const select = document.getElementById('categoria_id');
-            select.value = categoriaId;
-            const nomeCategoria = select.options[select.selectedIndex]?.text ?? '';
-            if (nomeCategoria) {
-                document.getElementById('modal-title').textContent =
-                    (tipo === 'entrada' ? 'Nova Entrada' : 'Nova SaÃ­da') + ` - ${nomeCategoria}`;
-            }
-            document.getElementById('modal-lancamento').classList.remove('hidden');
-            document.getElementById('modal-lancamento').classList.add('flex');
-        }
-
-        async function abrirModalEntrada() {
-            document.getElementById('tipo-lancamento').value = 'entrada';
-            document.getElementById('modal-title').textContent = 'Nova Entrada';
-            await carregarCategorias('entrada');
-            document.getElementById('modal-lancamento').classList.remove('hidden');
-            document.getElementById('modal-lancamento').classList.add('flex');
-        }
-
-        async function abrirModalSaida() {
-            document.getElementById('tipo-lancamento').value = 'saida';
-            document.getElementById('modal-title').textContent = 'Nova SaÃ­da';
-            await carregarCategorias('saida');
-            document.getElementById('modal-lancamento').classList.remove('hidden');
-            document.getElementById('modal-lancamento').classList.add('flex');
-        }
-
-        function fecharModalLancamento() {
-            const modal = document.getElementById('modal-lancamento');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            document.getElementById('form-lancamento').reset();
-        }
-
-        async function carregarCategorias(tipo) {
-            try {
-                const res = await fetch(`/api/tesouraria/categorias?tipo=${tipo}`);
-                const json = await res.json();
-                const select = document.getElementById('categoria_id');
-                select.innerHTML = '<option value="">Selecione uma categoria</option>';
-                (json.categorias || []).forEach(cat => {
-                    select.innerHTML += `<option value="${cat.id}">${cat.nome}</option>`;
-                });
-            } catch (err) {
-                console.error('Erro ao carregar categorias:', err);
-            }
-        }
-
-        function formatarMoeda(valor) {
-            return Number(valor || 0).toLocaleString('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-            });
-        }
-
-        function obterPeriodoAnterior(mes, ano) {
-            if (mes === 1) {
-                return { mes: 12, ano: ano - 1 };
-            }
-            return { mes: mes - 1, ano };
-        }
-
-        function obterProximoPeriodo(mes, ano) {
-            if (mes === 12) {
-                return { mes: 1, ano: ano + 1 };
-            }
-            return { mes: mes + 1, ano };
-        }
-
-        function projetarProximoPeriodo(totaisAnterior, totaisAtual) {
-            const entradaAnterior = Number(totaisAnterior.entrada || 0);
-            const entradaAtual = Number(totaisAtual.entrada || 0);
-            const saidaAnterior = Number(totaisAnterior.saida || 0);
-            const saidaAtual = Number(totaisAtual.saida || 0);
-
-            return {
-                entrada: Number(((entradaAnterior + entradaAtual) / 2).toFixed(2)),
-                saida: Number(((saidaAnterior + saidaAtual) / 2).toFixed(2)),
-            };
-        }
-
-        async function buscarTotaisPeriodo(mes, ano) {
-            const res = await fetch(`/api/tesouraria/caixa?mes=${mes}&ano=${ano}`);
-            const json = await res.json();
-            return json.totais || { entrada: 0, saida: 0 };
-        }
-
-        async function filtrarCaixa() {
-            const mes = Number(document.getElementById('filter-mes').value);
-            const ano = Number(document.getElementById('filter-ano').value);
-            try {
-                const res = await fetch(`/api/tesouraria/caixa?mes=${mes}&ano=${ano}`);
-                const json = await res.json();
-                atualizarTabelaCaixa(json.lancamentos || [], json.totais || {});
-                await atualizarGraficos(mes, ano, json.totais || {});
-            } catch (err) {
-                console.error('Erro ao carregar caixa:', err);
-            }
-        }
-
-        function atualizarTabelaCaixa(lancamentos, totais) {
-            const tbody = document.getElementById('lancamentos-table');
-            const cards = document.getElementById('lancamentos-cards');
-            if (lancamentos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-4 text-center text-gray-500">Nenhum lanÃ§amento neste perÃ­odo</td></tr>';
-                cards.innerHTML = '<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">Nenhum lanÃ§amento neste perÃ­odo.</div>';
-            } else {
-                tbody.innerHTML = lancamentos.map(l => `
-                    <tr class="border-b border-gray-200 hover:bg-gray-50">
-                        <td class="px-4 py-2">${new Date(l.data_lancamento).toLocaleDateString('pt-BR')}</td>
-                        <td class="px-4 py-2">
-                            <span class="rounded px-2 py-1 text-xs font-semibold ${
-                                l.tipo === 'entrada'
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-red-100 text-red-700'
-                            }">
-                                ${l.tipo === 'entrada' ? 'Entrada' : 'SaÃ­da'}
-                            </span>
-                        </td>
-                        <td class="px-4 py-2">${l.categoria_nome}</td>
-                        <td class="px-4 py-2 text-gray-600">${l.descricao || '-'}</td>
-                        <td class="px-4 py-2 text-gray-600">${l.obreiro_nome || '-'}</td>
-                        <td class="px-4 py-2 text-right font-semibold ${
-                            l.tipo === 'entrada' ? 'text-green-700' : 'text-red-700'
-                        }">
-                            ${l.tipo === 'entrada' ? '+' : '-'} ${formatarMoeda(l.valor)}
-                        </td>
-                        <td class="px-4 py-2 text-center">
-                            <button onclick="deletarLancamento(${l.id})" class="text-xs text-red-600 hover:text-red-800">Excluir</button>
-                        </td>
+    <!-- Tabela de Lançamentos -->
+    <div class="card">
+        <div class="card-header"><h2 class="card-title">Lançamentos do período</h2></div>
+        <div id="lancamentos-cards" class="space-y-4 p-4 md:hidden">
+            <div class="text-center text-sm text-gray-500 py-4">Carregando...</div>
+        </div>
+        <div class="hidden md:block overflow-x-auto">
+            <table class="table-default">
+                <thead>
+                    <tr>
+                        <th>Data</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Obreiro</th><th class="text-right">Valor</th><th class="text-center">Ações</th>
                     </tr>
-                `).join('');
+                </thead>
+                <tbody id="lancamentos-table" class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tr><td colspan="7" class="px-4 py-6 text-center text-gray-500">Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-                cards.innerHTML = lancamentos.map(l => `
-                    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <div class="text-base font-semibold text-slate-900">${l.categoria_nome}</div>
-                                <div class="mt-1 text-sm text-slate-600">${new Date(l.data_lancamento).toLocaleDateString('pt-BR')}</div>
-                            </div>
-                            <span class="rounded-full px-3 py-1 text-xs font-semibold ${l.tipo === 'entrada' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
-                                ${l.tipo === 'entrada' ? 'Entrada' : 'SaÃ­da'}
-                            </span>
-                        </div>
-                        <div class="mt-3 text-sm text-slate-600">
-                            <div>DescriÃ§Ã£o: ${l.descricao || '-'}</div>
-                            <div>Obreiro: ${l.obreiro_nome || '-'}</div>
-                        </div>
-                        <div class="mt-4 flex items-center justify-between gap-3">
-                            <div class="text-lg font-semibold ${l.tipo === 'entrada' ? 'text-green-700' : 'text-red-700'}">
-                                ${l.tipo === 'entrada' ? '+' : '-'} ${formatarMoeda(l.valor)}
-                            </div>
-                            <button onclick="deletarLancamento(${l.id})" class="rounded border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50">
-                                Excluir
-                            </button>
-                        </div>
-                    </article>
-                `).join('');
-            }
+<!-- Modal de Lançamento -->
+<div id="modal-lancamento" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
+    <div class="modal-content" @click.away="fecharModalLancamento()">
+        <div class="modal-header">
+            <h2 class="modal-title" id="modal-title">Novo Lançamento</h2>
+            <button class="modal-close" onclick="fecharModalLancamento()">&times;</button>
+        </div>
+        <form id="form-lancamento" class="modal-body">
+            <input type="hidden" id="tipo-lancamento" name="tipo">
+            <input type="hidden" id="lancamento_id" name="lancamento_id">
 
-            document.getElementById('total-entradas').textContent = formatarMoeda(totais.entrada);
-            document.getElementById('total-saidas').textContent = formatarMoeda(totais.saida);
-            document.getElementById('saldo-liquido').textContent = formatarMoeda((totais.entrada || 0) - (totais.saida || 0));
-            document.getElementById('resumo-entradas-mobile').textContent = formatarMoeda(totais.entrada);
-            document.getElementById('resumo-saidas-mobile').textContent = formatarMoeda(totais.saida);
-        }
+            <div><label for="categoria_id" class="form-label">Categoria *</label><select id="categoria_id" name="categoria_id" class="form-select" required></select></div>
+            <div><label for="valor" class="form-label">Valor *</label><input type="number" id="valor" name="valor" step="0.01" min="0" class="form-input" required></div>
+            <div><label for="data_lancamento" class="form-label">Data *</label><input type="date" id="data_lancamento" name="data_lancamento" class="form-input" required></div>
+            <div><label for="descricao" class="form-label">Descrição</label><textarea id="descricao" name="descricao" rows="3" class="form-textarea"></textarea></div>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="fecharModalLancamento()" class="btn btn-secondary">Cancelar</button>
+                <button type="submit" id="modal-submit-button" class="btn btn-primary">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-        function atualizarGraficoPizza(totais) {
-            const entradas = Number(totais.entrada || 0);
-            const saidas = Number(totais.saida || 0);
-            const total = entradas + saidas;
-            const percentualEntradas = total > 0 ? (entradas / total) * 100 : 50;
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
+    .card-header-subtle { @apply p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center cursor-pointer; }
+    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
+    .card-title-subtle { @apply text-md font-semibold text-gray-700 dark:text-gray-200; }
+    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
+    .card-body { @apply p-5; }
+    .card-metric { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-5; }
+    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
+    .card-metric-value { @apply mt-1 text-3xl font-bold; }
+    
+    .table-default { @apply min-w-full text-sm; }
+    .table-default thead { @apply bg-gray-50 dark:bg-gray-700/50; }
+    .table-default th { @apply px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider text-xs; }
+    .table-default td { @apply px-4 py-3; }
+    
+    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
+    .form-select, .form-input, .form-textarea { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
 
-            const grafico = document.getElementById('chartCaixaPizza');
-            grafico.style.background = `conic-gradient(#16a34a 0% ${percentualEntradas}%, #dc2626 ${percentualEntradas}% 100%)`;
+    .btn-pill { @apply rounded-full border px-3 py-1 text-xs font-medium transition-colors; }
+    .btn-pill-success { @apply border-green-500/50 text-green-700 dark:text-green-400 hover:bg-green-500/10; }
+    .btn-pill-danger { @apply border-red-500/50 text-red-700 dark:text-red-400 hover:bg-red-500/10; }
 
-            if (total === 0) {
-                grafico.style.background = 'conic-gradient(#d1d5db 0% 100%)';
-            }
+    .modal-content { @apply w-full max-w-lg rounded-xl bg-white dark:bg-gray-800 shadow-xl; }
+    .modal-header { @apply flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-700; }
+    .modal-title { @apply text-lg font-bold text-gray-900 dark:text-gray-100; }
+    .modal-close { @apply text-2xl text-gray-500 hover:text-gray-800 dark:hover:text-gray-200; }
+    .modal-body { @apply p-5 space-y-4; }
+    .modal-footer { @apply flex justify-end gap-3 p-5 border-t border-gray-200 dark:border-gray-700; }
+</style>
 
-            document.getElementById('legenda-entradas').textContent = `Entradas: ${formatarMoeda(entradas)}`;
-            document.getElementById('legenda-saidas').textContent = `Saidas: ${formatarMoeda(saidas)}`;
-        }
+<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
 
-        function atualizarGraficoTendencia(labels, totaisAnterior, totaisAtual, totaisProjecao) {
-            const entradas = [totaisAnterior.entrada, totaisAtual.entrada, totaisProjecao.entrada].map(valor => Number(valor || 0));
-            const saidas = [totaisAnterior.saida, totaisAtual.saida, totaisProjecao.saida].map(valor => Number(valor || 0));
-            const saldos = entradas.map((entrada, index) => Number((entrada - saidas[index]).toFixed(2)));
-
-            const container = document.getElementById('chartCaixaTendencia');
-            const maiorValor = Math.max(...entradas, ...saidas, ...saldos.map(valor => Math.abs(valor)), 1);
-            const pontosLinha = saldos.map((saldo, index) => {
-                const x = 40 + (index * 180);
-                const y = 220 - ((saldo + maiorValor) / (maiorValor * 2)) * 180;
-                return `${x},${y}`;
-            }).join(' ');
-
-            container.innerHTML = `
-                <div class="flex h-full flex-col gap-3">
-                    <div class="flex items-center justify-center gap-4 text-xs text-gray-600">
-                        <span class="flex items-center gap-2"><span class="inline-block h-3 w-3 rounded-sm bg-green-500"></span>Entradas</span>
-                        <span class="flex items-center gap-2"><span class="inline-block h-3 w-3 rounded-sm bg-red-500"></span>Saidas</span>
-                        <span class="flex items-center gap-2"><span class="inline-block h-0.5 w-4 bg-blue-600"></span>Saldo Liquido</span>
-                    </div>
-                    <div class="grid flex-1 grid-cols-3 items-end gap-4">
-                        ${labels.map((label, index) => {
-                            const entradaAltura = Math.max((entradas[index] / maiorValor) * 140, entradas[index] > 0 ? 10 : 2);
-                            const saidaAltura = Math.max((saidas[index] / maiorValor) * 140, saidas[index] > 0 ? 10 : 2);
-                            return `
-                                <div class="relative flex h-full flex-col items-center justify-end gap-3">
-                                    <div class="min-h-[32px] text-center text-xs text-gray-500">${label}</div>
-                                    <div class="flex h-40 items-end gap-2">
-                                        <div class="w-10 rounded-t-md bg-green-500" style="height:${entradaAltura}px" title="Entradas: ${formatarMoeda(entradas[index])}"></div>
-                                        <div class="w-10 rounded-t-md bg-red-500" style="height:${saidaAltura}px" title="Saidas: ${formatarMoeda(saidas[index])}"></div>
-                                    </div>
-                                    <div class="text-xs font-semibold ${saldos[index] >= 0 ? 'text-blue-700' : 'text-red-700'}">Saldo: ${formatarMoeda(saldos[index])}</div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                    <div class="-mt-44 pointer-events-none">
-                        <svg viewBox="0 0 400 220" class="h-44 w-full overflow-visible">
-                            <polyline fill="none" stroke="#2563eb" stroke-width="3" points="${pontosLinha}" />
-                            ${saldos.map((saldo, index) => {
-                                const x = 40 + (index * 180);
-                                const y = 220 - ((saldo + maiorValor) / (maiorValor * 2)) * 180;
-                                return `<circle cx="${x}" cy="${y}" r="5" fill="#2563eb"></circle>`;
-                            }).join('')}
-                        </svg>
-                    </div>
-                </div>
-            `;
-        }
-
-        async function atualizarGraficos(mes, ano, totaisAtual) {
-            atualizarGraficoPizza(totaisAtual);
-
-            const periodoAnterior = obterPeriodoAnterior(mes, ano);
-            const proximoPeriodo = obterProximoPeriodo(mes, ano);
-            const totaisAnterior = await buscarTotaisPeriodo(periodoAnterior.mes, periodoAnterior.ano);
-            const totaisProjecao = projetarProximoPeriodo(totaisAnterior, totaisAtual);
-
-            atualizarGraficoTendencia([
-                nomesMeses[periodoAnterior.mes - 1],
-                nomesMeses[mes - 1],
-                `${nomesMeses[proximoPeriodo.mes - 1]} (proj.)`
-            ], totaisAnterior, totaisAtual, totaisProjecao);
-        }
-
-        document.getElementById('form-lancamento').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const mes = document.getElementById('filter-mes').value;
-            const ano = document.getElementById('filter-ano').value;
-            const data = {
-                tipo: document.getElementById('tipo-lancamento').value,
-                categoria_id: document.getElementById('categoria_id').value,
-                valor: document.getElementById('valor').value,
-                data_lancamento: document.getElementById('data_lancamento').value,
-                descricao: document.getElementById('descricao').value,
-                mes_ref: parseInt(mes),
-                ano_ref: parseInt(ano)
-            };
-
-            try {
-                const res = await fetch('/api/tesouraria/lancamento/criar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const json = await res.json();
-                if (json.ok) {
-                    fecharModalLancamento();
-                    filtrarCaixa();
-                }
-            } catch (err) {
-                console.error('Erro ao salvar:', err);
-            }
-        });
-
-        async function deletarLancamento(id) {
-            if (!confirm('Tem certeza que deseja excluir este lancamento?')) return;
-            try {
-                const res = await fetch(`/api/tesouraria/lancamento/${id}`, { method: 'DELETE' });
-                const json = await res.json();
-                if (json.ok) {
-                    filtrarCaixa();
-                }
-            } catch (err) {
-                console.error('Erro ao excluir:', err);
-            }
-        }
-
-        window.addEventListener('load', () => {
-            filtrarCaixa();
-            carregarSugestoes();
-        });
-    </script>
-<?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="/assets/js/tesouraria_caixa.js"></script>
 

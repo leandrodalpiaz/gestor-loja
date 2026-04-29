@@ -1,148 +1,92 @@
 <?php
+require_once __DIR__ . '/../partials/erp_shell_open.php';
+
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
+
 $nomeCompanheiro = (string) ($companheiro['nome_historico'] ?? $companheiro['nome'] ?? 'Companheiro');
 $etapaAtualOrdem = (int) ($etapaAtual['etapa_ordem'] ?? 1);
 $etapaAtualTitulo = (string) ($etapaAtual['titulo_etapa'] ?? '');
 $etapaAtualStatus = (string) ($etapaAtual['status'] ?? 'nao_iniciado');
 $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($tituloPagina) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        ardosia: '#152538',
-                        dourado: '#be9c45',
-                        pinho: '#33555a',
-                        pergaminho: '#f6f0e5'
-                    },
-                    fontFamily: {
-                        display: ['"Cormorant Garamond"', 'serif'],
-                        sans: ['"Inter"', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        @media (min-width: 1440px) {
-            .erp-readable {
-                font-size: 1.08rem;
-            }
-            .erp-readable .text-xs,
-            .erp-readable .text-\[11px\] {
-                font-size: 0.92rem !important;
-                line-height: 1.4rem !important;
-            }
-            .erp-readable .text-sm {
-                font-size: 1.03rem !important;
-                line-height: 1.58rem !important;
-            }
-        }
-    </style>
-</head>
-<body class="erp-readable min-h-screen bg-[radial-gradient(circle_at_top,#faf6ed_0%,#edf1f5_46%,#e7eaef_100%)] font-sans text-slate-900">
-    <div class="mx-auto max-w-6xl px-4 py-8">
-        <header class="rounded-3xl border border-white/50 bg-[radial-gradient(circle_at_top_left,#d9be84,transparent_28%),linear-gradient(135deg,#152538,#21405e_55%,#33555a)] px-6 py-7 text-white shadow-2xl">
-            <p class="text-xs uppercase tracking-[0.22em] text-amber-200"><?= $somenteProprio ? 'Autoacompanhamento' : 'Acompanhamento formativo' ?></p>
-            <h1 class="mt-2 font-display text-4xl font-bold"><?= htmlspecialchars($nomeCompanheiro) ?></h1>
-            <p class="mt-2 text-sm text-slate-200">
-                <?= $somenteProprio ? 'Acompanhe sua trilha, sua leitura orientada, o certificado e a recomendação de exaltação.' : 'Linha do tempo individual do Companheiro com trilha, leitura sugerida, docência e recomendação formal de exaltação.' ?>
-            </p>
-            <div class="mt-5 flex flex-wrap gap-2">
-                <a href="<?= $somenteProprio ? '/dashboard' : '/segundo-vigilante' ?>" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Voltar</a>
-                <?php if (!$somenteProprio): ?>
-                    <a href="/obreiros" class="rounded-md bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-200">Lista de obreiros</a>
-                    <a href="/biblioteca" class="rounded-md bg-white/10 px-3 py-2 text-sm hover:bg-white/20">Biblioteca e classificação</a>
-                <?php endif; ?>
-            </div>
-        </header>
 
-        <?php if ($mensagemSucesso): ?>
-            <div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700"><?= htmlspecialchars($mensagemSucesso) ?></div>
-        <?php endif; ?>
-        <?php if ($mensagemErro): ?>
-            <div class="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700"><?= htmlspecialchars($mensagemErro) ?></div>
-        <?php endif; ?>
-        <?php if (!empty($avisoInfra)): ?>
-            <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800"><?= htmlspecialchars((string) $avisoInfra) ?></div>
-        <?php endif; ?>
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <section class="mt-6 grid gap-4 md:grid-cols-4">
-            <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Etapa atual</div>
-                <div class="mt-2 text-2xl font-bold text-ardosia"><?= $etapaAtualOrdem ?></div>
-                <div class="mt-1 text-xs text-slate-700"><?= htmlspecialchars($etapaAtualTitulo) ?></div>
-            </article>
-            <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Status atual</div>
-                <div class="mt-2 text-lg font-semibold text-ardosia"><?= htmlspecialchars($etapaAtualStatus) ?></div>
-            </article>
-            <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Etapas concluídas</div>
-                <div class="mt-2 text-2xl font-bold text-ardosia"><?= (int) ($resumoTrilha['total_concluidas'] ?? 0) ?> / <?= (int) ($resumoTrilha['total_etapas'] ?? 0) ?></div>
-            </article>
-            <article class="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Conclusão da trilha</div>
-                <div class="mt-2 text-2xl font-bold text-ardosia"><?= $percentual ?>%</div>
-            </article>
-        </section>
+    <!-- Cabeçalho do Companheiro -->
+    <div class="bg-gradient-to-r from-gray-800 to-blue-900 text-white rounded-lg shadow-lg p-6 mb-8">
+        <p class="text-sm font-semibold uppercase tracking-wider text-blue-300"><?= $somenteProprio ? 'Autoacompanhamento' : 'Acompanhamento Formativo' ?></p>
+        <h1 class="text-4xl font-bold mt-2"><?= htmlspecialchars($nomeCompanheiro) ?></h1>
+        <p class="mt-2 text-blue-200 max-w-3xl">
+            <?= $somenteProprio ? 'Acompanhe sua trilha, leitura, certificado e recomendação de exaltação.' : 'Linha do tempo individual do Companheiro com trilha, leitura, docência e recomendação de exaltação.' ?>
+        </p>
+        <div class="mt-5 flex flex-wrap gap-3">
+            <a href="<?= $somenteProprio ? '/dashboard' : '/segundo-vigilante' ?>" class="btn btn-secondary">Voltar</a>
+            <?php if (!$somenteProprio): ?>
+                <a href="/obreiros" class="btn btn-primary">Lista de Obreiros</a>
+                <a href="/biblioteca" class="btn btn-secondary">Biblioteca</a>
+            <?php endif; ?>
+        </div>
+    </div>
 
-        <?php if (!$somenteProprio): ?>
-            <section class="mt-6 grid gap-6 xl:grid-cols-2">
-                <article class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
-                    <h2 class="font-display text-2xl font-semibold">Atualizar etapa da trilha</h2>
-                    <p class="mt-1 text-sm text-slate-700">Registre andamento, recebimento, revisão e devolutiva do Companheiro.</p>
-                    <form action="/segundo-vigilante/trilha/atualizar" method="POST" class="mt-4 grid gap-4 md:grid-cols-2">
+    <!-- Mensagens de Feedback -->
+    <?php if ($mensagemSucesso): ?><div class="alert alert-success mb-6"><?= htmlspecialchars($mensagemSucesso) ?></div><?php endif; ?>
+    <?php if ($mensagemErro): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
+    <?php if (!empty($avisoInfra)): ?><div class="alert alert-warning mb-6"><?= htmlspecialchars((string) $avisoInfra) ?></div><?php endif; ?>
+
+    <!-- Métricas Rápidas -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="card-metric"><p class="card-metric-label">Etapa Atual</p><p class="card-metric-value"><?= $etapaAtualOrdem ?></p><p class="text-sm text-gray-500 dark:text-gray-400 mt-1"><?= htmlspecialchars($etapaAtualTitulo) ?></p></div>
+        <div class="card-metric"><p class="card-metric-label">Status Atual</p><p class="card-metric-value text-2xl"><?= htmlspecialchars($etapaAtualStatus) ?></p></div>
+        <div class="card-metric"><p class="card-metric-label">Etapas Concluídas</p><p class="card-metric-value"><?= (int) ($resumoTrilha['total_concluidas'] ?? 0) ?> / <?= (int) ($resumoTrilha['total_etapas'] ?? 0) ?></p></div>
+        <div class="card-metric"><p class="card-metric-label">Conclusão da Trilha</p><p class="card-metric-value"><?= $percentual ?>%</p></div>
+    </div>
+
+    <!-- Formulários de Gestão (Apenas para 2º Vigilante) -->
+    <?php if (!$somenteProprio): ?>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Atualizar Etapa da Trilha</h2><p class="card-description">Registre andamento, recebimento, revisão e devolutiva.</p></div>
+                <div class="card-body">
+                    <form action="/segundo-vigilante/trilha/atualizar" method="POST" class="space-y-4">
                         <input type="hidden" name="companheiro_id" value="<?= htmlspecialchars((string) ($companheiro['id'] ?? '')) ?>">
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Etapa</label>
-                            <select name="etapa_ordem" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                                <?php foreach ($etapas as $etapa): ?>
-                                    <option value="<?= (int) ($etapa['etapa_ordem'] ?? 0) ?>" <?= (int) ($etapa['etapa_ordem'] ?? 0) === $etapaAtualOrdem ? 'selected' : '' ?>>
-                                        Etapa <?= (int) ($etapa['etapa_ordem'] ?? 0) ?> - <?= htmlspecialchars((string) ($etapa['titulo_etapa'] ?? '')) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="etapa_ordem" class="form-label">Etapa</label>
+                                <select name="etapa_ordem" id="etapa_ordem" class="form-select">
+                                    <?php foreach ($etapas as $etapa): ?>
+                                        <option value="<?= (int) ($etapa['etapa_ordem'] ?? 0) ?>" <?= (int) ($etapa['etapa_ordem'] ?? 0) === $etapaAtualOrdem ? 'selected' : '' ?>>
+                                            Etapa <?= (int) ($etapa['etapa_ordem'] ?? 0) ?> - <?= htmlspecialchars((string) ($etapa['titulo_etapa'] ?? '')) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="status" class="form-label">Status</label>
+                                <select name="status" id="status" class="form-select">
+                                    <?php foreach ($statusDisponiveis as $codigo => $rotulo): ?>
+                                        <option value="<?= htmlspecialchars($codigo) ?>" <?= $codigo === $etapaAtualStatus ? 'selected' : '' ?>><?= htmlspecialchars($rotulo) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Status</label>
-                            <select name="status" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                                <?php foreach ($statusDisponiveis as $codigo => $rotulo): ?>
-                                    <option value="<?= htmlspecialchars($codigo) ?>" <?= $codigo === $etapaAtualStatus ? 'selected' : '' ?>><?= htmlspecialchars($rotulo) ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                            <label for="observacao_vigilante" class="form-label">Observação do 2º Vigilante</label>
+                            <textarea name="observacao_vigilante" id="observacao_vigilante" rows="3" class="form-textarea" placeholder="Registre orientações, devolutivas e temas sugeridos."><?= htmlspecialchars((string) ($etapaAtual['observacao_vigilante'] ?? '')) ?></textarea>
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Observação do 2o Vigilante</label>
-                            <textarea name="observacao_vigilante" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Registre orientações, devolutivas e temas sugeridos."><?= htmlspecialchars((string) ($etapaAtual['observacao_vigilante'] ?? '')) ?></textarea>
-                        </div>
-                        <div class="md:col-span-2 flex justify-end">
-                            <button type="submit" class="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700">Salvar andamento da trilha</button>
-                        </div>
+                        <div class="text-right"><button type="submit" class="btn btn-primary">Salvar Andamento</button></div>
                     </form>
-                </article>
-
-                <article id="leitura-sugerida" class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
-                    <h2 class="font-display text-2xl font-semibold">Leitura sugerida</h2>
-                    <p class="mt-1 text-sm text-slate-700">Conecte o acompanhamento do Companheiro com a biblioteca da Loja.</p>
-                    <form action="/segundo-vigilante/leitura/salvar" method="POST" class="mt-4 space-y-4">
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Leitura Sugerida</h2><p class="card-description">Conecte o acompanhamento com a biblioteca da Loja.</p></div>
+                <div class="card-body">
+                    <form action="/segundo-vigilante/leitura/salvar" method="POST" class="space-y-4">
                         <input type="hidden" name="companheiro_id" value="<?= htmlspecialchars((string) ($companheiro['id'] ?? '')) ?>">
                         <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Item do acervo</label>
-                            <select name="acervo_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            <label for="acervo_id" class="form-label">Item do Acervo</label>
+                            <select name="acervo_id" id="acervo_id" class="form-select">
                                 <option value="">Sem vincular livro específico</option>
                                 <?php foreach ($leiturasDisponiveis as $livro): ?>
                                     <option value="<?= (int) ($livro['id'] ?? 0) ?>" <?= ((int) ($acompanhamento['leitura_acervo_id'] ?? 0) === (int) ($livro['id'] ?? 0)) ? 'selected' : '' ?>>
@@ -152,149 +96,154 @@ $percentual = (int) ($resumoTrilha['percentual_conclusao'] ?? 0);
                             </select>
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Orientação de leitura</label>
-                            <textarea name="observacao_leitura" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Explique o foco do estudo ou capítulo recomendado."><?= htmlspecialchars((string) ($acompanhamento['leitura_observacao'] ?? '')) ?></textarea>
+                            <label for="observacao_leitura" class="form-label">Orientação de Leitura</label>
+                            <textarea name="observacao_leitura" id="observacao_leitura" rows="3" class="form-textarea" placeholder="Explique o foco do estudo ou capítulo recomendado."><?= htmlspecialchars((string) ($acompanhamento['leitura_observacao'] ?? '')) ?></textarea>
                         </div>
-                        <div class="flex justify-end">
-                            <button type="submit" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">Salvar leitura sugerida</button>
-                        </div>
+                        <div class="text-right"><button type="submit" class="btn btn-primary">Salvar Leitura</button></div>
                     </form>
-                </article>
-            </section>
-        <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
-        <section class="mt-6 grid gap-6 xl:grid-cols-2">
-            <article class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
-                <div class="flex items-center justify-between gap-4">
+    <!-- Linha do Tempo e Histórico -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2">
+            <div class="card">
+                <div class="card-header flex items-center justify-between">
                     <div>
-                        <h2 class="font-display text-2xl font-semibold">Linha do tempo da trilha</h2>
-                        <p class="mt-1 text-sm text-slate-700">Cada etapa mostra o estado real da jornada do Companheiro.</p>
+                        <h2 class="card-title">Linha do Tempo da Trilha</h2>
+                        <p class="card-description">Jornada formativa do Companheiro.</p>
                     </div>
-                    <div class="w-40">
-                        <div class="h-3 overflow-hidden rounded-full bg-slate-200">
-                            <div class="h-full rounded-full bg-pinho" style="width: <?= max(0, min(100, $percentual)) ?>%"></div>
+                    <div class="w-32">
+                        <div class="h-2.5 rounded-full bg-gray-200 dark:bg-gray-700">
+                            <div class="h-2.5 rounded-full bg-blue-600" style="width: <?= max(0, min(100, $percentual)) ?>%"></div>
                         </div>
                     </div>
                 </div>
-
-                <div class="mt-6 space-y-4">
-                    <?php foreach ($etapas as $etapa): ?>
-                        <?php
+                <div class="card-body space-y-4">
+                    <?php foreach ($etapas as $etapa):
                         $status = (string) ($etapa['status'] ?? 'nao_iniciado');
                         $ordem = (int) ($etapa['etapa_ordem'] ?? 0);
                         $ativo = $ordem === $etapaAtualOrdem;
                         $concluido = in_array($status, ['concluido', 'certificado_solicitado', 'exaltacao_recomendada'], true);
-                        ?>
-                        <article id="etapa-<?= $ordem ?>" class="rounded-2xl border px-5 py-4 <?= $ativo ? 'border-dourado bg-amber-50/60' : ($concluido ? 'border-emerald-200 bg-emerald-50/60' : 'border-slate-200 bg-white') ?>">
-                            <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                                <div class="min-w-0">
+                        $baseClass = 'p-4 rounded-lg border';
+                        $colorClass = $ativo ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700' : ($concluido ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700' : 'bg-gray-50 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700');
+                    ?>
+                        <div id="etapa-<?= $ordem ?>" class="<?= $baseClass ?> <?= $colorClass ?>">
+                            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                                <div>
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="rounded-full px-2 py-1 text-xs font-medium <?= $ativo ? 'bg-amber-200 text-amber-900' : ($concluido ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-100 text-slate-700') ?>">
-                                            Etapa <?= $ordem ?>
-                                        </span>
-                                        <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700"><?= htmlspecialchars($status) ?></span>
+                                        <span class="badge <?= $ativo ? 'badge-primary' : ($concluido ? 'badge-success' : 'badge-secondary') ?>">Etapa <?= $ordem ?></span>
+                                        <span class="badge badge-secondary"><?= htmlspecialchars($status) ?></span>
                                     </div>
-                                    <h3 class="mt-2 text-lg font-semibold text-ardosia"><?= htmlspecialchars((string) ($etapa['titulo_etapa'] ?? '')) ?></h3>
+                                    <h3 class="mt-2 text-lg font-semibold"><?= htmlspecialchars((string) ($etapa['titulo_etapa'] ?? '')) ?></h3>
                                     <?php if (!empty($etapa['observacao_vigilante'])): ?>
-                                        <p class="mt-2 text-sm text-slate-700"><?= nl2br(htmlspecialchars((string) $etapa['observacao_vigilante'])) ?></p>
-                                    <?php endif; ?>
-                                    <?php if (!$somenteProprio && !empty($acoesRapidasPorEtapa[$ordem])): ?>
-                                        <div class="mt-3 flex flex-wrap gap-2">
-                                            <?php foreach ($acoesRapidasPorEtapa[$ordem] as $acao): ?>
-                                                <form action="/segundo-vigilante/trilha/acao-rapida" method="POST">
-                                                    <input type="hidden" name="companheiro_id" value="<?= htmlspecialchars((string) ($companheiro['id'] ?? '')) ?>">
-                                                    <input type="hidden" name="etapa_ordem" value="<?= $ordem ?>">
-                                                    <input type="hidden" name="status" value="<?= htmlspecialchars((string) ($acao['status'] ?? '')) ?>">
-                                                    <button type="submit" class="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700">
-                                                        <?= htmlspecialchars((string) ($acao['label'] ?? 'Avancar')) ?>
-                                                    </button>
-                                                </form>
-                                            <?php endforeach; ?>
-                                        </div>
+                                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400"><?= nl2br(htmlspecialchars((string) $etapa['observacao_vigilante'])) ?></p>
                                     <?php endif; ?>
                                 </div>
-                                <div class="grid gap-2 text-xs text-slate-700 md:text-right">
-                                    <div>Disponibilização: <?= !empty($etapa['data_disponibilizacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_disponibilizacao']))) : '-' ?></div>
-                                    <div>Entrega: <?= !empty($etapa['data_entrega']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_entrega']))) : '-' ?></div>
-                                    <div>Revisão: <?= !empty($etapa['data_revisao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_revisao']))) : '-' ?></div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 md:text-right space-y-1 flex-shrink-0">
+                                    <p>Disponibilização: <?= !empty($etapa['data_disponibilizacao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_disponibilizacao']))) : '-' ?></p>
+                                    <p>Entrega: <?= !empty($etapa['data_entrega']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_entrega']))) : '-' ?></p>
+                                    <p>Revisão: <?= !empty($etapa['data_revisao']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $etapa['data_revisao']))) : '-' ?></p>
                                 </div>
                             </div>
-                        </article>
+                             <?php if (!$somenteProprio && !empty($acoesRapidasPorEtapa[$ordem])): ?>
+                                <div class="mt-3 flex flex-wrap gap-2 border-t border-gray-200 dark:border-gray-700 pt-3">
+                                    <?php foreach ($acoesRapidasPorEtapa[$ordem] as $acao): ?>
+                                        <form action="/segundo-vigilante/trilha/acao-rapida" method="POST">
+                                            <input type="hidden" name="companheiro_id" value="<?= htmlspecialchars((string) ($companheiro['id'] ?? '')) ?>">
+                                            <input type="hidden" name="etapa_ordem" value="<?= $ordem ?>">
+                                            <input type="hidden" name="status" value="<?= htmlspecialchars((string) ($acao['status'] ?? '')) ?>">
+                                            <button type="submit" class="btn btn-sm btn-dark"><?= htmlspecialchars((string) ($acao['label'] ?? 'Avançar')) ?></button>
+                                        </form>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     <?php endforeach; ?>
                 </div>
-            </article>
+            </div>
+        </div>
 
-            <div class="space-y-6">
-                <article id="certificado" class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
-                    <h2 class="font-display text-2xl font-semibold">Certificado de docência</h2>
-                    <p class="mt-1 text-sm text-slate-700">Solicitação formal da conclusão da docência do Companheiro.</p>
-                    <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <div class="text-xs uppercase tracking-wide text-slate-700">Status</div>
-                        <div class="mt-2 text-lg font-semibold text-ardosia"><?= htmlspecialchars((string) ($acompanhamento['certificado_status'] ?? 'nao_solicitado')) ?></div>
+        <div class="space-y-8">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Certificado de Docência</h2><p class="card-description">Conclusão da docência do Companheiro.</p></div>
+                <div class="card-body">
+                    <div class="bg-gray-100 dark:bg-gray-700/50 p-4 rounded-lg mb-4">
+                        <p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Status</p>
+                        <p class="mt-1 text-lg font-semibold"><?= htmlspecialchars((string) ($acompanhamento['certificado_status'] ?? 'nao_solicitado')) ?></p>
                         <?php if (!empty($acompanhamento['certificado_solicitado_em'])): ?>
-                            <div class="mt-1 text-sm text-slate-700">Solicitado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string) $acompanhamento['certificado_solicitado_em']))) ?></div>
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Solicitado em <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string) $acompanhamento['certificado_solicitado_em']))) ?></p>
                         <?php endif; ?>
                     </div>
                     <?php if (!$somenteProprio): ?>
-                        <form action="/segundo-vigilante/certificado/solicitar" method="POST" class="mt-4 space-y-4">
+                        <form action="/segundo-vigilante/certificado/solicitar" method="POST" class="space-y-4">
                             <input type="hidden" name="companheiro_id" value="<?= htmlspecialchars((string) ($companheiro['id'] ?? '')) ?>">
                             <div>
-                                <label class="mb-1 block text-sm font-medium text-slate-700">Observação da solicitação</label>
-                                <textarea name="observacao_certificado" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Registre a avaliação final da docência."><?= htmlspecialchars((string) ($acompanhamento['certificado_observacao'] ?? '')) ?></textarea>
+                                <label for="observacao_certificado" class="form-label">Observação da Solicitação</label>
+                                <textarea name="observacao_certificado" id="observacao_certificado" rows="3" class="form-textarea" placeholder="Registre a avaliação final da docência."><?= htmlspecialchars((string) ($acompanhamento['certificado_observacao'] ?? '')) ?></textarea>
                             </div>
-                            <div class="flex justify-end">
-                                <button type="submit" class="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700">Solicitar certificado</button>
-                            </div>
+                            <div class="text-right"><button type="submit" class="btn btn-primary">Solicitar Certificado</button></div>
                         </form>
                     <?php endif; ?>
-                </article>
-
-                <article id="exaltacao" class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
-                    <h2 class="font-display text-2xl font-semibold">Recomendação de exaltação</h2>
-                    <p class="mt-1 text-sm text-slate-700">Encaminhamento formal do Companheiro para apreciação da exaltação.</p>
-                    <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <div class="text-xs uppercase tracking-wide text-slate-700">Status</div>
-                        <div class="mt-2 text-lg font-semibold text-ardosia"><?= htmlspecialchars((string) ($acompanhamento['exaltacao_status'] ?? 'nao_recomendada')) ?></div>
+                </div>
+            </div>
+             <div class="card">
+                <div class="card-header"><h2 class="card-title">Recomendação de Exaltação</h2><p class="card-description">Encaminhamento para apreciação da exaltação.</p></div>
+                <div class="card-body">
+                    <div class="bg-gray-100 dark:bg-gray-700/50 p-4 rounded-lg mb-4">
+                        <p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Status</p>
+                        <p class="mt-1 text-lg font-semibold"><?= htmlspecialchars((string) ($acompanhamento['exaltacao_status'] ?? 'nao_recomendada')) ?></p>
                         <?php if (!empty($acompanhamento['exaltacao_recomendada_em'])): ?>
-                            <div class="mt-1 text-sm text-slate-700">Recomendada em <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string) $acompanhamento['exaltacao_recomendada_em']))) ?></div>
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Recomendada em <?= htmlspecialchars(date('d/m/Y H:i', strtotime((string) $acompanhamento['exaltacao_recomendada_em']))) ?></p>
                         <?php endif; ?>
                     </div>
                     <?php if (!$somenteProprio): ?>
-                        <form action="/segundo-vigilante/exaltacao/recomendar" method="POST" class="mt-4 space-y-4">
+                        <form action="/segundo-vigilante/exaltacao/recomendar" method="POST" class="space-y-4">
                             <input type="hidden" name="companheiro_id" value="<?= htmlspecialchars((string) ($companheiro['id'] ?? '')) ?>">
                             <div>
-                                <label class="mb-1 block text-sm font-medium text-slate-700">Observação da recomendação</label>
-                                <textarea name="observacao_exaltacao" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Registre os fundamentos para a exaltação."><?= htmlspecialchars((string) ($acompanhamento['exaltacao_observacao'] ?? '')) ?></textarea>
+                                <label for="observacao_exaltacao" class="form-label">Observação da Recomendação</label>
+                                <textarea name="observacao_exaltacao" id="observacao_exaltacao" rows="3" class="form-textarea" placeholder="Registre os fundamentos para a exaltação."><?= htmlspecialchars((string) ($acompanhamento['exaltacao_observacao'] ?? '')) ?></textarea>
                             </div>
-                            <div class="flex justify-end">
-                                <button type="submit" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">Recomendar exaltação</button>
-                            </div>
+                            <div class="text-right"><button type="submit" class="btn btn-dark">Recomendar Exaltação</button></div>
                         </form>
                     <?php endif; ?>
-                </article>
-
-                <article class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-sm">
-                    <h2 class="font-display text-2xl font-semibold">Histórico formativo</h2>
-                    <p class="mt-1 text-sm text-slate-700">Linha consolidada da trilha, leitura, certificado e exaltação.</p>
-                    <div class="mt-4 space-y-3">
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Histórico Formativo</h2><p class="card-description">Marcos da trilha, leitura, certificado e exaltação.</p></div>
+                <div class="card-body space-y-3">
+                    <?php if (empty($historicoFormativo)): ?>
+                        <p class="text-center text-gray-500 dark:text-gray-400 py-4">Ainda não há marcos registrados.</p>
+                    <?php else: ?>
                         <?php foreach ($historicoFormativo as $evento): ?>
-                            <div class="rounded-2xl border border-slate-200 px-4 py-3">
-                                <div class="text-xs uppercase tracking-wide text-slate-700"><?= htmlspecialchars((string) ($evento['tipo'] ?? 'evento')) ?></div>
-                                <div class="mt-1 text-sm font-medium text-slate-800"><?= htmlspecialchars((string) ($evento['titulo'] ?? 'Marco formativo')) ?></div>
-                                <div class="mt-1 text-xs text-slate-700"><?= !empty($evento['momento']) ? htmlspecialchars(date('d/m/Y H:i', strtotime((string) $evento['momento']))) : '-' ?></div>
-                                <?php if (!empty($evento['descricao'])): ?>
-                                    <div class="mt-2 text-sm text-slate-700"><?= htmlspecialchars((string) $evento['descricao']) ?></div>
-                                <?php endif; ?>
+                            <div class="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                <p class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400"><?= htmlspecialchars((string) ($evento['tipo'] ?? 'evento')) ?></p>
+                                <p class="font-semibold mt-1"><?= htmlspecialchars((string) ($evento['titulo'] ?? 'Marco formativo')) ?></p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1"><?= !empty($evento['momento']) ? htmlspecialchars(date('d/m/Y H:i', strtotime((string) $evento['momento']))) : '-' ?></p>
+                                <?php if (!empty($evento['descricao'])): ?><p class="text-sm mt-2"><?= htmlspecialchars((string) $evento['descricao']) ?></p><?php endif; ?>
                             </div>
                         <?php endforeach; ?>
-                        <?php if ($historicoFormativo === []): ?>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">Ainda não há marcos registrados para este Companheiro.</div>
-                        <?php endif; ?>
-                    </div>
-                </article>
+                    <?php endif; ?>
+                </div>
             </div>
-        </section>
+        </div>
     </div>
-</body>
-</html>
+</div>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-header { @apply p-6 border-b border-gray-200 dark:border-gray-700; }
+    .card-title { @apply text-xl font-bold text-gray-800 dark:text-gray-100; }
+    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
+    .card-body { @apply p-6; }
+    .card-metric { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-5; }
+    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
+    .card-metric-value { @apply mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100; }
+</style>
+
+<?php
+require_once __DIR__ . '/../partials/erp_shell_close.php';
+?>
 

@@ -1,4 +1,10 @@
 <?php
+declare(strict_types=1);
+
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
 if (!isset($obreiroTesouraria) || !$obreiroTesouraria) {
     http_response_code(401);
     echo 'Acesso não autorizado.';
@@ -7,187 +13,61 @@ if (!isset($obreiroTesouraria) || !$obreiroTesouraria) {
 
 $resumoObreiro = $resumoObreiro ?? [];
 $obrigacoesObreiro = $obrigacoesObreiro ?? [];
-$formatCurrency = static function ($value): string {
-    return 'R$ ' . number_format((float) $value, 2, ',', '.');
-};
 $configuracaoFinanceira = (new \App\Models\ConfiguracaoLoja())->obter();
+
+$formatCurrency = static fn ($value): string => 'R$ ' . number_format((float) $value, 2, ',', '.');
+$formatDate = static fn (?string $date): string => $date ? (new DateTimeImmutable($date))->format('d/m/Y') : '-';
+
 $mensalidadePadrao = (float) ($configuracaoFinanceira['mensalidade_valor_padrao'] ?? 150);
 $pixTipo = (string) ($configuracaoFinanceira['pix_chave_tipo'] ?? 'CNPJ');
 $pixValor = (string) ($configuracaoFinanceira['pix_chave_valor'] ?? '');
 $pixBeneficiario = (string) ($configuracaoFinanceira['pix_beneficiario'] ?? '');
 $hoje = date('Y-m-d');
 $mesAtualChave = date('Y-m');
+$anoPainel = 2026; // Ano fixo para o painel de ajuste
+
+// Simulação de dados da biblioteca
 $bibliotecaPorMes = [];
 try {
     $dbTesouraria = \App\Config\Database::getConnection();
     $stmtBiblioteca = $dbTesouraria->prepare("
         SELECT mes_ref, valor_previsto
         FROM public.biblioteca_contribuintes_mensal
-        WHERE ano_ref = 2026 AND obreiro_id = :obreiro_id
+        WHERE ano_ref = :ano_ref AND obreiro_id = :obreiro_id
     ");
     $stmtBiblioteca->execute([
+        'ano_ref' => $anoPainel,
         'obreiro_id' => (string) ($obreiroTesouraria['id'] ?? ''),
     ]);
     foreach ($stmtBiblioteca->fetchAll(PDO::FETCH_ASSOC) as $linhaBiblioteca) {
-        $bibliotecaPorMes[(int) ($linhaBiblioteca['mes_ref'] ?? 0)] = (float) ($linhaBiblioteca['valor_previsto'] ?? 44);
+        $bibliotecaPorMes[(int) ($linhaBiblioteca['mes_ref'] ?? 0)] = (float) ($linhaBiblioteca['valor_previsto'] ?? 0);
     }
 } catch (\Throwable $e) {
+    // Silencia o erro se a tabela não existir ou houver outro problema
     $bibliotecaPorMes = [];
 }
-$nomesMeses = [
-    1 => 'Janeiro',
-    2 => 'Fevereiro',
-    3 => 'Março',
-    4 => 'Abril',
-    5 => 'Maio',
-    6 => 'Junho',
-    7 => 'Julho',
-    8 => 'Agosto',
-    9 => 'Setembro',
-    10 => 'Outubro',
-    11 => 'Novembro',
-    12 => 'Dezembro',
-];
-$joiaResumo = null;
 
-$parcelasPagas = [];
-$parcelasAguardandoConfirmacao = [];
-$parcelasProgramadas = [];
-$parcelasAtrasadas = [];
+$nomesMeses = [1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril', 5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto', 9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'];
 $mesesTesourarias = [];
-$anoPainel = 2026;
 
-for ($mes = 1; $mes <= 12; $mes++) {
-    $chaveMes = sprintf('%04d-%02d', $anoPainel, $mes);
-    $mensalidadePaga = $mes <= 3;
-    $mesesTesourarias[$chaveMes] = [
-        'chave' => $chaveMes,
-        'rotulo' => ($nomesMeses[$mes] ?? 'Mês') . ' ' . $anoPainel,
-        'total_pago' => $mensalidadePaga ? $mensalidadePadrao : 0.0,
-        'total_previsto' => $mensalidadePadrao + ($bibliotecaPorMes[$mes] ?? 0.0),
-        'total_aberto' => $mensalidadePaga ? 0.0 : $mensalidadePadrao,
-        'pagos' => $mensalidadePaga ? 1 : 0,
-        'abertos' => $mensalidadePaga ? 0 : 1,
-        'atrasados' => 0,
-        'itens' => [[
-            'item_base' => true,
-            'obrigacao_titulo' => 'Contribuição mensal da Loja',
-            'tipo_obrigacao' => 'mensalidade',
-            'competencia_label' => sprintf('%02d/%04d', $mes, $anoPainel),
-            'competencia_mes' => $mes,
-            'competencia_ano' => $anoPainel,
-            'vencimento' => sprintf('%04d-%02d-10', $anoPainel, $mes),
-            'valor_previsto' => $mensalidadePadrao,
-            'pago_presumido' => $mensalidadePaga,
-            'quitado_na_exibicao' => $mensalidadePaga,
-            'status_exibicao' => $mensalidadePaga ? 'quitado_ajuste' : 'pendente',
-            'descricao_status' => $mensalidadePaga
-                ? 'Contribuição mensal considerada paga no ajuste inicial de 2026.'
-                : 'Contribuição mensal prevista para o mês.',
-            'em_atraso' => false,
-            'pago_em' => null,
-        ]],
-    ];
-
-    if (isset($bibliotecaPorMes[$mes])) {
-        $bibliotecaPaga = $mes <= 3;
-        if ($bibliotecaPaga) {
-            $mesesTesourarias[$chaveMes]['total_pago'] += (float) $bibliotecaPorMes[$mes];
-            $mesesTesourarias[$chaveMes]['pagos']++;
-        } else {
-            $mesesTesourarias[$chaveMes]['total_aberto'] += (float) $bibliotecaPorMes[$mes];
-            $mesesTesourarias[$chaveMes]['abertos']++;
-        }
-        $mesesTesourarias[$chaveMes]['itens'][] = [
-            'item_base' => true,
-            'obrigacao_titulo' => 'Contribuição Biblioteca',
-            'tipo_obrigacao' => 'biblioteca',
-            'competencia_label' => sprintf('%02d/%04d', $mes, $anoPainel),
-            'competencia_mes' => $mes,
-            'competencia_ano' => $anoPainel,
-            'vencimento' => sprintf('%04d-%02d-10', $anoPainel, $mes),
-            'valor_previsto' => (float) $bibliotecaPorMes[$mes],
-            'pago_presumido' => $bibliotecaPaga,
-            'quitado_na_exibicao' => $bibliotecaPaga,
-            'status_exibicao' => $bibliotecaPaga ? 'quitado_ajuste' : 'pendente',
-            'descricao_status' => $bibliotecaPaga
-                ? 'Contribuição considerada paga no ajuste inicial de 2026.'
-                : 'Contribuição da biblioteca prevista para este mês.',
-            'em_atraso' => false,
-            'pago_em' => null,
-        ];
-    }
-}
-
+// Processamento de obrigações
 foreach ($obrigacoesObreiro as $obrigacao) {
-    if ((string) ($obrigacao['tipo_obrigacao'] ?? '') === 'joia') {
-        $parcelasJoia = $obrigacao['parcelas'] ?? [];
-        $totalJoia = 0.0;
-        $totalPagoJoia = 0.0;
-        $totalAbertoJoia = 0.0;
-        $quantidadeParcelas = count($parcelasJoia);
-        foreach ($parcelasJoia as $parcelaJoia) {
-            $valorJoia = (float) ($parcelaJoia['valor_previsto'] ?? 0);
-            $totalJoia += $valorJoia;
-            if (!empty($parcelaJoia['quitado_na_exibicao'])) {
-                $totalPagoJoia += $valorJoia;
-            } else {
-                $totalAbertoJoia += $valorJoia;
-            }
-        }
-        $joiaResumo = [
-            'titulo' => (string) ($obrigacao['titulo'] ?? 'Joia'),
-            'total' => $totalJoia > 0 ? $totalJoia : 1621.0,
-            'pago' => $totalPagoJoia,
-            'aberto' => $totalAbertoJoia,
-            'parcelas_total' => $quantidadeParcelas > 0 ? $quantidadeParcelas : 1,
-            'valor_parcela' => $quantidadeParcelas > 0 ? ($totalJoia / max(1, $quantidadeParcelas)) : 1621.0,
-            'forma' => (string) ($obrigacao['instrucoes_pagamento'] ?? 'Contribuicao definido pela Tesouraria'),
-        ];
-    }
     foreach (($obrigacao['parcelas'] ?? []) as $parcela) {
         $parcela['obrigacao_titulo'] = (string) ($parcela['obrigacao_titulo'] ?? $obrigacao['titulo'] ?? 'Obrigacao');
         $parcela['tipo_obrigacao'] = (string) ($parcela['tipo_obrigacao'] ?? $obrigacao['tipo_obrigacao'] ?? 'outra');
-
         $mesCompetencia = (int) ($parcela['competencia_mes'] ?? 0);
         $anoCompetencia = (int) ($parcela['competencia_ano'] ?? 0);
+
         if ($mesCompetencia > 0 && $anoCompetencia > 0) {
             $chaveMes = sprintf('%04d-%02d', $anoCompetencia, $mesCompetencia);
-            if ($anoCompetencia === $anoPainel && isset($mesesTesourarias[$chaveMes])) {
-                foreach ($mesesTesourarias[$chaveMes]['itens'] as $indice => $itemExistente) {
-                    if (
-                        (string) ($itemExistente['tipo_obrigacao'] ?? '') === (string) ($parcela['tipo_obrigacao'] ?? '') &&
-                        !empty($itemExistente['item_base'])
-                    ) {
-                        $valorAnterior = (float) ($mesesTesourarias[$chaveMes]['itens'][$indice]['valor_previsto'] ?? 0);
-                        $eraQuitado = !empty($mesesTesourarias[$chaveMes]['itens'][$indice]['quitado_na_exibicao']);
-
-                        $mesesTesourarias[$chaveMes]['total_previsto'] -= $valorAnterior;
-                        if ($eraQuitado) {
-                            $mesesTesourarias[$chaveMes]['total_pago'] -= $valorAnterior;
-                            $mesesTesourarias[$chaveMes]['pagos'] = max(0, $mesesTesourarias[$chaveMes]['pagos'] - 1);
-                        } else {
-                            $mesesTesourarias[$chaveMes]['total_aberto'] -= $valorAnterior;
-                            $mesesTesourarias[$chaveMes]['abertos'] = max(0, $mesesTesourarias[$chaveMes]['abertos'] - 1);
-                        }
-                        unset($mesesTesourarias[$chaveMes]['itens'][$indice]);
-                        break;
-                    }
-                }
-            } elseif (!isset($mesesTesourarias[$chaveMes])) {
+            if (!isset($mesesTesourarias[$chaveMes])) {
                 $mesesTesourarias[$chaveMes] = [
                     'chave' => $chaveMes,
                     'rotulo' => ($nomesMeses[$mesCompetencia] ?? 'Mês') . ' ' . $anoCompetencia,
-                    'total_pago' => 0.0,
-                    'total_previsto' => 0.0,
-                    'total_aberto' => 0.0,
-                    'pagos' => 0,
-                    'abertos' => 0,
-                    'atrasados' => 0,
-                    'itens' => [],
+                    'total_pago' => 0.0, 'total_previsto' => 0.0, 'total_aberto' => 0.0,
+                    'pagos' => 0, 'abertos' => 0, 'atrasados' => 0, 'itens' => [],
                 ];
             }
-
             $mesesTesourarias[$chaveMes]['total_previsto'] += (float) ($parcela['valor_previsto'] ?? 0);
             if (!empty($parcela['quitado_na_exibicao'])) {
                 $mesesTesourarias[$chaveMes]['total_pago'] += (float) ($parcela['valor_previsto'] ?? 0);
@@ -195,402 +75,187 @@ foreach ($obrigacoesObreiro as $obrigacao) {
             } else {
                 $mesesTesourarias[$chaveMes]['total_aberto'] += (float) ($parcela['valor_previsto'] ?? 0);
                 $mesesTesourarias[$chaveMes]['abertos']++;
-                if (!empty($parcela['em_atraso'])) {
-                    $mesesTesourarias[$chaveMes]['atrasados']++;
-                }
+                if (!empty($parcela['em_atraso'])) $mesesTesourarias[$chaveMes]['atrasados']++;
             }
             $mesesTesourarias[$chaveMes]['itens'][] = $parcela;
         }
-
     }
 }
 
-uasort($mesesTesourarias, static function (array $a, array $b): int {
-    return strcmp((string) ($a['chave'] ?? ''), (string) ($b['chave'] ?? ''));
-});
+uasort($mesesTesourarias, static fn (array $a, array $b): int => strcmp((string) ($a['chave'] ?? ''), (string) ($b['chave'] ?? '')));
 
-foreach ($mesesTesourarias as $mesTesouraria) {
-    foreach (($mesTesouraria['itens'] ?? []) as $parcela) {
-        if (!empty($parcela['quitado_na_exibicao'])) {
-            $parcelasPagas[] = $parcela;
-            continue;
-        }
+$parcelasPagas = [];
+$parcelasAguardandoConfirmacao = [];
+$parcelasProgramadas = [];
+$parcelasAtrasadas = [];
 
-        if (!empty($parcela['em_atraso'])) {
-            $parcelasAtrasadas[] = $parcela;
-            continue;
-        }
-
-        $vencimento = (string) ($parcela['vencimento'] ?? '');
-        if ($vencimento !== '' && $vencimento <= date('Y-m-d')) {
-            $parcelasAguardandoConfirmacao[] = $parcela;
-        } else {
-            $parcelasProgramadas[] = $parcela;
-        }
+foreach ($mesesTesourarias as $mes) {
+    foreach (($mes['itens'] ?? []) as $p) {
+        if (!empty($p['quitado_na_exibicao'])) $parcelasPagas[] = $p;
+        elseif (!empty($p['em_atraso'])) $parcelasAtrasadas[] = $p;
+        elseif (!empty($p['vencimento']) && $p['vencimento'] <= $hoje) $parcelasAguardandoConfirmacao[] = $p;
+        else $parcelasProgramadas[] = $p;
     }
 }
 
-usort($parcelasPagas, static function (array $a, array $b): int {
-    return strcmp((string) ($b['competencia_label'] ?? ''), (string) ($a['competencia_label'] ?? ''));
-});
-usort($parcelasAguardandoConfirmacao, static function (array $a, array $b): int {
-    return strcmp((string) ($a['vencimento'] ?? ''), (string) ($b['vencimento'] ?? ''));
-});
-usort($parcelasProgramadas, static function (array $a, array $b): int {
-    return strcmp((string) ($a['vencimento'] ?? ''), (string) ($b['vencimento'] ?? ''));
-});
-usort($parcelasAtrasadas, static function (array $a, array $b): int {
-    return strcmp((string) ($a['vencimento'] ?? ''), (string) ($b['vencimento'] ?? ''));
-});
+$sortFn = static fn (array $a, array $b): int => strcmp((string) ($a['vencimento'] ?? ''), (string) ($b['vencimento'] ?? ''));
+usort($parcelasPagas, static fn (array $a, array $b): int => strcmp((string) ($b['pago_em'] ?? $b['vencimento']), (string) ($a['pago_em'] ?? $a['vencimento'])));
+usort($parcelasAguardandoConfirmacao, $sortFn);
+usort($parcelasProgramadas, $sortFn);
+usort($parcelasAtrasadas, $sortFn);
 
-$pagasRecentes = array_slice($parcelasPagas, 0, 6);
-$proximaObrigacao = $parcelasAguardandoConfirmacao[0] ?? $parcelasProgramadas[0] ?? null;
-$proximosCompromissos = array_slice($parcelasProgramadas, 0, 6);
 $nomeObreiro = (string) ($obreiroTesouraria['nome_historico'] ?? $obreiroTesouraria['nome'] ?? 'Irmão');
-$totalPagoExibicao = array_reduce($parcelasPagas, static function (float $carry, array $parcela): float {
-    return $carry + (float) ($parcela['valor_previsto'] ?? 0);
-}, 0.0);
-$resumoPagoTexto = count($parcelasPagas) > 0
-    ? count($parcelasPagas) . ' compromissos marcados como pagos.'
-    : 'Nenhum pagamento confirmado até aqui.';
-$resumoPagoDetalhe = $pagasRecentes[0]['obrigacao_titulo'] ?? '';
+$totalPago = array_reduce($parcelasPagas, static fn ($c, $p) => $c + ($p['valor_previsto'] ?? 0), 0.0);
+$totalAberto = array_reduce(array_merge($parcelasAguardandoConfirmacao, $parcelasProgramadas, $parcelasAtrasadas), static fn ($c, $p) => $c + ($p['valor_previsto'] ?? 0), 0.0);
+$totalAtrasado = array_reduce($parcelasAtrasadas, static fn ($c, $p) => $c + ($p['valor_previsto'] ?? 0), 0.0);
+$proximaObrigacao = $parcelasAguardandoConfirmacao[0] ?? $parcelasProgramadas[0] ?? null;
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
+$appShellEyebrow = 'Tesouraria';
+$appShellTitle = 'Minhas Obrigações';
+$appShellDescription = 'Painel financeiro pessoal do obreiro ' . htmlspecialchars($nomeObreiro);
+$appShellActiveHref = '/minhas-obrigacoes';
+$appShellActions = [['label' => 'Voltar ao Painel', 'href' => '/dashboard']];
+
+require __DIR__ . '/partials/erp_shell_open.php';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Meu Tesouraria</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @media (min-width: 1440px) {
-            .erp-readable {
-                font-size: 1.08rem;
-            }
-            .erp-readable .text-xs,
-            .erp-readable .text-\[11px\] {
-                font-size: 0.92rem !important;
-                line-height: 1.4rem !important;
-            }
-            .erp-readable .text-sm {
-                font-size: 1.03rem !important;
-                line-height: 1.58rem !important;
-            }
-        }
-    </style>
-</head>
-<body class="erp-readable min-h-screen bg-[linear-gradient(180deg,#f8f3e8_0%,#f4f4f5_42%,#ffffff_100%)] text-slate-900">
-<div class="mx-auto max-w-7xl px-4 py-6">
-    <section class="overflow-hidden rounded-[2rem] bg-slate-950 text-stone-100 shadow-2xl">
-        <div class="bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.24),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(148,163,184,0.28),transparent_28%)] px-6 py-7 sm:px-8">
-            <p class="text-xs uppercase tracking-[0.32em] text-amber-300">Meu financeiro</p>
-            <div class="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div class="max-w-3xl">
-                    <h1 class="text-3xl font-semibold"><?php echo htmlspecialchars($nomeObreiro); ?></h1>
-                    <p class="mt-2 text-sm leading-6 text-slate-300">
-                        Agora o painel destaca competência por competência, mostrando o que já foi pago, o que ainda está previsto e os próximos compromissos da Loja.
-                    </p>
-                </div>
-                <div class="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                    <div class="uppercase tracking-[0.18em] text-amber-200">Ajuste inicial 2026</div>
-                    <div class="mt-1 text-slate-300">Janeiro, fevereiro e março de 2026 aparecem como quitados no ajuste inicial do sistema.</div>
-                </div>
-            </div>
-            <div class="mt-4 flex flex-wrap items-center gap-3">
-                <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                    PIX <?php echo htmlspecialchars($pixTipo); ?>: <?php echo htmlspecialchars($pixValor ?: 'Não informado'); ?>
-                </div>
-                <button type="button" class="rounded-2xl bg-amber-300 px-4 py-3 text-sm font-semibold text-slate-950" onclick="navigator.clipboard && navigator.clipboard.writeText('<?php echo htmlspecialchars(addslashes($pixValor)); ?>')">Copiar chave PIX</button>
-                <div class="text-sm text-slate-300"><?php echo htmlspecialchars($pixBeneficiario); ?></div>
-            </div>
-        </div>
-    </section>
 
-    <?php
-    $dashboard = [
-        'title' => 'Painel do Obreiro',
-        'subtitle' => 'Consumo pessoal: financeiro, biblioteca e empréstimos.',
-        'meta' => ['Perfil: obreiro', 'Sem operação administrativa'],
-        'actions' => [
-            ['label' => 'Ver obrigações', 'href' => '/financeiro/minhas-obrigacoes'],
-            ['label' => 'Solicitar item', 'href' => '/biblioteca'],
-            ['label' => 'Ver meus empréstimos', 'href' => '/biblioteca/meus-emprestimos'],
-        ],
-        'blocks' => [
-            ['title' => 'Minhas obrigações', 'subtitle' => 'Resumo financeiro pessoal.', 'span' => 'half', 'metrics' => [
-                ['label' => 'Total pago', 'value' => $formatCurrency($totalPagoExibicao)],
-                ['label' => 'Aguardando confirmação', 'value' => (string) count($parcelasAguardandoConfirmacao)],
-                ['label' => 'Atrasadas', 'value' => (string) count($parcelasAtrasadas)],
-            ], 'list' => array_map(static fn (array $p): array => ['item' => (string) ($p['obrigacao_titulo'] ?? 'Obrigação'), 'meta' => (string) ($p['competencia_label'] ?? '-'), 'status' => (string) ($p['status_exibicao'] ?? 'programada')], array_slice($parcelasAguardandoConfirmacao ?: $parcelasProgramadas, 0, 4))],
-            ['title' => 'Biblioteca e interações', 'subtitle' => 'Uso pessoal do acervo.', 'span' => 'half', 'metrics' => [
-                ['label' => 'Pagas recentes', 'value' => (string) count($pagasRecentes)],
-                ['label' => 'Próximos compromissos', 'value' => (string) count($proximosCompromissos)],
-            ], 'list' => [['item' => 'Biblioteca', 'meta' => 'Catálogo e solicitações', 'status' => 'Regular'], ['item' => 'Meus empréstimos', 'meta' => 'Acompanhamento pessoal', 'status' => 'Regular']]],
-        ],
-        'alerts' => [['title' => 'Compromissos financeiros', 'text' => 'Contribuições e confirmações devem seguir os canais oficiais da tesouraria.', 'tone' => (count($parcelasAtrasadas) > 0 ? 'danger' : 'warning')]],
-        'activity' => array_map(static fn (array $p): array => ['item' => (string) ($p['obrigacao_titulo'] ?? 'Obrigação'), 'meta' => 'Pago em ' . (string) ($p['pago_em'] ?? '-')] , array_slice($pagasRecentes, 0, 4)),
-        'links' => [['label' => 'Biblioteca', 'href' => '/biblioteca'], ['label' => 'Meus empréstimos', 'href' => '/biblioteca/meus-emprestimos']],
-    ];
-    $dashboardRenderers = [
-        static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/components/dashboard_list.php'; echo '</div>'; },
-        static function (array $block): void { $dashboardMetrics = $block['metrics'] ?? []; $dashboardListItems = $block['list'] ?? []; require __DIR__ . '/components/dashboard_metrics.php'; echo '<div class="mt-3">'; require __DIR__ . '/components/dashboard_list.php'; echo '</div>'; },
-    ];
-    require __DIR__ . '/layouts/dashboard.php';
-    ?>
-
-    <section class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div class="rounded-[1.75rem] border border-emerald-100 bg-emerald-50 p-5 shadow-sm">
-            <div class="text-xs uppercase tracking-[0.18em] text-emerald-500">O que já foi pago</div>
-            <div class="mt-2 text-3xl font-semibold text-emerald-800"><?php echo $formatCurrency($totalPagoExibicao); ?></div>
-            <div class="mt-2 text-sm text-emerald-700"><?php echo htmlspecialchars($resumoPagoTexto); ?></div>
-            <?php if ($resumoPagoDetalhe !== ''): ?>
-                <div class="mt-2 text-sm font-medium text-emerald-800"><?php echo htmlspecialchars($resumoPagoDetalhe); ?></div>
-            <?php endif; ?>
-        </div>
-        <div class="rounded-[1.75rem] border border-amber-100 bg-amber-50 p-5 shadow-sm">
-            <div class="text-xs uppercase tracking-[0.18em] text-amber-500">Próxima obrigação</div>
-            <div class="mt-2 text-3xl font-semibold text-amber-800"><?php echo $formatCurrency($proximaObrigacao['valor_previsto'] ?? 0); ?></div>
-            <div class="mt-2 text-sm text-amber-700">
-                <?php if ($proximaObrigacao): ?>
-                    <?php echo htmlspecialchars((string) ($proximaObrigacao['obrigacao_titulo'] ?? 'Obrigação')); ?> de <?php echo htmlspecialchars((string) ($proximaObrigacao['competencia_label'] ?? '')); ?>.
-                <?php else: ?>
-                    Nenhuma obrigação pendente no momento.
-                <?php endif; ?>
-            </div>
-        </div>
-        <?php if (!empty($parcelasAguardandoConfirmacao) || !empty($parcelasAtrasadas)): ?>
-            <div class="rounded-[1.75rem] border border-rose-100 bg-rose-50 p-5 shadow-sm">
-                <div class="text-xs uppercase tracking-[0.18em] text-rose-500">Atenção</div>
-                <div class="mt-2 text-3xl font-semibold text-rose-800"><?php echo count($parcelasAguardandoConfirmacao) + count($parcelasAtrasadas); ?></div>
-                <div class="mt-2 text-sm text-rose-700">Contribuições que exigem confirmação ou tratativa com a Tesouraria.</div>
-            </div>
-        <?php else: ?>
-            <div class="flex items-center justify-center rounded-[1.75rem] border border-sky-100 bg-[linear-gradient(135deg,#eff6ff_0%,#dbeafe_100%)] p-5 shadow-sm">
-                <div class="text-center text-xl font-semibold text-sky-900">A prumo com a tesouraria</div>
-            </div>
-        <?php endif; ?>
-        <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="text-xs uppercase tracking-[0.18em] text-slate-400">Próximo marco</div>
-            <div class="mt-2 text-2xl font-semibold text-slate-900">
-                <?php echo $proximaObrigacao && !empty($proximaObrigacao['vencimento']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $proximaObrigacao['vencimento']))) : 'Sem previsão'; ?>
-            </div>
-            <div class="mt-2 text-sm text-slate-700">Contribuições mensais seguem orientadas para o dia 10. Obrigações futuras ficam apenas programadas até se aproximarem do pagamento.</div>
-        </div>
-        <?php if ($joiaResumo !== null): ?>
-            <div class="rounded-[1.75rem] border border-violet-100 bg-violet-50 p-5 shadow-sm sm:col-span-2 xl:col-span-4">
-                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                        <div class="text-xs uppercase tracking-[0.18em] text-violet-500">Joia</div>
-                        <div class="mt-2 text-3xl font-semibold text-violet-800"><?php echo $formatCurrency($joiaResumo['total']); ?></div>
-                        <div class="mt-2 text-sm text-violet-700"><?php echo htmlspecialchars($joiaResumo['titulo']); ?></div>
-                    </div>
-                    <div class="grid gap-3 sm:grid-cols-3">
-                        <div class="rounded-2xl bg-white px-4 py-3">
-                            <div class="text-xs uppercase tracking-[0.14em] text-slate-400">Pago</div>
-                            <div class="mt-1 text-lg font-semibold text-emerald-700"><?php echo $formatCurrency($joiaResumo['pago']); ?></div>
-                        </div>
-                        <div class="rounded-2xl bg-white px-4 py-3">
-                            <div class="text-xs uppercase tracking-[0.14em] text-slate-400">Em aberto</div>
-                            <div class="mt-1 text-lg font-semibold text-amber-700"><?php echo $formatCurrency($joiaResumo['aberto']); ?></div>
-                        </div>
-                        <div class="rounded-2xl bg-white px-4 py-3">
-                            <div class="text-xs uppercase tracking-[0.14em] text-slate-400">Parcelamento</div>
-                            <div class="mt-1 text-lg font-semibold text-slate-900"><?php echo $joiaResumo['parcelas_total']; ?> x <?php echo $formatCurrency($joiaResumo['valor_parcela']); ?></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-3 text-sm text-violet-700"><?php echo htmlspecialchars($joiaResumo['forma']); ?></div>
-                <div class="mt-2 text-xs text-violet-600">Referência do salário mínimo nacional em 2026: R$ 1.621,00.</div>
-            </div>
-        <?php endif; ?>
-    </section>
-
-    <section class="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div class="space-y-6">
-            <section class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
-                <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                        <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Painel mensal</p>
-                        <h2 class="mt-1 text-2xl font-semibold">Mês a mês da Loja</h2>
-                    </div>
-                    <div class="text-sm text-slate-700">Visualmente aparente: total pago, total previsto e lista de obrigações dentro de cada competência.</div>
-                </div>
-
-                <div class="mt-5 space-y-4">
-                    <?php foreach ($mesesTesourarias as $mesTesouraria): ?>
-                        <?php
-                        $mostrarPixMes = false;
-                        $mesPago = (int) ($mesTesouraria['abertos'] ?? 0) === 0 && (float) ($mesTesouraria['total_pago'] ?? 0) > 0;
-                        $mesAtrasado = (int) ($mesTesouraria['atrasados'] ?? 0) > 0;
-                        $cardMesClass = 'border-stone-200 bg-stone-50/70';
-                        if ($mesPago) {
-                            $cardMesClass = 'border-emerald-100 bg-emerald-50';
-                        } elseif ($mesAtrasado) {
-                            $cardMesClass = 'border-rose-200 bg-rose-50';
-                        }
-                        foreach (($mesTesouraria['itens'] ?? []) as $itemMes) {
-                            $vencimentoItem = (string) ($itemMes['vencimento'] ?? '');
-                            $chaveItem = substr($vencimentoItem, 0, 7);
-                            if (empty($itemMes['quitado_na_exibicao']) && ($vencimentoItem !== '' && ($vencimentoItem <= $hoje || $chaveItem === $mesAtualChave))) {
-                                $mostrarPixMes = true;
-                                break;
-                            }
-                        }
-                        ?>
-                        <article class="rounded-[1.75rem] border p-5 <?php echo $cardMesClass; ?>">
-                            <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                                <div>
-                                    <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Competencia</p>
-                                    <h3 class="mt-2 text-2xl font-semibold text-slate-900"><?php echo htmlspecialchars((string) $mesTesouraria['rotulo']); ?></h3>
-                                    <p class="mt-2 text-sm leading-6 text-slate-700">Resumo consolidado do mês para você enxergar rapidamente o que já entrou e o que ainda depende de pagamento.</p>
-                                    <?php if ($mostrarPixMes): ?>
-                                        <button
-                                            type="button"
-                                            class="mt-4 rounded-2xl bg-amber-300 px-4 py-2.5 text-sm font-semibold text-slate-950"
-                                            onclick="navigator.clipboard && navigator.clipboard.writeText('<?php echo htmlspecialchars(addslashes($pixValor)); ?>')"
-                                        >
-                                            Fazer pagamento via PIX â€¢ <?php echo $formatCurrency($mesTesouraria['total_aberto']); ?>
-                                        </button>
-                                    <?php endif; ?>
-                                </div>
-
-                                <div class="grid gap-2 rounded-[1.5rem] bg-white p-4 text-sm text-slate-700 shadow-sm sm:grid-cols-3 xl:min-w-[380px]">
-                                    <div>
-                                        <div class="text-xs uppercase tracking-[0.16em] text-slate-400">Pago</div>
-                                        <div class="mt-1 text-lg font-semibold text-emerald-700"><?php echo $formatCurrency($mesTesouraria['total_pago']); ?></div>
-                                    </div>
-                                    <div>
-                                        <div class="text-xs uppercase tracking-[0.16em] text-slate-400">Aguardando confirmação</div>
-                                        <div class="mt-1 text-lg font-semibold text-amber-700"><?php echo $formatCurrency($mesTesouraria['total_aberto']); ?></div>
-                                    </div>
-                                    <div>
-                                        <div class="text-xs uppercase tracking-[0.16em] text-slate-400">Movimento</div>
-                                        <div class="mt-1 text-lg font-semibold text-slate-900"><?php echo $mesTesouraria['pagos']; ?> pagos â€¢ <?php echo $mesTesouraria['abertos']; ?> abertos</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-5 grid gap-3 lg:grid-cols-2">
-                                <?php if ($mesTesouraria['itens'] === []): ?>
-                                    <div class="lg:col-span-2 rounded-[1.35rem] border border-dashed border-stone-300 bg-white px-4 py-5 text-sm text-slate-700">
-                                        Nenhuma obrigação lançada neste mês ainda. Quando houver mensalidade, biblioteca, joia ou outra cobrança, ela aparecerá aqui.
-                                    </div>
-                                <?php endif; ?>
-                                <?php foreach ($mesTesouraria['itens'] as $parcela): ?>
-                                    <?php
-                                    $badgeClass = 'bg-amber-100 text-amber-700';
-                                    $badgeLabel = 'Programada';
-                                    if (!empty($parcela['pago_presumido'])) {
-                                        $badgeClass = 'bg-sky-100 text-sky-700';
-                                        $badgeLabel = 'Quitado no ajuste inicial';
-                                    } elseif (($parcela['status_exibicao'] ?? '') === 'pago') {
-                                        $badgeClass = 'bg-emerald-100 text-emerald-700';
-                                        $badgeLabel = 'Pago';
-                                    } elseif (!empty($parcela['em_atraso'])) {
-                                        $badgeClass = 'bg-rose-100 text-rose-700';
-                                        $badgeLabel = 'Atencao';
-                                    } elseif (!empty($parcela['vencimento']) && (string) $parcela['vencimento'] <= date('Y-m-d')) {
-                                        $badgeClass = 'bg-amber-100 text-amber-700';
-                                        $badgeLabel = 'Aguardando confirmacao';
-                                    }
-                                    ?>
-                                    <div class="rounded-[1.35rem] border border-stone-200 bg-white px-4 py-4 shadow-sm">
-                                        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                                            <div>
-                                                <div class="text-sm font-semibold text-slate-900"><?php echo htmlspecialchars((string) $parcela['obrigacao_titulo']); ?></div>
-                                                <div class="mt-1 text-sm text-slate-700">
-                                                    <?php echo htmlspecialchars((string) ($parcela['competencia_label'] ?? '-')); ?> â€¢ vencimento <?php echo !empty($parcela['vencimento']) ? htmlspecialchars(date('d/m/Y', strtotime((string) $parcela['vencimento']))) : '-'; ?>
-                                                    <?php if (!empty($parcela['pago_em'])): ?>
-                                                        â€¢ pago em <?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $parcela['pago_em']))); ?>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </div>
-                                            <div class="flex flex-wrap items-center gap-3 lg:justify-end">
-                                                <div class="text-lg font-semibold text-slate-900"><?php echo $formatCurrency($parcela['valor_previsto'] ?? 0); ?></div>
-                                                <span class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] <?php echo $badgeClass; ?>"><?php echo $badgeLabel; ?></span>
-                                            </div>
-                                        </div>
-                                        <div class="mt-3 text-sm text-slate-700"><?php echo htmlspecialchars((string) ($parcela['descricao_status'] ?? '')); ?></div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </article>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-        </div>
-
-        <div class="space-y-6">
-            <section class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
-                <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Contribuições</p>
-                    <h2 class="mt-1 text-2xl font-semibold">Histórico recente</h2>
-                <div class="mt-4 space-y-3">
-                    <?php if ($pagasRecentes === []): ?>
-                        <div class="rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 p-5 text-sm text-slate-700">Ainda não há compromissos reconhecidos como pagos.</div>
-                    <?php endif; ?>
-                    <?php foreach ($pagasRecentes as $parcela): ?>
-                        <div class="rounded-[1.4rem] border border-stone-200 bg-stone-50 px-4 py-4">
-                            <div class="flex items-start justify-between gap-4">
-                                <div>
-                                    <div class="text-sm font-semibold text-slate-900"><?php echo htmlspecialchars((string) $parcela['obrigacao_titulo']); ?></div>
-                                    <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars((string) ($parcela['competencia_label'] ?? '-')); ?></div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-sm font-semibold text-emerald-700"><?php echo $formatCurrency($parcela['valor_previsto'] ?? 0); ?></div>
-                                    <div class="mt-1 text-xs text-slate-700"><?php echo !empty($parcela['pago_presumido']) ? 'Quitado no ajuste inicial' : 'Pago'; ?></div>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-
-            <section class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
-                <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Programado</p>
-                <h2 class="mt-1 text-2xl font-semibold">Acompanhar agora</h2>
-                <div class="mt-4 space-y-3">
-                    <?php if ($proximosCompromissos === []): ?>
-                        <div class="rounded-[1.5rem] border border-dashed border-stone-300 bg-stone-50 p-5 text-sm text-slate-700">Nenhuma obrigação futura programada no momento.</div>
-                    <?php endif; ?>
-                    <?php foreach ($proximosCompromissos as $parcela): ?>
-                        <div class="rounded-[1.4rem] border border-stone-200 bg-stone-50 px-4 py-4">
-                            <div class="flex items-start justify-between gap-4">
-                                <div>
-                                    <div class="text-sm font-semibold text-slate-900"><?php echo htmlspecialchars((string) $parcela['obrigacao_titulo']); ?></div>
-                                    <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars((string) ($parcela['competencia_label'] ?? '-')); ?> â€¢ programada para <?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $parcela['vencimento']))); ?></div>
-                                </div>
-                                <div class="text-right text-sm font-semibold text-slate-900"><?php echo $formatCurrency($parcela['valor_previsto'] ?? 0); ?></div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-
-            <section class="rounded-[2rem] border border-rose-100 bg-rose-50 p-6 shadow-sm">
-                <p class="text-xs uppercase tracking-[0.22em] text-rose-500">Quando procurar a Tesouraria</p>
-                <h2 class="mt-1 text-2xl font-semibold text-rose-900">Pendências que pedem ajuste</h2>
-                <div class="mt-4 space-y-3">
-                    <?php if ($parcelasAtrasadas === []): ?>
-                        <div class="rounded-[1.5rem] border border-rose-100 bg-white/80 p-5 text-sm text-rose-700">Nenhuma pendência em atraso no momento.</div>
-                    <?php endif; ?>
-                    <?php foreach ($parcelasAtrasadas as $parcela): ?>
-                        <div class="rounded-[1.4rem] border border-rose-200 bg-white px-4 py-4">
-                            <div class="flex items-start justify-between gap-4">
-                                <div>
-                                    <div class="text-sm font-semibold text-slate-900"><?php echo htmlspecialchars((string) $parcela['obrigacao_titulo']); ?></div>
-                                    <div class="mt-1 text-sm text-slate-700"><?php echo htmlspecialchars((string) ($parcela['competencia_label'] ?? '-')); ?> â€¢ previsto para <?php echo htmlspecialchars(date('d/m/Y', strtotime((string) $parcela['vencimento']))); ?></div>
-                                </div>
-                                <div class="text-right text-sm font-semibold text-rose-700"><?php echo $formatCurrency($parcela['valor_previsto'] ?? 0); ?></div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-        </div>
-    </section>
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 xl:gap-8">
+    <!-- Métricas Principais -->
+    <div class="metric-card bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
+        <div class="metric-label">Total Pago</div>
+        <div class="metric-value text-green-700 dark:text-green-300"><?= $formatCurrency($totalPago) ?></div>
+        <div class="metric-meta"><?= count($parcelasPagas) ?> compromissos quitados</div>
+    </div>
+    <div class="metric-card bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
+        <div class="metric-label">Próxima Obrigação</div>
+        <div class="metric-value text-yellow-700 dark:text-yellow-300"><?= $formatCurrency($proximaObrigacao['valor_previsto'] ?? 0) ?></div>
+        <div class="metric-meta"><?= $proximaObrigacao ? htmlspecialchars($proximaObrigacao['obrigacao_titulo']) . ' em ' . $formatDate($proximaObrigacao['vencimento']) : 'Nenhuma obrigação futura' ?></div>
+    </div>
+    <div class="metric-card bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+        <div class="metric-label">Total em Aberto</div>
+        <div class="metric-value text-blue-700 dark:text-blue-300"><?= $formatCurrency($totalAberto) ?></div>
+        <div class="metric-meta"><?= count($parcelasProgramadas) + count($parcelasAguardandoConfirmacao) ?> compromissos programados</div>
+    </div>
+    <div class="metric-card bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800">
+        <div class="metric-label">Em Atraso</div>
+        <div class="metric-value text-red-700 dark:text-red-300"><?= $formatCurrency($totalAtrasado) ?></div>
+        <div class="metric-meta"><?= count($parcelasAtrasadas) ?> pendências</div>
+    </div>
 </div>
-</body>
-</html>
+
+<!-- Chave PIX -->
+<div class="card mt-6 xl:mt-8">
+    <div class="card-body flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h3 class="font-semibold text-gray-800 dark:text-gray-200">Pagamento via PIX</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                Chave <?= htmlspecialchars($pixTipo) ?>: <strong class="font-mono"><?= htmlspecialchars($pixValor ?: 'Não informada') ?></strong>
+                (<?= htmlspecialchars($pixBeneficiario) ?>)
+            </p>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="navigator.clipboard.writeText('<?= htmlspecialchars(addslashes($pixValor)) ?>')">
+            Copiar Chave PIX
+        </button>
+    </div>
+</div>
+
+<!-- Painel de Obrigações Mensais -->
+<div class="card mt-6 xl:mt-8">
+    <div class="card-header">
+        <h2 class="card-title">Painel Mensal de Obrigações</h2>
+        <p class="card-subtitle">Detalhes de cada competência, incluindo o que foi pago e o que está pendente.</p>
+    </div>
+    <div class="card-body space-y-4">
+        <?php if (empty($mesesTesourarias)): ?>
+            <div class="text-center py-10 text-gray-500">Nenhuma obrigação encontrada para este período.</div>
+        <?php endif; ?>
+
+        <?php foreach ($mesesTesourarias as $mes): ?>
+            <?php
+            $mesPago = ($mes['abertos'] ?? 0) === 0 && ($mes['total_pago'] ?? 0) > 0;
+            $mesAtrasado = ($mes['atrasados'] ?? 0) > 0;
+            $cardMesClass = 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700';
+            if ($mesPago) $cardMesClass = 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
+            elseif ($mesAtrasado) $cardMesClass = 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
+            ?>
+            <details class="rounded-lg border <?= $cardMesClass ?>" <?= $mes['chave'] === $mesAtualChave ? 'open' : '' ?>>
+                <summary class="p-4 cursor-pointer flex justify-between items-center">
+                    <div>
+                        <h3 class="font-semibold text-lg text-gray-800 dark:text-gray-200"><?= htmlspecialchars($mes['rotulo']) ?></h3>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                            <span class="text-green-600 dark:text-green-400">Pago: <?= $formatCurrency($mes['total_pago']) ?></span> |
+                            <span class="text-yellow-600 dark:text-yellow-400">Aberto: <?= $formatCurrency($mes['total_aberto']) ?></span>
+                        </div>
+                    </div>
+                    <div class="text-sm font-semibold"><?= $mes['pagos'] ?> pagos | <?= $mes['abertos'] ?> abertos</div>
+                </summary>
+                <div class="px-4 pb-4 border-t border-[inherit]">
+                    <div class="divide-y divide-[inherit]">
+                        <?php foreach (($mes['itens'] ?? []) as $parcela): ?>
+                            <div class="py-3">
+                                <div class="flex flex-wrap justify-between items-start gap-2">
+                                    <div>
+                                        <div class="font-semibold text-gray-800 dark:text-gray-100"><?= htmlspecialchars($parcela['obrigacao_titulo']) ?></div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            Vencimento: <?= $formatDate($parcela['vencimento']) ?>
+                                            <?php if (!empty($parcela['pago_em'])): ?>
+                                                | Pago em: <?= $formatDate($parcela['pago_em']) ?>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-semibold text-lg"><?= $formatCurrency($parcela['valor_previsto'] ?? 0) ?></div>
+                                        <?php
+                                        $statusClass = 'badge-status-warning';
+                                        $statusLabel = 'Programada';
+                                        if (!empty($parcela['quitado_na_exibicao'])) {
+                                            $statusClass = 'badge-status-success';
+                                            $statusLabel = 'Pago';
+                                        } elseif (!empty($parcela['em_atraso'])) {
+                                            $statusClass = 'badge-status-danger';
+                                            $statusLabel = 'Atrasado';
+                                        }
+                                        ?>
+                                        <span class="badge-status <?= $statusClass ?>"><?= $statusLabel ?></span>
+                                    </div>
+                                </div>
+                                <?php if (!empty($parcela['descricao_status'])): ?>
+                                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">"<?= htmlspecialchars($parcela['descricao_status']) ?>"</p>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </details>
+        <?php endforeach; ?>
+    </div>
+</div>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm; }
+    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
+    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
+    .card-subtitle { @apply text-sm text-gray-500 dark:text-gray-400 mt-1; }
+    .card-body { @apply p-5; }
+
+    .metric-card { @apply p-5 rounded-lg border; }
+    .metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
+    .metric-value { @apply text-3xl font-bold mt-1; }
+    .metric-meta { @apply text-sm text-gray-600 dark:text-gray-400 mt-1; }
+
+    .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 transition-colors; }
+    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
+
+    .badge-status { @apply inline-block px-2 py-0.5 text-xs font-semibold rounded-full; }
+    .badge-status-success { @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300; }
+    .badge-status-warning { @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300; }
+    .badge-status-danger { @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300; }
+</style>
+
+<?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
 
 

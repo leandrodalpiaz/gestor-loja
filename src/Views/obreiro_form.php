@@ -1,320 +1,131 @@
 <?php
-use App\Models\Obreiro;
+declare(strict_types=1);
+
+// #############################################################################
+// SEGURANÇA E PREPARAÇÃO
+// #############################################################################
 
 if (!isset($_SESSION["usuario_logado"])) {
     header("Location: /login");
     exit;
 }
 
-$appTitle = "Adicionar Obreiro - Secretaria";
-$estadosCivis = [
-    'solteiro' => 'Solteiro',
-    'casado' => 'Casado',
-    'divorciado' => 'Divorciado',
-    'separado' => 'Separado',
-    'viuvo' => 'Viúvo',
-    'uniao_estavel' => 'União estável',
-    'nao_informado' => 'Não informado',
-];
-$escolaridades = [
-    'fundamental_incompleto' => 'Fundamental incompleto',
-    'fundamental_completo' => 'Fundamental completo',
-    'medio_incompleto' => 'Médio incompleto',
-    'medio_completo' => 'Médio completo',
-    'tecnico' => 'Técnico',
-    'superior_incompleto' => 'Superior incompleto',
-    'superior_completo' => 'Superior completo',
-    'pos_graduacao' => 'Pós-graduação',
-    'mestrado' => 'Mestrado',
-    'doutorado' => 'Doutorado',
-    'nao_informado' => 'Não informado',
-];
-$faixasRenda = [
-    'ate_1_sm' => 'Até 1 salário mínimo',
-    'de_1_a_3_sm' => 'De 1 a 3 salários mínimos',
-    'de_3_a_5_sm' => 'De 3 a 5 salários mínimos',
-    'de_5_a_10_sm' => 'De 5 a 10 salários mínimos',
-    'acima_10_sm' => 'Acima de 10 salários mínimos',
-    'nao_informado' => 'Não informado',
-];
-$situacoesQuadro = [
-    'ativo' => 'Regular',
-    'licenciado' => 'Licenciado',
-    'suspenso' => 'Suspenso',
-    'desligado' => 'Desligado',
-    'falecido' => 'Falecido',
-    'oriente_eterno' => 'Oriente Eterno',
-    'inativo' => 'Afastado',
-];
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
+$estadosCivis = ['solteiro' => 'Solteiro', 'casado' => 'Casado', 'divorciado' => 'Divorciado', 'separado' => 'Separado', 'viuvo' => 'Viúvo', 'uniao_estavel' => 'União estável', 'nao_informado' => 'Não informado'];
+$escolaridades = ['fundamental_incompleto' => 'Fundamental incompleto', 'fundamental_completo' => 'Fundamental completo', 'medio_incompleto' => 'Médio incompleto', 'medio_completo' => 'Médio completo', 'tecnico' => 'Técnico', 'superior_incompleto' => 'Superior incompleto', 'superior_completo' => 'Superior completo', 'pos_graduacao' => 'Pós-graduação', 'mestrado' => 'Mestrado', 'doutorado' => 'Doutorado', 'nao_informado' => 'Não informado'];
+$faixasRenda = ['ate_1_sm' => 'Até 1 salário mínimo', 'de_1_a_3_sm' => 'De 1 a 3 salários mínimos', 'de_3_a_5_sm' => 'De 3 a 5 salários mínimos', 'de_5_a_10_sm' => 'De 5 a 10 salários mínimos', 'acima_10_sm' => 'Acima de 10 salários mínimos', 'nao_informado' => 'Não informado'];
+$situacoesQuadro = ['ativo' => 'Regular', 'licenciado' => 'Licenciado', 'suspenso' => 'Suspenso', 'desligado' => 'Desligado', 'falecido' => 'Falecido', 'oriente_eterno' => 'Oriente Eterno', 'inativo' => 'Afastado'];
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
+$appShellEyebrow = 'Secretaria';
+$appShellTitle = 'Adicionar Obreiro';
+$appShellDescription = 'Ficha de cadastro para um novo membro da loja.';
+$appShellActiveHref = '/obreiros';
+$appShellActions = [['label' => 'Voltar para a Lista', 'href' => '/obreiros']];
+
+require __DIR__ . '/partials/erp_shell_open.php';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($appTitle) ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        cobalto: '#0a192f',
-                        ouro: '#cfa935',
-                        pedra: '#f3f4f6'
-                    },
-                    fontFamily: {
-                        serif: ['Merriweather', 'serif'],
-                        sans: ['Inter', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        @media (min-width: 1440px) {
-            .erp-readable {
-                font-size: 1.08rem;
-            }
-            .erp-readable .text-xs,
-            .erp-readable .text-\[11px\] {
-                font-size: 0.92rem !important;
-                line-height: 1.4rem !important;
-            }
-            .erp-readable .text-sm {
-                font-size: 1.03rem !important;
-                line-height: 1.58rem !important;
-            }
-        }
-    </style>
-</head>
-<body class="erp-readable bg-pedra font-sans text-gray-800 antialiased">
-    <header class="bg-cobalto text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-            <a href="/obreiros" class="text-gray-300 hover:text-white" title="Voltar">
-                <i class="fas fa-arrow-left text-lg"></i>
-            </a>
-            <h1 class="font-serif text-lg font-bold tracking-wider">
-                <i class="fas fa-user-plus text-ouro mr-2"></i>Adicionar Obreiro
-            </h1>
+
+<form action="/obreiros/salvar" method="POST" class="space-y-8">
+
+    <!-- Card: Dados Civis -->
+    <div class="card" id="dados-civis">
+        <div class="card-header"><h2 class="card-title">Dados Civis</h2></div>
+        <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2"><label for="nome_completo" class="form-label">Nome Completo Civil</label><input id="nome_completo" type="text" name="nome_completo" required class="form-input"></div>
+            <div class="md:col-span-2"><label for="nome_historico" class="form-label">Nome Histórico</label><input id="nome_historico" type="text" name="nome_historico" class="form-input"></div>
+            <div><label for="cpf" class="form-label">CPF</label><input id="cpf" type="text" name="cpf" class="form-input"></div>
+            <div><label for="data_nascimento_civil" class="form-label">Data de Nascimento</label><input id="data_nascimento_civil" type="date" name="data_nascimento_civil" class="form-input"></div>
+            <div><label for="estado_civil" class="form-label">Estado Civil</label><select id="estado_civil" name="estado_civil" class="form-select"><?php foreach ($estadosCivis as $v => $r) echo "<option value=\"$v\">$r</option>"; ?></select></div>
+            <div><label for="telefone" class="form-label">Telefone</label><input id="telefone" type="text" name="telefone" class="form-input"></div>
+            <div class="md:col-span-2"><label for="email" class="form-label">E-mail</label><input id="email" type="email" name="email" class="form-input"></div>
         </div>
-    </header>
+    </div>
 
-    <main class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 mt-4 mb-20">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="p-6 border-b border-gray-100 bg-gray-50">
-                <h2 class="text-xl font-bold text-cobalto">Ficha de cadastro</h2>
-                <p class="text-sm text-gray-500 mt-1">Registro reforçado para relatórios individuais, estatísticos e trilha de situação do quadro.</p>
-            </div>
-
-            <form action="/obreiros/salvar" method="POST" class="p-6 space-y-8">
-                <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-ouro uppercase tracking-wider border-b border-gray-200 pb-2">Dados civis</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome completo civil</label>
-                            <input type="text" name="nome_completo" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome historico</label>
-                            <input type="text" name="nome_historico" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-                            <input type="text" name="cpf" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de nascimento civil</label>
-                            <input type="date" name="data_nascimento_civil" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado civil</label>
-                            <select name="estado_civil" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <option value="">Selecione</option>
-                                <?php foreach ($estadosCivis as $valor => $rotulo): ?>
-                                    <option value="<?= htmlspecialchars($valor) ?>"><?= htmlspecialchars($rotulo) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-                            <input type="text" name="telefone" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-                            <input type="email" name="email" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-ouro uppercase tracking-wider border-b border-gray-200 pb-2">Dados maconicos</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">CIM</label>
-                            <input type="number" name="cim" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Grau</label>
-                            <select name="grau" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <option value="Aprendiz">Aprendiz</option>
-                                <option value="Companheiro">Companheiro</option>
-                                <option value="Mestre">Mestre</option>
-                                <option value="Mestre Instalado">Mestre Instalado</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Cargo legado</label>
-                            <select name="cargo" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <option value="">Sem cargo</option>
-                                <option value="Veneravel">Veneravel Mestre</option>
-                                <option value="1 Vigilante">1 Vigilante</option>
-                                <option value="2 Vigilante">2 Vigilante</option>
-                                <option value="Secretario">Secretario</option>
-                                <option value="Tesoureiro">Tesoureiro</option>
-                                <option value="Chanceler">Chanceler</option>
-                                <option value="Orador">Orador</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Loja de origem</label>
-                            <input type="text" name="loja_origem" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de iniciacao</label>
-                            <input type="date" name="data_iniciacao" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de elevacao</label>
-                            <input type="date" name="data_elevacao" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de exaltacao</label>
-                            <input type="date" name="data_exaltacao" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de filiacao</label>
-                            <input type="date" name="data_filiacao" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-ouro uppercase tracking-wider border-b border-gray-200 pb-2">Perfil estatistico</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Profissao</label>
-                            <input type="text" name="profissao" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Escolaridade</label>
-                            <select name="escolaridade" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <option value="">Selecione</option>
-                                <?php foreach ($escolaridades as $valor => $rotulo): ?>
-                                    <option value="<?= htmlspecialchars($valor) ?>"><?= htmlspecialchars($rotulo) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Faixa de renda</label>
-                            <select name="faixa_renda" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <option value="">Selecione</option>
-                                <?php foreach ($faixasRenda as $valor => $rotulo): ?>
-                                    <option value="<?= htmlspecialchars($valor) ?>"><?= htmlspecialchars($rotulo) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-ouro uppercase tracking-wider border-b border-gray-200 pb-2">Situacao no quadro</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Situacao</label>
-                            <select name="situacao_quadro" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <?php foreach ($situacoesQuadro as $valor => $rotulo): ?>
-                                    <option value="<?= htmlspecialchars($valor) ?>" <?= $valor === 'ativo' ? 'selected' : '' ?>><?= htmlspecialchars($rotulo) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de regularizacao</label>
-                            <input type="date" name="data_regularizacao" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de reintegracao</label>
-                            <input type="date" name="data_reintegracao" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de quite-placet</label>
-                            <input type="date" name="data_quite_placet" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de suspensao</label>
-                            <input type="date" name="data_suspensao" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de desligamento</label>
-                            <input type="date" name="data_desligamento" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de Oriente Eterno</label>
-                            <input type="date" name="data_oriente_eterno" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-ouro uppercase tracking-wider border-b border-gray-200 pb-2">Vinculos com Potencia e gestao</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Potencia</label>
-                            <input type="text" name="potencia_nome" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Sigla da Potencia</label>
-                            <input type="text" name="potencia_sigla" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Numero no quadro</label>
-                            <input type="text" name="numero_quadro" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Telegram ID</label>
-                            <input type="number" name="telegram_id" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Login na Potencia</label>
-                            <input type="text" name="potencia_login" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                        <div class="flex items-end">
-                            <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                                <input type="checkbox" name="acesso_potencia_liberado" value="1" class="rounded border-gray-300">
-                                Acesso na plataforma da Potencia ja liberado
-                            </label>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Observacao da Secretaria</label>
-                            <textarea name="observacao_secretaria" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border-t border-gray-100 bg-gray-50 -my-6 -mx-6 mt-2 p-6 flex justify-end gap-3 flex-col sm:flex-row rounded-b-xl">
-                    <a href="/obreiros" class="w-full sm:w-auto text-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                        Cancelar
-                    </a>
-                    <button type="submit" class="w-full sm:w-auto flex justify-center py-2 px-6 text-sm font-medium rounded-md text-white bg-cobalto hover:bg-blue-900 gap-2 items-center">
-                        <i class="fas fa-save text-ouro"></i>Gravar obreiro
-                    </button>
-                </div>
-            </form>
+    <!-- Card: Dados Maçônicos -->
+    <div class="card" id="dados-maconicos">
+        <div class="card-header"><h2 class="card-title">Dados Maçônicos</h2></div>
+        <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div><label for="cim" class="form-label">CIM</label><input id="cim" type="number" name="cim" required class="form-input"></div>
+            <div><label for="grau" class="form-label">Grau</label><select id="grau" name="grau" required class="form-select"><?php foreach (['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'] as $g) echo "<option value=\"$g\">$g</option>"; ?></select></div>
+            <div><label for="cargo" class="form-label">Cargo (Legado)</label><select id="cargo" name="cargo" class="form-select"><option value="">Sem cargo</option><option value="Veneravel">Veneravel Mestre</option><option value="1 Vigilante">1 Vigilante</option><option value="2 Vigilante">2 Vigilante</option><option value="Secretario">Secretario</option><option value="Tesoureiro">Tesoureiro</option><option value="Chanceler">Chanceler</option><option value="Orador">Orador</option></select></div>
+            <div><label for="loja_origem" class="form-label">Loja de Origem</label><input id="loja_origem" type="text" name="loja_origem" class="form-input"></div>
+            <div><label for="data_iniciacao" class="form-label">Data de Iniciação</label><input id="data_iniciacao" type="date" name="data_iniciacao" class="form-input"></div>
+            <div><label for="data_elevacao" class="form-label">Data de Elevação</label><input id="data_elevacao" type="date" name="data_elevacao" class="form-input"></div>
+            <div><label for="data_exaltacao" class="form-label">Data de Exaltação</label><input id="data_exaltacao" type="date" name="data_exaltacao" class="form-input"></div>
+            <div><label for="data_filiacao" class="form-label">Data de Filiação</label><input id="data_filiacao" type="date" name="data_filiacao" class="form-input"></div>
         </div>
-    </main>
-</body>
-</html>
+    </div>
+
+    <!-- Card: Perfil Estatístico -->
+    <div class="card" id="perfil-estatistico">
+        <div class="card-header"><h2 class="card-title">Perfil Estatístico</h2></div>
+        <div class="card-body grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div><label for="profissao" class="form-label">Profissão</label><input id="profissao" type="text" name="profissao" class="form-input"></div>
+            <div><label for="escolaridade" class="form-label">Escolaridade</label><select id="escolaridade" name="escolaridade" class="form-select"><?php foreach ($escolaridades as $v => $r) echo "<option value=\"$v\">$r</option>"; ?></select></div>
+            <div><label for="faixa_renda" class="form-label">Faixa de Renda</label><select id="faixa_renda" name="faixa_renda" class="form-select"><?php foreach ($faixasRenda as $v => $r) echo "<option value=\"$v\">$r</option>"; ?></select></div>
+        </div>
+    </div>
+
+    <!-- Card: Situação no Quadro -->
+    <div class="card" id="situacao-quadro">
+        <div class="card-header"><h2 class="card-title">Situação no Quadro</h2></div>
+        <div class="card-body grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div><label for="situacao_quadro" class="form-label">Situação</label><select id="situacao_quadro" name="situacao_quadro" class="form-select"><?php foreach ($situacoesQuadro as $v => $r) echo "<option value=\"$v\" " . ($v === 'ativo' ? 'selected' : '') . ">$r</option>"; ?></select></div>
+            <div><label for="data_regularizacao" class="form-label">Data de Regularização</label><input id="data_regularizacao" type="date" name="data_regularizacao" class="form-input"></div>
+            <div><label for="data_reintegracao" class="form-label">Data de Reintegração</label><input id="data_reintegracao" type="date" name="data_reintegracao" class="form-input"></div>
+            <div><label for="data_quite_placet" class="form-label">Data de Quite-Placet</label><input id="data_quite_placet" type="date" name="data_quite_placet" class="form-input"></div>
+            <div><label for="data_suspensao" class="form-label">Data de Suspensão</label><input id="data_suspensao" type="date" name="data_suspensao" class="form-input"></div>
+            <div><label for="data_desligamento" class="form-label">Data de Desligamento</label><input id="data_desligamento" type="date" name="data_desligamento" class="form-input"></div>
+            <div><label for="data_oriente_eterno" class="form-label">Data de Oriente Eterno</label><input id="data_oriente_eterno" type="date" name="data_oriente_eterno" class="form-input"></div>
+        </div>
+    </div>
+
+    <!-- Card: Vínculos e Gestão -->
+    <div class="card" id="vinculos-gestao">
+        <div class="card-header"><h2 class="card-title">Vínculos e Gestão</h2></div>
+        <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div><label for="potencia_nome" class="form-label">Potência</label><input id="potencia_nome" type="text" name="potencia_nome" class="form-input"></div>
+            <div><label for="potencia_sigla" class="form-label">Sigla da Potência</label><input id="potencia_sigla" type="text" name="potencia_sigla" class="form-input"></div>
+            <div><label for="numero_quadro" class="form-label">Número no Quadro</label><input id="numero_quadro" type="text" name="numero_quadro" class="form-input"></div>
+            <div><label for="telegram_id" class="form-label">Telegram ID</label><input id="telegram_id" type="number" name="telegram_id" class="form-input"></div>
+            <div><label for="potencia_login" class="form-label">Login na Potência</label><input id="potencia_login" type="text" name="potencia_login" class="form-input"></div>
+            <div class="flex items-center"><label class="form-checkbox-label"><input type="checkbox" name="acesso_potencia_liberado" value="1" class="form-checkbox"> Acesso na plataforma da Potência liberado</label></div>
+            <div class="md:col-span-2"><label for="observacao_secretaria" class="form-label">Observação da Secretaria</label><textarea id="observacao_secretaria" name="observacao_secretaria" rows="3" class="form-textarea"></textarea></div>
+        </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="card">
+        <div class="card-body flex justify-end gap-3">
+            <a href="/obreiros" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Gravar Obreiro</button>
+        </div>
+    </div>
+</form>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm; }
+    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
+    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
+    .card-body { @apply p-5; }
+
+    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
+    .form-input, .form-select, .form-textarea { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
+    .form-checkbox { @apply h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500; }
+    .form-checkbox-label { @apply flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300; }
+
+    .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 transition-colors; }
+    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
+    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
+</style>
+
+<?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
 
 

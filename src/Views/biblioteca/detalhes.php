@@ -1,132 +1,172 @@
 <?php
-$usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
-$podeSolicitar = isset($_SESSION['usuario_id']) && (int) $_SESSION['usuario_id'] > 0;
+declare(strict_types=1);
+
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
+$podeSolicitar = $auth->isLoggedIn();
 $lojaIdDetalhe = (int) ($_GET['loja_id'] ?? 0);
 $voltarHref = $lojaIdDetalhe > 0 ? '/biblioteca?acervo=rede' : '/biblioteca';
+
+$formatDate = static fn($dateStr) => !empty($dateStr) ? (new DateTime($dateStr))->format('d/m/Y H:i') : '';
+$formatGrau = static fn($grau) => $grau ? ucfirst(strtolower($grau)) : 'Livre';
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
+$appShellEyebrow = 'Biblioteca';
+$appShellTitle = 'Detalhes do Título';
+$appShellDescription = 'Veja informações completas, solicite empréstimos e participe das discussões.';
+$appShellActiveHref = '/biblioteca';
+
+require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalhes do livro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @media (min-width: 1440px) {
-            .erp-readable {
-                font-size: 1.08rem;
-            }
-            .erp-readable .text-xs,
-            .erp-readable .text-\[11px\] {
-                font-size: 0.92rem !important;
-                line-height: 1.4rem !important;
-            }
-            .erp-readable .text-sm {
-                font-size: 1.03rem !important;
-                line-height: 1.58rem !important;
-            }
-        }
-    </style>
-</head>
-<body class="erp-readable bg-slate-50 min-h-screen text-slate-800">
-    <header class="bg-blue-900 text-white shadow-sm">
-        <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4">
-            <div>
-                <div class="text-xs uppercase tracking-[0.18em] text-blue-100/80">Biblioteca</div>
-                <h1 class="text-lg font-semibold">Detalhes do livro</h1>
-            </div>
-            <div class="text-sm"><?= htmlspecialchars($usuarioNome) ?></div>
-        </div>
-    </header>
 
-    <main class="max-w-5xl mx-auto p-4 md:p-6">
-        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <a href="<?= htmlspecialchars($voltarHref) ?>" class="text-sm font-medium text-blue-700 hover:underline">Voltar ao catálogo</a>
+<div class="mb-4">
+    <a href="<?= htmlspecialchars($voltarHref) ?>" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+        Voltar ao Catálogo
+    </a>
+</div>
 
-            <div class="mt-4 grid grid-cols-1 gap-5 md:grid-cols-[180px_1fr]">
-                <div>
-                    <?php if (!empty($item['capa_url'])): ?>
-                        <img src="<?= htmlspecialchars((string) $item['capa_url']) ?>" alt="Capa" class="w-40 rounded border border-slate-200">
-                    <?php else: ?>
-                        <div class="h-56 w-40 rounded border border-slate-200 bg-slate-100"></div>
-                    <?php endif; ?>
-                </div>
-                <article class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <div class="flex flex-wrap items-start gap-2">
-                        <h2 class="min-w-0 flex-1 text-2xl font-semibold text-blue-900"><?= htmlspecialchars((string) ($item['titulo'] ?? '')) ?></h2>
-                        <?php if ((int) ($item['quantidade_disponivel'] ?? 0) > 0): ?>
-                            <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">Disponível</span>
-                        <?php else: ?>
-                            <span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">Indisponível</span>
-                        <?php endif; ?>
-                    </div>
-                    <p class="mt-1 text-slate-700"><?= htmlspecialchars((string) ($item['autor'] ?? '')) ?></p>
-                    <div class="mt-3 text-sm space-y-1">
-                        <div><span class="font-medium">Código:</span> <span class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></span></div>
-                        <div><span class="font-medium">ISBN:</span> <?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></div>
-                        <div><span class="font-medium">Exemplares livres:</span> <?= (int) ($item['quantidade_disponivel'] ?? 0) ?></div>
-                        <div><span class="font-medium">Grau sugerido:</span> <?= htmlspecialchars((string) ($item['grau_recomendado'] ?? 'Livre')) ?></div>
-                    </div>
-                    <p class="mt-4 whitespace-pre-wrap text-sm text-slate-700"><?= htmlspecialchars((string) ($item['resumo'] ?? 'Resumo ainda não informado.')) ?></p>
-
-                    <div class="mt-4">
-                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Ações</div>
-                        <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                            <?php if ($podeSolicitar): ?>
-                                <form action="/biblioteca/solicitar" method="POST">
-                                    <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
-                                    <?php if ($lojaIdDetalhe > 0): ?>
-                                        <input type="hidden" name="loja_id" value="<?= (int) $lojaIdDetalhe ?>">
-                                    <?php endif; ?>
-                                    <button type="submit" class="w-full rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 sm:w-auto">Solicitar emprestimo</button>
-                                </form>
-                            <?php endif; ?>
-
-                            <form action="/biblioteca/reagir" method="POST">
-                                <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
-                                <input type="hidden" name="gostei" value="sim">
-                                <button type="submit" class="w-full rounded-lg border border-emerald-300 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 sm:w-auto">Gostei (<?= (int) ($item['total_gostei_sim'] ?? 0) ?>)</button>
-                            </form>
-                            <form action="/biblioteca/reagir" method="POST">
-                                <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
-                                <input type="hidden" name="gostei" value="nao">
-                                <button type="submit" class="w-full rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50 sm:w-auto">Não gostei (<?= (int) ($item['total_gostei_nao'] ?? 0) ?>)</button>
-                            </form>
-                        </div>
-                    </div>
-                </article>
-            </div>
-        </div>
-        
-        <section class="mt-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-            <div class="border-b border-slate-200 pb-3">
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Comentarios</div>
-                <h3 class="mt-1 text-lg font-semibold">Comentarios (<?= (int) ($item['total_comentarios'] ?? 0) ?>)</h3>
-            </div>
-            <form action="/biblioteca/comentar" method="POST" class="mt-4">
-                <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
-                <label class="block text-sm font-medium text-slate-700">Novo comentario</label>
-                <textarea name="comentario" rows="3" required class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="Compartilhe sua opiniao sobre a leitura..."></textarea>
-                <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
-                    <button type="submit" class="w-full rounded-lg bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800 sm:w-auto">Publicar comentario</button>
-                </div>
-            </form>
-
-            <div class="mt-4 space-y-3">
-                <?php if (!empty($comentarios)): ?>
-                    <?php foreach ($comentarios as $comentario): ?>
-                        <article class="border border-slate-200 rounded p-3">
-                            <div class="text-sm font-medium text-slate-900"><?= htmlspecialchars((string) ($comentario['obreiro_nome'] ?? 'Irmão')) ?></div>
-                            <div class="text-xs text-slate-700 mt-1"><?= htmlspecialchars((string) ($comentario['criado_em'] ?? '')) ?></div>
-                            <p class="text-sm text-slate-700 mt-2 whitespace-pre-wrap"><?= htmlspecialchars((string) ($comentario['comentario'] ?? '')) ?></p>
-                        </article>
-                    <?php endforeach; ?>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Coluna da Capa e Ações -->
+    <div class="lg:col-span-1 space-y-6">
+        <div class="card">
+            <div class="card-body text-center">
+                <?php if (!empty($item['capa_url'])): ?>
+                    <img src="<?= htmlspecialchars((string) $item['capa_url']) ?>" alt="Capa do livro" class="w-48 mx-auto rounded-md shadow-lg border-4 border-white dark:border-gray-700">
                 <?php else: ?>
-                    <p class="text-sm text-slate-700">Ainda não há comentários para este livro.</p>
+                    <div class="w-48 h-64 mx-auto rounded-md bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-4 border-white dark:border-gray-700">
+                        <span class="text-gray-400">Sem capa</span>
+                    </div>
                 <?php endif; ?>
             </div>
-        </section>
-    </main>
-</body>
-</html>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Ações</h2></div>
+            <div class="card-body space-y-3">
+                <?php if ($podeSolicitar): ?>
+                    <form action="/biblioteca/solicitar" method="POST">
+                        <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
+                        <?php if ($lojaIdDetalhe > 0): ?>
+                            <input type="hidden" name="loja_id" value="<?= (int) $lojaIdDetalhe ?>">
+                        <?php endif; ?>
+                        <button type="submit" class="btn btn-primary w-full">Solicitar Empréstimo</button>
+                    </form>
+                <?php endif; ?>
+                <div class="grid grid-cols-2 gap-3">
+                    <form action="/biblioteca/reagir" method="POST">
+                        <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
+                        <input type="hidden" name="gostei" value="sim">
+                        <button type="submit" class="btn btn-secondary-green w-full">Gostei (<?= (int) ($item['total_gostei_sim'] ?? 0) ?>)</button>
+                    </form>
+                    <form action="/biblioteca/reagir" method="POST">
+                        <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
+                        <input type="hidden" name="gostei" value="nao">
+                        <button type="submit" class="btn btn-secondary-red w-full">Não Gostei (<?= (int) ($item['total_gostei_nao'] ?? 0) ?>)</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna de Detalhes e Comentários -->
+    <div class="lg:col-span-2 space-y-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="card-title text-2xl"><?= htmlspecialchars((string) ($item['titulo'] ?? '')) ?></h1>
+                        <p class="card-description text-lg"><?= htmlspecialchars((string) ($item['autor'] ?? '')) ?></p>
+                    </div>
+                    <?php if ((int) ($item['quantidade_disponivel'] ?? 0) > 0): ?>
+                        <span class="badge-status success">Disponível</span>
+                    <?php else: ?>
+                        <span class="badge-status danger">Indisponível</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-6">
+                    <div class="list-item-param"><span>Código</span><strong class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></strong></div>
+                    <div class="list-item-param"><span>ISBN</span><strong><?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></strong></div>
+                    <div class="list-item-param"><span>Exemplares</span><strong><?= (int) ($item['quantidade_disponivel'] ?? 0) ?></strong></div>
+                    <div class="list-item-param col-span-2 md:col-span-1"><span>Grau Sugerido</span><strong class="badge-grau"><?= $formatGrau((string) ($item['grau_recomendado'] ?? '')) ?></strong></div>
+                    <?php if (!empty($item['nota_instrucao'])): ?>
+                        <div class="list-item-param col-span-2"><p><?= htmlspecialchars((string) $item['nota_instrucao']) ?></p></div>
+                    <?php endif; ?>
+                </div>
+                <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-2">Resumo</h3>
+                <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed whitespace-pre-wrap"><?= htmlspecialchars((string) ($item['resumo'] ?? 'Resumo ainda não informado.')) ?></p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Comentários (<?= (int) ($item['total_comentarios'] ?? 0) ?>)</h2></div>
+            <div class="card-body">
+                <form action="/biblioteca/comentar" method="POST" class="mb-6">
+                    <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
+                    <label for="comentario" class="form-label sr-only">Novo comentário</label>
+                    <textarea id="comentario" name="comentario" rows="3" required class="form-textarea" placeholder="Compartilhe sua opinião sobre a leitura..."></textarea>
+                    <div class="mt-3 flex justify-end">
+                        <button type="submit" class="btn btn-primary">Publicar Comentário</button>
+                    </div>
+                </form>
+
+                <div class="space-y-4">
+                    <?php if (empty($comentarios)): ?>
+                        <div class="card-placeholder-inner">Ainda não há comentários para este livro.</div>
+                    <?php else: ?>
+                        <?php foreach ($comentarios as $comentario): ?>
+                            <div class="list-item-comment">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center font-bold text-sm text-gray-500 dark:text-gray-300">
+                                        <?= strtoupper(substr((string) ($comentario['obreiro_nome'] ?? 'I'), 0, 1)) ?>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-sm"><?= htmlspecialchars((string) ($comentario['obreiro_nome'] ?? 'Irmão')) ?></p>
+                                        <p class="text-xs text-gray-500"><?= $formatDate((string) ($comentario['criado_em'] ?? '')) ?></p>
+                                    </div>
+                                </div>
+                                <p class="mt-3 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap"><?= htmlspecialchars((string) ($comentario['comentario'] ?? '')) ?></p>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
+    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
+    .card-description { @apply mt-1 text-gray-600 dark:text-gray-400; }
+    .card-body { @apply p-5; }
+    .card-placeholder-inner { @apply text-center py-8 px-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-gray-500; }
+
+    .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900; }
+    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
+    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
+    .btn-secondary-green { @apply bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-300 dark:hover:bg-green-900 focus:ring-green-500; }
+    .btn-secondary-red { @apply bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/50 dark:text-red-300 dark:hover:bg-red-900 focus:ring-red-500; }
+
+    .badge-status { @apply inline-block px-2.5 py-1 text-xs font-medium rounded-full; }
+    .badge-status.success { @apply bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300; }
+    .badge-status.danger { @apply bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300; }
+    .badge-grau { @apply inline-block px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300; }
+
+    .list-item-param { @apply flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md; }
+    .list-item-comment { @apply p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg; }
+
+    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
+    .form-textarea { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
+</style>
+
+<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
 

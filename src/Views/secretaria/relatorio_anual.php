@@ -1,348 +1,268 @@
 <?php
-$formatarDataExibicao = static function (?string $valor): string {
-    $valor = trim((string) $valor);
-    if ($valor === '') {
-        return '-';
-    }
+declare(strict_types=1);
 
-    try {
-        return (new DateTimeImmutable($valor))
-            ->setTimezone(new DateTimeZone('America/Sao_Paulo'))
-            ->format('d-m-Y');
-    } catch (\Throwable $e) {
-        return $valor;
-    }
-};
-$erpPageTitle = 'Relatório Anual - Secretaria';
+// #############################################################################
+// LÓGICA DE NEGÓCIO E HELPERS
+// #############################################################################
+
+$formatDate = static fn(?string $val): string => !empty(trim((string) $val)) ? (new DateTimeImmutable(trim((string) $val)))->format('d/m/Y') : '-';
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL
+// #############################################################################
+
 $appShellEyebrow = 'Secretaria';
-$appShellTitle = 'Relatório anual';
+$appShellTitle = 'Relatório Anual';
 $appShellDescription = 'Consolidação anual da atividade da Loja sob responsabilidade da Secretaria.';
 $appShellActiveHref = '/secretaria/relatorio-anual';
-$appShellActions = [
-    ['label' => 'Voltar para Secretaria', 'href' => '/secretaria'],
-];
-$appShellSidebarSections = [
-    [
-        'title' => 'Secretaria',
-        'items' => [
-            ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
-            ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
-            ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
-            ['label' => 'Acessos', 'href' => '/admin/acessos'],
-            ['label' => 'Sessões', 'href' => '/secretaria'],
-            ['label' => 'Balaústres / votação', 'href' => '/secretaria/votacao'],
-            ['label' => 'Relatório anual', 'href' => '/secretaria/relatorio-anual'],
-        ],
-    ],
-    [
-        'title' => 'Geral',
-        'items' => [
-            ['label' => 'Painel', 'href' => '/dashboard'],
-        ],
-    ],
-];
-require __DIR__ . '/../partials/erp_head.php';
-?>
-<?php require __DIR__ . '/../partials/erp_shell_open.php'; ?>
-<div class="space-y-6">
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm mb-6">
-            <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div>
-                    <div class="text-xs uppercase tracking-[0.24em] text-slate-700">Identificação institucional</div>
-                    <h2 class="mt-2 text-2xl font-semibold text-erp-navy">
-                        <?= htmlspecialchars((string) (($relatorio['loja']['nome_loja'] ?? '') !== '' ? $relatorio['loja']['nome_loja'] : 'Loja não configurada')) ?>
-                    </h2>
-                    <p class="mt-2 text-sm text-slate-700">
-                        Potência: <?= htmlspecialchars((string) (($relatorio['loja']['potencia_nome'] ?? '') !== '' ? $relatorio['loja']['potencia_nome'] : 'não informada')) ?>
-                        <?php if (!empty($relatorio['loja']['potencia_sigla'])): ?>
-                            (<?= htmlspecialchars((string) $relatorio['loja']['potencia_sigla']) ?>)
-                        <?php endif; ?>
-                    </p>
-                    <p class="mt-1 text-sm text-slate-700">
-                        Oriente: <?= htmlspecialchars((string) (($relatorio['loja']['oriente'] ?? '') !== '' ? $relatorio['loja']['oriente'] : 'não informado')) ?>
-                        <?php if (!empty($relatorio['loja']['cidade']) || !empty($relatorio['loja']['uf'])): ?>
-                            | Cidade: <?= htmlspecialchars(trim((string) (($relatorio['loja']['cidade'] ?? '') . ' / ' . ($relatorio['loja']['uf'] ?? '')), ' /')) ?>
-                        <?php endif; ?>
-                    </p>
-                    <p class="mt-1 text-sm text-slate-700">
-                        Rito: <?= htmlspecialchars((string) (($relatorio['loja']['rito'] ?? '') !== '' ? $relatorio['loja']['rito'] : 'não informado')) ?>
-                        | Fundação: <?= htmlspecialchars((string) (($relatorio['loja']['data_fundacao'] ?? '') !== '' ? $formatarDataExibicao((string) $relatorio['loja']['data_fundacao']) : 'não informada')) ?>
-                        | Instalação: <?= htmlspecialchars((string) (($relatorio['loja']['data_instalacao'] ?? '') !== '' ? $formatarDataExibicao((string) $relatorio['loja']['data_instalacao']) : 'não informada')) ?>
-                    </p>
+require __DIR__ . '/../partials/erp_shell_open.php';
+?>
+
+<!-- Filtro de Ano -->
+<div class="card mb-8">
+    <div class="card-body">
+        <form method="GET" action="/secretaria/relatorio-anual" class="flex flex-col sm:flex-row sm:items-end sm:gap-4">
+            <div>
+                <label for="ano" class="form-label">Ano de referência</label>
+                <select name="ano" id="ano" class="form-select">
+                    <?php foreach ($anosDisponiveis as $anoOpcao): ?>
+                        <option value="<?= (int) $anoOpcao ?>" <?= (int) $anoOpcao === (int) $relatorio['ano'] ? 'selected' : '' ?>>
+                            <?= (int) $anoOpcao ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary mt-4 sm:mt-0">Atualizar Relatório</button>
+        </form>
+    </div>
+</div>
+
+<!-- Identificação Institucional -->
+<div class="card mb-8">
+    <div class="card-body">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+            <div>
+                <h2 class="text-xl font-bold">
+                    <?= htmlspecialchars((string) (($relatorio['loja']['nome_loja'] ?? '') ?: 'Loja não configurada')) ?>
+                </h2>
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                    <p><strong>Potência:</strong> <?= htmlspecialchars(trim((string) (($relatorio['loja']['potencia_nome'] ?? 'não informada') . (!empty($relatorio['loja']['potencia_sigla']) ? ' (' . $relatorio['loja']['potencia_sigla'] . ')' : '')))) ?></p>
+                    <p><strong>Oriente:</strong> <?= htmlspecialchars((string) (($relatorio['loja']['oriente'] ?? '') ?: 'não informado')) ?></p>
+                    <p><strong>Cidade/UF:</strong> <?= htmlspecialchars(trim((string) (($relatorio['loja']['cidade'] ?? '') . ' / ' . ($relatorio['loja']['uf'] ?? '')), ' /')) ?></p>
+                    <p><strong>Rito:</strong> <?= htmlspecialchars((string) (($relatorio['loja']['rito'] ?? '') ?: 'não informado')) ?></p>
+                    <p><strong>Fundação:</strong> <?= $formatDate($relatorio['loja']['data_fundacao'] ?? null) ?></p>
+                    <p><strong>Instalação:</strong> <?= $formatDate($relatorio['loja']['data_instalacao'] ?? null) ?></p>
                 </div>
-                <?php if (!empty($relatorio['loja']['observacao_relatorios'])): ?>
-                    <div class="max-w-xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                        <?= htmlspecialchars((string) $relatorio['loja']['observacao_relatorios']) ?>
+            </div>
+            <?php if (!empty($relatorio['loja']['observacao_relatorios'])): ?>
+                <div class="max-w-md alert alert-warning">
+                    <strong>Observação:</strong> <?= htmlspecialchars((string) $relatorio['loja']['observacao_relatorios']) ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<!-- Métricas Principais -->
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
+    <div class="card-metric"><p class="card-metric-label">Visitantes</p><p class="card-metric-value"><?= (int) ($relatorio['visitantes']['total'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Visitas Externas</p><p class="card-metric-value"><?= (int) ($relatorio['visitas_externas']['total'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Congressos</p><p class="card-metric-value"><?= (int) ($relatorio['congressos']['total'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Palestras</p><p class="card-metric-value"><?= (int) ($relatorio['palestras']['total'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Sessões</p><p class="card-metric-value"><?= (int) ($relatorio['sessoes_por_grau']['total'] ?? 0) ?></p></div>
+</div>
+
+<!-- Métricas do Quadro -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <div class="card-metric"><p class="card-metric-label">Obreiros no Quadro</p><p class="card-metric-value"><?= (int) ($relatorio['perfil_quadro']['total'] ?? 0) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Idade Média</p><p class="card-metric-value"><?= ($relatorio['perfil_quadro']['idade_media'] ?? null) !== null ? round((float)$relatorio['perfil_quadro']['idade_media']) . ' anos' : '-' ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Situação Predominante</p><p class="card-metric-value !text-2xl"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($relatorio['perfil_quadro']['situacoes'][0]['categoria'] ?? 'N/A')))) ?></p></div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Coluna Esquerda -->
+    <div class="space-y-8">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Visitantes e Visitas Externas</h3><p class="card-description">Frequência de visitantes na Loja e de obreiros em outras Lojas.</p></div>
+            <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold mb-3">Lojas mais frequentes (Visitantes)</h4>
+                    <div class="space-y-2">
+                        <?php if (empty($relatorio['visitantes']['lojas_mais_frequentes'])): ?>
+                            <p class="text-sm text-gray-500">Nenhum registro.</p>
+                        <?php else: ?>
+                            <?php foreach ($relatorio['visitantes']['lojas_mais_frequentes'] as $linha): ?>
+                                <div class="list-item"><span><?= htmlspecialchars((string) ($linha['loja'] ?? 'N/A')) ?></span><strong><?= (int) ($linha['total'] ?? 0) ?></strong></div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">Fonte: <?= htmlspecialchars((string) ($relatorio['visitantes']['fonte'] ?? 'N/A')) ?></p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-3">Lojas mais visitadas (Externas)</h4>
+                    <div class="space-y-2">
+                        <?php if (empty($relatorio['visitas_externas']['lojas_mais_visitadas'])): ?>
+                            <p class="text-sm text-gray-500">Nenhum registro.</p>
+                        <?php else: ?>
+                            <?php foreach ($relatorio['visitas_externas']['lojas_mais_visitadas'] as $linha): ?>
+                                <div class="list-item"><span><?= htmlspecialchars((string) ($linha['loja'] ?? 'N/A')) ?></span><strong><?= (int) ($linha['total'] ?? 0) ?></strong></div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">Fonte: <?= htmlspecialchars((string) ($relatorio['visitas_externas']['fonte'] ?? 'N/A')) ?></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Sessões e Eventos</h3><p class="card-description">Distribuição de sessões por grau e total de eventos.</p></div>
+            <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold mb-3">Sessões por Grau</h4>
+                    <div class="space-y-2">
+                        <?php if (empty($relatorio['sessoes_por_grau']['itens'])): ?>
+                            <p class="text-sm text-gray-500">Nenhuma sessão no período.</p>
+                        <?php else: ?>
+                            <?php foreach ($relatorio['sessoes_por_grau']['itens'] as $linha): ?>
+                                <div class="list-item"><span><?= htmlspecialchars((string) ($linha['grau_sessao'] ?? 'N/A')) ?></span><strong><?= (int) ($linha['total'] ?? 0) ?></strong></div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2"><?= htmlspecialchars((string) ($relatorio['sessoes_por_grau']['regra'] ?? '')) ?></p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-3">Eventos Registrados</h4>
+                    <div class="space-y-4">
+                        <div class="list-item flex-col items-start"><div class="flex justify-between w-full"><span>Congressos</span><strong><?= (int) ($relatorio['congressos']['total'] ?? 0) ?></strong></div><p class="text-xs text-gray-400 w-full">Fonte: <?= htmlspecialchars((string) ($relatorio['congressos']['fonte'] ?? 'N/A')) ?></p></div>
+                        <div class="list-item flex-col items-start"><div class="flex justify-between w-full"><span>Palestras</span><strong><?= (int) ($relatorio['palestras']['total'] ?? 0) ?></strong></div><p class="text-xs text-gray-400 w-full">Fonte: <?= htmlspecialchars((string) ($relatorio['palestras']['fonte'] ?? 'N/A')) ?></p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Amostra Cadastral</h3><p class="card-description">Leitura rápida para apoio ao saneamento e conferências.</p></div>
+            <div class="card-body space-y-3 max-h-96 overflow-y-auto">
+                <?php if (empty($relatorio['perfil_quadro']['amostra_cadastral'])): ?>
+                    <p class="text-sm text-gray-500 text-center py-4">Não há obreiros elegíveis no período.</p>
+                <?php else: ?>
+                    <?php foreach ($relatorio['perfil_quadro']['amostra_cadastral'] as $item): ?>
+                        <div class="list-item-report">
+                            <div class="flex items-center justify-between gap-3">
+                                <p class="font-semibold"><?= htmlspecialchars((string) ($item['nome_exibicao'] ?? '-')) ?></p>
+                                <span class="badge badge-secondary text-xs"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($item['situacao_quadro'] ?? 'N/A')))) ?></span>
+                            </div>
+                            <div class="mt-2 text-xs grid grid-cols-2 gap-1">
+                                <p><strong>Grau:</strong> <?= htmlspecialchars((string) ($item['grau'] ?? 'N/A')) ?></p>
+                                <p><strong>Profissão:</strong> <?= htmlspecialchars((string) ($item['profissao'] ?? 'N/A')) ?></p>
+                                <p><strong>Escolaridade:</strong> <?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($item['escolaridade'] ?? 'N/A')))) ?></p>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Direita -->
+    <div class="space-y-8">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Movimentação do Quadro</h3><p class="card-description">Panorama anual da composição do quadro.</p></div>
+            <div class="card-body">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="card-metric-simple"><p class="card-metric-label">Início do ano</p><p class="card-metric-value text-2xl"><?= ($relatorio['quadro']['inicio_ano'] ?? null) !== null ? $relatorio['quadro']['inicio_ano'] : '-' ?></p></div>
+                    <div class="card-metric-simple"><p class="card-metric-label">Fim do ano</p><p class="card-metric-value text-2xl"><?= ($relatorio['quadro']['fim_ano'] ?? null) !== null ? $relatorio['quadro']['fim_ano'] : '-' ?></p></div>
+                </div>
+                <?php if (!empty($relatorio['quadro']['observacao'])): ?>
+                    <div class="alert alert-warning mb-4"><?= htmlspecialchars((string) $relatorio['quadro']['observacao']) ?></div>
+                <?php endif; ?>
+                <?php if (!empty($relatorio['quadro']['movimentacao'])): ?>
+                    <div class="grid grid-cols-2 gap-3">
+                        <?php foreach (['filiacoes' => 'Filiações', 'regularizacoes' => 'Regularizações', 'reintegracoes' => 'Reintegrações', 'suspensoes' => 'Suspensões', 'desligamentos' => 'Desligamentos', 'oriente_eterno' => 'Oriente Eterno'] as $chave => $label): ?>
+                            <div class="list-item !py-2 !px-3"><span><?= htmlspecialchars($label) ?></span><strong><?= (int) ($relatorio['quadro']['movimentacao'][$chave] ?? 0) ?></strong></div>
+                        <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm mb-6">
-            <form method="GET" action="/secretaria/relatorio-anual" class="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Perfil do Quadro</h3><p class="card-description">Recorte estatístico do cadastro de obreiros.</p></div>
+            <div class="card-body space-y-6">
                 <div>
-                    <label class="block text-sm font-medium mb-1">Ano de referência</label>
-                    <select name="ano" class="rounded-lg border border-slate-300 px-3 py-2">
-                        <?php foreach ($anosDisponiveis as $anoOpcao): ?>
-                            <option value="<?= (int) $anoOpcao ?>" <?= (int) $anoOpcao === (int) $relatorio['ano'] ? 'selected' : '' ?>>
-                                <?= (int) $anoOpcao ?>
-                            </option>
+                    <h4 class="font-semibold mb-3 text-sm">Escolaridade</h4>
+                    <div class="space-y-2">
+                        <?php foreach (($relatorio['perfil_quadro']['escolaridade'] ?? []) as $linha): ?>
+                            <div class="list-item"><span><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($linha['categoria'] ?? 'N/A')))) ?></span><strong><?= (int) ($linha['total'] ?? 0) ?></strong></div>
                         <?php endforeach; ?>
-                    </select>
-                </div>
-                <button type="submit" class="rounded-lg bg-erp-navy px-4 py-2 text-sm font-medium text-white">Atualizar relatório</button>
-            </form>
-        </div>
-
-        <div class="grid gap-4 md:grid-cols-5 mb-8">
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Visitantes no periodo</div>
-                <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) ($relatorio['visitantes']['total'] ?? 0) ?></div>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Visitas a outras Lojas</div>
-                <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) ($relatorio['visitas_externas']['total'] ?? 0) ?></div>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Congressos</div>
-                <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) ($relatorio['congressos']['total'] ?? 0) ?></div>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Palestras</div>
-                <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) ($relatorio['palestras']['total'] ?? 0) ?></div>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Sessões no período</div>
-                <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) ($relatorio['sessoes_por_grau']['total'] ?? 0) ?></div>
-            </div>
-        </div>
-
-        <div class="grid gap-4 md:grid-cols-3 mb-8">
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Obreiros no quadro</div>
-                <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= (int) ($relatorio['perfil_quadro']['total'] ?? 0) ?></div>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Idade média</div>
-                <div class="mt-2 text-3xl font-semibold text-erp-navy"><?= htmlspecialchars((string) (($relatorio['perfil_quadro']['idade_media'] ?? null) !== null ? $relatorio['perfil_quadro']['idade_media'] : '-')) ?></div>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-sm text-slate-700">Situação predominante</div>
-                <div class="mt-2 text-2xl font-semibold text-erp-navy">
-                    <?= htmlspecialchars((string) (($relatorio['perfil_quadro']['situacoes'][0]['categoria'] ?? 'nao_informado'))) ?>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <section class="space-y-6">
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-xl font-semibold text-erp-navy">Visitantes</h2>
-                    <p class="mt-1 text-sm text-slate-700">Quantidade total de visitantes extraída dos registros estruturados da palavra a bem da ordem no balaustre.</p>
-                    <div class="mt-4 text-xs text-slate-700">Fonte: <?= htmlspecialchars((string) ($relatorio['visitantes']['fonte'] ?? '')) ?></div>
-
-                    <div class="mt-5">
-                        <h3 class="text-sm font-semibold text-slate-700 mb-2">Lojas mais frequentes</h3>
-                        <div class="space-y-2">
-                            <?php foreach (($relatorio['visitantes']['lojas_mais_frequentes'] ?? []) as $linha): ?>
-                                <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                                    <span><?= htmlspecialchars((string) ($linha['loja'] ?? 'Loja não informada')) ?></span>
-                                    <strong><?= (int) ($linha['total'] ?? 0) ?></strong>
-                                </div>
-                            <?php endforeach; ?>
-                            <?php if (($relatorio['visitantes']['lojas_mais_frequentes'] ?? []) === []): ?>
-                                <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Não há visitantes estruturados no período selecionado.</div>
-                            <?php endif; ?>
-                        </div>
                     </div>
                 </div>
-
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-xl font-semibold text-erp-navy">Visitas a outras Lojas</h2>
-                    <p class="mt-1 text-sm text-slate-700">Quantidade de vezes em que membros do quadro da Loja informaram visitas externas no saco de propostas.</p>
-                    <div class="mt-4 text-xs text-slate-700">Fonte: <?= htmlspecialchars((string) ($relatorio['visitas_externas']['fonte'] ?? '')) ?></div>
-
-                    <div class="mt-5">
-                        <h3 class="text-sm font-semibold text-slate-700 mb-2">Lojas mais visitadas</h3>
-                        <div class="space-y-2">
-                            <?php foreach (($relatorio['visitas_externas']['lojas_mais_visitadas'] ?? []) as $linha): ?>
-                                <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                                    <span><?= htmlspecialchars((string) ($linha['loja'] ?? 'Loja não informada')) ?></span>
-                                    <strong><?= (int) ($linha['total'] ?? 0) ?></strong>
-                                </div>
-                            <?php endforeach; ?>
-                            <?php if (($relatorio['visitas_externas']['lojas_mais_visitadas'] ?? []) === []): ?>
-                                <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Não há visitas externas estruturadas no período selecionado.</div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-xl font-semibold text-erp-navy">Sessões por grau</h2>
-                    <p class="mt-1 text-sm text-slate-700"><?= htmlspecialchars((string) ($relatorio['sessoes_por_grau']['regra'] ?? '')) ?></p>
-                    <div class="mt-5 space-y-2">
-                        <?php foreach (($relatorio['sessoes_por_grau']['itens'] ?? []) as $linha): ?>
-                            <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                                <span><?= htmlspecialchars((string) ($linha['grau_sessao'] ?? 'Não informado')) ?></span>
-                                <strong><?= (int) ($linha['total'] ?? 0) ?></strong>
-                            </div>
+                <div>
+                    <h4 class="font-semibold mb-3 text-sm">Situação no Quadro</h4>
+                    <div class="space-y-2">
+                        <?php foreach (($relatorio['perfil_quadro']['situacoes'] ?? []) as $linha): ?>
+                            <div class="list-item"><span><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($linha['categoria'] ?? 'N/A')))) ?></span><strong><?= (int) ($linha['total'] ?? 0) ?></strong></div>
                         <?php endforeach; ?>
-                        <?php if (($relatorio['sessoes_por_grau']['itens'] ?? []) === []): ?>
-                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Não há sessões no período selecionado.</div>
-                        <?php endif; ?>
                     </div>
                 </div>
-            </section>
-
-            <section class="space-y-6">
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-xl font-semibold text-erp-navy">Congressos e palestras</h2>
-                    <div class="mt-5 grid gap-4 sm:grid-cols-2">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-sm text-slate-700">Congressos realizados</div>
-                            <div class="mt-2 text-2xl font-semibold text-erp-navy"><?= (int) ($relatorio['congressos']['total'] ?? 0) ?></div>
-                            <div class="mt-2 text-xs text-slate-700">Fonte: <?= htmlspecialchars((string) ($relatorio['congressos']['fonte'] ?? '')) ?></div>
-                        </div>
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-sm text-slate-700">Palestras realizadas</div>
-                            <div class="mt-2 text-2xl font-semibold text-erp-navy"><?= (int) ($relatorio['palestras']['total'] ?? 0) ?></div>
-                            <div class="mt-2 text-xs text-slate-700">Fonte: <?= htmlspecialchars((string) ($relatorio['palestras']['fonte'] ?? '')) ?></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-xl font-semibold text-erp-navy">Quadro da Loja</h2>
-                    <p class="mt-1 text-sm text-slate-700">Panorama anual da composição do quadro com base na trilha cadastral disponível hoje.</p>
-
-                    <div class="mt-5 grid gap-4 sm:grid-cols-2">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-sm text-slate-700">Começaram o ano no quadro</div>
-                            <div class="mt-2 text-2xl font-semibold text-erp-navy"><?= htmlspecialchars((string) (($relatorio['quadro']['inicio_ano'] ?? null) !== null ? $relatorio['quadro']['inicio_ano'] : '-')) ?></div>
-                        </div>
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                            <div class="text-sm text-slate-700">Terminaram o ano no quadro</div>
-                            <div class="mt-2 text-2xl font-semibold text-erp-navy"><?= htmlspecialchars((string) (($relatorio['quadro']['fim_ano'] ?? null) !== null ? $relatorio['quadro']['fim_ano'] : '-')) ?></div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                        <?= htmlspecialchars((string) ($relatorio['quadro']['observacao'] ?? '')) ?>
-                    </div>
-
-                    <?php if (($relatorio['quadro']['movimentacao'] ?? null) !== null): ?>
-                        <div class="mt-5">
-                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Movimentação do quadro</h3>
-                            <div class="grid gap-3 sm:grid-cols-2">
-                                <?php foreach ([
-                                    'filiacoes' => 'Filiações',
-                                    'regularizacoes' => 'Regularizações',
-                                    'reintegracoes' => 'Reintegrações',
-                                    'suspensoes' => 'Suspensões',
-                                    'desligamentos' => 'Desligamentos',
-                                    'oriente_eterno' => 'Oriente Eterno',
-                                ] as $chave => $label): ?>
-                                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm flex items-center justify-between">
-                                        <span><?= htmlspecialchars($label) ?></span>
-                                        <strong><?= (int) ($relatorio['quadro']['movimentacao'][$chave] ?? 0) ?></strong>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-xl font-semibold text-erp-navy">Leitura administrativa</h2>
-                    <ul class="mt-4 space-y-2 text-sm text-slate-700 list-disc pl-5">
-                        <li>Visitantes refletem os registros estruturados no balaustre.</li>
-                        <li>Visitas externas refletem os registros feitos no saco de propostas durante a sessão.</li>
-                        <li>Congressos e palestras são contabilizados a partir dos eventos informados no balaustre.</li>
-                        <li>Sessões por grau usam as sessões do período com status diferente de cancelada.</li>
-                        <li>O quadro anual depende da trilha cadastral dos obreiros; quanto melhor a disciplina de cadastro, melhor a precisão do indicador.</li>
-                    </ul>
-                </div>
-            </section>
-
-            <section class="space-y-6">
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-xl font-semibold text-erp-navy">Perfil do quadro</h2>
-                    <p class="mt-1 text-sm text-slate-700">Recorte estatístico do cadastro de obreiros utilizado para relatórios da gestão e relatórios por irmão.</p>
-
-                    <div class="mt-5 grid gap-4 md:grid-cols-3">
-                        <div>
-                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Escolaridade</h3>
-                            <div class="space-y-2">
-                                <?php foreach (($relatorio['perfil_quadro']['escolaridade'] ?? []) as $linha): ?>
-                                    <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                                        <span><?= htmlspecialchars((string) ($linha['categoria'] ?? 'nao_informado')) ?></span>
-                                        <strong><?= (int) ($linha['total'] ?? 0) ?></strong>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Situação do quadro</h3>
-                            <div class="space-y-2">
-                                <?php foreach (($relatorio['perfil_quadro']['situacoes'] ?? []) as $linha): ?>
-                                    <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                                        <span><?= htmlspecialchars((string) ($linha['categoria'] ?? 'nao_informado')) ?></span>
-                                        <strong><?= (int) ($linha['total'] ?? 0) ?></strong>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h3 class="text-sm font-semibold text-slate-700 mb-2">Distribuição por grau</h3>
-                            <div class="space-y-2">
-                                <?php foreach (($relatorio['perfil_quadro']['graus'] ?? []) as $linha): ?>
-                                    <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                                        <span><?= htmlspecialchars((string) ($linha['categoria'] ?? 'Não informado')) ?></span>
-                                        <strong><?= (int) ($linha['total'] ?? 0) ?></strong>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-xl font-semibold text-erp-navy">Amostra cadastral</h2>
-                    <p class="mt-1 text-sm text-slate-700">Leitura rápida por irmão para apoio ao saneamento cadastral e conferências do relatório.</p>
-
-                    <div class="mt-5 space-y-3">
-                        <?php foreach (($relatorio['perfil_quadro']['amostra_cadastral'] ?? []) as $item): ?>
-                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                                <div class="flex items-center justify-between gap-3">
-                                    <div class="font-medium text-erp-navy"><?= htmlspecialchars((string) ($item['nome_exibicao'] ?? '-')) ?></div>
-                                    <div class="text-xs uppercase tracking-wide text-slate-700"><?= htmlspecialchars((string) ($item['situacao_quadro'] ?? 'nao_informado')) ?></div>
-                                </div>
-                                <div class="mt-2 text-sm text-slate-700">
-                                    Grau: <?= htmlspecialchars((string) ($item['grau'] ?? 'Não informado')) ?> |
-                                    Escolaridade: <?= htmlspecialchars((string) ($item['escolaridade'] ?? 'nao_informado')) ?> |
-                                    Profissao: <?= htmlspecialchars((string) ($item['profissao'] ?? 'nao_informada')) ?>
-                                </div>
-                                <div class="mt-1 text-xs text-slate-700">
-                                    Filiação: <?= htmlspecialchars((string) ($item['data_filiacao'] ?? '-')) ?> |
-                                    Regularização: <?= htmlspecialchars((string) ($item['data_regularizacao'] ?? '-')) ?> |
-                                    Reintegração: <?= htmlspecialchars((string) ($item['data_reintegracao'] ?? '-')) ?> |
-                                    Desligamento: <?= htmlspecialchars((string) ($item['data_desligamento'] ?? '-')) ?> |
-                                    Oriente Eterno: <?= htmlspecialchars((string) ($item['data_oriente_eterno'] ?? '-')) ?>
-                                </div>
-                            </div>
+                <div>
+                    <h4 class="font-semibold mb-3 text-sm">Distribuição por Grau</h4>
+                    <div class="space-y-2">
+                        <?php foreach (($relatorio['perfil_quadro']['graus'] ?? []) as $linha): ?>
+                            <div class="list-item"><span><?= htmlspecialchars((string) ($linha['categoria'] ?? 'N/A')) ?></span><strong><?= (int) ($linha['total'] ?? 0) ?></strong></div>
                         <?php endforeach; ?>
-
-                        <?php if (($relatorio['perfil_quadro']['amostra_cadastral'] ?? []) === []): ?>
-                            <div class="rounded-xl border border-dashed border-slate-300 px-4 py-4 text-sm text-slate-700">Não há obreiros elegíveis no período selecionado.</div>
-                        <?php endif; ?>
                     </div>
                 </div>
-            </section>
+            </div>
         </div>
+
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Leitura Administrativa</h3></div>
+            <div class="card-body">
+                <ul class="list-disc pl-5 space-y-2 text-sm text-gray-500">
+                    <li>Visitantes refletem os registros estruturados no balaustre.</li>
+                    <li>Visitas externas refletem os registros feitos no saco de propostas.</li>
+                    <li>Congressos e palestras são contabilizados a partir dos eventos informados no balaustre.</li>
+                    <li>Sessões por grau usam as sessões do período com status diferente de 'cancelada'.</li>
+                    <li>O quadro anual depende da trilha cadastral dos obreiros; a precisão do indicador melhora com a disciplina de cadastro.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>
-<?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+
+<style>
+    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
+    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
+    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
+    .card-description { @apply mt-1 text-sm text-gray-600 dark:text-gray-400; }
+    .card-body { @apply p-5; }
+
+    .card-metric { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-5; }
+    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
+    .card-metric-value { @apply mt-1 text-3xl font-bold; }
+
+    .card-metric-simple { @apply bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4; }
+    .card-metric-simple .card-metric-label { @apply text-xs uppercase tracking-wider; }
+    .card-metric-simple .card-metric-value { @apply text-xl; }
+
+    .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
+    .form-select { @apply w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-blue-500; }
+
+    .list-item { @apply flex items-center justify-between bg-gray-100 dark:bg-gray-700/50 p-3 rounded-md text-sm; }
+    .list-item span { @apply text-gray-800 dark:text-gray-200; }
+    .list-item strong { @apply font-semibold text-gray-900 dark:text-gray-100; }
+    .list-item-report { @apply p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg; }
+
+    .alert { @apply px-4 py-3 rounded-lg text-sm; }
+    .alert-warning { @apply bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 text-yellow-700 dark:text-yellow-300; }
+
+    .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold; }
+    .badge-secondary { @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200; }
+</style>
+
+<?php
+require_once __DIR__ . '/../partials/erp_shell_close.php';
+?>
 

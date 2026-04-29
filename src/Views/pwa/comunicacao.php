@@ -1,89 +1,81 @@
 <?php
-if (!headers_sent()) {
-    header('Content-Type: text/html; charset=UTF-8');
+declare(strict_types=1);
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    @session_start();
 }
 
 $lista = is_array($comunicados ?? null) ? $comunicados : [];
 $erroDb = $erroDb ?? null;
+$podeCriar = !empty($_SESSION['usuario_cargo']) && in_array((string) $_SESSION['usuario_cargo'], ['secretario', 'admin', 'veneravel'], true);
 
-$usuarioNome = (string) ($_SESSION['usuario_nome'] ?? 'Irmão');
-$usuarioCargo = (string) ($_SESSION['usuario_cargo'] ?? '');
+$pwaPageTitle = 'Comunicação';
+$pwaShowBackButton = true;
+
+ob_start();
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comunicação Oficial</title>
-    <link rel="manifest" href="/manifest.php">
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-50 min-h-screen text-slate-800">
-    <header class="bg-blue-900 text-white shadow-sm">
-        <div class="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-4">
-            <div>
-                <div class="text-xs uppercase tracking-[0.18em] text-blue-100/80">Comunicação</div>
-                <h1 class="text-lg font-semibold">Central oficial</h1>
-                <div class="text-xs text-blue-100/80"><?= htmlspecialchars($usuarioNome) ?><?= $usuarioCargo !== '' ? ' · ' . htmlspecialchars($usuarioCargo) : '' ?></div>
-            </div>
-            <a class="rounded-md bg-white/10 px-3 py-2 text-sm font-medium hover:bg-white/15" href="/dashboard">Painel</a>
+
+<div class="p-4 sm:p-6 space-y-4">
+    <?php if ($podeCriar): ?>
+        <a href="/pwa/comunicacao/novo" class="flex items-center justify-center rounded-xl bg-erpNavy px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <span>Novo Comunicado</span>
+        </a>
+    <?php endif; ?>
+
+    <?php if ($erroDb): ?>
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <p class="font-semibold">Erro de Acesso</p>
+            <p><?= htmlspecialchars((string) $erroDb) ?></p>
+            <p class="mt-1 text-xs">Ação: Aplique a migração `database/phase2_comunicacao.sql` no schema do ambiente e tente novamente.</p>
         </div>
-    </header>
+    <?php endif; ?>
 
-    <main class="mx-auto max-w-3xl px-4 py-6 space-y-4">
-        <?php if (!empty($_SESSION['usuario_cargo']) && in_array((string) $_SESSION['usuario_cargo'], ['secretario', 'admin', 'veneravel'], true)): ?>
-            <a href="/pwa/comunicacao/novo" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700">
-                Novo comunicado
-            </a>
-        <?php endif; ?>
-
-        <?php if ($erroDb): ?>
-            <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
-                <?= htmlspecialchars((string) $erroDb) ?>
-                <div class="mt-1 text-xs text-amber-800">Aplique `database/phase2_comunicacao.sql` no schema do ambiente e tente novamente.</div>
-            </div>
-        <?php endif; ?>
-
-        <?php if ($lista === []): ?>
-            <div class="rounded-xl border border-slate-200 bg-white p-4">
-                <div class="text-sm text-slate-600">Nenhum comunicado publicado.</div>
-            </div>
-        <?php else: ?>
-            <div class="space-y-3">
-                <?php foreach ($lista as $item): ?>
-                    <?php
-                    $id = (int) ($item['id'] ?? 0);
-                    $titulo = (string) ($item['titulo'] ?? 'Comunicado');
-                    $categoria = (string) ($item['categoria'] ?? 'geral');
-                    $publicadoEm = (string) ($item['publicado_em'] ?? '');
-                    $leituras = (int) ($item['total_leituras'] ?? 0);
-                    ?>
-                    <a href="/pwa/comunicacao/ler?id=<?= $id ?>" class="block rounded-xl border border-slate-200 bg-white p-4 hover:border-slate-300">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <div class="text-base font-semibold truncate"><?= htmlspecialchars($titulo) ?></div>
-                                <div class="text-xs text-slate-500 truncate">
-                                    <?= htmlspecialchars($categoria) ?><?= $publicadoEm !== '' ? ' · ' . htmlspecialchars($publicadoEm) : '' ?>
-                                </div>
-                            </div>
-                            <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                                Leituras: <?= $leituras ?>
-                            </span>
+    <?php if ($lista === []): ?>
+        <div class="rounded-2xl border border-erpBorder bg-erpSurface p-5 text-center">
+            <div class="text-lg font-semibold text-erpNavy">Nenhum comunicado</div>
+            <p class="mt-1 text-sm text-erpMuted">Ainda não há comunicados oficiais publicados.</p>
+        </div>
+    <?php else: ?>
+        <div class="space-y-3">
+            <?php foreach ($lista as $item): ?>
+                <?php
+                $id = (int) ($item['id'] ?? 0);
+                $titulo = (string) ($item['titulo'] ?? 'Comunicado');
+                $categoria = (string) ($item['categoria'] ?? 'geral');
+                $publicadoEm = (string) ($item['publicado_em'] ?? '');
+                $leituras = (int) ($item['total_leituras'] ?? 0);
+                $lido = (bool) ($item['lido_pelo_usuario'] ?? false);
+                ?>
+                <a href="/pwa/comunicacao/ler?id=<?= $id ?>" class="block rounded-2xl border border-erpBorder bg-erpSurface p-4 shadow-sm transition hover:border-erpNavy">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <h3 class="font-semibold text-erpNavy truncate"><?= htmlspecialchars($titulo) ?></h3>
+                            <p class="text-xs text-erpMuted truncate">
+                                Categoria: <?= htmlspecialchars($categoria) ?>
+                                <?= $publicadoEm !== '' ? ' · ' . htmlspecialchars($publicadoEm) : '' ?>
+                            </p>
                         </div>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-
-        <div class="text-xs text-slate-500">
-            Observação: isto não é chat. É um canal de avisos estruturados e rastreáveis.
+                        <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold <?= $lido ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' ?>">
+                            <?= $lido ? 'Lido' : 'Não Lido' ?>
+                        </span>
+                    </div>
+                    <div class="mt-3 text-xs text-erpMuted">
+                        Confirmado por <?= $leituras ?> irmão(s).
+                    </div>
+                </a>
+            <?php endforeach; ?>
         </div>
-    </main>
+    <?php endif; ?>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(() => {});
-        }
-    </script>
-</body>
-</html>
+    <div class="text-center text-xs text-erpMuted">
+        Este é um canal de avisos estruturados e rastreáveis, não um chat.
+    </div>
+</div>
+
+<?php
+$pwaContent = ob_get_clean();
+require __DIR__ . '/shell.php';
+?>

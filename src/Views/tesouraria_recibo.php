@@ -1,123 +1,194 @@
 <?php
+declare(strict_types=1);
+
+// #############################################################################
+// LÓGICA DE NEGÓCIO E CONSULTA DE DADOS
+// #############################################################################
+
 $parcelaRecibo = $parcelaRecibo ?? [];
 $configuracaoLoja = $configuracaoLoja ?? [];
-$formatCurrency = static function ($value): string {
-    return number_format((float) $value, 2, ',', '.');
-};
-$nomeLoja = trim((string) ($configuracaoLoja['nome_loja'] ?? ($_SESSION['tenant_name'] ?? 'Loja')));
+
+$formatCurrency = static fn($value): string => 'R$ ' . number_format((float) $value, 2, ',', '.');
+$formatDate = static fn($dateStr): string => !empty($dateStr) ? (new DateTime($dateStr))->format('d/m/Y') : '';
+
+$nomeLoja = trim((string) ($configuracaoLoja['nome_loja'] ?? $_SESSION['tenant_name'] ?? 'Loja'));
 $numeroLoja = trim((string) ($configuracaoLoja['numero_loja'] ?? ''));
-$tituloTratamento = trim((string) ($configuracaoLoja['titulo_tratamento'] ?? 'Aug Resp Loj Simb'));
-$oriente = trim((string) ($configuracaoLoja['oriente'] ?? (($configuracaoLoja['cidade'] ?? 'Arroio do Sal') . ' / ' . ($configuracaoLoja['uf'] ?? 'RS'))));
-$dataFundacao = !empty($configuracaoLoja['data_fundacao']) ? date('d/m/Y', strtotime((string) $configuracaoLoja['data_fundacao'])) : '';
+$tituloTratamento = trim((string) ($configuracaoLoja['titulo_tratamento'] ?? 'Aug∴ Resp∴ Loj∴ Simb∴'));
+$oriente = trim((string) ($configuracaoLoja['oriente'] ?? (($configuracaoLoja['cidade'] ?? 'Cidade') . ' / ' . ($configuracaoLoja['uf'] ?? 'UF'))));
+$dataFundacao = $formatDate($configuracaoLoja['data_fundacao'] ?? '');
+$tesoureiroNome = (string) ($_SESSION['user_name'] ?? 'Tesoureiro');
+
 $nomeIrmao = (string) ($parcelaRecibo['obreiro_nome'] ?? 'Irmão');
 $tituloContribuicao = (string) ($parcelaRecibo['titulo'] ?? 'Recebimento');
 $tipoObrigacao = strtolower((string) ($parcelaRecibo['tipo_obrigacao'] ?? 'outra'));
 $categoriaNome = (string) ($parcelaRecibo['categoria_nome'] ?? '');
 $competencia = (string) ($parcelaRecibo['competencia_label'] ?? '');
 $valorPago = (float) ($parcelaRecibo['valor_previsto'] ?? 0);
-$dataContribuicao = !empty($parcelaRecibo['pago_em']) ? date('d/m/Y', strtotime((string) $parcelaRecibo['pago_em'])) : date('d/m/Y');
+$dataContribuicao = $formatDate($parcelaRecibo['pago_em'] ?? 'now');
 $numeroRecibo = str_pad((string) ($parcelaRecibo['lancamento_id'] ?? $parcelaRecibo['id'] ?? 0), 5, '0', STR_PAD_LEFT);
 
-$campos = [
-    'Contribuicao mensal' => '',
-    'Iniciacao' => '',
-    'Elevacao' => '',
-    'Exaltacao' => '',
-    'Outros recebimentos' => '',
-];
-
+$discriminacao = ['titulo' => 'Outros recebimentos', 'descricao' => trim($tituloContribuicao . ($categoriaNome !== '' ? ' - ' . $categoriaNome : ''))];
 if ($tipoObrigacao === 'mensalidade') {
-    $campos['Contribuicao mensal'] = $competencia !== '' ? 'Ref. ' . $competencia : $tituloContribuicao;
-} elseif (str_contains($tituloContribuicao, 'Inici')) {
-    $campos['Iniciacao'] = $tituloContribuicao;
-} elseif (str_contains($tituloContribuicao, 'Eleva')) {
-    $campos['Elevacao'] = $tituloContribuicao;
-} elseif (str_contains($tituloContribuicao, 'Exalta')) {
-    $campos['Exaltacao'] = $tituloContribuicao;
+    $discriminacao['titulo'] = 'Contribuição mensal';
+    $discriminacao['descricao'] = $competencia !== '' ? 'Referente à competência ' . $competencia : $tituloContribuicao;
+} elseif (stripos($tituloContribuicao, 'Inicia') !== false) {
+    $discriminacao['titulo'] = 'Taxa de Iniciação';
+    $discriminacao['descricao'] = $tituloContribuicao;
+} elseif (stripos($tituloContribuicao, 'Eleva') !== false) {
+    $discriminacao['titulo'] = 'Taxa de Elevação';
+    $discriminacao['descricao'] = $tituloContribuicao;
+} elseif (stripos($tituloContribuicao, 'Exalta') !== false) {
+    $discriminacao['titulo'] = 'Taxa de Exaltação';
+    $discriminacao['descricao'] = $tituloContribuicao;
+}
+
+// #############################################################################
+// CONFIGURAÇÃO DO APP SHELL E RENDERIZAÇÃO DA VIEW
+// #############################################################################
+
+$appShellEyebrow = 'Tesouraria';
+$appShellTitle = 'Recibo Nº ' . htmlspecialchars($numeroRecibo);
+$appShellDescription = 'Recibo de pagamento para impressão ou arquivamento digital.';
+$appShellActiveHref = '/tesouraria/caixa';
+$renderShell = ($_GET['print'] ?? 'false') !== 'true';
+
+if ($renderShell) {
+    require __DIR__ . '/partials/erp_shell_open.php';
 } else {
-    $campos['Outros recebimentos'] = trim($tituloContribuicao . ($categoriaNome !== '' ? ' - ' . $categoriaNome : ''));
+    ?>
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Recibo Tesouraria - Nº <?= htmlspecialchars($numeroRecibo) ?></title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+        <style>
+            body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-family: 'Inter', sans-serif; }
+            .font-serif { font-family: 'Playfair Display', serif; }
+            @media print {
+                .no-print { display: none !important; }
+                body { background-color: white !important; }
+                #recibo-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+                #recibo-paper { box-shadow: none !important; border-radius: 0 !important; border: none !important; }
+                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+        </style>
+    </head>
+    <body class="bg-gray-100">
+    <?php
 }
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recibo Tesouraria</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; }
-        }
-    </style>
-    <style>
-        @media (min-width: 1440px) {
-            .erp-readable {
-                font-size: 1.08rem;
-            }
-            .erp-readable .text-xs,
-            .erp-readable .text-\[11px\] {
-                font-size: 0.92rem !important;
-                line-height: 1.4rem !important;
-            }
-            .erp-readable .text-sm {
-                font-size: 1.03rem !important;
-                line-height: 1.58rem !important;
-            }
-        }
-    </style>
-</head>
-<body class="erp-readable min-h-screen bg-stone-100 p-6 text-slate-900">
-    <div class="no-print mx-auto mb-4 flex max-w-3xl justify-end">
-        <button onclick="window.print()" class="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Imprimir recibo</button>
+
+<div class="max-w-4xl mx-auto" id="recibo-container">
+    <?php if ($renderShell): ?>
+    <div class="no-print mb-6 flex justify-between items-center">
+        <p class="text-sm text-gray-600 dark:text-gray-400">Pronto para impressão.</p>
+        <div class="flex gap-2">
+            <a href="/tesouraria/obrigacoes" class="btn btn-secondary">Voltar</a>
+            <button onclick="window.print()" class="btn btn-primary">Imprimir</button>
+        </div>
     </div>
+    <?php endif; ?>
 
-    <main class="mx-auto max-w-3xl rounded-[2rem] border-[3px] border-stone-800 bg-white p-6 shadow-xl">
-        <div class="flex items-start justify-between gap-6">
-            <div class="max-w-xl">
-                <div class="text-sm font-semibold uppercase tracking-[0.22em]"><?php echo htmlspecialchars($tituloTratamento); ?></div>
-                <div class="mt-2 text-2xl font-bold uppercase"><?php echo htmlspecialchars($nomeLoja . ' n ' . $numeroLoja); ?></div>
-                <div class="mt-2 text-sm">Fundada em <?php echo htmlspecialchars($dataFundacao ?: '--/--/----'); ?></div>
-                <div class="text-sm"><?php echo htmlspecialchars($oriente); ?></div>
-            </div>
-            <div class="min-w-[110px] rounded-[1.5rem] border-2 border-stone-700 px-4 py-3 text-center">
-                <div class="text-xs uppercase tracking-[0.18em] text-slate-700">No</div>
-                <div class="mt-1 text-3xl font-bold text-rose-700"><?php echo htmlspecialchars($numeroRecibo); ?></div>
-            </div>
-        </div>
-
-        <div class="mt-8 grid gap-4">
-            <?php foreach ($campos as $rotulo => $texto): ?>
-                <div class="grid grid-cols-[160px_1fr_120px] items-end gap-3 border-b border-stone-300 pb-2">
-                    <div class="text-base"><?php echo htmlspecialchars($rotulo); ?>:</div>
-                    <div class="min-h-[28px] text-lg"><?php echo htmlspecialchars($texto); ?></div>
-                    <div class="text-right text-lg font-semibold"><?php echo $texto !== '' ? 'R$ ' . $formatCurrency($valorPago) : 'R$'; ?></div>
+    <main class="bg-white rounded-lg shadow-lg border border-gray-200" id="recibo-paper">
+        <div class="p-8 sm:p-10 lg:p-12">
+            <header class="grid grid-cols-[1fr_auto] gap-8 items-start mb-10">
+                <div>
+                    <p class="font-serif text-lg font-bold text-gray-800 tracking-wide"><?= htmlspecialchars($tituloTratamento) ?></p>
+                    <h2 class="mt-1 text-2xl font-bold text-gray-900 uppercase"><?= htmlspecialchars($nomeLoja . ' Nº ' . $numeroLoja) ?></h2>
+                    <p class="mt-2 text-xs text-gray-500">
+                        Fundada em <?= htmlspecialchars($dataFundacao ?: '--/--/----') ?><br>
+                        <?= htmlspecialchars($oriente) ?>
+                    </p>
                 </div>
-            <?php endforeach; ?>
-        </div>
+                <div class="text-right">
+                    <p class="text-sm font-semibold text-gray-500">RECIBO Nº</p>
+                    <p class="text-5xl font-bold text-blue-600 tracking-tighter"><?= htmlspecialchars($numeroRecibo) ?></p>
+                </div>
+            </header>
 
-        <div class="mt-8 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
-            <div>
-                <div class="border-b border-stone-400 pb-2 text-xl uppercase"><?php echo htmlspecialchars($nomeIrmao); ?></div>
-                <div class="mt-2 text-base">Ir.</div>
+            <div class="mb-10">
+                <p class="text-base leading-relaxed text-gray-700">
+                    Recebemos de <strong class="font-semibold text-gray-900"><?= htmlspecialchars($nomeIrmao) ?></strong>,
+                    a importância de <strong class="font-semibold text-gray-900"><?= $formatCurrency($valorPago) ?></strong>,
+                    referente ao que se segue:
+                </p>
             </div>
-            <div class="text-right">
-                <div class="text-3xl font-bold">Total Recebido R$ <?php echo $formatCurrency($valorPago); ?></div>
-            </div>
-        </div>
 
-        <div class="mt-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-            <div class="text-lg">
-                Arroio do Sal, <?php echo htmlspecialchars($dataContribuicao); ?>
+            <div class="border rounded-lg mb-10">
+                <div class="grid grid-cols-[1fr_auto] gap-4 p-4">
+                    <div>
+                        <p class="font-semibold text-gray-800"><?= htmlspecialchars($discriminacao['titulo']) ?></p>
+                        <p class="text-sm text-gray-600"><?= htmlspecialchars($discriminacao['descricao']) ?></p>
+                    </div>
+                    <div class="text-right font-semibold text-gray-800">
+                        <?= $formatCurrency($valorPago) ?>
+                    </div>
+                </div>
             </div>
-            <div class="min-w-[240px] text-center">
-                <div class="border-b border-stone-500 pb-2 text-lg uppercase"><?php echo htmlspecialchars($tesoureiroNome ?? 'Tesoureiro'); ?></div>
-                <div class="mt-2 text-base">Tesoureiro</div>
+
+            <div class="flex justify-end mb-12">
+                <div class="text-right w-64">
+                    <p class="text-sm font-medium text-gray-500">TOTAL RECEBIDO</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-1"><?= $formatCurrency($valorPago) ?></p>
+                </div>
             </div>
+
+            <footer class="grid sm:grid-cols-2 gap-12 items-end pt-8 border-t border-gray-200">
+                <div class="text-left">
+                    <p class="text-sm text-gray-600"><?= htmlspecialchars($configuracaoLoja['cidade'] ?? 'Cidade') ?>, <?= htmlspecialchars($dataContribuicao) ?></p>
+                </div>
+                <div class="text-center">
+                    <div class="border-b-2 border-gray-400 border-dotted pb-2 w-full max-w-xs mx-auto"></div>
+                    <p class="mt-2 text-sm font-semibold text-gray-800"><?= htmlspecialchars($tesoureiroNome) ?></p>
+                    <p class="text-xs text-gray-600">Tesoureiro</p>
+                </div>
+            </footer>
         </div>
     </main>
-</body>
-</html>
+</div>
+
+<?php if ($renderShell) { ?>
+<style>
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        transition: background-color 0.2s ease, color 0.2s ease;
+        text-decoration: none;
+    }
+    .btn-primary {
+        background-color: #2563eb;
+        color: #ffffff;
+    }
+    .btn-primary:hover {
+        background-color: #1d4ed8;
+    }
+    .btn-secondary {
+        background-color: #e5e7eb;
+        color: #1f2937;
+    }
+    .btn-secondary:hover {
+        background-color: #d1d5db;
+    }
+</style>
+<?php
+    require __DIR__ . '/partials/erp_shell_close.php';
+} else {
+    ?>
+    </body>
+    </html>
+    <?php
+}
+?>
 
 
