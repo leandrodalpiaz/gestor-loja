@@ -32,8 +32,8 @@ foreach ($appShellSidebarSections as $section) {
     <style>
         /* Estabilização local do shell ERP (fallback sem Tailwind). */
         body { background: var(--erp-bg); color: var(--erp-text); }
-        body > div[x-data] { min-height: 100vh; }
-        body > div[x-data] > aside {
+        .erp-app-shell { min-height: 100vh; }
+        .erp-app-shell > aside {
             position: fixed;
             top: 0;
             left: 0;
@@ -44,18 +44,19 @@ foreach ($appShellSidebarSections as $section) {
             overflow: hidden;
             z-index: 30;
         }
-        body > div[x-data] > aside > div { height: 100%; display: flex; flex-direction: column; }
-        body > div[x-data] > div { min-width: 0; margin-left: 280px; }
-        body > div[x-data] > div > header {
+        .erp-app-shell > aside > div { height: 100%; display: flex; flex-direction: column; }
+        .erp-app-main { min-width: 0; min-height: 100vh; margin-left: 280px; }
+        .erp-app-main > header {
             position: sticky;
             top: 0;
             z-index: 20;
             background: var(--erp-surface);
             border-bottom: 1px solid var(--erp-border);
         }
-        body > div[x-data] > div > main {
+        .erp-app-main > main {
             padding: 24px;
             padding-bottom: 96px;
+            width: 100%;
         }
         nav a, aside a { text-decoration: none; }
         aside svg { width: 20px; height: 20px; flex: 0 0 20px; }
@@ -69,12 +70,12 @@ foreach ($appShellSidebarSections as $section) {
         aside nav a[class*="bg-erp-navy"] { background: var(--erp-brand); color: #fff; }
         header svg { width: 22px; height: 22px; }
         @media (max-width: 1023px) {
-            body > div[x-data] > aside { transform: translateX(-100%); }
-            body > div[x-data] > div { margin-left: 0; }
-            body > div[x-data] > div > main { padding: 16px; padding-bottom: 96px; }
+            .erp-app-shell > aside { transform: translateX(-100%); }
+            .erp-app-main { margin-left: 0; }
+            .erp-app-main > main { padding: 16px; padding-bottom: 96px; }
         }
     </style>
-    <div x-data="{ sidebarOpen: false }" class="min-h-screen lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
+    <div x-data="{ sidebarOpen: false }" class="erp-app-shell min-h-screen">
         <!-- Sidebar -->
         <aside 
             class="fixed inset-y-0 left-0 z-30 w-[280px] transform border-r border-erp-border bg-erp-surface transition-transform duration-300 ease-in-out lg:translate-x-0"
@@ -129,7 +130,7 @@ foreach ($appShellSidebarSections as $section) {
         </aside>
 
         <!-- Main content -->
-        <div class="min-w-0 lg:pl-[280px]">
+        <div class="erp-app-main min-w-0">
             <header class="sticky top-0 z-20 border-b border-erp-border bg-erp-surface/80 backdrop-blur-sm">
                 <div class="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
                     <!-- Mobile sidebar toggle -->

@@ -7,8 +7,8 @@ namespace App\Core;
 final class DashboardSections
 {
     /**
-     * Monta secoes do menu por cargo responsavel (dono do modulo),
-     * filtrando cada item por permissao do usuario autenticado.
+     * Monta seções do menu por cargo responsável (dono do módulo),
+     * filtrando cada item por permissão do usuário autenticado.
      */
     public static function build(callable $can, bool $isSystemAdmin): array
     {
@@ -16,20 +16,20 @@ final class DashboardSections
             [
                 'titulo' => 'Obreiro',
                 'itens' => [
-                    ['label' => 'Minhas Obrigacoes', 'href' => '/financeiro/minhas-obrigacoes', 'permission' => 'financeiro.self'],
+                    ['label' => 'Minhas Obrigações', 'href' => '/financeiro/minhas-obrigacoes', 'permission' => 'financeiro.self'],
                 ],
             ],
             [
-                'titulo' => 'Veneravel Mestre',
+                'titulo' => 'Venerável Mestre',
                 'itens' => [
-                    ['label' => 'Painel do Veneravel', 'href' => '/veneravel', 'permission' => 'veneravel.manage'],
+                    ['label' => 'Painel do Venerável', 'href' => '/veneravel', 'permission' => 'veneravel.manage'],
                 ],
             ],
             [
                 'titulo' => 'Secretaria',
                 'itens' => [
                     ['label' => 'Painel da Secretaria', 'href' => '/secretaria', 'permission' => 'secretaria.manage'],
-                    ['label' => 'Votacoes', 'href' => '/secretaria/votacao', 'permission' => 'secretaria.manage'],
+                    ['label' => 'Votações', 'href' => '/secretaria/votacao', 'permission' => 'secretaria.manage'],
                     ['label' => 'Obreiros', 'href' => '/obreiros', 'permission' => 'obreiros.view'],
                     ['label' => 'Cadastrar Obreiro', 'href' => '/obreiros/novo', 'permission' => 'obreiros.manage'],
                 ],
@@ -37,34 +37,34 @@ final class DashboardSections
             [
                 'titulo' => 'Chancelaria',
                 'itens' => [
-                    ['label' => 'Sessao da Chancelaria', 'href' => '/chanceler/sessao', 'permission' => 'chancelaria.manage'],
-                    ['label' => 'Efemerides', 'href' => '/chancelaria/efemerides', 'permission' => 'chancelaria.manage'],
+                    ['label' => 'Sessão da Chancelaria', 'href' => '/chanceler/sessao', 'permission' => 'chancelaria.manage'],
+                    ['label' => 'Efemérides', 'href' => '/chancelaria/efemerides', 'permission' => 'chancelaria.manage'],
                 ],
             ],
             [
                 'titulo' => 'Tesouraria',
                 'itens' => [
                     ['label' => 'Caixa', 'href' => '/tesouraria/caixa', 'permission' => 'tesouraria.manage'],
-                    ['label' => 'Obrigacoes', 'href' => '/tesouraria/obrigacoes', 'permission' => 'tesouraria.manage'],
+                    ['label' => 'Obrigações', 'href' => '/tesouraria/obrigacoes', 'permission' => 'tesouraria.manage'],
                     ['label' => 'Comprovantes', 'href' => '/tesouraria/comprovantes', 'permission' => 'tesouraria.manage'],
                 ],
             ],
             [
                 'titulo' => 'Hospitaleiro',
                 'itens' => [
-                    ['label' => 'Assistencia', 'href' => '/assistencia', 'permission' => 'hospitaleiro.manage'],
+                    ['label' => 'Assistência', 'href' => '/assistencia', 'permission' => 'hospitaleiro.manage'],
                 ],
             ],
             [
                 'titulo' => 'Primeiro Vigilante',
                 'itens' => [
-                    ['label' => 'Painel do 1o Vigilante', 'href' => '/primeiro-vigilante', 'permission' => 'vigilancia.primeiro.manage'],
+                    ['label' => 'Painel do 1º Vigilante', 'href' => '/primeiro-vigilante', 'permission' => 'vigilancia.primeiro.manage'],
                 ],
             ],
             [
                 'titulo' => 'Segundo Vigilante',
                 'itens' => [
-                    ['label' => 'Painel do 2o Vigilante', 'href' => '/segundo-vigilante', 'permission' => 'vigilancia.segundo.manage'],
+                    ['label' => 'Painel do 2º Vigilante', 'href' => '/segundo-vigilante', 'permission' => 'vigilancia.segundo.manage'],
                 ],
             ],
             [
@@ -90,24 +90,24 @@ final class DashboardSections
                 'titulo' => 'Biblioteca',
                 'itens' => [
                     ['label' => 'Acervo', 'href' => '/biblioteca', 'permission' => 'biblioteca.self'],
-                    ['label' => 'Meus Emprestimos', 'href' => '/biblioteca/meus-emprestimos', 'permission' => 'biblioteca.self'],
-                    ['label' => 'Gerenciar Emprestimos', 'href' => '/biblioteca/emprestimos', 'permission' => 'biblioteca.manage'],
-                    ['label' => 'Classificacao', 'href' => '/biblioteca/classificar', 'permission' => 'biblioteca.classificar'],
+                    ['label' => 'Meus Empréstimos', 'href' => '/biblioteca/meus-emprestimos', 'permission' => 'biblioteca.self'],
+                    ['label' => 'Gerenciar Empréstimos', 'href' => '/biblioteca/emprestimos', 'permission' => 'biblioteca.manage'],
+                    ['label' => 'Classificação', 'href' => '/biblioteca/classificar', 'permission' => 'biblioteca.classificar'],
                 ],
             ],
             [
-                'titulo' => 'Administracao',
+                'titulo' => 'Administração',
                 'itens' => [
                     ['label' => 'Nominata e Cargos', 'href' => '/admin/cargos', 'permission' => 'admin.cargos.view'],
-                    ['label' => 'Configuracoes da Loja', 'href' => '/admin/loja', 'permission' => 'admin.loja.view'],
-                    ['label' => 'Gestao de Acessos', 'href' => '/admin/acessos', 'permission' => 'access.manage'],
-                    ['label' => 'Conteudo Publico', 'href' => '/admin/conteudo-publico', 'permission' => 'public_content.manage'],
+                    ['label' => 'Configurações da Loja', 'href' => '/admin/loja', 'permission' => 'admin.loja.view'],
+                    ['label' => 'Gestão de Acessos', 'href' => '/admin/acessos', 'permission' => 'access.manage'],
+                    ['label' => 'Conteúdo Público', 'href' => '/admin/conteudo-publico', 'permission' => 'public_content.manage'],
                 ],
             ],
             [
                 'titulo' => 'Sistema',
                 'itens' => [
-                    ['label' => 'Painel Tecnico', 'href' => '/sistema', 'system_only' => true],
+                    ['label' => 'Painel Técnico', 'href' => '/sistema', 'system_only' => true],
                 ],
             ],
         ];
@@ -144,7 +144,7 @@ final class DashboardSections
 
             if ($items !== []) {
                 $sections[] = [
-                    'titulo' => (string) ($section['titulo'] ?? 'Secao'),
+                    'titulo' => (string) ($section['titulo'] ?? 'Seção'),
                     'itens' => $items,
                 ];
             }
