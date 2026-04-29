@@ -20,10 +20,19 @@ $shortName = 'Gestor';
 $themeColor = '#1E3A5F';
 $backgroundColor = '#F4F7FB';
 
-$iconSvg = "/assets/tenants/{$tenantSlug}/logo.svg";
-if (!is_file(__DIR__ . $iconSvg)) {
-    $iconSvg = '/assets/placeholders/logo-loja.svg';
-}
+$tenantBase = '/assets/tenants/' . rawurlencode($tenantSlug) . '/';
+$logo192 = $tenantBase . 'logo-192.png';
+$logo512 = $tenantBase . 'logo-512.png';
+$logoPng = $tenantBase . 'logo.png';
+$logoSvg = $tenantBase . 'logo.svg';
+
+$icon192 = is_file(__DIR__ . $logo192)
+    ? $logo192
+    : (is_file(__DIR__ . $logoPng) ? $logoPng : '/assets/pwa/icon-192.png');
+$icon512 = is_file(__DIR__ . $logo512)
+    ? $logo512
+    : (is_file(__DIR__ . $logoPng) ? $logoPng : '/assets/pwa/icon-512.png');
+$iconSvg = is_file(__DIR__ . $logoSvg) ? $logoSvg : '/assets/placeholders/logo-loja.svg';
 
 echo json_encode([
     'name' => $name,
@@ -35,15 +44,15 @@ echo json_encode([
     'background_color' => $backgroundColor,
     'icons' => [
         [
-            'src' => '/assets/pwa/icon-192.png',
+            'src' => $icon192,
             'sizes' => '192x192',
-            'type' => 'image/png',
+            'type' => str_ends_with($icon192, '.png') ? 'image/png' : 'image/svg+xml',
             'purpose' => 'any maskable',
         ],
         [
-            'src' => '/assets/pwa/icon-512.png',
+            'src' => $icon512,
             'sizes' => '512x512',
-            'type' => 'image/png',
+            'type' => str_ends_with($icon512, '.png') ? 'image/png' : 'image/svg+xml',
             'purpose' => 'any maskable',
         ],
         [

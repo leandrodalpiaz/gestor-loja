@@ -227,7 +227,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 </div>
 
-<style>
+<style type="text/tailwindcss">
     .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
     .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
     .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }

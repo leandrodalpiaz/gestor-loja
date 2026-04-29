@@ -7,6 +7,22 @@ $appShellActions = is_array($appShellActions ?? null) ? $appShellActions : [];
 $appShellSidebarSections = is_array($appShellSidebarSections ?? null) ? $appShellSidebarSections : [];
 $appShellActiveHref = (string) ($appShellActiveHref ?? '');
 $appShellUserLabel = (string) ($appShellUserLabel ?? ($_SESSION['usuario_nome'] ?? 'Operador'));
+$tenantSlug = trim((string) ($_SESSION['tenant_slug'] ?? ''));
+$tenantLogo = \App\Core\Tenant\TenantAssetResolver::resolveLogo($tenantSlug);
+$appShellBottomNavItems = [];
+foreach ($appShellSidebarSections as $section) {
+    foreach (($section['items'] ?? []) as $item) {
+        $href = (string) ($item['href'] ?? '');
+        $label = (string) ($item['label'] ?? '');
+        if ($href === '' || $label === '' || $href === '/logout') {
+            continue;
+        }
+        $appShellBottomNavItems[] = ['href' => $href, 'label' => $label];
+        if (count($appShellBottomNavItems) >= 5) {
+            break 2;
+        }
+    }
+}
 ?>
 <body class="min-h-screen bg-erp-bg font-sans text-erp-text antialiased">
     <div x-data="{ sidebarOpen: false }" class="min-h-screen lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
@@ -18,8 +34,12 @@ $appShellUserLabel = (string) ($appShellUserLabel ?? ($_SESSION['usuario_nome'] 
             <div class="flex h-full flex-col">
                 <div class="border-b border-erp-border px-6 py-5">
                     <div class="flex items-center gap-3">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-erp-navy text-white">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9V3m-3.5 14.5a3 3 0 01-3-3m0 0a3 3 0 013-3m-3 3h3m-3 3a3 3 0 01-3-3m0 0a3 3 0 013-3m-3 3H6.5m11 3.5a3 3 0 01-3-3m0 0a3 3 0 013-3m-3 3h3m-3 3a3 3 0 01-3-3m0 0a3 3 0 013-3m-3 3H14.5" /></svg>
+                        <div class="flex h-10 w-10 items-center justify-center rounded-lg border border-erp-border bg-erp-surface-2 overflow-hidden">
+                            <?php if ($tenantLogo !== ''): ?>
+                                <img src="<?= htmlspecialchars($tenantLogo) ?>" alt="Logo da Loja" class="h-9 w-9 object-contain">
+                            <?php else: ?>
+                                <span class="text-sm font-semibold text-erp-navy">GL</span>
+                            <?php endif; ?>
                         </div>
                         <div>
                             <div class="text-sm font-semibold text-erp-navy">Gestor-Loja</div>
@@ -78,7 +98,7 @@ $appShellUserLabel = (string) ($appShellUserLabel ?? ($_SESSION['usuario_nome'] 
                 </div>
             </header>
 
-            <main class="px-4 py-6 sm:px-6 lg:px-8">
+            <main class="px-4 py-6 pb-24 sm:px-6 lg:px-8 lg:pb-8">
                 <!-- Page Header -->
                 <div class="mb-6">
                     <?php if ($appShellEyebrow !== ''): ?>

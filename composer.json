@@ -12,6 +12,7 @@
         }
     },
     "scripts": {
-        "check:dashboard-sections": "php scripts/check_dashboard_sections.php"
+        "check:dashboard-sections": "php scripts/check_dashboard_sections.php",
+        "pwa:icons": ".\\.venv\\Scripts\\python.exe scripts/generate_pwa_icons.py"
     }
 }

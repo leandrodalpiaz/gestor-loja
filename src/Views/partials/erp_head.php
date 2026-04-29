@@ -1,12 +1,22 @@
 <?php
 $erpPageTitle = $erpPageTitle ?? 'Gestor-Loja';
+$tenantSlug = trim((string) ($_SESSION['tenant_slug'] ?? ''));
+$tenantLogo = \App\Core\Tenant\TenantAssetResolver::resolveLogo($tenantSlug);
+$appleTouchIcon = $tenantLogo !== '' ? $tenantLogo : '/assets/pwa/icon-192.png';
 ?>
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($erpPageTitle) ?></title>
+    <meta name="theme-color" content="#1E3A5F">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Gestor Loja">
+    <link rel="manifest" href="/manifest.php">
+    <link rel="apple-touch-icon" href="<?= htmlspecialchars($appleTouchIcon) ?>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/assets/css/erp_design_system.css">
     <script>
@@ -17,8 +27,11 @@ $erpPageTitle = $erpPageTitle ?? 'Gestor-Loja';
                         'erp-navy': 'var(--erp-navy)',
                         'erp-gold': 'var(--erp-gold)',
                         'erp-accent': 'var(--erp-accent)',
+                        'erp-brand': 'var(--erp-brand)',
+                        'erp-accent-strong': 'var(--erp-accent-strong)',
                         'erp-bg': 'var(--erp-bg)',
                         'erp-surface': 'var(--erp-surface)',
+                        'erp-surface-2': 'var(--erp-surface-2)',
                         'erp-border': 'var(--erp-border)',
                         'erp-text': 'var(--erp-text)',
                         'erp-muted': 'var(--erp-muted)',
@@ -34,4 +47,20 @@ $erpPageTitle = $erpPageTitle ?? 'Gestor-Loja';
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        (function () {
+            try {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                }
+            } catch (e) {}
+
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function () {
+                    navigator.serviceWorker.register('/sw.js').catch(function () {});
+                });
+            }
+        })();
+    </script>
 </head>

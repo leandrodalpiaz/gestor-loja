@@ -238,3 +238,23 @@ Para manter o bot responsivo em producao:
 2. Validar `APP_URL` com HTTPS e dominio publico correto.
 3. Confirmar resposta `200` em `GET /login` e `POST /webhook.php`.
 4. Evitar cliques repetidos no mesmo botao durante carregamento.
+
+## PWA Icons por Loja
+
+Para gerar automaticamente `logo-192.png` e `logo-512.png` para cada loja (tenant):
+
+```powershell
+python scripts/generate_pwa_icons.py
+```
+
+Para uma loja espec?fica:
+
+```powershell
+python scripts/generate_pwa_icons.py --tenant loja-teste
+```
+
+Notas:
+- Se houver `logo.svg`, o script tenta converter via CairoSVG.
+- Se a DLL nativa do Cairo n?o estiver dispon?vel no Windows, o script faz fallback para `logo.png` (quando existir).
+- O `manifest.php` j? prioriza `logo-192.png` e `logo-512.png` automaticamente.
+
