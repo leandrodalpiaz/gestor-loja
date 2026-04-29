@@ -256,6 +256,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
     .list-item-action { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--erp-text); background: var(--erp-surface-2); text-decoration: none; border: 1px solid var(--erp-border); }
     .list-item-action:hover { filter: brightness(0.98); }
+    .list-item-action svg { width: 16px; height: 16px; min-width: 16px; flex: 0 0 16px; display: block; }
     .list-item-condensed { background: var(--erp-surface-2); padding: 12px; border-radius: 10px; border: 1px solid var(--erp-border); }
 </style>
 
