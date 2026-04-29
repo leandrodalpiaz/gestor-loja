@@ -227,36 +227,36 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 </div>
 
-<style type="text/tailwindcss">
-    .card { @apply bg-white dark:bg-gray-800 rounded-lg shadow-md; }
-    .card-header { @apply p-5 border-b border-gray-200 dark:border-gray-700; }
-    .card-title { @apply text-lg font-bold text-gray-800 dark:text-gray-100; }
-    .card-subtitle { @apply text-sm text-gray-500 dark:text-gray-400 mt-1; }
-    .card-body { @apply p-5; }
+<style>
+    .card { background: var(--erp-surface); border: 1px solid var(--erp-border); border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+    .card-header { padding: 16px; border-bottom: 1px solid var(--erp-border); }
+    .card-title { font-size: 18px; font-weight: 700; color: var(--erp-text); margin: 0; }
+    .card-subtitle { font-size: 13px; color: var(--erp-muted); margin-top: 4px; }
+    .card-body { padding: 16px; }
 
-    .card-metric { @apply bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md flex flex-col; }
-    .card-metric-label { @apply text-sm font-medium text-gray-500 dark:text-gray-400; }
-    .card-metric-value { @apply text-2xl font-bold text-gray-900 dark:text-white mt-1; }
-    .card-metric-context { @apply text-sm text-gray-500 dark:text-gray-400 mt-1; }
+    .card-metric { background: var(--erp-surface); border: 1px solid var(--erp-border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; }
+    .card-metric-label { font-size: 13px; color: var(--erp-muted); font-weight: 600; }
+    .card-metric-value { font-size: 22px; line-height: 1.2; color: var(--erp-text); font-weight: 700; margin-top: 4px; }
+    .card-metric-context { font-size: 13px; color: var(--erp-muted); margin-top: 4px; }
 
-    .alert { @apply p-4 rounded-md text-sm; }
-    .alert-success { @apply bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300; }
-    .alert-danger { @apply bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300; }
-    .alert-info { @apply bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300; }
+    .alert { padding: 12px; border-radius: 8px; font-size: 13px; border: 1px solid var(--erp-border); }
+    .alert-success { background: #ecfdf3; color: #166534; border-color: #86efac; }
+    .alert-danger { background: #fff1f2; color: #9f1239; border-color: #fecdd3; }
+    .alert-info { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
 
-    .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 transition-colors; }
-    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500; }
-    .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; border: 1px solid transparent; text-decoration: none; cursor: pointer; }
+    .btn-primary { background: var(--erp-brand); color: #fff; }
+    .btn-secondary { background: var(--erp-surface-2); color: var(--erp-text); border-color: var(--erp-border); }
 
-    .badge-status-success { @apply inline-block px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full dark:bg-green-900/30 dark:text-green-300; }
-    .badge-status-danger { @apply inline-block px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full dark:bg-red-900/30 dark:text-red-300; }
-    .badge-status-warning { @apply inline-block px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full dark:bg-yellow-900/30 dark:text-yellow-300; }
-    .badge-status-neutral { @apply inline-block px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full dark:bg-gray-700 dark:text-gray-300; }
+    .badge-status-success, .badge-status-danger, .badge-status-warning, .badge-status-neutral { display: inline-block; padding: 3px 8px; font-size: 11px; font-weight: 700; border-radius: 999px; }
+    .badge-status-success { color: #166534; background: #dcfce7; }
+    .badge-status-danger { color: #991b1b; background: #fee2e2; }
+    .badge-status-warning { color: #92400e; background: #fef3c7; }
+    .badge-status-neutral { color: #374151; background: #e5e7eb; }
 
-    .list-item-action { @apply flex items-center justify-between p-3 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-300 transition-colors; }
-    .list-item-action svg { @apply opacity-0 group-hover:opacity-100 transition-opacity; }
-    
-    .list-item-condensed { @apply bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700; }
+    .list-item-action { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--erp-text); background: var(--erp-surface-2); text-decoration: none; border: 1px solid var(--erp-border); }
+    .list-item-action:hover { filter: brightness(0.98); }
+    .list-item-condensed { background: var(--erp-surface-2); padding: 12px; border-radius: 10px; border: 1px solid var(--erp-border); }
 </style>
 
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
