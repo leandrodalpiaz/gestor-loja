@@ -3,6 +3,7 @@ $erpPageTitle = $erpPageTitle ?? 'Gestor-Loja';
 $tenantSlug = trim((string) ($_SESSION['tenant_slug'] ?? ''));
 $tenantLogo = \App\Core\Tenant\TenantAssetResolver::resolveLogo($tenantSlug);
 $appleTouchIcon = $tenantLogo !== '' ? $tenantLogo : '/assets/pwa/icon-192.png';
+$GLOBALS['gestor_loja_erp_head_rendered'] = true;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR" class="h-full">

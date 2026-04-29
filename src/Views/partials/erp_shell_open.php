@@ -1,4 +1,8 @@
 <?php
+if (empty($GLOBALS['gestor_loja_erp_head_rendered'])) {
+    require __DIR__ . '/erp_head.php';
+}
+
 // Normaliza variaveis esperadas pelos templates ERP.
 $appShellEyebrow = (string) ($appShellEyebrow ?? '');
 $appShellTitle = (string) ($appShellTitle ?? 'Painel');
