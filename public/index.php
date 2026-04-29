@@ -474,7 +474,6 @@ $syncSessionRoles = static function (?array $usuario = null) use ($normalizeRole
 
     $slugsEfetivos = array_values(array_unique($slugs));
 
-    // Obs.: não forçar papel-base aqui para não ampliar permissões além do necessário.
     if ($isSystemAdmin) {
         if (!in_array('admin', $slugsEfetivos, true)) {
             $slugsEfetivos[] = 'admin';
@@ -484,6 +483,11 @@ $syncSessionRoles = static function (?array $usuario = null) use ($normalizeRole
             $slugsEfetivos,
             static fn (string $slug): bool => $slug !== 'admin'
         ));
+
+        // Regra de acesso: todo obreiro autenticado herda o papel-base "obreiro".
+        if (!in_array('obreiro', $slugsEfetivos, true)) {
+            $slugsEfetivos[] = 'obreiro';
+        }
     }
 
     $fallbackEfetivo = $fallback;

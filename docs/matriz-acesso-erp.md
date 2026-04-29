@@ -14,6 +14,33 @@ Principios:
 
 - manter compatibilidade com web, Telegram e miniapps
 
+## Regra oficial de organizacao visual do dashboard
+
+Esta regra define somente organizacao visual. Nao altera RBAC.
+
+1. Cada funcao/rota do menu pertence a uma secao prioritaria (cargo responsavel pela area).
+2. A funcao deve aparecer uma unica vez no menu (sem duplicacao em secoes diferentes).
+3. Se outro cargo tiver permissao para a mesma funcao, ele acessa essa funcao na mesma secao prioritaria.
+4. Exibicao de item e sempre por permissao efetiva da sessao, nunca por hardcode de cargo na view.
+5. O cargo-base "obreiro" concentra apenas funcoes comuns (pessoais), sem absorver funcoes tecnicas de outros modulos.
+
+### Ordem oficial de prioridade das secoes
+
+1. Obreiro
+2. Veneravel Mestre
+3. Secretaria
+4. Chancelaria
+5. Tesouraria
+6. Hospitaleiro
+7. Primeiro Vigilante
+8. Segundo Vigilante
+9. Orador
+10. Mestre de Banquetes
+11. Mestre de Harmonia
+12. Biblioteca
+13. Administracao
+14. Sistema (somente admin tecnico)
+
 ## Niveis de acesso
 
 ### 1. Comum a todos

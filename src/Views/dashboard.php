@@ -24,28 +24,7 @@ $showAllPanels = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VAL
 $dashboardPermissions = isset($dashboardPermissions) && is_array($dashboardPermissions) ? $dashboardPermissions : [];
 $dashboardCan = static fn (string $p): bool => $showAllPanels || (bool) ($dashboardPermissions[$p] ?? false);
 
-$secoesPermitidas = [
-    'veneravel' => $dashboardCan('veneravel.manage'),
-    'chancelaria' => $dashboardCan('chancelaria.manage'),
-    'secretaria' => $dashboardCan('secretaria.manage'),
-    'orador' => $dashboardCan('orador.view'),
-    'mestre_banquetes' => $dashboardCan('mestre_banquetes.manage'),
-    'hospitaleiro' => $dashboardCan('hospitaleiro.manage'),
-    'mestre_harmonia' => $dashboardCan('mestre_harmonia.manage'),
-    'primeiro_vigilante' => $dashboardCan('vigilancia.primeiro.manage'),
-    'segundo_vigilante' => $dashboardCan('vigilancia.segundo.manage'),
-    'tesouraria' => $dashboardCan('tesouraria.manage'),
-    'tesouraria_pessoal' => $dashboardCan('financeiro.self'),
-    'biblioteca' => $dashboardCan('biblioteca.self') || $dashboardCan('biblioteca.manage') || $dashboardCan('biblioteca.classificar'),
-    'obreiros' => $dashboardCan('obreiros.view'),
-    'admin' => $dashboardCan('admin.cargos.view') || $dashboardCan('admin.loja.view'),
-    'sistema' => $isSystemAdmin,
-];
-
-$routerClass = '\\App\\Core\\Router';
-$secoes = (class_exists($routerClass) && method_exists($routerClass, 'getDashboardSections'))
-    ? $routerClass::getDashboardSections($secoesPermitidas)
-    : [];
+$secoes = \App\Core\DashboardSections::build($dashboardCan, $isSystemAdmin);
 
 $dashboardConfiguracaoLoja = isset($dashboardConfiguracaoLoja) && is_array($dashboardConfiguracaoLoja) ? $dashboardConfiguracaoLoja : [];
 $dashboardNomeLoja = trim((string) ($dashboardConfiguracaoLoja['nome_loja'] ?? ($_SESSION['tenant_name'] ?? 'Loja Maçônica')));

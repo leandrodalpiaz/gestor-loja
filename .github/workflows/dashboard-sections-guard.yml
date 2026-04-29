@@ -1,0 +1,27 @@
+name: Dashboard Sections Guard
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  dashboard-sections-guard:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Validate composer file
+        run: composer validate --no-check-publish
+
+      - name: Run dashboard sections regression guard
+        run: composer run check:dashboard-sections

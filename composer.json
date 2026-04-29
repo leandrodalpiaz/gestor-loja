@@ -10,5 +10,8 @@
         "psr-4": {
             "App\\": "src/"
         }
+    },
+    "scripts": {
+        "check:dashboard-sections": "php scripts/check_dashboard_sections.php"
     }
 }
