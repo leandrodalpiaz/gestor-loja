@@ -55,6 +55,7 @@ class Obreiro
 
     private PDO $db;
     private ?bool $suportaLojaId = null;
+    private array $suportaColunaCache = [];
 
     public function __construct()
     {
@@ -174,6 +175,40 @@ class Obreiro
         return $this->suportaLojaId;
     }
 
+    private function suportaColuna(string $coluna): bool
+    {
+        $coluna = strtolower(trim($coluna));
+        if ($coluna === '') {
+            return false;
+        }
+
+        if (array_key_exists($coluna, $this->suportaColunaCache)) {
+            return (bool) $this->suportaColunaCache[$coluna];
+        }
+
+        $stmt = $this->db->prepare(
+            "SELECT 1
+             FROM information_schema.columns
+             WHERE table_schema = 'public'
+               AND table_name = 'obreiros'
+               AND column_name = :coluna
+             LIMIT 1"
+        );
+        $stmt->execute(['coluna' => $coluna]);
+        $this->suportaColunaCache[$coluna] = (bool) $stmt->fetchColumn();
+
+        return (bool) $this->suportaColunaCache[$coluna];
+    }
+
+    private function aplicarExclusaoManualEmSql(string &$sql, array &$params): void
+    {
+        // Exclusão controlada pelo usuário via banco (não quebra vínculos por ID).
+        // Se a coluna existir, registros marcados não aparecem em listagens/efemérides.
+        if ($this->suportaColuna('excluir_em_listas')) {
+            $sql .= " AND COALESCE(excluir_em_listas, false) = false";
+        }
+    }
+
     /**
      * Atualiza apenas o cargo legado de um obreiro pelo ID.
      * Mantido por compatibilidade com telas antigas.
@@ -285,6 +320,7 @@ class Obreiro
                     WHERE ativo = true";
         }
 
+        $this->aplicarExclusaoManualEmSql($sql, $params);
         $this->aplicarExclusaoSystemAdminsEmSql($sql, $params);
         $this->aplicarSanitizacaoObreirosEmSql($sql, $params);
 
@@ -325,6 +361,7 @@ class Obreiro
                           )";
         }
 
+        $this->aplicarExclusaoManualEmSql($sql, $params);
         $this->aplicarExclusaoSystemAdminsEmSql($sql, $params);
         $this->aplicarSanitizacaoObreirosEmSql($sql, $params);
 
@@ -350,6 +387,7 @@ class Obreiro
             $params = [];
         }
 
+        $this->aplicarExclusaoManualEmSql($sql, $params);
         $situacaoFiltroInformado = trim((string) ($filtros['situacao'] ?? ''));
 
         $busca = trim((string) ($filtros['busca'] ?? ''));
@@ -506,42 +544,59 @@ class Obreiro
               AND loja_id = :loja_id',
                 $sql
             );
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute(['loja_id' => $this->obterLojaAtualId()]);
+            $params = ['loja_id' => $this->obterLojaAtualId()];
         } else {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute();
+            $params = [];
         }
+
+        $this->aplicarExclusaoManualEmSql($sql, $params);
+        $this->aplicarExclusaoSystemAdminsEmSql($sql, $params);
+        $this->aplicarSanitizacaoObreirosEmSql($sql, $params);
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function buscarPorAniversario($data): array
     {
+        $params = [];
         if ($this->suportaLojaId()) {
-            $sql = "SELECT * FROM obreiros WHERE loja_id = ? AND TO_CHAR(data_nascimento_civil, 'MM-DD') = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$this->obterLojaAtualId(), $data]);
+            $sql = "SELECT * FROM obreiros WHERE loja_id = :loja_id AND TO_CHAR(data_nascimento_civil, 'MM-DD') = :data";
+            $params['loja_id'] = $this->obterLojaAtualId();
         } else {
-            $sql = "SELECT * FROM obreiros WHERE TO_CHAR(data_nascimento_civil, 'MM-DD') = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$data]);
+            $sql = "SELECT * FROM obreiros WHERE TO_CHAR(data_nascimento_civil, 'MM-DD') = :data";
         }
+
+        $params['data'] = $data;
+        $this->aplicarExclusaoManualEmSql($sql, $params);
+        $this->aplicarExclusaoSystemAdminsEmSql($sql, $params);
+        $this->aplicarSanitizacaoObreirosEmSql($sql, $params);
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function buscarPorDatasMaconicas($data): array
     {
+        $params = [];
         if ($this->suportaLojaId()) {
-            $sql = "SELECT nome, 'Iniciacao' as tipo, data_iniciacao as data FROM obreiros WHERE loja_id = ? AND TO_CHAR(data_iniciacao, 'MM-DD') = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$this->obterLojaAtualId(), $data]);
+            $sql = "SELECT nome, 'Iniciacao' as tipo, data_iniciacao as data FROM obreiros WHERE loja_id = :loja_id AND TO_CHAR(data_iniciacao, 'MM-DD') = :data";
+            $params['loja_id'] = $this->obterLojaAtualId();
         } else {
-            $sql = "SELECT nome, 'Iniciacao' as tipo, data_iniciacao as data FROM obreiros WHERE TO_CHAR(data_iniciacao, 'MM-DD') = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$data]);
+            $sql = "SELECT nome, 'Iniciacao' as tipo, data_iniciacao as data FROM obreiros WHERE TO_CHAR(data_iniciacao, 'MM-DD') = :data";
         }
+
+        $params['data'] = $data;
+        $this->aplicarExclusaoManualEmSql($sql, $params);
+        $this->aplicarExclusaoSystemAdminsEmSql($sql, $params);
+        $this->aplicarSanitizacaoObreirosEmSql($sql, $params);
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
