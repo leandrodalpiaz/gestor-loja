@@ -216,7 +216,7 @@ class Obreiro
     public function atualizarCargo($id, $novoCargo): bool
     {
         if ($this->suportaLojaId()) {
-            $stmt = $this->db->prepare("UPDATE obreiros SET cargo = :cargo WHERE id = :id AND loja_id = :loja_id");
+            $stmt = $this->db->prepare("UPDATE public.obreiros SET cargo = :cargo WHERE id = :id AND loja_id = :loja_id");
             return $stmt->execute([
                 'cargo' => $novoCargo,
                 'id' => $id,
@@ -224,7 +224,7 @@ class Obreiro
             ]);
         }
 
-        $stmt = $this->db->prepare("UPDATE obreiros SET cargo = :cargo WHERE id = :id");
+        $stmt = $this->db->prepare("UPDATE public.obreiros SET cargo = :cargo WHERE id = :id");
         return $stmt->execute([
             'cargo' => $novoCargo,
             'id' => $id,
@@ -252,7 +252,7 @@ class Obreiro
         if ($this->suportaLojaId() && $this->deveAplicarEscopoTenantNaIdentidade()) {
             $stmt = $this->db->prepare(
                 "SELECT *
-                 FROM obreiros
+                 FROM public.obreiros
                  WHERE telegram_id = :telegram_id
                    AND loja_id = :loja_id
                  LIMIT 1"
@@ -264,7 +264,7 @@ class Obreiro
         } else {
             $stmt = $this->db->prepare(
                 "SELECT *
-                 FROM obreiros
+                 FROM public.obreiros
                  WHERE telegram_id = :telegram_id
                  ORDER BY nome ASC
                  LIMIT 1"
@@ -281,7 +281,7 @@ class Obreiro
         if ($this->suportaLojaId() && $this->deveAplicarEscopoTenantNaIdentidade()) {
             $stmt = $this->db->prepare(
                 "SELECT *
-                 FROM obreiros
+                 FROM public.obreiros
                  WHERE cim = :cim
                    AND loja_id = :loja_id
                  LIMIT 1"
@@ -293,7 +293,7 @@ class Obreiro
         } else {
             $stmt = $this->db->prepare(
                 "SELECT *
-                 FROM obreiros
+                 FROM public.obreiros
                  WHERE cim = :cim
                  ORDER BY nome ASC
                  LIMIT 1"
@@ -310,13 +310,13 @@ class Obreiro
         $params = [];
         if ($this->suportaLojaId()) {
             $sql = "SELECT *
-                    FROM obreiros
+                    FROM public.obreiros
                     WHERE ativo = true
                       AND loja_id = :loja_id";
             $params['loja_id'] = $this->obterLojaAtualId();
         } else {
             $sql = "SELECT *
-                    FROM obreiros
+                    FROM public.obreiros
                     WHERE ativo = true";
         }
 
@@ -343,7 +343,7 @@ class Obreiro
 
         if ($this->suportaLojaId()) {
             $sql = "SELECT *
-                    FROM obreiros
+                    FROM public.obreiros
                     WHERE ativo = true
                       AND loja_id = :loja_id
                       AND (
@@ -353,7 +353,7 @@ class Obreiro
             $params['loja_id'] = $this->obterLojaAtualId();
         } else {
             $sql = "SELECT *
-                    FROM obreiros
+                    FROM public.obreiros
                     WHERE ativo = true
                       AND (
                             nome ILIKE :busca
@@ -377,12 +377,12 @@ class Obreiro
     {
         if ($this->suportaLojaId()) {
             $sql = "SELECT *
-                    FROM obreiros
+                    FROM public.obreiros
                     WHERE loja_id = :loja_id";
             $params = ['loja_id' => $this->obterLojaAtualId()];
         } else {
             $sql = "SELECT *
-                    FROM obreiros
+                    FROM public.obreiros
                     WHERE 1 = 1";
             $params = [];
         }
@@ -528,7 +528,7 @@ class Obreiro
                 CASE WHEN EXTRACT(MONTH FROM data_iniciacao) = EXTRACT(MONTH FROM CURRENT_DATE)
                       AND EXTRACT(DAY FROM data_iniciacao) = EXTRACT(DAY FROM CURRENT_DATE)
                      THEN true ELSE false END as is_aniversario_maconico
-            FROM obreiros
+            FROM public.obreiros
             WHERE ativo = true
               AND (
                   (EXTRACT(MONTH FROM data_nascimento_civil) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM data_nascimento_civil) = EXTRACT(DAY FROM CURRENT_DATE))
@@ -563,10 +563,10 @@ class Obreiro
     {
         $params = [];
         if ($this->suportaLojaId()) {
-            $sql = "SELECT * FROM obreiros WHERE loja_id = :loja_id AND TO_CHAR(data_nascimento_civil, 'MM-DD') = :data";
+            $sql = "SELECT * FROM public.obreiros WHERE loja_id = :loja_id AND TO_CHAR(data_nascimento_civil, 'MM-DD') = :data";
             $params['loja_id'] = $this->obterLojaAtualId();
         } else {
-            $sql = "SELECT * FROM obreiros WHERE TO_CHAR(data_nascimento_civil, 'MM-DD') = :data";
+            $sql = "SELECT * FROM public.obreiros WHERE TO_CHAR(data_nascimento_civil, 'MM-DD') = :data";
         }
 
         $params['data'] = $data;
@@ -584,10 +584,10 @@ class Obreiro
     {
         $params = [];
         if ($this->suportaLojaId()) {
-            $sql = "SELECT nome, 'Iniciacao' as tipo, data_iniciacao as data FROM obreiros WHERE loja_id = :loja_id AND TO_CHAR(data_iniciacao, 'MM-DD') = :data";
+            $sql = "SELECT nome, 'Iniciacao' as tipo, data_iniciacao as data FROM public.obreiros WHERE loja_id = :loja_id AND TO_CHAR(data_iniciacao, 'MM-DD') = :data";
             $params['loja_id'] = $this->obterLojaAtualId();
         } else {
-            $sql = "SELECT nome, 'Iniciacao' as tipo, data_iniciacao as data FROM obreiros WHERE TO_CHAR(data_iniciacao, 'MM-DD') = :data";
+            $sql = "SELECT nome, 'Iniciacao' as tipo, data_iniciacao as data FROM public.obreiros WHERE TO_CHAR(data_iniciacao, 'MM-DD') = :data";
         }
 
         $params['data'] = $data;
@@ -715,13 +715,13 @@ class Obreiro
     public function findById(string $id): ?array
     {
         if ($this->suportaLojaId()) {
-            $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE id = :id AND loja_id = :loja_id LIMIT 1");
+            $stmt = $this->db->prepare("SELECT * FROM public.obreiros WHERE id = :id AND loja_id = :loja_id LIMIT 1");
             $stmt->execute([
                 'id' => $id,
                 'loja_id' => $this->obterLojaAtualId(),
             ]);
         } else {
-            $stmt = $this->db->prepare("SELECT * FROM obreiros WHERE id = :id LIMIT 1");
+            $stmt = $this->db->prepare("SELECT * FROM public.obreiros WHERE id = :id LIMIT 1");
             $stmt->execute(['id' => $id]);
         }
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -746,7 +746,7 @@ class Obreiro
             $acessoStatus = '';
         }
 
-        $sql = "UPDATE obreiros SET
+        $sql = "UPDATE public.obreiros SET
             cim = :cim,
             nome = :nome,
             nome_historico = :nome_historico,
@@ -857,7 +857,7 @@ class Obreiro
         if ($this->suportaLojaId()) {
             $stmt = $this->db->prepare(
                 "SELECT 1
-                 FROM obreiros
+                 FROM public.obreiros
                  WHERE cim = :cim
                    AND id <> :id
                    AND loja_id = :loja_id
@@ -871,7 +871,7 @@ class Obreiro
         } else {
             $stmt = $this->db->prepare(
                 "SELECT 1
-                 FROM obreiros
+                 FROM public.obreiros
                  WHERE cim = :cim
                    AND id <> :id
                  LIMIT 1"
@@ -893,7 +893,7 @@ class Obreiro
 
         if ($this->suportaLojaId()) {
             $stmt = $this->db->prepare(
-                "UPDATE obreiros
+                "UPDATE public.obreiros
                  SET ativo = false,
                      situacao_quadro = 'inativo',
                      acesso_status = 'inativo',
@@ -908,7 +908,7 @@ class Obreiro
             ]);
         } else {
             $stmt = $this->db->prepare(
-                "UPDATE obreiros
+                "UPDATE public.obreiros
                  SET ativo = false,
                      situacao_quadro = 'inativo',
                      acesso_status = 'inativo',
@@ -916,6 +916,60 @@ class Obreiro
                      updated_at = NOW()
                  WHERE id = :id"
             );
+            $stmt->execute(['id' => $id]);
+        }
+
+        return $stmt->rowCount() > 0;
+    }
+
+    public function excluirPorId(string $id): bool
+    {
+        if ($id === '') {
+            return false;
+        }
+
+        if ($this->suportaColuna('excluir_em_listas')) {
+            if ($this->suportaLojaId()) {
+                $stmt = $this->db->prepare(
+                    "UPDATE public.obreiros
+                     SET excluir_em_listas = true,
+                         ativo = false,
+                         situacao_quadro = 'inativo',
+                         acesso_status = 'inativo',
+                         telegram_id = NULL,
+                         updated_at = NOW()
+                     WHERE id = :id
+                       AND loja_id = :loja_id"
+                );
+                $stmt->execute([
+                    'id' => $id,
+                    'loja_id' => $this->obterLojaAtualId(),
+                ]);
+            } else {
+                $stmt = $this->db->prepare(
+                    "UPDATE public.obreiros
+                     SET excluir_em_listas = true,
+                         ativo = false,
+                         situacao_quadro = 'inativo',
+                         acesso_status = 'inativo',
+                         telegram_id = NULL,
+                         updated_at = NOW()
+                     WHERE id = :id"
+                );
+                $stmt->execute(['id' => $id]);
+            }
+
+            return $stmt->rowCount() > 0;
+        }
+
+        if ($this->suportaLojaId()) {
+            $stmt = $this->db->prepare("DELETE FROM public.obreiros WHERE id = :id AND loja_id = :loja_id");
+            $stmt->execute([
+                'id' => $id,
+                'loja_id' => $this->obterLojaAtualId(),
+            ]);
+        } else {
+            $stmt = $this->db->prepare("DELETE FROM public.obreiros WHERE id = :id");
             $stmt->execute(['id' => $id]);
         }
 

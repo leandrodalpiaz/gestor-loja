@@ -185,6 +185,14 @@ require __DIR__ . '/partials/erp_shell_open.php';
                             <div class="flex justify-end gap-2">
                                 <?php if ($podeGerenciarObreiros): ?>
                                     <a href="/obreiros/editar?id=<?= $obreiro['id'] ?>" class="btn btn-secondary text-xs">Editar</a>
+                                    <form method="post" action="/obreiros/inativar" onsubmit="return confirm('Inativar este obreiro?');">
+                                        <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
+                                        <button type="submit" class="btn btn-secondary text-xs">Inativar</button>
+                                    </form>
+                                    <form method="post" action="/obreiros/excluir" onsubmit="return confirm('Excluir este obreiro da gestão? Esta ação pode ser irreversível.');">
+                                        <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
+                                        <button type="submit" class="btn btn-secondary text-xs bg-red-100 text-red-800 hover:bg-red-200">Excluir</button>
+                                    </form>
                                 <?php endif; ?>
                                 <?php if ($podeGerarConvitesAcesso): ?>
                                     <form method="post" action="/admin/convites/gerar" onsubmit="return confirm('Gerar convite de acesso para este obreiro?');">
@@ -237,6 +245,14 @@ require __DIR__ . '/partials/erp_shell_open.php';
                     <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
                         <?php if ($podeGerenciarObreiros): ?>
                             <a href="/obreiros/editar?id=<?= $obreiro['id'] ?>" class="btn btn-primary text-sm">Editar Obreiro</a>
+                            <form method="post" action="/obreiros/inativar" onsubmit="return confirm('Inativar este obreiro?');" class="flex-grow">
+                                <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
+                                <button type="submit" class="btn btn-secondary text-sm w-full">Inativar</button>
+                            </form>
+                            <form method="post" action="/obreiros/excluir" onsubmit="return confirm('Excluir este obreiro da gestão? Esta ação pode ser irreversível.');" class="flex-grow">
+                                <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
+                                <button type="submit" class="btn btn-secondary text-sm w-full bg-red-100 text-red-800 hover:bg-red-200">Excluir</button>
+                            </form>
                         <?php endif; ?>
                         <?php if ($podeGerarConvitesAcesso): ?>
                             <form method="post" action="/admin/convites/gerar" onsubmit="return confirm('Gerar convite de acesso para este obreiro?');" class="flex-grow">
@@ -253,5 +269,4 @@ require __DIR__ . '/partials/erp_shell_open.php';
 <?php endif; ?>
 
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
-
 

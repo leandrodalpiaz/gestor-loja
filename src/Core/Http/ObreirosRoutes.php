@@ -115,6 +115,24 @@ class ObreirosRoutes
                 header('Location: /obreiros?' . ($ok ? 'sucesso=1' : 'erro=1'));
                 exit;
 
+            case '/obreiros/excluir':
+                ModuleGuards::requireObreirosManageAccess($openTestAccess, $session, $authorizer);
+                if ($method !== 'POST') {
+                    header('Location: /obreiros');
+                    exit;
+                }
+
+                $obreiroId = (string) ($_POST['id'] ?? '');
+                if ($obreiroId === '') {
+                    header('Location: /obreiros?erro=1');
+                    exit;
+                }
+
+                $obreiroModel = new Obreiro();
+                $ok = $obreiroModel->excluirPorId($obreiroId);
+                header('Location: /obreiros?' . ($ok ? 'sucesso=1' : 'erro=1'));
+                exit;
+
             default:
                 return false;
         }
