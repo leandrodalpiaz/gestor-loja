@@ -23,13 +23,19 @@ class ConteudoPublico
 
     public function listarParaAdmin(): array
     {
-        $stmt = $this->db->query(
-            "SELECT *
-             FROM conteudos_publicos
-             ORDER BY publicado DESC, prioridade DESC, created_at DESC"
-        );
+        try {
+            $stmt = $this->db->query(
+                "SELECT *
+                 FROM conteudos_publicos
+                 ORDER BY publicado DESC, prioridade DESC, created_at DESC"
+            );
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            // In ambientes recem-instalados a migracao pode ainda nao ter sido aplicada.
+            error_log('ConteudoPublico::listarParaAdmin - ' . $e->getMessage());
+            return [];
+        }
     }
 
     public function listarPublicos(?string $tipo = null, int $limit = 12): array
@@ -53,10 +59,15 @@ class ConteudoPublico
                 ORDER BY prioridade DESC, COALESCE(inicio_em, created_at::date) DESC, created_at DESC
                 LIMIT {$limit}";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            error_log('ConteudoPublico::listarPublicos - ' . $e->getMessage());
+            return [];
+        }
     }
 
     public function listarAdsPublicos(int $limit = 3): array
@@ -66,19 +77,24 @@ class ConteudoPublico
             return [];
         }
 
-        $stmt = $this->db->prepare(
-            "SELECT *
-             FROM conteudos_publicos
-             WHERE publicado = TRUE
-               AND tipo = 'ad'
-               AND (inicio_em IS NULL OR inicio_em <= CURRENT_DATE)
-               AND (fim_em IS NULL OR fim_em >= CURRENT_DATE)
-             ORDER BY prioridade DESC, created_at DESC
-             LIMIT {$limit}"
-        );
-        $stmt->execute();
+        try {
+            $stmt = $this->db->prepare(
+                "SELECT *
+                 FROM conteudos_publicos
+                 WHERE publicado = TRUE
+                   AND tipo = 'ad'
+                   AND (inicio_em IS NULL OR inicio_em <= CURRENT_DATE)
+                   AND (fim_em IS NULL OR fim_em >= CURRENT_DATE)
+                 ORDER BY prioridade DESC, created_at DESC
+                 LIMIT {$limit}"
+            );
+            $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            error_log('ConteudoPublico::listarAdsPublicos - ' . $e->getMessage());
+            return [];
+        }
     }
 
     public function salvar(array $input): int

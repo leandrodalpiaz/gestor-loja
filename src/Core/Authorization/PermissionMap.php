@@ -9,7 +9,6 @@ class PermissionMap
      * Papeis operacionais existentes continuam convivendo com papeis-base.
      */
     private const ROLE_PERMISSIONS = [
-        'admin' => ['*'],
         'veneravel' => [
             'dashboard.view',
             'admin.cargos.view',

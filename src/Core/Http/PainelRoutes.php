@@ -53,12 +53,12 @@ class PainelRoutes
                 return true;
 
             case '/miniapp/orador':
-                requireMiniappAuth(['orador', 'veneravel', 'admin'], 'orador.view');
+                requireMiniappAuth(['orador', 'veneravel'], 'orador.view');
                 require __DIR__ . '/../../Views/miniapp/orador.php';
                 return true;
 
             case '/api/miniapp/orador/dashboard':
-                $miniappUser = requireMiniappAuth(['orador', 'veneravel', 'admin'], 'orador.view');
+                $miniappUser = requireMiniappAuth(['orador', 'veneravel'], 'orador.view');
                 $controller = new OradorController();
                 $sessaoId = isset($_GET['sessao_id']) ? (int) $_GET['sessao_id'] : null;
                 JsonResponse::send([

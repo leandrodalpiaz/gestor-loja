@@ -5,7 +5,7 @@ $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
 $erpPageTitle = 'Conteudo publico';
-$appShellEyebrow = 'Administracao';
+$appShellEyebrow = 'Sistema';
 $appShellTitle = 'Landing/Login';
 $appShellDescription = 'Agenda, convites, noticias e espacos discretos de apoio exibidos em /login.';
 $appShellActiveHref = '/admin/conteudo-publico';
@@ -14,7 +14,7 @@ $appShellActions = [
 ];
 $appShellSidebarSections = [
     [
-        'title' => 'Administracao',
+        'title' => 'Sistema',
         'items' => [
             ['label' => 'Conteudo publico', 'href' => '/admin/conteudo-publico'],
             ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],

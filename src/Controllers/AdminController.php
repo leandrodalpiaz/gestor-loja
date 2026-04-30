@@ -12,6 +12,15 @@ use App\Models\ConviteAcesso;
 
 class AdminController
 {
+    private function resolveReturnTo(string $fallback): string
+    {
+        $returnTo = trim((string) ($_POST['return_to'] ?? ''));
+        if ($returnTo === '' || $returnTo[0] !== '/') {
+            return $fallback;
+        }
+        return $returnTo;
+    }
+
     public function acessosPendentes()
     {
         $itens = (new Obreiro())->listarPendentesAcesso();
@@ -36,7 +45,7 @@ class AdminController
             }
         }
 
-        header('Location: /admin/acessos');
+        header('Location: ' . $this->resolveReturnTo('/admin/acessos'));
         exit;
     }
 
@@ -60,7 +69,7 @@ class AdminController
             }
         }
 
-        header('Location: /admin/conteudo-publico');
+        header('Location: ' . $this->resolveReturnTo('/admin/conteudo-publico'));
         exit;
     }
 
@@ -77,7 +86,7 @@ class AdminController
             }
         }
 
-        header('Location: /admin/conteudo-publico');
+        header('Location: ' . $this->resolveReturnTo('/admin/conteudo-publico'));
         exit;
     }
 

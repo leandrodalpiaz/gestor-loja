@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Administracao Mobile</title>
+    <title>Sistema (Mobile)</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
@@ -14,8 +14,8 @@
 <body class="min-h-screen p-4">
 <div class="mx-auto max-w-lg space-y-4">
     <div>
-        <h1 class="text-xl font-bold">Administracao</h1>
-        <p class="mt-1 text-sm text-gray-500">Gestoes, cargos, parametros da Loja e auditoria critica.</p>
+        <h1 class="text-xl font-bold">Sistema</h1>
+        <p class="mt-1 text-sm text-gray-500">Ajustes tecnicos, cargos e auditoria critica.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>

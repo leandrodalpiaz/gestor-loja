@@ -64,13 +64,13 @@ class Obreiro
 
     private function deveOcultarSystemAdminsEmListas(): bool
     {
-        // System admin é suporte técnico, não membro ativo: não deve aparecer em listas comuns.
+        // System admin ÃƒÆ’Ã‚Â© suporte tÃƒÆ’Ã‚Â©cnico, nÃƒÆ’Ã‚Â£o membro ativo: nÃƒÆ’Ã‚Â£o deve aparecer em listas comuns.
         return true;
     }
 
     private function aplicarSanitizacaoObreirosEmSql(string &$sql, array &$params): void
     {
-        // Oculta registros técnicos/teste do contexto da Loja (somente visual/listagem).
+        // Oculta registros tÃƒÆ’Ã‚Â©cnicos/teste do contexto da Loja (somente visual/listagem).
         $sql .= " AND COALESCE(LOWER(NULLIF(nome_historico, '')), LOWER(NULLIF(nome, ''))) NOT IN ('admin', 'administrador')";
 
         $rawCims = trim((string) (getenv('OBREIROS_SANITIZE_EXCLUDE_CIMS') ?: ''));
@@ -151,8 +151,8 @@ class Obreiro
             $params[$key] = $id;
         }
 
-        // Evita ocultar obreiro regular quando compartilha telegram_id com conta técnica.
-        // Só exclui do resultado quando o registro também tem perfil típico de conta técnica.
+        // Evita ocultar obreiro regular quando compartilha telegram_id com conta tÃƒÆ’Ã‚Â©cnica.
+        // SÃƒÆ’Ã‚Â³ exclui do resultado quando o registro tambÃƒÆ’Ã‚Â©m tem perfil tÃƒÆ’Ã‚Â­pico de conta tÃƒÆ’Ã‚Â©cnica.
         $sql .= " AND (
             telegram_id IS NULL
             OR telegram_id NOT IN (" . implode(', ', $placeholders) . ")
@@ -211,8 +211,8 @@ class Obreiro
 
     private function aplicarExclusaoManualEmSql(string &$sql, array &$params): void
     {
-        // Exclusão controlada pelo usuário via banco (não quebra vínculos por ID).
-        // Se a coluna existir, registros marcados não aparecem em listagens/efemérides.
+        // ExclusÃƒÆ’Ã‚Â£o controlada pelo usuÃƒÆ’Ã‚Â¡rio via banco (nÃƒÆ’Ã‚Â£o quebra vÃƒÆ’Ã‚Â­nculos por ID).
+        // Se a coluna existir, registros marcados nÃƒÆ’Ã‚Â£o aparecem em listagens/efemÃƒÆ’Ã‚Â©rides.
         if ($this->suportaColuna('excluir_em_listas')) {
             $sql .= " AND COALESCE(excluir_em_listas, false) = false";
         }
@@ -1134,16 +1134,9 @@ class Obreiro
             $this->normalizarCargoLegado((string) ($obreiro['cargo'] ?? ''))
         );
 
-        // System admin (fora do RBAC da loja): adiciona role "admin" sem alterar o cargo principal.
+        // System admin (fora do RBAC da loja): flag tecnica, nao e cargo oficial.
         $telegramId = isset($obreiro['telegram_id']) ? (int) $obreiro['telegram_id'] : null;
-        if ($telegramId && $this->isSystemAdminTelegramId($telegramId)) {
-            $obreiro['is_system_admin'] = true;
-            if (!in_array('admin', $obreiro['cargos'], true)) {
-                $obreiro['cargos'][] = 'admin';
-            }
-        } else {
-            $obreiro['is_system_admin'] = false;
-        }
+        $obreiro['is_system_admin'] = (bool) ($telegramId && $this->isSystemAdminTelegramId($telegramId));
 
         return $obreiro;
     }
@@ -1176,9 +1169,6 @@ class Obreiro
             $telegramId = isset($obreiro['telegram_id']) ? (int) $obreiro['telegram_id'] : null;
             if ($telegramId && $this->isSystemAdminTelegramId($telegramId)) {
                 $obreiro['is_system_admin'] = true;
-                if (!in_array('admin', $obreiro['cargos'], true)) {
-                    $obreiro['cargos'][] = 'admin';
-                }
             } else {
                 $obreiro['is_system_admin'] = false;
             }

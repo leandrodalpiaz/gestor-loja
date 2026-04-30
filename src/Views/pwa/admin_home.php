@@ -7,7 +7,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 $links = is_array($links ?? null) ? $links : [];
 
-$pwaPageTitle = 'Admin';
+$pwaPageTitle = 'Sistema';
 $pwaShowBackButton = true;
 
 ob_start();
@@ -15,7 +15,7 @@ ob_start();
 
 <div class="p-4 sm:p-6 space-y-4">
     <div class="rounded-2xl border border-erpBorder bg-erpSurface p-5">
-        <h2 class="text-xl font-bold text-erpNavy">Atalhos Administrativos</h2>
+        <h2 class="text-xl font-bold text-erpNavy">Atalhos do Sistema</h2>
         <p class="mt-1 text-sm text-erpMuted">
             Estes atalhos levam para os módulos de gestão completos (visão de desktop).
         </p>
@@ -24,7 +24,7 @@ ob_start();
     <div class="space-y-3">
         <?php if (empty($links)): ?>
             <div class="rounded-2xl border border-erpBorder bg-erpSurface p-5 text-center">
-                <p class="text-sm text-erpMuted">Nenhum atalho administrativo disponível.</p>
+                <p class="text-sm text-erpMuted">Nenhum atalho do sistema disponível.</p>
             </div>
         <?php else: ?>
             <?php foreach ($links as $item): ?>

@@ -12,7 +12,7 @@ class ModuleGuards
             $openTestAccess,
             $session,
             $authorizer->hasPermission('admin.cargos.view'),
-            'Acesso restrito ao Administrador, Secretario ou Veneravel Mestre.'
+            'Acesso restrito a Secretaria ou ao Veneravel Mestre.'
         );
     }
 
@@ -22,7 +22,7 @@ class ModuleGuards
             $openTestAccess,
             $session,
             $authorizer->hasPermission('admin.cargos.manage'),
-            'Acesso restrito ao Administrador, Secretario ou Veneravel Mestre.'
+            'Acesso restrito a Secretaria ou ao Veneravel Mestre.'
         );
     }
 
@@ -32,7 +32,7 @@ class ModuleGuards
             $openTestAccess,
             $session,
             $authorizer->hasPermission('admin.loja.view'),
-            'Acesso restrito ao Administrador.'
+            'Acesso restrito.'
         );
     }
 
@@ -42,7 +42,7 @@ class ModuleGuards
             $openTestAccess,
             $session,
             $authorizer->hasPermission('admin.loja.manage'),
-            'Acesso restrito ao Administrador.'
+            'Acesso restrito.'
         );
     }
 
@@ -52,7 +52,7 @@ class ModuleGuards
             $openTestAccess,
             $session,
             $authorizer->hasPermission('admin.auditoria.view'),
-            'Acesso restrito ao Administrador ou Veneravel Mestre.'
+            'Acesso restrito ao Veneravel Mestre.'
         );
     }
 
@@ -62,7 +62,7 @@ class ModuleGuards
             $openTestAccess,
             $session,
             $authorizer->hasPermission('public_content.manage'),
-            'Acesso restrito ao Administrador, Secretario ou Veneravel Mestre.'
+            'Acesso restrito a Secretaria ou ao Veneravel Mestre.'
         );
     }
 
@@ -72,7 +72,7 @@ class ModuleGuards
             $openTestAccess,
             $session,
             $authorizer->hasPermission('access.manage'),
-            'Acesso restrito ao Administrador ou Secretario.'
+            'Acesso restrito a Secretaria.'
         );
     }
 
@@ -88,7 +88,7 @@ class ModuleGuards
         self::requireBibliotecaAccess($openTestAccess, $session, $authorizer);
         WebGuards::requirePermission(
             $authorizer->hasPermission('biblioteca.manage'),
-            'Acesso restrito ao Bibliotecario, Veneravel Mestre ou Administrador.'
+            'Acesso restrito ao Bibliotecario ou ao Veneravel Mestre.'
         );
     }
 
@@ -98,7 +98,7 @@ class ModuleGuards
             $openTestAccess,
             $session,
             $authorizer->hasPermission('secretaria.manage'),
-            'Acesso restrito ao Secretario, Veneravel Mestre ou Administrador.'
+            'Acesso restrito a Secretaria ou ao Veneravel Mestre.'
         );
     }
 
@@ -108,7 +108,7 @@ class ModuleGuards
             $openTestAccess,
             $session,
             $authorizer->hasPermission('obreiros.view'),
-            'Acesso restrito a Secretaria, 1o Vigilante, 2o Vigilante, Chancelaria, Veneravel Mestre ou Administrador.'
+            'Acesso restrito a Secretaria, Vigilancia, Chancelaria ou Veneravel Mestre.'
         );
     }
 
@@ -118,7 +118,7 @@ class ModuleGuards
             $openTestAccess,
             $session,
             $authorizer->hasPermission('obreiros.manage'),
-            'Acesso restrito ao Secretario ou Administrador.'
+            'Acesso restrito a Secretaria.'
         );
     }
 
@@ -128,7 +128,7 @@ class ModuleGuards
             $openTestAccess,
             $session,
             $authorizer->hasPermission('hospitaleiro.manage'),
-            'Acesso restrito ao Mestre Hospitaleiro, Secretario, Tesoureiro, Veneravel Mestre ou Administrador.'
+            'Acesso restrito ao Mestre Hospitaleiro, Secretaria, Tesouraria ou Veneravel Mestre.'
         );
     }
 }

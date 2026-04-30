@@ -27,6 +27,51 @@ class SecretariaRoutes
                 $controller->votacao();
                 return true;
 
+            case '/secretaria/nominata':
+                ModuleGuards::requireAdminCargosView($openTestAccess, $session, $authorizer);
+                $controller->nominata();
+                return true;
+
+            case '/secretaria/nominata/salvar':
+                ModuleGuards::requireAdminCargosManage($openTestAccess, $session, $authorizer);
+                $controller->salvarNominata();
+                return true;
+
+            case '/secretaria/acessos':
+                ModuleGuards::requireAccessManage($openTestAccess, $session, $authorizer);
+                $controller->acessos();
+                return true;
+
+            case '/secretaria/acessos/atualizar':
+                ModuleGuards::requireAccessManage($openTestAccess, $session, $authorizer);
+                $controller->atualizarAcesso();
+                return true;
+
+            case '/secretaria/convites':
+                ModuleGuards::requireAccessManage($openTestAccess, $session, $authorizer);
+                $controller->convites();
+                return true;
+
+            case '/secretaria/convites/gerar':
+                ModuleGuards::requireAccessManage($openTestAccess, $session, $authorizer);
+                $controller->gerarConvite();
+                return true;
+
+            case '/secretaria/conteudo-publico':
+                ModuleGuards::requirePublicContentManage($openTestAccess, $session, $authorizer);
+                $controller->conteudoPublico();
+                return true;
+
+            case '/secretaria/conteudo-publico/salvar':
+                ModuleGuards::requirePublicContentManage($openTestAccess, $session, $authorizer);
+                $controller->salvarConteudoPublico();
+                return true;
+
+            case '/secretaria/conteudo-publico/excluir':
+                ModuleGuards::requirePublicContentManage($openTestAccess, $session, $authorizer);
+                $controller->excluirConteudoPublico();
+                return true;
+
             case '/secretaria/relatorio-anual':
                 ModuleGuards::requireSecretariaAccess($openTestAccess, $session, $authorizer);
                 $controller->relatorioAnual();
@@ -85,8 +130,8 @@ class SecretariaRoutes
             case '/secretaria/balaustres/abrir-votacao':
                 WebGuards::requireLogin($openTestAccess, $session);
                 WebGuards::requirePermission(
-                    (bool) $sessionHasRole('veneravel', 'admin'),
-                    'Acesso restrito ao Veneravel Mestre ou Administrador.'
+                    $authorizer->hasPermission('veneravel.manage'),
+                    'Acesso restrito ao Veneravel Mestre.'
                 );
                 $controller->abrirVotacaoBalaustre();
                 return true;
@@ -99,8 +144,8 @@ class SecretariaRoutes
             case '/secretaria/balaustres/encerrar-votacao':
                 WebGuards::requireLogin($openTestAccess, $session);
                 WebGuards::requirePermission(
-                    (bool) $sessionHasRole('veneravel', 'admin'),
-                    'Acesso restrito ao Veneravel Mestre ou Administrador.'
+                    $authorizer->hasPermission('veneravel.manage'),
+                    'Acesso restrito ao Veneravel Mestre.'
                 );
                 $controller->encerrarVotacaoBalaustre();
                 return true;

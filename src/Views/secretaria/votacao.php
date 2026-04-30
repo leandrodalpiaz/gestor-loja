@@ -14,8 +14,8 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 // #############################################################################
 
 $appShellEyebrow = 'Secretaria';
-$appShellTitle = 'Balaústres e Votação';
-$appShellDescription = 'Acompanhe e registre votos nos balaústres das sessões publicadas.';
+$appShellTitle = 'Balaústres em Votação';
+$appShellDescription = 'Acompanhe votações abertas e registre votos (quando elegível).';
 $appShellActiveHref = '/secretaria/votacao';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
@@ -26,12 +26,13 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <?php if ($mensagemSucesso): ?><div class="alert alert-success mb-6"><?= htmlspecialchars($mensagemSucesso) ?></div><?php endif; ?>
 <?php if ($mensagemErro): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
 
-<!-- Votações Abertas -->
+<!-- Balaústres Em Votação -->
 <div class="space-y-6">
     <?php if (empty($votacoesAbertas)): ?>
         <div class="card">
             <div class="card-body text-center">
-                <p class="text-gray-500">No momento, não há votações abertas para o seu perfil.</p>
+                <p class="text-gray-500">Nenhuma votação aberta no momento.</p>
+                <p class="text-xs text-gray-500 mt-2">Para o secretário: prepare o balaústre na Secretaria e marque como apto para votação.</p>
             </div>
         </div>
     <?php else: ?>

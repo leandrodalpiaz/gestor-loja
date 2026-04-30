@@ -799,6 +799,12 @@ if (!function_exists('requireMiniappAuth')) {
         /** @var PermissionMap|null $permissionMap */
         $permissionMap = $GLOBALS['gestor_loja_permission_map'] ?? null;
 
+        // Admin do sistema nao e cargo oficial, mas deve ter acesso total aos miniapps.
+        // Mantemos isso via flag tecnica is_system_admin (sem "admin" aparecer como cargo).
+        if (!empty($_SESSION['is_system_admin']) && isset($_SESSION['usuario_logado'])) {
+            return is_array($_SESSION['usuario_logado']) ? $_SESSION['usuario_logado'] : [];
+        }
+
         $allowedRoles = array_values(array_unique(array_filter(array_map($normalizeRole, $allowedRoles))));
         $sessionRoles = array_values(array_unique(array_filter(array_map(
             $normalizeRole,
@@ -846,6 +852,10 @@ if (!function_exists('requireMiniappAuth')) {
             http_response_code(401);
             echo 'Nao autenticado no miniapp.';
             exit;
+        }
+
+        if (!empty($miniappObreiro['is_system_admin'])) {
+            return $miniappObreiro;
         }
 
         $miniappRoles = array_values(array_unique(array_filter(array_map(
