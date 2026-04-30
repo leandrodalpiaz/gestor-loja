@@ -169,6 +169,47 @@ class SecretariaController
         $nominataOficialMap = $this->carregarNominataOficial();
         $cargosSessaoBase = $this->obterCargosSessaoBase($nominataOficialMap);
         $lojasVisitantesFrequentes = self::LOJAS_VISITANTES_FREQUENTES;
+        $balaustreSessao = null;
+        $dadosBalaustreSessao = [];
+        $visitantesBalaustre = [];
+        $visitasExternasBalaustre = [];
+        $cargosBalaustreSessao = [];
+        $observacoesBalaustre = '';
+
+        if (!empty($sessaoResumo['id'])) {
+            $balaustreSessao = $balaustreModel->buscarPorSessao((int) $sessaoResumo['id']);
+            $capturadoSessao = $balaustreSessao['dados_capturados'] ?? null;
+            if (is_string($capturadoSessao)) {
+                $decoded = json_decode($capturadoSessao, true);
+                $capturadoSessao = is_array($decoded) ? $decoded : [];
+            }
+            $dadosBalaustreSessao = is_array($capturadoSessao) ? $capturadoSessao : [];
+            $visitantesBalaustre = is_array($dadosBalaustreSessao['palavra_bem_ordem']['visitantes'] ?? null)
+                ? $dadosBalaustreSessao['palavra_bem_ordem']['visitantes']
+                : [];
+            $visitasExternasBalaustre = is_array($dadosBalaustreSessao['saco_propostas']['visitas_externas'] ?? null)
+                ? $dadosBalaustreSessao['saco_propostas']['visitas_externas']
+                : [];
+            $observacoesBalaustre = (string) ($dadosBalaustreSessao['observacoes_secretaria'] ?? '');
+        }
+
+        $cargosCapturados = is_array($dadosBalaustreSessao['cargos_sessao'] ?? null)
+            ? $dadosBalaustreSessao['cargos_sessao']
+            : [];
+        if ($cargosCapturados !== []) {
+            $cargosBalaustreSessao = $cargosCapturados;
+        } else {
+            $cargosBalaustreSessao = array_map(static function (array $cargoBase): array {
+                $titular = (string) ($cargoBase['titular_oficial'] ?? '');
+                return [
+                    'codigo' => (string) ($cargoBase['codigo'] ?? ''),
+                    'cargo_nome' => (string) ($cargoBase['label'] ?? ''),
+                    'titular_oficial' => $titular,
+                    'ocupante_nome' => $titular,
+                    'observacao' => '',
+                ];
+            }, $cargosSessaoBase);
+        }
 
         foreach ($balaustres as &$balaustre) {
             $capturado = $balaustre['dados_capturados'] ?? null;
@@ -397,6 +438,19 @@ class SecretariaController
             'ordem_dia' => trim((string) ($_POST['ordem_dia'] ?? '')),
             'observacao_interna' => trim((string) ($_POST['observacao_interna'] ?? '')),
         ];
+
+        if (!$this->dataHoraFormularioValida($payload['data_hora_inicio'])) {
+            $_SESSION['mensagem_erro'] = 'Informe uma data e hora de inicio validas para revisar a sessao.';
+            header('Location: /secretaria' . ($sessaoId > 0 ? '?editar_sessao=' . $sessaoId : ''));
+            exit;
+        }
+
+        if ($payload['data_hora_fim'] !== '' && !$this->dataHoraFormularioValida($payload['data_hora_fim'])) {
+            $_SESSION['mensagem_erro'] = 'Informe uma data e hora de encerramento validas ou deixe o campo em branco.';
+            header('Location: /secretaria' . ($sessaoId > 0 ? '?editar_sessao=' . $sessaoId : ''));
+            exit;
+        }
+
         $payload = $this->normalizarRascunhoSessao($payload);
         if ($sessaoId > 0) {
             $payload['id'] = $sessaoId;
@@ -759,6 +813,21 @@ class SecretariaController
         ) ? $payload['agape_modelo_financeiro'] : 'oficial_loja';
         $payload['agape_ativo'] = in_array($payload['agape_modalidade'], ['gratuito', 'pago'], true);
         return $payload;
+    }
+
+    private function dataHoraFormularioValida(string $valor): bool
+    {
+        $valor = trim($valor);
+        if ($valor === '') {
+            return false;
+        }
+
+        try {
+            new \DateTimeImmutable($valor);
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public function montarPayloadMiniapp(?int $sessaoId = null): array

@@ -566,7 +566,11 @@ class Sessao
             return null;
         }
 
-        $inicio = new DateTimeImmutable($payload['data_hora_inicio']);
+        $inicio = $this->parseDateTime($payload['data_hora_inicio']);
+        if (!$inicio) {
+            return null;
+        }
+
         $inicioDia = $inicio->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('Y-m-d');
         $hora = $inicio->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('H:i');
 
@@ -594,10 +598,14 @@ class Sessao
     {
         $dataHora = '';
         if (!empty($sessao['data_hora_inicio'])) {
-            $dt = new DateTimeImmutable((string) $sessao['data_hora_inicio']);
-            $dt = $dt->setTimezone(new DateTimeZone('America/Sao_Paulo'));
-            $dias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
-            $dataHora = $dt->format('d/m/Y') . ' (' . $dias[(int) $dt->format('w')] . ') - ' . $dt->format('H:i');
+            $dt = $this->parseDateTime((string) $sessao['data_hora_inicio']);
+            if ($dt) {
+                $dt = $dt->setTimezone(new DateTimeZone('America/Sao_Paulo'));
+                $dias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+                $dataHora = $dt->format('d/m/Y') . ' (' . $dias[(int) $dt->format('w')] . ') - ' . $dt->format('H:i');
+            } else {
+                $dataHora = 'Data invalida';
+            }
         }
 
         $grau = trim((string) ($sessao['grau_sessao'] ?? ''));
@@ -748,6 +756,20 @@ class Sessao
     private function obterLojaAtualId(): int
     {
         return $this->resolveCurrentStoreId($this->db);
+    }
+
+    private function parseDateTime(?string $valor): ?DateTimeImmutable
+    {
+        $valor = trim((string) $valor);
+        if ($valor === '') {
+            return null;
+        }
+
+        try {
+            return new DateTimeImmutable($valor);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function normalizarPayload(array $data, ?array $fallback = null): array

@@ -12,9 +12,30 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 $sessaoEmFormulario = is_array($sessaoRascunho ?? null) ? $sessaoRascunho : (is_array($sessaoEdicao ?? null) ? $sessaoEdicao : []);
 $modoEdicaoSessao = !is_array($sessaoRascunho ?? null) && is_array($sessaoEdicao ?? null);
 
-$formatDate = static fn(?string $val): string => !empty(trim((string) $val)) ? (new DateTimeImmutable(trim((string) $val)))->format('d/m/Y') : '-';
-$formatDateTime = static fn(?string $val): string => !empty(trim((string) $val)) ? (new DateTimeImmutable(trim((string) $val)))->format('d/m/Y \Ã \s H:i') : 'Data a definir';
-$formatInputDateTime = static fn(?string $val): string => !empty(trim((string) $val)) ? (new DateTimeImmutable(trim((string) $val)))->format('Y-m-d\TH:i') : '';
+$parseDateTime = static function (?string $val): ?DateTimeImmutable {
+    $val = trim((string) $val);
+    if ($val === '') {
+        return null;
+    }
+
+    try {
+        return new DateTimeImmutable($val);
+    } catch (Throwable) {
+        return null;
+    }
+};
+$formatDate = static function (?string $val) use ($parseDateTime): string {
+    $dt = $parseDateTime($val);
+    return $dt ? $dt->format('d/m/Y') : '-';
+};
+$formatDateTime = static function (?string $val) use ($parseDateTime): string {
+    $dt = $parseDateTime($val);
+    return $dt ? $dt->format('d/m/Y \a\s H:i') : 'Data a definir';
+};
+$formatInputDateTime = static function (?string $val) use ($parseDateTime): string {
+    $dt = $parseDateTime($val);
+    return $dt ? $dt->format('Y-m-d\TH:i') : '';
+};
 
 $badgeStatusSessao = static function (?string $status): string {
     return match (strtolower(trim((string) $status))) {
@@ -25,6 +46,15 @@ $badgeStatusSessao = static function (?string $status): string {
     };
 };
 
+$rascunhoEditaSessaoExistente = is_array($sessaoRascunho ?? null) && !empty($sessaoRascunho['id']);
+$etapasSessao = [
+    ['numero' => '1', 'titulo' => 'Preencher', 'texto' => 'Dados oficiais da agenda', 'ativo' => !$resumoRascunhoSessao],
+    ['numero' => '2', 'titulo' => 'Revisar', 'texto' => 'Resumo final antes de publicar', 'ativo' => (bool) $resumoRascunhoSessao],
+    ['numero' => '3', 'titulo' => 'Gerenciar', 'texto' => 'Editar, publicar, cancelar e acompanhar', 'ativo' => false],
+];
+$linhasVisitantesBalaustre = array_pad($visitantesBalaustre ?? [], max(3, count($visitantesBalaustre ?? []) + 1), []);
+$linhasVisitasExternasBalaustre = array_pad($visitasExternasBalaustre ?? [], max(2, count($visitasExternasBalaustre ?? []) + 1), []);
+
 // #############################################################################
 // CONFIGURAÃ‡ÃƒO DO APP SHELL
 // #############################################################################
@@ -33,6 +63,12 @@ $appShellEyebrow = 'Secretaria';
 $appShellTitle = 'Painel da Secretaria';
 $appShellDescription = 'GestÃ£o de obreiros, sessÃµes, balaÃºstres, acessos e convites da Loja.';
 $appShellActiveHref = '/secretaria';
+$appShellActions = [
+    ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
+    ['label' => 'Novo Obreiro', 'href' => '/obreiros/novo'],
+    ['label' => 'Nominata', 'href' => '/admin/cargos'],
+    ['label' => 'Convites/Acessos', 'href' => '/admin/convites'],
+];
 
 require __DIR__ . '/../partials/erp_shell_open.php';
 
@@ -62,10 +98,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             </div>
             <div class="card-body">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="card-metric-simple"><p class="card-metric-label">Total</p><p class="card-metric-value text-xl"><?= (int) ($resumoRegistros['total'] ?? 0) ?></p></div>
-                    <div class="card-metric-simple"><p class="card-metric-label">No Quadro</p><p class="card-metric-value text-xl"><?= (int) ($resumoRegistros['ativos'] ?? 0) ?></p></div>
-                    <div class="card-metric-simple alert-warning"><p class="card-metric-label">Com Alerta</p><p class="card-metric-value text-xl"><?= (int) ($resumoRegistros['com_alerta'] ?? 0) ?></p></div>
-                    <div class="card-metric-simple"><p class="card-metric-label">Com Bot</p><p class="card-metric-value text-xl"><?= (int) ($resumoRegistros['com_telegram'] ?? 0) ?></p></div>
+                    <div class="card-metric-simple"><p class="card-metric-label">Total</p><p class="card-metric-value text-xl"><?= (int) ($resumoCadastros['total'] ?? 0) ?></p></div>
+                    <div class="card-metric-simple"><p class="card-metric-label">No Quadro</p><p class="card-metric-value text-xl"><?= (int) ($resumoCadastros['ativos'] ?? 0) ?></p></div>
+                    <div class="card-metric-simple alert-warning"><p class="card-metric-label">Com Alerta</p><p class="card-metric-value text-xl"><?= (int) ($resumoCadastros['com_alerta'] ?? 0) ?></p></div>
+                    <div class="card-metric-simple"><p class="card-metric-label">Com Bot</p><p class="card-metric-value text-xl"><?= (int) ($resumoCadastros['com_telegram'] ?? 0) ?></p></div>
                 </div>
                 <div class="mt-6 flex flex-wrap gap-3">
                     <a href="/obreiros?alerta=cadastro" class="btn btn-warning">Ver Alertas Cadastrais</a>
@@ -157,12 +193,26 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
     <!-- Gerenciamento de SessÃµes -->
     <div class="card mt-8">
-        <div class="card-header"><h2 class="card-title">Gerenciamento de SessÃµes</h2><p class="card-description">Crie, edite e publique a agenda oficial da Loja.</p></div>
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Gerenciamento de Sessões</h2>
+                <p class="card-description">Fluxo operacional: preencher, revisar, publicar e acompanhar a agenda oficial.</p>
+            </div>
+        </div>
         <div class="card-body">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+                <?php foreach ($etapasSessao as $etapaSessao): ?>
+                    <div class="list-item-param !items-start <?= !empty($etapaSessao['ativo']) ? 'border-l-4 border-blue-600' : '' ?>">
+                        <span class="badge <?= !empty($etapaSessao['ativo']) ? 'badge-primary' : 'badge-secondary' ?>">Etapa <?= htmlspecialchars($etapaSessao['numero']) ?></span>
+                        <strong class="mt-2"><?= htmlspecialchars($etapaSessao['titulo']) ?></strong>
+                        <span class="text-xs text-gray-500"><?= htmlspecialchars($etapaSessao['texto']) ?></span>
+                    </div>
+                <?php endforeach; ?>
+            </div>
             <?php if ($resumoRascunhoSessao): ?>
                 <div class="alert alert-warning mb-8">
                     <div class="flex flex-wrap items-start justify-between gap-4">
-                        <div><h3 class="font-bold">RevisÃ£o Final de Rascunho</h3><p class="text-sm">Resumo pronto para publicaÃ§Ã£o.</p></div>
+                        <div><h3 class="font-bold"><?= $rascunhoEditaSessaoExistente ? 'Revisão final da atualização' : 'Revisão final da nova sessão' ?></h3><p class="text-sm"><?= $rascunhoEditaSessaoExistente ? 'Confira o resumo antes de atualizar a sessão já existente.' : 'Confira o texto final antes de publicar a nova sessão.' ?></p></div>
                         <?php if ($sessaoDuplicada): ?><span class="badge badge-danger">SessÃ£o semelhante encontrada no mesmo dia/horÃ¡rio</span><?php endif; ?>
                     </div>
                     <pre class="mt-4 whitespace-pre-wrap rounded-md bg-white dark:bg-gray-800 p-4 text-sm font-mono"><?= htmlspecialchars($resumoRascunhoSessao) ?></pre>
@@ -172,8 +222,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <?php endforeach; ?>
                     </div>
                     <div class="mt-6 flex flex-wrap gap-3">
-                        <form method="POST" action="/secretaria/sessoes/publicar-rascunho"><button type="submit" class="btn btn-primary">Confirmar PublicaÃ§Ã£o</button></form>
-                        <form method="POST" action="/secretaria/sessoes/cancelar-rascunho"><button type="submit" class="btn btn-secondary">Cancelar Rascunho</button></form>
+                        <form method="POST" action="/secretaria/sessoes/publicar-rascunho"><button type="submit" class="btn btn-primary"><?= $rascunhoEditaSessaoExistente ? 'Confirmar atualização' : 'Confirmar publicação' ?></button></form>
+                        <form method="POST" action="/secretaria/sessoes/cancelar-rascunho"><button type="submit" class="btn btn-secondary">Descartar revisão</button></form>
                     </div>
                 </div>
             <?php endif; ?>
@@ -277,10 +327,122 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         </div>
     <?php endif; ?>
 
-    <!-- Placeholders -->
+    <!-- Trabalhos e Balaustre -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-        <div class="card"><div class="card-header"><h2 class="card-title">Trabalhos e PeÃ§as de Arquitetura</h2><p class="card-description">Controle de trabalhos para a Ordem do Dia.</p></div><div class="card-body text-center text-gray-500"><p>Em breve: formulÃ¡rio e lista de trabalhos refatorados.</p></div></div>
-        <div class="card"><div class="card-header"><h2 class="card-title">BalaÃºstre e VotaÃ§Ã£o</h2><p class="card-description">PreparaÃ§Ã£o do balaÃºstre para votaÃ§Ã£o.</p></div><div class="card-body text-center text-gray-500"><p>Em breve: formulÃ¡rio de balaÃºstre refatorado.</p></div></div>
+        <div class="card"><div class="card-header"><h2 class="card-title">Trabalhos e Peças de Arquitetura</h2><p class="card-description">Controle de trabalhos para a Ordem do Dia.</p></div><div class="card-body text-center text-gray-500"><p>Em breve: formulário e lista de trabalhos refatorados.</p></div></div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Balaústre da Sessão em Foco</h2>
+                    <p class="card-description">Rascunho pré-preenchido com sessão, nominata e campos essenciais da ata.</p>
+                </div>
+                <?php if (!empty($balaustreSessao)): ?>
+                    <span class="badge <?= $badgeStatusSessao($balaustreSessao['status'] ?? null) ?>"><?= htmlspecialchars((string) ($balaustreSessao['status'] ?? 'rascunho')) ?></span>
+                <?php endif; ?>
+            </div>
+            <div class="card-body">
+                <?php if (empty($sessaoResumo)): ?>
+                    <div class="space-y-4">
+                        <div class="text-sm text-gray-600">Você pode preparar o balaústre manualmente em qualquer momento. Primeiro selecione a sessão que será a base do rascunho.</div>
+                        <form method="GET" action="/secretaria" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="md:col-span-2">
+                                <label for="sessao_resumo_balaustre" class="form-label">Sessão para preparar o balaústre</label>
+                                <select name="sessao_resumo" id="sessao_resumo_balaustre" class="form-select">
+                                    <?php foreach ($sessoes as $sessaoOpcao): ?>
+                                        <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>">
+                                            <?= htmlspecialchars((string) ($sessaoOpcao['titulo'] ?: (($sessaoOpcao['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="md:col-span-1 flex items-end">
+                                <button type="submit" class="btn btn-primary w-full">Carregar formulário</button>
+                            </div>
+                        </form>
+                        <div class="text-xs text-gray-500">Depois de carregar, revise e edite todos os campos antes de salvar. O rascunho pode ser salvo e retomado depois.</div>
+                    </div>
+                <?php else: ?>
+                    <form method="POST" action="/secretaria/balaustres/salvar" class="space-y-6">
+                        <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoResumo['id'] ?? 0) ?>">
+                        <div class="list-item-report">
+                            <p class="font-semibold"><?= htmlspecialchars((string) ($sessaoResumo['titulo'] ?: (($sessaoResumo['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessaoResumo['grau_sessao'] ?? '')))) ?></p>
+                            <p class="text-sm text-gray-500"><?= $formatDateTime((string) ($sessaoResumo['data_hora_inicio'] ?? '')) ?> · <?= (int) ($sessaoResumo['total_presentes'] ?? 0) ?> presença(s) registradas</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="numero_balaustre" class="form-label">Número do balaústre</label><input id="numero_balaustre" name="numero_balaustre" value="<?= htmlspecialchars((string) ($balaustreSessao['numero_balaustre'] ?? '')) ?>" class="form-input" placeholder="Ex: 012/2026"></div>
+                            <div><label for="template_versao" class="form-label">Modelo</label><input id="template_versao" name="template_versao" value="<?= htmlspecialchars((string) ($balaustreSessao['template_versao'] ?? 'oficial-v1')) ?>" class="form-input"></div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-semibold mb-3">Cargos da sessão</h3>
+                            <div class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                                <?php foreach ($cargosBalaustreSessao as $cargoSessao): ?>
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 list-item-param !items-start">
+                                        <input type="hidden" name="cargo_sessao_codigo[]" value="<?= htmlspecialchars((string) ($cargoSessao['codigo'] ?? '')) ?>">
+                                        <input type="hidden" name="cargo_sessao_nome[]" value="<?= htmlspecialchars((string) ($cargoSessao['cargo_nome'] ?? $cargoSessao['label'] ?? '')) ?>">
+                                        <input type="hidden" name="cargo_sessao_titular_oficial[]" value="<?= htmlspecialchars((string) ($cargoSessao['titular_oficial'] ?? '')) ?>">
+                                        <div><span>Cargo</span><strong><?= htmlspecialchars((string) ($cargoSessao['cargo_nome'] ?? $cargoSessao['label'] ?? '-')) ?></strong></div>
+                                        <div><span>Titular oficial</span><strong><?= htmlspecialchars((string) (($cargoSessao['titular_oficial'] ?? '') !== '' ? $cargoSessao['titular_oficial'] : '-')) ?></strong></div>
+                                        <div><label class="form-label">Ocupante em Loja</label><input name="cargo_sessao_ocupante_nome[]" value="<?= htmlspecialchars((string) ($cargoSessao['ocupante_nome'] ?? $cargoSessao['titular_oficial'] ?? '')) ?>" class="form-input"></div>
+                                        <div><label class="form-label">Observação</label><input name="cargo_sessao_observacao[]" value="<?= htmlspecialchars((string) ($cargoSessao['observacao'] ?? '')) ?>" class="form-input" placeholder="ad hoc, ausência..."></div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-semibold mb-3">Palavra a bem da Ordem: visitantes</h3>
+                            <div class="space-y-3">
+                                <?php foreach ($linhasVisitantesBalaustre as $visitante): ?>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 list-item-param !items-start">
+                                        <input name="palavra_visitante_nome[]" value="<?= htmlspecialchars((string) ($visitante['nome'] ?? '')) ?>" class="form-input" placeholder="Nome do visitante">
+                                        <input name="palavra_visitante_loja[]" value="<?= htmlspecialchars((string) ($visitante['loja'] ?? '')) ?>" class="form-input" placeholder="Loja">
+                                        <input name="palavra_visitante_oriente[]" value="<?= htmlspecialchars((string) ($visitante['oriente'] ?? '')) ?>" class="form-input" placeholder="Oriente">
+                                        <input name="palavra_visitante_potencia[]" value="<?= htmlspecialchars((string) ($visitante['potencia'] ?? '')) ?>" class="form-input" placeholder="Potência">
+                                        <input name="palavra_visitante_grau[]" value="<?= htmlspecialchars((string) ($visitante['grau'] ?? '')) ?>" class="form-input" placeholder="Grau">
+                                        <input name="palavra_visitante_fala[]" value="<?= htmlspecialchars((string) ($visitante['fala_resumida'] ?? '')) ?>" class="form-input" placeholder="Fala resumida">
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-semibold mb-3">Convites e visitas de terceiros</h3>
+                            <div class="space-y-3">
+                                <?php foreach ($linhasVisitasExternasBalaustre as $visitaExterna): ?>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 list-item-param !items-start">
+                                        <input name="visita_externa_obreiro_nome[]" value="<?= htmlspecialchars((string) ($visitaExterna['obreiro_nome'] ?? '')) ?>" class="form-input" placeholder="Obreiro responsável">
+                                        <input name="visita_externa_loja[]" value="<?= htmlspecialchars((string) ($visitaExterna['loja'] ?? '')) ?>" class="form-input" placeholder="Loja visitada / convidada">
+                                        <input name="visita_externa_oriente[]" value="<?= htmlspecialchars((string) ($visitaExterna['oriente'] ?? '')) ?>" class="form-input" placeholder="Oriente">
+                                        <input name="visita_externa_potencia[]" value="<?= htmlspecialchars((string) ($visitaExterna['potencia_obediencia'] ?? '')) ?>" class="form-input" placeholder="Potência">
+                                        <input type="date" name="visita_externa_data[]" value="<?= htmlspecialchars((string) ($visitaExterna['data_visita'] ?? '')) ?>" class="form-input">
+                                        <input name="visita_externa_observacao[]" value="<?= htmlspecialchars((string) ($visitaExterna['observacao'] ?? '')) ?>" class="form-input" placeholder="Observação">
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <div><label for="texto_final" class="form-label">Texto final do balaústre</label><textarea id="texto_final" name="texto_final" rows="5" class="form-textarea" placeholder="Síntese final para conferência e votação."><?= htmlspecialchars((string) ($balaustreSessao['texto_final'] ?? '')) ?></textarea></div>
+                        <div><label for="observacoes_secretaria" class="form-label">Observações da Secretaria</label><textarea id="observacoes_secretaria" name="observacoes_secretaria" rows="3" class="form-textarea"><?= htmlspecialchars($observacoesBalaustre) ?></textarea></div>
+
+                        <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <button type="submit" class="btn btn-primary">Salvar balaústre</button>
+                            <?php if (!empty($balaustreSessao['id']) && !in_array($balaustreSessao['status'] ?? '', ['apto_votacao', 'em_votacao', 'aprovado'], true)): ?>
+                                <button type="submit" form="marcar-balaustre-apto" class="btn btn-warning">Marcar apto para votação</button>
+                            <?php endif; ?>
+                            <a href="/secretaria/votacao" class="btn btn-secondary">Acompanhar votações</a>
+                        </div>
+                    </form>
+                    <?php if (!empty($balaustreSessao['id']) && !in_array($balaustreSessao['status'] ?? '', ['apto_votacao', 'em_votacao', 'aprovado'], true)): ?>
+                        <form id="marcar-balaustre-apto" method="POST" action="/secretaria/balaustres/apto" onsubmit="return confirm('Marcar este balaústre como apto para votação?');">
+                            <input type="hidden" name="balaustre_id" value="<?= (int) ($balaustreSessao['id'] ?? 0) ?>">
+                        </form>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 </div>
 
