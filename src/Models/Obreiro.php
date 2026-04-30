@@ -151,7 +151,16 @@ class Obreiro
             $params[$key] = $id;
         }
 
-        $sql .= " AND (telegram_id IS NULL OR telegram_id NOT IN (" . implode(', ', $placeholders) . "))";
+        // Evita ocultar obreiro regular quando compartilha telegram_id com conta técnica.
+        // Só exclui do resultado quando o registro também tem perfil típico de conta técnica.
+        $sql .= " AND (
+            telegram_id IS NULL
+            OR telegram_id NOT IN (" . implode(', ', $placeholders) . ")
+            OR (
+                COALESCE(cim::text, '') <> ''
+                AND COALESCE(LOWER(NULLIF(nome_historico, '')), LOWER(NULLIF(nome, ''))) NOT IN ('admin', 'administrador', 'system admin')
+            )
+        )";
     }
 
     private function suportaLojaId(): bool
