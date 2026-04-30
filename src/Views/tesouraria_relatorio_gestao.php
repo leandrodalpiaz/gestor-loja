@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+/** @var array<int, array<string, mixed>> $gestoes */
+/** @var array<string, mixed> $relatorio */
+
 // #############################################################################
 // LÓGICA DE NEGÓCIO E HELPERS
 // #############################################################################
@@ -21,7 +24,7 @@ $rotulosBloco = [
 ];
 
 $formatCurrency = static fn($valor) => 'R$ ' . number_format((float) $valor, 2, ',', '.');
-$formatDate = static fn($dateStr) => !empty($dateStr) ? (new DateTime($dateStr))->format('d/m/Y') : '';
+$formatDate = static fn($dateStr) => !empty($dateStr) ? (new \DateTime($dateStr))->format('d/m/Y') : '';
 
 // #############################################################################
 // CONFIGURAÇÃO DO APP SHELL
@@ -157,7 +160,5 @@ require __DIR__ . '/partials/erp_shell_open.php';
 </div>
 
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
-
-
 
 
