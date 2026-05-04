@@ -19,6 +19,10 @@ class Database
             $password = Env::get('DB_PASS', '');
             $schema = trim((string) Env::get('DB_SCHEMA', ''));
 
+            if (!\App\Config\AppEnv::isProduction() && strtolower($schema) === 'app_prod') {
+                throw new \RuntimeException("SECURITY GUARDRAIL: Acesso ao schema de producao ('app_prod') bloqueado fora do ambiente de producao.");
+            }
+
             $dsn = "pgsql:host={$host};port={$port};dbname={$dbName};options='--client_encoding=UTF8'";
 
             try {

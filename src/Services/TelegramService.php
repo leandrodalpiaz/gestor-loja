@@ -40,6 +40,11 @@ class TelegramService
             return false;
         }
 
+        if (\App\Config\AppEnv::telegramDryRun()) {
+            error_log("TelegramBot (DRY RUN): [Chat $chatId] $message");
+            return true;
+        }
+
         foreach ($this->splitMessage($message) as $chunk) {
             $ok = $this->postToTelegram($chatId, $chunk);
             if (!$ok) {

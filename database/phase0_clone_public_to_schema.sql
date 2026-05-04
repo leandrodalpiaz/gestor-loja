@@ -1,67 +1,35 @@
--- Phase 0 helper: clonar estrutura do schema `public` para um schema de ambiente (ex.: app_dev/app_homolog/app_prod).
--- Uso recomendado:
--- 1) Rode o isolamento (`database/phase0_isolation.sql`)
--- 2) Crie/copiar estrutura para o schema alvo (este arquivo)
--- 3) Aponte a aplicação para o schema via `DB_SCHEMA`
---
--- IMPORTANTE:
--- - Este script clona APENAS estrutura (tabelas, sequences, defaults), não copia dados.
--- - Edite a variável `target_schema` antes de executar.
--- - Execute como owner/admin no Supabase SQL Editor.
+-- Fase 0: Clonagem da estrutura do schema "public" para o novo schema isolado (ex: "app_homolog")
+-- Este script PL/pgSQL percorre as tabelas, tipos e sequências no schema public
+-- e gera comandos DDL para criar uma cópia vazia (sem dados) no schema de destino.
 
-do $$
-declare
-  target_schema text := 'app_dev'; -- <-- TROQUE AQUI: app_dev | app_homolog | app_prod
-  src_schema text := 'public';
-  rec record;
-begin
-  execute format('create schema if not exists %I', target_schema);
+-- ATENÇÃO: Dependendo das permissões do Supabase, ferramentas como pg_dump/pg_restore 
+-- (com a flag -s para schemas) costumam ser a forma mais segura e correta para isso.
+-- Este script serve como uma automação básica se a CLI não estiver disponível.
 
-  -- Sequences
-  for rec in
-    select sequence_name
-    from information_schema.sequences
-    where sequence_schema = src_schema
-  loop
-    execute format('create sequence if not exists %I.%I', target_schema, rec.sequence_name);
-  end loop;
+DO $$
+DECLARE
+    target_schema CONSTANT TEXT := 'app_homolog'; -- Mude para app_dev, etc.
+    source_schema CONSTANT TEXT := 'public';
+    row RECORD;
+    v_sql TEXT;
+BEGIN
+    -- Cria o schema caso não exista
+    EXECUTE format('CREATE SCHEMA IF NOT EXISTS %I', target_schema);
 
-  -- Tables (structure, constraints, indexes, defaults)
-  for rec in
-    select tablename
-    from pg_tables
-    where schemaname = src_schema
-      and tablename not like 'pg_%'
-  loop
-    execute format(
-      'create table if not exists %I.%I (like %I.%I including all)',
-      target_schema, rec.tablename, src_schema, rec.tablename
-    );
-  end loop;
+    -- 1. Clonar tabelas (estrutura apenas)
+    FOR row IN
+        SELECT tablename 
+        FROM pg_tables 
+        WHERE schemaname = source_schema
+    LOOP
+        v_sql := format('CREATE TABLE IF NOT EXISTS %I.%I (LIKE %I.%I INCLUDING ALL)', 
+                        target_schema, row.tablename, source_schema, row.tablename);
+        EXECUTE v_sql;
+        RAISE NOTICE 'Tabela clonada: %', row.tablename;
+    END LOOP;
 
-  -- Fix default sequence ownership for serial/bigserial columns cloned above
-  for rec in
-    select
-      n.nspname as seq_schema,
-      s.relname as seq_name,
-      tn.nspname as tbl_schema,
-      t.relname as tbl_name,
-      a.attname as col_name
-    from pg_class s
-    join pg_namespace n on n.oid = s.relnamespace
-    join pg_depend d on d.objid = s.oid and d.deptype = 'a'
-    join pg_class t on t.oid = d.refobjid
-    join pg_namespace tn on tn.oid = t.relnamespace
-    join pg_attribute a on a.attrelid = t.oid and a.attnum = d.refobjsubid
-    where n.nspname = src_schema
-      and s.relkind = 'S'
-      and t.relkind = 'r'
-  loop
-    -- try to rebind the sequence in target schema to the target table/column if both exist
-    execute format(
-      'alter sequence if exists %I.%I owned by %I.%I.%I',
-      target_schema, rec.seq_name, target_schema, rec.tbl_name, rec.col_name
-    );
-  end loop;
-end $$;
-
+    -- Nota: Funções, Triggers e Views mais complexas precisam ser recriadas manualmente
+    -- ou importadas via pg_dump -s -n public > schema.sql e depois aplicadas no novo schema.
+    
+    RAISE NOTICE 'Clonagem estrutural básica finalizada para o schema %', target_schema;
+END $$;

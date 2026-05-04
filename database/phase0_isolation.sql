@@ -1,50 +1,29 @@
--- Phase 0: Isolamento por schema + roles no mesmo projeto Supabase
--- Execute no SQL Editor do Supabase (como owner/admin do projeto).
---
--- Objetivo:
--- - Criar schemas por ambiente: app_prod, app_homolog, app_dev
--- - Criar roles de aplicação por ambiente com acesso APENAS ao seu schema
--- - Definir search_path default para cada role (opcional, mas recomendado)
---
--- Ajuste os nomes/segredos antes de rodar.
+-- Fase 0: Isolamento de Ambientes no Supabase
+-- Script Base: Criação dos Schemas de Produção, Homologação e Desenvolvimento
+-- ATENÇÃO: Execute este script com o usuário 'postgres' (admin).
 
-begin;
+-- 1. Criação dos schemas
+CREATE SCHEMA IF NOT EXISTS app_prod;
+CREATE SCHEMA IF NOT EXISTS app_homolog;
+CREATE SCHEMA IF NOT EXISTS app_dev;
 
-create schema if not exists app_prod;
-create schema if not exists app_homolog;
-create schema if not exists app_dev;
+-- 2. Revogar acesso público aos novos schemas
+REVOKE ALL ON SCHEMA app_prod FROM public;
+REVOKE ALL ON SCHEMA app_homolog FROM public;
+REVOKE ALL ON SCHEMA app_dev FROM public;
 
--- Roles (não-login) para agrupar permissões
-do $$
-begin
-  if not exists (select 1 from pg_roles where rolname = 'role_prod_app') then
-    create role role_prod_app;
-  end if;
-  if not exists (select 1 from pg_roles where rolname = 'role_homolog_app') then
-    create role role_homolog_app;
-  end if;
-  if not exists (select 1 from pg_roles where rolname = 'role_dev_app') then
-    create role role_dev_app;
-  end if;
-end $$;
+-- 3. (Opcional) Criação de Roles Dedicadas por Ambiente
+-- Para isolamento perfeito, recomenda-se criar roles que só acessam um schema específico.
+-- Exemplo:
+-- CREATE ROLE role_prod NOLOGIN;
+-- GRANT USAGE ON SCHEMA app_prod TO role_prod;
+-- GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA app_prod TO role_prod;
 
--- Permissões por schema: uso + objetos futuros
-grant usage on schema app_prod to role_prod_app;
-grant usage on schema app_homolog to role_homolog_app;
-grant usage on schema app_dev to role_dev_app;
+-- CREATE ROLE role_homolog NOLOGIN;
+-- GRANT USAGE ON SCHEMA app_homolog TO role_homolog;
+-- GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA app_homolog TO role_homolog;
 
-alter default privileges in schema app_prod grant select, insert, update, delete on tables to role_prod_app;
-alter default privileges in schema app_homolog grant select, insert, update, delete on tables to role_homolog_app;
-alter default privileges in schema app_dev grant select, insert, update, delete on tables to role_dev_app;
-
-alter default privileges in schema app_prod grant usage, select, update on sequences to role_prod_app;
-alter default privileges in schema app_homolog grant usage, select, update on sequences to role_homolog_app;
-alter default privileges in schema app_dev grant usage, select, update on sequences to role_dev_app;
-
--- Opcional: search_path padrão por role (reduz risco de cross-schema)
-alter role role_prod_app set search_path = app_prod, public;
-alter role role_homolog_app set search_path = app_homolog, public;
-alter role role_dev_app set search_path = app_dev, public;
-
-commit;
-
+-- Observação: A migração dos dados e tabelas do schema "public" atual para o 
+-- schema "app_prod" não é feita automaticamente aqui para evitar perda de dados.
+-- O schema "public" atual pode ser renomeado para "app_prod" (se suportado sem quebrar FKs)
+-- ou os dados exportados via pg_dump e restaurados no novo schema.
