@@ -15,203 +15,83 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso Restrito - <?= htmlspecialchars($tenantName ?: 'Gestor de Loja') ?></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Portal Público - <?= htmlspecialchars($tenantName ?: 'Gestor de Loja') ?></title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
     <link rel="stylesheet" href="/assets/css/erp_design_system.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root { color-scheme: light dark; }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
-            background: var(--erp-bg);
-            color: var(--erp-text);
-        }
-        .page {
-            max-width: 1240px;
-            margin: 0 auto;
-            padding: 16px;
-        }
-        .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            background: var(--erp-surface);
-            border: 1px solid var(--erp-border);
-            border-radius: 10px;
-            padding: 12px 14px;
-        }
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-        .logo {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            border: 1px solid var(--erp-border);
-            background: var(--erp-surface-2);
-            object-fit: contain;
-            flex: 0 0 auto;
-        }
-        .brand-title { font-size: 14px; font-weight: 600; }
-        .brand-sub { font-size: 12px; color: var(--erp-muted); }
-        .grid {
-            margin-top: 14px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 14px;
-        }
-        @media (min-width: 980px) {
-            .grid { grid-template-columns: 1.2fr 0.8fr; align-items: start; }
-        }
-        .panel {
-            background: var(--erp-surface);
-            border: 1px solid var(--erp-border);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .panel-head {
-            padding: 12px 14px;
-            border-bottom: 1px solid var(--erp-border);
-        }
-        .panel-title { font-size: 14px; font-weight: 600; }
-        .panel-sub { margin-top: 4px; font-size: 12px; color: var(--erp-muted); }
-        .panel-body { padding: 14px; }
-        .content-list { display: grid; gap: 10px; }
-        .content-card {
-            display: block;
-            color: inherit;
-            text-decoration: none;
-            border: 1px solid var(--erp-border);
-            border-radius: 10px;
-            padding: 12px;
-            background: var(--erp-surface);
-        }
-        .content-card:hover { background: var(--erp-surface-2); }
-        .badge {
-            display: inline-block;
-            font-size: 11px;
-            letter-spacing: .04em;
-            text-transform: uppercase;
-            color: var(--erp-muted);
-            border: 1px solid var(--erp-border);
-            background: var(--erp-surface-2);
-            border-radius: 999px;
-            padding: 3px 8px;
-        }
-        .content-title { margin-top: 8px; font-size: 14px; font-weight: 600; color: var(--erp-text); }
-        .content-resume { margin-top: 4px; font-size: 12px; color: var(--erp-muted); line-height: 1.45; }
-        .ad-wrap { display: grid; gap: 10px; margin-bottom: 10px; }
-        @media (min-width: 680px) { .ad-wrap { grid-template-columns: 1fr 1fr; } }
-        .ad-media {
-            width: 48px;
-            height: 48px;
-            border-radius: 8px;
-            border: 1px solid var(--erp-border);
-            object-fit: cover;
-            background: var(--erp-surface-2);
-            flex: 0 0 auto;
-        }
-        .ad-row { display: flex; gap: 10px; align-items: flex-start; }
-        .form-row { margin-bottom: 12px; }
-        .label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-            color: var(--erp-muted);
-            font-weight: 600;
-            margin-bottom: 6px;
-            display: block;
-        }
-        .input {
-            width: 100%;
-            border: 1px solid var(--erp-border);
-            background: var(--erp-surface);
-            color: var(--erp-text);
-            border-radius: 8px;
-            padding: 11px 12px;
-            font-size: 14px;
-        }
-        .input:focus {
-            outline: none;
-            border-color: var(--erp-info);
-            box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.18);
-        }
-        .btn {
-            width: 100%;
-            border-radius: 8px;
-            padding: 11px 12px;
-            font-size: 14px;
-            font-weight: 600;
-            border: 1px solid transparent;
-            cursor: pointer;
-        }
-        .btn + .btn { margin-top: 10px; }
-        .btn-primary { background: var(--erp-brand); color: #fff; }
-        .btn-secondary { background: var(--erp-surface-2); color: var(--erp-text); border-color: var(--erp-border); }
-        .btn[disabled] { opacity: .55; cursor: not-allowed; }
-        .alert {
-            border-radius: 8px;
-            border: 1px solid var(--erp-border);
-            padding: 10px 12px;
-            font-size: 13px;
-            margin-bottom: 12px;
-        }
-        .alert-warning { background: #fff8e8; border-color: #f2cf84; color: #6d4700; }
-        .alert-danger { background: #fff1f2; border-color: #fecdd3; color: #9f1239; }
-        .note { font-size: 12px; color: var(--erp-muted); margin-top: 10px; line-height: 1.4; }
-    </style>
 </head>
-<body>
-    <div class="page">
-        <header class="topbar">
-            <div class="brand">
-                <?php if ($logoLogin): ?>
-                    <img src="<?= htmlspecialchars($logoLogin) ?>" alt="Logo da Loja" class="logo" width="40" height="40">
-                <?php else: ?>
-                    <div class="logo"></div>
-                <?php endif; ?>
-                <div style="min-width:0;">
-                    <div class="brand-title"><?= htmlspecialchars($tenantName ?: 'Gestor de Loja') ?></div>
-                    <div class="brand-sub">Acesso e informações públicas</div>
+<body class="bg-erpSurface text-erpText font-sans antialiased min-h-screen flex flex-col items-center">
+
+<div class="w-full max-w-6xl mx-auto px-4 py-8 flex-1 flex flex-col gap-8 md:gap-12">
+    
+    <!-- Hero Section -->
+    <header class="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 md:pb-10 border-b border-erpBorder/50">
+        <div class="flex items-center gap-4 text-center md:text-left">
+            <?php if ($logoLogin): ?>
+                <img src="<?= htmlspecialchars($logoLogin) ?>" alt="Logo da Loja" class="w-16 h-16 md:w-20 md:h-20 object-contain rounded-2xl bg-erpSurface shadow-sm border border-erpBorder/50">
+            <?php else: ?>
+                <div class="w-16 h-16 md:w-20 md:h-20 bg-erpSurface2 rounded-2xl border border-erpBorder/50 flex items-center justify-center shadow-sm">
+                    <span class="text-2xl text-erpMuted">🏛️</span>
                 </div>
+            <?php endif; ?>
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold tracking-tight"><?= htmlspecialchars($tenantName ?: 'Gestor de Loja') ?></h1>
+                <p class="text-sm md:text-base text-erpMuted mt-1">Bem-vindo ao portal público e de acesso restrito.</p>
             </div>
-            <div class="brand-sub">Painel Administrativo</div>
-        </header>
+        </div>
+        <div class="hidden md:flex flex-col text-right">
+            <span class="text-sm font-medium text-erpMuted uppercase tracking-wider">Acesso Seguro</span>
+            <span class="text-xs text-erpMuted mt-1">Ambiente Criptografado</span>
+        </div>
+    </header>
 
-        <div class="grid">
-            <section class="panel">
-                <div class="panel-head">
-                    <div class="panel-title">Comunicados e agenda</div>
-                    <div class="panel-sub">Informações públicas exibidas em /login.</div>
+    <main class="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start w-full">
+        
+        <!-- Conteúdo Público (Notícias / Ads) -->
+        <div class="w-full lg:flex-1 space-y-10">
+            
+            <?php if ($publicAdsEnabled && !empty($publicAds)): ?>
+            <section>
+                <div class="flex items-center justify-between mb-5">
+                    <h2 class="text-xl font-bold tracking-tight">Apoio Institucional</h2>
+                    <span class="text-xs font-semibold bg-erpBrand/10 text-erpBrand px-2.5 py-1 rounded-md uppercase tracking-wider">Patrocinadores</span>
                 </div>
-                <div class="panel-body">
-                    <?php if ($publicAdsEnabled && !empty($publicAds)): ?>
-                        <div class="ad-wrap">
-                            <?php foreach ($publicAds as $ad): ?>
-                                <a href="<?= htmlspecialchars((string) ($ad['link_url'] ?? '#')) ?>" class="content-card">
-                                    <div class="ad-row">
-                                        <?php if (!empty($ad['imagem_url'])): ?>
-                                            <img src="<?= htmlspecialchars((string) $ad['imagem_url']) ?>" alt="" class="ad-media" width="48" height="48">
-                                        <?php endif; ?>
-                                        <div>
-                                            <div class="content-title" style="margin-top:0;"><?= htmlspecialchars((string) ($ad['titulo'] ?? 'Apoio')) ?></div>
-                                            <div class="content-resume"><?= htmlspecialchars((string) ($ad['resumo'] ?? '')) ?></div>
-                                        </div>
-                                    </div>
-                                </a>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <?php foreach ($publicAds as $ad): ?>
+                        <a href="<?= htmlspecialchars((string) ($ad['link_url'] ?? '#')) ?>" target="_blank" rel="noopener noreferrer" class="group relative bg-erpSurface border border-erpBorder/60 hover:border-erpBrand/40 rounded-2xl p-4 flex gap-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+                            <?php if (!empty($ad['imagem_url'])): ?>
+                                <img src="<?= htmlspecialchars((string) $ad['imagem_url']) ?>" alt="Sponsor" class="w-16 h-16 rounded-xl object-cover border border-erpBorder/50 shrink-0">
+                            <?php else: ?>
+                                <div class="w-16 h-16 rounded-xl bg-erpSurface2 border border-erpBorder/50 flex items-center justify-center shrink-0">
+                                    <svg class="w-6 h-6 text-erpMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                </div>
+                            <?php endif; ?>
+                            <div class="flex flex-col justify-center">
+                                <h3 class="text-sm font-semibold text-erpText group-hover:text-erpBrand transition-colors line-clamp-1"><?= htmlspecialchars((string) ($ad['titulo'] ?? 'Apoio')) ?></h3>
+                                <p class="text-xs text-erpMuted mt-1.5 line-clamp-2 leading-relaxed"><?= htmlspecialchars((string) ($ad['resumo'] ?? '')) ?></p>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+            <?php endif; ?>
 
-                    <div class="content-list">
+            <section>
+                <div class="flex items-center justify-between mb-5">
+                    <h2 class="text-xl font-bold tracking-tight">Mural e Acontecimentos</h2>
+                    <span class="text-xs font-semibold bg-erpSurface2 px-2.5 py-1 rounded-md text-erpMuted uppercase tracking-wider">Notícias</span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <?php if (empty($publicConteudos)): ?>
+                        <div class="col-span-full py-10 text-center bg-erpSurface2/50 rounded-2xl border border-erpBorder border-dashed">
+                            <p class="text-erpMuted text-sm font-medium">Nenhum evento ou comunicado publicado no momento.</p>
+                        </div>
+                    <?php else: ?>
                         <?php foreach ($publicConteudos as $item): ?>
                             <?php
                             $tipo = strtoupper(trim((string) ($item['tipo'] ?? '')));
@@ -219,65 +99,116 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
                             $resumo = (string) ($item['resumo'] ?? '');
                             $inicioEm = (string) ($item['inicio_em'] ?? '');
                             $linkUrl = (string) ($item['link_url'] ?? '');
+                            
+                            $badgeColor = match(strtolower($tipo)) {
+                                'evento', 'agenda' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+                                'noticia' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+                                'comunicado' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+                                default => 'bg-erpSurface2 text-erpMuted border-erpBorder',
+                            };
                             ?>
-                            <a href="<?= htmlspecialchars($linkUrl !== '' ? $linkUrl : '#') ?>" class="content-card">
-                                <?php if ($tipo !== ''): ?>
-                                    <span class="badge"><?= htmlspecialchars($tipo) ?></span>
-                                <?php endif; ?>
-                                <?php if ($inicioEm !== ''): ?>
-                                    <span class="badge" style="margin-left:6px;"><?= htmlspecialchars($inicioEm) ?></span>
-                                <?php endif; ?>
-                                <div class="content-title"><?= htmlspecialchars($titulo) ?></div>
+                            <a href="<?= htmlspecialchars($linkUrl !== '' ? $linkUrl : '#') ?>" class="group bg-erpSurface border border-erpBorder/80 hover:border-erpBrand/50 rounded-2xl p-6 flex flex-col transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                                <div class="flex items-center gap-2.5 mb-3.5">
+                                    <?php if ($tipo !== ''): ?>
+                                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border <?= $badgeColor ?>">
+                                            <?= htmlspecialchars($tipo) ?>
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if ($inicioEm !== ''): ?>
+                                        <span class="text-xs font-medium text-erpMuted flex items-center gap-1.5">
+                                            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            <?= htmlspecialchars($inicioEm) ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                                <h3 class="text-base font-semibold text-erpText group-hover:text-erpBrand transition-colors leading-snug"><?= htmlspecialchars($titulo) ?></h3>
                                 <?php if ($resumo !== ''): ?>
-                                    <div class="content-resume"><?= htmlspecialchars($resumo) ?></div>
+                                    <p class="text-sm text-erpMuted mt-2.5 leading-relaxed flex-1 line-clamp-3"><?= htmlspecialchars($resumo) ?></p>
                                 <?php endif; ?>
                             </a>
                         <?php endforeach; ?>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </section>
-
-            <aside class="panel">
-                <div class="panel-head">
-                    <div class="panel-title">Acesso restrito</div>
-                    <div class="panel-sub">Entre com seu CIM e senha cadastrada.</div>
-                </div>
-                <div class="panel-body">
-                    <?php if (!$tenantResolved): ?>
-                        <div class="alert alert-warning"><?= htmlspecialchars($tenantUnavailableMessage ?: 'Loja não identificada. Verifique a configuração do ambiente.') ?></div>
-                    <?php endif; ?>
-
-                    <?php if (isset($erroLogin)): ?>
-                        <div class="alert alert-danger"><?= htmlspecialchars((string) $erroLogin) ?></div>
-                    <?php endif; ?>
-
-                    <form action="/login" method="POST">
-                        <div class="form-row">
-                            <label for="matricula" class="label">CIM / Matrícula</label>
-                            <input id="matricula" name="matricula" type="text" required <?= !$tenantResolved ? 'disabled' : '' ?> class="input" placeholder="Digite seu CIM">
-                        </div>
-                        <div class="form-row">
-                            <label for="password" class="label">Senha</label>
-                            <input id="password" name="password" type="password" required <?= !$tenantResolved ? 'disabled' : '' ?> class="input" placeholder="Digite sua senha">
-                        </div>
-                        <button type="submit" name="acao" value="login" <?= !$tenantResolved ? 'disabled' : '' ?> class="btn btn-primary">Entrar</button>
-                        <button type="submit" name="acao" value="solicitar" <?= !$tenantResolved ? 'disabled' : '' ?> class="btn btn-secondary">Solicitar acesso</button>
-                    </form>
-
-                    <div class="note">Em caso de dúvida, procure a Secretaria da sua Loja para validação cadastral.</div>
-                </div>
-            </aside>
         </div>
-    </div>
-    <script>
-        (function () {
-            try {
-                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+
+        <!-- Área de Login (Formulário Lateral) -->
+        <aside class="w-full lg:w-[420px] shrink-0">
+            <div class="bg-erpSurface border border-erpBorder shadow-md rounded-[24px] p-6 md:p-8 sticky top-8">
+                <div class="mb-8 text-center">
+                    <div class="w-12 h-12 bg-erpBrand/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6 text-erpBrand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    </div>
+                    <h2 class="text-xl font-bold tracking-tight">Acesso Restrito</h2>
+                    <p class="text-sm text-erpMuted mt-1.5">Identifique-se para acessar os módulos internos</p>
+                </div>
+
+                <?php if (!$tenantResolved): ?>
+                    <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-800 flex items-start gap-3">
+                        <svg class="w-5 h-5 shrink-0 mt-0.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <span><?= htmlspecialchars($tenantUnavailableMessage ?: 'Loja não identificada. Verifique a configuração do ambiente.') ?></span>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (isset($erroLogin)): ?>
+                    <div class="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-800 flex items-start gap-3">
+                        <svg class="w-5 h-5 shrink-0 mt-0.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span><?= htmlspecialchars((string) $erroLogin) ?></span>
+                    </div>
+                <?php endif; ?>
+
+                <form action="/login" method="POST" class="space-y-5">
+                    <div>
+                        <label for="matricula" class="block text-xs font-semibold text-erpMuted uppercase tracking-wider mb-2">CIM / Matrícula</label>
+                        <input id="matricula" name="matricula" type="text" required <?= !$tenantResolved ? 'disabled' : '' ?> 
+                            class="w-full px-4 py-3.5 bg-erpSurface border border-erpBorder rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-erpBrand/20 focus:border-erpBrand transition-all shadow-sm" 
+                            placeholder="Digite seu CIM numérico">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-xs font-semibold text-erpMuted uppercase tracking-wider mb-2">Senha</label>
+                        <input id="password" name="password" type="password" required <?= !$tenantResolved ? 'disabled' : '' ?> 
+                            class="w-full px-4 py-3.5 bg-erpSurface border border-erpBorder rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-erpBrand/20 focus:border-erpBrand transition-all shadow-sm" 
+                            placeholder="Digite sua senha cadastrada">
+                    </div>
+                    
+                    <div class="pt-4 flex flex-col gap-3">
+                        <button type="submit" name="acao" value="login" <?= !$tenantResolved ? 'disabled' : '' ?> 
+                            class="w-full flex items-center justify-center gap-2 bg-erpBrand hover:bg-erpBrand/90 text-white font-semibold py-3.5 px-4 rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none shadow-sm">
+                            Entrar no Sistema
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                        <button type="submit" name="acao" value="solicitar" <?= !$tenantResolved ? 'disabled' : '' ?> 
+                            class="w-full bg-erpSurface hover:bg-erpSurface2 text-erpText border border-erpBorder font-semibold py-3 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none text-sm">
+                            Primeiro acesso ou esqueceu a senha?
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-8 pt-6 border-t border-erpBorder/50 text-center">
+                    <p class="text-[11px] text-erpMuted leading-relaxed">Em caso de dificuldade técnica, procure a Secretaria da sua Loja para validação cadastral ou redefinição de credenciais.</p>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+</div>
+
+<script>
+    // System Dark Mode auto-sync
+    (function () {
+        try {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if(e.matches) {
                     document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
                 }
-            } catch (e) {}
-        })();
-    </script>
+            });
+        } catch (e) {}
+    })();
+</script>
 </body>
 </html>
-
