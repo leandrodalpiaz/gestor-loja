@@ -169,14 +169,14 @@ require __DIR__ . '/partials/erp_shell_open.php';
                             <div class="font-semibold"><?= htmlspecialchars($nomeExibicao) ?></div>
                             <div class="text-xs text-gray-500">CIM: <?= htmlspecialchars($obreiro['cim'] ?? '-') ?> | Grau: <?= htmlspecialchars($obreiro['grau'] ?? '-') ?></div>
                         </td>
-                        <td><span class="badge-status badge-status-info"><?= htmlspecialchars($situacao) ?></span></td>
+                        <td><?php $label = $situacao; $type = 'info'; require __DIR__ . '/components/badge-status.php'; ?></td>
                         <td>
                             <div class="flex flex-wrap gap-1">
                                 <?php if (empty($cargosAtuais)): ?>
                                     <span class="text-xs text-gray-500">Nenhum</span>
                                 <?php else: ?>
                                     <?php foreach ($cargosAtuais as $codigo): ?>
-                                        <span class="badge-status badge-status-neutral"><?= htmlspecialchars(Cargo::rotuloOficial($codigo)) ?></span>
+                                        <?php $label = Cargo::rotuloOficial($codigo); $type = 'neutral'; require __DIR__ . '/components/badge-status.php'; ?>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </div>
@@ -212,58 +212,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
     <!-- Cards para Mobile -->
     <div class="lg:hidden space-y-4">
         <?php foreach ($obreiros as $obreiro): ?>
-            <?php
-            $nomeExibicao = $obreiro['nome_historico'] ?: $obreiro['nome'];
-            $situacao = $obreiro['situacao_quadro'] ?? 'Regular';
-            $cargosAtuais = $obreiro['cargos_codigos'] ?? [];
-            $alertas = $obreiro['alertas_cadastro'] ?? [];
-            ?>
-            <div class="card">
-                <div class="card-body">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="font-bold text-lg"><?= htmlspecialchars($nomeExibicao) ?></h3>
-                            <p class="text-sm text-gray-500">CIM: <?= htmlspecialchars($obreiro['cim'] ?? '-') ?> | Grau: <?= htmlspecialchars($obreiro['grau'] ?? '-') ?></p>
-                        </div>
-                        <span class="badge-status badge-status-info"><?= htmlspecialchars($situacao) ?></span>
-                    </div>
-                    <?php if (!empty($alertas)): ?>
-                        <div class="mt-2"><span class="badge-status badge-status-warning"><?= count($alertas) ?> Alerta(s) de Cadastro</span></div>
-                    <?php endif; ?>
-                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <h4 class="text-sm font-semibold mb-2">Cargos</h4>
-                        <div class="flex flex-wrap gap-1">
-                            <?php if (empty($cargosAtuais)): ?>
-                                <span class="text-xs text-gray-500">Nenhum cargo oficial em exercício.</span>
-                            <?php else: ?>
-                                <?php foreach ($cargosAtuais as $codigo): ?>
-                                    <span class="badge-status badge-status-neutral"><?= htmlspecialchars(Cargo::rotuloOficial($codigo)) ?></span>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
-                        <?php if ($podeGerenciarObreiros): ?>
-                            <a href="/obreiros/editar?id=<?= $obreiro['id'] ?>" class="btn btn-primary text-sm">Editar Obreiro</a>
-                            <form method="post" action="/obreiros/inativar" onsubmit="return confirm('Inativar este obreiro?');" class="flex-grow">
-                                <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
-                                <button type="submit" class="btn btn-secondary text-sm w-full">Inativar</button>
-                            </form>
-                            <form method="post" action="/obreiros/excluir" onsubmit="return confirm('Excluir este obreiro da gestão? Esta ação pode ser irreversível.');" class="flex-grow">
-                                <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
-                                <button type="submit" class="btn btn-secondary text-sm w-full bg-red-100 text-red-800 hover:bg-red-200">Excluir</button>
-                            </form>
-                        <?php endif; ?>
-                        <?php if ($podeGerarConvitesAcesso): ?>
-                            <form method="post" action="/admin/convites/gerar" onsubmit="return confirm('Gerar convite de acesso para este obreiro?');" class="flex-grow">
-                                <input type="hidden" name="obreiro_id" value="<?= $obreiro['id'] ?>">
-                                <input type="hidden" name="return_to" value="<?= htmlspecialchars($returnToAtual) ?>">
-                                <button type="submit" class="btn btn-secondary text-sm w-full">Gerar Convite</button>
-                            </form>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
+            <?php require __DIR__ . '/components/card-obreiro.php'; ?>
         <?php endforeach; ?>
     </div>
 <?php endif; ?>

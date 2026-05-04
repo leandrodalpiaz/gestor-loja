@@ -26,9 +26,19 @@ ob_start();
                 Buscar
             </button>
         </form>
-        <a href="/pwa/biblioteca/meus-emprestimos" class="flex items-center justify-center rounded-xl border border-erpBorder bg-erpSurface px-5 py-3 text-sm font-semibold text-erpNavy transition hover:bg-erpBg">
-            Meus Empréstimos
-        </a>
+        <div class="flex gap-2 w-full sm:w-auto">
+            <a href="/pwa/biblioteca/meus-emprestimos" class="flex flex-1 items-center justify-center rounded-xl border border-erpBorder bg-erpSurface px-5 py-3 text-sm font-semibold text-erpNavy transition hover:bg-erpBg whitespace-nowrap">
+                Meus Empréstimos
+            </a>
+            <?php
+            $authorizer = $GLOBALS['gestor_loja_authorizer'] ?? null;
+            if ($authorizer instanceof \App\Core\Authorization\Authorizer && $authorizer->hasPermission('biblioteca.manage')):
+            ?>
+                <a href="/pwa/biblioteca/adicionar" class="flex flex-1 items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 whitespace-nowrap">
+                    + Adicionar
+                </a>
+            <?php endif; ?>
+        </div>
     </div>
 
     <?php if ($redeHabilitada): ?>
@@ -58,6 +68,7 @@ ob_start();
                 $tipo = (string) ($item['tipo'] ?? '');
                 $lojaNome = (string) ($item['loja_nome'] ?? '');
                 $disponivel = (bool) ($item['disponivel'] ?? false);
+                $grauRecomendado = (string) ($item['grau_recomendado'] ?? 'Livre');
                 ?>
                 <div class="rounded-2xl border border-erpBorder bg-erpSurface p-4 shadow-sm">
                     <div class="flex items-start justify-between gap-3">
@@ -66,20 +77,23 @@ ob_start();
                             <p class="text-sm text-erpMuted truncate">
                                 <?= $autor !== '' ? htmlspecialchars($autor) : 'Autor não informado' ?>
                             </p>
-                            <p class="text-xs text-erpMuted truncate">
-                                <?= $tipo !== '' ? htmlspecialchars($tipo) : 'Não classificado' ?>
-                                <?php if ($lojaNome !== ''): ?>
-                                    · <span class="font-medium"><?= htmlspecialchars($lojaNome) ?></span>
+                            <div class="mt-1 flex flex-wrap items-center gap-1.5 text-[0.65rem] text-erpMuted">
+                                <span class="uppercase tracking-wider font-semibold"><?= $tipo !== '' ? htmlspecialchars($tipo) : 'Não classificado' ?></span>
+                                <?php if ($grauRecomendado !== 'Livre'): ?>
+                                    · <span class="font-bold text-indigo-600 uppercase tracking-wider"><?= htmlspecialchars($grauRecomendado) ?></span>
                                 <?php endif; ?>
-                            </p>
+                                <?php if ($lojaNome !== ''): ?>
+                                    · <span class="font-medium text-erpNavy truncate max-w-[120px]"><?= htmlspecialchars($lojaNome) ?></span>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold <?= $disponivel ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700' ?>">
-                            <?= $disponivel ? 'Disponível' : 'Indisponível' ?>
+                        <span class="shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-wider <?= $disponivel ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700' ?>">
+                            <?= $disponivel ? 'Disp.' : 'Indisp.' ?>
                         </span>
                     </div>
 
                     <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <a href="/biblioteca/detalhes?id=<?= (int) ($item['id'] ?? 0) ?><?= $catalogScope === 'rede' ? '&scope=rede' : '' ?>"
+                        <a href="/pwa/biblioteca/detalhes?id=<?= (int) ($item['id'] ?? 0) ?><?= $catalogScope === 'rede' ? '&loja_id=' . (int)($item['loja_id']??0) : '' ?>"
                            class="w-full rounded-lg border border-erpBorder bg-erpSurface px-4 py-2.5 text-center text-sm font-semibold text-erpNavy transition hover:bg-erpBg">
                             Ver detalhes
                         </a>
@@ -88,7 +102,7 @@ ob_start();
                             <input type="hidden" name="scope" value="<?= htmlspecialchars($catalogScope) ?>">
                             <input type="hidden" name="loja_id" value="<?= (int) ($item['loja_id'] ?? 0) ?>">
                             <button class="w-full rounded-lg bg-erpNavy px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50" <?= $disponivel ? '' : 'disabled' ?>>
-                                <?= $disponivel ? 'Solicitar Empréstimo' : 'Indisponível' ?>
+                                Solicitar Empréstimo
                             </button>
                         </form>
                     </div>

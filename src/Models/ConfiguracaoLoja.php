@@ -106,6 +106,9 @@ class ConfiguracaoLoja
             'pix_beneficiario' => 'Renascença nº 270',
             'observacao_relatorios' => '',
             'historia_loja' => '',
+            'cor_primaria_light' => '#1E3A8A',
+            'cor_primaria_dark' => '#0F172A',
+            'logo_path' => null,
         ];
     }
 
@@ -126,6 +129,7 @@ class ConfiguracaoLoja
                     contribuicao_biblioteca_valor_padrao, contribuicao_biblioteca_quantidade_mensal,
                     pix_chave_tipo, pix_chave_valor, pix_beneficiario,
                     observacao_relatorios, historia_loja,
+                    cor_primaria_light, cor_primaria_dark, logo_path,
                     created_at, updated_at
                 ) VALUES (
                     1, :loja_id, :nome_loja, :numero_loja, :titulo_tratamento, :cidade, :uf, :oriente,
@@ -140,6 +144,7 @@ class ConfiguracaoLoja
                     :contribuicao_biblioteca_valor_padrao, :contribuicao_biblioteca_quantidade_mensal,
                     :pix_chave_tipo, :pix_chave_valor, :pix_beneficiario,
                     :observacao_relatorios, :historia_loja,
+                    :cor_primaria_light, :cor_primaria_dark, :logo_path,
                     NOW(), NOW()
                 )
                 ON CONFLICT (loja_id) DO UPDATE SET
@@ -185,6 +190,9 @@ class ConfiguracaoLoja
                     pix_beneficiario = EXCLUDED.pix_beneficiario,
                     observacao_relatorios = EXCLUDED.observacao_relatorios,
                     historia_loja = EXCLUDED.historia_loja,
+                    cor_primaria_light = EXCLUDED.cor_primaria_light,
+                    cor_primaria_dark = EXCLUDED.cor_primaria_dark,
+                    logo_path = EXCLUDED.logo_path,
                     updated_at = NOW()";
         } else {
             $sql = "INSERT INTO configuracoes_loja (
@@ -200,6 +208,7 @@ class ConfiguracaoLoja
                     contribuicao_biblioteca_valor_padrao, contribuicao_biblioteca_quantidade_mensal,
                     pix_chave_tipo, pix_chave_valor, pix_beneficiario,
                     observacao_relatorios, historia_loja,
+                    cor_primaria_light, cor_primaria_dark, logo_path,
                     created_at, updated_at
                 ) VALUES (
                     1, :nome_loja, :numero_loja, :titulo_tratamento, :cidade, :uf, :oriente,
@@ -214,6 +223,7 @@ class ConfiguracaoLoja
                     :contribuicao_biblioteca_valor_padrao, :contribuicao_biblioteca_quantidade_mensal,
                     :pix_chave_tipo, :pix_chave_valor, :pix_beneficiario,
                     :observacao_relatorios, :historia_loja,
+                    :cor_primaria_light, :cor_primaria_dark, :logo_path,
                     NOW(), NOW()
                 )
                 ON CONFLICT (id) DO UPDATE SET
@@ -258,6 +268,9 @@ class ConfiguracaoLoja
                     pix_beneficiario = EXCLUDED.pix_beneficiario,
                     observacao_relatorios = EXCLUDED.observacao_relatorios,
                     historia_loja = EXCLUDED.historia_loja,
+                    cor_primaria_light = EXCLUDED.cor_primaria_light,
+                    cor_primaria_dark = EXCLUDED.cor_primaria_dark,
+                    logo_path = EXCLUDED.logo_path,
                     updated_at = NOW()";
         }
 
@@ -305,6 +318,9 @@ class ConfiguracaoLoja
             'pix_beneficiario' => $this->texto($dados['pix_beneficiario'] ?? null),
             'observacao_relatorios' => $this->texto($dados['observacao_relatorios'] ?? null),
             'historia_loja' => $this->texto($dados['historia_loja'] ?? null),
+            'cor_primaria_light' => $this->texto($dados['cor_primaria_light'] ?? '#1E3A8A'),
+            'cor_primaria_dark' => $this->texto($dados['cor_primaria_dark'] ?? '#0F172A'),
+            'logo_path' => $this->texto($dados['logo_path'] ?? null),
         ];
 
         if ($this->suportaLojaId()) {

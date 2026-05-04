@@ -157,6 +157,34 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
                 <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
                     <div class="border-b border-slate-200 pb-4">
+                        <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Identidade Visual (PWA)</div>
+                        <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Cores e Logotipo</h2>
+                    </div>
+                    <div class="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                        <div>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Cor Primária (Light)</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="cor_primaria_light" value="<?= htmlspecialchars((string) ($configuracao['cor_primaria_light'] ?? '#1E3A8A')) ?>" class="h-10 w-10 cursor-pointer rounded border border-slate-200 bg-transparent p-0.5 focus:border-dourado">
+                                <input type="text" value="<?= htmlspecialchars((string) ($configuracao['cor_primaria_light'] ?? '#1E3A8A')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Cor Primária (Dark)</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" name="cor_primaria_dark" value="<?= htmlspecialchars((string) ($configuracao['cor_primaria_dark'] ?? '#0F172A')) ?>" class="h-10 w-10 cursor-pointer rounded border border-slate-200 bg-transparent p-0.5 focus:border-dourado">
+                                <input type="text" value="<?= htmlspecialchars((string) ($configuracao['cor_primaria_dark'] ?? '#0F172A')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none" oninput="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">Caminho do Logotipo</label>
+                            <input type="text" name="logo_path" placeholder="Ex: /assets/tenants/loja/logo.png" value="<?= htmlspecialchars((string) ($configuracao['logo_path'] ?? '')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
+                            <p class="mt-2 text-xs text-slate-400">Deixe em branco para usar o logotipo padrão resolvido pelo slug.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rounded-[1.5rem] border border-slate-200 bg-white p-7 shadow-sm">
+                    <div class="border-b border-slate-200 pb-4">
                         <div class="text-[0.72rem] uppercase tracking-[0.32em] text-dourado">Potência e estrutura</div>
                         <h2 class="mt-2 text-3xl font-semibold leading-tight text-erp-navy">Vínculos institucionais</h2>
                     </div>

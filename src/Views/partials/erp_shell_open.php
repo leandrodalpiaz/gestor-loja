@@ -131,6 +131,12 @@ foreach ($appShellSidebarSections as $section) {
 
         <!-- Main content -->
         <div class="erp-app-main min-w-0">
+            <?php if (!empty($_SESSION['admin_mode'])): ?>
+                <div style="background: #ef4444; color: white; padding: 12px; text-align: center; font-weight: bold; position: relative; z-index: 50;">
+                    ⚠️ ATENÇÃO: Você está navegando em MODO SUPORTE (Ghost Login). As ações não afetarão o histórico civil do seu Obreiro real.
+                    <a href="/admin-suporte/sair" style="text-decoration: underline; margin-left: 10px; color: white;">Sair do Modo Suporte</a>
+                </div>
+            <?php endif; ?>
             <header class="sticky top-0 z-20 border-b border-erp-border bg-erp-surface/80 backdrop-blur-sm">
                 <div class="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
                     <!-- Mobile sidebar toggle -->

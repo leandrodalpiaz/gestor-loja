@@ -90,6 +90,17 @@ class PwaComunicacaoController
                 $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
                 $id = (new Comunicado())->criar($payload, $autorId !== '' && $autorId !== '0' ? $autorId : null);
                 if ($id) {
+                    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (int)($_SERVER['SERVER_PORT'] ?? 80) === 443 ? 'https' : 'http';
+                    $link = "{$scheme}://{$host}/pwa/comunicacao/ler?id=" . urlencode((string) $id);
+                    $mensagemTelegram = "📢 <b>Novo Comunicado Oficial</b>\n\n"
+                                      . "Foi publicado um novo comunicado no painel da Loja.\n"
+                                      . "<b>Título:</b> " . htmlspecialchars($payload['titulo']) . "\n\n"
+                                      . "Acesse o link abaixo para ler e confirmar sua ciência:\n"
+                                      . $link;
+                    
+                    (new \App\Services\TelegramService())->sendMessageToGroup($mensagemTelegram);
+
                     $_SESSION['mensagem_sucesso'] = 'Comunicado publicado com sucesso.';
                     header('Location: /pwa/comunicacao/ler?id=' . urlencode((string) $id));
                     exit;

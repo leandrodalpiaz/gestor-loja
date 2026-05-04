@@ -140,6 +140,47 @@ class PainelRoutes
                 (new PwaBibliotecaController())->meusEmprestimos();
                 return true;
 
+            case '/pwa/biblioteca/detalhes':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('biblioteca.self') || $authorizer->hasPermission('biblioteca.manage'),
+                    'Acesso restrito ao módulo Biblioteca.'
+                );
+                if (!FeatureFlags::pwaBiblioteca()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                $id = (int) ($_GET['id'] ?? 0);
+                if ($id <= 0) {
+                    header('Location: /pwa/biblioteca');
+                    exit;
+                }
+                (new PwaBibliotecaController())->detalhes($id);
+                return true;
+
+            case '/pwa/biblioteca/adicionar':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('biblioteca.manage'),
+                    'Acesso restrito ao Bibliotecário e Administradores.'
+                );
+                if (!FeatureFlags::pwaBiblioteca()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaBibliotecaController())->adicionar();
+                return true;
+
+            case '/pwa/biblioteca/classificar':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('biblioteca.classificar'),
+                    'Acesso restrito.'
+                );
+                if (!FeatureFlags::pwaBiblioteca()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaBibliotecaController())->classificar();
+                return true;
+
             case '/pwa/comunicacao':
                 WebGuards::requireLogin($openTestAccess, $session);
                 WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Acesso restrito ao painel.');

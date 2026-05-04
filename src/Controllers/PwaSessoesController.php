@@ -20,14 +20,20 @@ class PwaSessoesController
         $presencaModel = new Presenca();
 
         $usuarioId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-        $proximaSessao = $sessaoModel->obterProximaSessao();
-        $sessao = null;
-        $resposta = null;
+        $sessoesList = $sessaoModel->listarFuturas(); // Traz até 50 futuras por padrão
+        
+        $sessoesFuturas = [];
+        $respostas = [];
 
-        if ($proximaSessao && !empty($proximaSessao['id'])) {
-            $sessao = $sessaoModel->findById((int) $proximaSessao['id']);
-            if ($sessao && $usuarioId !== '' && $usuarioId !== '0') {
-                $resposta = $presencaModel->obterResposta((int) $sessao['id'], $usuarioId);
+        foreach ($sessoesList as $s) {
+            $sessaoDetalhada = $sessaoModel->findById((int) $s['id']);
+            if ($sessaoDetalhada) {
+                $sessoesFuturas[] = $sessaoDetalhada;
+                if ($usuarioId !== '' && $usuarioId !== '0') {
+                    $respostas[$s['id']] = $presencaModel->obterResposta((int) $s['id'], $usuarioId);
+                } else {
+                    $respostas[$s['id']] = null;
+                }
             }
         }
 

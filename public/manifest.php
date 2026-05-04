@@ -15,10 +15,25 @@ if ($tenantSlug === '') {
     $tenantSlug = 'loja-teste';
 }
 
-$name = 'Gestor Loja';
-$shortName = 'Gestor';
-$themeColor = '#1E3A5F';
-$backgroundColor = '#F4F7FB';
+require_once __DIR__ . '/../vendor/autoload.php';
+\App\Config\Environment::load(__DIR__ . '/../');
+
+try {
+    $configuracaoLoja = (new \App\Models\ConfiguracaoLoja())->obter();
+} catch (\Throwable $e) {
+    $configuracaoLoja = [];
+}
+
+$nomeLoja = trim((string) ($configuracaoLoja['nome_loja'] ?? ''));
+if ($nomeLoja === '') {
+    $nomeLoja = 'Gestor Loja';
+}
+
+$shortName = mb_strimwidth($nomeLoja, 0, 12, '');
+$themeColor = (string) ($configuracaoLoja['cor_primaria_light'] ?? '#1E3A8A');
+$backgroundColor = (string) ($configuracaoLoja['cor_primaria_dark'] ?? '#0F172A');
+
+$name = $nomeLoja;
 
 $tenantBase = '/assets/tenants/' . rawurlencode($tenantSlug) . '/';
 $logo192 = $tenantBase . 'logo-192.png';
@@ -40,6 +55,7 @@ echo json_encode([
     'start_url' => '/pwa',
     'scope' => '/',
     'display' => 'standalone',
+    'orientation' => 'portrait',
     'theme_color' => $themeColor,
     'background_color' => $backgroundColor,
     'icons' => [

@@ -10,8 +10,17 @@ class AdminRoutes
     public static function dispatch(string $requestUri, bool $openTestAccess, array $session, Authorizer $authorizer): bool
     {
         $controller = new AdminController();
+        $supportController = new \App\Controllers\AdminSupportController();
 
         switch ($requestUri) {
+            case '/admin-suporte':
+                $supportController->ativarModoSuporte();
+                return true;
+
+            case '/admin-suporte/sair':
+                $supportController->desativarModoSuporte();
+                return true;
+
             case '/admin/acessos':
                 ModuleGuards::requireAccessManage($openTestAccess, $session, $authorizer);
                 $controller->acessosPendentes();

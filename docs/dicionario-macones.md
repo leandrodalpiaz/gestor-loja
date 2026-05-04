@@ -40,7 +40,10 @@ Este dicionario define a padronizacao de linguagem visivel ao usuario no sistema
 | Inativo | Afastado | Estado visual | "Situacao: Afastado" |
 | Bloqueado | Irregular | Estado visual | "Situacao: Irregular" |
 | Pendente | Em aberto / Em analise | Contexto de cobranca ou validacao | "Contribuicao em aberto" |
-
+| Membros, Usuários, Clientes | Quadro de Obreiros | Telas de listagem e gestão de pessoas | "Quadro de Obreiros" |
+| Financeiro, Pagamentos | Tesouraria | Módulo do cargo e navegação | "Tesouraria" |
+| Usuário logado / Sucesso | Seja bem-vindo, Irmão | Apenas após o login | "Seja bem-vindo, Irmão" |
+| Oriente (como saudação) | Oriente (como cidade) | Restrito a campos de endereço geográfico | "Oriente: São Paulo" |
 ## Termos vetados fora de contexto ritual
 
 Evitar, salvo contexto ritualistico real:

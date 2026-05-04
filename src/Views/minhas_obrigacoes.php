@@ -221,7 +221,12 @@ require __DIR__ . '/partials/erp_shell_open.php';
                                             $statusLabel = 'Atrasado';
                                         }
                                         ?>
-                                        <span class="badge-status <?= $statusClass ?>"><?= $statusLabel ?></span>
+                                        <?php
+                                        $label = $statusLabel;
+                                        // Mapeando a classe de status para o type do componente (ex: badge-status-warning -> warning)
+                                        $type = str_replace('badge-status-', '', $statusClass);
+                                        require __DIR__ . '/components/badge-status.php';
+                                        ?>
                                     </div>
                                 </div>
                                 <?php if (!empty($parcela['descricao_status'])): ?>

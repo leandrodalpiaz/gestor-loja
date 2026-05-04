@@ -88,4 +88,97 @@ class PwaBibliotecaController
 
         require __DIR__ . '/../Views/pwa/biblioteca_meus_emprestimos.php';
     }
+
+    public function detalhes(int $id): void
+    {
+        if (!FeatureFlags::pwaBiblioteca()) {
+            http_response_code(404);
+            echo 'Recurso indisponível.';
+            return;
+        }
+
+        $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $redeConfig = (new BibliotecaLojaConfig())->obterDaLojaAtual();
+        $redeHabilitada = !empty($redeConfig['compartilhar_acervo']);
+        $lojaId = $redeHabilitada ? (int) ($_GET['loja_id'] ?? 0) : 0;
+
+        $item = $this->acervoModel->buscarDetalhes(
+            $id,
+            $obreiroId !== '' ? $obreiroId : null,
+            $lojaId > 0 ? $lojaId : null
+        );
+
+        if (!$item) {
+            http_response_code(404);
+            echo 'Livro não encontrado.';
+            exit;
+        }
+
+        $comentarios = (new \App\Models\ComentarioBiblioteca())->listarPorLivro($id);
+        $permissoes = $this->resolverPermissoes();
+
+        require __DIR__ . '/../Views/pwa/biblioteca_detalhes.php';
+    }
+
+    public function adicionar(): void
+    {
+        if (!FeatureFlags::pwaBiblioteca()) {
+            http_response_code(404);
+            echo 'Recurso indisponível.';
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $isbn = trim((string) ($_POST['isbn'] ?? ''));
+            if ($isbn !== '') {
+                $dados = [
+                    'isbn' => $isbn,
+                    'quantidade_disponivel' => 1,
+                    'curador_id' => $_SESSION['usuario_id'] ?? null,
+                ];
+                $ok = $this->acervoModel->adicionar($dados);
+                header('Location: /pwa/biblioteca' . ($ok ? '?sucesso=1' : '?erro=1'));
+                exit;
+            }
+            header('Location: /pwa/biblioteca/adicionar?erro=isbn_vazio');
+            exit;
+        }
+
+        require __DIR__ . '/../Views/pwa/biblioteca_adicionar.php';
+    }
+
+    public function classificar(): void
+    {
+        $livroId = (int) ($_POST['livro_id'] ?? 0);
+        $grau = (string) ($_POST['grau_recomendado'] ?? 'Livre');
+        $nota = trim((string) ($_POST['nota_instrucao'] ?? ''));
+        $curadorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+
+        if ($livroId > 0 && $curadorId !== '') {
+            $this->acervoModel->atualizarClassificacao($livroId, $grau, $nota, $curadorId);
+        }
+        
+        header('Location: /pwa/biblioteca/detalhes?id=' . $livroId);
+        exit;
+    }
+
+    private function resolverPermissoes(): array
+    {
+        $permissionMap = $GLOBALS['gestor_loja_permission_map'] ?? null;
+        if (!$permissionMap instanceof \App\Core\Authorization\PermissionMap) {
+            return [];
+        }
+
+        $roles = array_values(array_unique(array_filter(array_map(
+            static fn ($role) => strtolower(trim((string) $role)),
+            $_SESSION['usuario_cargos'] ?? [$_SESSION['usuario_cargo'] ?? '']
+        ))));
+        $permissions = $permissionMap->permissionsForRoles($roles);
+        $all = in_array('*', $permissions, true);
+
+        return [
+            'biblioteca.manage' => $all || in_array('biblioteca.manage', $permissions, true),
+            'biblioteca.classificar' => $all || in_array('biblioteca.classificar', $permissions, true),
+        ];
+    }
 }
