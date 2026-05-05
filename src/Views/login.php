@@ -17,13 +17,13 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Portal Público - <?= htmlspecialchars($tenantName ?: 'Gestor de Loja') ?></title>
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#1B3A5C" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0A1628" media="(prefers-color-scheme: dark)">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/assets/css/erp_design_system.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* Fallback de estabilidade e customizações Tailwind */
         [x-cloak] { display: none !important; }
@@ -35,9 +35,9 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
 
 <!-- Premium Background Effect -->
 <div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
-    <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-erp-navy/10 blur-[120px]"></div>
-    <div class="absolute top-[20%] -right-[10%] w-[30%] h-[30%] rounded-full bg-erp-gold/5 blur-[100px]"></div>
-    <div class="absolute -bottom-[10%] left-[20%] w-[50%] h-[50%] rounded-full bg-erp-brand-vibrant/5 blur-[150px]"></div>
+    <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-[#1B3A5C]/8 blur-[120px]"></div>
+    <div class="absolute top-[20%] -right-[10%] w-[30%] h-[30%] rounded-full bg-[#C9A227]/5 blur-[100px]"></div>
+    <div class="absolute -bottom-[10%] left-[20%] w-[50%] h-[50%] rounded-full bg-[#4BACD4]/4 blur-[150px]"></div>
 </div>
 
 <div class="w-full max-w-7xl mx-auto px-6 py-12 flex-1 flex flex-col gap-12 md:gap-20">
@@ -46,13 +46,11 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
     <header class="flex flex-col md:flex-row items-center justify-between gap-8 pb-10 border-b border-erp-border/30">
         <div class="flex items-center gap-6 text-center md:text-left">
             <div class="relative group">
-                <div class="absolute -inset-2 bg-gradient-to-r from-erp-gold to-erp-navy rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                <div class="absolute -inset-2 bg-gradient-to-r from-[#C9A227]/30 to-[#1B3A5C]/20 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-500"></div>
                 <?php if ($logoLogin): ?>
                     <img src="<?= htmlspecialchars($logoLogin) ?>" alt="Logo" class="relative w-20 h-20 md:w-24 md:h-24 object-contain rounded-2xl bg-white shadow-xl border border-erp-border/50 p-2">
                 <?php else: ?>
-                    <div class="relative w-20 h-20 md:w-24 md:h-24 bg-white rounded-2xl border border-erp-border/50 flex items-center justify-center shadow-xl">
-                        <span class="text-4xl">🏛️</span>
-                    </div>
+                    <img src="/assets/logo-renascenca.png" alt="Logo Renascença" class="relative w-20 h-20 md:w-24 md:h-24 object-contain rounded-2xl bg-white shadow-xl border border-erp-border/50 p-2">
                 <?php endif; ?>
             </div>
             <div>
@@ -150,13 +148,17 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
 
         <!-- Área de Login (Formulário Lateral) -->
         <aside class="w-full lg:w-[460px] shrink-0">
-            <div class="glass-surface depth-3 rounded-[32px] p-8 md:p-12 sticky top-8 border-white/20">
-                <div class="mb-10 text-center">
-                    <div class="w-16 h-16 bg-erp-navy rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-erp-navy/20 rotate-3">
-                        <svg class="w-8 h-8 text-erp-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            <div class="glass-surface depth-3 rounded-2xl p-8 md:p-10 sticky top-8 border border-[#C9A227]/15">
+                <div class="mb-8 text-center">
+                    <div class="w-14 h-14 rounded-xl overflow-hidden mx-auto mb-5 shadow-lg border border-[#C9A227]/20">
+                        <?php if ($logoLogin): ?>
+                            <img src="<?= htmlspecialchars($logoLogin) ?>" alt="Logo" class="w-full h-full object-contain bg-white p-1">
+                        <?php else: ?>
+                            <img src="/assets/logo-renascenca.png" alt="Logo" class="w-full h-full object-contain bg-white p-1">
+                        <?php endif; ?>
                     </div>
-                    <h2 class="text-2xl font-black tracking-tight text-erp-navy">Acesso de Obreiros</h2>
-                    <p class="text-sm text-erp-muted mt-3 font-medium">Insira suas credenciais administrativas</p>
+                    <h2 class="text-xl font-extrabold tracking-tight text-erp-navy">Acesso de Obreiros</h2>
+                    <p class="text-sm text-erp-muted mt-2 font-medium">Insira suas credenciais administrativas</p>
                 </div>
 
                 <?php if (!$tenantResolved): ?>

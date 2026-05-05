@@ -30,37 +30,46 @@ foreach ($appShellSidebarSections as $section) {
 ?>
 <body class="min-h-screen bg-erp-bg font-sans text-erp-text antialiased">
     <style>
-        /* Estabilização local do shell ERP com foco em profundidade e glassmorphism */
+        /* Shell — Layout & Depth */
         .erp-app-shell { min-height: 100vh; display: flex; }
         .erp-app-shell > aside {
             position: fixed;
             top: 0; left: 0; bottom: 0;
-            width: 280px;
-            background: var(--erp-surface);
-            border-right: 1px solid var(--erp-border);
+            width: 260px;
+            background: linear-gradient(180deg, var(--erp-navy-deep, #0E2640) 0%, var(--erp-navy, #1B3A5C) 100%);
+            border-right: 1px solid rgba(255,255,255,0.06);
             z-index: 40;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .erp-app-main { flex: 1; min-width: 0; margin-left: 280px; transition: margin-left 0.3s ease; }
-        
-        /* Sidebar Refinement */
-        aside nav a { 
-            position: relative;
-            transition: all 0.2s ease;
-            color: var(--erp-muted);
-        }
-        aside nav a:hover { color: var(--erp-text); background: var(--erp-surface-2); }
-        aside nav a.active { 
-            background: var(--erp-navy); 
-            color: #fff; 
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-        }
-        aside nav a.active svg { color: var(--erp-gold); }
+        .erp-app-main { flex: 1; min-width: 0; margin-left: 260px; transition: margin-left 0.3s ease; }
 
-        /* Mobile Adjustments */
+        /* Sidebar — Navigation */
+        aside nav a {
+            position: relative;
+            transition: all 0.15s ease;
+            color: rgba(255,255,255,0.55);
+        }
+        aside nav a:hover {
+            color: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.06);
+        }
+        aside nav a.active {
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+            border-left: 3px solid var(--erp-gold, #C9A227);
+            box-shadow: inset 4px 0 12px rgba(201,162,39,0.08);
+        }
+        aside nav a.active svg { color: var(--erp-gold, #C9A227); }
+
+        /* Sidebar section titles */
+        aside nav h3 {
+            color: rgba(255,255,255,0.3) !important;
+        }
+
+        /* Mobile */
         @media (max-width: 1023px) {
             .erp-app-shell > aside { transform: translateX(-100%); }
-            .erp-app-shell > aside.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.2); }
+            .erp-app-shell > aside.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.3); }
             .erp-app-main { margin-left: 0; }
         }
     </style>
@@ -71,22 +80,20 @@ foreach ($appShellSidebarSections as $section) {
             :class="{'open': sidebarOpen}"
         >
             <div class="flex h-full flex-col">
-                <div class="px-6 py-8">
-                    <div class="flex items-center gap-4">
-                        <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-erp-border bg-white shadow-lg shadow-erp-navy/5 overflow-hidden p-1 group-hover:scale-105 transition-transform">
-                            <?php if ($tenantLogo !== ''): ?>
-                                <img src="<?= htmlspecialchars($tenantLogo) ?>" alt="Logo" class="h-full w-full object-contain">
-                            <?php else: ?>
-                                <div class="bg-gradient-to-br from-erp-navy to-erp-navy/80 text-white h-full w-full flex items-center justify-center font-black text-lg">
-                                    <?= strtoupper(substr($_SESSION['tenant_name'] ?? 'GL', 0, 1)) ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="text-sm font-black tracking-tight text-erp-navy leading-tight truncate">
+                <div class="px-5 pt-6 pb-4">
+                    <?php
+                        $sidebarLogo = $tenantLogo;
+                        if ($sidebarLogo === '' || str_contains($sidebarLogo, 'placeholder')) {
+                            $sidebarLogo = '/assets/logo-renascenca.png';
+                        }
+                    ?>
+                    <div class="flex flex-col items-center text-center gap-2">
+                        <img src="<?= htmlspecialchars($sidebarLogo) ?>" alt="Logo" class="h-[88px] w-[88px] object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                        <div>
+                            <div class="text-sm font-bold tracking-tight text-white leading-tight">
                                 <?= htmlspecialchars($_SESSION['tenant_name'] ?? 'Gestor-Loja') ?>
                             </div>
-                            <div class="text-[9px] font-black uppercase tracking-[0.2em] text-erp-gold opacity-80">Oficina Digital</div>
+                            <div class="text-[9px] font-bold uppercase tracking-[0.15em] text-[#C9A227] opacity-70 mt-0.5">Oficina Digital</div>
                         </div>
                     </div>
                 </div>
@@ -116,13 +123,13 @@ foreach ($appShellSidebarSections as $section) {
                 </nav>
 
                 <div class="p-4">
-                    <div class="flex items-center gap-3 rounded-2xl bg-erp-surface-2 p-3 border border-erp-border/50">
-                        <div class="h-10 w-10 rounded-xl bg-erp-navy text-white flex items-center justify-center font-bold shadow-md">
+                    <div class="flex items-center gap-3 rounded-xl bg-white/5 p-3 border border-white/8">
+                        <div class="h-9 w-9 rounded-lg bg-[#C9A227] text-[#0E2640] flex items-center justify-center text-xs font-bold">
                             <?= strtoupper(substr($appShellUserLabel, 0, 1)) ?>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="text-xs font-bold text-erp-text truncate"><?= htmlspecialchars($appShellUserLabel) ?></div>
-                            <a href="/logout" class="text-[10px] font-bold text-erp-muted hover:text-erp-danger uppercase tracking-wider">Deslogar</a>
+                            <div class="text-xs font-semibold text-white/80 truncate"><?= htmlspecialchars($appShellUserLabel) ?></div>
+                            <a href="/logout" class="text-[10px] font-semibold text-white/35 hover:text-red-400 uppercase tracking-wider transition-colors">Deslogar</a>
                         </div>
                     </div>
                 </div>

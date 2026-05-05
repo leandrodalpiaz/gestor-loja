@@ -28,14 +28,14 @@ $pwaBackUrl = (string) ($pwaBackUrl ?? '/pwa');
             theme: {
                 extend: {
                     colors: {
-                        erpNavy: '#1E3A5F',
-                        erpNavyDeep: '#162E4A',
-                        erpGold: '#B8960C',
-                        erpBg: '#F4F7FB',
+                        erpNavy: '#1B3A5C',
+                        erpNavyDeep: '#0E2640',
+                        erpGold: '#C9A227',
+                        erpBg: '#F6F8FB',
                         erpSurface: '#FFFFFF',
-                        erpBorder: '#D9E0EA',
-                        erpText: '#1F2937',
-                        erpMuted: '#526173',
+                        erpBorder: '#D1DAE6',
+                        erpText: '#1A2B3D',
+                        erpMuted: '#6B7F94',
                     }
                 }
             }
@@ -68,7 +68,7 @@ $pwaBackUrl = (string) ($pwaBackUrl ?? '/pwa');
 <body class="bg-erpBg text-erpText antialiased">
     <div class="app-container">
         <!-- Cabeçalho do App -->
-        <header class="app-header bg-erpNavy text-white shadow-md z-10">
+        <header class="app-header bg-gradient-to-r from-erpNavyDeep to-erpNavy text-white shadow-lg z-10">
             <div class="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
                 <div class="flex items-center gap-3">
                     <?php if ($pwaShowBackButton): ?>
@@ -100,7 +100,7 @@ $pwaBackUrl = (string) ($pwaBackUrl ?? '/pwa');
         </main>
 
         <!-- Barra de Navegação Inferior -->
-        <nav class="app-nav border-t border-erpBorder bg-erpSurface shadow-lg">
+        <nav class="app-nav border-t border-erpBorder bg-erpSurface shadow-[0_-2px_8px_rgba(27,58,92,0.06)]">
             <div class="mx-auto grid max-w-5xl grid-cols-3 items-center justify-items-center px-2 py-1">
                 <a href="/pwa" class="flex w-full flex-col items-center rounded-lg px-2 py-2 text-erpMuted hover:bg-erpBg hover:text-erpNavy">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
