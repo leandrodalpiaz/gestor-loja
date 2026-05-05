@@ -70,8 +70,8 @@ class HospitaleiroController
         $model = new OcorrenciaAssistencial();
         $ok = $model->criar($payload);
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'OcorrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªncia assistencial registrada com sucesso.'
-            : 'NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o foi possÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­vel registrar a ocorrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªncia assistencial.';
+            ? 'Ocorrência assistencial registrada com sucesso.'
+            : 'Não foi possível registrar a ocorrência assistencial.';
 
         header('Location: /assistencia');
         exit;
@@ -90,7 +90,7 @@ class HospitaleiroController
         $autorId = (string) ($_SESSION['usuario_id'] ?? '');
 
         if ($id <= 0 || $status === '') {
-            $_SESSION['mensagem_erro'] = 'Dados insuficientes para atualizar o status da ocorrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªncia.';
+            $_SESSION['mensagem_erro'] = 'Dados insuficientes para atualizar o status da ocorrência.';
             header('Location: /assistencia');
             exit;
         }
@@ -98,8 +98,8 @@ class HospitaleiroController
         $model = new OcorrenciaAssistencial();
         $ok = $model->atualizarStatus($id, $status, $autorId !== '' ? $autorId : null, $observacao !== '' ? $observacao : null);
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Status da ocorrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªncia atualizado.'
-            : 'NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o foi possÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­vel atualizar o status da ocorrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªncia.';
+            ? 'Status da ocorrência atualizado.'
+            : 'Não foi possível atualizar o status da ocorrência.';
 
         header('Location: /assistencia');
         exit;
@@ -118,7 +118,7 @@ class HospitaleiroController
         $autorId = (string) ($_SESSION['usuario_id'] ?? '');
 
         if ($id <= 0) {
-            $_SESSION['mensagem_erro'] = 'OcorrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªncia invÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡lida para registrar visita.';
+            $_SESSION['mensagem_erro'] = 'Ocorrência inválida para registrar visita.';
             header('Location: /assistencia');
             exit;
         }
@@ -132,7 +132,7 @@ class HospitaleiroController
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Visita/retorno registrado com sucesso.'
-            : 'NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o foi possÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­vel registrar a visita/retorno.';
+            : 'Não foi possível registrar a visita/retorno.';
         header('Location: /assistencia');
         exit;
     }
@@ -160,7 +160,7 @@ class HospitaleiroController
     {
         $descricao = trim((string) ($dados['descricao'] ?? ''));
         if ($descricao === '') {
-            return ['ok' => false, 'erro' => 'Informe a descriÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o da ocorrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªncia assistencial.'];
+        return ['ok' => false, 'erro' => 'Informe a descrição da ocorrência assistencial.'];
         }
 
         $payload = [
@@ -184,26 +184,26 @@ class HospitaleiroController
         ];
 
         $ok = (new OcorrenciaAssistencial())->criar($payload);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o foi possÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­vel registrar a ocorrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªncia assistencial.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar a ocorrência assistencial.'];
     }
 
     public function atualizarStatusMiniapp(int $id, string $status, ?string $autorId = null, ?string $observacao = null): array
     {
         if ($id <= 0 || trim($status) === '') {
-            return ['ok' => false, 'erro' => 'Dados insuficientes para atualizar o status da ocorrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªncia.'];
+            return ['ok' => false, 'erro' => 'Dados insuficientes para atualizar o status da ocorrência.'];
         }
 
         $ok = (new OcorrenciaAssistencial())->atualizarStatus($id, $status, $autorId, $observacao);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o foi possÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­vel atualizar o status da ocorrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªncia.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível atualizar o status da ocorrência.'];
     }
 
     public function registrarVisitaMiniapp(int $id, ?string $autorId = null, ?string $observacao = null, ?string $dataProximaAcao = null): array
     {
         if ($id <= 0) {
-            return ['ok' => false, 'erro' => 'OcorrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªncia invÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡lida para registrar visita.'];
+            return ['ok' => false, 'erro' => 'Ocorrência inválida para registrar visita.'];
         }
 
         $ok = (new OcorrenciaAssistencial())->registrarVisita($id, $autorId, $observacao, $dataProximaAcao);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o foi possÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­vel registrar a visita/retorno.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar a visita/retorno.'];
     }
 }

@@ -7,8 +7,8 @@ namespace App\Core;
 final class DashboardSections
 {
     /**
-     * Monta seÃ§Ãµes do menu por cargo responsÃ¡vel (dono do mÃ³dulo),
-     * filtrando cada item por permissÃ£o do usuÃ¡rio autenticado.
+     * Monta seções do menu por cargo responsável (dono do módulo),
+     * filtrando cada item por permissão do usuário autenticado.
      */
     public static function build(callable $can, bool $isSystemAdmin): array
     {
@@ -16,13 +16,13 @@ final class DashboardSections
             [
                 'titulo' => 'Obreiro',
                 'itens' => [
-                    ['label' => 'Minhas ObrigaÃ§Ãµes', 'href' => '/financeiro/minhas-obrigacoes', 'permission' => 'financeiro.self'],
+                    ['label' => 'Minhas Obrigações', 'href' => '/financeiro/minhas-obrigacoes', 'permission' => 'financeiro.self'],
                 ],
             ],
             [
-                'titulo' => 'VenerÃ¡vel Mestre',
+                'titulo' => 'Venerável Mestre',
                 'itens' => [
-                    ['label' => 'Painel do VenerÃ¡vel', 'href' => '/veneravel', 'permission' => 'veneravel.manage'],
+                    ['label' => 'Painel do Venerável', 'href' => '/veneravel', 'permission' => 'veneravel.manage'],
                 ],
             ],
             [
@@ -35,34 +35,34 @@ final class DashboardSections
                     ['label' => 'Convites Externos', 'href' => '/secretaria/convites-externos', 'permission' => 'secretaria.manage'],
                     ['label' => 'Relatorio Anual', 'href' => '/secretaria/relatorio-anual', 'permission' => 'secretaria.manage'],
                     ['label' => 'Relatorio de Gestao', 'href' => '/secretaria/relatorio-gestao', 'permission' => 'secretaria.manage'],
-                    ['label' => 'BalaÃºstres em votaÃ§Ã£o', 'href' => '/secretaria/votacao', 'permission' => 'secretaria.manage'],
+                    ['label' => 'Balaústres em votação', 'href' => '/secretaria/votacao', 'permission' => 'secretaria.manage'],
                     ['label' => 'Obreiros', 'href' => '/obreiros', 'permission' => 'obreiros.view'],
                     ['label' => 'Cadastrar Obreiro', 'href' => '/obreiros/novo', 'permission' => 'obreiros.manage'],
                     ['label' => 'Nominata e Cargos', 'href' => '/secretaria/nominata', 'permission' => 'admin.cargos.view'],
                     ['label' => 'Convites de acesso', 'href' => '/secretaria/convites', 'permission' => 'access.manage'],
                     ['label' => 'Acessos', 'href' => '/secretaria/acessos', 'permission' => 'access.manage'],
-                    ['label' => 'ConteÃºdo PÃºblico', 'href' => '/secretaria/conteudo-publico', 'permission' => 'public_content.manage'],
+                    ['label' => 'Conteúdo Público', 'href' => '/secretaria/conteudo-publico', 'permission' => 'public_content.manage'],
                 ],
             ],
             [
                 'titulo' => 'Chancelaria',
                 'itens' => [
-                    ['label' => 'SessÃ£o da Chancelaria', 'href' => '/chanceler/sessao', 'permission' => 'chancelaria.manage'],
-                    ['label' => 'EfemÃ©rides', 'href' => '/chancelaria/efemerides', 'permission' => 'chancelaria.manage'],
+                    ['label' => 'Sessão da Chancelaria', 'href' => '/chanceler/sessao', 'permission' => 'chancelaria.manage'],
+                    ['label' => 'Efemérides', 'href' => '/chancelaria/efemerides', 'permission' => 'chancelaria.manage'],
                 ],
             ],
             [
                 'titulo' => 'Tesouraria',
                 'itens' => [
                     ['label' => 'Caixa', 'href' => '/tesouraria/caixa', 'permission' => 'tesouraria.manage'],
-                    ['label' => 'ObrigaÃ§Ãµes', 'href' => '/tesouraria/obrigacoes', 'permission' => 'tesouraria.manage'],
+                    ['label' => 'Obrigações', 'href' => '/tesouraria/obrigacoes', 'permission' => 'tesouraria.manage'],
                     ['label' => 'Comprovantes', 'href' => '/tesouraria/comprovantes', 'permission' => 'tesouraria.manage'],
                 ],
             ],
             [
                 'titulo' => 'Hospitaleiro',
                 'itens' => [
-                    ['label' => 'AssistÃªncia', 'href' => '/assistencia', 'permission' => 'hospitaleiro.manage'],
+                    ['label' => 'Assistência', 'href' => '/assistencia', 'permission' => 'hospitaleiro.manage'],
                 ],
             ],
             [
@@ -100,15 +100,15 @@ final class DashboardSections
                 'titulo' => 'Biblioteca',
                 'itens' => [
                     ['label' => 'Acervo', 'href' => '/biblioteca', 'permission' => 'biblioteca.self'],
-                    ['label' => 'Meus EmprÃ©stimos', 'href' => '/biblioteca/meus-emprestimos', 'permission' => 'biblioteca.self'],
-                    ['label' => 'Gerenciar EmprÃ©stimos', 'href' => '/biblioteca/emprestimos', 'permission' => 'biblioteca.manage'],
-                    ['label' => 'ClassificaÃ§Ã£o', 'href' => '/biblioteca/classificar', 'permission' => 'biblioteca.classificar'],
+                    ['label' => 'Meus Empréstimos', 'href' => '/biblioteca/meus-emprestimos', 'permission' => 'biblioteca.self'],
+                    ['label' => 'Gerenciar Empréstimos', 'href' => '/biblioteca/emprestimos', 'permission' => 'biblioteca.manage'],
+                    ['label' => 'Classificação', 'href' => '/biblioteca/classificar', 'permission' => 'biblioteca.classificar'],
                 ],
             ],
             [
                 'titulo' => 'Sistema',
                 'itens' => [
-                    ['label' => 'Painel TÃ©cnico', 'href' => '/sistema', 'system_only' => true],
+                    ['label' => 'Painel Técnico', 'href' => '/sistema', 'system_only' => true],
                 ],
             ],
         ];
@@ -145,7 +145,7 @@ final class DashboardSections
 
             if ($items !== []) {
                 $sections[] = [
-                    'titulo' => (string) ($section['titulo'] ?? 'SeÃ§Ã£o'),
+                    'titulo' => (string) ($section['titulo'] ?? 'Seção'),
                     'itens' => $items,
                 ];
             }

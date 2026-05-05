@@ -16,7 +16,7 @@ $appShellTitle = 'Relatório Anual';
 $appShellDescription = 'Consolidação anual da atividade da Loja sob responsabilidade da Secretaria.';
 $appShellActiveHref = '/secretaria/relatorio-anual';
 if (($_SERVER['REQUEST_URI'] ?? '') === '/secretaria/relatorio-gestao') {
-    $appShellTitle = 'RelatÃ³rio de GestÃ£o';
+    $appShellTitle = 'Relatório de Gestão';
     $appShellActiveHref = '/secretaria/relatorio-gestao';
 }
 require __DIR__ . '/_sidebar.php';
