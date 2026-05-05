@@ -23,7 +23,7 @@ class PwaAdminController
         }
 
         if ($authorizer->hasPermission('tesouraria.manage')) {
-            $links[] = ['label' => 'Tesouraria', 'href' => '/tesouraria', 'desc' => 'Caixa, comprovantes, fechamento.'];
+            $links[] = ['label' => 'Tesouraria', 'href' => '/tesouraria/caixa', 'desc' => 'Caixa, comprovantes, fechamento.'];
         }
 
         if ($authorizer->hasPermission('chancelaria.manage')) {

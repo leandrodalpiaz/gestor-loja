@@ -1,142 +1,110 @@
 :root {
-    /* Brand (compat + novos tokens) */
-    --erp-navy: #1E3A5F;
+    /* Brand (premium tokens) */
+    --erp-navy: #0F172A;
     --erp-gold: #C9A13A;
     --erp-accent: #D4AF37;
+    --erp-brand-vibrant: #3B82F6;
 
     /* Base (light) */
-    --erp-bg: #F5F7FA;
+    --erp-bg: #F8FAFC;
     --erp-surface: #FFFFFF;
-    --erp-surface-2: #F0F3F7;
-    --erp-border: #D7DEE8;
-    --erp-text: #111827;
-    --erp-muted: #475569;
+    --erp-surface-2: #F1F5F9;
+    --erp-border: #E2E8F0;
+    --erp-text: #0F172A;
+    --erp-muted: #64748B;
 
     /* Intent tokens */
     --erp-brand: var(--erp-navy);
     --erp-accent-strong: var(--erp-gold);
 
     /* Semânticas (light) */
-    --erp-success: #167A55;
-    --erp-warning: #9A5B00;
-    --erp-danger: #B42318;
-    --erp-info: #1D4ED8;
+    --erp-success: #10B981;
+    --erp-warning: #F59E0B;
+    --erp-danger: #EF4444;
+    --erp-info: #3B82F6;
 
-    /* Focus */
-    --erp-focus: #2563EB;
+    /* Shadows & Effects */
+    --erp-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --erp-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --erp-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --erp-glass-bg: rgba(255, 255, 255, 0.7);
+    --erp-glass-border: rgba(255, 255, 255, 0.3);
 }
 
 /* Base (dark) via class .dark no <html> */
 html.dark {
-    --erp-bg: #0B1220;
-    --erp-surface: #101B2E;
-    --erp-surface-2: #0E172A;
-    --erp-border: #22314A;
-    --erp-text: #E5E7EB;
-    --erp-muted: #9CA3AF;
+    --erp-bg: #020617;
+    --erp-surface: #0F172A;
+    --erp-surface-2: #1E293B;
+    --erp-border: #334155;
+    --erp-text: #F1F5F9;
+    --erp-muted: #94A3B8;
 
     --erp-success: #34D399;
     --erp-warning: #FBBF24;
     --erp-danger: #FB7185;
     --erp-info: #60A5FA;
 
-    --erp-focus: #60A5FA;
+    --erp-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --erp-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.2);
+    --erp-shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+    --erp-glass-bg: rgba(15, 23, 42, 0.6);
+    --erp-glass-border: rgba(255, 255, 255, 0.05);
 }
 
 body {
     background-color: var(--erp-bg);
     color: var(--erp-text);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-size: 15px;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Sensação nativa no mobile sem bloquear inputs */
-body {
-    -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: contain;
+/* Transição suave para dark mode */
+html {
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-main, nav, aside, header, section, article, a, button {
-    user-select: none;
+/* Glassmorphism Utility */
+.glass-surface {
+    background: var(--erp-glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--erp-glass-border);
 }
 
-input, textarea, [contenteditable="true"], .allow-select {
-    user-select: text;
+/* Depth System */
+.depth-1 { box-shadow: var(--erp-shadow-sm); }
+.depth-2 { box-shadow: var(--erp-shadow); }
+.depth-3 { box-shadow: var(--erp-shadow-lg); }
+
+.hover-lift {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--erp-shadow-lg);
 }
 
 /* Helpers básicos para evitar "cara de site" e manter densidade */
 .erp-container {
-    max-width: 80rem; /* 1280px */
+    max-width: 90rem; /* 1440px para telas maiores */
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1.25rem; /* 20px */
-    padding-right: 1.25rem; /* 20px */
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
 }
 
-.erp-card {
+.erp-card, .card, .metric-card, .card-metric, .card-metric-simple {
     background: var(--erp-surface);
     border: 1px solid var(--erp-border);
-    border-radius: 12px;
+    border-radius: 16px; /* Cantos um pouco mais suaves */
+    transition: border-color 0.2s ease;
 }
 
-.erp-card-header {
-    border-bottom: 1px solid var(--erp-border);
-}
-
-.erp-input {
-    width: 100%;
-    border: 1px solid var(--erp-border);
-    background: var(--erp-surface);
-    color: var(--erp-text);
-    border-radius: 10px;
-    padding: 0.75rem 0.9rem;
-    outline: none;
-}
-
-.erp-input:focus {
-    border-color: var(--erp-focus);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--erp-focus) 25%, transparent);
-}
-
-.erp-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    padding: 0.75rem 1rem;
-    font-weight: 600;
-    border: 1px solid transparent;
-    cursor: pointer;
-}
-
-.erp-btn-primary {
-    background: var(--erp-brand);
-    color: #fff;
-}
-
-.erp-btn-primary:hover {
-    filter: brightness(0.95);
-}
-
-.erp-btn-secondary {
-    background: var(--erp-surface-2);
-    border-color: var(--erp-border);
-    color: var(--erp-text);
-}
-
-.erp-btn-secondary:hover {
-    filter: brightness(0.98);
-}
-
-/* Componentes semanticos globais para estabilizar as views ERP. */
-.card,
-.metric-card,
-.card-metric,
-.card-metric-simple {
-    background: var(--erp-surface);
-    border: 1px solid var(--erp-border);
-    border-radius: 12px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+.card:hover {
+    border-color: color-mix(in srgb, var(--erp-brand) 30%, var(--erp-border));
 }
 
 .card-header,

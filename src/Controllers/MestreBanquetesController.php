@@ -23,6 +23,11 @@ class MestreBanquetesController
         $descricaoAgape = null;
         $descricaoModeloFinanceiroAgape = null;
         $operacaoBanquete = null;
+        $financeiroBanquete = [
+            'valor_estimado' => 0.0,
+            'resultado_previsto' => 0.0,
+            'resultado_real' => 0.0,
+        ];
 
         if ($sessaoSelecionadaId > 0) {
             $sessaoEmFoco = $sessaoModel->findById($sessaoSelecionadaId);
@@ -38,6 +43,7 @@ class MestreBanquetesController
             $descricaoAgape = $sessaoModel->obterDescricaoAgape($sessaoEmFoco);
             $descricaoModeloFinanceiroAgape = $sessaoModel->obterDescricaoModeloFinanceiroAgape($sessaoEmFoco);
             $operacaoBanquete = $operacaoModel->obterPorSessao($sessaoId);
+            $financeiroBanquete = $this->montarResumoFinanceiro($sessaoEmFoco, count($participantesAgape), $operacaoBanquete);
         }
 
         require_once __DIR__ . '/../Views/mestre_banquetes/index.php';
@@ -91,6 +97,7 @@ class MestreBanquetesController
             $participantesAgape = $presencaModel->listarParticipantesAgapePorSessao((int) $sessaoFoco['id']);
             $confirmadosSemAgape = array_values(array_filter($confirmados, static fn (array $item): bool => empty($item['participara_agape'])));
             $operacao = $operacaoModel->obterPorSessao((int) $sessaoFoco['id']);
+            $sessaoFoco['financeiro_banquete'] = $this->montarResumoFinanceiro($sessaoFoco, count($participantesAgape), $operacao);
         }
 
         return [
@@ -117,5 +124,29 @@ class MestreBanquetesController
         $ok = (new BanqueteOperacao())->salvar($sessaoId, $dados, $autorId);
 
         return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível salvar a operação do banquete.'];
+    }
+
+    private function montarResumoFinanceiro(array $sessao, int $participantesAgape, ?array $operacao): array
+    {
+        $valorSessao = (float) ($sessao['agape_valor'] ?? 0);
+        $valorUnitario = (float) ($operacao['valor_unitario_previsto'] ?? 0);
+        if ($valorUnitario <= 0) {
+            $valorUnitario = $valorSessao;
+        }
+
+        $valorEstimado = $valorUnitario > 0 ? round($valorUnitario * $participantesAgape, 2) : 0.0;
+        $custoPrevisto = (float) ($operacao['custo_previsto'] ?? 0);
+        $valorArrecadado = (float) ($operacao['valor_arrecadado'] ?? 0);
+        $custoReal = (float) ($operacao['custo_real'] ?? 0);
+
+        return [
+            'valor_unitario' => $valorUnitario,
+            'valor_estimado' => $valorEstimado,
+            'custo_previsto' => $custoPrevisto,
+            'valor_arrecadado' => $valorArrecadado,
+            'custo_real' => $custoReal,
+            'resultado_previsto' => round($valorEstimado - $custoPrevisto, 2),
+            'resultado_real' => round($valorArrecadado - $custoReal, 2),
+        ];
     }
 }

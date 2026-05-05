@@ -57,6 +57,10 @@ final class DashboardSections
                     ['label' => 'Caixa', 'href' => '/tesouraria/caixa', 'permission' => 'tesouraria.manage'],
                     ['label' => 'Obrigações', 'href' => '/tesouraria/obrigacoes', 'permission' => 'tesouraria.manage'],
                     ['label' => 'Comprovantes', 'href' => '/tesouraria/comprovantes', 'permission' => 'tesouraria.manage'],
+                    ['label' => 'Regularidade', 'href' => '/tesouraria/regularidade', 'permission' => 'tesouraria.manage'],
+                    ['label' => 'Sessões Financeiras', 'href' => '/tesouraria/sessoes', 'permission' => 'tesouraria.manage'],
+                    ['label' => 'Fechamento de Mês', 'href' => '/tesouraria/fechamento', 'permission' => 'tesouraria.manage'],
+                    ['label' => 'Relatório de Gestão', 'href' => '/tesouraria/relatorio-gestao', 'permission' => 'tesouraria.manage'],
                 ],
             ],
             [

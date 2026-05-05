@@ -18,6 +18,7 @@ $GLOBALS['gestor_loja_erp_head_rendered'] = true;
     <meta name="apple-mobile-web-app-title" content="Gestor Loja">
     <link rel="manifest" href="/manifest.php">
     <link rel="apple-touch-icon" href="<?= htmlspecialchars($appleTouchIcon) ?>">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <link rel="stylesheet" href="/assets/css/erp_design_system.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">

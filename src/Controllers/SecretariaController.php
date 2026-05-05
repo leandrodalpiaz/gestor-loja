@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\Obreiro;
 use App\Models\Balaustre;
+use App\Models\BalaustreComposer;
 use App\Models\Cargo;
 use App\Models\ConfiguracaoLoja;
 use App\Models\ConviteExterno;
@@ -13,6 +14,9 @@ use App\Models\PublicacaoSecretaria;
 use App\Models\RelatorioSecretariaAnual;
 use App\Models\Sessao;
 use App\Models\TrabalhoSessao;
+use App\Core\Auth\CurrentUser;
+use App\Core\Authorization\Authorizer;
+use App\Core\Authorization\PermissionMap;
 
 class SecretariaController
 {
@@ -134,7 +138,7 @@ class SecretariaController
         if ($sessaoEdicaoId > 0) {
             $sessaoEdicao = $sessaoModel->findById($sessaoEdicaoId);
             if (!$sessaoEdicao) {
-                $_SESSION['mensagem_erro'] = 'Sessão informada para edição não foi encontrada.';
+                $_SESSION['mensagem_erro'] = 'SessÃ£o informada para ediÃ§Ã£o nÃ£o foi encontrada.';
                 header('Location: /secretaria');
                 exit;
             }
@@ -272,7 +276,7 @@ class SecretariaController
             static fn ($role) => strtolower((string) $role),
             $_SESSION['usuario_cargos'] ?? [$_SESSION['usuario_cargo'] ?? '']
         )));
-        $authorizer = new \App\Core\Authorization\Authorizer($_SESSION);
+        $authorizer = new Authorizer(new CurrentUser($_SESSION), new PermissionMap());
         $podeOperarSecretaria = $authorizer->hasPermission('secretaria.manage');
         $podeAbrirVotacao = $authorizer->hasPermission('veneravel.manage');
 
@@ -286,25 +290,25 @@ class SecretariaController
 
         $dashboard = [
             'title' => 'Dashboard operacional da Secretaria',
-            'subtitle' => 'ExecuÃÃ†â€™Â§ÃÃ†â€™Â£o diÃÃ†â€™Â¡ria, documental e centralizadora.',
+            'subtitle' => 'ExecuÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o diÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â¡ria, documental e centralizadora.',
             'meta' => [
                 'Perfil: operacional',
                 'Sem analytics complexos',
                 'Foco em pendencias e estados',
             ],
             'actions' => [
-                ['label' => 'Nova sessÃÃ†â€™Â£o / salvar sessÃÃ†â€™Â£o', 'href' => '/secretaria'],
+                ['label' => 'Nova sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o / salvar sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o', 'href' => '/secretaria'],
                 ['label' => 'Publicar rascunho', 'href' => '/secretaria'],
-                ['label' => 'Publicar sessÃÃ†â€™Â£o', 'href' => '/secretaria'],
+                ['label' => 'Publicar sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o', 'href' => '/secretaria'],
                 ['label' => 'Salvar trabalho', 'href' => '/secretaria'],
-                ['label' => 'Salvar publicaÃÃ†â€™Â§ÃÃ†â€™Â£o', 'href' => '/secretaria'],
+                ['label' => 'Salvar publicaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o', 'href' => '/secretaria'],
                 ['label' => 'Atualizar obreiro', 'href' => '/obreiros'],
                 ['label' => 'Gerar convite', 'href' => '/secretaria/convites'],
             ],
             'blocks' => [
                 [
-                    'title' => 'SessÃÃ†â€™Âµes',
-                    'subtitle' => 'Agenda e operaÃÃ†â€™Â§ÃÃ†â€™Â£o de sessÃÃ†â€™Âµes.',
+                    'title' => 'SessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Âµes',
+                    'subtitle' => 'Agenda e operaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o de sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Âµes.',
                     'span' => 'half',
                     'metrics' => [
                         ['label' => 'Futuras', 'value' => (string) count($sessoes)],
@@ -318,28 +322,28 @@ class SecretariaController
                 ],
                 [
                     'title' => 'Balaustres',
-                    'subtitle' => 'PendÃÃ†â€™Âªncias e estado operacional.',
+                    'subtitle' => 'PendÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Âªncias e estado operacional.',
                     'span' => 'half',
                     'metrics' => [
                         ['label' => 'Aptos', 'value' => (string) $resumo['balaustres_aptos']],
                         ['label' => 'Recentes', 'value' => (string) count($balaustres)],
                     ],
                     'list' => array_map(static fn (array $item): array => [
-                        'item' => (string) ($item['numero_balaustre'] ?: 'Sem nÃÃ†â€™Âºmero'),
+                        'item' => (string) ($item['numero_balaustre'] ?: 'Sem nÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Âºmero'),
                         'meta' => (string) ($item['sessao_titulo'] ?? ''),
                         'status' => (string) ($item['status'] ?? '-'),
                     ], array_slice($balaustres, 0, 5)),
                 ],
                 [
-                    'title' => 'PublicaÃÃ†â€™Â§ÃÃ†â€™Âµes e trabalhos',
+                    'title' => 'PublicaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Âµes e trabalhos',
                     'subtitle' => 'Controle de envio e rascunho.',
                     'span' => 'half',
                     'metrics' => [
                         ['label' => 'Trabalhos pendentes', 'value' => (string) $resumo['trabalhos_pendentes']],
-                        ['label' => 'PublicaÃÃ†â€™Â§ÃÃ†â€™Âµes rascunho', 'value' => (string) $resumo['publicacoes_rascunho']],
+                        ['label' => 'PublicaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Âµes rascunho', 'value' => (string) $resumo['publicacoes_rascunho']],
                     ],
                     'list' => array_map(static fn (array $item): array => [
-                        'item' => (string) ($item['titulo'] ?? 'PublicaÃÃ†â€™Â§ÃÃ†â€™Â£o'),
+                        'item' => (string) ($item['titulo'] ?? 'PublicaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o'),
                         'meta' => (string) ($item['tipo_publicacao'] ?? 'Secretaria'),
                         'status' => (string) ($item['status_publicacao'] ?? '-'),
                     ], array_slice($publicacoes, 0, 4)),
@@ -354,16 +358,16 @@ class SecretariaController
                         ['label' => 'Com bot', 'value' => (string) ($resumoCadastros['com_telegram'] ?? 0)],
                     ],
                     'list' => [
-                        ['item' => 'Central de obreiros', 'meta' => 'AtualizaÃÃ†â€™Â§ÃÃ†â€™Âµes cadastrais', 'status' => 'Operacional'],
+                        ['item' => 'Central de obreiros', 'meta' => 'AtualizaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Âµes cadastrais', 'status' => 'Operacional'],
                         ['item' => 'Convites de acesso', 'meta' => 'Controle de entrada', 'status' => 'Ativo'],
-                        ['item' => 'Acessos do sistema', 'meta' => 'PermissÃÃ†â€™Âµes e auditoria', 'status' => 'Ativo'],
+                        ['item' => 'Acessos do sistema', 'meta' => 'PermissÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Âµes e auditoria', 'status' => 'Ativo'],
                     ],
                 ],
             ],
             'alerts' => [
-                ['title' => 'PendÃÃ†â€™Âªncias de sessÃÃ†â€™Â£o', 'text' => $resumo['sessoes_futuras'] > 0 ? 'Existem sessÃÃ†â€™Âµes para revisÃÃ†â€™Â£o/publicaÃÃ†â€™Â§ÃÃ†â€™Â£o.' : 'Nenhuma sessÃÃ†â€™Â£o pendente.', 'tone' => $resumo['sessoes_futuras'] > 0 ? 'warning' : 'success'],
+                ['title' => 'PendÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Âªncias de sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o', 'text' => $resumo['sessoes_futuras'] > 0 ? 'Existem sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Âµes para revisÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o/publicaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.' : 'Nenhuma sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o pendente.', 'tone' => $resumo['sessoes_futuras'] > 0 ? 'warning' : 'success'],
                 ['title' => 'Balaustres aptos', 'text' => $resumo['balaustres_aptos'] . ' balaustre(s) apto(s) para encaminhamento.', 'tone' => $resumo['balaustres_aptos'] > 0 ? 'warning' : 'success'],
-                ['title' => 'Abertura/encerramento de votaÃÃ†â€™Â§ÃÃ†â€™Â£o', 'text' => $podeAbrirVotacao ? 'Permitido para este usuÃÃ†â€™Â¡rio.' : 'Somente o Veneravel Mestre pode abrir ou encerrar votacao.', 'tone' => $podeAbrirVotacao ? 'success' : 'warning'],
+                ['title' => 'Abertura/encerramento de votaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o', 'text' => $podeAbrirVotacao ? 'Permitido para este usuÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â¡rio.' : 'Somente o Veneravel Mestre pode abrir ou encerrar votacao.', 'tone' => $podeAbrirVotacao ? 'success' : 'warning'],
             ],
             'activity' => array_merge(
                 array_map(static fn (array $sessao): array => [
@@ -376,35 +380,15 @@ class SecretariaController
                 ], array_slice($balaustres, 0, 3))
             ),
             'links' => [
-                ['label' => 'Balaustres / votaÃÃ†â€™Â§ÃÃ†â€™Â£o', 'href' => '/secretaria/votacao'],
+                ['label' => 'Balaustres / votaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o', 'href' => '/secretaria/votacao'],
                 ['label' => 'Relatorio anual', 'href' => '/secretaria/relatorio-anual'],
                 ['label' => 'Central de obreiros', 'href' => '/obreiros'],
                 ['label' => 'Convites', 'href' => '/secretaria/convites'],
             ],
         ];
 
-        if (!empty($sessaoResumo)) {
-            $previewTextoOficialBalaustre = $balaustreModel->gerarTextoOficialPreview(
-                (int) ($sessaoResumo['id'] ?? 0),
-                [
-                    'numero_balaustre' => (string) ($balaustreSessao['numero_balaustre'] ?? ''),
-                    'bloco_abertura' => (string) ($blocosBalaustre['abertura'] ?? ''),
-                    'bloco_balaustre' => (string) ($blocosBalaustre['balaustre'] ?? ''),
-                    'bloco_expediente' => (string) ($blocosBalaustre['expediente'] ?? ''),
-                    'bloco_saco_propostas' => (string) ($blocosBalaustre['saco_propostas'] ?? ''),
-                    'bloco_ordem_dia' => (string) ($blocosBalaustre['ordem_dia'] ?? ''),
-                    'bloco_tronco_solidariedade' => (string) ($blocosBalaustre['tronco_solidariedade'] ?? ''),
-                    'bloco_conclusoes_orador' => (string) ($blocosBalaustre['conclusoes_orador'] ?? ''),
-                    'bloco_encerramento' => (string) ($blocosBalaustre['encerramento'] ?? ''),
-                    'bloco_assinaturas' => (string) ($blocosBalaustre['assinaturas'] ?? ''),
-                    'palavra_obreiro_nome' => array_map(static fn($x) => (string) ($x['nome'] ?? ''), $palavrasObreirosBalaustre),
-                    'palavra_obreiro_cargo' => array_map(static fn($x) => (string) ($x['cargo_no_momento'] ?? ''), $palavrasObreirosBalaustre),
-                    'palavra_obreiro_fala' => array_map(static fn($x) => (string) ($x['fala_resumida'] ?? ''), $palavrasObreirosBalaustre),
-                    'palavra_visitante_nome' => array_map(static fn($x) => (string) ($x['nome'] ?? ''), $visitantesBalaustre),
-                    'palavra_visitante_loja' => array_map(static fn($x) => (string) ($x['loja'] ?? ''), $visitantesBalaustre),
-                    'palavra_visitante_fala' => array_map(static fn($x) => (string) ($x['fala_resumida'] ?? ''), $visitantesBalaustre),
-                ]
-            );
+        if (!empty($balaustreSessao)) {
+            $previewTextoOficialBalaustre = BalaustreComposer::build($dadosBalaustreSessao);
         }
 
         require_once __DIR__ . '/../Views/secretaria/index.php';
@@ -412,13 +396,105 @@ class SecretariaController
 
     public function sessoes(): void
     {
-        $this->index();
+        $sessaoModel = new Sessao();
+        $configuracaoLoja = (new ConfiguracaoLoja())->obter();
+        $sessoes = $sessaoModel->listarFuturas(50);
+        $sessaoRascunho = $_SESSION['secretaria_sessao_rascunho'] ?? null;
+        $sessaoEdicao = null;
+        $sessaoEdicaoId = (int) ($_GET['editar_sessao'] ?? 0);
+        if ($sessaoEdicaoId > 0) {
+            $sessaoEdicao = $sessaoModel->findById($sessaoEdicaoId);
+            if (!$sessaoEdicao) {
+                $_SESSION['mensagem_erro'] = 'SessÃ£o informada para ediÃ§Ã£o nÃ£o foi encontrada.';
+                header('Location: /secretaria/sessoes');
+                exit;
+            }
+        }
+        $sessaoEmFormulario = is_array($sessaoRascunho) ? $sessaoRascunho : (is_array($sessaoEdicao) ? $sessaoEdicao : []);
+        $modoEdicaoSessao = !is_array($sessaoRascunho) && is_array($sessaoEdicao);
+        $resumoRascunhoSessao = is_array($sessaoRascunho) ? $sessaoModel->comporResumoPublicacao($sessaoRascunho, $configuracaoLoja) : null;
+        $sessaoDuplicada = is_array($sessaoRascunho) ? $sessaoModel->buscarDuplicidade($sessaoRascunho) : null;
+        $acoesConfirmacaoRascunho = is_array($sessaoRascunho) ? $sessaoModel->obterAcoesConfirmacao($sessaoRascunho) : [];
+        $sessaoHistorico = null;
+        $historicoSessao = [];
+        $sessaoHistoricoId = (int) ($_GET['historico_sessao'] ?? 0);
+        if ($sessaoHistoricoId > 0) {
+            $sessaoHistorico = $sessaoModel->findById($sessaoHistoricoId);
+            $historicoSessao = $sessaoHistorico ? $sessaoModel->listarHistorico($sessaoHistoricoId, 20) : [];
+        }
+
+        require_once __DIR__ . '/../Views/secretaria/sessoes.php';
     }
 
     public function balaustres(): void
     {
-        $_GET['balaustre_sem_sessao'] = $_GET['balaustre_sem_sessao'] ?? '1';
-        $this->index();
+        $sessaoModel = new Sessao();
+        $balaustreModel = new Balaustre();
+        $presencaModel = new Presenca();
+        $obreiroModel = new Obreiro();
+
+        $sessoes = $sessaoModel->listarFuturas(50);
+        $obreiros = $obreiroModel->getAllAtivos();
+        $balaustres = $balaustreModel->listarRecentes(20);
+        $modoBalaustreIndependente = isset($_GET['balaustre_sem_sessao']) || (int) ($_GET['sessao_resumo'] ?? 0) <= 0;
+        $sessaoResumoId = (int) ($_GET['sessao_resumo'] ?? 0);
+        $sessaoResumo = $sessaoResumoId > 0 ? $sessaoModel->findById($sessaoResumoId) : null;
+        if (!$sessaoResumo) {
+            $sessaoResumo = [
+                'id' => 0,
+                'titulo' => 'BalaÃºstre independente',
+                'tipo_sessao' => 'SessÃ£o',
+                'grau_sessao' => '',
+                'data_hora_inicio' => '',
+                'data_hora_fim' => '',
+                'total_presentes' => 0,
+                'total_confirmados' => 0,
+                'total_ausentes' => 0,
+                'total_agape' => 0,
+            ];
+            $modoBalaustreIndependente = true;
+        }
+        $confirmadosSessaoResumo = !empty($sessaoResumo['id']) ? $presencaModel->listarConfirmadosPorSessao((int) $sessaoResumo['id']) : [];
+        $balaustreSessao = !empty($sessaoResumo['id']) ? $balaustreModel->buscarPorSessao((int) $sessaoResumo['id']) : null;
+        if (!$balaustreSessao && $modoBalaustreIndependente) {
+            foreach ($balaustres as $balaustreRecente) {
+                if (empty($balaustreRecente['sessao_id'])) {
+                    $balaustreSessao = $balaustreRecente;
+                    break;
+                }
+            }
+        }
+
+        $dadosBalaustreSessao = [];
+        if ($balaustreSessao) {
+            $capturado = $balaustreSessao['dados_capturados'] ?? null;
+            if (is_string($capturado)) {
+                $decoded = json_decode($capturado, true);
+                $capturado = is_array($decoded) ? $decoded : [];
+            }
+            $dadosBalaustreSessao = is_array($capturado) ? $capturado : [];
+        }
+        $blocosBalaustre = is_array($dadosBalaustreSessao['blocos'] ?? null) ? $dadosBalaustreSessao['blocos'] : [];
+        $palavrasObreirosBalaustre = is_array($dadosBalaustreSessao['palavra_bem_ordem']['obreiros'] ?? null) ? $dadosBalaustreSessao['palavra_bem_ordem']['obreiros'] : [];
+        $visitantesBalaustre = is_array($dadosBalaustreSessao['palavra_bem_ordem']['visitantes'] ?? null) ? $dadosBalaustreSessao['palavra_bem_ordem']['visitantes'] : [];
+        $nominataOficialMap = $this->carregarNominataOficial();
+        $cargosSessaoBase = $this->obterCargosSessaoBase($nominataOficialMap);
+        $cargosBalaustreSessao = is_array($dadosBalaustreSessao['cargos_sessao'] ?? null) ? $dadosBalaustreSessao['cargos_sessao'] : array_map(static function (array $cargoBase): array {
+            $titular = (string) ($cargoBase['titular_oficial'] ?? '');
+            return [
+                'codigo' => (string) ($cargoBase['codigo'] ?? ''),
+                'cargo_nome' => (string) ($cargoBase['label'] ?? ''),
+                'titular_oficial' => $titular,
+                'ocupante_nome' => $titular,
+                'observacao' => '',
+            ];
+        }, $cargosSessaoBase);
+        $previewTextoOficialBalaustre = trim((string) ($balaustreSessao['texto_final'] ?? ''));
+        if ($previewTextoOficialBalaustre === '' && $dadosBalaustreSessao !== []) {
+            $previewTextoOficialBalaustre = BalaustreComposer::build($dadosBalaustreSessao);
+        }
+
+        require_once __DIR__ . '/../Views/secretaria/balaustres.php';
     }
 
     public function trabalhosPublicacoes(): void
@@ -522,7 +598,7 @@ class SecretariaController
     public function revisarSessao(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /secretaria');
+            header('Location: /secretaria/sessoes');
             exit;
         }
 
@@ -557,13 +633,13 @@ class SecretariaController
 
         if (!$this->dataHoraFormularioValida($payload['data_hora_inicio'])) {
             $_SESSION['mensagem_erro'] = 'Informe uma data e hora de inicio validas para revisar a sessao.';
-            header('Location: /secretaria' . ($sessaoId > 0 ? '?editar_sessao=' . $sessaoId : ''));
+            header('Location: /secretaria/sessoes' . ($sessaoId > 0 ? '?editar_sessao=' . $sessaoId : ''));
             exit;
         }
 
         if ($payload['data_hora_fim'] !== '' && !$this->dataHoraFormularioValida($payload['data_hora_fim'])) {
             $_SESSION['mensagem_erro'] = 'Informe uma data e hora de encerramento validas ou deixe o campo em branco.';
-            header('Location: /secretaria' . ($sessaoId > 0 ? '?editar_sessao=' . $sessaoId : ''));
+            header('Location: /secretaria/sessoes' . ($sessaoId > 0 ? '?editar_sessao=' . $sessaoId : ''));
             exit;
         }
 
@@ -573,24 +649,24 @@ class SecretariaController
         }
         $_SESSION['secretaria_sessao_rascunho'] = $payload;
         $_SESSION['mensagem_sucesso'] = $sessaoId > 0
-            ? 'SessÃÃ†â€™Â£o preparada para revisÃÃ†â€™Â£o final da ediÃÃ†â€™Â§ÃÃ†â€™Â£o. Confira o resumo antes de confirmar a atualizaÃÃ†â€™Â§ÃÃ†â€™Â£o.'
-            : 'SessÃÃ†â€™Â£o preparada para revisÃÃ†â€™Â£o final. Confira o resumo antes de publicar.';
+            ? 'SessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o preparada para revisÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o final da ediÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o. Confira o resumo antes de confirmar a atualizaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.'
+            : 'SessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o preparada para revisÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o final. Confira o resumo antes de publicar.';
 
-        header('Location: /secretaria');
+        header('Location: /secretaria/sessoes');
         exit;
     }
 
     public function publicarSessaoRascunho(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /secretaria');
+            header('Location: /secretaria/sessoes');
             exit;
         }
 
         $rascunho = $_SESSION['secretaria_sessao_rascunho'] ?? null;
         if (!is_array($rascunho)) {
-            $_SESSION['mensagem_erro'] = 'NÃÃ†â€™Â£o existe rascunho de sessÃÃ†â€™Â£o aguardando revisÃÃ†â€™Â£o.';
-            header('Location: /secretaria');
+            $_SESSION['mensagem_erro'] = 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o existe rascunho de sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o aguardando revisÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.';
+            header('Location: /secretaria/sessoes');
             exit;
         }
 
@@ -605,11 +681,11 @@ class SecretariaController
                 $sessaoIdExistente,
                 $rascunho,
                 $autorId,
-                'AtualizaÃÃ†â€™Â§ÃÃ†â€™Â£o confirmada pela Secretaria apÃÃ†â€™Â³s revisÃÃ†â€™Â£o final.'
+                'AtualizaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o confirmada pela Secretaria apÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â³s revisÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o final.'
             );
             if (!$ok) {
-                $_SESSION['mensagem_erro'] = 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel atualizar a sessÃÃ†â€™Â£o revisada.';
-                header('Location: /secretaria');
+                $_SESSION['mensagem_erro'] = 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel atualizar a sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o revisada.';
+                header('Location: /secretaria/sessoes');
                 exit;
             }
             $sessaoId = $sessaoIdExistente;
@@ -617,12 +693,12 @@ class SecretariaController
             $sessaoId = $sessaoModel->criar($rascunho, $autorId);
 
             if (!$sessaoId) {
-                $_SESSION['mensagem_erro'] = 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel persistir a sessÃÃ†â€™Â£o revisada.';
-                header('Location: /secretaria');
+                $_SESSION['mensagem_erro'] = 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel persistir a sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o revisada.';
+                header('Location: /secretaria/sessoes');
                 exit;
             }
 
-            $sessaoModel->marcarPublicada($sessaoId, $autorId, 'PublicaÃÃ†â€™Â§ÃÃ†â€™Â£o confirmada pela Secretaria apÃÃ†â€™Â³s revisÃÃ†â€™Â£o final.');
+            $sessaoModel->marcarPublicada($sessaoId, $autorId, 'PublicaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o confirmada pela Secretaria apÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â³s revisÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o final.');
         }
 
         $sessaoCriada = $sessaoModel->findById($sessaoId) ?? $rascunho;
@@ -631,31 +707,31 @@ class SecretariaController
 
         unset($_SESSION['secretaria_sessao_rascunho']);
         $_SESSION['mensagem_sucesso'] = $sessaoIdExistente > 0
-            ? 'SessÃÃ†â€™Â£o atualizada com sucesso e histÃÃ†â€™Â³rico registrado.'
-            : 'SessÃÃ†â€™Â£o publicada com sucesso e pronta para confirmaÃÃ†â€™Â§ÃÃ†â€™Âµes.';
-        header('Location: /secretaria');
+            ? 'SessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o atualizada com sucesso e histÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â³rico registrado.'
+            : 'SessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o publicada com sucesso e pronta para confirmaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Âµes.';
+        header('Location: /secretaria/sessoes');
         exit;
     }
 
     public function cancelarRascunhoSessao(): void
     {
         unset($_SESSION['secretaria_sessao_rascunho']);
-        $_SESSION['mensagem_sucesso'] = 'Rascunho da sessÃÃ†â€™Â£o descartado.';
-        header('Location: /secretaria');
+        $_SESSION['mensagem_sucesso'] = 'Rascunho da sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o descartado.';
+        header('Location: /secretaria/sessoes');
         exit;
     }
 
     public function cancelarSessao(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /secretaria');
+            header('Location: /secretaria/sessoes');
             exit;
         }
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         if ($sessaoId <= 0) {
-            $_SESSION['mensagem_erro'] = 'SessÃÃ†â€™Â£o invÃÃ†â€™Â¡lida para cancelamento.';
-            header('Location: /secretaria');
+            $_SESSION['mensagem_erro'] = 'SessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o invÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â¡lida para cancelamento.';
+            header('Location: /secretaria/sessoes');
             exit;
         }
 
@@ -667,24 +743,24 @@ class SecretariaController
         );
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'SessÃÃ†â€™Â£o cancelada com sucesso pela Secretaria.'
-            : 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel cancelar a sessÃÃ†â€™Â£o.';
+            ? 'SessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o cancelada com sucesso pela Secretaria.'
+            : 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel cancelar a sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.';
 
-        header('Location: /secretaria');
+        header('Location: /secretaria/sessoes');
         exit;
     }
 
     public function reabrirSessao(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /secretaria');
+            header('Location: /secretaria/sessoes');
             exit;
         }
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         if ($sessaoId <= 0) {
-            $_SESSION['mensagem_erro'] = 'SessÃÃ†â€™Â£o invÃÃ†â€™Â¡lida para reabertura.';
-            header('Location: /secretaria');
+            $_SESSION['mensagem_erro'] = 'SessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o invÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â¡lida para reabertura.';
+            header('Location: /secretaria/sessoes');
             exit;
         }
 
@@ -696,24 +772,24 @@ class SecretariaController
         );
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'SessÃÃ†â€™Â£o reaberta com sucesso pela Secretaria.'
-            : 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel reabrir a sessÃÃ†â€™Â£o.';
+            ? 'SessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o reaberta com sucesso pela Secretaria.'
+            : 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel reabrir a sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.';
 
-        header('Location: /secretaria');
+        header('Location: /secretaria/sessoes');
         exit;
     }
 
     public function publicarSessao(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /secretaria');
+            header('Location: /secretaria/sessoes');
             exit;
         }
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         if ($sessaoId <= 0) {
-            $_SESSION['mensagem_erro'] = 'SessÃÃ†â€™Â£o invÃÃ†â€™Â¡lida para publicaÃÃ†â€™Â§ÃÃ†â€™Â£o.';
-            header('Location: /secretaria');
+            $_SESSION['mensagem_erro'] = 'SessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o invÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â¡lida para publicaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.';
+            header('Location: /secretaria/sessoes');
             exit;
         }
 
@@ -723,14 +799,14 @@ class SecretariaController
         $ok = (new Sessao())->marcarPublicada(
             $sessaoId,
             $autorId,
-            'PublicaÃÃ†â€™Â§ÃÃ†â€™Â£o operacional realizada pela Secretaria.'
+            'PublicaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o operacional realizada pela Secretaria.'
         );
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'SessÃÃ†â€™Â£o publicada com sucesso pela Secretaria.'
-            : 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel publicar a sessÃÃ†â€™Â£o.';
+            ? 'SessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o publicada com sucesso pela Secretaria.'
+            : 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel publicar a sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.';
 
-        header('Location: /secretaria');
+        header('Location: /secretaria/sessoes');
         exit;
     }
 
@@ -747,7 +823,7 @@ class SecretariaController
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Trabalho registrado com sucesso.'
-            : 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel registrar o trabalho.';
+            : 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel registrar o trabalho.';
 
         header('Location: /secretaria');
         exit;
@@ -765,8 +841,8 @@ class SecretariaController
         $ok = $publicacaoModel->criar($_POST, $autorId !== '' ? $autorId : null);
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'PublicaÃÃ†â€™Â§ÃÃ†â€™Â£o registrada com sucesso.'
-            : 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel registrar a publicaÃÃ†â€™Â§ÃÃ†â€™Â£o.';
+            ? 'PublicaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o registrada com sucesso.'
+            : 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel registrar a publicaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.';
 
         header('Location: /secretaria');
         exit;
@@ -775,13 +851,13 @@ class SecretariaController
     public function salvarBalaustre(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /secretaria');
+            header('Location: /secretaria/balaustres');
             exit;
         }
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         if ($sessaoId <= 0 && empty($_POST['balaustre_independente'])) {
-            $_SESSION['mensagem_erro'] = 'Selecione a sessÃÃ†â€™Â£o para salvar o balaustre.';
+            $_SESSION['mensagem_erro'] = 'Selecione a sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o para salvar o balaustre.';
             header('Location: /secretaria');
             exit;
         }
@@ -791,23 +867,23 @@ class SecretariaController
         $ok = $model->salvarPorSessao($sessaoId, $_POST, $autorId !== '' ? $autorId : null);
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Balaustre salvo em rascunho.'
-            : 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel salvar o balaustre.';
+            : 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel salvar o balaustre.';
 
-        header('Location: ' . ($sessaoId > 0 ? '/secretaria?sessao_resumo=' . urlencode((string) $sessaoId) : '/secretaria/balaustres'));
+        header('Location: ' . ($sessaoId > 0 ? '/secretaria/balaustres?sessao_resumo=' . urlencode((string) $sessaoId) : '/secretaria/balaustres'));
         exit;
     }
 
     public function marcarBalaustreApto(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /secretaria');
+            header('Location: /secretaria/balaustres');
             exit;
         }
 
         $balaustreId = (int) ($_POST['balaustre_id'] ?? 0);
         if ($balaustreId <= 0) {
-            $_SESSION['mensagem_erro'] = 'Balaustre invÃÃ†â€™Â¡lido para marcar como apto.';
-            header('Location: /secretaria');
+            $_SESSION['mensagem_erro'] = 'Balaustre invÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â¡lido para marcar como apto.';
+            header('Location: /secretaria/balaustres');
             exit;
         }
 
@@ -816,16 +892,16 @@ class SecretariaController
         $validacao = $model->validarParaApto($balaustreId);
         if (!($validacao['ok'] ?? false)) {
             $_SESSION['mensagem_erro'] = (string) ($validacao['erro'] ?? 'Balaustre ainda nao atende aos requisitos do padrao oficial.');
-            header('Location: /secretaria');
+            header('Location: /secretaria/balaustres');
             exit;
         }
 
         $ok = $model->marcarAptoVotacao($balaustreId, $autorId !== '' ? $autorId : null);
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Balaustre apto para votaÃÃ†â€™Â§ÃÃ†â€™Â£o. O VenerÃÃ†â€™Â¡vel Mestre jÃÃ†â€™Â¡ pode abrir a votaÃÃ†â€™Â§ÃÃ†â€™Â£o.'
-            : 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel marcar o balaustre como apto.';
+            ? 'Balaustre apto para votaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o. O VenerÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â¡vel Mestre jÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â¡ pode abrir a votaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.'
+            : 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel marcar o balaustre como apto.';
 
-        header('Location: /secretaria');
+        header('Location: /secretaria/balaustres');
         exit;
     }
 
@@ -838,7 +914,7 @@ class SecretariaController
 
         $balaustreId = (int) ($_POST['balaustre_id'] ?? 0);
         if ($balaustreId <= 0) {
-            $_SESSION['mensagem_erro'] = 'Balaustre invÃÃ†â€™Â¡lido para abrir votaÃÃ†â€™Â§ÃÃ†â€™Â£o.';
+            $_SESSION['mensagem_erro'] = 'Balaustre invÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â¡lido para abrir votaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.';
             header('Location: /secretaria');
             exit;
         }
@@ -847,9 +923,9 @@ class SecretariaController
         $autorId = (string) ($_SESSION['usuario_id'] ?? '');
         $resultado = $model->abrirVotacao($balaustreId, $autorId !== '' ? $autorId : null);
         if (($resultado['ok'] ?? false) === true) {
-            $_SESSION['mensagem_sucesso'] = 'VotaÃÃ†â€™Â§ÃÃ†â€™Â£o aberta com sucesso pelo VenerÃÃ†â€™Â¡vel Mestre. Votantes aptos: ' . (int) ($resultado['total_votantes'] ?? 0) . '.';
+            $_SESSION['mensagem_sucesso'] = 'VotaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o aberta com sucesso pelo VenerÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â¡vel Mestre. Votantes aptos: ' . (int) ($resultado['total_votantes'] ?? 0) . '.';
         } else {
-            $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel abrir votaÃÃ†â€™Â§ÃÃ†â€™Â£o.');
+            $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel abrir votaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.');
         }
 
         header('Location: /secretaria');
@@ -885,7 +961,7 @@ class SecretariaController
         if (($resultado['ok'] ?? false) === true) {
             $_SESSION['mensagem_sucesso'] = 'Voto registrado com sucesso.';
         } else {
-            $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel registrar voto.');
+            $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel registrar voto.');
         }
 
         header('Location: ' . $destino);
@@ -901,7 +977,7 @@ class SecretariaController
 
         $balaustreId = (int) ($_POST['balaustre_id'] ?? 0);
         if ($balaustreId <= 0) {
-            $_SESSION['mensagem_erro'] = 'Balaustre invÃÃ†â€™Â¡lido para encerrar votaÃÃ†â€™Â§ÃÃ†â€™Â£o.';
+            $_SESSION['mensagem_erro'] = 'Balaustre invÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â¡lido para encerrar votaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.';
             header('Location: /secretaria');
             exit;
         }
@@ -909,9 +985,9 @@ class SecretariaController
         $model = new Balaustre();
         $resultado = $model->encerrarVotacaoPorBalaustre($balaustreId);
         if (($resultado['ok'] ?? false) === true) {
-            $_SESSION['mensagem_sucesso'] = 'VotaÃÃ†â€™Â§ÃÃ†â€™Â£o encerrada. Resultado do balaustre: ' . (string) ($resultado['status'] ?? 'indefinido') . '.';
+            $_SESSION['mensagem_sucesso'] = 'VotaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o encerrada. Resultado do balaustre: ' . (string) ($resultado['status'] ?? 'indefinido') . '.';
         } else {
-            $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel encerrar votaÃÃ†â€™Â§ÃÃ†â€™Â£o.');
+            $_SESSION['mensagem_erro'] = (string) ($resultado['erro'] ?? 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel encerrar votaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.');
         }
 
         header('Location: /secretaria');
@@ -1098,7 +1174,7 @@ class SecretariaController
         ];
 
         if ($payload['titulo'] === '' || $payload['data_hora_inicio'] === '') {
-            return ['ok' => false, 'erro' => 'TÃÃ†â€™Â­tulo e data/hora de inÃÃ†â€™Â­cio sÃÃ†â€™Â£o obrigatÃÃ†â€™Â³rios.'];
+            return ['ok' => false, 'erro' => 'TÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­tulo e data/hora de inÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­cio sÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o obrigatÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â³rios.'];
         }
 
         $payload = $this->normalizarRascunhoSessao($payload);
@@ -1106,11 +1182,30 @@ class SecretariaController
 
         if ($sessaoId > 0) {
             $ok = $sessaoModel->atualizar($sessaoId, $payload, $autorId, 'Atualizacao realizada pela Secretaria no miniapp.');
-            return ['ok' => $ok, 'sessao_id' => $sessaoId, 'erro' => $ok ? null : 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel atualizar a sessÃÃ†â€™Â£o.'];
+            return ['ok' => $ok, 'sessao_id' => $sessaoId, 'erro' => $ok ? null : 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel atualizar a sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.'];
         }
 
         $novoId = $sessaoModel->criar($payload, $autorId);
-        return ['ok' => $novoId !== null, 'sessao_id' => $novoId, 'erro' => $novoId !== null ? null : 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel criar a sessÃÃ†â€™Â£o.'];
+        return ['ok' => $novoId !== null, 'sessao_id' => $novoId, 'erro' => $novoId !== null ? null : 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel criar a sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.'];
+    }
+
+    public function visualizarBalaustre(): void
+    {
+        $id = (int) ($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            header('Location: /secretaria/votacao');
+            exit;
+        }
+
+        $balaustreModel = new Balaustre();
+        $balaustre = $balaustreModel->buscarPorId($id);
+        if (!$balaustre) {
+            $_SESSION['mensagem_erro'] = 'Balaustre nÃ£o encontrado.';
+            header('Location: /secretaria/votacao');
+            exit;
+        }
+
+        require_once __DIR__ . '/../Views/secretaria/visualizar_balaustre.php';
     }
 
     private function mapearSessaoMiniapp(array $sessao, Sessao $sessaoModel): array
@@ -1163,18 +1258,18 @@ class SecretariaController
         ];
 
         if ($payload['sessao_id'] <= 0 || $payload['titulo'] === '') {
-            return ['ok' => false, 'erro' => 'SessÃÃ†â€™Â£o e tÃÃ†â€™Â­tulo sÃÃ†â€™Â£o obrigatÃÃ†â€™Â³rios para registrar o trabalho.'];
+            return ['ok' => false, 'erro' => 'SessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o e tÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­tulo sÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o obrigatÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â³rios para registrar o trabalho.'];
         }
 
         $ok = (new TrabalhoSessao())->criar($payload, $autorId);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel registrar o trabalho.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel registrar o trabalho.'];
     }
 
     public function salvarBalaustreMiniapp(array $input, ?string $autorId = null): array
     {
         $sessaoId = (int) ($input['sessao_id'] ?? 0);
         if ($sessaoId <= 0) {
-            return ['ok' => false, 'erro' => 'Selecione a sessÃÃ†â€™Â£o para registrar o balaustre.'];
+            return ['ok' => false, 'erro' => 'Selecione a sessÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o para registrar o balaustre.'];
         }
 
         $payload = [
@@ -1185,7 +1280,7 @@ class SecretariaController
         ];
 
         $ok = (new Balaustre())->salvarPorSessao($sessaoId, $payload, $autorId);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel salvar o balaustre.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel salvar o balaustre.'];
     }
 
     public function salvarPublicacaoMiniapp(array $input, ?string $autorId = null): array
@@ -1202,7 +1297,7 @@ class SecretariaController
         ];
 
         if ($payload['titulo'] === '') {
-            return ['ok' => false, 'erro' => 'TÃÃ†â€™Â­tulo ÃÃ†â€™Â© obrigatÃÃ†â€™Â³rio para registrar a publicaÃÃ†â€™Â§ÃÃ†â€™Â£o.'];
+            return ['ok' => false, 'erro' => 'TÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­tulo ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â© obrigatÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â³rio para registrar a publicaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.'];
         }
 
         if ($payload['sessao_id'] <= 0) {
@@ -1210,7 +1305,7 @@ class SecretariaController
         }
 
         $ok = (new PublicacaoSecretaria())->criar($payload, $autorId);
-        return ['ok' => $ok, 'erro' => $ok ? null : 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel registrar a publicaÃÃ†â€™Â§ÃÃ†â€™Â£o.'];
+        return ['ok' => $ok, 'erro' => $ok ? null : 'NÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o foi possÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â­vel registrar a publicaÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â§ÃƒÃƒâ€ Ã¢â‚¬â„¢Ã‚Â£o.'];
     }
 
     public function votarBalaustreMiniapp(array $input, string $obreiroId): array
@@ -1315,5 +1410,6 @@ class SecretariaController
         (new AdminController())->excluirConteudoPublico();
     }
 }
+
 
 

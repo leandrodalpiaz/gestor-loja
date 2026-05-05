@@ -71,6 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'pendente': statusBadge = `<span class="badge badge-warning">Pendente</span>`; break;
             case 'aprovado': statusBadge = `<span class="badge badge-success">Aprovado</span>`; break;
             case 'rejeitado': statusBadge = `<span class="badge badge-danger">Rejeitado</span>`; break;
+            case 'cancelado': statusBadge = `<span class="badge badge-secondary">Cancelado</span>`; break;
+            default: statusBadge = `<span class="badge badge-secondary">${c.status || 'Sem status'}</span>`;
         }
 
         return `
@@ -90,9 +92,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     ${c.status === 'aprovado' ? `<p class="mt-2 text-xs text-green-600 dark:text-green-400"><strong>Aprovado:</strong> ${formatarMoeda(c.valor_validado)} em ${String(c.mes_ref_validado || '').padStart(2, '0')}/${c.ano_ref_validado || '?'}</p>` : ''}
                     ${c.status === 'rejeitado' ? `<p class="mt-2 text-xs text-red-600 dark:text-red-400"><strong>Motivo:</strong> ${c.motivo_rejeicao || '-'}</p>` : ''}
+                    ${c.status === 'cancelado' ? `<p class="mt-2 text-xs text-gray-600 dark:text-gray-400"><strong>Cancelado:</strong> ${c.motivo_cancelamento || '-'}</p>` : ''}
                 </div>
-                <div class="flex-shrink-0">
+                <div class="flex-shrink-0 flex flex-wrap gap-2 justify-end">
                     ${c.status === 'pendente' ? `<button onclick="abrirValidacao(${c.id})" class="btn btn-primary">Validar</button>` : ''}
+                    ${c.status === 'aprovado' ? `<button onclick="cancelarComprovante(${c.id})" class="btn btn-secondary">Desfazer aprovação</button>` : ''}
                 </div>
             </div>
         </div>
@@ -185,6 +189,30 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error('Erro ao rejeitar:', err);
             alert('Não foi possível rejeitar o comprovante.');
+        }
+    }
+
+    window.cancelarComprovante = async function(id) {
+        const motivo = prompt('Informe o motivo do cancelamento da aprovação:');
+        if (!motivo || !motivo.trim()) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/tesouraria/comprovantes/${id}/cancelar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ motivo: motivo.trim() })
+            });
+            const json = await res.json();
+            if (!json.ok) {
+                alert(json.erro || 'Não foi possível cancelar o comprovante.');
+                return;
+            }
+            carregarComprovantes();
+        } catch (err) {
+            console.error('Erro ao cancelar comprovante:', err);
+            alert('Não foi possível cancelar o comprovante.');
         }
     }
 

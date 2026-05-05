@@ -49,7 +49,6 @@ class Balaustre
                 UPDATE balaustres
                    SET numero_balaustre = :numero_balaustre,
                        sessao_id = :sessao_id,
-                       loja_id = :loja_id,
                        template_versao = :template_versao,
                        texto_final = :texto_final,
                        dados_capturados = CAST(:dados_capturados AS jsonb),
@@ -60,8 +59,15 @@ class Balaustre
                        apto_votacao_em = CASE WHEN status = 'em_votacao' THEN apto_votacao_em ELSE NULL END,
                        apto_votacao_por = CASE WHEN status = 'em_votacao' THEN apto_votacao_por ELSE NULL END,
                        updated_at = NOW()
-                 WHERE id = :id
-                   AND loja_id = :loja_id
+                  WHERE id = :id
+                    AND (
+                        :sessao_id IS NULL
+                        OR EXISTS (
+                            SELECT 1 FROM sessoes s
+                            WHERE s.id = :sessao_id
+                              AND s.loja_id = :loja_id
+                        )
+                    )
             ");
 
                 $okBalaustre = $stmt->execute([
@@ -77,7 +83,6 @@ class Balaustre
             } else {
                 $stmt = $this->db->prepare("
             INSERT INTO balaustres (
-                loja_id,
                 sessao_id,
                 numero_balaustre,
                 template_versao,
@@ -88,7 +93,6 @@ class Balaustre
                 status,
                 updated_at
             ) VALUES (
-                :loja_id,
                 :sessao_id,
                 :numero_balaustre,
                 :template_versao,
@@ -102,7 +106,6 @@ class Balaustre
         ");
 
                 $okBalaustre = $stmt->execute([
-                    'loja_id' => $lojaId,
                     'sessao_id' => $sessaoId > 0 ? $sessaoId : null,
                     'numero_balaustre' => trim((string) ($data['numero_balaustre'] ?? '')) ?: null,
                     'template_versao' => trim((string) ($data['template_versao'] ?? 'oficial-v1')) ?: 'oficial-v1',
@@ -147,16 +150,83 @@ class Balaustre
         return $this->buildTextoOficial($sessaoId, $dadosJson, $data);
     }
 
+    public function adicionarVisitanteSessao(int $sessaoId, array $visitante, ?string $autorId = null): bool
+    {
+        if ($sessaoId <= 0) {
+            return false;
+        }
+
+        $nome = trim((string) ($visitante['nome'] ?? ''));
+        if ($nome === '') {
+            return false;
+        }
+
+        $atual = $this->buscarPorSessao($sessaoId);
+        $dados = [];
+        if ($atual && !empty($atual['dados_capturados'])) {
+            $decoded = is_string($atual['dados_capturados'])
+                ? json_decode($atual['dados_capturados'], true)
+                : $atual['dados_capturados'];
+            $dados = is_array($decoded) ? $decoded : [];
+        }
+
+        if (!isset($dados['palavra_bem_ordem']) || !is_array($dados['palavra_bem_ordem'])) {
+            $dados['palavra_bem_ordem'] = ['obreiros' => [], 'visitantes' => []];
+        }
+        if (!isset($dados['palavra_bem_ordem']['visitantes']) || !is_array($dados['palavra_bem_ordem']['visitantes'])) {
+            $dados['palavra_bem_ordem']['visitantes'] = [];
+        }
+
+        $dados['palavra_bem_ordem']['visitantes'][] = [
+            'nome' => $nome,
+            'loja' => trim((string) ($visitante['loja'] ?? '')),
+            'oriente' => trim((string) ($visitante['oriente'] ?? '')),
+            'potencia' => trim((string) ($visitante['potencia'] ?? '')),
+            'grau' => trim((string) ($visitante['grau'] ?? '')),
+            'dia_reuniao' => trim((string) ($visitante['dia_reuniao'] ?? '')),
+            'fala_resumida' => trim((string) ($visitante['fala_resumida'] ?? '')),
+        ];
+
+        if ($atual) {
+            $stmt = $this->db->prepare("
+                UPDATE balaustres
+                   SET dados_capturados = CAST(:dados AS jsonb),
+                       preparado_por = :autor,
+                       preparado_em = NOW(),
+                       updated_at = NOW()
+                 WHERE id = :id
+            ");
+            return $stmt->execute([
+                'dados' => json_encode($dados, JSON_UNESCAPED_UNICODE),
+                'autor' => $autorId,
+                'id' => (int) $atual['id'],
+            ]);
+        }
+
+        $stmt = $this->db->prepare("
+            INSERT INTO balaustres (
+                sessao_id, loja_id, template_versao, dados_capturados, preparado_por,
+                preparado_em, status, updated_at
+            ) VALUES (
+                :sessao_id, :loja_id, 'oficial-v1', CAST(:dados AS jsonb), :autor,
+                NOW(), 'rascunho', NOW()
+            )
+        ");
+
+        return $stmt->execute([
+            'sessao_id' => $sessaoId,
+            'loja_id' => $this->obterLojaAtualId(),
+            'dados' => json_encode($dados, JSON_UNESCAPED_UNICODE),
+            'autor' => $autorId,
+        ]);
+    }
+
     public function validarParaApto(int $balaustreId): array
     {
         $balaustre = $this->buscarPorId($balaustreId);
         if (!$balaustre) {
             return ['ok' => false, 'erro' => 'Balaustre nao encontrado.'];
         }
-        if (empty($balaustre['sessao_id'])) {
-            return ['ok' => false, 'erro' => 'Balaustre sem sessao vinculada nao pode seguir para votacao.'];
-        }
-
         $dados = $balaustre['dados_capturados'] ?? null;
         if (is_string($dados)) {
             $dec = json_decode($dados, true);
@@ -165,6 +235,7 @@ class Balaustre
         $dados = is_array($dados) ? $dados : [];
 
         $obrigatorios = [
+            'abertura' => trim((string) ($dados['blocos']['abertura'] ?? '')),
             'expediente' => trim((string) ($dados['blocos']['expediente'] ?? '')),
             'saco_propostas' => trim((string) ($dados['blocos']['saco_propostas'] ?? '')),
             'ordem_dia' => trim((string) ($dados['blocos']['ordem_dia'] ?? '')),
@@ -175,7 +246,7 @@ class Balaustre
         ];
         foreach ($obrigatorios as $chave => $valor) {
             if ($valor === '') {
-                return ['ok' => false, 'erro' => 'Campo obrigatorio nao preenchido para votacao: ' . $chave . '.'];
+                return ['ok' => false, 'erro' => 'Campo obrigatorio nao preenchido para o padrao oficial: ' . str_replace('_', ' ', $chave) . '.'];
             }
         }
 
@@ -202,6 +273,28 @@ class Balaustre
         $palavraQuadro = $this->comporPalavraQuadro($dadosJson);
         $palavraVisitantes = $this->comporPalavraVisitantes($dadosJson);
         $palavraComposta = trim($palavraQuadro . ($palavraQuadro !== '' && $palavraVisitantes !== '' ? ' ' : '') . $palavraVisitantes);
+
+        $dadosJson['cabecalho'] = implode("\n", array_filter([
+            'ESTADO DO RIO GRANDE DO SUL',
+            'ORIENTE DE ' . strtoupper(trim((string) ($cfg['oriente'] ?? ''))),
+            'Balaustre nº ' . ($numeroBalaustre !== '' ? $numeroBalaustre : '---'),
+            strtoupper(trim($tipoSessao . ' ' . ($grauSessao !== '' ? 'DE ' . $grauSessao : ''))),
+        ], static fn ($linha) => trim((string) $linha) !== ''));
+        $dadosJson['blocos']['abertura'] = $abertura;
+        $dadosJson['blocos']['balaustre'] = trim((string) ($dadosJson['blocos']['balaustre'] ?? 'Sem registro.'));
+        $dadosJson['blocos']['expediente'] = trim((string) ($dadosJson['blocos']['expediente'] ?? 'Sem expediente.'));
+        $dadosJson['blocos']['saco_propostas'] = trim((string) ($dadosJson['blocos']['saco_propostas'] ?? 'Sem registros.'));
+        $dadosJson['blocos']['ordem_dia'] = trim((string) ($dadosJson['blocos']['ordem_dia'] ?? 'Sem registros.'));
+        $dadosJson['blocos']['tronco_solidariedade'] = trim((string) ($dadosJson['blocos']['tronco_solidariedade'] ?? 'Sem coleta informada.'));
+        $dadosJson['blocos']['conclusoes_orador'] = trim((string) ($dadosJson['blocos']['conclusoes_orador'] ?? 'Sem registro.'));
+        $dadosJson['blocos']['encerramento'] = trim((string) ($dadosJson['blocos']['encerramento'] ?? $this->montarEncerramentoPadrao($dataFim)));
+        $dadosJson['blocos']['assinaturas'] = trim((string) ($dadosJson['blocos']['assinaturas'] ?? 'Secretario              Guarda da Lei              Veneravel Mestre'));
+
+        if ($palavraComposta !== '' && empty($dadosJson['palavra_bem_ordem']['obreiros']) && empty($dadosJson['palavra_bem_ordem']['visitantes'])) {
+            $dadosJson['palavra_obreiros'] = [['nome' => '', 'fala' => $palavraComposta]];
+        }
+
+        return BalaustreComposer::build($dadosJson);
 
         $linhas = [
             'ESTADO DO RIO GRANDE DO SUL',
@@ -674,23 +767,38 @@ class Balaustre
 
     public function marcarAptoVotacao(int $balaustreId, ?string $autorId = null): bool
     {
+        $balaustre = $this->buscarPorId($balaustreId);
+        if (!$balaustre) {
+            return false;
+        }
+
+        $dados = $balaustre['dados_capturados'] ?? null;
+        if (is_string($dados)) {
+            $decoded = json_decode($dados, true);
+            $dados = is_array($decoded) ? $decoded : [];
+        } else {
+            $dados = is_array($dados) ? $dados : [];
+        }
+
+        $textoFinalExistente = trim((string) ($balaustre['texto_final'] ?? ''));
+        $textoFinal = $textoFinalExistente !== '' ? $textoFinalExistente : BalaustreComposer::build($dados);
+
         $stmt = $this->db->prepare("
             UPDATE balaustres
               SET apto_votacao = TRUE,
                    apto_votacao_em = NOW(),
                    apto_votacao_por = :autor_id,
                    status = 'apto_votacao',
+                   texto_final = :texto_final,
                    updated_at = NOW()
              WHERE id = :id
-               AND loja_id = :loja_id
-               AND sessao_id IS NOT NULL
                AND status <> 'em_votacao'
         ");
 
         return $stmt->execute([
             'id' => $balaustreId,
             'autor_id' => $autorId,
-            'loja_id' => $this->obterLojaAtualId(),
+            'texto_final' => $textoFinal,
         ]);
     }
 
@@ -813,8 +921,8 @@ class Balaustre
                       AND v.status = 'aberta'
                 ) AS total_votantes_abertos
             FROM balaustres b
-            LEFT JOIN sessoes s ON s.id = b.sessao_id
-            WHERE b.loja_id = :loja_id
+            INNER JOIN sessoes s ON s.id = b.sessao_id
+            WHERE s.loja_id = :loja_id
             ORDER BY b.updated_at DESC, b.id DESC
             LIMIT :limite
         ");
@@ -1115,7 +1223,7 @@ class Balaustre
             FROM balaustres b
             LEFT JOIN sessoes s ON s.id = b.sessao_id
             WHERE b.id = :id
-              AND b.loja_id = :loja_id
+              AND (s.loja_id = :loja_id OR s.loja_id IS NULL)
             LIMIT 1
         ");
         $stmt->execute([

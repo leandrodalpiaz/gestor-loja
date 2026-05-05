@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    let fechamentoAtual = null;
     const ui = {
         filterMes: document.getElementById('filter-mes'),
         filterAno: document.getElementById('filter-ano'),
@@ -41,6 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const json = await res.json();
             const fechamento = json.fechamento || {};
             const totais = json.totais || {};
+            const totalEntradas = totais.entrada ?? fechamento.total_entradas ?? 0;
+            const totalSaidas = totais.saida ?? fechamento.total_saidas ?? 0;
+            fechamentoAtual = fechamento;
 
             const isFechado = fechamento.status === 'fechado';
             
@@ -48,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.statusFechamento.className = `font-bold ${isFechado ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'}`;
             
             ui.saldoInicial.textContent = formatarMoeda(fechamento.saldo_inicial || 0);
-            ui.totalEntradas.textContent = formatarMoeda(totais.entrada || 0);
-            ui.totalSaidas.textContent = formatarMoeda(totais.saida || 0);
+            ui.totalEntradas.textContent = formatarMoeda(totalEntradas);
+            ui.totalSaidas.textContent = formatarMoeda(totalSaidas);
             ui.saldoFinal.textContent = formatarMoeda(fechamento.saldo_final || 0);
 
             ui.btnFecharMes.disabled = isFechado;
@@ -93,12 +97,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const mes = parseInt(ui.filterMes.value);
         const ano = parseInt(ui.filterAno.value);
         const saldoInicial = parseFloat(ui.saldoInicialInput.value || '0');
+        const fechamentoId = parseInt(fechamentoAtual?.id || 0);
+
+        if (!fechamentoId) {
+            alert('Não foi possível identificar o fechamento desta competência.');
+            return;
+        }
 
         try {
             const res = await fetch('/api/tesouraria/fechamento/saldo-inicial', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mes, ano, saldo_inicial: saldoInicial })
+                body: JSON.stringify({
+                    fechamento_id: fechamentoId,
+                    novo_saldo: saldoInicial,
+                    justificativa: `Ajuste manual do saldo inicial de ${String(mes).padStart(2, '0')}/${ano}`
+                })
             });
             const json = await res.json();
             if (json.ok) {

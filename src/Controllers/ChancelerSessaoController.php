@@ -79,6 +79,32 @@ class ChancelerSessaoController
         exit;
     }
 
+    public function registrarVisitante(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /chanceler/sessao');
+            exit;
+        }
+
+        $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
+        $nome = trim((string) ($_POST['nome'] ?? ''));
+        $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+
+        if ($sessaoId <= 0 || $nome === '') {
+            $_SESSION['mensagem_erro'] = 'Informe a sessão e o nome do visitante.';
+            header('Location: /chanceler/sessao' . ($sessaoId > 0 ? '?sessao_id=' . urlencode((string) $sessaoId) : ''));
+            exit;
+        }
+
+        $ok = (new Balaustre())->adicionarVisitanteSessao($sessaoId, $_POST, $autorId !== '' ? $autorId : null);
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Visitante registrado para abastecer Balaústre e Orador.'
+            : 'Não foi possível registrar o visitante.';
+
+        header('Location: /chanceler/sessao?sessao_id=' . urlencode((string) $sessaoId));
+        exit;
+    }
+
     public function montarPayloadMiniapp(?int $sessaoId = null): array
     {
         $sessaoModel = new Sessao();

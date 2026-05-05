@@ -190,6 +190,11 @@ class SecretariaRoutes
                 $controller->encerrarVotacaoBalaustre();
                 return true;
 
+            case '/secretaria/balaustres/visualizar':
+                ModuleGuards::requireSecretariaAccess($openTestAccess, $session, $authorizer);
+                $controller->visualizarBalaustre();
+                return true;
+
             default:
                 return false;
         }

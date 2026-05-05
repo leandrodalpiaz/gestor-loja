@@ -48,6 +48,11 @@ class ChancelariaRoutes
                 (new ChancelerSessaoController())->registrarPresenca();
                 return true;
 
+            case '/chanceler/sessao/visitante':
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                (new ChancelerSessaoController())->registrarVisitante();
+                return true;
+
             case '/veneravel/sessoes/publicar':
                 self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
                 (new VeneravelController())->publicarSessao();

@@ -7,7 +7,7 @@ $appShellSidebarSections = [
             ['label' => 'Sessões', 'href' => '/secretaria/sessoes'],
             ['label' => 'Balaústres', 'href' => '/secretaria/balaustres'],
             ['label' => 'Trabalhos/Publicações', 'href' => '/secretaria/trabalhos-publicacoes'],
-            ['label' => 'Convites Externos', 'href' => '/secretaria/convites-externos'],
+            ['label' => 'Mural Externo', 'href' => '/secretaria/convites-externos'],
             ['label' => 'Votação', 'href' => '/secretaria/votacao'],
             ['label' => 'Relatório Anual', 'href' => '/secretaria/relatorio-anual'],
             ['label' => 'Relatório de Gestão', 'href' => '/secretaria/relatorio-gestao'],

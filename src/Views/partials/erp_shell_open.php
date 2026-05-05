@@ -30,84 +30,83 @@ foreach ($appShellSidebarSections as $section) {
 ?>
 <body class="min-h-screen bg-erp-bg font-sans text-erp-text antialiased">
     <style>
-        /* Estabilização local do shell ERP (fallback sem Tailwind). */
-        body { background: var(--erp-bg); color: var(--erp-text); }
-        .erp-app-shell { min-height: 100vh; }
+        /* Estabilização local do shell ERP com foco em profundidade e glassmorphism */
+        .erp-app-shell { min-height: 100vh; display: flex; }
         .erp-app-shell > aside {
             position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
+            top: 0; left: 0; bottom: 0;
             width: 280px;
             background: var(--erp-surface);
             border-right: 1px solid var(--erp-border);
-            overflow: hidden;
-            z-index: 30;
+            z-index: 40;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .erp-app-shell > aside > div { height: 100%; display: flex; flex-direction: column; }
-        .erp-app-main { min-width: 0; min-height: 100vh; margin-left: 280px; }
-        .erp-app-main > header {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            background: var(--erp-surface);
-            border-bottom: 1px solid var(--erp-border);
+        .erp-app-main { flex: 1; min-width: 0; margin-left: 280px; transition: margin-left 0.3s ease; }
+        
+        /* Sidebar Refinement */
+        aside nav a { 
+            position: relative;
+            transition: all 0.2s ease;
+            color: var(--erp-muted);
         }
-        .erp-app-main > main {
-            padding: 24px;
-            padding-bottom: 96px;
-            width: 100%;
+        aside nav a:hover { color: var(--erp-text); background: var(--erp-surface-2); }
+        aside nav a.active { 
+            background: var(--erp-navy); 
+            color: #fff; 
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
         }
-        nav a, aside a { text-decoration: none; }
-        aside svg { width: 20px; height: 20px; flex: 0 0 20px; }
-        aside a { display: flex; align-items: center; gap: 10px; }
-        aside a span { line-height: 1.25; }
-        aside nav { padding: 12px 10px; overflow-y: auto; }
-        aside nav h3 { margin: 0 0 8px 0; font-size: 11px; color: var(--erp-muted); text-transform: uppercase; letter-spacing: .08em; }
-        aside nav > div { margin-bottom: 14px; }
-        aside nav a { padding: 8px 10px; border-radius: 8px; color: var(--erp-text); }
-        aside nav a:hover { background: var(--erp-surface-2); }
-        aside nav a[class*="bg-erp-navy"] { background: var(--erp-brand); color: #fff; }
-        header svg { width: 22px; height: 22px; }
+        aside nav a.active svg { color: var(--erp-gold); }
+
+        /* Mobile Adjustments */
         @media (max-width: 1023px) {
             .erp-app-shell > aside { transform: translateX(-100%); }
+            .erp-app-shell > aside.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.2); }
             .erp-app-main { margin-left: 0; }
-            .erp-app-main > main { padding: 16px; padding-bottom: 96px; }
         }
     </style>
-    <div x-data="{ sidebarOpen: false }" class="erp-app-shell min-h-screen">
+    <div x-data="{ sidebarOpen: false }" class="erp-app-shell bg-erp-bg">
         <!-- Sidebar -->
         <aside 
-            class="fixed inset-y-0 left-0 z-30 w-[280px] transform border-r border-erp-border bg-erp-surface transition-transform duration-300 ease-in-out lg:translate-x-0"
-            :class="{'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen}"
+            class="depth-2"
+            :class="{'open': sidebarOpen}"
         >
             <div class="flex h-full flex-col">
-                <div class="border-b border-erp-border px-6 py-5">
-                    <div class="flex items-center gap-3">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-lg border border-erp-border bg-erp-surface-2 overflow-hidden">
+                <div class="px-6 py-8">
+                    <div class="flex items-center gap-4">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-erp-border bg-white shadow-lg shadow-erp-navy/5 overflow-hidden p-1 group-hover:scale-105 transition-transform">
                             <?php if ($tenantLogo !== ''): ?>
-                                <img src="<?= htmlspecialchars($tenantLogo) ?>" alt="Logo da Loja" class="h-9 w-9 object-contain" width="36" height="36" style="width:36px;height:36px;object-fit:contain;">
+                                <img src="<?= htmlspecialchars($tenantLogo) ?>" alt="Logo" class="h-full w-full object-contain">
                             <?php else: ?>
-                                <span class="text-sm font-semibold text-erp-navy">GL</span>
+                                <div class="bg-gradient-to-br from-erp-navy to-erp-navy/80 text-white h-full w-full flex items-center justify-center font-black text-lg">
+                                    <?= strtoupper(substr($_SESSION['tenant_name'] ?? 'GL', 0, 1)) ?>
+                                </div>
                             <?php endif; ?>
                         </div>
-                        <div>
-                            <div class="text-sm font-semibold text-erp-navy">Gestor-Loja</div>
-                            <div class="text-xs text-erp-muted">Painel Administrativo</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-black tracking-tight text-erp-navy leading-tight truncate">
+                                <?= htmlspecialchars($_SESSION['tenant_name'] ?? 'Gestor-Loja') ?>
+                            </div>
+                            <div class="text-[9px] font-black uppercase tracking-[0.2em] text-erp-gold opacity-80">Oficina Digital</div>
                         </div>
                     </div>
                 </div>
-                <nav class="flex-1 overflow-y-auto px-4 py-4">
+
+                <nav class="flex-1 space-y-8 overflow-y-auto px-4 py-4 scrollbar-hide">
                     <?php foreach ($appShellSidebarSections as $section): ?>
-                        <div class="mb-6">
-                            <h3 class="px-3 text-xs font-semibold uppercase tracking-wider text-erp-muted"><?= htmlspecialchars((string) ($section['title'] ?? 'Seção')) ?></h3>
-                            <div class="mt-2 space-y-1">
+                        <div>
+                            <h3 class="mb-3 px-4 text-[10px] font-bold uppercase tracking-[0.15em] text-erp-muted opacity-60">
+                                <?= htmlspecialchars((string) ($section['title'] ?? 'Menu')) ?>
+                            </h3>
+                            <div class="space-y-1">
                                 <?php foreach (($section['items'] ?? []) as $item): ?>
                                     <?php $isActive = (string) ($item['href'] ?? '') === $appShellActiveHref; ?>
                                     <a href="<?= htmlspecialchars((string) ($item['href'] ?? '#')) ?>" 
-                                       class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors <?= $isActive ? 'bg-erp-navy text-white' : 'text-erp-text hover:bg-erp-bg' ?>">
-                                        <!-- Icon placeholder -->
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                       class="group flex items-center rounded-xl px-4 py-3 text-sm font-semibold transition-all <?= $isActive ? 'active' : '' ?>">
+                                        <div class="mr-3 transition-transform group-hover:scale-110">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
                                         <span><?= htmlspecialchars((string) ($item['label'] ?? 'Item')) ?></span>
                                     </a>
                                 <?php endforeach; ?>
@@ -115,14 +114,15 @@ foreach ($appShellSidebarSections as $section) {
                         </div>
                     <?php endforeach; ?>
                 </nav>
-                <div class="border-t border-erp-border p-4">
-                    <div class="flex items-center gap-3 rounded-lg bg-erp-bg p-3">
-                        <div class="h-9 w-9 rounded-full bg-erp-navy text-white flex items-center justify-center text-sm font-bold">
+
+                <div class="p-4">
+                    <div class="flex items-center gap-3 rounded-2xl bg-erp-surface-2 p-3 border border-erp-border/50">
+                        <div class="h-10 w-10 rounded-xl bg-erp-navy text-white flex items-center justify-center font-bold shadow-md">
                             <?= strtoupper(substr($appShellUserLabel, 0, 1)) ?>
                         </div>
-                        <div>
-                            <div class="text-sm font-semibold text-erp-text"><?= htmlspecialchars($appShellUserLabel) ?></div>
-                            <a href="/logout" class="text-xs text-erp-muted hover:text-erp-danger">Sair</a>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs font-bold text-erp-text truncate"><?= htmlspecialchars($appShellUserLabel) ?></div>
+                            <a href="/logout" class="text-[10px] font-bold text-erp-muted hover:text-erp-danger uppercase tracking-wider">Deslogar</a>
                         </div>
                     </div>
                 </div>
@@ -130,49 +130,54 @@ foreach ($appShellSidebarSections as $section) {
         </aside>
 
         <!-- Main content -->
-        <div class="erp-app-main min-w-0">
+        <div class="erp-app-main">
             <?php if (!empty($_SESSION['admin_mode'])): ?>
-                <div style="background: #ef4444; color: white; padding: 12px; text-align: center; font-weight: bold; position: relative; z-index: 50;">
-                    ⚠️ ATENÇÃO: Você está navegando em MODO SUPORTE (Ghost Login). As ações não afetarão o histórico civil do seu Obreiro real.
-                    <a href="/admin-suporte/sair" style="text-decoration: underline; margin-left: 10px; color: white;">Sair do Modo Suporte</a>
+                <div class="bg-erp-danger text-white px-6 py-2 text-center text-xs font-bold tracking-wide uppercase z-50 sticky top-0">
+                    ⚠️ Modo Suporte Ativo
+                    <a href="/admin-suporte/sair" class="ml-4 underline hover:text-white/80">Sair</a>
                 </div>
             <?php endif; ?>
-            <header class="sticky top-0 z-20 border-b border-erp-border bg-erp-surface/80 backdrop-blur-sm">
-                <div class="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-                    <!-- Mobile sidebar toggle -->
-                    <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-                    </button>
-                    
-                    <div class="flex-1"></div>
 
-                    <!-- Top right actions -->
-                    <div class="flex items-center gap-4">
-                        <a href="/pwa" class="text-sm font-medium text-erp-muted hover:text-erp-navy">Visão Mobile</a>
-                        <!-- User menu can be added here -->
-                    </div>
+            <header class="glass-surface sticky top-0 z-30 px-4 h-16 flex items-center justify-between sm:px-8">
+                <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-2 rounded-lg hover:bg-erp-surface-2 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                
+                <div class="flex-1"></div>
+
+                <div class="flex items-center gap-6">
+                    <a href="/pwa" class="text-[11px] font-bold uppercase tracking-widest text-erp-muted hover:text-erp-navy transition-colors">Acesso PWA</a>
+                    <div class="h-8 w-[1px] bg-erp-border"></div>
+                    <button class="text-erp-muted hover:text-erp-navy transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </button>
                 </div>
             </header>
 
-            <main class="px-4 py-6 pb-24 sm:px-6 lg:px-8 lg:pb-8">
+            <main class="max-w-[1200px] mx-auto px-4 py-10 sm:px-8 pb-32">
                 <!-- Page Header -->
-                <div class="mb-6">
+                <div class="mb-10">
                     <?php if ($appShellEyebrow !== ''): ?>
-                        <div class="text-sm font-semibold uppercase tracking-wider text-erp-accent"><?= htmlspecialchars($appShellEyebrow) ?></div>
+                        <div class="inline-block px-3 py-1 rounded-full bg-erp-navy/5 text-[10px] font-bold uppercase tracking-widest text-erp-navy mb-3">
+                            <?= htmlspecialchars($appShellEyebrow) ?>
+                        </div>
                     <?php endif; ?>
-                    <h1 class="mt-1 text-2xl font-bold text-erp-navy sm:text-3xl"><?= htmlspecialchars($appShellTitle) ?></h1>
+                    <h1 class="text-3xl font-black text-erp-navy tracking-tight sm:text-4xl"><?= htmlspecialchars($appShellTitle) ?></h1>
                     <?php if ($appShellDescription !== ''): ?>
-                        <p class="mt-2 max-w-2xl text-sm text-erp-muted"><?= htmlspecialchars($appShellDescription) ?></p>
+                        <p class="mt-3 max-w-2xl text-base text-erp-muted leading-relaxed"><?= htmlspecialchars($appShellDescription) ?></p>
                     <?php endif; ?>
                 </div>
 
                 <!-- Page Actions -->
                 <?php if ($appShellActions !== []): ?>
-                    <div class="mb-6 flex flex-wrap gap-3">
+                    <div class="mb-10 flex flex-wrap gap-4">
                         <?php foreach ($appShellActions as $action): ?>
                             <a href="<?= htmlspecialchars((string) ($action['href'] ?? '#')) ?>" 
-                               class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors shadow-sm
-                               <?= !empty($action['primary']) ? 'bg-erp-navy text-white hover:bg-opacity-90' : 'bg-erp-surface text-erp-text border border-erp-border hover:bg-erp-bg' ?>">
+                               class="btn depth-1 hover-lift <?= !empty($action['primary']) ? 'btn-primary' : 'btn-secondary' ?>">
                                 <?= htmlspecialchars((string) ($action['label'] ?? 'Abrir')) ?>
                             </a>
                         <?php endforeach; ?>

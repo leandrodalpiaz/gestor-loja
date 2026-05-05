@@ -204,7 +204,22 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <h2 class="card-title">Visitantes Resumidos (<?= count($visitantesResumo) ?>)</h2>
                 <p class="card-subtitle">Apoio para Secretaria e Orador.</p>
             </div>
-            <div class="card-body space-y-3">
+            <div class="card-body space-y-4">
+                <?php if ($sessaoEmFoco): ?>
+                    <form method="POST" action="/chanceler/sessao/visitante" class="rounded-2xl border border-erp-border bg-erp-surface/60 p-4 space-y-3">
+                        <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoEmFoco['id'] ?? 0) ?>">
+                        <div class="font-semibold text-gray-800 dark:text-gray-100">Registrar visitante em Loja</div>
+                        <div class="grid grid-cols-1 gap-3">
+                            <input name="nome" class="form-input" placeholder="Nome do visitante" required>
+                            <input name="loja" class="form-input" placeholder="Loja">
+                            <input name="oriente" class="form-input" placeholder="Oriente">
+                            <input name="potencia" class="form-input" placeholder="Potência">
+                            <input name="grau" class="form-input" placeholder="Grau">
+                            <textarea name="fala_resumida" rows="2" class="form-textarea" placeholder="Observação ou fala resumida para Orador/Balaústre"></textarea>
+                        </div>
+                        <button class="btn btn-primary w-full" type="submit">Adicionar visitante</button>
+                    </form>
+                <?php endif; ?>
                 <?php if (!empty($visitantesResumo)): ?>
                     <?php foreach ($visitantesResumo as $visitante): ?>
                         <div class="list-item-condensed">
