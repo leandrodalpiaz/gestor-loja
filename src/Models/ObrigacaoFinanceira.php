@@ -378,7 +378,7 @@ class ObrigacaoFinanceira
     {
         $parametros = $this->obterParametrosFinanceiros();
         $categoriaId = $this->obterCategoriaIdPorCodigo('CONTRIBUICAO_BIBLIOTECA');
-        $valor = (float) ($parametros['contribuicao_biblioteca_valor_padrao'] ?? 44);
+        $valor = (float) ($parametros['contribuicao_biblioteca_valor_padrao'] ?? 40);
         $competencia = new DateTimeImmutable(sprintf('%04d-%02d-01', $ano, $mes));
         $resultado = ['geradas' => 0, 'ignoradas' => 0, 'isentas' => 0];
         $obreirosIds = array_values(array_unique(array_filter(array_map('strval', $obreirosIds))));
@@ -436,6 +436,52 @@ class ObrigacaoFinanceira
             }
         }
 
+        return $resultado;
+    }
+
+    public function programarBibliotecaRenascencaAno(int $ano, $usuarioId = null): array
+    {
+        $ano = max(2020, min(2100, $ano));
+        $obreirosPorNome = [];
+        foreach ((new Obreiro())->getAllAtivos() as $obreiro) {
+            $obreiroId = (string) ($obreiro['id'] ?? '');
+            $nome = (string) ($obreiro['nome_historico'] ?? $obreiro['nome'] ?? '');
+            if ($obreiroId === '' || $nome === '') {
+                continue;
+            }
+            $obreirosPorNome[$this->normalizarNome($nome)] = $obreiroId;
+        }
+
+        $resultado = ['geradas' => 0, 'ignoradas' => 0, 'isentas' => 0, 'nao_encontrados' => []];
+        foreach ($this->escalaBibliotecaRenascenca() as $mes => $nomes) {
+            $ids = [];
+            foreach ($nomes as $nome) {
+                $chave = $this->normalizarNome($nome);
+                if (isset($obreirosPorNome[$chave])) {
+                    $ids[] = $obreirosPorNome[$chave];
+                } else {
+                    $resultado['nao_encontrados'][] = $nome;
+                }
+            }
+
+            if ($ids === []) {
+                continue;
+            }
+
+            $parcial = $this->designarBibliotecaMes(
+                (int) $mes,
+                $ano,
+                $ids,
+                'Programação anual obrigatória da contribuição da Biblioteca.',
+                $usuarioId
+            );
+
+            $resultado['geradas'] += (int) ($parcial['geradas'] ?? 0);
+            $resultado['ignoradas'] += (int) ($parcial['ignoradas'] ?? 0);
+            $resultado['isentas'] += (int) ($parcial['isentas'] ?? 0);
+        }
+
+        $resultado['nao_encontrados'] = array_values(array_unique($resultado['nao_encontrados']));
         return $resultado;
     }
 
@@ -848,7 +894,7 @@ class ObrigacaoFinanceira
             'mensalidade_valor_padrao' => (float) ($configuracao['mensalidade_valor_padrao'] ?? 150),
             'mensalidade_dia_sugerido' => (int) ($configuracao['mensalidade_dia_sugerido'] ?? 10),
             'mensalidade_regra_atraso' => (string) ($configuracao['mensalidade_regra_atraso'] ?? 'primeiro_dia_util_mes_seguinte'),
-            'contribuicao_biblioteca_valor_padrao' => (float) ($configuracao['contribuicao_biblioteca_valor_padrao'] ?? 44),
+            'contribuicao_biblioteca_valor_padrao' => (float) ($configuracao['contribuicao_biblioteca_valor_padrao'] ?? 40),
             'contribuicao_biblioteca_quantidade_mensal' => (int) ($configuracao['contribuicao_biblioteca_quantidade_mensal'] ?? 2),
         ];
 
@@ -947,6 +993,37 @@ class ObrigacaoFinanceira
         ");
         $stmt->execute(['obreiro_id' => $obreiroId, 'mes' => $mes, 'ano' => $ano]);
         return (bool) $stmt->fetchColumn();
+    }
+
+    private function escalaBibliotecaRenascenca(): array
+    {
+        return [
+            1 => ['Alexandre Bock', 'André Machado'],
+            2 => ['Carlos Ventura', 'Cassiano Mendes'],
+            3 => ['Clóvis Bassani', 'Douglas Rodrigues'],
+            4 => ['Fabiano Lamb', 'Flavio Zancanaro'],
+            5 => ['Francisco Peixouto', 'Gilvan Christello'],
+            6 => ['Joel Horn', 'Jucemar Teixeira'],
+            7 => ['Leandro Dalpiaz', 'Luiz Lavieja'],
+            8 => ['Leandro Ortiz', 'Marcelo Kordyas'],
+            9 => ['Mario Picoli', 'Marlon Maciel'],
+            10 => ['Munir Mashini', 'Paulo Tedesco'],
+            11 => ['Rafael Aislan', 'Rafael Euzébio'],
+            12 => ['Tiago Camargo', 'Tiago Irigoyen', 'Vilson Braga'],
+        ];
+    }
+
+    private function normalizarNome(string $nome): string
+    {
+        $nome = strtr(mb_strtolower(trim($nome), 'UTF-8'), [
+            'á' => 'a', 'à' => 'a', 'ã' => 'a', 'â' => 'a', 'ä' => 'a',
+            'é' => 'e', 'ê' => 'e', 'è' => 'e', 'ë' => 'e',
+            'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
+            'ó' => 'o', 'ò' => 'o', 'õ' => 'o', 'ô' => 'o', 'ö' => 'o',
+            'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+            'ç' => 'c',
+        ]);
+        return preg_replace('/\s+/', ' ', $nome) ?: $nome;
     }
 
     private function obreiroEstaIsento(string $obreiroId, string $tipoObrigacao, DateTimeImmutable $competencia): bool

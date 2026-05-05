@@ -8,8 +8,9 @@ declare(strict_types=1);
 $lista = $itens ?? [];
 $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
 
-$podeGerenciar = $auth->isGranted('biblioteca.manage');
-$podeClassificar = $auth->isGranted('biblioteca.classificar');
+$bibliotecaPermissions = is_array($bibliotecaPermissions ?? null) ? $bibliotecaPermissions : [];
+$podeGerenciar = !empty($bibliotecaPermissions['biblioteca.manage']);
+$podeClassificar = !empty($bibliotecaPermissions['biblioteca.classificar']);
 
 $formatGrau = static fn($grau) => $grau ? ucfirst(strtolower($grau)) : 'Livre';
 

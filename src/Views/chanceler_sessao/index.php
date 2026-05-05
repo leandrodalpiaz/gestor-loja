@@ -110,6 +110,13 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         <p class="card-subtitle">Troque a sessão em foco para visualizar os dados correspondentes.</p>
     </div>
     <div class="card-body">
+        <form method="GET" action="/chanceler/sessao" class="flex flex-col md:flex-row md:items-end md:gap-4 mb-4">
+            <div class="md:w-64">
+                <label for="data_sessao" class="form-label">Abrir trabalhos por data</label>
+                <input type="date" id="data_sessao" name="data_sessao" value="<?= htmlspecialchars((string) ($dataSessaoInformada ?? date('Y-m-d'))) ?>" class="form-input">
+            </div>
+            <button type="submit" class="btn btn-primary">Abrir check-in</button>
+        </form>
         <form method="GET" action="/chanceler/sessao" class="flex flex-col md:flex-row md:items-end md:gap-4">
             <div class="flex-grow">
                 <label for="sessao_id" class="form-label">Selecionar Sessão</label>
@@ -215,6 +222,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <input name="oriente" class="form-input" placeholder="Oriente">
                             <input name="potencia" class="form-input" placeholder="Potência">
                             <input name="grau" class="form-input" placeholder="Grau">
+                            <input name="numero_certificado" class="form-input" placeholder="N&ordm; do certificado de visitacao">
+                            <input type="date" name="certificado_emitido_em" class="form-input" aria-label="Data do certificado de visitacao">
                             <textarea name="fala_resumida" rows="2" class="form-textarea" placeholder="Observação ou fala resumida para Orador/Balaústre"></textarea>
                         </div>
                         <button class="btn btn-primary w-full" type="submit">Adicionar visitante</button>

@@ -109,6 +109,18 @@ $totalPago = array_reduce($parcelasPagas, static fn ($c, $p) => $c + ($p['valor_
 $totalAberto = array_reduce(array_merge($parcelasAguardandoConfirmacao, $parcelasProgramadas, $parcelasAtrasadas), static fn ($c, $p) => $c + ($p['valor_previsto'] ?? 0), 0.0);
 $totalAtrasado = array_reduce($parcelasAtrasadas, static fn ($c, $p) => $c + ($p['valor_previsto'] ?? 0), 0.0);
 $proximaObrigacao = $parcelasAguardandoConfirmacao[0] ?? $parcelasProgramadas[0] ?? null;
+$alertaBiblioteca = null;
+$limiteAlertaBiblioteca = (new DateTimeImmutable('today'))->modify('+30 days')->format('Y-m-d');
+foreach (array_merge($parcelasAguardandoConfirmacao, $parcelasProgramadas) as $parcelaAlerta) {
+    $tipoAlerta = strtolower((string) ($parcelaAlerta['tipo_obrigacao'] ?? ''));
+    $tituloAlerta = strtolower((string) ($parcelaAlerta['obrigacao_titulo'] ?? ''));
+    $vencimentoAlerta = (string) ($parcelaAlerta['vencimento'] ?? '');
+    if (($tipoAlerta === 'biblioteca' || str_contains($tituloAlerta, 'biblioteca')) && $vencimentoAlerta !== '' && $vencimentoAlerta <= $limiteAlertaBiblioteca) {
+        $alertaBiblioteca = $parcelaAlerta;
+        break;
+    }
+}
+$totalEsperadoBiblioteca = $alertaBiblioteca ? $mensalidadePadrao + (float) ($alertaBiblioteca['valor_previsto'] ?? 0) : 0.0;
 
 // #############################################################################
 // CONFIGURAÇÃO DO APP SHELL
@@ -147,6 +159,21 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <div class="metric-meta"><?= count($parcelasAtrasadas) ?> pendências</div>
     </div>
 </div>
+
+<?php if ($alertaBiblioteca): ?>
+<div class="card mt-6 xl:mt-8 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
+    <div class="card-body flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h3 class="font-semibold text-amber-900 dark:text-amber-100">Alerta da Biblioteca</h3>
+            <p class="text-sm text-amber-800 dark:text-amber-200">
+                No vencimento de <?= $formatDate($alertaBiblioteca['vencimento'] ?? null) ?>, acrescente <?= $formatCurrency($alertaBiblioteca['valor_previsto'] ?? 0) ?> &agrave; mensalidade.
+                Total esperado: <?= $formatCurrency($totalEsperadoBiblioteca) ?>.
+            </p>
+        </div>
+        <span class="badge-status warning">Aviso 30 dias</span>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Chave PIX -->
 <div class="card mt-6 xl:mt-8">

@@ -224,6 +224,26 @@ class TesourariaRoutes
                 header('Location: /tesouraria/obrigacoes');
                 exit;
 
+            case '/tesouraria/obrigacoes/biblioteca/programar-renascenca':
+                if ($method !== 'POST') {
+                    http_response_code(405);
+                    exit;
+                }
+                $requireTesourariaAccess();
+                $anoBiblioteca = max(2020, (int) ($_POST['ano_ref'] ?? date('Y')));
+                $resultadoBiblioteca = (new ObrigacaoFinanceira())->programarBibliotecaRenascencaAno($anoBiblioteca, $session['usuario_id'] ?? null);
+                $naoEncontrados = $resultadoBiblioteca['nao_encontrados'] ?? [];
+                $_SESSION['mensagem_sucesso'] = sprintf(
+                    'Biblioteca %d: %d geradas, %d ignoradas e %d isentas.%s',
+                    $anoBiblioteca,
+                    $resultadoBiblioteca['geradas'],
+                    $resultadoBiblioteca['ignoradas'],
+                    $resultadoBiblioteca['isentas'],
+                    $naoEncontrados ? ' Não encontrados: ' . implode(', ', $naoEncontrados) . '.' : ''
+                );
+                header('Location: /tesouraria/obrigacoes');
+                exit;
+
             case '/tesouraria/obrigacoes/isencao/criar':
                 if ($method !== 'POST') {
                     http_response_code(405);

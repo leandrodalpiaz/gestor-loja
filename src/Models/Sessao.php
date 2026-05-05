@@ -171,6 +171,57 @@ class Sessao
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function obterPorDataControleChanceler(string $data): ?array
+    {
+        $data = trim($data);
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $data)) {
+            return null;
+        }
+
+        $stmt = $this->db->prepare("
+            SELECT id
+            FROM sessoes
+            WHERE loja_id = :loja_id
+              AND COALESCE(status, 'planejada') <> 'cancelada'
+              AND DATE(data_hora_inicio AT TIME ZONE 'America/Sao_Paulo') = :data
+            ORDER BY data_hora_inicio ASC, id ASC
+            LIMIT 1
+        ");
+        $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
+            'data' => $data,
+        ]);
+        $id = $stmt->fetchColumn();
+
+        return $id ? $this->findById((int) $id) : null;
+    }
+
+    public function obterOuCriarControleChancelerPorData(string $data, ?string $autorId = null): ?array
+    {
+        $existente = $this->obterPorDataControleChanceler($data);
+        if ($existente) {
+            return $existente;
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', trim($data))) {
+            return null;
+        }
+
+        $sessaoId = $this->criar([
+            'data_hora_inicio' => $data . ' 20:00:00',
+            'data_hora_fim' => $data . ' 22:00:00',
+            'titulo' => 'Trabalhos em Loja - ' . (new DateTimeImmutable($data))->format('d/m/Y'),
+            'grau_sessao' => 'Mestre',
+            'tipo_sessao_principal' => 'economica',
+            'tipo_sessao_subtipo' => 'economica_1',
+            'status' => 'planejada',
+            'resumo_publico' => 'Sessão aberta pelo Chanceler para check-in em Loja.',
+            'observacao_interna' => 'Criada automaticamente pelo controle do Chanceler em Loja.',
+        ], $autorId);
+
+        return $sessaoId ? $this->findById($sessaoId) : null;
+    }
+
     public function criar(array $data, ?string $autorId = null): ?int
     {
         $payload = $this->normalizarPayload($data);

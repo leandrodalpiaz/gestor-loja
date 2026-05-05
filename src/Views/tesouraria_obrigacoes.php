@@ -15,13 +15,15 @@ $meses = [1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril', 5 => 'M
 $tituloMesAtual = ($meses[$mesAtual] ?? 'Mês') . ' ' . $anoAtual;
 $formatCurrency = static fn($value): string => 'R$ ' . number_format((float) $value, 2, ',', '.');
 $selectedObreiroId = (string) ($_GET['obreiro_id'] ?? '');
+$mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
+$mensagemErro = $_SESSION['mensagem_erro'] ?? null;
+unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
-// Carregar configurações da loja
-$stmtConfig = $db->query("SELECT chave, valor FROM configuracoes WHERE chave LIKE 'tesouraria_%' OR chave LIKE 'pix_%'");
-$configuracaoLoja = $stmtConfig->fetchAll(PDO::FETCH_KEY_PAIR);
-$mensalidadePadrao = (float) ($configuracaoLoja['tesouraria_mensalidade_valor_padrao'] ?? 150);
-$bibliotecaPadrao = (float) ($configuracaoLoja['tesouraria_contribuicao_biblioteca_valor_padrao'] ?? 44);
-$salarioMinimoPadrao = (float) ($configuracaoLoja['tesouraria_salario_minimo_referencia'] ?? 1621);
+// Carregar configura??es da loja pelo modelo oficial, sem depender de tabela legada.
+$configuracaoLoja = is_array($configuracaoLoja ?? null) ? $configuracaoLoja : (new \App\Models\ConfiguracaoLoja())->obter();
+$mensalidadePadrao = (float) ($configuracaoLoja['mensalidade_valor_padrao'] ?? 150);
+$bibliotecaPadrao = (float) ($configuracaoLoja['contribuicao_biblioteca_valor_padrao'] ?? 40);
+$salarioMinimoPadrao = (float) ($configuracaoLoja['salario_minimo_referencia'] ?? 1621);
 $pixTipo = (string) ($configuracaoLoja['pix_chave_tipo'] ?? 'CNPJ');
 $pixValor = (string) ($configuracaoLoja['pix_chave_valor'] ?? '');
 
@@ -126,6 +128,13 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
 <?php require __DIR__ . '/partials/erp_tesouraria_topbar.php'; ?>
 
+<?php if ($mensagemSucesso): ?>
+<div class="alert alert-success mb-6"><?= htmlspecialchars($mensagemSucesso) ?></div>
+<?php endif; ?>
+<?php if ($mensagemErro): ?>
+<div class="alert alert-danger mb-6"><?= htmlspecialchars($mensagemErro) ?></div>
+<?php endif; ?>
+
 <!-- Métricas Gerais -->
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
     <div class="card-metric"><p class="card-metric-label">Resumo do Passado</p><p class="card-metric-value"><?= $formatCurrency($totalPassado) ?></p><p class="card-metric-sublabel">Entradas antes de <?= htmlspecialchars($tituloMesAtual) ?></p></div>
@@ -180,6 +189,21 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <div class="list-item-param"><span class="text-gray-500">Biblioteca</span><span class="font-semibold"><?= $formatCurrency($bibliotecaPadrao) ?></span></div>
                 <div class="list-item-param"><span class="text-gray-500">PIX <?= htmlspecialchars($pixTipo) ?></span><span class="font-semibold"><?= htmlspecialchars($pixValor ?: 'N/D') ?></span></div>
             </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Programacao Biblioteca</h2>
+                <p class="card-description">Escala obrigatoria anual da Loja Renascenca: mensalidade + <?= $formatCurrency($bibliotecaPadrao) ?> no mes designado.</p>
+            </div>
+            <form method="post" action="/tesouraria/obrigacoes/biblioteca/programar-renascenca" class="card-body space-y-3">
+                <label for="ano_biblioteca" class="form-label">Ano de referencia</label>
+                <div class="flex gap-2">
+                    <input id="ano_biblioteca" name="ano_ref" type="number" min="2020" value="<?= (int) $anoAtual ?>" class="form-input">
+                    <button class="btn btn-primary" type="submit">Programar ano</button>
+                </div>
+                <p class="text-xs text-gray-500">Ao programar, cada irmao designado passa a ver o alerta da Biblioteca 30 dias antes do vencimento.</p>
+            </form>
         </div>
     </aside>
 

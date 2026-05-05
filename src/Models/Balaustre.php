@@ -184,6 +184,8 @@ class Balaustre
             'potencia' => trim((string) ($visitante['potencia'] ?? '')),
             'grau' => trim((string) ($visitante['grau'] ?? '')),
             'dia_reuniao' => trim((string) ($visitante['dia_reuniao'] ?? '')),
+            'numero_certificado' => trim((string) ($visitante['numero_certificado'] ?? '')),
+            'certificado_emitido_em' => trim((string) ($visitante['certificado_emitido_em'] ?? '')),
             'fala_resumida' => trim((string) ($visitante['fala_resumida'] ?? '')),
         ];
 

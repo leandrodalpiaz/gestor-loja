@@ -13,6 +13,7 @@ class RelatorioTesourariaGestao
     use ResolvesStoreTenant;
 
     private PDO $db;
+    private array $schemaCache = [];
 
     public function __construct()
     {
@@ -72,81 +73,66 @@ class RelatorioTesourariaGestao
 
     private function obterSaldoAte(string $dataLimite): float
     {
+        $params = ['data_limite' => $dataLimite];
+        $filtroLoja = $this->montarFiltroLoja('lancamentos_financeiros', 'l', $params);
         $stmt = $this->db->prepare("
             SELECT COALESCE(SUM(CASE WHEN l.tipo = 'entrada' THEN l.valor ELSE -l.valor END), 0) AS saldo
             FROM lancamentos_financeiros l
             WHERE l.data_lancamento < :data_limite
-              AND l.loja_id = :loja_id
+              {$filtroLoja}
         ");
-        $stmt->execute([
-            'data_limite' => $dataLimite,
-            'loja_id' => $this->obterLojaAtualId(),
-        ]);
+        $stmt->execute($params);
         return (float) $stmt->fetchColumn();
     }
 
     private function obterTotaisPeriodo(string $inicio, string $fim): array
     {
+        $params = ['inicio' => $inicio, 'fim' => $fim];
+        $filtroLoja = $this->montarFiltroLoja('lancamentos_financeiros', null, $params);
         $stmt = $this->db->prepare("
             SELECT
                 COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) AS entradas,
                 COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) AS saidas
             FROM lancamentos_financeiros
             WHERE data_lancamento BETWEEN :inicio AND :fim
-              AND loja_id = :loja_id
+              {$filtroLoja}
         ");
-        $stmt->execute([
-            'inicio' => $inicio,
-            'fim' => $fim,
-            'loja_id' => $this->obterLojaAtualId(),
-        ]);
+        $stmt->execute($params);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: ['entradas' => 0, 'saidas' => 0];
     }
 
     private function obterTotaisPorBloco(string $inicio, string $fim): array
     {
+        $params = ['inicio' => $inicio, 'fim' => $fim];
+        $filtroLoja = $this->montarFiltroLoja('lancamentos_financeiros', 'l', $params);
         $stmt = $this->db->prepare("
-            SELECT
-                COALESCE(c.bloco_relatorio, 'outros') AS bloco_relatorio,
-                l.tipo,
-                COALESCE(SUM(l.valor), 0) AS total
+            SELECT COALESCE(c.bloco_relatorio, 'outros') AS bloco_relatorio, l.tipo, COALESCE(SUM(l.valor), 0) AS total
             FROM lancamentos_financeiros l
             JOIN categorias_financeiras c ON c.id = l.categoria_id
             WHERE l.data_lancamento BETWEEN :inicio AND :fim
-              AND l.loja_id = :loja_id
+              {$filtroLoja}
             GROUP BY COALESCE(c.bloco_relatorio, 'outros'), l.tipo
             ORDER BY bloco_relatorio ASC, l.tipo ASC
         ");
-        $stmt->execute([
-            'inicio' => $inicio,
-            'fim' => $fim,
-            'loja_id' => $this->obterLojaAtualId(),
-        ]);
+        $stmt->execute($params);
 
         $blocos = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $bloco = (string) ($row['bloco_relatorio'] ?? 'outros');
-            if (!isset($blocos[$bloco])) {
-                $blocos[$bloco] = ['entrada' => 0.0, 'saida' => 0.0];
-            }
+            $blocos[$bloco] ??= ['entrada' => 0.0, 'saida' => 0.0];
             $blocos[$bloco][(string) $row['tipo']] = (float) ($row['total'] ?? 0);
         }
-
         return $blocos;
     }
 
     private function obterTotaisPorCategoria(string $inicio, string $fim): array
     {
+        $params = ['inicio' => $inicio, 'fim' => $fim];
+        $filtroLoja = $this->montarFiltroLoja('lancamentos_financeiros', 'l', $params);
         $stmt = $this->db->prepare("
             SELECT
-                CASE
-                    WHEN c.codigo IN ('INICIACAO', 'ELEVACAO', 'EXALTACAO', 'JOIAS') THEN 'Joias'
-                    ELSE c.nome
-                END AS nome,
-                CASE
-                    WHEN c.codigo IN ('INICIACAO', 'ELEVACAO', 'EXALTACAO', 'JOIAS') THEN 'JOIAS'
-                    ELSE c.codigo
-                END AS codigo,
+                CASE WHEN c.codigo IN ('INICIACAO', 'ELEVACAO', 'EXALTACAO', 'JOIAS') THEN 'Joias' ELSE c.nome END AS nome,
+                CASE WHEN c.codigo IN ('INICIACAO', 'ELEVACAO', 'EXALTACAO', 'JOIAS') THEN 'JOIAS' ELSE c.codigo END AS codigo,
                 c.bloco_relatorio,
                 l.tipo,
                 COUNT(l.id) AS quantidade,
@@ -154,43 +140,42 @@ class RelatorioTesourariaGestao
             FROM lancamentos_financeiros l
             JOIN categorias_financeiras c ON c.id = l.categoria_id
             WHERE l.data_lancamento BETWEEN :inicio AND :fim
-              AND l.loja_id = :loja_id
+              {$filtroLoja}
             GROUP BY 1, 2, c.bloco_relatorio, l.tipo
             ORDER BY c.bloco_relatorio ASC, total DESC, 1 ASC
         ");
-        $stmt->execute([
-            'inicio' => $inicio,
-            'fim' => $fim,
-            'loja_id' => $this->obterLojaAtualId(),
-        ]);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     private function obterEntidadesAuxiliadas(string $inicio, string $fim): array
     {
+        if (!$this->colunaExiste('lancamentos_financeiros', 'entidade_auxiliada') || !$this->colunaExiste('categorias_financeiras', 'exige_entidade_auxiliada')) {
+            return [];
+        }
+
+        $params = ['inicio' => $inicio, 'fim' => $fim];
+        $filtroLoja = $this->montarFiltroLoja('lancamentos_financeiros', 'l', $params);
         $stmt = $this->db->prepare("
-            SELECT
-                COALESCE(NULLIF(TRIM(l.entidade_auxiliada), ''), 'Não informada') AS entidade,
-                COUNT(l.id) AS quantidade,
-                COALESCE(SUM(l.valor), 0) AS total
+            SELECT COALESCE(NULLIF(TRIM(l.entidade_auxiliada), ''), 'Não informada') AS entidade, COUNT(l.id) AS quantidade, COALESCE(SUM(l.valor), 0) AS total
             FROM lancamentos_financeiros l
             JOIN categorias_financeiras c ON c.id = l.categoria_id
             WHERE l.data_lancamento BETWEEN :inicio AND :fim
-              AND l.loja_id = :loja_id
+              {$filtroLoja}
               AND c.exige_entidade_auxiliada = TRUE
             GROUP BY entidade
             ORDER BY total DESC, entidade ASC
         ");
-        $stmt->execute([
-            'inicio' => $inicio,
-            'fim' => $fim,
-            'loja_id' => $this->obterLojaAtualId(),
-        ]);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     private function obterLancamentosPeriodo(string $inicio, string $fim): array
     {
+        $params = ['inicio' => $inicio, 'fim' => $fim];
+        $filtroLoja = $this->montarFiltroLoja('lancamentos_financeiros', 'l', $params);
+        $entidadeSelect = $this->colunaSelect('lancamentos_financeiros', 'entidade_auxiliada', 'l');
+        $observacaoSelect = $this->colunaSelect('lancamentos_financeiros', 'observacao_gestao', 'l');
         $stmt = $this->db->prepare("
             SELECT
                 l.id,
@@ -198,8 +183,8 @@ class RelatorioTesourariaGestao
                 l.tipo,
                 l.valor,
                 l.descricao,
-                l.entidade_auxiliada,
-                l.observacao_gestao,
+                {$entidadeSelect},
+                {$observacaoSelect},
                 c.nome AS categoria_nome,
                 c.bloco_relatorio,
                 COALESCE(o.nome_historico, o.nome) AS obreiro_nome
@@ -207,34 +192,78 @@ class RelatorioTesourariaGestao
             JOIN categorias_financeiras c ON c.id = l.categoria_id
             LEFT JOIN obreiros o ON o.id = l.obreiro_id
             WHERE l.data_lancamento BETWEEN :inicio AND :fim
-              AND l.loja_id = :loja_id
+              {$filtroLoja}
             ORDER BY l.data_lancamento DESC, l.id DESC
             LIMIT 120
         ");
-        $stmt->execute([
-            'inicio' => $inicio,
-            'fim' => $fim,
-            'loja_id' => $this->obterLojaAtualId(),
-        ]);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     private function obterTotaisTronco(string $inicio, string $fim): array
     {
+        if (!$this->tabelaExiste('tronco_solidariedade')) {
+            return ['entradas' => 0, 'saidas' => 0];
+        }
+
+        $params = ['inicio' => $inicio, 'fim' => $fim];
+        $filtroLoja = $this->montarFiltroLoja('tronco_solidariedade', null, $params);
         $stmt = $this->db->prepare("
             SELECT
                 COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) AS entradas,
                 COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) AS saidas
             FROM tronco_solidariedade
             WHERE data_mov BETWEEN :inicio AND :fim
-              AND loja_id = :loja_id
+              {$filtroLoja}
         ");
-        $stmt->execute([
-            'inicio' => $inicio,
-            'fim' => $fim,
-            'loja_id' => $this->obterLojaAtualId(),
-        ]);
+        $stmt->execute($params);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: ['entradas' => 0, 'saidas' => 0];
+    }
+
+    private function montarFiltroLoja(string $tabela, ?string $alias, array &$params): string
+    {
+        if (!$this->colunaExiste($tabela, 'loja_id')) {
+            return '';
+        }
+
+        $params['loja_id'] = $this->obterLojaAtualId();
+        return 'AND ' . ($alias ? $alias . '.' : '') . 'loja_id = :loja_id';
+    }
+
+    private function colunaSelect(string $tabela, string $coluna, string $alias): string
+    {
+        return $this->colunaExiste($tabela, $coluna) ? $alias . '.' . $coluna : "'' AS " . $coluna;
+    }
+
+    private function tabelaExiste(string $tabela): bool
+    {
+        $cacheKey = 'table:' . $tabela;
+        if (array_key_exists($cacheKey, $this->schemaCache)) {
+            return $this->schemaCache[$cacheKey];
+        }
+
+        $stmt = $this->db->prepare('SELECT to_regclass(:tabela) IS NOT NULL');
+        $stmt->execute(['tabela' => 'public.' . $tabela]);
+        return $this->schemaCache[$cacheKey] = (bool) $stmt->fetchColumn();
+    }
+
+    private function colunaExiste(string $tabela, string $coluna): bool
+    {
+        $cacheKey = 'column:' . $tabela . '.' . $coluna;
+        if (array_key_exists($cacheKey, $this->schemaCache)) {
+            return $this->schemaCache[$cacheKey];
+        }
+
+        $stmt = $this->db->prepare("
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = :tabela
+              AND column_name = :coluna
+            LIMIT 1
+        ");
+        $stmt->execute(['tabela' => $tabela, 'coluna' => $coluna]);
+        return $this->schemaCache[$cacheKey] = (bool) $stmt->fetchColumn();
     }
 
     private function obterLojaAtualId(): int

@@ -21,6 +21,7 @@ class ChancelerSessaoController
         $proximaSessao = $sessaoModel->obterProximaSessao();
         $sessoes = $sessaoModel->listarFuturas(8);
         $sessaoSelecionadaId = (int) ($_GET['sessao_id'] ?? 0);
+        $dataSessaoInformada = trim((string) ($_GET['data_sessao'] ?? ''));
         $sessaoSelecionada = null;
         $mapaPresencas = [];
         $confirmados = [];
@@ -29,6 +30,26 @@ class ChancelerSessaoController
 
         if ($sessaoSelecionadaId > 0) {
             $sessaoSelecionada = $sessaoModel->findById($sessaoSelecionadaId);
+        }
+        if (!$sessaoSelecionada && $dataSessaoInformada !== '') {
+            $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+            $sessaoSelecionada = $sessaoModel->obterOuCriarControleChancelerPorData(
+                $dataSessaoInformada,
+                $autorId !== '' ? $autorId : null
+            );
+            if ($sessaoSelecionada && !empty($sessaoSelecionada['id'])) {
+                $vistos = [];
+                $sessoesUnicas = [];
+                foreach (array_merge([$sessaoSelecionada], $sessoes) as $sessaoOpcao) {
+                    $idOpcao = (int) ($sessaoOpcao['id'] ?? 0);
+                    if ($idOpcao <= 0 || isset($vistos[$idOpcao])) {
+                        continue;
+                    }
+                    $vistos[$idOpcao] = true;
+                    $sessoesUnicas[] = $sessaoOpcao;
+                }
+                $sessoes = $sessoesUnicas;
+            }
         }
         if (!$sessaoSelecionada && $proximaSessao && !empty($proximaSessao['id'])) {
             $sessaoSelecionada = $sessaoModel->findById((int) $proximaSessao['id']);
