@@ -22,6 +22,41 @@ class SecretariaRoutes
                 $controller->index();
                 return true;
 
+            case '/secretaria/sessoes':
+                ModuleGuards::requireSecretariaAccess($openTestAccess, $session, $authorizer);
+                $controller->sessoes();
+                return true;
+
+            case '/secretaria/balaustres':
+                ModuleGuards::requireSecretariaAccess($openTestAccess, $session, $authorizer);
+                $controller->balaustres();
+                return true;
+
+            case '/secretaria/trabalhos-publicacoes':
+                ModuleGuards::requireSecretariaAccess($openTestAccess, $session, $authorizer);
+                $controller->trabalhosPublicacoes();
+                return true;
+
+            case '/secretaria/convites-externos':
+                ModuleGuards::requireSecretariaAccess($openTestAccess, $session, $authorizer);
+                $controller->convitesExternos();
+                return true;
+
+            case '/secretaria/convites-externos/salvar':
+                ModuleGuards::requireSecretariaAccess($openTestAccess, $session, $authorizer);
+                $controller->salvarConviteExterno();
+                return true;
+
+            case '/secretaria/convites-externos/remover-anexo':
+                ModuleGuards::requireSecretariaAccess($openTestAccess, $session, $authorizer);
+                $controller->removerAnexoConviteExterno();
+                return true;
+
+            case '/secretaria/convites-externos/presenca':
+                ModuleGuards::requireSecretariaAccess($openTestAccess, $session, $authorizer);
+                $controller->confirmarConviteExterno();
+                return true;
+
             case '/secretaria/votacao':
                 WebGuards::requireLogin($openTestAccess, $session);
                 $controller->votacao();
@@ -75,6 +110,11 @@ class SecretariaRoutes
             case '/secretaria/relatorio-anual':
                 ModuleGuards::requireSecretariaAccess($openTestAccess, $session, $authorizer);
                 $controller->relatorioAnual();
+                return true;
+
+            case '/secretaria/relatorio-gestao':
+                ModuleGuards::requireSecretariaAccess($openTestAccess, $session, $authorizer);
+                $controller->relatorioGestao();
                 return true;
 
             case '/secretaria/sessoes/salvar':

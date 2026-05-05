@@ -29,6 +29,12 @@ final class DashboardSections
                 'titulo' => 'Secretaria',
                 'itens' => [
                     ['label' => 'Painel da Secretaria', 'href' => '/secretaria', 'permission' => 'secretaria.manage'],
+                    ['label' => 'Sessoes', 'href' => '/secretaria/sessoes', 'permission' => 'secretaria.manage'],
+                    ['label' => 'Balaustres', 'href' => '/secretaria/balaustres', 'permission' => 'secretaria.manage'],
+                    ['label' => 'Trabalhos/Publicacoes', 'href' => '/secretaria/trabalhos-publicacoes', 'permission' => 'secretaria.manage'],
+                    ['label' => 'Convites Externos', 'href' => '/secretaria/convites-externos', 'permission' => 'secretaria.manage'],
+                    ['label' => 'Relatorio Anual', 'href' => '/secretaria/relatorio-anual', 'permission' => 'secretaria.manage'],
+                    ['label' => 'Relatorio de Gestao', 'href' => '/secretaria/relatorio-gestao', 'permission' => 'secretaria.manage'],
                     ['label' => 'BalaÃºstres em votaÃ§Ã£o', 'href' => '/secretaria/votacao', 'permission' => 'secretaria.manage'],
                     ['label' => 'Obreiros', 'href' => '/obreiros', 'permission' => 'obreiros.view'],
                     ['label' => 'Cadastrar Obreiro', 'href' => '/obreiros/novo', 'permission' => 'obreiros.manage'],

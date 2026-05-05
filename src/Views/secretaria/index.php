@@ -54,6 +54,8 @@ $etapasSessao = [
 ];
 $linhasVisitantesBalaustre = array_pad($visitantesBalaustre ?? [], max(3, count($visitantesBalaustre ?? []) + 1), []);
 $linhasVisitasExternasBalaustre = array_pad($visitasExternasBalaustre ?? [], max(2, count($visitasExternasBalaustre ?? []) + 1), []);
+$linhasObreirosPalavraBalaustre = array_pad($palavrasObreirosBalaustre ?? [], max(3, count($palavrasObreirosBalaustre ?? []) + 1), []);
+$blocosBalaustre = is_array($blocosBalaustre ?? null) ? $blocosBalaustre : [];
 
 // #############################################################################
 // CONFIGURAÃ‡ÃƒO DO APP SHELL
@@ -66,6 +68,7 @@ $appShellActiveHref = '/secretaria';
 $appShellActions = [
     ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
     ['label' => 'Novo Obreiro', 'href' => '/obreiros/novo'],];
+require __DIR__ . '/_sidebar.php';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
 
@@ -339,7 +342,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <?php endif; ?>
             </div>
             <div class="card-body">
-                <?php if (empty($sessaoResumo)): ?>
+                <?php if (empty($sessaoResumo) && empty($modoBalaustreIndependente)): ?>
                     <div class="space-y-4">
                         <div class="text-sm text-gray-600">Vocï¿½ pode preparar o balaï¿½stre manualmente em qualquer momento. Primeiro selecione a sessï¿½o que serï¿½ a base do rascunho.</div>
                         <form method="GET" action="/secretaria" class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -362,6 +365,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <?php else: ?>
                     <form method="POST" action="/secretaria/balaustres/salvar" class="space-y-6">
                         <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoResumo['id'] ?? 0) ?>">
+                        <input type="hidden" name="balaustre_id" value="<?= (int) ($balaustreSessao['id'] ?? 0) ?>">
+                        <?php if (!empty($modoBalaustreIndependente)): ?><input type="hidden" name="balaustre_independente" value="1"><?php endif; ?>
                         <div class="list-item-report">
                             <p class="font-semibold"><?= htmlspecialchars((string) ($sessaoResumo['titulo'] ?: (($sessaoResumo['tipo_sessao'] ?? 'Sessï¿½o') . ' - ' . ($sessaoResumo['grau_sessao'] ?? '')))) ?></p>
                             <p class="text-sm text-gray-500"><?= $formatDateTime((string) ($sessaoResumo['data_hora_inicio'] ?? '')) ?> ï¿½ <?= (int) ($sessaoResumo['total_presentes'] ?? 0) ?> presenï¿½a(s) registradas</p>
@@ -370,6 +375,21 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div><label for="numero_balaustre" class="form-label">Nï¿½mero do balaï¿½stre</label><input id="numero_balaustre" name="numero_balaustre" value="<?= htmlspecialchars((string) ($balaustreSessao['numero_balaustre'] ?? '')) ?>" class="form-input" placeholder="Ex: 012/2026"></div>
                             <div><label for="template_versao" class="form-label">Modelo</label><input id="template_versao" name="template_versao" value="<?= htmlspecialchars((string) ($balaustreSessao['template_versao'] ?? 'oficial-v1')) ?>" class="form-input"></div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-semibold mb-3">Redacao oficial por blocos</h3>
+                            <div class="space-y-3">
+                                <div><label class="form-label">Abertura</label><textarea name="bloco_abertura" rows="3" class="form-textarea"><?= htmlspecialchars((string) ($blocosBalaustre['abertura'] ?? '')) ?></textarea></div>
+                                <div><label class="form-label">Balaustre</label><textarea name="bloco_balaustre" rows="3" class="form-textarea"><?= htmlspecialchars((string) ($blocosBalaustre['balaustre'] ?? '')) ?></textarea></div>
+                                <div><label class="form-label">Expediente</label><textarea name="bloco_expediente" rows="3" class="form-textarea"><?= htmlspecialchars((string) ($blocosBalaustre['expediente'] ?? '')) ?></textarea></div>
+                                <div><label class="form-label">Saco de Propostas e Informacoes</label><textarea name="bloco_saco_propostas" rows="3" class="form-textarea"><?= htmlspecialchars((string) ($blocosBalaustre['saco_propostas'] ?? '')) ?></textarea></div>
+                                <div><label class="form-label">Ordem do Dia</label><textarea name="bloco_ordem_dia" rows="4" class="form-textarea"><?= htmlspecialchars((string) ($blocosBalaustre['ordem_dia'] ?? '')) ?></textarea></div>
+                                <div><label class="form-label">Tronco de Solidariedade</label><textarea name="bloco_tronco_solidariedade" rows="2" class="form-textarea"><?= htmlspecialchars((string) ($blocosBalaustre['tronco_solidariedade'] ?? '')) ?></textarea></div>
+                                <div><label class="form-label">Conclusoes do Orador</label><textarea name="bloco_conclusoes_orador" rows="3" class="form-textarea"><?= htmlspecialchars((string) ($blocosBalaustre['conclusoes_orador'] ?? '')) ?></textarea></div>
+                                <div><label class="form-label">Encerramento</label><textarea name="bloco_encerramento" rows="3" class="form-textarea"><?= htmlspecialchars((string) ($blocosBalaustre['encerramento'] ?? '')) ?></textarea></div>
+                                <div><label class="form-label">Assinaturas</label><textarea name="bloco_assinaturas" rows="2" class="form-textarea"><?= htmlspecialchars((string) ($blocosBalaustre['assinaturas'] ?? 'Secretario              Guarda da Lei              Veneravel Mestre')) ?></textarea></div>
+                            </div>
                         </div>
 
                         <div>
@@ -384,6 +404,25 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                         <div><span>Titular oficial</span><strong><?= htmlspecialchars((string) (($cargoSessao['titular_oficial'] ?? '') !== '' ? $cargoSessao['titular_oficial'] : '-')) ?></strong></div>
                                         <div><label class="form-label">Ocupante em Loja</label><input name="cargo_sessao_ocupante_nome[]" value="<?= htmlspecialchars((string) ($cargoSessao['ocupante_nome'] ?? $cargoSessao['titular_oficial'] ?? '')) ?>" class="form-input"></div>
                                         <div><label class="form-label">Observaï¿½ï¿½o</label><input name="cargo_sessao_observacao[]" value="<?= htmlspecialchars((string) ($cargoSessao['observacao'] ?? '')) ?>" class="form-input" placeholder="ad hoc, ausï¿½ncia..."></div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-semibold mb-3">Palavra a bem da Ordem: quadro oficial</h3>
+                            <div class="space-y-3">
+                                <?php foreach ($linhasObreirosPalavraBalaustre as $palavraObreiro): ?>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 list-item-param !items-start">
+                                        <select name="palavra_obreiro_id[]" class="form-select">
+                                            <option value="">Selecionar obreiro</option>
+                                            <?php foreach ($obreiros as $obreiroPalavraOpcao): ?>
+                                                <option value="<?= htmlspecialchars((string) ($obreiroPalavraOpcao['id'] ?? '')) ?>" <?= (string) ($palavraObreiro['obreiro_id'] ?? '') === (string) ($obreiroPalavraOpcao['id'] ?? '') ? 'selected' : '' ?>><?= htmlspecialchars((string) ($obreiroPalavraOpcao['nome'] ?? 'Obreiro')) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <input name="palavra_obreiro_nome[]" value="<?= htmlspecialchars((string) ($palavraObreiro['nome'] ?? '')) ?>" class="form-input" placeholder="Obreiro">
+                                        <input name="palavra_obreiro_cargo[]" value="<?= htmlspecialchars((string) ($palavraObreiro['cargo_no_momento'] ?? '')) ?>" class="form-input" placeholder="Cargo no momento">
+                                        <input name="palavra_obreiro_fala[]" value="<?= htmlspecialchars((string) ($palavraObreiro['fala_resumida'] ?? '')) ?>" class="form-input md:col-span-3" placeholder="Fala resumida">
                                     </div>
                                 <?php endforeach; ?>
                             </div>
@@ -421,18 +460,19 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             </div>
                         </div>
 
-                        <div><label for="texto_final" class="form-label">Texto final do balaï¿½stre</label><textarea id="texto_final" name="texto_final" rows="5" class="form-textarea" placeholder="Sï¿½ntese final para conferï¿½ncia e votaï¿½ï¿½o."><?= htmlspecialchars((string) ($balaustreSessao['texto_final'] ?? '')) ?></textarea></div>
+                        <div><label for="texto_final" class="form-label">Texto final do balaï¿½stre (snapshot oficial)</label><textarea id="texto_final" name="texto_final" rows="5" class="form-textarea" readonly><?= htmlspecialchars((string) ($balaustreSessao['texto_final'] ?? '')) ?></textarea></div>
                         <div><label for="observacoes_secretaria" class="form-label">Observaï¿½ï¿½es da Secretaria</label><textarea id="observacoes_secretaria" name="observacoes_secretaria" rows="3" class="form-textarea"><?= htmlspecialchars($observacoesBalaustre) ?></textarea></div>
+                        <div><label class="form-label">Previa oficial (modelo estrito)</label><pre class="whitespace-pre-wrap rounded-md bg-white dark:bg-gray-800 p-4 text-sm font-mono"><?= htmlspecialchars((string) ($previewTextoOficialBalaustre ?? '')) ?></pre></div>
 
                         <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                             <button type="submit" class="btn btn-primary">Salvar balaï¿½stre</button>
-                            <?php if (!empty($balaustreSessao['id']) && !in_array($balaustreSessao['status'] ?? '', ['apto_votacao', 'em_votacao', 'aprovado'], true)): ?>
+                            <?php if (!empty($sessaoResumo['id']) && !empty($balaustreSessao['id']) && !in_array($balaustreSessao['status'] ?? '', ['apto_votacao', 'em_votacao', 'aprovado'], true)): ?>
                                 <button type="submit" form="marcar-balaustre-apto" class="btn btn-warning">Marcar apto para votaï¿½ï¿½o</button>
                             <?php endif; ?>
                             <a href="/secretaria/votacao" class="btn btn-secondary">Acompanhar votaï¿½ï¿½es</a>
                         </div>
                     </form>
-                    <?php if (!empty($balaustreSessao['id']) && !in_array($balaustreSessao['status'] ?? '', ['apto_votacao', 'em_votacao', 'aprovado'], true)): ?>
+                    <?php if (!empty($sessaoResumo['id']) && !empty($balaustreSessao['id']) && !in_array($balaustreSessao['status'] ?? '', ['apto_votacao', 'em_votacao', 'aprovado'], true)): ?>
                         <form id="marcar-balaustre-apto" method="POST" action="/secretaria/balaustres/apto" onsubmit="return confirm('Marcar este balaï¿½stre como apto para votaï¿½ï¿½o?');">
                             <input type="hidden" name="balaustre_id" value="<?= (int) ($balaustreSessao['id'] ?? 0) ?>">
                         </form>

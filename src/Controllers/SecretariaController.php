@@ -6,6 +6,7 @@ use App\Models\Obreiro;
 use App\Models\Balaustre;
 use App\Models\Cargo;
 use App\Models\ConfiguracaoLoja;
+use App\Models\ConviteExterno;
 use App\Models\Presenca;
 use App\Models\PublicacaoSessao;
 use App\Models\PublicacaoSecretaria;
@@ -147,8 +148,9 @@ class SecretariaController
         $sessaoResumo = null;
         $confirmadosSessaoResumo = [];
         $participantesAgapeResumo = [];
+        $modoBalaustreIndependente = isset($_GET['balaustre_sem_sessao']);
         $sessaoResumoId = (int) ($_GET['sessao_resumo'] ?? 0);
-        if ($sessaoResumoId <= 0 && !empty($proximaSessao['id'])) {
+        if (!$modoBalaustreIndependente && $sessaoResumoId <= 0 && !empty($proximaSessao['id'])) {
             $sessaoResumoId = (int) $proximaSessao['id'];
         }
         if ($sessaoResumoId > 0) {
@@ -157,6 +159,19 @@ class SecretariaController
                 $confirmadosSessaoResumo = $presencaModel->listarConfirmadosPorSessao($sessaoResumoId);
                 $participantesAgapeResumo = $presencaModel->listarParticipantesAgapePorSessao($sessaoResumoId);
             }
+        }
+        if ($modoBalaustreIndependente && empty($sessaoResumo)) {
+            $sessaoResumo = [
+                'id' => 0,
+                'titulo' => 'Balaustre sem sessao vinculada',
+                'tipo_sessao' => 'Balaustre',
+                'grau_sessao' => '',
+                'data_hora_inicio' => '',
+                'total_presentes' => 0,
+                'total_confirmados' => 0,
+                'total_ausentes' => 0,
+                'total_agape' => 0,
+            ];
         }
         $sessaoDuplicada = null;
         $resumoRascunhoSessao = null;
@@ -171,19 +186,35 @@ class SecretariaController
         $lojasVisitantesFrequentes = self::LOJAS_VISITANTES_FREQUENTES;
         $balaustreSessao = null;
         $dadosBalaustreSessao = [];
+        $palavrasObreirosBalaustre = [];
         $visitantesBalaustre = [];
         $visitasExternasBalaustre = [];
         $cargosBalaustreSessao = [];
         $observacoesBalaustre = '';
+        $blocosBalaustre = [];
+        $previewTextoOficialBalaustre = '';
 
-        if (!empty($sessaoResumo['id'])) {
+        if ($modoBalaustreIndependente) {
+            foreach ($balaustres as $balaustreRecente) {
+                if (empty($balaustreRecente['sessao_id'])) {
+                    $balaustreSessao = $balaustreRecente;
+                    break;
+                }
+            }
+        } elseif (!empty($sessaoResumo['id'])) {
             $balaustreSessao = $balaustreModel->buscarPorSessao((int) $sessaoResumo['id']);
+        }
+
+        if (!empty($balaustreSessao)) {
             $capturadoSessao = $balaustreSessao['dados_capturados'] ?? null;
             if (is_string($capturadoSessao)) {
                 $decoded = json_decode($capturadoSessao, true);
                 $capturadoSessao = is_array($decoded) ? $decoded : [];
             }
             $dadosBalaustreSessao = is_array($capturadoSessao) ? $capturadoSessao : [];
+            $palavrasObreirosBalaustre = is_array($dadosBalaustreSessao['palavra_bem_ordem']['obreiros'] ?? null)
+                ? $dadosBalaustreSessao['palavra_bem_ordem']['obreiros']
+                : [];
             $visitantesBalaustre = is_array($dadosBalaustreSessao['palavra_bem_ordem']['visitantes'] ?? null)
                 ? $dadosBalaustreSessao['palavra_bem_ordem']['visitantes']
                 : [];
@@ -191,6 +222,7 @@ class SecretariaController
                 ? $dadosBalaustreSessao['saco_propostas']['visitas_externas']
                 : [];
             $observacoesBalaustre = (string) ($dadosBalaustreSessao['observacoes_secretaria'] ?? '');
+            $blocosBalaustre = is_array($dadosBalaustreSessao['blocos'] ?? null) ? $dadosBalaustreSessao['blocos'] : [];
         }
 
         $cargosCapturados = is_array($dadosBalaustreSessao['cargos_sessao'] ?? null)
@@ -351,7 +383,85 @@ class SecretariaController
             ],
         ];
 
+        if (!empty($sessaoResumo)) {
+            $previewTextoOficialBalaustre = $balaustreModel->gerarTextoOficialPreview(
+                (int) ($sessaoResumo['id'] ?? 0),
+                [
+                    'numero_balaustre' => (string) ($balaustreSessao['numero_balaustre'] ?? ''),
+                    'bloco_abertura' => (string) ($blocosBalaustre['abertura'] ?? ''),
+                    'bloco_balaustre' => (string) ($blocosBalaustre['balaustre'] ?? ''),
+                    'bloco_expediente' => (string) ($blocosBalaustre['expediente'] ?? ''),
+                    'bloco_saco_propostas' => (string) ($blocosBalaustre['saco_propostas'] ?? ''),
+                    'bloco_ordem_dia' => (string) ($blocosBalaustre['ordem_dia'] ?? ''),
+                    'bloco_tronco_solidariedade' => (string) ($blocosBalaustre['tronco_solidariedade'] ?? ''),
+                    'bloco_conclusoes_orador' => (string) ($blocosBalaustre['conclusoes_orador'] ?? ''),
+                    'bloco_encerramento' => (string) ($blocosBalaustre['encerramento'] ?? ''),
+                    'bloco_assinaturas' => (string) ($blocosBalaustre['assinaturas'] ?? ''),
+                    'palavra_obreiro_nome' => array_map(static fn($x) => (string) ($x['nome'] ?? ''), $palavrasObreirosBalaustre),
+                    'palavra_obreiro_cargo' => array_map(static fn($x) => (string) ($x['cargo_no_momento'] ?? ''), $palavrasObreirosBalaustre),
+                    'palavra_obreiro_fala' => array_map(static fn($x) => (string) ($x['fala_resumida'] ?? ''), $palavrasObreirosBalaustre),
+                    'palavra_visitante_nome' => array_map(static fn($x) => (string) ($x['nome'] ?? ''), $visitantesBalaustre),
+                    'palavra_visitante_loja' => array_map(static fn($x) => (string) ($x['loja'] ?? ''), $visitantesBalaustre),
+                    'palavra_visitante_fala' => array_map(static fn($x) => (string) ($x['fala_resumida'] ?? ''), $visitantesBalaustre),
+                ]
+            );
+        }
+
         require_once __DIR__ . '/../Views/secretaria/index.php';
+    }
+
+    public function sessoes(): void
+    {
+        $this->index();
+    }
+
+    public function balaustres(): void
+    {
+        $_GET['balaustre_sem_sessao'] = $_GET['balaustre_sem_sessao'] ?? '1';
+        $this->index();
+    }
+
+    public function trabalhosPublicacoes(): void
+    {
+        $this->index();
+    }
+
+    public function convitesExternos(): void
+    {
+        $conviteModel = new ConviteExterno();
+        $convitesExternos = $conviteModel->listarRecentes(80);
+        $confirmadosPorConvite = [];
+        foreach ($convitesExternos as $item) {
+            $conviteId = (int) ($item['id'] ?? 0);
+            if ($conviteId > 0) {
+                $confirmadosPorConvite[$conviteId] = $conviteModel->listarConfirmados($conviteId);
+            }
+        }
+        $sessoes = (new Sessao())->listarFuturas(20);
+        require_once __DIR__ . '/../Views/secretaria/convites_externos.php';
+    }
+
+    public function confirmarConviteExterno(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /secretaria/convites-externos');
+            exit;
+        }
+
+        $conviteId = (int) ($_POST['convite_id'] ?? 0);
+        $status = trim((string) ($_POST['status'] ?? 'pendente'));
+        $obreiroId = (string) ($_SESSION['usuario_id'] ?? '');
+        $ok = false;
+        if ($conviteId > 0 && $obreiroId !== '') {
+            $ok = (new ConviteExterno())->definirPresenca($conviteId, $obreiroId, $status);
+        }
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Presenca atualizada no convite externo.'
+            : 'Nao foi possivel atualizar a presenca.';
+
+        header('Location: /secretaria/convites-externos');
+        exit;
     }
 
     public function votacao(): void
@@ -397,6 +507,11 @@ class SecretariaController
         }
 
         require_once __DIR__ . '/../Views/secretaria/relatorio_anual.php';
+    }
+
+    public function relatorioGestao(): void
+    {
+        $this->relatorioAnual();
     }
 
     public function salvarSessao(): void
@@ -665,7 +780,7 @@ class SecretariaController
         }
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
-        if ($sessaoId <= 0) {
+        if ($sessaoId <= 0 && empty($_POST['balaustre_independente'])) {
             $_SESSION['mensagem_erro'] = 'Selecione a sessÃƒÆ’Ã‚Â£o para salvar o balaustre.';
             header('Location: /secretaria');
             exit;
@@ -678,7 +793,7 @@ class SecretariaController
             ? 'Balaustre salvo em rascunho.'
             : 'NÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel salvar o balaustre.';
 
-        header('Location: /secretaria');
+        header('Location: ' . ($sessaoId > 0 ? '/secretaria?sessao_resumo=' . urlencode((string) $sessaoId) : '/secretaria/balaustres'));
         exit;
     }
 
@@ -698,6 +813,13 @@ class SecretariaController
 
         $model = new Balaustre();
         $autorId = (string) ($_SESSION['usuario_id'] ?? '');
+        $validacao = $model->validarParaApto($balaustreId);
+        if (!($validacao['ok'] ?? false)) {
+            $_SESSION['mensagem_erro'] = (string) ($validacao['erro'] ?? 'Balaustre ainda nao atende aos requisitos do padrao oficial.');
+            header('Location: /secretaria');
+            exit;
+        }
+
         $ok = $model->marcarAptoVotacao($balaustreId, $autorId !== '' ? $autorId : null);
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Balaustre apto para votaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o. O VenerÃƒÆ’Ã‚Â¡vel Mestre jÃƒÆ’Ã‚Â¡ pode abrir a votaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o.'
@@ -1140,6 +1262,40 @@ class SecretariaController
     {
         $_POST['return_to'] = $_POST['return_to'] ?? '/secretaria/convites';
         (new AdminController())->gerarConviteAcesso();
+    }
+
+    public function salvarConviteExterno(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /secretaria/convites-externos');
+            exit;
+        }
+
+        $arquivo = is_array($_FILES['anexo'] ?? null) ? $_FILES['anexo'] : [];
+        $ok = (new ConviteExterno())->criar($_POST, $arquivo, (string) ($_SESSION['usuario_id'] ?? '') ?: null);
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Convite externo registrado com sucesso.'
+            : 'Nao foi possivel registrar o convite externo.';
+
+        header('Location: /secretaria/convites-externos');
+        exit;
+    }
+
+    public function removerAnexoConviteExterno(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /secretaria/convites-externos');
+            exit;
+        }
+
+        $id = (int) ($_POST['convite_id'] ?? 0);
+        $ok = $id > 0 && (new ConviteExterno())->removerAnexo($id);
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Anexo removido do convite externo.'
+            : 'Nao foi possivel remover o anexo.';
+
+        header('Location: /secretaria/convites-externos');
+        exit;
     }
 
     public function conteudoPublico(): void

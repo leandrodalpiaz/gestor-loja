@@ -17,6 +17,7 @@ $appShellEyebrow = 'Secretaria';
 $appShellTitle = 'Balaústres em Votação';
 $appShellDescription = 'Acompanhe votações abertas e registre votos (quando elegível).';
 $appShellActiveHref = '/secretaria/votacao';
+require __DIR__ . '/_sidebar.php';
 
 require __DIR__ . '/../partials/erp_shell_open.php';
 

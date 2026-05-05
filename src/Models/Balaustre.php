@@ -6,6 +6,8 @@ use App\Config\Database;
 use App\Core\Tenant\ResolvesStoreTenant;
 use PDO;
 use App\Models\EventoSessao;
+use App\Models\ConfiguracaoLoja;
+use App\Models\Sessao;
 use App\Models\VisitaExternaSessao;
 
 class Balaustre
@@ -29,10 +31,14 @@ class Balaustre
 
     public function salvarPorSessao(int $sessaoId, array $data, ?string $autorId = null): bool
     {
+        $sessaoId = max(0, $sessaoId);
+        $lojaId = $this->obterLojaAtualId();
+        $balaustreId = (int) ($data['balaustre_id'] ?? 0);
         $dadosJson = $this->montarDadosCapturados($data);
+        $textoFinalOficial = $this->buildTextoOficial($sessaoId, $dadosJson, $data);
         $visitasExternas = $dadosJson['saco_propostas']['visitas_externas'] ?? [];
         $eventosSessao = $this->montarEventosEstruturados($data, $dadosJson);
-        $atual = $this->buscarPorSessao($sessaoId);
+        $atual = $sessaoId > 0 ? $this->buscarPorSessao($sessaoId) : ($balaustreId > 0 ? $this->buscarPorId($balaustreId) : null);
 
         $this->db->beginTransaction();
         try {
@@ -42,6 +48,8 @@ class Balaustre
                 $stmt = $this->db->prepare("
                 UPDATE balaustres
                    SET numero_balaustre = :numero_balaustre,
+                       sessao_id = :sessao_id,
+                       loja_id = :loja_id,
                        template_versao = :template_versao,
                        texto_final = :texto_final,
                        dados_capturados = CAST(:dados_capturados AS jsonb),
@@ -52,27 +60,24 @@ class Balaustre
                        apto_votacao_em = CASE WHEN status = 'em_votacao' THEN apto_votacao_em ELSE NULL END,
                        apto_votacao_por = CASE WHEN status = 'em_votacao' THEN apto_votacao_por ELSE NULL END,
                        updated_at = NOW()
-                 WHERE sessao_id = :sessao_id
-                   AND EXISTS (
-                       SELECT 1
-                       FROM sessoes s
-                       WHERE s.id = :sessao_id
-                         AND s.loja_id = :loja_id
-                   )
+                 WHERE id = :id
+                   AND loja_id = :loja_id
             ");
 
                 $okBalaustre = $stmt->execute([
-                    'sessao_id' => $sessaoId,
+                    'id' => (int) ($atual['id'] ?? 0),
+                    'sessao_id' => $sessaoId > 0 ? $sessaoId : null,
                     'numero_balaustre' => trim((string) ($data['numero_balaustre'] ?? '')) ?: null,
                     'template_versao' => trim((string) ($data['template_versao'] ?? 'oficial-v1')) ?: 'oficial-v1',
-                    'texto_final' => trim((string) ($data['texto_final'] ?? '')) ?: null,
+                    'texto_final' => $textoFinalOficial !== '' ? $textoFinalOficial : null,
                     'dados_capturados' => $dadosJson !== null ? json_encode($dadosJson, JSON_UNESCAPED_UNICODE) : null,
                     'preparado_por' => $autorId,
-                    'loja_id' => $this->obterLojaAtualId(),
+                    'loja_id' => $lojaId,
                 ]);
             } else {
                 $stmt = $this->db->prepare("
             INSERT INTO balaustres (
+                loja_id,
                 sessao_id,
                 numero_balaustre,
                 template_versao,
@@ -83,6 +88,7 @@ class Balaustre
                 status,
                 updated_at
             ) VALUES (
+                :loja_id,
                 :sessao_id,
                 :numero_balaustre,
                 :template_versao,
@@ -96,10 +102,11 @@ class Balaustre
         ");
 
                 $okBalaustre = $stmt->execute([
-                    'sessao_id' => $sessaoId,
+                    'loja_id' => $lojaId,
+                    'sessao_id' => $sessaoId > 0 ? $sessaoId : null,
                     'numero_balaustre' => trim((string) ($data['numero_balaustre'] ?? '')) ?: null,
                     'template_versao' => trim((string) ($data['template_versao'] ?? 'oficial-v1')) ?: 'oficial-v1',
-                    'texto_final' => trim((string) ($data['texto_final'] ?? '')) ?: null,
+                    'texto_final' => $textoFinalOficial !== '' ? $textoFinalOficial : null,
                     'dados_capturados' => $dadosJson !== null ? json_encode($dadosJson, JSON_UNESCAPED_UNICODE) : null,
                     'preparado_por' => $autorId,
                 ]);
@@ -110,16 +117,18 @@ class Balaustre
                 return false;
             }
 
-            $okVisitas = (new VisitaExternaSessao())->substituirPorSessao($sessaoId, is_array($visitasExternas) ? $visitasExternas : [], $autorId);
-            if (!$okVisitas) {
-                $this->db->rollBack();
-                return false;
-            }
+            if ($sessaoId > 0) {
+                $okVisitas = (new VisitaExternaSessao())->substituirPorSessao($sessaoId, is_array($visitasExternas) ? $visitasExternas : [], $autorId);
+                if (!$okVisitas) {
+                    $this->db->rollBack();
+                    return false;
+                }
 
-            $okEventos = (new EventoSessao())->substituirPorSessao($sessaoId, $eventosSessao, $autorId);
-            if (!$okEventos) {
-                $this->db->rollBack();
-                return false;
+                $okEventos = (new EventoSessao())->substituirPorSessao($sessaoId, $eventosSessao, $autorId);
+                if (!$okEventos) {
+                    $this->db->rollBack();
+                    return false;
+                }
             }
 
             $this->db->commit();
@@ -130,6 +139,162 @@ class Balaustre
             }
             return false;
         }
+    }
+
+    public function gerarTextoOficialPreview(int $sessaoId, array $data): string
+    {
+        $dadosJson = $this->montarDadosCapturados($data);
+        return $this->buildTextoOficial($sessaoId, $dadosJson, $data);
+    }
+
+    public function validarParaApto(int $balaustreId): array
+    {
+        $balaustre = $this->buscarPorId($balaustreId);
+        if (!$balaustre) {
+            return ['ok' => false, 'erro' => 'Balaustre nao encontrado.'];
+        }
+        if (empty($balaustre['sessao_id'])) {
+            return ['ok' => false, 'erro' => 'Balaustre sem sessao vinculada nao pode seguir para votacao.'];
+        }
+
+        $dados = $balaustre['dados_capturados'] ?? null;
+        if (is_string($dados)) {
+            $dec = json_decode($dados, true);
+            $dados = is_array($dec) ? $dec : [];
+        }
+        $dados = is_array($dados) ? $dados : [];
+
+        $obrigatorios = [
+            'expediente' => trim((string) ($dados['blocos']['expediente'] ?? '')),
+            'saco_propostas' => trim((string) ($dados['blocos']['saco_propostas'] ?? '')),
+            'ordem_dia' => trim((string) ($dados['blocos']['ordem_dia'] ?? '')),
+            'tronco_solidariedade' => trim((string) ($dados['blocos']['tronco_solidariedade'] ?? '')),
+            'conclusoes_orador' => trim((string) ($dados['blocos']['conclusoes_orador'] ?? '')),
+            'encerramento' => trim((string) ($dados['blocos']['encerramento'] ?? '')),
+            'assinaturas' => trim((string) ($dados['blocos']['assinaturas'] ?? '')),
+        ];
+        foreach ($obrigatorios as $chave => $valor) {
+            if ($valor === '') {
+                return ['ok' => false, 'erro' => 'Campo obrigatorio nao preenchido para votacao: ' . $chave . '.'];
+            }
+        }
+
+        return ['ok' => true];
+    }
+
+    private function buildTextoOficial(int $sessaoId, array $dadosJson, array $entrada): string
+    {
+        $sessao = $sessaoId > 0 ? (new Sessao())->findById($sessaoId) : null;
+        $cfg = (new ConfiguracaoLoja())->obter();
+
+        $numeroBalaustre = trim((string) ($entrada['numero_balaustre'] ?? ''));
+        $tipoSessao = trim((string) ($sessao['tipo_sessao'] ?? 'Sessao'));
+        $grauSessao = trim((string) ($sessao['grau_sessao'] ?? ''));
+        $tituloSessao = trim((string) ($sessao['titulo'] ?? ''));
+        $dataInicio = trim((string) ($sessao['data_hora_inicio'] ?? ''));
+        $dataFim = trim((string) ($sessao['data_hora_fim'] ?? ''));
+
+        $abertura = trim((string) ($dadosJson['blocos']['abertura'] ?? ''));
+        if ($abertura === '') {
+            $abertura = $this->montarAberturaPadrao($cfg, $tipoSessao, $grauSessao, $tituloSessao, $dataInicio);
+        }
+
+        $palavraQuadro = $this->comporPalavraQuadro($dadosJson);
+        $palavraVisitantes = $this->comporPalavraVisitantes($dadosJson);
+        $palavraComposta = trim($palavraQuadro . ($palavraQuadro !== '' && $palavraVisitantes !== '' ? ' ' : '') . $palavraVisitantes);
+
+        $linhas = [
+            'ESTADO DO RIO GRANDE DO SUL',
+            '',
+            'ORIENTE DE ' . strtoupper(trim((string) ($cfg['oriente'] ?? ''))),
+            '',
+            'Balaustre n° ' . ($numeroBalaustre !== '' ? $numeroBalaustre : '---'),
+            strtoupper(trim($tipoSessao . ' ' . ($grauSessao !== '' ? 'DE ' . $grauSessao : ''))),
+            $abertura,
+            'BALAUSTRE: ' . trim((string) ($dadosJson['blocos']['balaustre'] ?? 'Sem registro.')),
+            'EXPEDIENTE: ' . trim((string) ($dadosJson['blocos']['expediente'] ?? 'Sem expediente.')),
+            'SACO DE PROPOSTAS E INFORMACOES: ' . trim((string) ($dadosJson['blocos']['saco_propostas'] ?? 'Sem registros.')),
+            'ORDEM DO DIA: ' . trim((string) ($dadosJson['blocos']['ordem_dia'] ?? 'Sem registros.')),
+            'TRONCO DE SOLIDARIEDADE: ' . trim((string) ($dadosJson['blocos']['tronco_solidariedade'] ?? 'Sem coleta informada.')),
+            'PALAVRA A BEM DA ORDEM EM GERAL E DO QUADRO EM PARTICULAR: ' . ($palavraComposta !== '' ? $palavraComposta : 'Nao utilizada.'),
+            'CONCLUSOES DO ORADOR: ' . trim((string) ($dadosJson['blocos']['conclusoes_orador'] ?? 'Sem registro.')),
+            'ENCERRAMENTO: ' . trim((string) ($dadosJson['blocos']['encerramento'] ?? $this->montarEncerramentoPadrao($dataFim))),
+            trim((string) ($dadosJson['blocos']['assinaturas'] ?? 'Secretario              Guarda da Lei              Veneravel Mestre')),
+        ];
+
+        return trim(implode("\n\n", array_filter($linhas, static fn ($linha) => trim((string) $linha) !== '')));
+    }
+
+    private function montarAberturaPadrao(array $cfg, string $tipoSessao, string $grauSessao, string $tituloSessao, string $dataInicio): string
+    {
+        $dataExtenso = $dataInicio !== '' ? date('d/m/Y H\hi', strtotime($dataInicio)) : 'data nao informada';
+        $nomeLoja = trim((string) ($cfg['nome_loja'] ?? 'Loja'));
+        $numeroLoja = trim((string) ($cfg['numero_loja'] ?? ''));
+        $templo = trim((string) ($cfg['nome_templo'] ?? 'Templo nao informado'));
+        $oriente = trim((string) ($cfg['oriente'] ?? 'Oriente nao informado'));
+
+        return 'Aos ' . $dataExtenso . ', no ' . $templo . ', pertencente a ' . $nomeLoja
+            . ($numeroLoja !== '' ? ' n° ' . $numeroLoja : '')
+            . ', no Oriente de ' . $oriente
+            . ', reuniram-se os obreiros para realizacao de ' . trim($tipoSessao . ' ' . $grauSessao)
+            . ($tituloSessao !== '' ? ' sob o titulo "' . $tituloSessao . '"' : '')
+            . '.';
+    }
+
+    private function montarEncerramentoPadrao(string $dataFim): string
+    {
+        if ($dataFim === '') {
+            return 'Nada mais havendo, os trabalhos foram encerrados no mesmo grau da abertura.';
+        }
+        return 'Nada mais havendo, os trabalhos foram encerrados no mesmo grau da abertura as ' . date('H\hi', strtotime($dataFim)) . '.';
+    }
+
+    private function comporPalavraQuadro(array $dadosJson): string
+    {
+        $obreiros = $dadosJson['palavra_bem_ordem']['obreiros'] ?? [];
+        if (!is_array($obreiros) || $obreiros === []) {
+            return '';
+        }
+        $linhas = [];
+        foreach ($obreiros as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $nome = trim((string) ($item['nome'] ?? ''));
+            $fala = trim((string) ($item['fala_resumida'] ?? ''));
+            $cargo = trim((string) ($item['cargo_no_momento'] ?? ''));
+            if ($nome === '' && $fala === '') {
+                continue;
+            }
+            $linhas[] = ($nome !== '' ? $nome : 'Irmao nao identificado')
+                . ($cargo !== '' ? ' (' . $cargo . ')' : '')
+                . ($fala !== '' ? ' relatou: ' . $fala : '.');
+        }
+        return implode(' ', $linhas);
+    }
+
+    private function comporPalavraVisitantes(array $dadosJson): string
+    {
+        $visitantes = $dadosJson['palavra_bem_ordem']['visitantes'] ?? [];
+        if (!is_array($visitantes) || $visitantes === []) {
+            return '';
+        }
+        $linhas = [];
+        foreach ($visitantes as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $nome = trim((string) ($item['nome'] ?? ''));
+            $loja = trim((string) ($item['loja'] ?? ''));
+            $fala = trim((string) ($item['fala_resumida'] ?? ''));
+            if ($nome === '' && $fala === '') {
+                continue;
+            }
+            $linhas[] = ($nome !== '' ? $nome : 'Visitante')
+                . ($loja !== '' ? ' da loja ' . $loja : '')
+                . ($fala !== '' ? ' manifestou: ' . $fala : '.');
+        }
+        return implode(' ', $linhas);
     }
 
     private function normalizarComparacao(?string $valor): string
@@ -165,6 +330,10 @@ class Balaustre
         $visitanteGraus = is_array($data['palavra_visitante_grau'] ?? null) ? $data['palavra_visitante_grau'] : [];
         $visitanteDias = is_array($data['palavra_visitante_dia_reuniao'] ?? null) ? $data['palavra_visitante_dia_reuniao'] : [];
         $visitanteFalhas = is_array($data['palavra_visitante_fala'] ?? null) ? $data['palavra_visitante_fala'] : [];
+        $obreiroIds = is_array($data['palavra_obreiro_id'] ?? null) ? $data['palavra_obreiro_id'] : [];
+        $obreiroNomes = is_array($data['palavra_obreiro_nome'] ?? null) ? $data['palavra_obreiro_nome'] : [];
+        $obreiroCargos = is_array($data['palavra_obreiro_cargo'] ?? null) ? $data['palavra_obreiro_cargo'] : [];
+        $obreiroFalhas = is_array($data['palavra_obreiro_fala'] ?? null) ? $data['palavra_obreiro_fala'] : [];
 
         $totalVisitantes = max(
             count($visitanteNomes),
@@ -190,6 +359,28 @@ class Balaustre
                 'potencia' => trim((string) ($visitantePotencias[$i] ?? '')),
                 'grau' => trim((string) ($visitanteGraus[$i] ?? '')),
                 'dia_reuniao' => trim((string) ($visitanteDias[$i] ?? '')),
+                'fala_resumida' => $fala,
+            ];
+        }
+
+        $totalObreirosPalavra = max(
+            count($obreiroIds),
+            count($obreiroNomes),
+            count($obreiroCargos),
+            count($obreiroFalhas)
+        );
+        $obreirosPalavra = [];
+        for ($i = 0; $i < $totalObreirosPalavra; $i++) {
+            $obreiroId = trim((string) ($obreiroIds[$i] ?? ''));
+            $nome = trim((string) ($obreiroNomes[$i] ?? ''));
+            $fala = trim((string) ($obreiroFalhas[$i] ?? ''));
+            if ($obreiroId === '' && $nome === '' && $fala === '') {
+                continue;
+            }
+            $obreirosPalavra[] = [
+                'obreiro_id' => $this->isUuid($obreiroId) ? $obreiroId : null,
+                'nome' => $nome,
+                'cargo_no_momento' => trim((string) ($obreiroCargos[$i] ?? '')),
                 'fala_resumida' => $fala,
             ];
         }
@@ -321,6 +512,7 @@ class Balaustre
 
         $dadosJson['palavra_bem_ordem'] = [
             'lojas_frequentes' => array_values(array_unique($lojasFrequentes)),
+            'obreiros' => $obreirosPalavra,
             'visitantes' => $visitantes,
         ];
         $dadosJson['cargos_sessao'] = $cargosSessao;
@@ -330,6 +522,17 @@ class Balaustre
         $dadosJson['eventos_realizados'] = [
             'congressos' => $congressos,
             'palestras' => $palestras,
+        ];
+        $dadosJson['blocos'] = [
+            'abertura' => trim((string) ($data['bloco_abertura'] ?? '')),
+            'balaustre' => trim((string) ($data['bloco_balaustre'] ?? '')),
+            'expediente' => trim((string) ($data['bloco_expediente'] ?? '')),
+            'saco_propostas' => trim((string) ($data['bloco_saco_propostas'] ?? '')),
+            'ordem_dia' => trim((string) ($data['bloco_ordem_dia'] ?? '')),
+            'tronco_solidariedade' => trim((string) ($data['bloco_tronco_solidariedade'] ?? '')),
+            'conclusoes_orador' => trim((string) ($data['bloco_conclusoes_orador'] ?? '')),
+            'encerramento' => trim((string) ($data['bloco_encerramento'] ?? '')),
+            'assinaturas' => trim((string) ($data['bloco_assinaturas'] ?? '')),
         ];
         $dadosJson['observacoes_secretaria'] = trim((string) ($data['observacoes_secretaria'] ?? ''));
 
@@ -479,13 +682,8 @@ class Balaustre
                    status = 'apto_votacao',
                    updated_at = NOW()
              WHERE id = :id
-               AND EXISTS (
-                   SELECT 1
-                   FROM balaustres b
-                   JOIN sessoes s ON s.id = b.sessao_id
-                   WHERE b.id = :id
-                     AND s.loja_id = :loja_id
-               )
+               AND loja_id = :loja_id
+               AND sessao_id IS NOT NULL
                AND status <> 'em_votacao'
         ");
 
@@ -615,8 +813,8 @@ class Balaustre
                       AND v.status = 'aberta'
                 ) AS total_votantes_abertos
             FROM balaustres b
-            JOIN sessoes s ON s.id = b.sessao_id
-            WHERE s.loja_id = :loja_id
+            LEFT JOIN sessoes s ON s.id = b.sessao_id
+            WHERE b.loja_id = :loja_id
             ORDER BY b.updated_at DESC, b.id DESC
             LIMIT :limite
         ");
@@ -842,12 +1040,7 @@ class Balaustre
             SELECT *
             FROM balaustres
             WHERE sessao_id = :sessao_id
-              AND EXISTS (
-                  SELECT 1
-                  FROM sessoes s
-                  WHERE s.id = :sessao_id
-                    AND s.loja_id = :loja_id
-              )
+              AND loja_id = :loja_id
             LIMIT 1
         ");
         $stmt->execute([
@@ -913,11 +1106,16 @@ class Balaustre
     public function buscarPorId(int $id): ?array
     {
         $stmt = $this->db->prepare("
-            SELECT *
+            SELECT
+                b.*,
+                s.titulo AS sessao_titulo,
+                s.data_hora_inicio,
+                s.tipo_sessao,
+                s.grau_sessao
             FROM balaustres b
-            JOIN sessoes s ON s.id = b.sessao_id
+            LEFT JOIN sessoes s ON s.id = b.sessao_id
             WHERE b.id = :id
-              AND s.loja_id = :loja_id
+              AND b.loja_id = :loja_id
             LIMIT 1
         ");
         $stmt->execute([
