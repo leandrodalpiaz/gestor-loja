@@ -27,7 +27,7 @@ $situacoesQuadro = ['ativo' => 'Regular', 'licenciado' => 'Licenciado', 'suspens
 
 $appShellEyebrow = 'Secretaria';
 $appShellTitle = 'Editar Obreiro';
-$appShellDescription = 'Manutenção do cadastro de ' . htmlspecialchars($obreiro['nome_historico'] ?? $obreiro['nome'] ?? 'Obreiro');
+$appShellDescription = 'Manutenção do registro de ' . htmlspecialchars($obreiro['nome_historico'] ?? $obreiro['nome'] ?? 'Obreiro');
 $appShellActiveHref = '/obreiros';
 $appShellActions = [['label' => 'Voltar para a Lista', 'href' => '/obreiros']];
 

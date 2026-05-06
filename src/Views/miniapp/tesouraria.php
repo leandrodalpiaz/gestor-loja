@@ -80,7 +80,7 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Sessoes com reflexo financeiro</div>
+            <div class="text-sm font-semibold">Sessões com reflexo na Tesouraria</div>
             <div id="lista-sessoes" class="mt-3 space-y-2 text-sm"></div>
         </div>
     </div>

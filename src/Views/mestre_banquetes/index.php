@@ -46,7 +46,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     <div class="card-metric"><p class="card-metric-label">Confirmados na Sessão</p><p class="card-metric-value"><?= count($confirmados) ?></p></div>
     <div class="card-metric"><p class="card-metric-label">Participantes do Ágape</p><p class="card-metric-value"><?= count($participantesAgape) ?></p></div>
     <div class="card-metric"><p class="card-metric-label">Status Operacional</p><p class="card-metric-value text-lg capitalize"><?= htmlspecialchars((string) ($operacaoBanquete['status_operacional'] ?? 'planejamento'))?></p></div>
-    <div class="card-metric"><p class="card-metric-label">Receita Estimada</p><p class="card-metric-value text-lg text-green-600"><?= htmlspecialchars($formatCurrency($financeiroBanquete['valor_estimado'] ?? 0)) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Entrada Estimada</p><p class="card-metric-value text-lg text-green-600"><?= htmlspecialchars($formatCurrency($financeiroBanquete['valor_estimado'] ?? 0)) ?></p></div>
     <div class="card-metric"><p class="card-metric-label">Resultado Real</p><p class="card-metric-value text-lg"><?= htmlspecialchars($formatCurrency($financeiroBanquete['resultado_real'] ?? 0)) ?></p></div>
 </div>
 

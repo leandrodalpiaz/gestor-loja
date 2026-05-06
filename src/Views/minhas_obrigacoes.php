@@ -166,7 +166,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <div>
             <h3 class="font-semibold text-amber-900 dark:text-amber-100">Alerta da Biblioteca</h3>
             <p class="text-sm text-amber-800 dark:text-amber-200">
-                No vencimento de <?= $formatDate($alertaBiblioteca['vencimento'] ?? null) ?>, acrescente <?= $formatCurrency($alertaBiblioteca['valor_previsto'] ?? 0) ?> &agrave; mensalidade.
+                No vencimento de <?= $formatDate($alertaBiblioteca['vencimento'] ?? null) ?>, acrescente <?= $formatCurrency($alertaBiblioteca['valor_previsto'] ?? 0) ?> &agrave; contribuição mensal.
                 Total esperado: <?= $formatCurrency($totalEsperadoBiblioteca) ?>.
             </p>
         </div>
@@ -179,7 +179,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
 <div class="card mt-6 xl:mt-8">
     <div class="card-body flex flex-wrap items-center justify-between gap-4">
         <div>
-            <h3 class="font-semibold text-gray-800 dark:text-gray-200">Pagamento via PIX</h3>
+            <h3 class="font-semibold text-gray-800 dark:text-gray-200">Contribuição via PIX</h3>
             <p class="text-sm text-gray-600 dark:text-gray-400">
                 Chave <?= htmlspecialchars($pixTipo) ?>: <strong class="font-mono"><?= htmlspecialchars($pixValor ?: 'Não informada') ?></strong>
                 (<?= htmlspecialchars($pixBeneficiario) ?>)

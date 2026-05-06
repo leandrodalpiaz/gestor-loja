@@ -71,12 +71,12 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
         <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <a href="/admin/acessos" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 hover:bg-white hover:border-cobalto">
-                Usuários e permissões
+                Obreiros e permissões
                 <div class="mt-1 text-xs font-normal text-slate-600">Controle de acessos operacionais.</div>
             </a>
             <a href="/admin/loja" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 hover:bg-white hover:border-cobalto">
                 Parâmetros da Loja
-                <div class="mt-1 text-xs font-normal text-slate-600">Configurações centrais e identidade institucional.</div>
+                <div class="mt-1 text-xs font-normal text-slate-600">Ajustes da Loja centrais e identidade institucional.</div>
             </a>
             <a href="/admin/auditoria" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 hover:bg-white hover:border-cobalto">
                 Auditoria

@@ -7,7 +7,7 @@ unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 $erpPageTitle = 'Aprovação de acesso';
 $appShellEyebrow = 'Secretaria';
 $appShellTitle = 'Acessos';
-$appShellDescription = 'Aprovação e bloqueio de acessos ao sistema (pendente/ativo/inativo).';
+$appShellDescription = 'Aprovação e bloqueio de acessos ao sistema (em análise/regular/afastado).';
 $appShellActiveHref = '/admin/acessos';
 $appShellActions = [
     ['label' => 'Voltar ao painel', 'href' => '/dashboard', 'primary' => true],
