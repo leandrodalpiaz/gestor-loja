@@ -60,7 +60,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     <div class="card-header">
         <div>
             <h2 class="card-title">Pedidos interloja recebidos</h2>
-            <p class="card-description">SolicitaÃ§Ãµes de outras lojas para livros compartilhados por esta biblioteca.</p>
+            <p class="card-description">Solicitações de outras lojas para livros compartilhados por esta biblioteca.</p>
         </div>
     </div>
     <div class="card-body">

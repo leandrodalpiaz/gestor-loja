@@ -35,7 +35,7 @@ class CommandHandler
     {
         $base = trim((string) Env::get('APP_URL', ''));
         if ($base === '') {
-            error_log('[bot] APP_URL ausente no .env; links web_app foram bloqueados atÃÃ†â€™Â© a configuraÃÃ†â€™Â§ÃÃ†â€™Â£o.');
+            error_log('[bot] APP_URL ausente no .env; links web_app foram bloqueados até a configuração.');
             return '';
         }
 
@@ -210,7 +210,7 @@ class CommandHandler
 
     private function privateMenuHint(): string
     {
-        return "\n\nSe algum botÃÃ†â€™Â£o nÃÃ†â€™Â£o abrir, envie /painel novamente.";
+        return "\n\nSe algum botão não abrir, envie /painel novamente.";
     }
 
     private function ensureAppUrlConfigured(int|string $chatId): bool
@@ -221,7 +221,7 @@ class CommandHandler
 
         $this->telegram->sendMessage(
             $chatId,
-            'Mini app indisponÃÃ†â€™Â­vel no momento. APP_URL nÃÃ†â€™Â£o configurada. Reenvie /painel apÃÃ†â€™Â³s atualizar o ambiente local.'
+            'Mini app indisponível no momento. APP_URL não configurada. Reenvie /painel após atualizar o ambiente local.'
         );
         return false;
     }
@@ -252,18 +252,18 @@ class CommandHandler
     private function sendAccessStateMessage(int|string $chatId, string $state): void
     {
         if ($state === 'pendente') {
-            $this->telegram->sendMessage($chatId, 'Seu acesso estÃÃ†â€™Â¡ pendente. Aguarde aprovaÃÃ†â€™Â§ÃÃ†â€™Â£o do secretÃÃ†â€™Â¡rio.');
+            $this->telegram->sendMessage($chatId, 'Seu acesso está pendente. Aguarde aprovação do secretário.');
             return;
         }
 
         if ($state === 'inativo') {
-            $this->telegram->sendMessage($chatId, 'Seu acesso estÃÃ†â€™Â¡ inativo. Procure o secretÃÃ†â€™Â¡rio.');
+            $this->telegram->sendMessage($chatId, 'Seu acesso está inativo. Procure o secretário.');
             return;
         }
 
         $this->telegram->sendMessage(
             $chatId,
-            'Registro nÃÃ†â€™Â£o localizado. Use /solicitar <CIM> <senha> ou procure o secretÃÃ†â€™Â¡rio para cadastro.'
+            'Registro não localizado. Use /solicitar <CIM> <senha> ou procure o secretário para cadastro.'
         );
     }
 
@@ -284,11 +284,11 @@ class CommandHandler
 
         $solicitacao = $this->obreiroModel->solicitarAcessoPorCim($cim, $senha, $telegramId);
         if (!($solicitacao['ok'] ?? false)) {
-            $this->telegram->sendMessage($chatId, 'Procure o secretÃÃ†â€™Â¡rio para cadastro');
+            $this->telegram->sendMessage($chatId, 'Procure o secretário para cadastro');
             return;
         }
 
-            $this->telegram->sendMessage($chatId, 'SolicitaÃÃ†â€™Â§ÃÃ†â€™Â£o registrada. Aguarde aprovaÃÃ†â€™Â§ÃÃ†â€™Â£o do secretÃÃ†â€™Â¡rio.');
+            $this->telegram->sendMessage($chatId, 'Solicitação registrada. Aguarde aprovação do secretário.');
     }
 
     private function notifyPrivateOnly($chatId): void
@@ -303,7 +303,7 @@ class CommandHandler
     {
         $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && (!$obreiro || !$this->obreiroHasPermission($obreiro, 'chancelaria.manage'))) {
-            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Chanceler, VenerÃÃ†â€™Â¡vel Mestre ou Administrador.');
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
             return false;
         }
 
@@ -359,7 +359,7 @@ class CommandHandler
             return;
         }
 
-        $mensagem = "*Painel do Sistema*\n\nSelecione o mÃÃ†â€™Â³dulo que deseja acessar:";
+        $mensagem = "*Painel do Sistema*\n\nSelecione o módulo que deseja acessar:";
         $teclado = [
             'inline_keyboard' => [
                 [
@@ -372,10 +372,10 @@ class CommandHandler
                 ],
                 [
                     ['text' => 'Hospitaleiro', 'callback_data' => 'admin_hospitaleiro'],
-                    ['text' => '1Ãââ‚¬Å¡Âº Vigilante', 'callback_data' => 'admin_primeiro_vigilante'],
+                    ['text' => '1º Vigilante', 'callback_data' => 'admin_primeiro_vigilante'],
                 ],
                 [
-                    ['text' => '2Ãââ‚¬Å¡Âº Vigilante', 'callback_data' => 'admin_segundo_vigilante'],
+                    ['text' => '2º Vigilante', 'callback_data' => 'admin_segundo_vigilante'],
                     ['text' => 'Orador', 'callback_data' => 'admin_orador'],
                 ],
                 [
@@ -383,7 +383,7 @@ class CommandHandler
                     ['text' => 'Mestre de Harmonia', 'callback_data' => 'admin_mestre_harmonia'],
                 ],
                 [
-                    ['text' => 'VenerÃÃ†â€™Â¡vel', 'callback_data' => 'admin_veneravel'],
+                    ['text' => 'Venerável', 'callback_data' => 'admin_veneravel'],
                     ['text' => 'Assistente', 'callback_data' => 'admin_assistente'],
                 ],
                 [
@@ -401,11 +401,11 @@ class CommandHandler
     {
         $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'vigilancia.primeiro.manage')) {
-            $this->telegram->sendMessage($chatId, 'Acesso restrito ao 1Ãââ‚¬Å¡Âº Vigilante, VenerÃÃ†â€™Â¡vel Mestre ou Administrador.');
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao 1º Vigilante, Venerável Mestre ou Administrador.');
             return;
         }
 
-        $mensagem = "*Painel do 1Ãââ‚¬Å¡Âº Vigilante*\n\nEscolha o modo de trabalho:";
+        $mensagem = "*Painel do 1º Vigilante*\n\nEscolha o modo de trabalho:";
         $teclado = [
             'inline_keyboard' => [
                 [
@@ -425,11 +425,11 @@ class CommandHandler
     {
         $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'vigilancia.segundo.manage')) {
-            $this->telegram->sendMessage($chatId, 'Acesso restrito ao 2Ãââ‚¬Å¡Âº Vigilante, VenerÃÃ†â€™Â¡vel Mestre ou Administrador.');
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao 2º Vigilante, Venerável Mestre ou Administrador.');
             return;
         }
 
-        $mensagem = "*Painel do 2Ãââ‚¬Å¡Âº Vigilante*\n\nEscolha o modo de trabalho:";
+        $mensagem = "*Painel do 2º Vigilante*\n\nEscolha o modo de trabalho:";
         $teclado = [
             'inline_keyboard' => [
                 [
@@ -449,7 +449,7 @@ class CommandHandler
     {
         $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'orador.view')) {
-            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Orador, VenerÃÃ†â€™Â¡vel Mestre ou Administrador.');
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Orador, Venerável Mestre ou Administrador.');
             return;
         }
 
@@ -472,7 +472,7 @@ class CommandHandler
     {
         $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'mestre_banquetes.manage')) {
-            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Mestre de Banquetes, VenerÃÃ†â€™Â¡vel Mestre ou Administrador.');
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Mestre de Banquetes, Venerável Mestre ou Administrador.');
             return;
         }
 
@@ -495,7 +495,7 @@ class CommandHandler
     {
         $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'mestre_harmonia.manage')) {
-            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Mestre de Harmonia, VenerÃÃ†â€™Â¡vel Mestre ou Administrador.');
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Mestre de Harmonia, Venerável Mestre ou Administrador.');
             return;
         }
 
@@ -518,16 +518,16 @@ class CommandHandler
     {
         $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'veneravel.manage')) {
-            $this->telegram->sendMessage($chatId, 'Acesso restrito ao VenerÃÃ†â€™Â¡vel Mestre ou Administrador.');
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Venerável Mestre ou Administrador.');
             return;
         }
 
-        $mensagem = "*Painel do VenerÃÃ†â€™Â¡vel Mestre*\n\nEscolha o modo de trabalho:";
+        $mensagem = "*Painel do Venerável Mestre*\n\nEscolha o modo de trabalho:";
         $teclado = [
             'inline_keyboard' => [
                 [
                     ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
-                    ['text' => 'VenerÃÃ†â€™Â¡vel Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
+                    ['text' => 'Venerável Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
                 ],
                 [
                     ['text' => 'Voltar', 'callback_data' => 'start_menu'],
@@ -558,7 +558,7 @@ class CommandHandler
                 'bibliotecario'
             ))
         ) {
-            $this->telegram->sendMessage($chatId, 'Acesso restrito ao painel de assistÃÃ†â€™Âªncia operacional.');
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao painel de assistência operacional.');
             return;
         }
 
@@ -598,18 +598,18 @@ class CommandHandler
                 'text' => '/painel',
             ],
         ], $this->getAppBaseUrl());
-                $mensagem = "Bem-vindo ao painel da Loja, meu IrmÃÃ†â€™Â£o!" . $this->privateMenuHint();
+                $mensagem = "Bem-vindo ao painel da Loja, meu Irmão!" . $this->privateMenuHint();
         $teclado = [
             'inline_keyboard' => [
                 [
                     ['text' => 'Meu cadastro', 'callback_data' => 'menu_meu_cadastro'],
-                    ['text' => 'Minhas informaÃÃ†â€™Â§ÃÃ†â€™Âµes', 'callback_data' => 'menu_minhas_info'],
+                    ['text' => 'Minhas informações', 'callback_data' => 'menu_minhas_info'],
                 ],
                 [
                     ['text' => 'Abrir PWA', 'web_app' => ['url' => $this->buildAppUrl('/pwa')]],
                 ],
                 array_values(array_filter([
-                    \App\Config\FeatureFlags::pwaSessoes() ? ['text' => 'SessÃÃ†â€™Âµes (PWA)', 'web_app' => ['url' => $this->buildAppUrl('/pwa/sessoes')]] : null,
+                    \App\Config\FeatureFlags::pwaSessoes() ? ['text' => 'Sessões (PWA)', 'web_app' => ['url' => $this->buildAppUrl('/pwa/sessoes')]] : null,
                     \App\Config\FeatureFlags::pwaBiblioteca() ? ['text' => 'Biblioteca (PWA)', 'web_app' => ['url' => $this->buildAppUrl('/pwa/biblioteca')]] : null,
                 ])),
                 array_values(array_filter([
@@ -646,19 +646,19 @@ class CommandHandler
 
         if ($isDev || $this->obreiroHasPermission($obreiro, 'hospitaleiro.manage')) {
             $teclado['inline_keyboard'][] = [
-                ['text' => 'AssistÃÃ†â€™Âªncia', 'callback_data' => 'assistencia_menu'],
+                ['text' => 'Assistência', 'callback_data' => 'assistencia_menu'],
             ];
         }
 
         if ($isDev || $this->obreiroHasPermission($obreiro, 'vigilancia.primeiro.manage')) {
             $teclado['inline_keyboard'][] = [
-                ['text' => '1Ãââ‚¬Å¡Âº Vigilante', 'callback_data' => 'admin_primeiro_vigilante'],
+                ['text' => '1º Vigilante', 'callback_data' => 'admin_primeiro_vigilante'],
             ];
         }
 
         if ($isDev || $this->obreiroHasPermission($obreiro, 'vigilancia.segundo.manage')) {
             $teclado['inline_keyboard'][] = [
-                ['text' => '2Ãââ‚¬Å¡Âº Vigilante', 'callback_data' => 'admin_segundo_vigilante'],
+                ['text' => '2º Vigilante', 'callback_data' => 'admin_segundo_vigilante'],
             ];
         }
 
@@ -682,7 +682,7 @@ class CommandHandler
 
         if ($isDev || $this->obreiroHasPermission($obreiro, 'veneravel.manage')) {
             $teclado['inline_keyboard'][] = [
-                ['text' => 'VenerÃÃ†â€™Â¡vel', 'callback_data' => 'admin_veneravel'],
+                ['text' => 'Venerável', 'callback_data' => 'admin_veneravel'],
             ];
         }
 
@@ -708,11 +708,11 @@ class CommandHandler
             ? 'Livre'
             : (($sessao['traje_tipo'] ?? 'maconico') === 'outro'
                 ? ((string) ($sessao['traje_personalizado'] ?? 'Outro'))
-                : 'MaÃÃ†â€™Â§ÃÃ†â€™Â´nico'));
+                : 'Maçônico'));
         $agape = match ((string) ($sessao['agape_modalidade'] ?? 'nao_havera')) {
             'gratuito' => 'Sim (gratuito)',
             'pago' => 'Sim (pago)',
-            default => 'NÃÃ†â€™Â£o haverÃÃ†â€™Â¡',
+            default => 'Não haverá',
         };
 
         $config = (new ConfiguracaoLoja())->obter();
@@ -721,15 +721,15 @@ class CommandHandler
         $linhaLoja = trim($nomeLoja . ($numeroLoja !== '' ? ' nÃââ‚¬Å¡Âº ' . $numeroLoja : ''));
         $ordemDia = trim((string) ($sessao['ordem_dia'] ?? $sessao['resumo_publico'] ?? ''));
 
-        return "NOVA SESSÃÃ†â€™Æââ‚¬â„¢O\n\n"
+        return "NOVA SESSÃO\n\n"
             . $dataHora . "\n"
             . "Grau: {$grau}\n\n"
             . $linhaLoja . "\n\n"
-            . "SessÃÃ†â€™Â£o:\n"
+            . "Sessão:\n"
             . "Tipo: {$tipo}\n"
             . "Traje: {$traje}\n"
             . "Ordem do dia: " . ($ordemDia !== '' ? $ordemDia : '-') . "\n"
-            . "ÃÃ†â€™Âgape: {$agape}";
+            . "Ágape: {$agape}";
     }
 
     private function montarBotoesSessao(array $sessao): array
@@ -738,27 +738,27 @@ class CommandHandler
         $linhas = [];
         if ($modalidade === 'gratuito') {
             $linhas[] = [
-                ['text' => 'Participar com ÃÃ†â€™Â¡gape (gratuito)', 'callback_data' => 'presenca_agape_gratuito'],
+                ['text' => 'Participar com ágape (gratuito)', 'callback_data' => 'presenca_agape_gratuito'],
             ];
             $linhas[] = [
-                ['text' => 'Participar sem ÃÃ†â€™Â¡gape', 'callback_data' => 'presenca_sem_agape'],
+                ['text' => 'Participar sem ágape', 'callback_data' => 'presenca_sem_agape'],
             ];
         } elseif ($modalidade === 'pago') {
             $linhas[] = [
-                ['text' => 'Participar com ÃÃ†â€™Â¡gape (pago)', 'callback_data' => 'presenca_agape_pago'],
+                ['text' => 'Participar com ágape (pago)', 'callback_data' => 'presenca_agape_pago'],
             ];
             $linhas[] = [
-                ['text' => 'Participar sem ÃÃ†â€™Â¡gape', 'callback_data' => 'presenca_sem_agape'],
+                ['text' => 'Participar sem ágape', 'callback_data' => 'presenca_sem_agape'],
             ];
         } else {
             $linhas[] = [
-                ['text' => 'Confirmar presenÃÃ†â€™Â§a', 'callback_data' => 'presenca_confirmar'],
+                ['text' => 'Confirmar presença', 'callback_data' => 'presenca_confirmar'],
             ];
         }
 
         $linhas[] = [
-            ['text' => 'Cancelar confirmaÃÃ†â€™Â§ÃÃ†â€™Â£o', 'callback_data' => 'presenca_cancelar'],
-            ['text' => 'Informar ausÃÃ†â€™Âªncia', 'callback_data' => 'presenca_ausencia'],
+            ['text' => 'Cancelar confirmação', 'callback_data' => 'presenca_cancelar'],
+            ['text' => 'Informar ausência', 'callback_data' => 'presenca_ausencia'],
         ];
         $linhas[] = [
             ['text' => 'Ver confirmados', 'callback_data' => 'presenca_ver_confirmados'],
@@ -771,7 +771,7 @@ class CommandHandler
     {
         $sessao = $this->sessaoModel->obterProximaSessao();
         if (!$sessao) {
-            $this->telegram->sendMessage($chatId, 'Ainda nÃÃ†â€™Â£o hÃÃ†â€™Â¡ sessÃÃ†â€™Â£o futura cadastrada.');
+            $this->telegram->sendMessage($chatId, 'Ainda não há sessão futura cadastrada.');
             return;
         }
 
@@ -785,51 +785,51 @@ class CommandHandler
     {
         $obreiro = $this->findObreiroByTelegramId((int) $fromId);
         if (!$obreiro) {
-            $this->telegram->sendMessage($chatId, 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel localizar seu cadastro agora. Tente novamente ou contate a Secretaria.');
+            $this->telegram->sendMessage($chatId, 'Não foi possível localizar seu cadastro agora. Tente novamente ou contate a Secretaria.');
             return;
         }
 
         $sessao = $this->sessaoModel->obterProximaSessao();
         if (!$sessao || empty($sessao['id'])) {
-            $this->telegram->sendMessage($chatId, 'NÃÃ†â€™Â£o hÃÃ†â€™Â¡ sessÃÃ†â€™Â£o disponÃÃ†â€™Â­vel para confirmar no momento.');
+            $this->telegram->sendMessage($chatId, 'Não há sessão disponível para confirmar no momento.');
             return;
         }
 
         $sessaoId = (int) $sessao['id'];
         $obreiroId = (string) ($obreiro['id'] ?? '');
         $ok = false;
-        $mensagem = 'NÃÃ†â€™Â£o conseguimos registrar sua resposta agora. Tente novamente em alguns minutos.';
+        $mensagem = 'Não conseguimos registrar sua resposta agora. Tente novamente em alguns minutos.';
 
         switch ($acao) {
             case 'confirmar':
                 $ok = $this->presencaModel->registrar($sessaoId, $obreiroId, 'confirmado', false);
-                $mensagem = $ok ? 'PresenÃÃ†â€™Â§a confirmada.' : $mensagem;
+                $mensagem = $ok ? 'Presença confirmada.' : $mensagem;
                 break;
             case 'com_agape':
                 $ok = $this->presencaModel->registrar($sessaoId, $obreiroId, 'confirmado', true);
-                $mensagem = $ok ? 'PresenÃÃ†â€™Â§a confirmada com ÃÃ†â€™Â¡gape.' : $mensagem;
+                $mensagem = $ok ? 'Presença confirmada com ágape.' : $mensagem;
                 break;
             case 'sem_agape':
                 $ok = $this->presencaModel->registrar($sessaoId, $obreiroId, 'confirmado', false);
-                $mensagem = $ok ? 'PresenÃÃ†â€™Â§a confirmada sem ÃÃ†â€™Â¡gape.' : $mensagem;
+                $mensagem = $ok ? 'Presença confirmada sem ágape.' : $mensagem;
                 break;
             case 'ausencia':
                 $ok = $this->presencaModel->registrar($sessaoId, $obreiroId, 'ausente', false);
-                $mensagem = $ok ? 'AusÃÃ†â€™Âªncia registrada.' : $mensagem;
+                $mensagem = $ok ? 'Ausência registrada.' : $mensagem;
                 break;
             case 'cancelar':
                 $ok = $this->presencaModel->cancelar($sessaoId, $obreiroId);
-                $mensagem = $ok ? 'ConfirmaÃÃ†â€™Â§ÃÃ†â€™Â£o cancelada. Sua resposta voltou para pendente.' : $mensagem;
+                $mensagem = $ok ? 'Confirmação cancelada. Sua resposta voltou para pendente.' : $mensagem;
                 break;
             case 'ver_confirmados':
                 $confirmados = $this->presencaModel->listarConfirmadosPorSessao($sessaoId);
                 if ($confirmados === []) {
-                    $this->telegram->sendMessage($chatId, 'Ainda nÃÃ†â€™Â£o hÃÃ†â€™Â¡ confirmaÃÃ†â€™Â§ÃÃ†â€™Âµes para esta sessÃÃ†â€™Â£o.');
+                    $this->telegram->sendMessage($chatId, 'Ainda não há confirmações para esta sessão.');
                     return;
                 }
-                $linhas = ["Confirmados da prÃÃ†â€™Â³xima sessÃÃ†â€™Â£o:\n"];
+                $linhas = ["Confirmados da próxima sessão:\n"];
                 foreach ($confirmados as $item) {
-                    $linhas[] = '- ' . (string) ($item['nome'] ?? 'Obreiro') . (!empty($item['participara_agape']) ? ' (com ÃÃ†â€™Â¡gape)' : ' (sem ÃÃ†â€™Â¡gape)');
+                    $linhas[] = '- ' . (string) ($item['nome'] ?? 'Obreiro') . (!empty($item['participara_agape']) ? ' (com ágape)' : ' (sem ágape)');
                 }
                 $this->telegram->sendMessage($chatId, implode("\n", $linhas));
                 return;
@@ -841,14 +841,14 @@ class CommandHandler
     public function handleHelp($chatId)
     {
         $mensagem = "<b>Ajuda do Gestor da Loja</b>\n\n";
-        $mensagem .= "Comandos disponÃÃ†â€™Â­veis:\n";
+        $mensagem .= "Comandos disponíveis:\n";
         $mensagem .= "/start - abre o menu principal\n";
         $mensagem .= "/chancelaria - painel da chancelaria\n";
         $mensagem .= "/tesouraria - painel da tesouraria\n";
         $mensagem .= "/biblioteca - painel da biblioteca\n";
-        $mensagem .= "/assistencia - painel de assistÃÃ†â€™Âªncia\n";
+        $mensagem .= "/assistencia - painel de assistência\n";
         $mensagem .= "/painel - painel administrativo\n";
-        $mensagem .= "/solicitar <CIM> <senha> - solicitar liberaÃÃ†â€™Â§ÃÃ†â€™Â£o de acesso\n";
+        $mensagem .= "/solicitar <CIM> <senha> - solicitar liberação de acesso\n";
 
         $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML']);
     }
@@ -884,18 +884,18 @@ class CommandHandler
 
         $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'tesoureiro', 'veneravel'))) {
-            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Tesoureiro, VenerÃÃ†â€™Â¡vel Mestre ou Administrador.');
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Tesoureiro, Venerável Mestre ou Administrador.');
             return;
         }
 
-        $mensagem = "*Painel da Tesouraria*\n\nSelecione uma opÃÃ†â€™Â§ÃÃ†â€™Â£o:";
+        $mensagem = "*Painel da Tesouraria*\n\nSelecione uma opção:";
         $teclado = [
             'inline_keyboard' => [
                 [
                     ['text' => 'Abrir Tesouraria Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria')]],
                 ],
                 [
-                    ['text' => 'Minhas ObrigaÃÃ†â€™Â§ÃÃ†â€™Âµes', 'web_app' => ['url' => $this->buildAppUrl('/financeiro/minhas-obrigacoes')]],
+                    ['text' => 'Minhas Obrigações', 'web_app' => ['url' => $this->buildAppUrl('/financeiro/minhas-obrigacoes')]],
                     ['text' => 'Como pagar via PIX', 'callback_data' => 'tesouraria_orientacao_pix'],
                 ],
                 [
@@ -907,12 +907,12 @@ class CommandHandler
                     ['text' => 'Fechamento Mensal', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Ffechamento')]],
                 ],
                 [
-                    ['text' => 'ObrigaÃÃ†â€™Â§ÃÃ†â€™Âµes', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fobrigacoes')]],
-                    ['text' => 'SessÃÃ†â€™Âµes', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fsessoes')]],
+                    ['text' => 'Obrigações', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fobrigacoes')]],
+                    ['text' => 'Sessões', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fsessoes')]],
                 ],
                 [
                     ['text' => 'Validar Pix', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fcomprovantes')]],
-                    ['text' => 'RelatÃÃ†â€™Â³rio de GestÃÃ†â€™Â£o', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Frelatorio-gestao')]],
+                    ['text' => 'Relatório de Gestão', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Frelatorio-gestao')]],
                 ],
                 [
                     ['text' => 'Voltar', 'callback_data' => 'start_menu'],
@@ -934,11 +934,11 @@ class CommandHandler
         $canClassificar = $this->obreiroHasRole($obreiro, 'primeiro_vigilante', 'segundo_vigilante', 'bibliotecario', 'veneravel');
         $isDev = $this->isDev($requesterTelegramId);
 
-        $mensagem = "<b>Biblioteca da Loja</b>\n\nSelecione uma opÃÃ†â€™Â§ÃÃ†â€™Â£o:";
+        $mensagem = "<b>Biblioteca da Loja</b>\n\nSelecione uma opção:";
         $botoes = [];
 
         $botoes[] = [
-            ['text' => 'Meus EmprÃÃ†â€™Â©stimos', 'callback_data' => 'biblioteca_meus_emprestimos'],
+            ['text' => 'Meus Empréstimos', 'callback_data' => 'biblioteca_meus_emprestimos'],
             ['text' => 'Ver Acervo', 'callback_data' => 'biblioteca_acervo'],
         ];
         $botoes[] = [
@@ -952,7 +952,7 @@ class CommandHandler
                 ['text' => 'Cadastrar Manual', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca/novo')]],
             ];
             $botoes[] = [
-                ['text' => 'Gerenciar EmprÃÃ†â€™Â©stimos', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca/emprestimos')]],
+                ['text' => 'Gerenciar Empréstimos', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca/emprestimos')]],
             ];
         }
         if ($canClassificar || $isDev) {
@@ -975,18 +975,18 @@ class CommandHandler
 
         $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$obreiro) {
-            $this->telegram->sendMessage($chatId, "NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel localizar seu cadastro agora. Tente novamente ou contate a Secretaria.");
+            $this->telegram->sendMessage($chatId, "Não foi possível localizar seu cadastro agora. Tente novamente ou contate a Secretaria.");
             return;
         }
 
         $emprestimos = $emprestimoModel->listarPendentesPorObreiro($obreiro['id']);
 
         if (empty($emprestimos)) {
-            $mensagem = "<b>Meus EmprÃÃ†â€™Â©stimos</b>\n\nVocÃÃ†â€™Âª nÃÃ†â€™Â£o possui emprÃÃ†â€™Â©stimos ativos.";
+            $mensagem = "<b>Meus Empréstimos</b>\n\nVocê não possui empréstimos ativos.";
         } else {
-            $mensagem = "<b>Meus EmprÃÃ†â€™Â©stimos</b>\n\n";
+            $mensagem = "<b>Meus Empréstimos</b>\n\n";
             foreach ($emprestimos as $e) {
-                $mensagem .= "- <b>" . htmlspecialchars($e['titulo']) . "</b> - DevoluÃÃ†â€™Â§ÃÃ†â€™Â£o prevista: " . date('d/m/Y', strtotime($e['data_devolucao_prevista'])) . "\n";
+                $mensagem .= "- <b>" . htmlspecialchars($e['titulo']) . "</b> - Devolução prevista: " . date('d/m/Y', strtotime($e['data_devolucao_prevista'])) . "\n";
             }
         }
 
@@ -1042,7 +1042,7 @@ class CommandHandler
 
     private function handleBibliotecaGerenciar($chatId, $fromId = null)
     {
-        $mensagem = "<b>Gerenciar EmprÃÃ†â€™Â©stimos</b>\n\nUse o painel web da biblioteca para aprovar devoluÃÃ†â€™Â§ÃÃ†â€™Âµes e acompanhar pendÃÃ†â€™Âªncias.";
+        $mensagem = "<b>Gerenciar Empréstimos</b>\n\nUse o painel web da biblioteca para aprovar devoluções e acompanhar pendências.";
         $this->telegram->sendMessage($chatId, $mensagem, [
             'parse_mode' => 'HTML',
             'reply_markup' => ['inline_keyboard' => [
@@ -1054,10 +1054,10 @@ class CommandHandler
 
     private function handleAniversarios($chatId)
     {
-        $aniversariantes = $this->getEfemeridesDoDiaPorTipos(['aniversÃÃ†â€™Â¡rio', 'aniversario']);
+        $aniversariantes = $this->getEfemeridesDoDiaPorTipos(['aniversário', 'aniversario']);
 
         if (empty($aniversariantes)) {
-            $msg = "NÃÃ†â€™Â£o hÃÃ†â€™Â¡ aniversariantes de vida registrados para hoje.";
+            $msg = "Não há aniversariantes de vida registrados para hoje.";
         } else {
             $msg = "<b>Aniversariantes de Vida Hoje</b>\n\n";
             foreach ($aniversariantes as $o) {
@@ -1071,27 +1071,27 @@ class CommandHandler
     private function handleDatasMaconicas($chatId)
     {
         $maconicos = $this->getEfemeridesDoDiaPorTipos([
-            'iniciaÃÃ†â€™Â§ÃÃ†â€™Â£o',
+            'iniciação',
             'iniciacao',
-            'elevaÃÃ†â€™Â§ÃÃ†â€™Â£o',
+            'elevação',
             'elevacao',
-            'exaltaÃÃ†â€™Â§ÃÃ†â€™Â£o',
+            'exaltação',
             'exaltacao',
-            'instalaÃÃ†â€™Â§ÃÃ†â€™Â£o',
+            'instalação',
             'instalacao',
-            'filiaÃÃ†â€™Â§ÃÃ†â€™Â£o',
+            'filiação',
             'filiacao',
-            'posse grÃÃ†â€™Â£o mestre',
+            'posse grão mestre',
             'posse grao mestre',
-            'concessÃÃ†â€™Â£o de membro honorÃÃ†â€™Â¡rio',
+            'concessão de membro honorário',
             'concessao de membro honorario',
             'oriente eterno',
         ]);
 
         if (empty($maconicos)) {
-            $msg = "NÃÃ†â€™Â£o hÃÃ†â€™Â¡ aniversÃÃ†â€™Â¡rios maÃÃ†â€™Â§ÃÃ†â€™Â´nicos registrados para hoje.";
+            $msg = "Não há aniversários maçônicos registrados para hoje.";
         } else {
-            $msg = "<b>AniversÃÃ†â€™Â¡rios MaÃÃ†â€™Â§ÃÃ†â€™Â´nicos Hoje</b>\n\n";
+            $msg = "<b>Aniversários Maçônicos Hoje</b>\n\n";
             foreach ($maconicos as $o) {
                 $msg .= $this->formatarLinhaEfemeride($o) . "\n";
             }
@@ -1108,13 +1108,13 @@ class CommandHandler
 
         $fatosHistoricos = array_values(array_filter($fatos, static function (array $item): bool {
             $tipo = strtolower(trim((string) ($item['tipo'] ?? '')));
-            return $tipo === 'historia' || $tipo === 'histÃÃ†â€™Â³ria';
+            return $tipo === 'historia' || $tipo === 'história';
         }));
 
         if (empty($fatosHistoricos)) {
-            $msg = "NÃÃ†â€™Â£o hÃÃ†â€™Â¡ fatos histÃÃ†â€™Â³ricos registrados para hoje.";
+            $msg = "Não há fatos históricos registrados para hoje.";
         } else {
-            $msg = "<b>Fatos HistÃÃ†â€™Â³ricos do Dia</b>\n\n";
+            $msg = "<b>Fatos Históricos do Dia</b>\n\n";
             foreach ($fatosHistoricos as $f) {
                 $texto = trim((string) ($f['mensagem_custom'] ?? ''));
                 if ($texto === '') {
@@ -1127,7 +1127,7 @@ class CommandHandler
                     $dataAtividade = $timestamp ? date('d/m/Y', $timestamp) : (string) $f['data_evento'];
                 }
 
-                $linha = htmlspecialchars($texto !== '' ? $texto : 'Registro histÃÃ†â€™Â³rico sem descriÃÃ†â€™Â§ÃÃ†â€™Â£o.');
+                $linha = htmlspecialchars($texto !== '' ? $texto : 'Registro histórico sem descrição.');
                 if ($dataAtividade !== '') {
                     $linha .= " ({$dataAtividade})";
                 }
@@ -1175,7 +1175,7 @@ class CommandHandler
             if ((string) $chatId !== (string) $requesterTelegramId) {
                 $this->telegram->sendMessage(
                     $chatId,
-                    "A prÃÃ†â€™Â©via de 'Neste Dia' foi enviada no seu privado para revisÃÃ†â€™Â£o.",
+                    "A prévia de 'Neste Dia' foi enviada no seu privado para revisão.",
                     ['parse_mode' => 'HTML']
                 );
             }
@@ -1184,7 +1184,7 @@ class CommandHandler
 
         $this->telegram->sendMessage(
             $chatId,
-                "NÃÃ†â€™Â£o consegui entregar a prÃÃ†â€™Â©via no privado. Abra o chat com o bot e tente novamente.",
+                "Não consegui entregar a prévia no privado. Abra o chat com o bot e tente novamente.",
             ['parse_mode' => 'HTML']
         );
     }
@@ -1211,7 +1211,7 @@ class CommandHandler
         if ($mensagem !== '') {
             $grupoId = $this->getGroupChatId();
             if (!$grupoId) {
-                $this->telegram->sendMessage($chatId, "NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel enviar: o grupo oficial ainda nÃÃ†â€™Â£o estÃÃ†â€™Â¡ configurado.", ['parse_mode' => 'HTML']);
+                $this->telegram->sendMessage($chatId, "Não foi possível enviar: o grupo oficial ainda não está configurado.", ['parse_mode' => 'HTML']);
                 return;
             }
 
@@ -1220,7 +1220,7 @@ class CommandHandler
             return;
         }
 
-        $this->telegram->sendMessage($chatId, "NÃÃ†â€™Â£o encontrei a mensagem de hoje para envio. Gere a prÃÃ†â€™Â©via e tente novamente.");
+        $this->telegram->sendMessage($chatId, "Não encontrei a mensagem de hoje para envio. Gere a prévia e tente novamente.");
     }
 
     public function handle($update)
@@ -1257,13 +1257,13 @@ class CommandHandler
                     if ($payload !== '' && str_starts_with($payload, 'ativar_')) {
                         $token = trim(substr($payload, strlen('ativar_')));
                         if ($token === '') {
-                            $this->telegram->sendMessage($chatId, 'Token de ativaÃÃ†â€™Â§ÃÃ†â€™Â£o invÃÃ†â€™Â¡lido. Procure o secretÃÃ†â€™Â¡rio.');
+                            $this->telegram->sendMessage($chatId, 'Token de ativação inválido. Procure o secretário.');
                             return;
                         }
 
                         $resultado = (new ConviteAcesso())->consumir($token, $fromId);
                         if (!($resultado['ok'] ?? false)) {
-                            $this->telegram->sendMessage($chatId, (string) ($resultado['erro'] ?? 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel ativar seu acesso. Procure o secretÃÃ†â€™Â¡rio.'));
+                            $this->telegram->sendMessage($chatId, (string) ($resultado['erro'] ?? 'Não foi possível ativar seu acesso. Procure o secretário.'));
                             return;
                         }
 
@@ -1301,9 +1301,9 @@ class CommandHandler
                 } elseif (isset($message['photo']) || isset($message['document'])) {
                     $this->handleComprovantePixRecebido($chatId, (int) $fromId, $message);
                 } elseif (trim((string) $caption) !== '') {
-                    $this->telegram->sendMessage($chatId, 'Se vocÃÃ†â€™Âª for enviar um comprovante PIX, anexe a imagem ou PDF junto com a legenda informando o que estÃÃ†â€™Â¡ sendo pago. Ex.: "mensalidade 05/2026 150,00".');
+                    $this->telegram->sendMessage($chatId, 'Se você for enviar um comprovante PIX, anexe a imagem ou PDF junto com a legenda informando o que está sendo pago. Ex.: "mensalidade 05/2026 150,00".');
                 } else {
-                    $this->telegram->sendMessage($chatId, "NÃÃ†â€™Â£o reconheci este comando. Use /ajuda para ver as opÃÃ†â€™Â§ÃÃ†â€™Âµes disponÃÃ†â€™Â­veis.");
+                    $this->telegram->sendMessage($chatId, "Não reconheci este comando. Use /ajuda para ver as opções disponíveis.");
                 }
             } elseif (isset($update['callback_query'])) {
                 $callback = $update['callback_query'];
@@ -1449,25 +1449,25 @@ class CommandHandler
                         $this->sendMenuPrincipal($chatId, $fromId);
                         break;
                     case 'menu_meu_cadastro':
-                        $this->telegram->sendMessage($chatId, 'Meu cadastro: procure a Secretaria para ajustes cadastrais e validaÃÃ†â€™Â§ÃÃ†â€™Â£o de dados.');
+                        $this->telegram->sendMessage($chatId, 'Meu cadastro: procure a Secretaria para ajustes cadastrais e validação de dados.');
                         break;
                     case 'menu_minhas_info':
-                        $this->telegram->sendMessage($chatId, 'Minhas informaÃÃ†â€™Â§ÃÃ†â€™Âµes: use o painel web para consultar dados e situaÃÃ†â€™Â§ÃÃ†â€™Â£o atual.');
+                        $this->telegram->sendMessage($chatId, 'Minhas informações: use o painel web para consultar dados e situação atual.');
                         break;
                     case 'menu_ajuda_contato':
-                        $this->telegram->sendMessage($chatId, 'Ajuda / contato: em caso de dÃÃ†â€™Âºvidas, fale com a Secretaria da Loja.');
+                        $this->telegram->sendMessage($chatId, 'Ajuda / contato: em caso de dúvidas, fale com a Secretaria da Loja.');
                         break;
                     case 'menu_admin_total':
                         $this->telegram->sendMessage($chatId, 'Recurso indisponivel neste perfil.');
                         break;
 
                     default:
-                        $this->telegram->sendMessage($chatId, "NÃÃ†â€™Â£o reconheci esta aÃÃ†â€™Â§ÃÃ†â€™Â£o. Volte ao menu principal e tente novamente.");
+                        $this->telegram->sendMessage($chatId, "Não reconheci esta ação. Volte ao menu principal e tente novamente.");
                         break;
                 }
 
             } else {
-                error_log('[handle] Update nÃÃ†â€™Â£o suportado: ' . json_encode($update));
+                error_log('[handle] Update não suportado: ' . json_encode($update));
             }
 
             error_log('[webhook] update processado com sucesso');
@@ -1478,7 +1478,7 @@ class CommandHandler
 
     private function handleTesourariaCaixa($chatId)
     {
-        $msg = "<b>Caixa da Loja</b>\n\nAcesse o painel para registrar entradas e saÃÃ†â€™Â­das, revisar movimentos e excluir lanÃÃ†â€™Â§amentos quando necessÃÃ†â€™Â¡rio.";
+        $msg = "<b>Caixa da Loja</b>\n\nAcesse o painel para registrar entradas e saídas, revisar movimentos e excluir lançamentos quando necessário.";
         $this->telegram->sendMessage($chatId, $msg, [
             'parse_mode' => 'HTML',
             'reply_markup' => [
@@ -1532,7 +1532,7 @@ class CommandHandler
 
     private function handleTesourariaFechamento($chatId)
     {
-        $msg = "<b>Fechamento Mensal</b>\n\nAcesse o painel para revisar lanÃÃ†â€™Â§amentos, ajustar o saldo inicial e concluir o fechamento do perÃÃ†â€™Â­odo.";
+        $msg = "<b>Fechamento Mensal</b>\n\nAcesse o painel para revisar lançamentos, ajustar o saldo inicial e concluir o fechamento do período.";
         $this->telegram->sendMessage($chatId, $msg, [
             'parse_mode' => 'HTML',
             'reply_markup' => [
@@ -1550,13 +1550,13 @@ class CommandHandler
 
     private function handleTesourariaValidarPix($chatId)
     {
-        $msg = "<b>ValidaÃÃ†â€™Â§ÃÃ†â€™Â£o de PIX</b>\n\nAcesse o painel de comprovantes para validar ou rejeitar os envios pendentes.";
+        $msg = "<b>Validação de PIX</b>\n\nAcesse o painel de comprovantes para validar ou rejeitar os envios pendentes.";
         $this->telegram->sendMessage($chatId, $msg, [
             'parse_mode' => 'HTML',
             'reply_markup' => [
                 'inline_keyboard' => [
                     [
-                        ['text' => 'Abrir ValidaÃÃ†â€™Â§ÃÃ†â€™Â£o PIX', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fcomprovantes')]],
+                        ['text' => 'Abrir Validação PIX', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/tesouraria?dest=%2Ftesouraria%2Fcomprovantes')]],
                     ],
                     [
                         ['text' => 'Voltar', 'callback_data' => 'tesouraria_menu'],
@@ -1570,7 +1570,7 @@ class CommandHandler
     {
         $obreiro = $this->findObreiroByTelegramId((int) $fromId);
         if (!$obreiro) {
-            $this->telegram->sendMessage($chatId, 'NÃÃ†â€™Â£o conseguimos localizar seu cadastro para consulta financeira agora. Tente novamente em alguns minutos.');
+            $this->telegram->sendMessage($chatId, 'Não conseguimos localizar seu cadastro para consulta financeira agora. Tente novamente em alguns minutos.');
             return;
         }
 
@@ -1581,22 +1581,22 @@ class CommandHandler
         $mensalidade = number_format((float) ($config['mensalidade_valor_padrao'] ?? 150), 2, ',', '.');
         $biblioteca = number_format((float) ($config['contribuicao_biblioteca_valor_padrao'] ?? 44), 2, ',', '.');
 
-        $msg = "<b>OrientaÃÃ†â€™Â§ÃÃ†â€™Âµes financeiras</b>\n\n";
-        $msg .= "ContribuiÃÃ†â€™Â§ÃÃ†â€™Â£o mensal padrÃÃ†â€™Â£o: <b>R$ {$mensalidade}</b>\n";
+        $msg = "<b>Orientações financeiras</b>\n\n";
+        $msg .= "Contribuição mensal padrão: <b>R$ {$mensalidade}</b>\n";
         $msg .= "Biblioteca por contribuinte designado: <b>R$ {$biblioteca}</b>\n\n";
         if ($pixValor !== '') {
             $msg .= "PIX da Loja: <b>{$pixTipo} {$pixValor}</b>";
             if ($pixBeneficiario !== '') {
-                $msg .= "\nBeneficiÃÃ†â€™Â¡rio: <b>{$pixBeneficiario}</b>";
+                $msg .= "\nBeneficiário: <b>{$pixBeneficiario}</b>";
             }
-            $msg .= "\n\nAo enviar comprovante, use legenda com o que estÃÃ†â€™Â¡ pagando.\n";
+            $msg .= "\n\nAo enviar comprovante, use legenda com o que está pagando.\n";
             $msg .= "Ex.: <code>mensalidade 05/2026 150,00</code>";
         }
 
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => 'Ver minhas obrigaÃÃ†â€™Â§ÃÃ†â€™Âµes', 'web_app' => ['url' => $this->buildAppUrl('/financeiro/minhas-obrigacoes')]],
+                    ['text' => 'Ver minhas obrigações', 'web_app' => ['url' => $this->buildAppUrl('/financeiro/minhas-obrigacoes')]],
                 ],
             ],
         ];
@@ -1608,7 +1608,7 @@ class CommandHandler
     {
         $obreiro = $this->findObreiroByTelegramId((int) $fromId);
         if (!$obreiro) {
-            $this->telegram->sendMessage($chatId, 'NÃÃ†â€™Â£o foi possÃÃ†â€™Â­vel localizar seu cadastro agora. Tente novamente ou contate a Secretaria.');
+            $this->telegram->sendMessage($chatId, 'Não foi possível localizar seu cadastro agora. Tente novamente ou contate a Secretaria.');
             return;
         }
 
@@ -1630,7 +1630,7 @@ class CommandHandler
         }
 
         if ($fileId === '') {
-            $this->telegram->sendMessage($chatId, 'NÃÃ†â€™Â£o consegui identificar o arquivo do comprovante. Reenvie a imagem ou PDF com a legenda do pagamento.');
+            $this->telegram->sendMessage($chatId, 'Não consegui identificar o arquivo do comprovante. Reenvie a imagem ou PDF com a legenda do pagamento.');
             return;
         }
 
@@ -1651,7 +1651,7 @@ class CommandHandler
         ]);
 
         if (!$ok) {
-            $this->telegram->sendMessage($chatId, 'NÃÃ†â€™Â£o conseguimos registrar seu comprovante agora. Tente novamente em alguns minutos.');
+            $this->telegram->sendMessage($chatId, 'Não conseguimos registrar seu comprovante agora. Tente novamente em alguns minutos.');
             return;
         }
 
@@ -1660,9 +1660,9 @@ class CommandHandler
         $pixValor = trim((string) ($config['pix_chave_valor'] ?? ''));
         $parcelas = (new ObrigacaoFinanceira())->listarParcelasEmAbertoObreiro((string) ($obreiro['id'] ?? ''));
 
-        $msg = "Comprovante recebido e encaminhado para validaÃÃ†â€™Â§ÃÃ†â€™Â£o da Tesouraria.";
+        $msg = "Comprovante recebido e encaminhado para validação da Tesouraria.";
         if (($dadosExtraidos['rotulo_pagamento'] ?? '') !== '') {
-            $msg .= "\n\nRÃÃ†â€™Â³tulo identificado: <b>" . htmlspecialchars((string) $dadosExtraidos['rotulo_pagamento']) . "</b>";
+            $msg .= "\n\nRótulo identificado: <b>" . htmlspecialchars((string) $dadosExtraidos['rotulo_pagamento']) . "</b>";
         }
         if ($pixValor !== '') {
             $msg .= "\nPIX da Loja: <b>{$pixTipo} {$pixValor}</b>";
@@ -1670,7 +1670,7 @@ class CommandHandler
 
         $sugestao = $this->montarSugestaoParcelas($parcelas);
         if ($sugestao !== '') {
-            $msg .= "\n\nSugestÃÃ†â€™Âµes em aberto:\n" . $sugestao;
+            $msg .= "\n\nSugestões em aberto:\n" . $sugestao;
         }
 
         $msg .= "\n\nPara facilitar a baixa, envie sempre o comprovante com legenda do pagamento.";
@@ -1707,7 +1707,7 @@ class CommandHandler
         $linhas = [];
         foreach (array_slice($parcelas, 0, 3) as $parcela) {
             $valor = number_format((float) ($parcela['valor_previsto'] ?? 0), 2, ',', '.');
-            $linhas[] = 'ââââ‚¬Å¡¬Â¢ ' . (string) ($parcela['titulo'] ?? 'ObrigaÃÃ†â€™Â§ÃÃ†â€™Â£o') . ' - ' . (string) ($parcela['competencia_label'] ?? '-') . ' - R$ ' . $valor;
+            $linhas[] = '• ' . (string) ($parcela['titulo'] ?? 'Obrigação') . ' - ' . (string) ($parcela['competencia_label'] ?? '-') . ' - R$ ' . $valor;
         }
 
         return implode("\n", $linhas);
@@ -1725,22 +1725,22 @@ class CommandHandler
             return;
         }
 
-        $mensagem = "*Painel da Secretaria*\n\nSelecione uma opÃÃ†â€™Â§ÃÃ†â€™Â£o para continuar:";
+        $mensagem = "*Painel da Secretaria*\n\nSelecione uma opção para continuar:";
         $botoes = [
             [
                 ['text' => 'Secretaria Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria')]],
-                ['text' => 'SessÃÃ†â€™Â£o em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria?foco=balaustre')]],
+                ['text' => 'Sessão em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria?foco=balaustre')]],
             ],
             [
-                ['text' => 'Agendas e SessÃÃ†â€™Âµes', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria')]],
-                ['text' => 'PublicaÃÃ†â€™Â§ÃÃ†â€™Âµes', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria')]],
+                ['text' => 'Agendas e Sessões', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria')]],
+                ['text' => 'Publicações', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria')]],
             ],
         ];
 
         if ($this->isDev($fromId) || $this->obreiroHasRole($obreiro, 'veneravel')) {
             $botoes[] = [
-                ['text' => 'Painel do VenerÃÃ†â€™Â¡vel Mestre', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
-                ['text' => 'VenerÃÃ†â€™Â¡vel Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
+                ['text' => 'Painel do Venerável Mestre', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
+                ['text' => 'Venerável Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/veneravel')]],
             ];
         }
 
@@ -1763,15 +1763,15 @@ class CommandHandler
 
         $obreiro = $this->findObreiroByTelegramId((int) $fromId);
         if (!$this->isDev($fromId) && (!$obreiro || !$this->obreiroHasRole($obreiro, 'hospitaleiro', 'secretario', 'tesoureiro', 'veneravel'))) {
-            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Mestre Hospitaleiro, Secretaria, Tesouraria, VenerÃÃ†â€™Â¡vel Mestre ou Administrador.');
+            $this->telegram->sendMessage($chatId, 'Acesso restrito ao Mestre Hospitaleiro, Secretaria, Tesouraria, Venerável Mestre ou Administrador.');
             return;
         }
 
-        $mensagem = "*Painel de AssistÃÃ†â€™Âªncia*\n\nRegistre e acompanhe ocorrÃÃ†â€™Âªncias assistenciais com encaminhamento ao VenerÃÃ†â€™Â¡vel e ÃÃ†â€™Â  Tesouraria.";
+        $mensagem = "*Painel de Assistência*\n\nRegistre e acompanhe ocorrências assistenciais com encaminhamento ao Venerável e à Tesouraria.";
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => 'AssistÃÃ†â€™Âªncia em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/hospitaleiro')]],
+                    ['text' => 'Assistência em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/hospitaleiro')]],
                     ['text' => 'Hospitaleiro Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/hospitaleiro')]],
                 ],
                 [
@@ -1797,7 +1797,7 @@ class CommandHandler
                     'inline_keyboard' => [
                         [
                             ['text' => 'Secretaria Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria')]],
-                            ['text' => 'SessÃÃ†â€™Â£o em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria?foco=balaustre')]],
+                            ['text' => 'Sessão em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/secretaria?foco=balaustre')]],
                         ],
                         [
                             ['text' => 'Voltar', 'callback_data' => 'secretaria_menu'],

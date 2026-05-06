@@ -95,8 +95,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <label class="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
                         <input type="checkbox" name="permitir_emprestimo_cruzado" value="1" class="mt-1" <?= $redePermiteEmprestimo ? 'checked' : '' ?>>
                         <span>
-                            <span class="block text-sm font-semibold text-gray-900 dark:text-white">Permitir solicitaÃ§Ã£o interloja</span>
-                            <span class="block text-xs text-gray-500">Outra loja pode solicitar emprÃ©stimo; a biblioteca decide o atendimento.</span>
+                            <span class="block text-sm font-semibold text-gray-900 dark:text-white">Permitir solicitação interloja</span>
+                            <span class="block text-xs text-gray-500">Outra loja pode solicitar empréstimo; a biblioteca decide o atendimento.</span>
                         </span>
                     </label>
                 </div>
