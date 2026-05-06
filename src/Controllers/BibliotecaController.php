@@ -8,6 +8,7 @@ use App\Models\ComentarioBiblioteca;
 use App\Models\Emprestimo;
 use App\Models\EmprestimoInterloja;
 use App\Models\ReacaoBiblioteca;
+use App\Services\LivroMetadataService;
 
 class BibliotecaController
 {
@@ -46,8 +47,28 @@ class BibliotecaController
         $bibliotecaPermissions = $this->resolverPermissoes();
         $catalogScope = $scope;
         $bibliotecaRedeHabilitada = $redeHabilitada;
+        $bibliotecaRedeConfig = $redeConfig;
         $bibliotecaLojasRede = $lojasRede;
         require_once __DIR__ . '/../Views/biblioteca/index.php';
+    }
+
+    public function configurarRede(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /biblioteca');
+            exit;
+        }
+
+        $compartilharAcervo = ($_POST['compartilhar_acervo'] ?? '') === '1';
+        $permitirEmprestimoCruzado = ($_POST['permitir_emprestimo_cruzado'] ?? '') === '1';
+        $ok = (new BibliotecaLojaConfig())->salvarDaLojaAtual($compartilharAcervo, $permitirEmprestimoCruzado);
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Configuracao da rede de bibliotecas atualizada.'
+            : 'Nao foi possivel salvar a configuracao da rede de bibliotecas.';
+
+        header('Location: /biblioteca');
+        exit;
     }
 
     public function adicionar(): void
@@ -65,7 +86,7 @@ class BibliotecaController
                 'capa_url' => trim((string) ($_POST['capa_url'] ?? '')),
                 'grau_recomendado' => trim((string) ($_POST['grau_recomendado'] ?? 'Livre')),
                 'nota_instrucao' => trim((string) ($_POST['nota_instrucao'] ?? '')),
-                'curador_id' => $_SESSION['usuario_id'] ?? null,
+                'curador_id' => $this->currentUserIdOrNull(),
             ];
             $ok = $this->acervoModel->adicionar($dados);
             header('Location: /biblioteca' . ($ok ? '?sucesso=1' : '?erro=1'));
@@ -74,14 +95,106 @@ class BibliotecaController
         require_once __DIR__ . '/../Views/biblioteca/adicionar.php';
     }
 
+    public function buscarIsbn(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        $isbn = trim((string) ($_GET['isbn'] ?? ''));
+        if ($isbn === '') {
+            http_response_code(422);
+            echo json_encode(['ok' => false, 'erro' => 'Informe o ISBN.']);
+            return;
+        }
+
+        $metadata = (new LivroMetadataService())->buscarPorIsbn($isbn);
+        if (!$metadata) {
+            http_response_code(404);
+            echo json_encode(['ok' => false, 'erro' => 'ISBN nao encontrado.']);
+            return;
+        }
+
+        echo json_encode(['ok' => true, 'dados' => $metadata], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function importar(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /biblioteca/adicionar');
+            exit;
+        }
+
+        $arquivo = $_FILES['arquivo_acervo'] ?? null;
+        if (!is_array($arquivo) || (int) ($arquivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            $_SESSION['mensagem_erro'] = 'Envie um arquivo CSV para importar.';
+            header('Location: /biblioteca/adicionar');
+            exit;
+        }
+
+        $handle = fopen((string) ($arquivo['tmp_name'] ?? ''), 'rb');
+        if (!$handle) {
+            $_SESSION['mensagem_erro'] = 'Nao foi possivel ler o arquivo enviado.';
+            header('Location: /biblioteca/adicionar');
+            exit;
+        }
+
+        $primeiraLinha = fgets($handle);
+        $delimitador = substr_count((string) $primeiraLinha, ';') > substr_count((string) $primeiraLinha, ',') ? ';' : ',';
+        $header = str_getcsv((string) $primeiraLinha, $delimitador);
+        if (!is_array($header)) {
+            fclose($handle);
+            $_SESSION['mensagem_erro'] = 'CSV sem cabecalho valido.';
+            header('Location: /biblioteca/adicionar');
+            exit;
+        }
+
+        $normalizar = static function (string $valor): string {
+            $valor = strtolower(trim($valor));
+            $valor = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $valor) ?: $valor;
+            return preg_replace('/[^a-z0-9]+/', '_', $valor) ?? '';
+        };
+        $chaves = array_map(static fn($coluna): string => $normalizar((string) $coluna), $header);
+
+        $importados = 0;
+        $ignorados = 0;
+        while (($linha = fgetcsv($handle, 0, $delimitador)) !== false) {
+            $row = [];
+            foreach ($chaves as $idx => $chave) {
+                $row[$chave] = trim((string) ($linha[$idx] ?? ''));
+            }
+
+            $dados = [
+                'titulo' => $row['titulo'] ?? $row['title'] ?? '',
+                'autor' => $row['autor'] ?? $row['author'] ?? '',
+                'isbn' => $row['isbn'] ?? '',
+                'resumo' => $row['resumo'] ?? $row['descricao'] ?? '',
+                'tipo' => $row['tipo'] ?? 'Livro Fisico',
+                'quantidade_disponivel' => $row['quantidade'] ?? $row['quantidade_disponivel'] ?? 1,
+                'grau_recomendado' => $row['grau_recomendado'] ?? $row['grau'] ?? 'Livre',
+                'nota_instrucao' => $row['nota_instrucao'] ?? $row['observacao'] ?? '',
+                'capa_url' => $row['capa_url'] ?? '',
+                'curador_id' => $this->currentUserIdOrNull(),
+            ];
+
+            if ($this->acervoModel->adicionar($dados)) {
+                $importados++;
+            } else {
+                $ignorados++;
+            }
+        }
+        fclose($handle);
+
+        $_SESSION['mensagem_sucesso'] = sprintf('Importacao concluida: %d livro(s) importado(s), %d linha(s) ignorada(s).', $importados, $ignorados);
+        header('Location: /biblioteca');
+        exit;
+    }
+
     public function classificar(): void
     {
         $livroId = (int) ($_POST['livro_id'] ?? 0);
         $grau = (string) ($_POST['grau_recomendado'] ?? 'Livre');
         $nota = (string) ($_POST['nota_instrucao'] ?? '');
-        $curadorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $curadorId = $this->currentUserIdOrNull();
 
-        if ($livroId > 0 && $curadorId !== '') {
+        if ($livroId > 0) {
             $this->acervoModel->atualizarClassificacao($livroId, $grau, $nota, $curadorId);
         }
         header('Location: /biblioteca');
@@ -108,7 +221,7 @@ class BibliotecaController
                 'capa_url' => trim((string) ($_POST['capa_url'] ?? '')),
                 'grau_recomendado' => trim((string) ($_POST['grau_recomendado'] ?? 'Livre')),
                 'nota_instrucao' => trim((string) ($_POST['nota_instrucao'] ?? '')),
-                'curador_id' => $_SESSION['usuario_id'] ?? null,
+                'curador_id' => $this->currentUserIdOrNull(),
             ];
             $ok = $this->acervoModel->atualizar($id, $dados);
             header('Location: /biblioteca' . ($ok ? '?editado=1' : '?erro=1'));
@@ -222,13 +335,34 @@ class BibliotecaController
             exit;
         }
         $emprestimos = $this->emprestimoModel->listarPorObreiro($obreiroId);
+        $pedidosInterloja = (new EmprestimoInterloja())->listarPorObreiroDaLojaAtual($obreiroId);
         require_once __DIR__ . '/../Views/biblioteca/meus_emprestimos.php';
     }
 
     public function emprestimos(): void
     {
         $emprestimos = $this->emprestimoModel->listarPendentes();
+        $pedidosInterloja = (new EmprestimoInterloja())->listarRecebidasDaLojaAtual();
         require_once __DIR__ . '/../Views/biblioteca/emprestimos.php';
+    }
+
+    public function decidirInterloja(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /biblioteca/emprestimos');
+            exit;
+        }
+
+        $pedidoId = (int) ($_POST['pedido_id'] ?? 0);
+        $decisao = trim((string) ($_POST['decisao'] ?? ''));
+        $ok = $pedidoId > 0 && (new EmprestimoInterloja())->decidir($pedidoId, $decisao, $this->currentUserIdOrNull());
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Pedido interloja atualizado.'
+            : 'Nao foi possivel atualizar o pedido interloja.';
+
+        header('Location: /biblioteca/emprestimos');
+        exit;
     }
 
     public function devolver(int $id): void
@@ -419,6 +553,13 @@ class BibliotecaController
 
     private function resolverPermissoes(): array
     {
+        if (!empty($_SESSION['is_system_admin']) || !empty($_SESSION['force_system_admin']) || (string) ($_SESSION['usuario_id'] ?? '') === '0') {
+            return [
+                'biblioteca.manage' => true,
+                'biblioteca.classificar' => true,
+            ];
+        }
+
         $permissionMap = $GLOBALS['gestor_loja_permission_map'] ?? null;
         if (!$permissionMap instanceof \App\Core\Authorization\PermissionMap) {
             return [];
@@ -435,5 +576,11 @@ class BibliotecaController
             'biblioteca.manage' => $all || in_array('biblioteca.manage', $permissions, true),
             'biblioteca.classificar' => $all || in_array('biblioteca.classificar', $permissions, true),
         ];
+    }
+
+    private function currentUserIdOrNull(): ?string
+    {
+        $id = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        return preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id) === 1 ? $id : null;
     }
 }

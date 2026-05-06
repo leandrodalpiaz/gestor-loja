@@ -91,14 +91,14 @@ if ($shouldNormalizeHtmlOutput) {
         ]);
     });
 }
-$openTestAccess = filter_var($_ENV["APP_TEST_OPEN_ACCESS"] ?? "false", FILTER_VALIDATE_BOOL);
+$openTestAccess = Env::bool("APP_TEST_OPEN_ACCESS", false);
 // Segurança: por padrão NÃO liberar todos os painéis. Em produção isso deve ser false.
 // Use APP_TEST_ALLOW_ALL_PANELS=true apenas para ambiente de teste.
-$allowAllPanels = filter_var($_ENV["APP_TEST_ALLOW_ALL_PANELS"] ?? "false", FILTER_VALIDATE_BOOL);
-$testLogin = trim((string) ($_ENV["APP_TEST_DEFAULT_LOGIN"] ?? ""));
-$testPassword = (string) ($_ENV["APP_TEST_DEFAULT_PASSWORD"] ?? "");
-$testRole = trim((string) ($_ENV["APP_TEST_DEFAULT_ROLE"] ?? "tesoureiro"));
-$testDisplayName = trim((string) ($_ENV["APP_TEST_DEFAULT_NAME"] ?? "Modo Teste"));
+$allowAllPanels = Env::bool("APP_TEST_ALLOW_ALL_PANELS", false);
+$testLogin = trim((string) Env::get("APP_TEST_DEFAULT_LOGIN", ""));
+$testPassword = (string) Env::get("APP_TEST_DEFAULT_PASSWORD", "");
+$testRole = trim((string) Env::get("APP_TEST_DEFAULT_ROLE", "tesoureiro"));
+$testDisplayName = trim((string) Env::get("APP_TEST_DEFAULT_NAME", "Modo Teste"));
 $isTestSession = isset($_SESSION["usuario_id"]) && (string) $_SESSION["usuario_id"] === '0';
 $bypassRoleChecks = $openTestAccess || $isTestSession || ($allowAllPanels && isset($_SESSION["usuario_logado"]));
 $appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? '')));

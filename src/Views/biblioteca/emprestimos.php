@@ -13,6 +13,10 @@ function getStatusInfo(string $status): array
         'atrasado' => ['label' => 'Atrasado', 'badge' => 'badge-status danger'],
         'pendente' => ['label' => 'Pendente', 'badge' => 'badge-status warning'],
         'devolvido' => ['label' => 'Devolvido', 'badge' => 'badge-status success'],
+        'solicitado' => ['label' => 'Solicitado', 'badge' => 'badge-status warning'],
+        'aprovado' => ['label' => 'Aprovado', 'badge' => 'badge-status success'],
+        'negado' => ['label' => 'Negado', 'badge' => 'badge-status danger'],
+        'cancelado' => ['label' => 'Cancelado', 'badge' => 'badge-status neutral'],
         default => ['label' => ucfirst($status), 'badge' => 'badge-status neutral'],
     };
 }
@@ -30,6 +34,20 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
 ?>
 
+<?php if (!empty($_SESSION['mensagem_sucesso'])): ?>
+    <div class="alert alert-success mb-6">
+        <?= htmlspecialchars((string) $_SESSION['mensagem_sucesso']) ?>
+    </div>
+    <?php unset($_SESSION['mensagem_sucesso']); ?>
+<?php endif; ?>
+
+<?php if (!empty($_SESSION['mensagem_erro'])): ?>
+    <div class="alert alert-danger mb-6">
+        <?= htmlspecialchars((string) $_SESSION['mensagem_erro']) ?>
+    </div>
+    <?php unset($_SESSION['mensagem_erro']); ?>
+<?php endif; ?>
+
 <div class="mb-6 flex justify-end">
     <a href="/biblioteca" class="btn btn-secondary">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
@@ -38,6 +56,61 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 </div>
 
 <!-- Lista de Empréstimos (Cards para Mobile) -->
+<div class="card mb-6">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Pedidos interloja recebidos</h2>
+            <p class="card-description">SolicitaÃ§Ãµes de outras lojas para livros compartilhados por esta biblioteca.</p>
+        </div>
+    </div>
+    <div class="card-body">
+        <?php if (empty($pedidosInterloja ?? [])): ?>
+            <div class="card-placeholder">Nenhum pedido interloja recebido.</div>
+        <?php else: ?>
+            <div class="space-y-3">
+                <?php foreach ($pedidosInterloja as $pedido): ?>
+                    <?php $statusInfo = getStatusInfo((string) ($pedido['status'] ?? '-')); ?>
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="font-bold text-gray-900 dark:text-white"><?= htmlspecialchars((string) ($pedido['titulo'] ?? '-')) ?></h3>
+                                    <span class="<?= $statusInfo['badge'] ?>"><?= $statusInfo['label'] ?></span>
+                                </div>
+                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                    <?= htmlspecialchars((string) ($pedido['obreiro_nome'] ?? '-')) ?>
+                                    - Loja <?= htmlspecialchars((string) ($pedido['loja_destino_numero'] ?? '')) ?>
+                                    <?= htmlspecialchars((string) ($pedido['loja_destino_sigla'] ?? '')) ?>
+                                    <?= htmlspecialchars((string) ($pedido['loja_destino_nome'] ?? '')) ?>
+                                </p>
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Codigo <?= htmlspecialchars((string) ($pedido['codigo_acervo'] ?? '')) ?>
+                                    - Disponivel: <?= (int) ($pedido['quantidade_disponivel'] ?? 0) ?>
+                                    - Pedido em <?= $formatDate((string) ($pedido['solicitado_em'] ?? '')) ?>
+                                </p>
+                            </div>
+                            <?php if (($pedido['status'] ?? '') === 'solicitado'): ?>
+                                <div class="flex flex-wrap gap-2 md:justify-end">
+                                    <form action="/biblioteca/interloja/decidir" method="POST">
+                                        <input type="hidden" name="pedido_id" value="<?= (int) ($pedido['id'] ?? 0) ?>">
+                                        <input type="hidden" name="decisao" value="aprovado">
+                                        <button type="submit" class="btn btn-primary">Aprovar</button>
+                                    </form>
+                                    <form action="/biblioteca/interloja/decidir" method="POST">
+                                        <input type="hidden" name="pedido_id" value="<?= (int) ($pedido['id'] ?? 0) ?>">
+                                        <input type="hidden" name="decisao" value="negado">
+                                        <button type="submit" class="btn btn-secondary">Negar</button>
+                                    </form>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
 <div class="space-y-4 md:hidden">
     <?php if (empty($emprestimos)): ?>
         <div class="card-placeholder">Nenhum empréstimo pendente ou atrasado.</div>

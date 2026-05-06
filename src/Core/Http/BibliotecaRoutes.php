@@ -61,6 +61,21 @@ class BibliotecaRoutes
                 $controller->adicionar();
                 return true;
 
+            case '/biblioteca/configurar-rede':
+                ModuleGuards::requireBibliotecaManageAccess($openTestAccess, $session, $authorizer);
+                $controller->configurarRede();
+                return true;
+
+            case '/biblioteca/isbn':
+                ModuleGuards::requireBibliotecaManageAccess($openTestAccess, $session, $authorizer);
+                $controller->buscarIsbn();
+                return true;
+
+            case '/biblioteca/importar':
+                ModuleGuards::requireBibliotecaManageAccess($openTestAccess, $session, $authorizer);
+                $controller->importar();
+                return true;
+
             case '/biblioteca/classificar':
                 WebGuards::requireLogin($openTestAccess, $session);
                 WebGuards::requirePermission(
@@ -86,6 +101,11 @@ class BibliotecaRoutes
             case '/biblioteca/emprestimos':
                 ModuleGuards::requireBibliotecaManageAccess($openTestAccess, $session, $authorizer);
                 $controller->emprestimos();
+                return true;
+
+            case '/biblioteca/interloja/decidir':
+                ModuleGuards::requireBibliotecaManageAccess($openTestAccess, $session, $authorizer);
+                $controller->decidirInterloja();
                 return true;
 
             case '/biblioteca/devolver':

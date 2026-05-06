@@ -27,6 +27,8 @@ class PermissionMap
             'mestre_harmonia.manage',
             'vigilancia.primeiro.manage',
             'vigilancia.segundo.manage',
+            'biblioteca.manage',
+            'biblioteca.self',
             'biblioteca.classificar',
         ],
         'secretario' => [
@@ -178,9 +180,13 @@ class PermissionMap
         '/biblioteca/comentar' => 'biblioteca.self',
         '/biblioteca/reagir' => 'biblioteca.self',
         '/biblioteca/adicionar' => 'biblioteca.manage',
+        '/biblioteca/configurar-rede' => 'biblioteca.manage',
+        '/biblioteca/isbn' => 'biblioteca.manage',
+        '/biblioteca/importar' => 'biblioteca.manage',
         '/biblioteca/editar' => 'biblioteca.manage',
         '/biblioteca/excluir' => 'biblioteca.manage',
         '/biblioteca/emprestimos' => 'biblioteca.manage',
+        '/biblioteca/interloja/decidir' => 'biblioteca.manage',
         '/biblioteca/devolver' => 'biblioteca.manage',
         '/biblioteca/classificar' => 'biblioteca.classificar',
     ];

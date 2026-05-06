@@ -36,12 +36,12 @@ $normalizeRole = static function (?string $cargo): string {
     $cargo = preg_replace('/[^a-z0-9_]+/', '', $cargo) ?? '';
     return $cargo;
 };
-$openTestAccess = filter_var($_ENV['APP_TEST_OPEN_ACCESS'] ?? 'false', FILTER_VALIDATE_BOOL);
+$openTestAccess = Env::bool('APP_TEST_OPEN_ACCESS', false);
 $currentUser = new CurrentUser($_SESSION, $normalizeRole);
 $permissionMap = new PermissionMap();
 $authorizer = new Authorizer($currentUser, $permissionMap, $openTestAccess);
 
-$authorized = isset($_SESSION['usuario_logado']) && $authorizer->hasPermission('biblioteca.manage');
+$authorized = $openTestAccess || (isset($_SESSION['usuario_logado']) && $authorizer->hasPermission('biblioteca.manage'));
 
 if (!$authorized) {
     $initData = trim((string) ($payload['initData'] ?? $payload['init_data'] ?? ''));

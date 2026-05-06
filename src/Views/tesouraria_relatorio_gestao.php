@@ -34,13 +34,43 @@ $appShellEyebrow = 'Tesouraria';
 $appShellTitle = 'Relatório Financeiro da Gestão';
 $appShellDescription = 'Consolidação por período para prestação de contas e análise administrativa.';
 $appShellActiveHref = '/tesouraria/relatorio-gestao';
+$appShellActions = [
+    ['label' => 'Painel', 'href' => '/dashboard'],
+];
 
 require __DIR__ . '/partials/erp_shell_open.php';
 
 ?>
 
+<style>
+@media print {
+    @page { size: A4; margin: 14mm; }
+    body { background: #fff !important; color: #111827 !important; }
+    aside, nav, .no-print, button, form, .sticky { display: none !important; }
+    main { margin: 0 !important; padding: 0 !important; max-width: none !important; }
+    .card, .card-metric, .card-metric-simple {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #d1d5db !important;
+        background: #fff !important;
+    }
+    .print-header { display: block !important; }
+}
+.print-header { display: none; }
+</style>
+
+<section class="print-header mb-6 border-b border-gray-300 pb-4">
+    <h1 class="text-xl font-bold">Relatório Financeiro da Gestão</h1>
+    <p class="text-sm">Período: <?= htmlspecialchars((string) ($relatorio['periodo']['inicio_label'] ?? '')) ?> a <?= htmlspecialchars((string) ($relatorio['periodo']['fim_label'] ?? '')) ?></p>
+    <p class="text-xs">Emitido em <?= date('d/m/Y H:i') ?></p>
+</section>
+
+<div class="no-print mb-4 flex justify-end">
+    <button type="button" class="btn btn-primary" onclick="window.print()">Imprimir A4</button>
+</div>
+
 <!-- Filtros -->
-<div class="card mb-6">
+<div class="card mb-6 no-print">
     <form method="GET" action="/tesouraria/relatorio-gestao" class="card-body">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>

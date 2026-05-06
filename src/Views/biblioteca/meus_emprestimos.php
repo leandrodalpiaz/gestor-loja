@@ -13,6 +13,10 @@ function getStatusInfo(string $status): array
         'atrasado' => ['label' => 'Atrasado', 'badge' => 'badge-status danger'],
         'pendente' => ['label' => 'Pendente', 'badge' => 'badge-status warning'],
         'devolvido' => ['label' => 'Devolvido', 'badge' => 'badge-status success'],
+        'solicitado' => ['label' => 'Solicitado', 'badge' => 'badge-status warning'],
+        'aprovado' => ['label' => 'Aprovado', 'badge' => 'badge-status success'],
+        'negado' => ['label' => 'Negado', 'badge' => 'badge-status danger'],
+        'cancelado' => ['label' => 'Cancelado', 'badge' => 'badge-status neutral'],
         default => ['label' => ucfirst($status), 'badge' => 'badge-status neutral'],
     };
 }
@@ -38,6 +42,43 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 </div>
 
 <!-- Lista de Empréstimos (Cards para Mobile) -->
+<div class="card mb-6">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Solicitacoes interloja</h2>
+            <p class="card-description">Pedidos feitos para acervos compartilhados por outras lojas.</p>
+        </div>
+    </div>
+    <div class="card-body">
+        <?php if (empty($pedidosInterloja ?? [])): ?>
+            <div class="card-placeholder">Nenhuma solicitacao interloja registrada.</div>
+        <?php else: ?>
+            <div class="space-y-3">
+                <?php foreach ($pedidosInterloja as $pedido): ?>
+                    <?php $statusInfo = getStatusInfo(strtolower(trim((string) ($pedido['status'] ?? '')))); ?>
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                            <div>
+                                <h3 class="font-bold text-gray-900 dark:text-white"><?= htmlspecialchars((string) ($pedido['titulo'] ?? '-')) ?></h3>
+                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                    Loja <?= htmlspecialchars((string) ($pedido['loja_origem_numero'] ?? '')) ?>
+                                    <?= htmlspecialchars((string) ($pedido['loja_origem_sigla'] ?? '')) ?>
+                                    <?= htmlspecialchars((string) ($pedido['loja_origem_nome'] ?? '')) ?>
+                                </p>
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Codigo <?= htmlspecialchars((string) ($pedido['codigo_acervo'] ?? '')) ?>
+                                    - Solicitado em <?= $formatDate((string) ($pedido['solicitado_em'] ?? '')) ?>
+                                </p>
+                            </div>
+                            <span class="<?= $statusInfo['badge'] ?>"><?= $statusInfo['label'] ?></span>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
 <div class="space-y-4 md:hidden">
     <?php if (empty($emprestimos)): ?>
         <div class="card-placeholder">Nenhum empréstimo registrado em seu nome.</div>

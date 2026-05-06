@@ -253,7 +253,7 @@ class Acervo
         ]);
     }
 
-    public function atualizarClassificacao($id, $grau, $nota, $curadorId): bool
+    public function atualizarClassificacao($id, $grau, $nota, ?string $curadorId): bool
     {
         $stmt = $this->db->prepare(
             "UPDATE acervo

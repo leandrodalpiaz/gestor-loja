@@ -100,6 +100,11 @@ class PainelRoutes
                 (new ChancelerSessaoController())->registrarPresenca();
                 return true;
 
+            case '/chanceler/sessao/visitante':
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                (new ChancelerSessaoController())->registrarVisitante();
+                return true;
+
             case '/pwa/sessoes':
                 WebGuards::requireLogin($openTestAccess, $session);
                 if (!FeatureFlags::pwaSessoes()) {

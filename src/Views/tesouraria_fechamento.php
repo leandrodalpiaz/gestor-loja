@@ -16,12 +16,42 @@ $appShellEyebrow = 'Tesouraria';
 $appShellTitle = 'Fechamento Mensal';
 $appShellDescription = 'Conferência final do período com leitura clara de saldos e movimentos.';
 $appShellActiveHref = '/tesouraria/fechamento';
+$appShellActions = [
+    ['label' => 'Painel', 'href' => '/dashboard'],
+];
 
 require __DIR__ . '/partials/erp_shell_open.php';
 
 ?>
 
-<?php require __DIR__ . '/partials/erp_tesouraria_topbar.php'; ?>
+<style>
+@media print {
+    @page { size: A4; margin: 14mm; }
+    body { background: #fff !important; color: #111827 !important; }
+    aside, nav, .no-print, button, form, .sticky { display: none !important; }
+    main { margin: 0 !important; padding: 0 !important; max-width: none !important; }
+    .card, .card-metric {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #d1d5db !important;
+        background: #fff !important;
+    }
+    .print-header { display: block !important; }
+}
+.print-header { display: none; }
+</style>
+
+<section class="print-header mb-6 border-b border-gray-300 pb-4">
+    <h1 class="text-xl font-bold">Fechamento Mensal da Tesouraria</h1>
+    <p class="text-sm">Competência selecionada no painel financeiro.</p>
+    <p class="text-xs">Emitido em <?= date('d/m/Y H:i') ?></p>
+</section>
+
+<div class="no-print mb-4 flex justify-end">
+    <button type="button" class="btn btn-primary" onclick="window.print()">Imprimir A4</button>
+</div>
+
+<div class="no-print"><?php require __DIR__ . '/partials/erp_tesouraria_topbar.php'; ?></div>
 
 <div class="space-y-8">
     <!-- Filtros -->

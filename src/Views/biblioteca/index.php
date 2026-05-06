@@ -11,6 +11,9 @@ $usuarioNome = $_SESSION['usuario_nome'] ?? 'Irmão';
 $bibliotecaPermissions = is_array($bibliotecaPermissions ?? null) ? $bibliotecaPermissions : [];
 $podeGerenciar = !empty($bibliotecaPermissions['biblioteca.manage']);
 $podeClassificar = !empty($bibliotecaPermissions['biblioteca.classificar']);
+$redeConfigTela = is_array($bibliotecaRedeConfig ?? null) ? $bibliotecaRedeConfig : [];
+$redeCompartilha = !empty($redeConfigTela['compartilhar_acervo']);
+$redePermiteEmprestimo = !empty($redeConfigTela['permitir_emprestimo_cruzado']);
 
 $formatGrau = static fn($grau) => $grau ? ucfirst(strtolower($grau)) : 'Livre';
 
@@ -31,6 +34,20 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
 
 <!-- Cabeçalho com Ações e Filtros -->
+<?php if (!empty($_SESSION['mensagem_sucesso'])): ?>
+    <div class="alert alert-success mb-6">
+        <?= htmlspecialchars((string) $_SESSION['mensagem_sucesso']) ?>
+    </div>
+    <?php unset($_SESSION['mensagem_sucesso']); ?>
+<?php endif; ?>
+
+<?php if (!empty($_SESSION['mensagem_erro'])): ?>
+    <div class="alert alert-danger mb-6">
+        <?= htmlspecialchars((string) $_SESSION['mensagem_erro']) ?>
+    </div>
+    <?php unset($_SESSION['mensagem_erro']); ?>
+<?php endif; ?>
+
 <div class="card mb-6">
     <div class="card-body">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -56,6 +73,40 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         </div>
     </div>
 </div>
+
+<?php if ($podeGerenciar): ?>
+    <div class="card mb-6">
+        <form action="/biblioteca/configurar-rede" method="POST" class="card-body">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">Rede de bibliotecas</h2>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        Controle se o acervo desta loja aparece para outras lojas que adotarem o Gestor.
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label class="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                        <input type="checkbox" name="compartilhar_acervo" value="1" class="mt-1" <?= $redeCompartilha ? 'checked' : '' ?>>
+                        <span>
+                            <span class="block text-sm font-semibold text-gray-900 dark:text-white">Compartilhar acervo</span>
+                            <span class="block text-xs text-gray-500">Livros desta loja aparecem na aba Rede.</span>
+                        </span>
+                    </label>
+                    <label class="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                        <input type="checkbox" name="permitir_emprestimo_cruzado" value="1" class="mt-1" <?= $redePermiteEmprestimo ? 'checked' : '' ?>>
+                        <span>
+                            <span class="block text-sm font-semibold text-gray-900 dark:text-white">Permitir solicitaÃ§Ã£o interloja</span>
+                            <span class="block text-xs text-gray-500">Outra loja pode solicitar emprÃ©stimo; a biblioteca decide o atendimento.</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="btn btn-primary">Salvar rede</button>
+                </div>
+            </div>
+        </form>
+    </div>
+<?php endif; ?>
 
 <div class="alert alert-info mb-6">
     O grau recomendado é uma sugestão formativa para orientar a leitura. Ele não bloqueia nem restringe automaticamente o acesso ao livro.

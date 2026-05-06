@@ -65,6 +65,37 @@ class BibliotecaLojaConfig
         ];
     }
 
+    public function salvarDaLojaAtual(bool $compartilharAcervo, bool $permitirEmprestimoCruzado): bool
+    {
+        if (!$this->tabelaExiste()) {
+            return false;
+        }
+
+        $lojaId = $this->buscarLojaAtualId();
+        $sql = "INSERT INTO biblioteca_loja_config (
+                    loja_id,
+                    compartilhar_acervo,
+                    permitir_emprestimo_cruzado,
+                    atualizado_em
+                ) VALUES (
+                    :loja_id,
+                    :compartilhar_acervo,
+                    :permitir_emprestimo_cruzado,
+                    CURRENT_TIMESTAMP
+                )
+                ON CONFLICT (loja_id) DO UPDATE SET
+                    compartilhar_acervo = EXCLUDED.compartilhar_acervo,
+                    permitir_emprestimo_cruzado = EXCLUDED.permitir_emprestimo_cruzado,
+                    atualizado_em = CURRENT_TIMESTAMP";
+
+        $stmt = $this->db->prepare($sql);
+        return (bool) $stmt->execute([
+            'loja_id' => $lojaId,
+            'compartilhar_acervo' => $compartilharAcervo,
+            'permitir_emprestimo_cruzado' => $compartilharAcervo && $permitirEmprestimoCruzado,
+        ]);
+    }
+
     public function listarLojasCompartilhadas(): array
     {
         if (!$this->tabelaExiste()) {

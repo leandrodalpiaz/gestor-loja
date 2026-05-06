@@ -35,10 +35,10 @@ class ChancelerSessaoController
             $sessaoSelecionada = $sessaoModel->findById($sessaoSelecionadaId);
         }
         if (!$sessaoSelecionada && $dataSessaoInformada !== '') {
-            $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+            $autorId = $this->currentUserUuidOrNull();
             $sessaoSelecionada = $sessaoModel->obterOuCriarControleChancelerPorData(
                 $dataSessaoInformada,
-                ($autorId !== '' && $autorId !== '0') ? $autorId : null
+                $autorId
             );
             if ($sessaoSelecionada && !empty($sessaoSelecionada['id'])) {
                 $vistos = [];
@@ -91,8 +91,7 @@ class ChancelerSessaoController
         $obreiroId = trim((string) ($_POST['obreiro_id'] ?? ''));
         $presente = isset($_POST['presente']) && $_POST['presente'] === '1';
         $observacao = trim((string) ($_POST['observacao'] ?? ''));
-        $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-        $autorId = ($autorId !== '' && $autorId !== '0') ? $autorId : '';
+        $autorId = $this->currentUserUuidOrNull();
 
         if ($sessaoId <= 0 || $obreiroId === '') {
             $_SESSION['mensagem_erro'] = 'Dados insuficientes para registrar a presença.';
@@ -104,7 +103,7 @@ class ChancelerSessaoController
             $sessaoId,
             $obreiroId,
             $presente,
-            $autorId !== '' ? $autorId : null,
+            $autorId,
             $observacao !== '' ? $observacao : null
         );
 
@@ -125,8 +124,14 @@ class ChancelerSessaoController
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         $nome = trim((string) ($_POST['nome'] ?? ''));
-        $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-        $autorId = ($autorId !== '' && $autorId !== '0') ? $autorId : '';
+        $autorId = $this->currentUserUuidOrNull();
+        if ($sessaoId <= 0) {
+            $sessaoControle = (new Sessao())->obterOuCriarControleChancelerPorData(
+                (new \DateTimeImmutable('today', new \DateTimeZone('America/Sao_Paulo')))->format('Y-m-d'),
+                $autorId
+            );
+            $sessaoId = (int) ($sessaoControle['id'] ?? 0);
+        }
 
         if ($sessaoId <= 0 || $nome === '') {
             $_SESSION['mensagem_erro'] = 'Informe a sessão e o nome do visitante.';
@@ -134,7 +139,7 @@ class ChancelerSessaoController
             exit;
         }
 
-        $ok = (new Balaustre())->adicionarVisitanteSessao($sessaoId, $_POST, $autorId !== '' ? $autorId : null);
+        $ok = (new Balaustre())->adicionarVisitanteSessao($sessaoId, $_POST, $autorId);
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Visitante registrado para abastecer Balaústre e Orador.'
             : 'Não foi possível registrar o visitante.';
@@ -230,5 +235,11 @@ class ChancelerSessaoController
             'agape_modalidade' => (string) ($sessao['agape_modalidade'] ?? 'nao_havera'),
             'agape_modelo_financeiro' => (string) ($sessao['agape_modelo_financeiro'] ?? 'oficial_loja'),
         ];
+    }
+
+    private function currentUserUuidOrNull(): ?string
+    {
+        $id = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        return preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id) === 1 ? $id : null;
     }
 }
