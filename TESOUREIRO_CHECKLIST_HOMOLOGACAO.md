@@ -11,19 +11,27 @@
 ### Setup
 
 - [ ] Aplicar migração 035 no banco:
-  ```bash
+  `````bash
+  psql -h localhost -U usuario -d gestor_loja < database/migrations/035_tesoureiro_auditoria.sql
+  ````bash
   psql -h localhost -U usuario -d gestor_loja < database/migrations/035_tesoureiro_auditoria.sql
   ```
   **Verificar**: Campos `quitado_por`, `quitado_em`, `cancelado_por`, `cancelado_em`, `motivo_cancelamento` existem
 
 - [ ] Verificar se as tabelas estão criadas:
-  ```sql
+  `````sql
+  SELECT * FROM obrigacao_financeira_parcelas LIMIT 1;  -- must have quitado_por, quitado_em
+  SELECT * FROM comprovantes_pix LIMIT 1;               -- must have cancelado_por, cancelado_em, motivo_cancelamento
+  ````sql
   SELECT * FROM obrigacao_financeira_parcelas LIMIT 1;  -- must have quitado_por, quitado_em
   SELECT * FROM comprovantes_pix LIMIT 1;               -- must have cancelado_por, cancelado_em, motivo_cancelamento
   ```
 
 - [ ] Limpar dados de teste anteriores:
-  ```sql
+  `````sql
+  DELETE FROM comprovantes_pix WHERE criado_em < NOW() - INTERVAL '1 month';
+  DELETE FROM lancamentos_financeiros WHERE data_lancamento < NOW() - INTERVAL '1 month';
+  ````sql
   DELETE FROM comprovantes_pix WHERE criado_em < NOW() - INTERVAL '1 month';
   DELETE FROM lancamentos_financeiros WHERE data_lancamento < NOW() - INTERVAL '1 month';
   ```
@@ -57,7 +65,16 @@
 - ✅ Auditoria registra: "Validado por [usuário] em [data]"
 
 **Verificar no BD**:
-```sql
+`````sql
+SELECT status, quitado_por, quitado_em FROM obrigacao_financeira_parcelas WHERE id = <id>;  
+-- Esperado: quitada, uuid, timestamp
+
+SELECT status FROM comprovantes_pix WHERE id = <id>;  
+-- Esperado: aprovado
+
+SELECT status FROM mensalidades_status WHERE obreiro_id = <id> AND mes_ref = 10 AND ano_ref = 2025;  
+-- Esperado: pago
+````sql
 SELECT status, quitado_por, quitado_em FROM obrigacao_financeira_parcelas WHERE id = <id>;  
 -- Esperado: quitada, uuid, timestamp
 
@@ -93,7 +110,16 @@ SELECT status FROM mensalidades_status WHERE obreiro_id = <id> AND mes_ref = 10 
 - ✅ Saldo de caixa aumentou em R$ 150
 
 **Verificar no BD**:
-```sql
+`````sql
+SELECT status FROM comprovantes_pix WHERE id = <id>;  
+-- Esperado: aprovado
+
+SELECT tipo, valor, mes_ref, ano_ref FROM lancamentos_financeiros WHERE id = <id>;  
+-- Esperado: entrada, 150.00, 11, 2025
+
+SELECT status FROM mensalidades_status WHERE obreiro_id = <id> AND mes_ref = 11 AND ano_ref = 2025;  
+-- Esperado: pago
+````sql
 SELECT status FROM comprovantes_pix WHERE id = <id>;  
 -- Esperado: aprovado
 
@@ -127,7 +153,13 @@ SELECT status FROM mensalidades_status WHERE obreiro_id = <id> AND mes_ref = 11 
 - ✅ Botão "Rejeitar" não aparece mais
 
 **Verificar no BD**:
-```sql
+`````sql
+SELECT status, motivo_rejeicao FROM comprovantes_pix WHERE id = <id>;  
+-- Esperado: rejeitado, "Comprovante ilegível"
+
+SELECT COUNT(*) FROM lancamentos_financeiros WHERE comprovante_id = <id>;  
+-- Esperado: 0 (nenhum)
+````sql
 SELECT status, motivo_rejeicao FROM comprovantes_pix WHERE id = <id>;  
 -- Esperado: rejeitado, "Comprovante ilegível"
 
@@ -159,7 +191,16 @@ SELECT COUNT(*) FROM lancamentos_financeiros WHERE comprovante_id = <id>;
 - ✅ Nenhum lançamento afetado (não havia)
 
 **Verificar no BD**:
-```sql
+`````sql
+SELECT status, quitado_por, quitado_em FROM obrigacao_financeira_parcelas WHERE id = 456;  
+-- Esperado: pendente, NULL, NULL
+
+SELECT status, cancelado_por, motivo_cancelamento FROM comprovantes_pix WHERE id = <id>;  
+-- Esperado: cancelado, uuid, "PIX falso detectado"
+
+SELECT status FROM mensalidades_status WHERE obreiro_id = <id> AND mes_ref = 10 AND ano_ref = 2025;  
+-- Esperado: pendente (foi revertido!)
+````sql
 SELECT status, quitado_por, quitado_em FROM obrigacao_financeira_parcelas WHERE id = 456;  
 -- Esperado: pendente, NULL, NULL
 
@@ -194,7 +235,13 @@ SELECT status FROM mensalidades_status WHERE obreiro_id = <id> AND mes_ref = 10 
 - ✅ Auditoria registra: "Cancelado por [usuário] - Valor errado"
 
 **Verificar no BD**:
-```sql
+`````sql
+SELECT COUNT(*) FROM lancamentos_financeiros WHERE comprovante_id = <id>;  
+-- Esperado: 0 (foi deletado)
+
+SELECT status FROM mensalidades_status WHERE obreiro_id = <id> AND mes_ref = 11 AND ano_ref = 2025;  
+-- Esperado: pendente (foi revertido!)
+````sql
 SELECT COUNT(*) FROM lancamentos_financeiros WHERE comprovante_id = <id>;  
 -- Esperado: 0 (foi deletado)
 
@@ -224,7 +271,10 @@ SELECT status FROM mensalidades_status WHERE obreiro_id = <id> AND mes_ref = 11 
 
 **Verificar**:
 - Linha de código garante: 
-  ```php
+  `````php
+  $diasAtras = (int) ((time() - strtotime($comprovante['criado_em'])) / 86400);
+  if ($diasAtras > 30) { JsonResponse::send(['ok' => false, 'erro' => '...']); }
+  ````php
   $diasAtras = (int) ((time() - strtotime($comprovante['criado_em'])) / 86400);
   if ($diasAtras > 30) { JsonResponse::send(['ok' => false, 'erro' => '...']); }
   ```
@@ -254,7 +304,13 @@ SELECT status FROM mensalidades_status WHERE obreiro_id = <id> AND mes_ref = 11 
 - ✅ Relatório imutável
 
 **Verificar no BD**:
-```sql
+`````sql
+SELECT COUNT(*) FROM fechamento_mensal WHERE mes_ref = 10 AND ano_ref = 2025;  
+-- Esperado: 1
+
+SELECT status FROM comprovantes_pix WHERE mes_ref_validado = 10 AND ano_ref_validado = 2025;  
+-- Esperado: todos "aprovado", nenhum "cancelado"
+````sql
 SELECT COUNT(*) FROM fechamento_mensal WHERE mes_ref = 10 AND ano_ref = 2025;  
 -- Esperado: 1
 

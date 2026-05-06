@@ -77,7 +77,39 @@
 - `/tesouraria/obrigacoes`
 
 **O que fazer**:
-```html
+`````html
+<!-- Top bar (em todas as telas) -->
+<div class="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+  <div>
+    <label>Competência:</label>
+    <select id="competencia" onchange="recarregar()">
+      <option value="<?php echo $mes . '-' . $ano; ?>">
+        <?php echo $meses[$mes] . ' ' . $ano; ?>
+      </option>
+      <!-- últimos 3 meses -->
+    </select>
+  </div>
+  
+  <!-- Badges -->
+  <div class="flex gap-2">
+    <?php if ($pixPendentes > 0): ?>
+      <span class="badge badge-warning"><?php echo $pixPendentes; ?> PIX pendentes</span>
+    <?php endif; ?>
+    
+    <?php if ($obreirosIrregulares > 0): ?>
+      <span class="badge badge-danger"><?php echo $obreirosIrregulares; ?> irregulares</span>
+    <?php endif; ?>
+    
+    <?php if ($parcelasAtrasadas > 0): ?>
+      <span class="badge badge-error"><?php echo $parcelasAtrasadas; ?> atrasadas</span>
+    <?php endif; ?>
+    
+    <?php if ($fechamentoAberto): ?>
+      <span class="badge badge-info">Fechamento aberto</span>
+    <?php endif; ?>
+  </div>
+</div>
+````html
 <!-- Top bar (em todas as telas) -->
 <div class="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
   <div>
@@ -112,7 +144,14 @@
 ```
 
 **Botões sticky (floating)**:
-```html
+`````html
+<!-- No final da tela -->
+<div class="fixed bottom-4 right-4 flex flex-col gap-2">
+  <button class="btn btn-primary">Novo lançamento</button>
+  <button class="btn btn-accent">Validar PIX</button>
+  <button class="btn btn-warning">Quitar parcela</button>
+</div>
+````html
 <!-- No final da tela -->
 <div class="fixed bottom-4 right-4 flex flex-col gap-2">
   <button class="btn btn-primary">Novo lançamento</button>
@@ -126,7 +165,13 @@
 **4 Tarefas no Miniapp** (em cards progressivos):
 
 #### a) Validar PIX (5 cards)
-```
+`````
+Card 1: Selecionar comprovante (lista pendentes)
+Card 2: Confirmar valor R$ 250.00 | Competência OUT/2025
+Card 3: Escolher categoria (dropdown)
+Card 4: Vincular parcela (se houver em aberto) (dropdown)
+Card 5: Aprovar (botão)
+````
 Card 1: Selecionar comprovante (lista pendentes)
 Card 2: Confirmar valor R$ 250.00 | Competência OUT/2025
 Card 3: Escolher categoria (dropdown)
@@ -139,7 +184,12 @@ Card 5: Aprovar (botão)
 - PUT /api/miniapp/tesouraria/comprovantes/{id}/aprovar (com category_id + parcela_id) (update)
 
 #### b) Registrar Movimento (4 cards)
-```
+`````
+Card 1: Entrada ou Saída (radio buttons)
+Card 2: Valor + Data
+Card 3: Categoria (dropdown GET /api/tesouraria/categorias?tipo=entrada/saida)
+Card 4: Competência (mês/ano)
+````
 Card 1: Entrada ou Saída (radio buttons)
 Card 2: Valor + Data
 Card 3: Categoria (dropdown GET /api/tesouraria/categorias?tipo=entrada/saida)
@@ -150,7 +200,11 @@ Card 4: Competência (mês/ano)
 - POST /api/miniapp/tesouraria/lancamento/criar (novo endpoint)
 
 #### c) Quitar Parcela (3 cards)
-```
+`````
+Card 1: Buscar obreiro (input com autocomplete)
+Card 2: Listar parcelas em aberto (GET /api/tesouraria/obrigacoes-abertas?obreiro_id=X)
+Card 3: Quitar (valor/data/categoria/descrição)
+````
 Card 1: Buscar obreiro (input com autocomplete)
 Card 2: Listar parcelas em aberto (GET /api/tesouraria/obrigacoes-abertas?obreiro_id=X)
 Card 3: Quitar (valor/data/categoria/descrição)
@@ -161,7 +215,10 @@ Card 3: Quitar (valor/data/categoria/descrição)
 - POST /api/miniapp/tesouraria/parcela/quitar (novo endpoint)
 
 #### d) Regularidade (2 cards)
-```
+`````
+Card 1: Listar obreiros irregulares
+Card 2: Marcar como regular (botão)
+````
 Card 1: Listar obreiros irregulares
 Card 2: Marcar como regular (botão)
 ```
@@ -171,7 +228,11 @@ Card 2: Marcar como regular (botão)
 ### 9. Bot Deep Links
 Mapear botões do bot para abrir miniapp com contexto:
 
-```
+`````
+Bot "Validar PIX" → /miniapp/tesouraria?tab=validar-pix&status=pendentes
+Bot "Registrar movimento" → /miniapp/tesouraria?action=novo-lancamento
+Bot "Quitar parcela" → /miniapp/tesouraria?action=quitar-parcela
+````
 Bot "Validar PIX" → /miniapp/tesouraria?tab=validar-pix&status=pendentes
 Bot "Registrar movimento" → /miniapp/tesouraria?action=novo-lancamento
 Bot "Quitar parcela" → /miniapp/tesouraria?action=quitar-parcela
@@ -183,7 +244,9 @@ Bot "Quitar parcela" → /miniapp/tesouraria?action=quitar-parcela
 
 ### Semana 1: Validação
 1. Execute a migração 035 no banco:
-   ```bash
+   `````bash
+   psql -h localhost -U user -d db -f database/migrations/035_tesoureiro_auditoria.sql
+   ````bash
    psql -h localhost -U user -d db -f database/migrations/035_tesoureiro_auditoria.sql
    ```
 

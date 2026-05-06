@@ -8,7 +8,7 @@ Regras:
 - reduzir carga cognitiva
 - usar cards no mobile
 - evitar tabelas largas
-- destacar status e acao principal
+- destacar status e ação principal
 - manter compatibilidade com Tailwind e PHP server-rendered
 
 Entregaveis:

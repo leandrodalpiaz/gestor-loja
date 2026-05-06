@@ -1,59 +1,60 @@
-# Dicionario Mestre de Linguagem - Gestor Loja
+# Dicionário Mestre de Linguagem - Gestor Loja
 
-Este dicionario define a padronizacao de linguagem visivel ao usuario no sistema.
+Este dicionário define a padronização de linguagem visível ao usuário no sistema.
 
 ## Regras gerais
 
-- Aplicar apenas em textos visiveis (labels, titulos, mensagens e botoes).
-- Nao alterar rotas, nomes internos, tabelas, colunas, variaveis, enums tecnicos ou chaves de status.
-- Manter termos tecnicos quando forem de infraestrutura: `webhook`, `long polling`, `API`, `healthcheck`, `miniapp`, `URL`, `login tecnico`, `token`, `Chat ID`.
+- Aplicar apenas em textos visíveis (labels, títulos, mensagens e botões).
+- Não alterar rotas, nomes internos, tabelas, colunas, variáveis, enums técnicos ou chaves de status.
+- Manter termos técnicos quando forem de infraestrutura: `webhook`, `long polling`, `API`, `healthcheck`, `miniapp`, `URL`, `login técnico`, `token`, `Chat ID`.
 
-## Substituicoes contextuais
+## Substituições contextuais
 
-| Termo base | Termo em macones | Regra de contexto | Exemplo |
+| Termo base | Termo em maçones | Regra de contexto | Exemplo |
 |---|---|---|---|
-| Usuario / Usuarios | Obreiro / Obreiros | Administrativo e sistema | "Adicionar obreiro" |
-| Membro / Membros | Irmao / Irmaos | Fraterno e convivio | "Mensagem aos irmaos" |
-| Membro / Membros | Obreiro / Obreiros | Administrativo e gestao | "Registro de obreiros" |
-| Dashboard | Painel | Navegacao e titulos | "Voltar ao Painel" |
-| Dashboard geral | Painel da Loja | Visao principal | "Painel da Loja" |
-| Financeiro | Tesouraria | Modulo e textos de gestao | "Relatorio da Tesouraria" |
-| Pagamento / Pagamentos | Contribuicao / Contribuicoes | Cobranca e baixa | "Contribuicao confirmada" |
-| Mensalidade / Mensalidades | Contribuicao mensal / Contribuicoes mensais | Obrigações recorrentes | "Gerar contribuicoes mensais" |
-| Caixa | Caixa da Loja | Fluxo de caixa visivel | "Movimentacao do Caixa da Loja" |
-| Receita | Entrada | Relatorios e lancamentos | "Entradas do periodo" |
-| Despesa | Saida | Relatorios e lancamentos | "Saidas do periodo" |
-| Evento / Eventos | Atividade / Atividades | Acoes gerais | "Atividades da semana" |
-| Reuniao | Sessao | Reuniao formal da Loja | "Proxima Sessao" |
-| Presenca | Frequencia | Confirmacao e controle | "Confirmar frequencia" |
-| Configuracoes | Ajustes da Loja | Tela administrativa | "Ajustes da Loja" |
-| Dados da empresa | Dados da Loja | Identificacao institucional | "Dados da Loja" |
-| Cidade / Localidade | Oriente | Somente quando localidade masonica | "Oriente: Porto Alegre" |
-| Relatorio financeiro | Relatorio da Tesouraria | Titulos de relatorio | "Relatorio da Tesouraria" |
-| Relatorio de usuarios | Relatorio de obreiros | Titulos de relatorio | "Relatorio de obreiros" |
+| Usuário / Usuários | Obreiro / Obreiros | Administrativo e sistema | "Adicionar obreiro" |
+| Membro / Membros | Irmão / Irmãos | Fraterno e convívio | "Mensagem aos irmãos" |
+| Membro / Membros | Obreiro / Obreiros | Administrativo e gestão | "Registro de obreiros" |
+| Dashboard | Painel | Navegação e títulos | "Voltar ao Painel" |
+| Dashboard geral | Painel da Loja | Visão principal | "Painel da Loja" |
+| Financeiro | Tesouraria | Módulo e textos de gestão | "Relatório da Tesouraria" |
+| Pagamento / Pagamentos | Contribuição / Contribuições | Cobrança e baixa | "Contribuição confirmada" |
+| Mensalidade / Mensalidades | Contribuição mensal / Contribuições mensais | Obrigações recorrentes | "Gerar contribuições mensais" |
+| Caixa | Caixa da Loja | Fluxo de caixa visível | "Movimentação do Caixa da Loja" |
+| Receita | Entrada | Relatórios e lançamentos | "Entradas do período" |
+| Despesa | Saída | Relatórios e lançamentos | "Saídas do período" |
+| Evento / Eventos | Atividade / Atividades | Ações gerais | "Atividades da semana" |
+| Reunião | Sessão | Reunião formal da Loja | "Próxima Sessão" |
+| Presença | Frequência | Confirmação e controle | "Confirmar frequência" |
+| Configurações | Ajustes da Loja | Tela administrativa | "Ajustes da Loja" |
+| Dados da empresa | Dados da Loja | Identificação institucional | "Dados da Loja" |
+| Cidade / Localidade | Oriente | Somente quando localidade maçônica | "Oriente: Porto Alegre" |
+| Relatório financeiro | Relatório da Tesouraria | Títulos de relatório | "Relatório da Tesouraria" |
+| Relatório de usuários | Relatório de obreiros | Títulos de relatório | "Relatório de obreiros" |
 | Cadastro | Registro | Fluxo cadastral administrativo | "Registro atualizado" |
-| Criar usuario | Registrar obreiro | CTA | "Registrar obreiro" |
-| Adicionar usuario | Adicionar obreiro | CTA | "Adicionar obreiro" |
-| Editar usuario | Atualizar obreiro | CTA | "Atualizar obreiro" |
-| Excluir usuario | Remover do quadro | CTA | "Remover do quadro" |
-| Ativo | Regular | Estado visual | "Situacao: Regular" |
-| Inativo | Afastado | Estado visual | "Situacao: Afastado" |
-| Bloqueado | Irregular | Estado visual | "Situacao: Irregular" |
-| Pendente | Em aberto / Em analise | Contexto de cobranca ou validacao | "Contribuicao em aberto" |
-| Membros, Usuários, Clientes | Quadro de Obreiros | Telas de listagem e gestão de pessoas | "Quadro de Obreiros" |
+| Criar usuário | Registrar obreiro | CTA | "Registrar obreiro" |
+| Adicionar usuário | Adicionar obreiro | CTA | "Adicionar obreiro" |
+| Editar usuário | Atualizar obreiro | CTA | "Atualizar obreiro" |
+| Excluir usuário | Remover do quadro | CTA | "Remover do quadro" |
+| Ativo | Regular | Estado visual | "Situação: Regular" |
+| Inativo | Afastado | Estado visual | "Situação: Afastado" |
+| Bloqueado | Irregular | Estado visual | "Situação: Irregular" |
+| Pendente | Em aberto / Em análise | Contexto de cobrança ou validação | "Contribuição em aberto" |
+| Membros, Usuários, Clientes | Quadro de Obreiros | Telas de listagem e gerenciamento de pessoas | "Quadro de Obreiros" |
 | Financeiro, Pagamentos | Tesouraria | Módulo do cargo e navegação | "Tesouraria" |
 | Usuário logado / Sucesso | Seja bem-vindo, Irmão | Apenas após o login | "Seja bem-vindo, Irmão" |
 | Oriente (como saudação) | Oriente (como cidade) | Restrito a campos de endereço geográfico | "Oriente: São Paulo" |
+
 ## Termos vetados fora de contexto ritual
 
-Evitar, salvo contexto ritualistico real:
+Evitar, salvo contexto ritualístico real:
 
-- iniciacao
+- iniciação
 - palavra de passe
-- escrutinio
-- grau (como substituicao automatica)
+- escrutínio
+- grau (como substituição automática)
 - ritual
-- Camara do Meio
+- Câmara do Meio
 - sinais
 - toques
 - trabalhos abertos/fechados

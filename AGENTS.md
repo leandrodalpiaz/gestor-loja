@@ -21,20 +21,20 @@
 
 ## Padrão de listas administrativas
 - Em telas mobile, preferir cards empilhados para listas operacionais.
-- Em md+ pode ser mantida tabela se ela ja estiver estavel.
+- Em md+ pode ser mantida tabela se ela já estiver estável.
 - Evitar overflow horizontal como solucao principal.
 - Status deve aparecer como badge visual forte.
-- A acao principal deve ficar visivel no card sem exigir expansao.
+- A ação principal deve ficar visível no card sem exigir expansao.
 
 ## Regras de arquitetura
 - Preservar PHP server-rendered.
-- Usar Tailwind ja existente.
-- Nao introduzir framework front-end novo.
-- Nao quebrar rotas existentes.
-- Nao assumir lista fechada de cargos.
-- Nao converter IDs de obreiro para int; o banco real usa UUID.
+- Usar Tailwind já existente.
+- Não introduzir framework front-end novo.
+- Não quebrar rotas existentes.
+- Não assumir lista fechada de cargos.
+- Não converter IDs de obreiro para int; o banco real usa UUID.
 
 ## Fluxo esperado
 - Para tarefas complexas, planeje antes de implementar.
 - Antes de editar, liste arquivos impactados.
-- Depois de editar, resuma o diff e proponha validacao local.
+- Depois de editar, resuma o diff e proponha validação local.

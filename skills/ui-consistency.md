@@ -6,13 +6,13 @@ Padronizar visualmente telas do ERP.
 Verificar:
 - cabecalhos
 - espacamento
-- botoes
+- botões
 - badges
 - cards
-- secoes de formulario
+- seções de formulario
 - navegacao mobile
 
 Entregaveis:
 - inconsistencias
-- padrao proposto
+- padrão proposto
 - patch incremental

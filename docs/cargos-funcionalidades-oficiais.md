@@ -39,7 +39,7 @@ Fontes:
 - `POST /api/miniapp/veneravel/sessao/(publicar|cancelar|reabrir|realizar)`
 - `POST /api/miniapp/veneravel/balaustre/(abrir-votacao|encerrar-votacao)`
 
-**Planejado (docs/plano-conclusao...)**
+**Planejado (docs/plano-conclusão...)**
 - OK: painel, publicar/cancelar/reabrir/realizar, abrir/encerrar votação.
 
 **Riscos/guardrails**

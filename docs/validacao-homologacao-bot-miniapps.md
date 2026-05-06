@@ -1,8 +1,8 @@
-# Validacao e Homologacao - Bot e Miniapps
+# Validação e Homologacao - Bot e Miniapps
 
-Objetivo: executar um roteiro unico de validacao antes de deploy para evitar multiplos deploys.
+Objetivo: executar um roteiro único de validação antes de deploy para evitar multiplos deploys.
 
-## 1. Pre-check tecnico
+## 1. Pre-check técnico
 
 1. APP_URL correto e publico (HTTPS)
 2. webhook ativo em APP_URL/webhook.php
@@ -15,7 +15,7 @@ Para cada cargo, validar:
 
 - abre menu no bot
 - abre miniapp
-- executa acao principal
+- executa ação principal
 - volta ao menu sem travar
 
 ### Admin
@@ -30,9 +30,9 @@ Para cada cargo, validar:
 ### Secretario
 
 - Secretaria Mobile
-- Sessao em Loja
-- salvar rascunho de balaustre
-- finalizar balaustre
+- Sessão em Loja
+- salvar rascunho de balaústre
+- finalizar balaústre
 
 ### Tesoureiro
 
@@ -78,16 +78,16 @@ Para cada cargo, validar:
 
 - Em Loja
 
-## 3. Checklist de permissao
+## 3. Checklist de permissão
 
 Para cada teste de cargo:
 
-- usuario autorizado: deve abrir
-- usuario nao autorizado: deve receber mensagem de acesso restrito
+- usuário autorizado: deve abrir
+- usuário não autorizado: deve receber mensagem de acesso restrito
 
 ## 4. Checklist de logs
 
-No periodo do teste, verificar:
+No período do teste, verificar:
 
 - webhook processado com sucesso
 - ausencia de 403 indevido
@@ -97,23 +97,23 @@ No periodo do teste, verificar:
 
 Aprovado quando:
 
-- 100% dos modulos por cargo abrem no Telegram
+- 100% dos módulos por cargo abrem no Telegram
 - fluxos principais executam sem erro funcional
-- sem erro recorrente de permissao indevida
+- sem erro recorrente de permissão indevida
 - sem erro recorrente de banco no webhook
 
-## 6. Registro minimo de evidencia
+## 6. Registro mínimo de evidencia
 
 Salvar para cada cargo:
 
-- horario
-- botao usado
+- horário
+- botão usado
 - resultado
 - print opcional
 
 Formato sugerido:
 
 - cargo: Secretario
-- acao: Sessao em Loja > Salvar rascunho do balaustre
+- ação: Sessão em Loja > Salvar rascunho do balaústre
 - resultado: OK
-- horario: 2026-04-27 20:10
+- horário: 2026-04-27 20:10

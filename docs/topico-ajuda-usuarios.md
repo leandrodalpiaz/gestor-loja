@@ -1,28 +1,28 @@
-# Topico de Ajuda para Usuarios (Homologacao)
+# Topico de Ajuda para Usuários (Homologacao)
 
-Este guia e para usuarios convidados para teste em ambiente real.
-Objetivo: reduzir atrito, padronizar uso e facilitar manutencao.
+Este guia e para usuários convidados para teste em ambiente real.
+Objetivo: reduzir atrito, padronizar uso e facilitar manutenção.
 
 ## 1) Primeiro acesso (Telegram)
 
 1. Abra o chat oficial do bot da Loja.
 2. Envie /start.
 3. Aguarde o menu principal.
-4. Se algum botao nao abrir, envie /painel e teste novamente.
+4. Se algum botão não abrir, envie /painel e teste novamente.
 
 ## 2) Boas praticas de teste
 
-1. Teste uma acao por vez.
+1. Teste uma ação por vez.
 2. Aguarde a resposta visual antes de novo clique.
 3. Evite clique repetido em sequencia rapida.
-4. Em erro, registre horario e acao executada.
+4. Em erro, registre horário e ação executada.
 
 ## 3) Fluxos por cargo
 
 ### Admin
 
 1. Abrir menu Admin.
-2. Validar acesso aos modulos por cargo.
+2. Validar acesso aos módulos por cargo.
 
 ### Chanceler
 
@@ -33,9 +33,9 @@ Objetivo: reduzir atrito, padronizar uso e facilitar manutencao.
 ### Secretario
 
 1. Abrir Secretaria Mobile.
-2. Abrir Sessao em Loja.
-3. Salvar rascunho do balaustre durante a sessao.
-4. Finalizar balaustre quando estiver pronto.
+2. Abrir Sessão em Loja.
+3. Salvar rascunho do balaústre durante a sessão.
+4. Finalizar balaústre quando estiver pronto.
 
 ### Tesoureiro
 
@@ -85,27 +85,27 @@ Objetivo: reduzir atrito, padronizar uso e facilitar manutencao.
 Sempre informar:
 
 1. cargo e tela usada
-2. acao executada (botao/comando)
+2. ação executada (botão/comando)
 3. resultado esperado
 4. resultado obtido
-5. horario aproximado
+5. horário aproximado
 
 Exemplo:
 
 - cargo: Orador
-- acao: cliquei em Em Loja
+- ação: cliquei em Em Loja
 - esperado: abrir painel do orador
 - obtido: acesso restrito
-- horario: 27/04/2026 19:50
+- horário: 27/04/2026 19:50
 
 ## 5) Dicas rapidas
 
 1. Menu travado: envie /painel.
-2. Miniapp nao abriu: feche e toque novamente.
-3. Erro persistente: informe horario e botao usado.
+2. Miniapp não abriu: feche e toque novamente.
+3. Erro persistente: informe horário e botão usado.
 
 ## 6) Suporte interno
 
 1. Acionar Secretaria da Loja.
 2. Enviar relato no formato do item 4.
-3. Em homologacao, anexar print quando possivel.
+3. Em homologacao, anexar print quando possível.

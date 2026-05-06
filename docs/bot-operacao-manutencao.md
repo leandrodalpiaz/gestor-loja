@@ -1,6 +1,6 @@
-# Bot Telegram - Operacao e Manutencao
+# Bot Telegram - Operação e Manutenção
 
-Objetivo: documentar arquitetura funcional, cargos, menus, permissao e pontos de manutencao do bot e miniapps.
+Objetivo: documentar arquitetura funcional, cargos, menus, permissão e pontos de manutenção do bot e miniapps.
 
 ## 1. Escopo
 
@@ -8,15 +8,15 @@ Este documento cobre:
 
 - fluxo de acesso no bot
 - descricao dos paineis por cargo
-- regra de permissao no bot e miniapps
-- padrao de links WebApp para evitar erro de permissao
-- checklist tecnico de manutencao
+- regra de permissão no bot e miniapps
+- padrão de links WebApp para evitar erro de permissão
+- checklist técnico de manutenção
 
 ## 2. Regra principal de acesso
 
-O bot deve abrir miniapps por rotas /miniapp/* sempre que o usuario vier do Telegram.
+O bot deve abrir miniapps por rotas /miniapp/* sempre que o usuário vier do Telegram.
 
-Nao usar rota web administrativa direta em botao WebApp, por exemplo:
+Não usar rota web administrativa direta em botão WebApp, por exemplo:
 
 - evitar /orador
 - evitar /secretaria
@@ -30,13 +30,13 @@ Preferir:
 - /miniapp/veneravel
 - /miniapp/hospitaleiro
 
-Motivo: rota web depende de sessao tradicional e pode retornar 403 no Telegram WebView.
+Motivo: rota web depende de sessão tradicional e pode retornar 403 no Telegram WebView.
 
 ## 3. Menus por cargo (resumo operacional)
 
 ### Admin
 
-- painel consolidado com acesso a todos os modulos
+- painel consolidado com acesso a todos os módulos
 - usa callbacks admin_* para abrir menus especificos
 
 ### Chanceler
@@ -47,13 +47,13 @@ Motivo: rota web depende de sessao tradicional e pode retornar 403 no Telegram W
 ### Secretario
 
 - Secretaria Mobile: /miniapp/secretaria
-- Sessao em Loja: /miniapp/secretaria?foco=balaustre
-- fluxo de balaustre com salvar rascunho e finalizar depois
+- Sessão em Loja: /miniapp/secretaria?foco=balaústre
+- fluxo de balaústre com salvar rascunho e finalizar depois
 
 ### Tesoureiro
 
 - Tesouraria Mobile: /miniapp/tesouraria
-- atalho para caixa, comprovantes, regularidade, fechamento e relatorio
+- atalho para caixa, comprovantes, regularidade, fechamento e relatório
 
 ### Bibliotecario
 
@@ -90,12 +90,12 @@ Motivo: rota web depende de sessao tradicional e pode retornar 403 no Telegram W
 
 - Em Loja: /miniapp/hospitaleiro
 
-## 4. Fontes de permissao
+## 4. Fontes de permissão
 
 ### Bot
 
 - arquivo principal: src/Bot/CommandHandler.php
-- validacao por role e permission map
+- validação por role e permission map
 
 ### Miniapp page
 
@@ -110,21 +110,21 @@ Motivo: rota web depende de sessao tradicional e pode retornar 403 no Telegram W
 
 - definicoes em src/Core/Authorization/PermissionMap.php
 
-## 5. Criterios de manutencao obrigatorios
+## 5. Criterios de manutenção obrigatórios
 
-1. Qualquer novo botao WebApp deve ser validado com usuario real no Telegram.
+1. Qualquer novo botão WebApp deve ser validado com usuário real no Telegram.
 2. Se for painel de cargo, primeiro procurar rota /miniapp/* equivalente.
-3. Nao duplicar regra de permissao em front-end sem guard no backend.
-4. Mensagem de acesso negado deve ser clara e sem detalhe tecnico.
-5. Evitar regressao de UX: acao principal visivel e botao Voltar em todos os paineis de cargo.
+3. Não duplicar regra de permissão em front-end sem guard no backend.
+4. Mensagem de acesso negado deve ser clara e sem detalhe técnico.
+5. Evitar regressao de UX: ação principal visível e botão Voltar em todos os paineis de cargo.
 
-## 6. Padrao de callback
+## 6. Padrão de callback
 
 Padrão recomendado:
 
-- menu principal: exibir modulos por permissao
+- menu principal: exibir módulos por permissão
 - callback admin_*: abrir submenu do cargo
-- callback *_menu: reabrir painel do modulo
+- callback *_menu: reabrir painel do módulo
 
 Exemplos:
 
@@ -139,9 +139,9 @@ Exemplos:
 
 Causa comum:
 
-- botao apontando para rota web com sessao tradicional
+- botão apontando para rota web com sessão tradicional
 
-Acao:
+Ação:
 
 - trocar para rota /miniapp/*
 
@@ -151,33 +151,33 @@ Causa comum:
 
 - pooler em modo transacional invalidando prepared statements entre requests
 
-Acao:
+Ação:
 
-- PDO::ATTR_EMULATE_PREPARES = true na conexao
+- PDO::ATTR_EMULATE_PREPARES = true na conexão
 
 ## 8. Roteiro rapido de diagnostico
 
-1. reproduzir no Telegram com horario anotado
+1. reproduzir no Telegram com horário anotado
 2. conferir log do webhook
-3. validar rota do botao WebApp gerado
+3. validar rota do botão WebApp gerado
 4. validar guard em MiniappPageRoutes e MiniappApiRoutes
-5. validar role/cargo do usuario testado
+5. validar role/cargo do usuário testado
 
-## 9. Dono funcional por modulo
+## 9. Dono funcional por módulo
 
 - Chancelaria: Chanceler
 - Secretaria: Secretario
 - Tesouraria: Tesoureiro
 - Biblioteca: Bibliotecario
 - Vigilancia: 1o e 2o Vigilantes
-- Operacao ritual complementar: Orador, Mestre de Banquetes, Mestre de Harmonia
+- Operação ritual complementar: Orador, Mestre de Banquetes, Mestre de Harmonia
 - Governanca: Veneravel e Admin
 
 ## 10. Definicao de pronto para deploy
 
 So considerar pronto quando:
 
-- botao abre no Telegram
+- botão abre no Telegram
 - miniapp carrega dashboard
 - API responde sem 401/403 indevido
 - fluxo principal do cargo executa do inicio ao fim

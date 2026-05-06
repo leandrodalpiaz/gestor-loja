@@ -6,13 +6,13 @@ Fluxo recomendado para continuar desenvolvimento local (web + Telegram) sem perd
 
 De um duplo clique no arquivo `iniciar_local.bat` na raiz do projeto.
 
-Importante: a URL publica muda a cada execucao. Depois de iniciar, envie `/painel` novamente no bot para receber botoes com a URL atual.
+Importante: a URL publica muda a cada execucao. Depois de iniciar, envie `/painel` novamente no bot para receber botões com a URL atual.
 
 Ele executa automaticamente:
 
 - servidor web local
 - bot Telegram em long polling (sem Render, sem webhook publico)
-- tunnel HTTPS para abrir botoes Mini App
+- tunnel HTTPS para abrir botões Mini App
 - healthcheck + checklist local
 
 ## 1) Requisitos
@@ -22,33 +22,43 @@ Ele executa automaticamente:
 
 ## 2) Subir o sistema web local
 
-```powershell
+`````powershell
+docker compose up --build -d app
+````powershell
 docker compose up --build -d app
 ```
 
-Aplicacao web:
+Aplicação web:
 
-```text
+`````text
+http://localhost:8000
+````text
 http://localhost:8000
 ```
 
 Healthcheck:
 
-```text
+`````text
+http://localhost:8000/health
+````text
 http://localhost:8000/health
 ```
 
 ### Opcional: rodar sem Docker
 
-Se voce ainda nao instalou Docker, rode com PHP local:
+Se voce ainda não instalou Docker, rode com PHP local:
 
-```powershell
+`````powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_local.ps1 -Port 8000
+````powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\run_local.ps1 -Port 8000
 ```
 
-Para abrir painel sem login na sessao local:
+Para abrir painel sem login na sessão local:
 
-```powershell
+`````powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_local.ps1 -Port 8000 -OpenAccess
+````powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\run_local.ps1 -Port 8000 -OpenAccess
 ```
 
@@ -58,7 +68,10 @@ O Telegram exige URL publica HTTPS para webhook e Mini App.
 
 Suba o tunnel:
 
-```powershell
+`````powershell
+docker compose --profile tunnel up -d tunnel
+docker compose logs -f tunnel
+````powershell
 docker compose --profile tunnel up -d tunnel
 docker compose logs -f tunnel
 ```
@@ -67,7 +80,9 @@ Copie a URL publica exibida no log (exemplo: `https://abc123.trycloudflare.com`)
 
 Atualize `APP_URL` no `.env` com essa URL e reinicie o app:
 
-```powershell
+`````powershell
+docker compose up -d app
+````powershell
 docker compose up -d app
 ```
 
@@ -77,14 +92,19 @@ docker compose up -d app
 
 Use quando quiser testar Mini App e webhook HTTP.
 
-```powershell
+`````powershell
+php scripts/telegram_webhook.php set
+php scripts/telegram_webhook.php status
+````powershell
 php scripts/telegram_webhook.php set
 php scripts/telegram_webhook.php status
 ```
 
 Se quiser definir manualmente:
 
-```powershell
+`````powershell
+php scripts/telegram_webhook.php set https://SUA-URL/webhook.php
+````powershell
 php scripts/telegram_webhook.php set https://SUA-URL/webhook.php
 ```
 
@@ -92,12 +112,15 @@ php scripts/telegram_webhook.php set https://SUA-URL/webhook.php
 
 Use quando quiser continuar o desenvolvimento do bot local sem URL publica.
 
-```powershell
+`````powershell
+php scripts/telegram_webhook.php delete
+php scripts/telegram_polling.php
+````powershell
 php scripts/telegram_webhook.php delete
 php scripts/telegram_polling.php
 ```
 
-Observacao: nesse modo os comandos do bot funcionam, mas os botoes `web_app` (Mini App) continuam exigindo `APP_URL` publica HTTPS.
+Observação: nesse modo os comandos do bot funcionam, mas os botões `web_app` (Mini App) continuam exigindo `APP_URL` publica HTTPS.
 
 ## 5) Ciclo de desenvolvimento diario
 
@@ -120,71 +143,91 @@ Roda verificacoes de:
 
 Comando:
 
-```powershell
+`````powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\checklist_local.ps1 -Port 8090
+````powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\checklist_local.ps1 -Port 8090
 ```
 
 Se quiser forcar modo aberto para validar views sem login durante homologacao:
 
-```powershell
+`````powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\checklist_local.ps1 -Port 8090 -OpenAccess
+````powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\checklist_local.ps1 -Port 8090 -OpenAccess
 ```
 
 Se quiser rodar sem validar Telegram externo:
 
-```powershell
+`````powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\checklist_local.ps1 -Port 8090 -SkipTelegram
+````powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\checklist_local.ps1 -Port 8090 -SkipTelegram
 ```
 
 Se estiver usando modo polling:
 
-```powershell
+`````powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\checklist_local.ps1 -Port 8090 -TelegramMode polling
+````powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\checklist_local.ps1 -Port 8090 -TelegramMode polling
 ```
 
-## 5.2) Comando unico de uso diario
+## 5.2) Comando único de uso diario
 
 Sobe o servidor local, faz healthcheck, consulta webhook e roda checklist:
 
-```powershell
+`````powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess
+````powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess
 ```
 
 Se quiser apenas executar a sequencia e encerrar (sem manter servidor aberto):
 
-```powershell
+`````powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -NoHold
+````powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -NoHold
 ```
 
 Para tirar o Render do caminho e apontar Telegram para o ambiente local:
 
-```powershell
+`````powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -WithTunnel
+````powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -WithTunnel
 ```
 
 Esse modo:
 
-- sobe tunnel publico (padrao: `localhost.run` via `ssh`)
+- sobe tunnel publico (padrão: `localhost.run` via `ssh`)
 - atualiza `APP_URL` no `.env`
 - atualiza webhook para `APP_URL/webhook.php`
 
 Se quiser apenas atualizar tunnel/webhook e encerrar em seguida:
 
-```powershell
+`````powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -WithTunnel -NoHold
+````powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -WithTunnel -NoHold
 ```
 
-Observacao: com `-NoHold`, o tunnel e encerrado no final; use sem `-NoHold` para manter Telegram ativo.
+Observação: com `-NoHold`, o tunnel e encerrado no final; use sem `-NoHold` para manter Telegram ativo.
 
 Se quiser forcar provider alternativo:
 
-```powershell
+`````powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -WithTunnel -TunnelProvider cloudflared
+````powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -WithTunnel -TunnelProvider cloudflared
 ```
 
 Para deixar o Render totalmente de lado e rodar Telegram sem webhook:
 
-```powershell
+`````powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -WithPolling
+````powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -WithPolling
 ```
 
@@ -196,28 +239,32 @@ Esse modo:
 
 Para usar menus do bot em polling e manter Mini Apps abrindo (certificado, scanner, cadastro manual):
 
-```powershell
+`````powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -WithPolling -WithTunnel -TunnelProvider cloudflared
+````powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\dev_start.ps1 -Port 8000 -ChecklistPort 8090 -OpenAccess -WithPolling -WithTunnel -TunnelProvider cloudflared
 ```
 
 Nesse caso:
 
-- tunnel fornece `APP_URL` publica HTTPS para os botoes `web_app`
+- tunnel fornece `APP_URL` publica HTTPS para os botões `web_app`
 - bot continua em polling (sem depender de webhook do Render)
 
 ## 6) Encerrar ambiente
 
-```powershell
+`````powershell
+docker compose down
+````powershell
 docker compose down
 ```
 
 ## 7) Caminho para deploy futuro
 
-O projeto ja fica alinhado para migracao:
+O projeto já fica alinhado para migração:
 
 - `Dockerfile` continua sendo a base do ambiente
 - `APP_URL` e vars de Telegram/Banco controlam comportamento por ambiente
-- deploy em Render/Fly.io/Railway/VM fica principalmente troca de infraestrutura, sem reescrever aplicacao
+- deploy em Render/Fly.io/Railway/VM fica principalmente troca de infraestrutura, sem reescrever aplicação
 
 ## 8) Referencia funcional de cargos e dashboards
 
@@ -230,26 +277,30 @@ Para regras de negócio, separação entre cargos da Loja e Administrador do Sis
 - `docs/textos-ia-assistente.md`
 - `docs/validacao-homologacao-bot-miniapps.md`
 
-## 9) Operacao em producao (Render)
+## 9) Operação em producao (Render)
 
 Para manter o bot responsivo em producao:
 
 1. Garantir webhook ativo no Telegram apontando para `APP_URL/webhook.php`.
 2. Validar `APP_URL` com HTTPS e dominio publico correto.
 3. Confirmar resposta `200` em `GET /login` e `POST /webhook.php`.
-4. Evitar cliques repetidos no mesmo botao durante carregamento.
+4. Evitar cliques repetidos no mesmo botão durante carregamento.
 
 ## PWA Icons por Loja
 
 Para gerar automaticamente `logo-192.png` e `logo-512.png` para cada loja (tenant):
 
-```powershell
+`````powershell
+python scripts/generate_pwa_icons.py
+````powershell
 python scripts/generate_pwa_icons.py
 ```
 
 Para uma loja espec?fica:
 
-```powershell
+`````powershell
+python scripts/generate_pwa_icons.py --tenant loja-teste
+````powershell
 python scripts/generate_pwa_icons.py --tenant loja-teste
 ```
 

@@ -26,7 +26,28 @@
 
 ### 📁 **Arquivos Modificados**
 
-```
+`````
+✅ src/Core/Http/TesourariaApiRoutes.php
+   ├─ 💾 Validações críticas (valor, mês, ano, categoria, parcela)
+   ├─ 💾 Transação em aprovar-comprovante
+   ├─ 💾 POST /api/tesouraria/comprovantes/{id}/cancelar (NEW)
+   ├─ 💾 Lock retroativo (não deixa cancelar se > 30 dias)
+   └─ 💾 Revert de MensalidadeStatus
+
+✅ src/Models/ObrigacaoFinanceira.php
+   └─ 💾 quitarParcela() com quitado_por + quitado_em
+
+✅ database/migrations/035_tesoureiro_auditoria.sql (NEW)
+   ├─ 💾 ALTER obrigacao_financeira_parcelas (quitado_por, quitado_em)
+   ├─ 💾 ALTER comprovantes_pix (cancelado_por, cancelado_em, motivo_cancelamento, criado_por)
+   └─ 💾 Índices para auditoria rápida
+
+✅ TESOUREIRO_HOMOLOGACAO_STATUS.md (NEW)
+   └─ 💾 Documento de status + recomendações
+
+✅ TESOUREIRO_CHECKLIST_HOMOLOGACAO.md (NEW)
+   └─ 💾 6 testes de verdade + deploy checklist
+````
 ✅ src/Core/Http/TesourariaApiRoutes.php
    ├─ 💾 Validações críticas (valor, mês, ano, categoria, parcela)
    ├─ 💾 Transação em aprovar-comprovante
@@ -81,7 +102,21 @@
 
 ## 📋 Deploy Checklist (Rápido)
 
-```bash
+`````bash
+# 1. Aplicar migração
+psql -h localhost -U usuario -d db < database/migrations/035_tesoureiro_auditoria.sql
+
+# 2. Verificar campos no BD
+SELECT * FROM comprovantes_pix LIMIT 1;  # check cancelado_por, motivo_cancelamento
+SELECT * FROM obrigacao_financeira_parcelas LIMIT 1;  # check quitado_por, quitado_em
+
+# 3. Testar em staging (usar TESOUREIRO_CHECKLIST_HOMOLOGACAO.md)
+
+# 4. Deploy em produção
+# - Pull changes: git pull origin main
+# - Restart web: systemctl restart php-fpm
+# - Verify: curl https://seu-erp.com/api/tesouraria/categorias
+````bash
 # 1. Aplicar migração
 psql -h localhost -U usuario -d db < database/migrations/035_tesoureiro_auditoria.sql
 
@@ -119,7 +154,14 @@ SELECT * FROM obrigacao_financeira_parcelas LIMIT 1;  # check quitado_por, quita
 
 1. Alertar: Tesoureiro recebe badge "❌ Inconsistência detectada"
 2. Investigar: Query no BD
-   ```sql
+   `````sql
+   SELECT o.obreiro_id, o.mes_ref, o.ano_ref, p.status, m.status
+   FROM obrigacao_financeira_parcelas p
+   JOIN obrigacoes_financeiras o ON p.obrigacao_id = o.id
+   JOIN mensalidades_status m ON o.obreiro_id = m.obreiro_id 
+     AND o.mes_ref = m.mes_ref AND o.ano_ref = m.ano_ref
+   WHERE p.status = 'pendente' AND m.status = 'pago';
+   ````sql
    SELECT o.obreiro_id, o.mes_ref, o.ano_ref, p.status, m.status
    FROM obrigacao_financeira_parcelas p
    JOIN obrigacoes_financeiras o ON p.obrigacao_id = o.id
@@ -162,7 +204,21 @@ Documentado em: [TESOUREIRO_HOMOLOGACAO_STATUS.md](TESOUREIRO_HOMOLOGACAO_STATUS
 
 ## 🚀 Status Final
 
-```
+`````
+╔════════════════════════════════════════════════════════════╗
+║  TESOUREIRO - HOMOLOGAÇÃO LIBERADA                        ║
+║                                                            ║
+║  ✅ Backend: Pronto                                        ║
+║  ✅ Migrações: Prontas                                     ║
+║  ✅ Testes: Documentados                                   ║
+║  ✅ Auditoria: Completa                                    ║
+║  ✅ Segurança: Garantida                                   ║
+║  ✅ Deploy: Checklist pronto                               ║
+║                                                            ║
+║  Risco Operacional: 🟢 BAIXO                               ║
+║  Confiança: 🟢 ALTA                                        ║
+╚════════════════════════════════════════════════════════════╝
+````
 ╔════════════════════════════════════════════════════════════╗
 ║  TESOUREIRO - HOMOLOGAÇÃO LIBERADA                        ║
 ║                                                            ║

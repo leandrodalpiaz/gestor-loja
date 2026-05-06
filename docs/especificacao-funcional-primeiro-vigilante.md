@@ -1,4 +1,4 @@
-# ESPECIFICACAO FUNCIONAL - PRIMEIRO VIGILANTE
+# ESPECIFICAÇÃO FUNCIONAL - PRIMEIRO VIGILANTE
 
 ## 1. Objetivo
 
@@ -8,26 +8,26 @@ O 1o Vigilante, dentro do sistema, deve ser tratado como:
 
 - orientador da Coluna do Norte;
 - referencia de conhecimento para os Aprendizes;
-- responsavel por conduzir a trilha de estudo;
-- responsavel por passar, receber e revisar os trabalhos de instrucao;
+- responsável por conduzir a trilha de estudo;
+- responsável por passar, receber e revisar os trabalhos de instrucao;
 - incentivador da leitura e do aprofundamento simbolico;
 - agente de recomendacao positiva para o progresso do Aprendiz.
 
-O objetivo nao e criar um painel de vigilancia corretiva, mas um painel de instrucao e desenvolvimento.
+O objetivo não e criar um painel de vigilancia corretiva, mas um painel de instrucao e desenvolvimento.
 
 ## 2. Contexto atual do projeto
 
-O projeto ja possui base tecnica para sustentar esse cargo:
+O projeto já possui base técnica para sustentar esse cargo:
 
 - cargos oficiais em `cargos` e `atribuicoes_cargo`;
 - dashboard geral por cargos;
 - tela administrativa de atribuicao de cargos;
-- modulo de obreiros com campo `grau`;
-- modulo de biblioteca;
-- modulo de sessoes;
+- módulo de obreiros com campo `grau`;
+- módulo de biblioteca;
+- módulo de sessões;
 - estrutura de autenticacao por cargo.
 
-Conclusao:
+Conclusão:
 
 o 1o Vigilante deve nascer como cargo oficial com painel proprio, aproveitando a arquitetura existente e adicionando uma camada especifica de acompanhamento formativo dos Aprendizes.
 
@@ -46,36 +46,36 @@ O 1o Vigilante deve poder:
 - registrar devolutivas formativas;
 - sugerir leituras e livros da biblioteca;
 - sugerir temas de aprofundamento;
-- indicar que o Aprendiz concluiu a docencia maconica.
+- indicar que o Aprendiz concluiu a docência maconica.
 
-## 4. Problema que o modulo precisa resolver
+## 4. Problema que o módulo precisa resolver
 
-Hoje o sistema possui obreiros, cargos, biblioteca e sessoes, mas nao possui um fluxo estruturado para a jornada de formacao do Aprendiz.
+Hoje o sistema possui obreiros, cargos, biblioteca e sessões, mas não possui um fluxo estruturado para a jornada de formacao do Aprendiz.
 
-O modulo precisa responder perguntas como:
+O módulo precisa responder perguntas como:
 
 - em que etapa da trilha cada Aprendiz se encontra;
-- quais trabalhos ja foram passados;
-- quais trabalhos ja foram recebidos;
-- quais trabalhos aguardam revisao;
+- quais trabalhos já foram passados;
+- quais trabalhos já foram recebidos;
+- quais trabalhos aguardam revisão;
 - quais leituras e temas foram sugeridos;
 - quais Aprendizes concluiram a trilha;
-- quais Aprendizes estao aptos para solicitacao do certificado de conclusao da docencia maconica.
+- quais Aprendizes estao aptos para solicitação do certificado de conclusão da docência maconica.
 
 ## 5. Premissas
 
-- O sistema atende uma unica loja.
-- O foco do modulo sera obreiros com `grau = 'Aprendiz'`.
-- O cargo `PRIMEIRO_VIGILANTE` tera um unico titular ativo por vez, seguindo a regra atual do sistema.
+- O sistema atende uma única loja.
+- O foco do módulo sera obreiros com `grau = 'Aprendiz'`.
+- O cargo `PRIMEIRO_VIGILANTE` tera um único titular ativo por vez, seguindo a regra atual do sistema.
 - A trilha de estudo do Aprendiz sera fixa nesta primeira etapa.
-- O centro do modulo e a formacao, nao disciplina corretiva.
-- Informacoes de presenca podem existir como apoio futuro, mas nao sao o eixo principal do cargo.
+- O centro do módulo e a formacao, não disciplina corretiva.
+- Informações de presença podem existir como apoio futuro, mas não sao o eixo principal do cargo.
 
-## 6. Eixo central do modulo
+## 6. Eixo central do módulo
 
 O centro funcional do 1o Vigilante deve ser a `trilha de estudo por Aprendiz`.
 
-Cada Aprendiz devera ter sua propria trilha, com etapas claras, progresso visivel e historico de orientacoes.
+Cada Aprendiz devera ter sua própria trilha, com etapas claras, progresso visível e histórico de orientações.
 
 ## 7. Trilha fixa de estudo do Aprendiz
 
@@ -88,7 +88,7 @@ Cada Aprendiz deve seguir as seguintes etapas:
 5. `Passar e receber o trabalho da 3a instrucao`
 6. `Passar e receber o trabalho da 4a instrucao`
 7. `Passar e receber o trabalho da 5a instrucao`
-8. `Solicitar o certificado de conclusao da docencia maconica`
+8. `Solicitar o certificado de conclusão da docência maconica`
 
 Essa trilha sera o fluxo principal do painel do 1o Vigilante.
 
@@ -105,21 +105,21 @@ O sistema deve:
 
 ### 8.2 Painel do 1o Vigilante
 
-O sistema deve disponibilizar uma tela propria para o 1o Vigilante.
+O sistema deve disponibilizar uma tela própria para o 1o Vigilante.
 
 Esse painel deve ser centrado em instrucao e acompanhamento formativo.
 
-O painel deve mostrar, no minimo:
+O painel deve mostrar, no mínimo:
 
 - total de Aprendizes ativos;
 - Aprendizes em acompanhamento;
 - etapa atual de cada Aprendiz;
 - trabalhos aguardando entrega;
-- trabalhos recebidos aguardando revisao;
-- Aprendizes com trilha concluida;
-- Aprendizes aptos para solicitacao de certificado.
+- trabalhos recebidos aguardando revisão;
+- Aprendizes com trilha concluída;
+- Aprendizes aptos para solicitação de certificado.
 
-O painel deve oferecer acoes como:
+O painel deve oferecer ações como:
 
 - `Ver Aprendizes`
 - `Abrir trilha do Aprendiz`
@@ -138,8 +138,8 @@ O sistema deve listar obreiros ativos com `grau = 'Aprendiz'`, exibindo ao menos
 - data de iniciacao;
 - etapa atual da trilha;
 - status da etapa atual;
-- ultima orientacao registrada;
-- situacao geral da formacao.
+- ultima orientação registrada;
+- situação geral da formacao.
 
 ### 8.4 Acompanhamento por trilha
 
@@ -150,7 +150,7 @@ Cada etapa deve permitir registro de:
 - status da etapa;
 - data em que a etapa foi passada ao Aprendiz;
 - data em que o trabalho foi recebido;
-- data de revisao;
+- data de revisão;
 - comentario orientativo do 1o Vigilante;
 - material enviado ou entregue, quando houver.
 
@@ -169,7 +169,7 @@ O sistema deve registrar:
 - qual etapa foi passada;
 - quando foi passada;
 - quem passou;
-- orientacao complementar, se houver.
+- orientação complementar, se houver.
 
 ### 8.6 Receber trabalhos
 
@@ -179,22 +179,22 @@ O recebimento deve registrar:
 
 - etapa;
 - data de recebimento;
-- responsavel pelo recebimento;
-- observacao breve;
+- responsável pelo recebimento;
+- observação breve;
 - anexo, texto ou referencia ao material entregue, se houver suporte nessa etapa do projeto.
 
 ### 8.7 Revisar trabalhos
 
 O sistema deve permitir ao 1o Vigilante revisar os trabalhos recebidos e devolver uma avaliacao formativa.
 
-Essa revisao deve contemplar:
+Essa revisão deve contemplar:
 
 - comentario orientativo;
-- status da revisao;
-- data da revisao;
-- responsavel pela revisao.
+- status da revisão;
+- data da revisão;
+- responsável pela revisão.
 
-O foco da revisao deve ser:
+O foco da revisão deve ser:
 
 - amadurecimento do Aprendiz;
 - compreensao simbolica;
@@ -210,51 +210,51 @@ Essas sugestoes devem incluir:
 - livro do acervo;
 - texto recomendado;
 - tema de estudo;
-- observacao do por que a leitura foi indicada.
+- observação do por que a leitura foi indicada.
 
-O modulo deve se integrar com a biblioteca para:
+O módulo deve se integrar com a biblioteca para:
 
 - consultar livros do acervo;
 - associar livros ao Aprendiz;
 - registrar recomendacoes de leitura;
-- futuramente permitir controle de leitura sugerida, iniciada e concluida.
+- futuramente permitir controle de leitura sugerida, iniciada e concluída.
 
-### 8.9 Historico de orientacoes
+### 8.9 Histórico de orientações
 
-O sistema deve manter historico das orientacoes dadas ao Aprendiz.
+O sistema deve manter histórico das orientações dadas ao Aprendiz.
 
-Esse historico deve ser positivo e formativo, servindo para registrar:
+Esse histórico deve ser positivo e formativo, servindo para registrar:
 
-- orientacoes de estudo;
-- devolutivas de revisao;
+- orientações de estudo;
+- devolutivas de revisão;
 - encaminhamentos da trilha;
 - sugestoes de leitura;
 - recomendacoes de aprofundamento.
 
-### 8.10 Conclusao da trilha
+### 8.10 Conclusão da trilha
 
 Quando o Aprendiz concluir todas as etapas anteriores, o sistema deve permitir ao 1o Vigilante registrar que ele esta apto para a etapa final da trilha.
 
-Essa conclusao deve representar:
+Essa conclusão deve representar:
 
-- trilha formativa concluida;
-- docencia maconica concluida;
-- prontidao para solicitacao do certificado.
+- trilha formativa concluída;
+- docência maconica concluída;
+- prontidao para solicitação do certificado.
 
-### 8.11 Solicitacao do certificado de conclusao
+### 8.11 Solicitação do certificado de conclusão
 
-O sistema deve permitir ao 1o Vigilante solicitar o certificado de conclusao da docencia maconica.
+O sistema deve permitir ao 1o Vigilante solicitar o certificado de conclusão da docência maconica.
 
-Essa acao deve registrar:
+Essa ação deve registrar:
 
 - Aprendiz;
-- data da solicitacao;
-- vigilante responsavel;
-- observacao opcional.
+- data da solicitação;
+- vigilante responsável;
+- observação opcional.
 
-Nesta primeira etapa, a funcionalidade pode comecar apenas como registro interno da solicitacao.
+Nesta primeira etapa, a funcionalidade pode comecar apenas como registro interno da solicitação.
 
-Se depois houver fluxo com outro cargo ou geracao automatica, esse passo podera ser expandido.
+Se depois houver fluxo com outro cargo ou geração automatica, esse passo podera ser expandido.
 
 ## 9. Status sugeridos
 
@@ -267,7 +267,7 @@ Cada etapa da trilha pode usar status como:
 - `aguardando_entrega`
 - `recebido`
 - `revisado`
-- `concluido`
+- `concluído`
 
 ### 9.2 Status geral do Aprendiz
 
@@ -281,9 +281,9 @@ O Aprendiz pode ter um status geral de acompanhamento, como:
 - `apto_para_certificado`
 - `certificado_solicitado`
 
-## 10. Requisitos de permissao
+## 10. Requisitos de permissão
 
-O cargo `PRIMEIRO_VIGILANTE` deve ter permissao para:
+O cargo `PRIMEIRO_VIGILANTE` deve ter permissão para:
 
 - acessar painel proprio;
 - consultar Aprendizes;
@@ -291,23 +291,23 @@ O cargo `PRIMEIRO_VIGILANTE` deve ter permissao para:
 - passar etapas da trilha;
 - registrar recebimento de trabalhos;
 - revisar trabalhos;
-- registrar orientacoes;
+- registrar orientações;
 - sugerir temas;
 - sugerir livros da biblioteca;
-- solicitar certificado de conclusao.
+- solicitar certificado de conclusão.
 
-O cargo nao deve, nesta etapa inicial:
+O cargo não deve, nesta etapa inicial:
 
 - editar cadastro geral de obreiros;
-- alterar sessoes;
+- alterar sessões;
 - atribuir cargos;
 - executar a administracao global do sistema.
 
 O Veneravel Mestre e o Administrador podem ter acesso de contingencia ou consulta.
 
-## 11. Modelo funcional minimo de dados
+## 11. Modelo funcional mínimo de dados
 
-### 11.1 Reaproveitamento do que ja existe
+### 11.1 Reaproveitamento do que já existe
 
 Devem ser reaproveitados:
 
@@ -336,7 +336,7 @@ Campos minimos:
 - `created_at`
 - `updated_at`
 
-Observacao:
+Observação:
 
 - essa tabela guarda o progresso concreto da trilha por Aprendiz.
 
@@ -350,7 +350,7 @@ Campos minimos:
 - `aprendiz_id`
 - `livro_id`
 - `tema`
-- `observacao`
+- `observação`
 - `sugerido_por`
 - `status`
 - `data_sugestao`
@@ -360,22 +360,22 @@ Status sugeridos:
 
 - `sugerido`
 - `em_leitura`
-- `concluido`
+- `concluído`
 
-### 11.4 Estrutura sugerida para orientacoes e devolutivas
+### 11.4 Estrutura sugerida para orientações e devolutivas
 
-Se necessario, pode existir uma tabela propria como `orientacoes_aprendiz`.
+Se necessario, pode existir uma tabela própria como `orientacoes_aprendiz`.
 
-Mas, para a primeira entrega, tambem e aceitavel manter a observacao e devolutiva dentro da propria `trilha_aprendiz`, desde que o historico fique preservado.
+Mas, para a primeira entrega, tambem e aceitavel manter a observação e devolutiva dentro da própria `trilha_aprendiz`, desde que o histórico fique preservado.
 
-## 12. Regras de negocio
+## 12. Regras de negócio
 
-- Apenas obreiros ativos com `grau = 'Aprendiz'` entram nesse modulo.
+- Apenas obreiros ativos com `grau = 'Aprendiz'` entram nesse módulo.
 - Cada Aprendiz deve possuir a trilha completa com as 8 etapas padronizadas.
-- A etapa seguinte so deve ser liberada quando a anterior estiver adequadamente concluida, se essa regra for adotada no fluxo.
-- O 1o Vigilante e o responsavel principal por passar, receber e revisar as etapas.
-- Nenhum registro de trilha deve apagar o historico anterior sem auditoria.
-- A solicitacao do certificado depende da conclusao da trilha.
+- A etapa seguinte so deve ser liberada quando a anterior estiver adequadamente concluída, se essa regra for adotada no fluxo.
+- O 1o Vigilante e o responsável principal por passar, receber e revisar as etapas.
+- Nenhum registro de trilha deve apagar o histórico anterior sem auditoria.
+- A solicitação do certificado depende da conclusão da trilha.
 - Sugestoes de leitura devem funcionar como apoio formativo complementar.
 
 ## 13. Requisitos de interface
@@ -385,7 +385,7 @@ Mas, para a primeira entrega, tambem e aceitavel manter a observacao e devolutiv
 O dashboard principal deve:
 
 - exibir `1 Vigilante` na nominata;
-- mostrar a area do 1o Vigilante quando o usuario possuir esse cargo;
+- mostrar a área do 1o Vigilante quando o usuário possuir esse cargo;
 - incluir link para o painel do cargo.
 
 ### 13.2 Rotas sugeridas
@@ -406,7 +406,7 @@ Primeira versao recomendada:
 - cards de resumo;
 - lista de Aprendizes;
 - tela de detalhe do Aprendiz;
-- visualizacao da trilha em etapas;
+- visualização da trilha em etapas;
 - formulario simples para passar, receber e revisar trabalhos;
 - formulario para sugerir leitura.
 
@@ -428,7 +428,7 @@ Primeira versao recomendada:
 - `src/Views/primeiro_vigilante/index.php`
 - `src/Views/primeiro_vigilante/aprendiz.php`
 
-## 15. Ordem recomendada de implementacao
+## 15. Ordem recomendada de implementação
 
 ### Fase 1 - Fundacao do cargo
 
@@ -456,19 +456,19 @@ Primeira versao recomendada:
 
 - integrar sugestao de leituras com a biblioteca;
 - registrar temas indicados;
-- implementar solicitacao do certificado de conclusao da docencia maconica.
+- implementar solicitação do certificado de conclusão da docência maconica.
 
 ## 16. Recomendacao final
 
 O 1o Vigilante deve ser implementado como um cargo de instrucao e acompanhamento formativo.
 
-O nucleo correto do modulo e:
+O núcleo correto do módulo e:
 
 - trilha de estudo por Aprendiz;
 - passagem e recebimento de instrucoes;
-- revisao de trabalhos;
+- revisão de trabalhos;
 - sugestao de leituras e temas;
-- conclusao da jornada formativa;
-- solicitacao do certificado final.
+- conclusão da jornada formativa;
+- solicitação do certificado final.
 
-Essa abordagem representa melhor a natureza do cargo, aproveita o que o sistema ja possui e cria uma base solida para a implementacao.
+Essa abordagem representa melhor a natureza do cargo, aproveita o que o sistema já possui e cria uma base sólida para a implementação.

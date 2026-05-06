@@ -1,12 +1,12 @@
 # Responsive Patch
 
 Objetivo:
-Aplicar patch pequeno para melhorar responsividade de um modulo existente.
+Aplicar patch pequeno para melhorar responsividade de um módulo existente.
 
 Regras:
-- alterar o minimo necessario
+- alterar o mínimo necessario
 - preservar comportamento atual
-- nao mudar backend sem necessidade
+- não mudar backend sem necessidade
 - mobile-first
 - sem scroll horizontal
 - usar classes Tailwind legiveis
@@ -14,4 +14,4 @@ Regras:
 Entregaveis:
 - diff pequeno
 - resumo do que mudou
-- passos para validacao
+- passos para validação

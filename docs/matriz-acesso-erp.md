@@ -1,14 +1,14 @@
 ﻿# Matriz de acesso do ERP
 
-Objetivo: consolidar quem pode ver, agir ou administrar cada area do sistema, sem espalhar regra apenas pelo front-end.
+Objetivo: consolidar quem pode ver, agir ou administrar cada área do sistema, sem espalhar regra apenas pelo front-end.
 
 Principios:
 
 - preservar a regra real implementada hoje
 
-- nao assumir lista fechada de cargos
+- não assumir lista fechada de cargos
 
-- separar permissao de acesso da prioridade visual na interface
+- separar permissão de acesso da prioridade visual na interface
 
 - diferenciar o que e comum a todos do que e exclusivo por responsabilidade
 
@@ -16,15 +16,15 @@ Principios:
 
 ## Regra oficial de organizacao visual do dashboard
 
-Esta regra define somente organizacao visual. Nao altera RBAC.
+Esta regra define somente organizacao visual. Não altera RBAC.
 
-1. Cada funcao/rota do menu pertence a uma secao prioritaria (cargo responsavel pela area).
-2. A funcao deve aparecer uma unica vez no menu (sem duplicacao em secoes diferentes).
-3. Se outro cargo tiver permissao para a mesma funcao, ele acessa essa funcao na mesma secao prioritaria.
-4. Exibicao de item e sempre por permissao efetiva da sessao, nunca por hardcode de cargo na view.
-5. O cargo-base "obreiro" concentra apenas funcoes comuns (pessoais), sem absorver funcoes tecnicas de outros modulos.
+1. Cada função/rota do menu pertence a uma seção prioritaria (cargo responsável pela área).
+2. A função deve aparecer uma única vez no menu (sem duplicacao em seções diferentes).
+3. Se outro cargo tiver permissão para a mesma função, ele acessa essa função na mesma seção prioritaria.
+4. Exibicao de item e sempre por permissão efetiva da sessão, nunca por hardcode de cargo na view.
+5. O cargo-base "obreiro" concentra apenas funções comuns (pessoais), sem absorver funções técnicas de outros módulos.
 
-### Ordem oficial de prioridade das secoes
+### Ordem oficial de prioridade das seções
 
 1. Obreiro
 2. Veneravel Mestre
@@ -39,13 +39,13 @@ Esta regra define somente organizacao visual. Nao altera RBAC.
 11. Mestre de Harmonia
 12. Biblioteca
 13. Administracao
-14. Sistema (somente admin tecnico)
+14. Sistema (somente admin técnico)
 
 ## Niveis de acesso
 
 ### 1. Comum a todos
 
-Rotas e funcoes que podem ser mostradas para qualquer usuario autenticado, sem depender de um cargo administrativo especifico.
+Rotas e funções que podem ser mostradas para qualquer usuário autenticado, sem depender de um cargo administrativo especifico.
 
 Uso esperado:
 
@@ -53,15 +53,15 @@ Uso esperado:
 
 - acompanhamento proprio
 
-- acoes sem impacto administrativo amplo
+- ações sem impacto administrativo amplo
 
 ### 2. Por cargo
 
-Rotas e funcoes ligadas a uma responsabilidade especifica da Loja.
+Rotas e funções ligadas a uma responsabilidade especifica da Loja.
 
 Uso esperado:
 
-- operacao de secretaria
+- operação de secretaria
 
 - tesouraria
 
@@ -73,19 +73,19 @@ Uso esperado:
 
 ### 3. Especial ou restrito
 
-Rotas e funcoes que envolvem aprovacao, fechamento, configuracao ou supervisao ampla.
+Rotas e funções que envolvem aprovacao, fechamento, configuração ou supervisao ampla.
 
 Uso esperado:
 
 - administracao
 
-- configuracoes da Loja
+- configurações da Loja
 
 - auditoria
 
-- votacoes e fechamentos
+- votações e fechamentos
 
-## Tipos de acao
+## Tipos de ação
 
 - Ver: consultar tela, lista, dashboard ou detalhe
 
@@ -97,13 +97,13 @@ Uso esperado:
 
 - Administrar: configurar, manter parametros ou regras centrais
 
-## Direcao de visualizacao mobile
+## Direcao de visualização mobile
 
-- mostrar primeiro a acao principal do cargo
+- mostrar primeiro a ação principal do cargo
 
-- reduzir ruide de opcoes que o usuario nao executa com frequencia
+- reduzir ruide de opcoes que o usuário não executa com frequência
 
-- manter acoes criticas visiveis sem depender de tabela larga
+- manter ações criticas visíveis sem depender de tabela larga
 
 - em listas operacionais mobile, preferir cards empilhados
 
@@ -111,40 +111,40 @@ Uso esperado:
 
 ## Tabela pratica de acesso
 
-| Area | Ver | Agir (criar/editar/aprovar) | Administrar | Observacoes |
+| Área | Ver | Agir (criar/editar/aprovar) | Administrar | Observações |
 | --- | --- | --- | --- | --- |
-| Dashboard | autenticado com dashboard liberado | varia por links mostrados no menu do cargo | nao se aplica diretamente | precisa consolidar melhor a regra de entrada e prioridade por cargo |
-| Obreiros | secretario, primeiro_vigilante, segundo_vigilante, chanceler, veneravel, admin | editar ficha: secretario, admin; criar novo: secretario, admin | nao | manter busca como fluxo principal no mobile |
-| Biblioteca catalogo | autenticado no fluxo atual | solicitar, comentar e reagir conforme sessao autenticada; classificar para perfis formativos e administrativos | nao | separar consulta geral de gestao administrativa |
-| Biblioteca gestao | bibliotecario, admin, veneravel | adicionar, editar, emprestimos, devolucao | nao | manter visivel so para quem opera a area |
-| Secretaria | secretario, veneravel, admin | sessoes, trabalhos, publicacoes, balaustres | admin e parte de veneravel em acoes especiais | separar operacao rotineira de aprovacao |
-| Vigilancia 1 | primeiro_vigilante, veneravel, admin | trilhas, acoes rapidas, certificados | nao | foco em acompanhamento formativo |
-| Vigilancia 2 | segundo_vigilante, veneravel, admin | trilhas, acoes rapidas, recomendacoes, certificados | nao | foco em acompanhamento formativo |
-| Chancelaria | chanceler, veneravel, admin | previas, dados, envio e certificado | nao | destacar pendencias e mensagem do dia |
-| Assistencia | hospitaleiro, secretario, tesoureiro, veneravel, admin | ocorrencias, visitas, status | nao | mostrar ocorrencias abertas primeiro |
-| Mestre de Harmonia | mestre_harmonia, veneravel, admin | operacao do painel ritual | nao | fluxo altamente operacional e de baixa densidade |
-| Mestre de Banquetes | mestre_banquetes, veneravel, admin | salvar operacao e leitura de confirmados | nao | priorizar leitura rapida e confirmacoes |
-| Orador | orador, veneravel, admin | uso de painel e apoio de sessao | nao | foco em leitura resumida |
-| Tesouraria | tesoureiro, veneravel, admin | caixa, comprovantes, regularidade, fechamento, obrigacoes, sessoes | nao | separar ver, lancar, validar e fechar |
-| Administracao de cargos | admin, secretario, veneravel | salvar e encerrar gestoes: admin, secretario, veneravel | admin lidera governanca | importante separar governanca de operacao comum |
+| Dashboard | autenticado com dashboard liberado | varia por links mostrados no menu do cargo | não se aplica diretamente | precisa consolidar melhor a regra de entrada e prioridade por cargo |
+| Obreiros | secretario, primeiro_vigilante, segundo_vigilante, chanceler, veneravel, admin | editar ficha: secretario, admin; criar novo: secretario, admin | não | manter busca como fluxo principal no mobile |
+| Biblioteca catalogo | autenticado no fluxo atual | solicitar, comentar e reagir conforme sessão autenticada; classificar para perfis formativos e administrativos | não | separar consulta geral de gestão administrativa |
+| Biblioteca gestão | bibliotecario, admin, veneravel | adicionar, editar, emprestimos, devolucao | não | manter visível so para quem opera a área |
+| Secretaria | secretario, veneravel, admin | sessões, trabalhos, publicações, balaústres | admin e parte de veneravel em ações especiais | separar operação rotineira de aprovacao |
+| Vigilancia 1 | primeiro_vigilante, veneravel, admin | trilhas, ações rapidas, certificados | não | foco em acompanhamento formativo |
+| Vigilancia 2 | segundo_vigilante, veneravel, admin | trilhas, ações rapidas, recomendacoes, certificados | não | foco em acompanhamento formativo |
+| Chancelaria | chanceler, veneravel, admin | previas, dados, envio e certificado | não | destacar pendencias e mensagem do dia |
+| Assistencia | hospitaleiro, secretario, tesoureiro, veneravel, admin | ocorrencias, visitas, status | não | mostrar ocorrencias abertas primeiro |
+| Mestre de Harmonia | mestre_harmonia, veneravel, admin | operação do painel ritual | não | fluxo altamente operacional e de baixa densidade |
+| Mestre de Banquetes | mestre_banquetes, veneravel, admin | salvar operação e leitura de confirmados | não | priorizar leitura rapida e confirmações |
+| Orador | orador, veneravel, admin | uso de painel e apoio de sessão | não | foco em leitura resumida |
+| Tesouraria | tesoureiro, veneravel, admin | caixa, comprovantes, regularidade, fechamento, obrigacoes, sessões | não | separar ver, lancar, validar e fechar |
+| Administracao de cargos | admin, secretario, veneravel | salvar e encerrar gestões: admin, secretario, veneravel | admin lidera governanca | importante separar governanca de operação comum |
 | Parametros da Loja | admin | salvar parametros: admin | admin | acesso especial/restrito |
-| Auditoria admin | admin, veneravel | consulta e revisao | admin | nao tratar como menu comum |
-| Meu financeiro | usuario autenticado no fluxo atual e/ou miniapp autorizado | consulta pessoal, possivel leitura de obrigacoes proprias | nao | precisa confirmar regra funcional final |
-| Telegram e miniapps | depende do perfil resolvido na sessao ou init_data | APIs miniapp por area e links web_app | nao | nunca presumir equivalencia automatica com a web |
+| Auditoria admin | admin, veneravel | consulta e revisão | admin | não tratar como menu comum |
+| Meu financeiro | usuário autenticado no fluxo atual e/ou miniapp autorizado | consulta pessoal, possível leitura de obrigacoes próprias | não | precisa confirmar regra funcional final |
+| Telegram e miniapps | depende do perfil resolvido na sessão ou init_data | APIs miniapp por área e links web_app | não | nunca presumir equivalencia automatica com a web |
 
-## Mapa inicial por area
+## Mapa inicial por área
 
 ### Dashboard
 
 Acesso atual:
 
-- usuarios autenticados com dashboard liberado
+- usuários autenticados com dashboard liberado
 
-Visualizacao recomendada:
+Visualização recomendada:
 
 - mostrar primeiro atalhos e pendencias do cargo principal
 
-- reduzir densidade de secoes na primeira dobra mobile
+- reduzir densidade de seções na primeira dobra mobile
 
 - manter menus completos para desktop
 
@@ -164,7 +164,7 @@ Acesso atual:
 
 - admin
 
-Tipos de acao atuais:
+Tipos de ação atuais:
 
 - Ver: lista de obreiros
 
@@ -172,11 +172,11 @@ Tipos de acao atuais:
 
 - Criar: novo obreiro (secretario, admin)
 
-Visualizacao recomendada:
+Visualização recomendada:
 
 - busca e alerta primeiro no mobile
 
-- acoes principais visiveis sem competir com filtros secundarios
+- ações principais visíveis sem competir com filtros secundarios
 
 ### Biblioteca
 
@@ -184,7 +184,7 @@ Acesso atual:
 
 - painel principal com acesso autenticado no fluxo atual
 
-- gestao administrativa:
+- gestão administrativa:
 
   - bibliotecario
 
@@ -204,19 +204,19 @@ Acesso atual:
 
   - admin
 
-Tipos de acao atuais:
+Tipos de ação atuais:
 
 - Ver: catalogo e detalhes
 
-- Criar/Editar: titulos e gestao de emprestimos
+- Criar/Editar: títulos e gestão de emprestimos
 
 - Agir: solicitar emprestimo, comentar, reagir, devolver
 
-Visualizacao recomendada:
+Visualização recomendada:
 
 - catalogo limpo para consulta
 
-- emprestimos e gestao destacados apenas para quem atua na area
+- emprestimos e gestão destacados apenas para quem atua na área
 
 ### Tesouraria
 
@@ -228,19 +228,19 @@ Acesso atual:
 
 - admin
 
-Tipos de acao atuais:
+Tipos de ação atuais:
 
-- Ver: caixa, sessoes, comprovantes, regularidade, fechamento, relatorio, obrigacoes
+- Ver: caixa, sessões, comprovantes, regularidade, fechamento, relatório, obrigacoes
 
 - Criar/Editar: lancamentos e obrigacoes
 
 - Aprovar: comprovantes, fechamentos, quitacoes
 
-Visualizacao recomendada:
+Visualização recomendada:
 
-- destacar pendencias financeiras e validacoes
+- destacar pendencias financeiras e validações
 
-- evitar expor operacoes criticas a perfis sem responsabilidade direta
+- evitar expor operações criticas a perfis sem responsabilidade direta
 
 ### Secretaria
 
@@ -252,17 +252,17 @@ Acesso atual:
 
 - admin
 
-Tipos de acao atuais:
+Tipos de ação atuais:
 
-- Ver: painel e relatorios
+- Ver: painel e relatórios
 
-- Criar/Editar: sessoes, trabalhos, publicacoes, balaustres
+- Criar/Editar: sessões, trabalhos, publicações, balaústres
 
-- Aprovar: algumas acoes ficam com veneravel/admin
+- Aprovar: algumas ações ficam com veneravel/admin
 
-Visualizacao recomendada:
+Visualização recomendada:
 
-- foco em saneamento cadastral, sessoes e votacoes
+- foco em saneamento cadastral, sessões e votações
 
 ### Vigilancias
 
@@ -282,17 +282,17 @@ Segundo Vigilante:
 
 - admin
 
-Tipos de acao atuais:
+Tipos de ação atuais:
 
 - Ver: paines e trilhas
 
-- Editar: acompanhamento e acoes rapidas
+- Editar: acompanhamento e ações rapidas
 
 - Agir: recomendacoes, certificados, trilhas
 
-Visualizacao recomendada:
+Visualização recomendada:
 
-- separar acompanhamento formativo de operacoes administrativas
+- separar acompanhamento formativo de operações administrativas
 
 ### Chancelaria
 
@@ -304,15 +304,15 @@ Acesso atual:
 
 - admin
 
-Tipos de acao atuais:
+Tipos de ação atuais:
 
-- Ver: efemerides, certificados, sessao
+- Ver: efemerides, certificados, sessão
 
 - Editar: previas, dados e mensagens
 
 - Agir: envio de previas, emissao de certificado
 
-Visualizacao recomendada:
+Visualização recomendada:
 
 - destacar mensagem do dia e pendencias de dados
 
@@ -330,7 +330,7 @@ Acesso atual:
 
 - admin
 
-Tipos de acao atuais:
+Tipos de ação atuais:
 
 - Ver: painel de assistencia
 
@@ -338,7 +338,7 @@ Tipos de acao atuais:
 
 - Agir: visitas, status e encaminhamentos
 
-Visualizacao recomendada:
+Visualização recomendada:
 
 - mostrar ocorrencias abertas primeiro
 
@@ -350,11 +350,11 @@ Acesso atual:
 
 - alguns pontos tambem para secretario e veneravel
 
-Tipos de acao atuais:
+Tipos de ação atuais:
 
-- Administrar: cargos, gestoes, parametros da Loja, auditoria
+- Administrar: cargos, gestões, parametros da Loja, auditoria
 
-Visualizacao recomendada:
+Visualização recomendada:
 
 - nunca tratar como menu comum
 
@@ -362,19 +362,19 @@ Visualizacao recomendada:
 
 ### Meu financeiro
 
-Observacao:
+Observação:
 
-- hoje a permissao real em `/financeiro/minhas-obrigacoes` parece mais restrita do que o nome sugere e precisa de revisao funcional antes de virar regra de experiencia
+- hoje a permissão real em `/financeiro/minhas-obrigacoes` parece mais restrita do que o nome sugere e precisa de revisão funcional antes de virar regra de experiencia
 
-Acao pendente:
+Ação pendente:
 
-- confirmar se esta rota deve ser realmente comum a todo usuario autenticado ou continuar restrita aos cargos atuais
+- confirmar se esta rota deve ser realmente comum a todo usuário autenticado ou continuar restrita aos cargos atuais
 
 ### Telegram e miniapps
 
 Regra geral:
 
-- qualquer alteracao em acesso e visualizacao deve considerar:
+- qualquer alteracao em acesso e visualização deve considerar:
 
   - dashboard web
 
@@ -384,7 +384,7 @@ Regra geral:
 
 Cuidados:
 
-- nao pressupor que liberar uma rota web significa liberar o miniapp equivalente
+- não pressupor que liberar uma rota web significa liberar o miniapp equivalente
 
 - validar sempre o impacto em links `web_app`, APIs miniapp e resolucao por init_data
 
@@ -396,15 +396,15 @@ Cuidados:
 
 - mapear melhor o que e "ver", "agir" e "administrar" dentro da Biblioteca
 
-- documentar visualizacao inicial recomendada por cargo no dashboard
+- documentar visualização inicial recomendada por cargo no dashboard
 
-## Validacao de manutencao (Bot + Miniapp)
+## Validação de manutenção (Bot + Miniapp)
 
 Toda alteracao de acesso deve validar os 3 pontos abaixo:
 
 $11. Bot Telegram
 
-- menu por cargo aparece conforme permissao
+- menu por cargo aparece conforme permissão
 
 - callback abre painel correto
 
@@ -414,8 +414,8 @@ $11. Miniapp page
 
 $11. Miniapp API
 
-- endpoint `/api/miniapp/*` com permissao equivalente a pagina miniapp
+- endpoint `/api/miniapp/*` com permissão equivalente a página miniapp
 
 Regra de seguranca operacional:
 
-- evitar usar rota web tradicional em botao WebApp do Telegram quando existir rota `/miniapp/*` equivalente.
+- evitar usar rota web tradicional em botão WebApp do Telegram quando existir rota `/miniapp/*` equivalente.

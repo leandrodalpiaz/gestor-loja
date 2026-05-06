@@ -1,4 +1,4 @@
-﻿# Guia de Linguagem ao Usuário Final (PT-BR)
+﻿# Guia de Linguagem ao Usuário final (PT-BR)
 
 ## Objetivo
 
@@ -43,23 +43,23 @@ Padronizar textos do ERP Web, Miniapps e Bot Telegram com linguagem natural, obj
 
 ## Regras adicionais para Bot e Miniapps
 
-- Botao de cargo no Telegram deve usar texto de acao clara:
-  - `Em Loja`, `Sessao em Loja`, `Secretaria Mobile`, `Voltar`
-- Evitar rotulo ambiguo em botao principal.
+- Botão de cargo no Telegram deve usar texto de ação clara:
+  - `Em Loja`, `Sessão em Loja`, `Secretaria Mobile`, `Voltar`
+- Evitar rotulo ambiguo em botão principal.
 - Em acesso negado:
   - informar perfil funcional
-  - nao informar detalhe tecnico interno
+  - não informar detalhe técnico interno
 
 Exemplo recomendado:
 
 - `Acesso restrito ao Orador, Veneravel Mestre ou Administrador.`
 
-## Regra de manutencao de texto
+## Regra de manutenção de texto
 
 Antes de publicar alteracao em bot, revisar:
 
-1. titulo do painel
-2. botoes principais
+1. título do painel
+2. botões principais
 3. mensagem de erro
 4. mensagem de sucesso
 5. mensagem de retorno
