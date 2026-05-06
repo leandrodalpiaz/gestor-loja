@@ -48,6 +48,22 @@ require_once __DIR__ . "/../src/autoload.php";
 
 Env::load(__DIR__ . "/../.env");
 
+// Garante o preenchimento de $_ENV em ambientes de produção (como o Render) onde as variáveis nativas estão disponíveis via getenv() mas $_ENV está vazio devido a diretiva variables_order do php.ini.
+foreach ([
+    'DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASS', 'DB_SCHEMA',
+    'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID_GROUP', 'TELEGRAM_CHAT_ID_CHANCELER',
+    'APP_URL', 'APP_TIMEZONE', 'APP_ENV', 'APP_LOJA_NUMERO', 'APP_DEFAULT_TENANT_SLUG',
+    'APP_DEFAULT_TENANT_ID', 'APP_DEFAULT_TENANT_NAME', 'APP_ALLOW_ENV_TENANT_FALLBACK',
+    'APP_TEST_OPEN_ACCESS', 'APP_TEST_ALLOW_ALL_PANELS', 'SYSTEM_ADMIN_TELEGRAM_IDS'
+] as $envKey) {
+    if (!isset($_ENV[$envKey]) || $_ENV[$envKey] === '') {
+        $val = getenv($envKey);
+        if ($val !== false) {
+            $_ENV[$envKey] = $val;
+        }
+    }
+}
+
 $requestUri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 $method = $_SERVER["REQUEST_METHOD"];
 if ($method === 'HEAD') {
