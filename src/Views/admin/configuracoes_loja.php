@@ -14,7 +14,7 @@ $appShellActions = [
 ];
 $appShellSidebarSections = [
     [
-        'title' => 'Administracao',
+        'title' => 'Administração',
         'items' => [
             ['label' => 'Parâmetros da Loja', 'href' => '/admin/loja'],
             ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
@@ -328,7 +328,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <input type="text" name="pix_beneficiario" value="<?= htmlspecialchars((string) ($configuracao['pix_beneficiario'] ?? 'Nome da Loja')) ?>" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-dourado focus:bg-white focus:outline-none">
                         </div>
                         <div class="md:col-span-2 xl:col-span-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-900">
-                            Configure aqui as regras financeiras padrao da Loja atual. O valor continua editavel no admin.
+                            Configure aqui as regras financeiras padrão da Loja atual. O valor continua editável no admin.
                         </div>
                     </div>
                 </section>

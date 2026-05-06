@@ -80,7 +80,7 @@ class BibliotecaRoutes
                 WebGuards::requireLogin($openTestAccess, $session);
                 WebGuards::requirePermission(
                     $authorizer->hasPermission('biblioteca.classificar'),
-                    'Acesso restrito aos responsaveis por classificar leituras.'
+                    'Acesso restrito aos responsáveis por classificar leituras.'
                 );
                 $controller->classificar();
                 return true;

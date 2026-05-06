@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>2o Vigilante Mobile</title>
+    <title>2º Vigilante Mobile</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
@@ -19,7 +19,7 @@
 <body class="min-h-screen p-4">
 <div class="mx-auto max-w-lg space-y-4">
     <div>
-        <h1 class="text-xl font-bold">2o Vigilante</h1>
+        <h1 class="text-xl font-bold">2º Vigilante</h1>
         <p class="mt-1 text-sm text-gray-500">Trilha, docência e recomendação de exaltação dos Companheiros.</p>
     </div>
 
@@ -287,7 +287,7 @@ document.getElementById('form-certificado').addEventListener('submit', async (ev
                 observacao_certificado: document.getElementById('observacao_certificado').value
             }
         });
-        tg.showAlert('Solicitacao de certificado registrada.');
+        tg.showAlert('Solicitação de certificado registrada.');
         await carregar(companheiroAtualId);
     } catch (err) {
         tg.showAlert(err.message);

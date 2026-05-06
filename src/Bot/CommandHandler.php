@@ -355,7 +355,7 @@ class CommandHandler
 
         $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
         if (!$this->isDev($requesterTelegramId) && !$this->obreiroHasPermission($obreiro, 'admin.cargos.view')) {
-            $this->telegram->sendMessage($chatId, 'Acesso restrito aos responsaveis do sistema.');
+            $this->telegram->sendMessage($chatId, 'Acesso restrito aos responsáveis do sistema.');
             return;
         }
 

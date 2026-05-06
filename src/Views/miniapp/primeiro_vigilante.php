@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>1o Vigilante Mobile</title>
+    <title>1º Vigilante Mobile</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
     <style>
@@ -19,7 +19,7 @@
 <body class="min-h-screen p-4">
 <div class="mx-auto max-w-lg space-y-4">
     <div>
-        <h1 class="text-xl font-bold">1o Vigilante</h1>
+        <h1 class="text-xl font-bold">1º Vigilante</h1>
         <p class="mt-1 text-sm text-gray-500">Trilha, leitura sugerida e certificado dos Aprendizes.</p>
     </div>
 
@@ -70,7 +70,7 @@
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Observacao do vigilante</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Observação do vigilante</label>
                 <textarea id="observacao_vigilante" rows="4" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
             <button type="submit" class="w-full rounded-xl bg-emerald-700 px-4 py-3 text-sm font-medium text-white">Salvar andamento da trilha</button>
@@ -83,7 +83,7 @@
                 <select id="acervo_id" class="w-full rounded-lg border px-3 py-2 text-sm"></select>
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Orientacao</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Orientação</label>
                 <textarea id="observacao_leitura" rows="4" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
             <button type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white">Salvar leitura sugerida</button>
@@ -93,7 +93,7 @@
             <div class="text-sm font-semibold">Certificado</div>
             <div id="certificado-status" class="rounded-xl bg-white/70 px-3 py-3 text-sm text-slate-700"></div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Observacao da solicitacao</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Observação da solicitação</label>
                 <textarea id="observacao_certificado" rows="4" class="w-full rounded-lg border px-3 py-2 text-sm"></textarea>
             </div>
             <button type="submit" class="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-medium text-slate-900">Solicitar certificado</button>
@@ -182,7 +182,7 @@ function render() {
     });
 
     const acervo = document.getElementById('acervo_id');
-    acervo.innerHTML = '<option value="">Sem vincular livro especifico</option>';
+    acervo.innerHTML = '<option value="">Sem vincular livro específico</option>';
     (dashboard.leituras_disponiveis || []).forEach(item => {
         const option = document.createElement('option');
         option.value = item.id;
@@ -277,7 +277,7 @@ document.getElementById('form-certificado').addEventListener('submit', async (ev
                 observacao_certificado: document.getElementById('observacao_certificado').value
             }
         });
-        tg.showAlert('Solicitacao de certificado registrada.');
+        tg.showAlert('Solicitação de certificado registrada.');
         await carregar(aprendizAtualId);
     } catch (err) {
         tg.showAlert(err.message);

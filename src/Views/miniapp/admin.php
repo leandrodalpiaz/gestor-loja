@@ -35,13 +35,13 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Parametros da Loja</div>
+            <div class="text-sm font-semibold">Parâmetros da Loja</div>
             <div id="configuracao" class="mt-3 rounded-xl bg-white/70 p-3 text-sm"></div>
             <div class="mt-3 grid grid-cols-2 gap-2">
-                <input id="cfg-mensalidade" type="number" step="0.01" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Contribuicao mensal">
+                <input id="cfg-mensalidade" type="number" step="0.01" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Contribuição mensal">
                 <input id="cfg-pix-tipo" type="text" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Tipo PIX">
                 <input id="cfg-pix-valor" type="text" class="col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Chave PIX">
-                <button id="btn-salvar-config" class="col-span-2 rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Salvar parametros principais</button>
+                <button id="btn-salvar-config" class="col-span-2 rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Salvar parâmetros principais</button>
             </div>
         </div>
 
@@ -84,7 +84,7 @@
         <div class="card rounded-2xl p-4">
             <div class="grid grid-cols-2 gap-2">
                 <button id="atalho-cargos" class="rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Gestão de cargos</button>
-                <button id="atalho-loja" class="rounded-xl bg-blue-700 px-3 py-3 text-sm font-medium text-white">Parametros da Loja</button>
+                <button id="atalho-loja" class="rounded-xl bg-blue-700 px-3 py-3 text-sm font-medium text-white">Parâmetros da Loja</button>
                 <button id="atalho-auditoria" class="rounded-xl bg-amber-700 px-3 py-3 text-sm font-medium text-white">Auditoria</button>
                 <button id="atalho-dashboard" class="rounded-xl bg-slate-700 px-3 py-3 text-sm font-medium text-white">Painel</button>
             </div>
@@ -155,7 +155,7 @@ function render() {
     document.getElementById('configuracao').innerHTML = `
         <div class="font-medium">${esc(dashboard.configuracao?.nome_loja || 'Loja')} ${esc(dashboard.configuracao?.numero_loja || '')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(dashboard.configuracao?.cidade || '')}/${esc(dashboard.configuracao?.uf || '')} · ${esc(dashboard.configuracao?.rito || '')}</div>
-        <div class="mt-2 text-sm text-gray-700">Contribuicao mensal ${esc(Number(dashboard.configuracao?.mensalidade_valor_padrao || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))}</div>
+        <div class="mt-2 text-sm text-gray-700">Contribuição mensal ${esc(Number(dashboard.configuracao?.mensalidade_valor_padrao || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))}</div>
         <div class="mt-1 text-xs text-gray-500">PIX ${esc(dashboard.configuracao?.pix_chave_tipo || '')} ${esc(dashboard.configuracao?.pix_chave_valor || '')}</div>
     `;
     document.getElementById('cfg-mensalidade').value = dashboard.configuracao?.mensalidade_valor_padrao || '';
@@ -262,7 +262,7 @@ document.getElementById('btn-atribuir-cargo').addEventListener('click', async ()
                 inicio_em: document.getElementById('cargo-inicio').value
             }
         });
-        tg.showAlert('Cargo atribuido com sucesso.');
+        tg.showAlert('Cargo atribuído com sucesso.');
         await carregar();
     } catch (err) {
         tg.showAlert(err.message);
@@ -279,7 +279,7 @@ document.getElementById('btn-salvar-config').addEventListener('click', async () 
                 pix_chave_valor: document.getElementById('cfg-pix-valor').value
             }
         });
-        tg.showAlert('Parametros principais atualizados.');
+        tg.showAlert('Parâmetros principais atualizados.');
         await carregar();
     } catch (err) {
         tg.showAlert(err.message);

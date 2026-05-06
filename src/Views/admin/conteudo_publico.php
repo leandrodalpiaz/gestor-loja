@@ -4,10 +4,10 @@ $mensagem = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
-$erpPageTitle = 'Conteudo publico';
+$erpPageTitle = 'Conteúdo público';
 $appShellEyebrow = 'Sistema';
 $appShellTitle = 'Landing/Login';
-$appShellDescription = 'Agenda, convites, noticias e espacos discretos de apoio exibidos em /login.';
+$appShellDescription = 'Agenda, convites, notícias e espaços discretos de apoio exibidos em /login.';
 $appShellActiveHref = '/admin/conteudo-publico';
 $appShellActions = [
     ['label' => 'Voltar ao painel', 'href' => '/dashboard', 'primary' => true],
@@ -16,9 +16,9 @@ $appShellSidebarSections = [
     [
         'title' => 'Sistema',
         'items' => [
-            ['label' => 'Conteudo publico', 'href' => '/admin/conteudo-publico'],
+            ['label' => 'Conteúdo público', 'href' => '/admin/conteudo-publico'],
             ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
-            ['label' => 'Parametros da Loja', 'href' => '/admin/loja'],
+            ['label' => 'Parâmetros da Loja', 'href' => '/admin/loja'],
             ['label' => 'Painel', 'href' => '/dashboard'],
         ],
     ],
@@ -31,13 +31,13 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <section class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
     <div class="rounded-2xl border border-erpBorder bg-white">
         <div class="border-b border-erpBorder px-6 py-5">
-            <div class="text-sm font-semibold text-erpNavy">Conteudos cadastrados</div>
-            <div class="mt-1 text-sm text-erpMuted">Ative/desative e ajuste prioridade para controlar a exibicao.</div>
+            <div class="text-sm font-semibold text-erpNavy">Conteúdos cadastrados</div>
+            <div class="mt-1 text-sm text-erpMuted">Ative/desative e ajuste prioridade para controlar a exibição.</div>
         </div>
 
         <div class="divide-y divide-erpBorder">
             <?php if (empty($itens)): ?>
-                <div class="px-6 py-8 text-sm text-erpMuted">Nenhum conteudo cadastrado ainda.</div>
+                <div class="px-6 py-8 text-sm text-erpMuted">Nenhum conteúdo cadastrado ainda.</div>
             <?php else: ?>
                 <?php foreach ($itens as $item): ?>
                     <?php
@@ -85,7 +85,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                     class="inline-flex items-center rounded-xl border border-erpBorder bg-white px-4 py-2 text-sm font-semibold text-erpNavy hover:bg-erpBg"
                                     onclick="window.dispatchEvent(new CustomEvent('gl:conteudo-editar', { detail: <?= htmlspecialchars(json_encode($item), ENT_QUOTES, 'UTF-8') ?> }))"
                                 >Editar</button>
-                                <form method="POST" action="/admin/conteudo-publico/excluir" onsubmit="return confirm('Remover este conteudo?');">
+                                <form method="POST" action="/admin/conteudo-publico/excluir" onsubmit="return confirm('Remover este conteúdo?');">
                                     <input type="hidden" name="id" value="<?= (int) ($item['id'] ?? 0) ?>">
                                     <button type="submit" class="inline-flex items-center rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100">Excluir</button>
                                 </form>
@@ -123,13 +123,13 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <select name="tipo" id="gl-tipo" class="w-full rounded-xl border border-erpBorder bg-slate-50 px-4 py-3 text-sm text-erpText focus:border-erpGold focus:bg-white focus:outline-none">
                         <option value="agenda">Agenda</option>
                         <option value="convite">Convite</option>
-                        <option value="noticia">Noticia</option>
+                        <option value="noticia">Notícia</option>
                         <option value="ad">Ad (apoio)</option>
                     </select>
                 </label>
 
                 <label class="grid gap-2 text-sm font-semibold text-erpNavy">
-                    Titulo
+                    Título
                     <input type="text" name="titulo" id="gl-titulo" class="w-full rounded-xl border border-erpBorder bg-slate-50 px-4 py-3 text-sm text-erpText focus:border-erpGold focus:bg-white focus:outline-none" maxlength="180" required>
                 </label>
 
@@ -171,7 +171,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
                 <label class="flex items-center gap-3 rounded-2xl border border-erpBorder bg-slate-50 px-4 py-4 text-sm font-semibold text-erpNavy">
                     <input type="checkbox" name="publicado" id="gl-publicado" class="h-4 w-4 rounded border-erpBorder text-erpNavyDeep" checked>
-                    Publicado (visivel em /login)
+                    Publicado (visível em /login)
                 </label>
 
                 <div class="flex flex-col gap-3 sm:flex-row">

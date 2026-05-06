@@ -4,7 +4,7 @@ $mensagem = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
 unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
 
-$erpPageTitle = 'Aprovacao de acesso';
+$erpPageTitle = 'Aprovação de acesso';
 $appShellEyebrow = 'Secretaria';
 $appShellTitle = 'Acessos';
 $appShellDescription = 'Aprovação e bloqueio de acessos ao sistema (pendente/ativo/inativo).';
@@ -19,7 +19,7 @@ $appShellSidebarSections = [
             ['label' => 'Nominata oficial', 'href' => '/admin/cargos'],
             ['label' => 'Central de Obreiros', 'href' => '/obreiros'],
             ['label' => 'Convites de acesso', 'href' => '/admin/convites'],
-            ['label' => 'Aprovacao de acessos', 'href' => '/admin/acessos'],
+            ['label' => 'Aprovação de acessos', 'href' => '/admin/acessos'],
             ['label' => 'Sessões', 'href' => '/secretaria'],
             ['label' => 'Balaustres / votação', 'href' => '/secretaria/votacao'],
             ['label' => 'Painel', 'href' => '/dashboard'],
@@ -34,7 +34,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <section class="rounded-2xl border border-erpBorder bg-white">
     <div class="border-b border-erpBorder px-6 py-5">
                 <div class="text-sm font-semibold text-erpNavy">Em análises de aprovação</div>
-        <div class="mt-1 text-sm text-erpMuted">Somente secretario/admin devem concluir esta etapa.</div>
+        <div class="mt-1 text-sm text-erpMuted">Somente secretário/admin devem concluir esta etapa.</div>
     </div>
 
     <?php if ($mensagem): ?>
@@ -49,7 +49,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     <?php endif; ?>
 
     <?php if (empty($itens)): ?>
-        <div class="px-6 py-8 text-sm text-erpMuted">Nenhuma solicitacao pendente no momento.</div>
+        <div class="px-6 py-8 text-sm text-erpMuted">Nenhuma solicitação pendente no momento.</div>
     <?php else: ?>
         <div class="divide-y divide-erpBorder">
             <?php foreach ($itens as $item): ?>

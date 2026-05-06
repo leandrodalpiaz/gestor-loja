@@ -238,8 +238,8 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">Programacao Biblioteca</h2>
-                <p class="card-description">Escala obrigatoria anual da Loja Renascenca: mensalidade + <?= $formatCurrency($bibliotecaPadrao) ?> no mes designado.</p>
+                <h2 class="card-title">Programação Biblioteca</h2>
+                <p class="card-description">Escala obrigatória anual da Loja Renascença: mensalidade + <?= $formatCurrency($bibliotecaPadrao) ?> no mês designado.</p>
             </div>
             <form method="post" action="/tesouraria/obrigacoes/biblioteca/programar-renascenca" class="card-body space-y-3">
                 <label for="ano_biblioteca" class="form-label">Ano de referencia</label>

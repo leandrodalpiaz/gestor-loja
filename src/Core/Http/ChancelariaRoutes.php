@@ -38,7 +38,7 @@ class ChancelariaRoutes
                     && !$canManageContentCategory('historia')
                     && !$canManageContentCategory('palavra_dia')
                 ) {
-                    WebGuards::forbidHtml('Acesso restrito aos responsaveis pelos conteudos da Chancelaria.');
+                    WebGuards::forbidHtml('Acesso restrito aos responsáveis pelos conteúdos da Chancelaria.');
                 }
                 (new ChancelerSessaoController())->index();
                 return true;
@@ -211,7 +211,7 @@ class ChancelariaRoutes
                 $redirectEfemerides($ok ? ['sucesso' => 'registro_desativado'] : ['erro' => 'falha_desativar']);
 
             case '/chancelaria/historias/salvar':
-                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'historia', 'Acesso restrito aos responsaveis por Historia Maconica.');
+                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'historia', 'Acesso restrito aos responsáveis por História Maçônica.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -226,7 +226,7 @@ class ChancelariaRoutes
                 $redirectEfemerides($ok ? ['sucesso' => 'historia_salva'] : ['erro' => 'falha_salvar_historia']);
 
             case '/chancelaria/historias/atualizar':
-                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'historia', 'Acesso restrito aos responsaveis por Historia Maconica.');
+                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'historia', 'Acesso restrito aos responsáveis por História Maçônica.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -242,7 +242,7 @@ class ChancelariaRoutes
                 $redirectEfemerides($ok ? ['sucesso' => 'historia_atualizada'] : ['erro' => 'falha_atualizar_historia']);
 
             case '/chancelaria/historias/toggle':
-                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'historia', 'Acesso restrito aos responsaveis por Historia Maconica.');
+                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'historia', 'Acesso restrito aos responsáveis por História Maçônica.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -251,7 +251,7 @@ class ChancelariaRoutes
                 $redirectEfemerides($ok ? ['sucesso' => 'historia_status'] : ['erro' => 'falha_status_historia']);
 
             case '/chancelaria/historias/excluir':
-                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'historia', 'Acesso restrito aos responsaveis por Historia Maconica.');
+                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'historia', 'Acesso restrito aos responsáveis por História Maçônica.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -260,7 +260,7 @@ class ChancelariaRoutes
                 $redirectEfemerides($ok ? ['sucesso' => 'historia_excluida'] : ['erro' => 'falha_excluir_historia']);
 
             case '/chancelaria/palavra-dia/salvar':
-                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'palavra_dia', 'Acesso restrito aos responsaveis por Palavra do Dia.');
+                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'palavra_dia', 'Acesso restrito aos responsáveis por Palavra do Dia.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -272,7 +272,7 @@ class ChancelariaRoutes
                 $redirectEfemerides($ok ? ['sucesso' => 'palavra_salva'] : ['erro' => 'falha_salvar_palavra']);
 
             case '/chancelaria/palavra-dia/atualizar':
-                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'palavra_dia', 'Acesso restrito aos responsaveis por Palavra do Dia.');
+                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'palavra_dia', 'Acesso restrito aos responsáveis por Palavra do Dia.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -285,7 +285,7 @@ class ChancelariaRoutes
                 $redirectEfemerides($ok ? ['sucesso' => 'palavra_atualizada'] : ['erro' => 'falha_atualizar_palavra']);
 
             case '/chancelaria/palavra-dia/toggle':
-                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'palavra_dia', 'Acesso restrito aos responsaveis por Palavra do Dia.');
+                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'palavra_dia', 'Acesso restrito aos responsáveis por Palavra do Dia.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -294,7 +294,7 @@ class ChancelariaRoutes
                 $redirectEfemerides($ok ? ['sucesso' => 'palavra_status'] : ['erro' => 'falha_status_palavra']);
 
             case '/chancelaria/palavra-dia/excluir':
-                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'palavra_dia', 'Acesso restrito aos responsaveis por Palavra do Dia.');
+                self::requireManageCategory($openTestAccess, $session, $canManageContentCategory, 'palavra_dia', 'Acesso restrito aos responsáveis por Palavra do Dia.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }

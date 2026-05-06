@@ -90,7 +90,7 @@ class PainelRoutes
                     && !$canManageContentCategory('historia')
                     && !$canManageContentCategory('palavra_dia')
                 ) {
-                    WebGuards::forbidHtml('Acesso restrito aos responsaveis pelos conteudos da Chancelaria.');
+                    WebGuards::forbidHtml('Acesso restrito aos responsáveis pelos conteúdos da Chancelaria.');
                 }
                 (new ChancelerSessaoController())->index();
                 return true;
