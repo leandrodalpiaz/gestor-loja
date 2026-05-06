@@ -12,6 +12,7 @@ $q = trim((string) ($_GET['q'] ?? ''));
 
 $pwaPageTitle = 'Biblioteca';
 $pwaShowBackButton = true;
+$pwaActiveTab = 'biblioteca';
 
 ob_start();
 ?>

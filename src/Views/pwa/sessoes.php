@@ -13,6 +13,7 @@ $isTestSession = isset($_SESSION['usuario_id']) && (string) $_SESSION['usuario_i
 
 $pwaPageTitle = 'Sessões';
 $pwaShowBackButton = true;
+$pwaActiveTab = 'cargo';
 
 ob_start();
 ?>

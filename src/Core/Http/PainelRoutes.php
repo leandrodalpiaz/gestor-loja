@@ -231,6 +231,96 @@ class PainelRoutes
                 (new PwaAdminController())->index();
                 return true;
 
+            case '/pwa/perfil':
+                WebGuards::requireLogin($openTestAccess, $session);
+                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+                $obreiroModel = new \App\Models\Obreiro();
+                $obreiroCompleto = $obreiroId !== '' ? $obreiroModel->findById($obreiroId) : null;
+                $irmaosAtivos = $obreiroModel->getAllAtivos();
+                require __DIR__ . '/../../Views/pwa/perfil.php';
+                return true;
+
+            case '/pwa/obrigacoes':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission($authorizer->hasPermission('financeiro.self'), 'Acesso restrito ao financeiro.');
+                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+                $obrigacaoModel = new \App\Models\ObrigacaoFinanceira();
+                $resumoObreiro = $obrigacaoModel->obterResumoObreiro($obreiroId);
+                $obrigacoesObreiro = $obrigacaoModel->listarPorObreiro($obreiroId);
+                $configuracaoFinanceira = (new \App\Models\ConfiguracaoLoja())->obter();
+                require __DIR__ . '/../../Views/pwa/obrigacoes.php';
+                return true;
+
+            case '/pwa/comprovantes':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission($authorizer->hasPermission('tesouraria.manage') || strtolower(trim((string) ($_SESSION['usuario_cargo'] ?? ''))) === 'tesoureiro', 'Acesso restrito à Tesouraria.');
+                $comprovanteModel = new \App\Models\ComprovantePix();
+                $comprovantesPendentes = $comprovanteModel->obterPendentes();
+                $categoriaModel = new \App\Models\CategoriaFinanceira();
+                $categoriasEntrada = $categoriaModel->obterPorTipo('entrada');
+                require __DIR__ . '/../../Views/pwa/comprovantes.php';
+                return true;
+
+            case '/pwa/obrigacoes/enviar-comprovante':
+                WebGuards::requireLogin($openTestAccess, $session);
+                if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                    header('Location: /pwa/obrigacoes');
+                    exit;
+                }
+                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+                $valor = (float) ($_POST['valor'] ?? 0);
+                $mes = (int) ($_POST['mes'] ?? date('n'));
+                $ano = (int) ($_POST['ano'] ?? date('Y'));
+                $descricao = trim((string) ($_POST['descricao'] ?? ''));
+
+                if ($valor <= 0) {
+                    $_SESSION['mensagem_erro'] = 'Informe um valor válido maior que zero.';
+                    header('Location: /pwa/obrigacoes');
+                    exit;
+                }
+
+                $nomeArquivo = null;
+                $tipoArquivo = 'desconhecido';
+
+                if (isset($_FILES['comprovante']) && $_FILES['comprovante']['error'] === UPLOAD_ERR_OK) {
+                    $uploadDir = __DIR__ . '/../../../../public/assets/uploads/comprovantes/';
+                    if (!is_dir($uploadDir)) {
+                        @mkdir($uploadDir, 0755, true);
+                    }
+                    $ext = strtolower(pathinfo($_FILES['comprovante']['name'], PATHINFO_EXTENSION));
+                    $nomeArquivo = 'comprovante_' . time() . '_' . uniqid() . '.' . $ext;
+                    if (@move_uploaded_file($_FILES['comprovante']['tmp_name'], $uploadDir . $nomeArquivo)) {
+                        $tipoArquivo = $_FILES['comprovante']['type'];
+                    } else {
+                        $_SESSION['mensagem_erro'] = 'Erro ao salvar o arquivo do comprovante.';
+                        header('Location: /pwa/obrigacoes');
+                        exit;
+                    }
+                } else {
+                    $_SESSION['mensagem_erro'] = 'Selecione o arquivo do comprovante.';
+                    header('Location: /pwa/obrigacoes');
+                    exit;
+                }
+
+                $comprovanteModel = new \App\Models\ComprovantePix();
+                $ok = $comprovanteModel->registrar([
+                    'obreiro_id' => $obreiroId,
+                    'valor_informado' => $valor,
+                    'mes_ref_informado' => $mes,
+                    'ano_ref_informado' => $ano,
+                    'descricao_usuario' => $descricao,
+                    'nome_arquivo' => $nomeArquivo,
+                    'tipo_arquivo' => $tipoArquivo,
+                    'status' => 'pendente',
+                ]);
+
+                $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+                    ? 'Comprovante enviado com sucesso para validação do Tesoureiro.'
+                    : 'Erro ao registrar comprovante no banco.';
+
+                header('Location: /pwa/obrigacoes');
+                exit;
+
             case '/veneravel/sessoes/publicar':
                 self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
                 (new VeneravelController())->publicarSessao();

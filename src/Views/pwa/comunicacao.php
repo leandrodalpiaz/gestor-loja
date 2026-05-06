@@ -11,6 +11,7 @@ $podeCriar = !empty($_SESSION['usuario_cargo']) && in_array((string) $_SESSION['
 
 $pwaPageTitle = 'Comunicação';
 $pwaShowBackButton = true;
+$pwaActiveTab = 'cargo';
 
 ob_start();
 ?>
