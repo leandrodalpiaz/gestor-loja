@@ -12,7 +12,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 $tenantSlug = trim((string) ($_SESSION['tenant_slug'] ?? ''));
 if ($tenantSlug === '') {
-    $tenantSlug = 'loja-teste';
+    $tenantSlug = 'renascenca';
 }
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -41,13 +41,15 @@ $logo512 = $tenantBase . 'logo-512.png';
 $logoPng = $tenantBase . 'logo.png';
 $logoSvg = $tenantBase . 'logo.svg';
 
+$defaultLogo = '/assets/logo-renascenca.png';
+
 $icon192 = is_file(__DIR__ . $logo192)
     ? $logo192
-    : (is_file(__DIR__ . $logoPng) ? $logoPng : '/assets/pwa/icon-192.png');
+    : (is_file(__DIR__ . $logoPng) ? $logoPng : $defaultLogo);
 $icon512 = is_file(__DIR__ . $logo512)
     ? $logo512
-    : (is_file(__DIR__ . $logoPng) ? $logoPng : '/assets/pwa/icon-512.png');
-$iconSvg = is_file(__DIR__ . $logoSvg) ? $logoSvg : '/assets/placeholders/logo-loja.svg';
+    : (is_file(__DIR__ . $logoPng) ? $logoPng : $defaultLogo);
+$iconSvg = is_file(__DIR__ . $logoSvg) ? $logoSvg : $defaultLogo;
 
 echo json_encode([
     'name' => $name,
@@ -79,4 +81,3 @@ echo json_encode([
         ],
     ],
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-
