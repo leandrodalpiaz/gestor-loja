@@ -201,17 +201,30 @@ $detectTenantFromRequest = static function () use ($normalizeTenantToken): ?stri
     $headerTenant = $_SERVER['HTTP_X_TENANT_SLUG'] ?? null;
     $queryTenant = $_GET['tenant'] ?? null;
 
+    if ($headerTenant !== null || $queryTenant !== null) {
+        return $normalizeTenantToken((string) ($headerTenant ?? $queryTenant));
+    }
+
     $host = trim((string) ($_SERVER['HTTP_HOST'] ?? ''));
     $host = preg_replace('/:\d+$/', '', $host) ?? $host;
     $hostTenant = null;
     if ($host !== '' && !in_array($host, ['localhost', '127.0.0.1'], true)) {
-        $parts = explode('.', $host);
-        if (count($parts) >= 3) {
-            $hostTenant = $parts[0] ?? null;
+        $appUrlHost = trim((string) parse_url((string) ($_ENV['APP_URL'] ?? ''), PHP_URL_HOST));
+        $hasDefaultTenant = trim((string) ($_ENV['APP_DEFAULT_TENANT_ID'] ?? '')) !== ''
+            || trim((string) ($_ENV['APP_DEFAULT_TENANT_SLUG'] ?? '')) !== ''
+            || trim((string) ($_ENV['APP_LOJA_NUMERO'] ?? '')) !== '';
+
+        // Render usa subdominios tecnicos por servico. Em instalacoes single-tenant,
+        // esse host nao deve sobrescrever o tenant configurado por ambiente.
+        if (!$hasDefaultTenant || strcasecmp($host, $appUrlHost) !== 0) {
+            $parts = explode('.', $host);
+            if (count($parts) >= 3) {
+                $hostTenant = $parts[0] ?? null;
+            }
         }
     }
 
-    return $normalizeTenantToken((string) ($headerTenant ?? $queryTenant ?? $hostTenant ?? ''));
+    return $normalizeTenantToken((string) ($hostTenant ?? ''));
 };
 
 $tenantSessionInput = $_SESSION;

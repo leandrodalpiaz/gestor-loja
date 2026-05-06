@@ -8,6 +8,7 @@ use PDO;
 class ConteudoPublico
 {
     private PDO $db;
+    private static bool $missingTableLogged = false;
 
     public const TIPOS = [
         'agenda',
@@ -32,8 +33,7 @@ class ConteudoPublico
 
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
-            // In ambientes recem-instalados a migracao pode ainda nao ter sido aplicada.
-            error_log('ConteudoPublico::listarParaAdmin - ' . $e->getMessage());
+            $this->logQueryFailure('listarParaAdmin', $e);
             return [];
         }
     }
@@ -65,7 +65,7 @@ class ConteudoPublico
 
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
-            error_log('ConteudoPublico::listarPublicos - ' . $e->getMessage());
+            $this->logQueryFailure('listarPublicos', $e);
             return [];
         }
     }
@@ -92,7 +92,7 @@ class ConteudoPublico
 
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
-            error_log('ConteudoPublico::listarAdsPublicos - ' . $e->getMessage());
+            $this->logQueryFailure('listarAdsPublicos', $e);
             return [];
         }
     }
@@ -169,6 +169,20 @@ class ConteudoPublico
 
         $stmt = $this->db->prepare("DELETE FROM conteudos_publicos WHERE id = :id");
         $stmt->execute(['id' => $id]);
+    }
+
+    private function logQueryFailure(string $method, \PDOException $e): void
+    {
+        $sqlState = (string) $e->getCode();
+        if ($sqlState === '42P01') {
+            if (!self::$missingTableLogged) {
+                self::$missingTableLogged = true;
+                error_log('ConteudoPublico::' . $method . ' - tabela conteudos_publicos ausente; aplique database/migrations/036_conteudos_publicos_landing_login.sql.');
+            }
+            return;
+        }
+
+        error_log('ConteudoPublico::' . $method . ' - ' . $e->getMessage());
     }
 }
 
