@@ -61,6 +61,15 @@ class BibliotecaRoutes
                 $controller->adicionar();
                 return true;
 
+            case '/biblioteca/classificar':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('biblioteca.classificar'),
+                    'Acesso restrito aos responsaveis por classificar leituras.'
+                );
+                $controller->classificar();
+                return true;
+
             case '/biblioteca/editar':
                 ModuleGuards::requireBibliotecaManageAccess($openTestAccess, $session, $authorizer);
                 $id = $method === 'POST'

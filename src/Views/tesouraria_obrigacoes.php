@@ -14,6 +14,41 @@ $competenciaAtual = sprintf('%02d/%04d', $mesAtual, $anoAtual);
 $meses = [1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril', 5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto', 9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'];
 $tituloMesAtual = ($meses[$mesAtual] ?? 'Mês') . ' ' . $anoAtual;
 $formatCurrency = static fn($value): string => 'R$ ' . number_format((float) $value, 2, ',', '.');
+$primeiroDiaUtilMesSeguinte = static function (int $mes, int $ano): DateTimeImmutable {
+    $base = (new DateTimeImmutable(sprintf('%04d-%02d-01', $ano, $mes)))->modify('first day of next month');
+    while ((int) $base->format('N') >= 6) {
+        $base = $base->modify('+1 day');
+    }
+    return $base;
+};
+$classificarParcela = static function (array $item) use ($hoje, $primeiroDiaUtilMesSeguinte): string {
+    if (($item['status'] ?? '') === 'pago') {
+        return 'pago';
+    }
+    $competenciaMes = (int) ($item['competencia_mes'] ?? $hoje->format('n'));
+    $competenciaAno = (int) ($item['competencia_ano'] ?? $hoje->format('Y'));
+    $limiteAtraso = $primeiroDiaUtilMesSeguinte($competenciaMes, $competenciaAno);
+    $competenciaInicio = new DateTimeImmutable(sprintf('%04d-%02d-01', $competenciaAno, $competenciaMes));
+    if ($hoje >= $limiteAtraso) {
+        return 'atrasado';
+    }
+    if ($competenciaInicio > $hoje) {
+        return 'futuro';
+    }
+    return 'a_vencer';
+};
+$labelParcela = static fn(string $status): string => match ($status) {
+    'pago' => 'Pago',
+    'atrasado' => 'Em atraso',
+    'futuro' => 'Futuro',
+    default => 'A vencer',
+};
+$badgeParcela = static fn(string $status): string => match ($status) {
+    'pago' => 'badge-success',
+    'atrasado' => 'badge-danger',
+    'futuro' => 'badge-secondary',
+    default => 'badge-info',
+};
 $selectedObreiroId = (string) ($_GET['obreiro_id'] ?? '');
 $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
 $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
@@ -58,7 +93,8 @@ foreach ($linhasMesAtual as $linha) {
     if (!isset($painelGeral[$obreiroId])) continue;
     $valor = (float) $linha['valor_previsto'];
     $estaPago = $linha['status'] === 'pago';
-    $estaVencido = !$estaPago && $linha['vencimento'] < $hoje->format('Y-m-d');
+    $statusTemporal = $classificarParcela($linha);
+    $estaVencido = !$estaPago && $statusTemporal === 'atrasado';
     if ($estaPago) $painelGeral[$obreiroId]['pago'] += $valor;
     else {
         $painelGeral[$obreiroId]['aberto'] += $valor;
@@ -67,7 +103,7 @@ foreach ($linhasMesAtual as $linha) {
             $painelGeral[$obreiroId]['vencidos']++;
         }
     }
-    $painelGeral[$obreiroId]['itens'][] = $linha + ['esta_vencido' => $estaVencido];
+    $painelGeral[$obreiroId]['itens'][] = $linha + ['esta_vencido' => $estaVencido, 'status_temporal' => $statusTemporal];
 }
 
 // Adicionar mensalidades faltantes
@@ -81,13 +117,18 @@ foreach ($painelGeral as &$registro) {
     }
     if (!$temMensalidade) {
         $vencimentoPadrao = sprintf('%04d-%02d-10', $anoAtual, $mesAtual);
-        $estaVencidoPadrao = $vencimentoPadrao < $hoje->format('Y-m-d');
+        $statusTemporalPadrao = $classificarParcela([
+            'status' => 'pendente',
+            'competencia_mes' => $mesAtual,
+            'competencia_ano' => $anoAtual,
+        ]);
+        $estaVencidoPadrao = $statusTemporalPadrao === 'atrasado';
         $registro['aberto'] += $mensalidadePadrao;
         if ($estaVencidoPadrao) {
             $registro['atrasado'] += $mensalidadePadrao;
             $registro['vencidos']++;
         }
-        $registro['itens'][] = ['parcela_id' => 0, 'titulo' => 'Contribuição mensal da Loja', 'tipo_obrigacao' => 'mensalidade', 'valor_previsto' => $mensalidadePadrao, 'vencimento' => $vencimentoPadrao, 'status' => 'pendente', 'pago_em' => null, 'esta_vencido' => $estaVencidoPadrao];
+        $registro['itens'][] = ['parcela_id' => 0, 'titulo' => 'Contribuição mensal da Loja', 'tipo_obrigacao' => 'mensalidade', 'valor_previsto' => $mensalidadePadrao, 'vencimento' => $vencimentoPadrao, 'status' => 'pendente', 'pago_em' => null, 'competencia_mes' => $mesAtual, 'competencia_ano' => $anoAtual, 'esta_vencido' => $estaVencidoPadrao, 'status_temporal' => $statusTemporalPadrao];
     }
 }
 unset($registro);
@@ -111,6 +152,10 @@ $registroSelecionado = $selectedObreiroId ? ($painelGeral[$selectedObreiroId] ??
 $selectedObreiroNome = $registroSelecionado['nome'] ?? 'Selecione um obreiro';
 $itensSelecionadosPago = $registroSelecionado ? array_values(array_filter($registroSelecionado['itens'], fn($item) => $item['status'] === 'pago')) : [];
 $itensSelecionadosAberto = $registroSelecionado ? array_values(array_filter($registroSelecionado['itens'], fn($item) => $item['status'] !== 'pago')) : [];
+$valorProximaObrigacao = $registroSelecionado ? array_sum(array_map(
+    static fn(array $item): float => in_array((string) ($item['status_temporal'] ?? ''), ['atrasado', 'a_vencer'], true) ? (float) ($item['valor_previsto'] ?? 0) : 0.0,
+    $itensSelecionadosAberto
+)) : 0.0;
 
 
 // #############################################################################
@@ -216,6 +261,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 mb-6">
                         <div class="card-metric-simple"><p class="card-metric-label">Já Pago</p><p class="card-metric-value text-green-600"><?= $formatCurrency($registroSelecionado['pago']) ?></p></div>
                         <div class="card-metric-simple"><p class="card-metric-label">Falta no Mês</p><p class="card-metric-value text-red-600"><?= $formatCurrency($registroSelecionado['aberto']) ?></p></div>
+                        <div class="card-metric-simple"><p class="card-metric-label">Próxima obrigação</p><p class="card-metric-value text-blue-600"><?= $formatCurrency($valorProximaObrigacao) ?></p><p class="card-metric-sublabel">Soma atrasados + itens a vencer</p></div>
                         <?php if (($registroSelecionado['vencidos'] ?? 0) > 0): ?>
                             <div class="card-metric-simple border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20"><p class="card-metric-label text-red-600 dark:text-red-400">Atenção</p><p class="card-metric-value text-red-700 dark:text-red-300"><?= (int) $registroSelecionado['vencidos'] ?> pendência(s)</p></div>
                         <?php else: ?>
@@ -244,21 +290,37 @@ require __DIR__ . '/partials/erp_shell_open.php';
                             <h4 class="font-semibold text-gray-800 dark:text-gray-100">Aberto no Mês</h4>
                             <?php if (empty($itensSelecionadosAberto)): ?><p class="text-sm text-gray-500">Nenhuma pendência no mês.</p><?php endif; ?>
                             <?php foreach ($itensSelecionadosAberto as $item): ?>
+                                <?php $statusTemporalItem = (string) ($item['status_temporal'] ?? $classificarParcela($item)); ?>
                                 <div class="list-item-detail flex-col items-stretch gap-2 <?= !empty($item['esta_vencido']) ? 'border-red-300 dark:border-red-600' : '' ?>">
                                     <div class="flex justify-between items-start">
                                         <div>
                                             <p class="font-medium"><?= htmlspecialchars($item['titulo']) ?></p>
-                                            <p class="text-xs text-gray-500">Vence em <?= htmlspecialchars(date('d/m/Y', strtotime($item['vencimento']))) ?></p>
+                                            <p class="text-xs text-gray-500">Vence em <?= htmlspecialchars(date('d/m/Y', strtotime($item['vencimento']))) ?> · <?= htmlspecialchars((string) ($item['tipo_obrigacao'] ?? 'obrigacao')) ?></p>
+                                            <span class="badge <?= $badgeParcela($statusTemporalItem) ?> mt-2"><?= htmlspecialchars($labelParcela($statusTemporalItem)) ?></span>
                                         </div>
                                         <p class="font-semibold text-red-600"><?= $formatCurrency($item['valor_previsto']) ?></p>
                                     </div>
-                                    <form action="/tesouraria/obrigacoes/parcela/quitar" method="post" class="flex items-center gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                                        <input type="hidden" name="parcela_id" value="<?= (int) $item['parcela_id'] ?>">
-                                        <input type="hidden" name="obreiro_id" value="<?= htmlspecialchars($selectedObreiroId) ?>">
-                                        <input type="date" name="pago_em" value="<?= date('Y-m-d') ?>" class="form-input-sm flex-grow">
-                                        <input type="number" name="valor_pago" step="0.01" value="<?= htmlspecialchars(number_format((float)$item['valor_previsto'], 2, '.', '')) ?>" class="form-input-sm w-28">
-                                        <button type="submit" class="btn btn-success btn-sm">Quitar</button>
-                                    </form>
+                                    <?php if ((int) ($item['parcela_id'] ?? 0) > 0): ?>
+                                        <form action="/tesouraria/obrigacoes/parcela/quitar" method="post" class="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                            <input type="hidden" name="parcela_id" value="<?= (int) $item['parcela_id'] ?>">
+                                            <input type="hidden" name="obreiro_id" value="<?= htmlspecialchars($selectedObreiroId) ?>">
+                                            <input type="date" name="pago_em" value="<?= date('Y-m-d') ?>" class="form-input-sm flex-grow">
+                                            <input type="number" name="valor_pago" step="0.01" value="<?= htmlspecialchars(number_format((float)$item['valor_previsto'], 2, '.', '')) ?>" class="form-input-sm w-28">
+                                            <button type="submit" class="btn btn-success btn-sm">Quitar</button>
+                                        </form>
+                                        <details class="pt-2 text-sm">
+                                            <summary class="cursor-pointer font-semibold text-gray-600 dark:text-gray-300">Editar parcela</summary>
+                                            <form action="/tesouraria/obrigacoes/parcela/atualizar" method="post" class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                                <input type="hidden" name="parcela_id" value="<?= (int) $item['parcela_id'] ?>">
+                                                <input type="hidden" name="obreiro_id" value="<?= htmlspecialchars($selectedObreiroId) ?>">
+                                                <input type="number" name="valor_previsto" step="0.01" min="0.01" value="<?= htmlspecialchars(number_format((float)$item['valor_previsto'], 2, '.', '')) ?>" class="form-input-sm">
+                                                <input type="date" name="vencimento" value="<?= htmlspecialchars((string) ($item['vencimento'] ?? '')) ?>" class="form-input-sm">
+                                                <button type="submit" class="btn btn-secondary btn-sm">Salvar edição</button>
+                                            </form>
+                                        </details>
+                                    <?php else: ?>
+                                        <div class="alert alert-info text-xs">Mensalidade prevista automaticamente. Gere as mensalidades do ano para editar/quitar esta parcela.</div>
+                                    <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
                         </div>

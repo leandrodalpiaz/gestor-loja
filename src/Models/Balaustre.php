@@ -180,6 +180,7 @@ class Balaustre
         $dados['palavra_bem_ordem']['visitantes'][] = [
             'nome' => $nome,
             'loja' => trim((string) ($visitante['loja'] ?? '')),
+            'numero_loja' => trim((string) ($visitante['numero_loja'] ?? '')),
             'oriente' => trim((string) ($visitante['oriente'] ?? '')),
             'potencia' => trim((string) ($visitante['potencia'] ?? '')),
             'grau' => trim((string) ($visitante['grau'] ?? '')),
@@ -207,17 +208,16 @@ class Balaustre
 
         $stmt = $this->db->prepare("
             INSERT INTO balaustres (
-                sessao_id, loja_id, template_versao, dados_capturados, preparado_por,
+                sessao_id, template_versao, dados_capturados, preparado_por,
                 preparado_em, status, updated_at
             ) VALUES (
-                :sessao_id, :loja_id, 'oficial-v1', CAST(:dados AS jsonb), :autor,
+                :sessao_id, 'oficial-v1', CAST(:dados AS jsonb), :autor,
                 NOW(), 'rascunho', NOW()
             )
         ");
 
         return $stmt->execute([
             'sessao_id' => $sessaoId,
-            'loja_id' => $this->obterLojaAtualId(),
             'dados' => json_encode($dados, JSON_UNESCAPED_UNICODE),
             'autor' => $autorId,
         ]);
@@ -1147,10 +1147,11 @@ class Balaustre
     public function buscarPorSessao(int $sessaoId): ?array
     {
         $stmt = $this->db->prepare("
-            SELECT *
-            FROM balaustres
-            WHERE sessao_id = :sessao_id
-              AND loja_id = :loja_id
+            SELECT b.*
+            FROM balaustres b
+            JOIN sessoes s ON s.id = b.sessao_id
+            WHERE b.sessao_id = :sessao_id
+              AND s.loja_id = :loja_id
             LIMIT 1
         ");
         $stmt->execute([
@@ -1189,6 +1190,7 @@ class Balaustre
                 }
                 $nome = trim((string) ($item['nome'] ?? ''));
                 $loja = trim((string) ($item['loja'] ?? ''));
+                $numeroLoja = trim((string) ($item['numero_loja'] ?? ''));
                 $oriente = trim((string) ($item['oriente'] ?? ''));
                 $potencia = trim((string) ($item['potencia'] ?? ''));
                 $grau = trim((string) ($item['grau'] ?? ''));
@@ -1199,12 +1201,14 @@ class Balaustre
                 return [
                     'nome' => $nome,
                     'loja' => $loja,
+                    'numero_loja' => $numeroLoja,
                     'oriente' => $oriente,
                     'potencia' => $potencia,
                     'grau' => $grau,
                     'linha_resumida' => trim($nome
                         . ($grau !== '' ? ' - ' . $grau : '')
                         . ($loja !== '' ? ' - ' . $loja : '')
+                        . ($numeroLoja !== '' ? ' n. ' . $numeroLoja : '')
                         . ($oriente !== '' ? ' - ' . $oriente : '')
                         . ($potencia !== '' ? ' - ' . $potencia : '')),
                 ];

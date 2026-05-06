@@ -22,6 +22,9 @@ class ChancelerSessaoController
         $sessoes = $sessaoModel->listarFuturas(8);
         $sessaoSelecionadaId = (int) ($_GET['sessao_id'] ?? 0);
         $dataSessaoInformada = trim((string) ($_GET['data_sessao'] ?? ''));
+        if ($dataSessaoInformada === '' && $sessaoSelecionadaId <= 0) {
+            $dataSessaoInformada = (new \DateTimeImmutable('today', new \DateTimeZone('America/Sao_Paulo')))->format('Y-m-d');
+        }
         $sessaoSelecionada = null;
         $mapaPresencas = [];
         $confirmados = [];
@@ -35,7 +38,7 @@ class ChancelerSessaoController
             $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
             $sessaoSelecionada = $sessaoModel->obterOuCriarControleChancelerPorData(
                 $dataSessaoInformada,
-                $autorId !== '' ? $autorId : null
+                ($autorId !== '' && $autorId !== '0') ? $autorId : null
             );
             if ($sessaoSelecionada && !empty($sessaoSelecionada['id'])) {
                 $vistos = [];
@@ -51,7 +54,7 @@ class ChancelerSessaoController
                 $sessoes = $sessoesUnicas;
             }
         }
-        if (!$sessaoSelecionada && $proximaSessao && !empty($proximaSessao['id'])) {
+        if (!$sessaoSelecionada && $proximaSessao && !empty($proximaSessao['id']) && empty($_GET['data_sessao'])) {
             $sessaoSelecionada = $sessaoModel->findById((int) $proximaSessao['id']);
         }
 
@@ -60,6 +63,18 @@ class ChancelerSessaoController
             $mapaPresencas = $presencaSessaoModel->listarMapaPorSessao($sessaoId);
             $confirmados = $presencaModel->listarConfirmadosPorSessao($sessaoId);
             $visitantesResumo = $balaustreModel->obterResumoVisitantesPorSessao($sessaoId);
+        }
+        if ($mapaPresencas === [] && $obreiros !== []) {
+            $mapaPresencas = array_map(static function (array $obreiro): array {
+                return [
+                    'id' => (string) ($obreiro['id'] ?? ''),
+                    'nome' => (string) ($obreiro['nome_historico'] ?? $obreiro['nome'] ?? 'Obreiro'),
+                    'cim' => (string) ($obreiro['cim'] ?? ''),
+                    'grau' => (string) ($obreiro['grau'] ?? ''),
+                    'presente' => false,
+                    'observacao' => null,
+                ];
+            }, $obreiros);
         }
 
         require_once __DIR__ . '/../Views/chanceler_sessao/index.php';
@@ -77,6 +92,7 @@ class ChancelerSessaoController
         $presente = isset($_POST['presente']) && $_POST['presente'] === '1';
         $observacao = trim((string) ($_POST['observacao'] ?? ''));
         $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $autorId = ($autorId !== '' && $autorId !== '0') ? $autorId : '';
 
         if ($sessaoId <= 0 || $obreiroId === '') {
             $_SESSION['mensagem_erro'] = 'Dados insuficientes para registrar a presença.';
@@ -110,6 +126,7 @@ class ChancelerSessaoController
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         $nome = trim((string) ($_POST['nome'] ?? ''));
         $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $autorId = ($autorId !== '' && $autorId !== '0') ? $autorId : '';
 
         if ($sessaoId <= 0 || $nome === '') {
             $_SESSION['mensagem_erro'] = 'Informe a sessão e o nome do visitante.';

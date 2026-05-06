@@ -19,6 +19,19 @@ $presentesEfetivos = array_values(array_filter(
     $mapaPresencas,
     static fn (array $registro): bool => !empty($registro['presente'])
 ));
+$pendentesEfetivos = array_values(array_filter(
+    $mapaPresencas,
+    static fn (array $registro): bool => empty($registro['presente'])
+));
+$filtroCheckin = strtolower(trim((string) ($_GET['checkin'] ?? 'todos')));
+if (!in_array($filtroCheckin, ['todos', 'presentes', 'pendentes'], true)) {
+    $filtroCheckin = 'todos';
+}
+$presencasFiltradas = match ($filtroCheckin) {
+    'presentes' => $presentesEfetivos,
+    'pendentes' => $pendentesEfetivos,
+    default => $mapaPresencas,
+};
 
 $formatarDataHoraExibicao = static function (?string $valor): string {
     if (empty(trim((string) $valor))) return 'Data a definir';
@@ -67,6 +80,10 @@ $appShellEyebrow = 'Painel do Chanceler';
 $appShellTitle = 'Controle de Sessão';
 $appShellDescription = 'Realize o check-in, acompanhe a nominata e gerencie os visitantes para a sessão.';
 $appShellActiveHref = '/chanceler/sessao';
+$appShellActions = [
+    ['label' => 'Painel', 'href' => '/dashboard'],
+    ['label' => 'Orador', 'href' => !empty($sessaoEmFoco['id']) ? '/orador?sessao_id=' . (int) $sessaoEmFoco['id'] : '/orador'],
+];
 
 require __DIR__ . '/../partials/erp_shell_open.php';
 
@@ -155,12 +172,25 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     <div class="xl:col-span-2 space-y-8">
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">Check-in do Quadro da Loja</h2>
-                <p class="card-subtitle">Marque os presentes para compor a lista final da sessão.</p>
+                <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div>
+                        <h2 class="card-title">Recepção e check-in do quadro</h2>
+                        <p class="card-subtitle">Mantenha os obreiros visíveis e marque rapidamente quem já chegou para a abertura dos trabalhos.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <?php foreach (['todos' => 'Todos', 'presentes' => 'Presentes', 'pendentes' => 'Pendentes'] as $valor => $label): ?>
+                            <?php $hrefFiltro = '/chanceler/sessao?' . http_build_query(array_filter([
+                                'sessao_id' => (int) ($sessaoEmFoco['id'] ?? 0) ?: null,
+                                'checkin' => $valor,
+                            ])); ?>
+                            <a href="<?= htmlspecialchars($hrefFiltro) ?>" class="btn <?= $filtroCheckin === $valor ? 'btn-primary' : 'btn-secondary' ?> !py-2 !px-3"><?= htmlspecialchars($label) ?></a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
             </div>
             <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
-                <?php if (!empty($mapaPresencas)): ?>
-                    <?php foreach ($mapaPresencas as $registro): ?>
+                <?php if (!empty($presencasFiltradas)): ?>
+                    <?php foreach ($presencasFiltradas as $registro): ?>
                         <form method="POST" action="/chanceler/sessao/presenca" class="checkin-card">
                             <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoEmFoco['id'] ?? 0) ?>">
                             <input type="hidden" name="obreiro_id" value="<?= htmlspecialchars((string) ($registro['id'] ?? '')) ?>">
@@ -177,7 +207,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         </form>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="alert alert-info md:col-span-2">Nenhuma nominata prevista para esta sessão.</div>
+                    <div class="alert alert-info md:col-span-2">Nenhum obreiro encontrado para este filtro.</div>
                 <?php endif; ?>
             </div>
         </div>
@@ -213,20 +243,27 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             </div>
             <div class="card-body space-y-4">
                 <?php if ($sessaoEmFoco): ?>
-                    <form method="POST" action="/chanceler/sessao/visitante" class="rounded-2xl border border-erp-border bg-erp-surface/60 p-4 space-y-3">
+                    <form method="POST" action="/chanceler/sessao/visitante" class="rounded-2xl border border-erp-border bg-erp-surface/60 p-4 space-y-3" id="visitante-form">
                         <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoEmFoco['id'] ?? 0) ?>">
                         <div class="font-semibold text-gray-800 dark:text-gray-100">Registrar visitante em Loja</div>
+                        <div>
+                            <label for="visitante_texto_livre" class="form-label">Entrada rápida</label>
+                            <textarea id="visitante_texto_livre" rows="2" class="form-textarea" placeholder="Ex: João Henrique, mestre, loja estrela do litoral, 155, arroio do sal - rs, GL-RS"></textarea>
+                            <button type="button" class="btn btn-secondary mt-2 w-full" id="preencher-visitante">Preencher prévia</button>
+                        </div>
                         <div class="grid grid-cols-1 gap-3">
-                            <input name="nome" class="form-input" placeholder="Nome do visitante" required>
-                            <input name="loja" class="form-input" placeholder="Loja">
-                            <input name="oriente" class="form-input" placeholder="Oriente">
-                            <input name="potencia" class="form-input" placeholder="Potência">
-                            <input name="grau" class="form-input" placeholder="Grau">
+                            <input name="nome" id="visitante_nome" class="form-input" placeholder="Nome do visitante" required>
+                            <input name="grau" id="visitante_grau" class="form-input" placeholder="Grau">
+                            <input name="loja" id="visitante_loja" class="form-input" placeholder="Nome da loja">
+                            <input name="numero_loja" id="visitante_numero_loja" class="form-input" placeholder="Número da loja">
+                            <input name="oriente" id="visitante_oriente" class="form-input" placeholder="Oriente da loja">
+                            <input name="potencia" id="visitante_potencia" class="form-input" placeholder="Potência da loja">
                             <input name="numero_certificado" class="form-input" placeholder="N&ordm; do certificado de visitacao">
                             <input type="date" name="certificado_emitido_em" class="form-input" aria-label="Data do certificado de visitacao">
                             <textarea name="fala_resumida" rows="2" class="form-textarea" placeholder="Observação ou fala resumida para Orador/Balaústre"></textarea>
                         </div>
-                        <button class="btn btn-primary w-full" type="submit">Adicionar visitante</button>
+                        <div class="alert alert-info text-xs">Confira a prévia antes de salvar. Estes dados alimentam o Balaústre e o painel do Orador.</div>
+                        <button class="btn btn-primary w-full" type="submit">Confirmar visitante</button>
                     </form>
                 <?php endif; ?>
                 <?php if (!empty($visitantesResumo)): ?>
@@ -262,6 +299,31 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('preencher-visitante');
+    var texto = document.getElementById('visitante_texto_livre');
+    if (!btn || !texto) return;
+
+    btn.addEventListener('click', function () {
+        var partes = texto.value.split(',').map(function (parte) { return parte.trim(); }).filter(Boolean);
+        var campos = [
+            'visitante_nome',
+            'visitante_grau',
+            'visitante_loja',
+            'visitante_numero_loja',
+            'visitante_oriente',
+            'visitante_potencia'
+        ];
+
+        campos.forEach(function (id, index) {
+            var campo = document.getElementById(id);
+            if (campo && partes[index]) campo.value = partes[index];
+        });
+    });
+});
+</script>
 
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
 

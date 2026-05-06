@@ -119,7 +119,25 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <div class="rounded-2xl border border-erp-border bg-erp-surface/60 p-4">
                         <div class="mb-4">
                             <h3 class="font-semibold text-gray-800 dark:text-gray-100">Controle financeiro do ágape</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Registre previsão, arrecadação e custo real. Ao marcar o registro no caixa, a Tesouraria recebe os lançamentos de entrada/saída.</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Escolha se o controle é particular, se afeta o caixa da Loja ou se é ressarcimento de compras para dispensa.</p>
+                        </div>
+                        <?php $fluxoAtual = (string) ($operacaoBanquete['fluxo_financeiro'] ?? 'rateio_particular'); ?>
+                        <div class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <label class="rounded-xl border border-erp-border bg-white p-4 text-sm">
+                                <input type="radio" name="fluxo_financeiro" value="rateio_particular" <?= $fluxoAtual === 'rateio_particular' ? 'checked' : '' ?>>
+                                <span class="ml-2 font-semibold">Rateio particular</span>
+                                <span class="mt-2 block text-xs text-gray-500">Um membro paga, o valor é dividido entre participantes e não entra no caixa da Loja.</span>
+                            </label>
+                            <label class="rounded-xl border border-erp-border bg-white p-4 text-sm">
+                                <input type="radio" name="fluxo_financeiro" value="caixa_loja" <?= $fluxoAtual === 'caixa_loja' ? 'checked' : '' ?>>
+                                <span class="ml-2 font-semibold">Caixa da Loja</span>
+                                <span class="mt-2 block text-xs text-gray-500">A Loja paga ou arrecada; ao registrar no caixa, gera lançamento oficial.</span>
+                            </label>
+                            <label class="rounded-xl border border-erp-border bg-white p-4 text-sm">
+                                <input type="radio" name="fluxo_financeiro" value="dispensa_ressarcimento" <?= $fluxoAtual === 'dispensa_ressarcimento' ? 'checked' : '' ?>>
+                                <span class="ml-2 font-semibold">Dispensa/ressarcimento</span>
+                                <span class="mt-2 block text-xs text-gray-500">Compra para abastecimento, com ressarcimento integral pela Tesouraria.</span>
+                            </label>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div><label for="valor_unitario_previsto" class="form-label">Valor por participante</label><input type="number" step="0.01" min="0" name="valor_unitario_previsto" id="valor_unitario_previsto" value="<?= htmlspecialchars((string) ($operacaoBanquete['valor_unitario_previsto'] ?? ($sessaoEmFoco['agape_valor'] ?? ''))) ?>" class="form-input"></div>
@@ -128,6 +146,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <div><label for="custo_real" class="form-label">Custo real</label><input type="number" step="0.01" min="0" name="custo_real" id="custo_real" value="<?= htmlspecialchars((string) ($operacaoBanquete['custo_real'] ?? '')) ?>" class="form-input"></div>
                         </div>
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div><label for="responsavel_pagamento" class="form-label">Responsável pelo pagamento</label><input type="text" name="responsavel_pagamento" id="responsavel_pagamento" value="<?= htmlspecialchars((string) ($operacaoBanquete['responsavel_pagamento'] ?? '')) ?>" class="form-input" placeholder="Nome do membro ou Loja"></div>
                             <div><label for="fornecedor" class="form-label">Fornecedor</label><input type="text" name="fornecedor" id="fornecedor" value="<?= htmlspecialchars((string) ($operacaoBanquete['fornecedor'] ?? '')) ?>" class="form-input"></div>
                             <div><label for="forma_pagamento" class="form-label">Forma de pagamento</label><input type="text" name="forma_pagamento" id="forma_pagamento" value="<?= htmlspecialchars((string) ($operacaoBanquete['forma_pagamento'] ?? '')) ?>" class="form-input" placeholder="PIX, dinheiro, cartão..."></div>
                             <div><label for="financeiro_status" class="form-label">Status financeiro</label><select name="financeiro_status" id="financeiro_status" class="form-select"><?php $finStatus = (string) ($operacaoBanquete['financeiro_status'] ?? 'planejado'); foreach (['planejado' => 'Planejado', 'a_receber' => 'A receber', 'a_pagar' => 'A pagar', 'conciliado' => 'Conciliado'] as $valor => $label): ?><option value="<?= $valor ?>" <?= $finStatus === $valor ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></div>
@@ -135,7 +154,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <div class="mt-4"><label for="financeiro_observacoes" class="form-label">Observações financeiras</label><textarea name="financeiro_observacoes" id="financeiro_observacoes" rows="2" class="form-textarea"><?= htmlspecialchars((string) ($operacaoBanquete['financeiro_observacoes'] ?? '')) ?></textarea></div>
                         <label class="mt-4 flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300">
                             <input type="checkbox" name="registrar_financeiro" value="1" class="mt-1 rounded border-gray-300">
-                            <span>Registrar no Livro-Caixa da Tesouraria os valores reais informados que ainda não foram lançados.</span>
+                            <span>Registrar no Livro-Caixa da Tesouraria somente quando o fluxo afetar o caixa da Loja ou exigir ressarcimento oficial.</span>
                         </label>
                         <?php if (!empty($operacaoBanquete['receita_lancamento_id']) || !empty($operacaoBanquete['despesa_lancamento_id'])): ?>
                             <div class="mt-3 text-xs text-gray-500">Lançamentos vinculados: receita #<?= htmlspecialchars((string) ($operacaoBanquete['receita_lancamento_id'] ?? '-')) ?> · despesa #<?= htmlspecialchars((string) ($operacaoBanquete['despesa_lancamento_id'] ?? '-')) ?></div>

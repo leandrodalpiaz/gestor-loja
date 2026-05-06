@@ -90,6 +90,17 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         </div>
 
         <div class="card">
+            <div class="card-header"><h2 class="card-title">Biblioteca</h2></div>
+            <div class="card-body">
+                <a href="/biblioteca" class="list-item-action">
+                    <span>Classificar livros por grau recomendado</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </a>
+                <p class="mt-3 text-xs text-gray-500">A recomendação orienta a formação dos Aprendizes e não restringe o acesso ao acervo.</p>
+            </div>
+        </div>
+
+        <div class="card">
             <div class="card-header"><h2 class="card-title">Trilha de Estudo</h2></div>
             <div class="card-body space-y-3">
                 <?php foreach ($trilhaEstudo as $ordem => $titulo): ?>

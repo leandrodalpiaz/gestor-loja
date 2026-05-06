@@ -150,6 +150,7 @@ class BibliotecaController
         }
 
         $comentarios = $this->comentarioModel->listarPorLivro($id);
+        $podeSolicitar = !empty($_SESSION['usuario_logado']) || !empty($_SESSION['usuario_id']);
         require_once __DIR__ . '/../Views/biblioteca/detalhes.php';
     }
 

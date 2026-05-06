@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let autoNext = false;
     let fadeTimer = null;
     let currentOperator = window.harmoniaOperator || '';
+    let preferredVolume = 1;
 
     const el = {
         sessionLabel: document.getElementById('sessionLabel'),
@@ -73,6 +74,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function setPlayerVolume(volume, remember = true) {
+        const normalized = Math.max(0, Math.min(1, Number(volume)));
+        el.audio.volume = normalized;
+        el.volumeStatus.textContent = `${Math.round(normalized * 100)}%`;
+        if (remember && normalized > 0) {
+            preferredVolume = normalized;
+        }
+    }
+
+    function restoreAudibleVolume() {
+        if (el.audio.volume <= 0) {
+            setPlayerVolume(preferredVolume > 0 ? preferredVolume : 1, false);
+        }
+    }
+
     function stepFade(target, durationMs) {
         clearFadeTimer();
         const audio = el.audio;
@@ -85,8 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fadeTimer = setInterval(() => {
             tick++;
             const progress = Math.min(1, tick / steps);
-            audio.volume = Math.max(0, Math.min(1, start + (diff * progress)));
-            el.volumeStatus.textContent = `${Math.round(audio.volume * 100)}%`;
+            setPlayerVolume(Math.max(0, Math.min(1, start + (diff * progress))), target > 0);
             if (progress >= 1) {
                 clearFadeTimer();
                 el.fadeStatus.textContent = 'Pronto';
@@ -119,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (loadOnly) {
             el.audio.src = resolveTrackUrl(current);
             el.audio.load();
+            restoreAudibleVolume();
             el.playerStatus.textContent = 'Pronto';
         }
 
@@ -229,12 +245,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function startPlayback(withFade = false) {
         if (currentIndex < 0 || !tracks[currentIndex]) return;
         if (withFade) {
-            el.audio.volume = 0;
-            el.volumeStatus.textContent = '0%';
+            setPlayerVolume(0, false);
             el.audio.play().catch(() => null);
-            stepFade(1, 1700);
+            stepFade(preferredVolume > 0 ? preferredVolume : 1, 1700);
             return;
         }
+        restoreAudibleVolume();
         el.audio.play().catch(() => null);
     }
 
@@ -294,8 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function bindEvents() {
         if (!el.audio) return;
 
-        el.audio.volume = 1;
-        el.volumeStatus.textContent = '100%';
+        setPlayerVolume(1, true);
 
         el.audio.addEventListener('loadedmetadata', () => {
             el.timeText.textContent = `00:00 / ${formatTime(el.audio.duration)}`;
@@ -333,8 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
         el.btnNext.addEventListener('click', () => moveStep(1, false));
         el.btnSilence.addEventListener('click', () => {
             clearFadeTimer();
-            el.audio.volume = 0;
-            el.volumeStatus.textContent = '0%';
+            setPlayerVolume(0, false);
             el.fadeStatus.textContent = 'Silêncio imediato';
             if (!el.audio.paused) {
                 el.audio.pause();
@@ -342,21 +356,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         el.btnFadeIn.addEventListener('click', () => {
             if (el.audio.paused) {
-                el.audio.volume = 0;
+                setPlayerVolume(0, false);
                 startPlayback(false);
             }
-            stepFade(1, 1800);
+            stepFade(preferredVolume > 0 ? preferredVolume : 1, 1800);
         });
         el.btnFadeOut.addEventListener('click', () => stepFade(0, 1800));
         el.btnVolDown.addEventListener('click', () => {
             clearFadeTimer();
-            el.audio.volume = Math.max(0, Number((el.audio.volume - 0.1).toFixed(2)));
-            el.volumeStatus.textContent = `${Math.round(el.audio.volume * 100)}%`;
+            setPlayerVolume(Math.max(0, Number((el.audio.volume - 0.1).toFixed(2))), true);
         });
         el.btnVolUp.addEventListener('click', () => {
             clearFadeTimer();
-            el.audio.volume = Math.min(1, Number((el.audio.volume + 0.1).toFixed(2)));
-            el.volumeStatus.textContent = `${Math.round(el.audio.volume * 100)}%`;
+            setPlayerVolume(Math.min(1, Number((el.audio.volume + 0.1).toFixed(2))), true);
         });
         el.btnToggleAuto.addEventListener('click', () => {
             autoNext = !autoNext;

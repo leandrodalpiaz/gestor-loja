@@ -25,6 +25,10 @@ $appShellEyebrow = 'Orador';
 $appShellTitle = 'Painel do Orador';
 $appShellDescription = 'Pauta ritual, leitura e visitantes para a palavra a bem da ordem.';
 $appShellActiveHref = '/orador';
+$appShellActions = [
+    ['label' => 'Painel', 'href' => '/dashboard'],
+    ['label' => 'Chancelaria', 'href' => !empty($sessaoEmFoco['id']) ? '/chanceler/sessao?sessao_id=' . (int) $sessaoEmFoco['id'] : '/chanceler/sessao'],
+];
 
 require __DIR__ . '/../partials/erp_shell_open.php';
 
@@ -77,8 +81,14 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
         <div class="card">
             <div class="card-header">
-                <div><h2 class="card-title">Visitantes para Leitura</h2><p class="card-description">Nominata resumida para saudação nominal.</p></div>
-                <span class="badge badge-primary"><?= count($visitantesResumo) ?> visitante(s)</span>
+                <div>
+                    <h2 class="card-title">Visitantes para leitura</h2>
+                    <p class="card-description">Dados sincronizados do check-in do Chanceler para apoiar a saudação nominal.</p>
+                </div>
+                <div class="flex flex-col items-start gap-2 sm:items-end">
+                    <span class="badge badge-primary"><?= count($visitantesResumo) ?> visitante(s)</span>
+                    <span class="badge badge-secondary text-xs">Atualizado pela Chancelaria</span>
+                </div>
             </div>
             <div class="card-body">
                 <?php if (empty($visitantesResumo)): ?>
@@ -86,9 +96,15 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <?php else: ?>
                     <div class="grid md:grid-cols-2 gap-4">
                         <?php foreach ($visitantesResumo as $visitante): ?>
-                            <div class="alert alert-warning !p-4">
+                            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-950">
                                 <p class="font-semibold"><?= htmlspecialchars((string) ($visitante['nome'] ?? 'Visitante')) ?></p>
-                                <p class="mt-1 text-sm"><?= htmlspecialchars((string) ($visitante['linha_resumida'] ?? 'Sem linha resumida.')) ?></p>
+                                <dl class="mt-3 grid grid-cols-1 gap-2 text-sm">
+                                    <div><dt class="font-semibold text-amber-800">Grau</dt><dd><?= htmlspecialchars((string) ($visitante['grau'] ?? '-')) ?></dd></div>
+                                    <div><dt class="font-semibold text-amber-800">Loja</dt><dd><?= htmlspecialchars(trim((string) (($visitante['loja'] ?? '') . (!empty($visitante['numero_loja']) ? ' n. ' . $visitante['numero_loja'] : ''))) ?: '-') ?></dd></div>
+                                    <div><dt class="font-semibold text-amber-800">Oriente</dt><dd><?= htmlspecialchars((string) ($visitante['oriente'] ?? '-')) ?></dd></div>
+                                    <div><dt class="font-semibold text-amber-800">Potência</dt><dd><?= htmlspecialchars((string) ($visitante['potencia'] ?? '-')) ?></dd></div>
+                                </dl>
+                                <p class="mt-3 text-sm font-medium"><?= htmlspecialchars((string) ($visitante['linha_resumida'] ?? 'Sem linha resumida.')) ?></p>
                             </div>
                         <?php endforeach; ?>
                     </div>

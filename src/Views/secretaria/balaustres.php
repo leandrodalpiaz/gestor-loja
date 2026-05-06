@@ -28,6 +28,16 @@ require __DIR__ . '/_sidebar.php';
 require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
 
+<style>
+    .form-input.\!bg-white,
+    .form-select.\!bg-white,
+    .form-textarea.\!bg-white {
+        background-color: #fff !important;
+        color: var(--erp-text) !important;
+        border-color: var(--erp-border) !important;
+    }
+</style>
+
 <?php if ($mensagemSucesso): ?><div class="alert alert-success mb-8 depth-1"><?= htmlspecialchars($mensagemSucesso) ?></div><?php endif; ?>
 <?php if ($mensagemErro): ?><div class="alert alert-danger mb-8 depth-1"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
 

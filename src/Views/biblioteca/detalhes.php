@@ -5,7 +5,7 @@ declare(strict_types=1);
 // LÓGICA DE NEGÓCIO E HELPERS
 // #############################################################################
 
-$podeSolicitar = $auth->isLoggedIn();
+$podeSolicitar = (bool) ($podeSolicitar ?? !empty($_SESSION['usuario_logado']) || !empty($_SESSION['usuario_id']));
 $lojaIdDetalhe = (int) ($_GET['loja_id'] ?? 0);
 $voltarHref = $lojaIdDetalhe > 0 ? '/biblioteca?acervo=rede' : '/biblioteca';
 
@@ -20,6 +20,10 @@ $appShellEyebrow = 'Biblioteca';
 $appShellTitle = 'Detalhes do Título';
 $appShellDescription = 'Veja informações completas, solicite empréstimos e participe das discussões.';
 $appShellActiveHref = '/biblioteca';
+$appShellActions = [
+    ['label' => 'Voltar', 'href' => $voltarHref],
+    ['label' => 'Painel', 'href' => '/dashboard'],
+];
 
 require __DIR__ . '/../partials/erp_shell_open.php';
 
@@ -96,11 +100,12 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <div class="list-item-param"><span>Código</span><strong class="font-mono"><?= htmlspecialchars((string) ($item['codigo_acervo'] ?? '')) ?></strong></div>
                     <div class="list-item-param"><span>ISBN</span><strong><?= htmlspecialchars((string) ($item['isbn'] ?? '-')) ?></strong></div>
                     <div class="list-item-param"><span>Exemplares</span><strong><?= (int) ($item['quantidade_disponivel'] ?? 0) ?></strong></div>
-                    <div class="list-item-param col-span-2 md:col-span-1"><span>Grau Sugerido</span><strong class="badge-grau"><?= $formatGrau((string) ($item['grau_recomendado'] ?? '')) ?></strong></div>
+                    <div class="list-item-param col-span-2 md:col-span-1"><span>Grau recomendado</span><strong class="badge-grau"><?= $formatGrau((string) ($item['grau_recomendado'] ?? '')) ?></strong></div>
                     <?php if (!empty($item['nota_instrucao'])): ?>
                         <div class="list-item-param col-span-2"><p><?= htmlspecialchars((string) $item['nota_instrucao']) ?></p></div>
                     <?php endif; ?>
                 </div>
+                <div class="alert alert-info mb-6">O grau recomendado orienta a leitura formativa e não restringe automaticamente o acesso ao acervo.</div>
                 <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-2">Resumo</h3>
                 <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed whitespace-pre-wrap"><?= htmlspecialchars((string) ($item['resumo'] ?? 'Resumo ainda não informado.')) ?></p>
             </div>

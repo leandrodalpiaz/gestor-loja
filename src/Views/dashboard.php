@@ -25,6 +25,7 @@ $dashboardPermissions = isset($dashboardPermissions) && is_array($dashboardPermi
 $dashboardCan = static fn (string $p): bool => $showAllPanels || (bool) ($dashboardPermissions[$p] ?? false);
 
 $secoes = \App\Core\DashboardSections::build($dashboardCan, $isSystemAdmin);
+$atalhosOperacionais = array_slice(array_merge([], ...array_map(static fn(array $secao): array => $secao['itens'] ?? [], $secoes)), 0, 6);
 
 $dashboardConfiguracaoLoja = isset($dashboardConfiguracaoLoja) && is_array($dashboardConfiguracaoLoja) ? $dashboardConfiguracaoLoja : [];
 $dashboardNomeLoja = trim((string) ($dashboardConfiguracaoLoja['nome_loja'] ?? ($_SESSION['tenant_name'] ?? 'Loja Maçônica')));
@@ -107,6 +108,22 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <span class="card-metric-label">Reunião Semanal</span>
         <span class="card-metric-value"><?= htmlspecialchars($dashboardConfiguracaoLoja['dia_semana_reuniao'] ?? 'A definir') ?></span>
         <span class="card-metric-context"><?= htmlspecialchars($dashboardConfiguracaoLoja['horario_reuniao'] ?? 'Horário a definir') ?></span>
+    </div>
+</div>
+
+<!-- Painel operacional -->
+<div class="card mb-8">
+    <div class="card-header">
+        <h2 class="card-title">Painel operacional do cargo</h2>
+        <p class="card-subtitle">Ações mais úteis para o perfil ativo, mantendo as rotinas completas na barra lateral.</p>
+    </div>
+    <div class="card-body grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <?php foreach ($atalhosOperacionais as $item): ?>
+            <a href="<?= htmlspecialchars((string) ($item['href'] ?? '#')) ?>" class="list-item-action">
+                <span><?= htmlspecialchars((string) ($item['label'] ?? 'Acessar')) ?></span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </a>
+        <?php endforeach; ?>
     </div>
 </div>
 

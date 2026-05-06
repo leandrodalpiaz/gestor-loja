@@ -20,8 +20,11 @@ $formatGrau = static fn($grau) => $grau ? ucfirst(strtolower($grau)) : 'Livre';
 
 $appShellEyebrow = 'Biblioteca';
 $appShellTitle = 'Catálogo da Loja';
-$appShellDescription = 'Consulte o acervo, verifique a disponibilidade e gerencie os empréstimos.';
+$appShellDescription = 'Consulte o acervo, verifique a disponibilidade e use o grau recomendado como orientação de leitura.';
 $appShellActiveHref = '/biblioteca';
+$appShellActions = [
+    ['label' => 'Painel', 'href' => '/dashboard'],
+];
 
 require __DIR__ . '/../partials/erp_shell_open.php';
 
@@ -52,6 +55,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             </div>
         </div>
     </div>
+</div>
+
+<div class="alert alert-info mb-6">
+    O grau recomendado é uma sugestão formativa para orientar a leitura. Ele não bloqueia nem restringe automaticamente o acesso ao livro.
 </div>
 
 <!-- Lista de Itens (Cards para Mobile) -->
@@ -115,7 +122,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <th>Autor</th>
                     <?php if (($catalogScope ?? 'minha') === 'rede'): ?><th>Loja</th><?php endif; ?>
                     <th>Status</th>
-                    <th>Grau</th>
+                    <th>Grau recomendado</th>
                     <th class="w-40">Ações</th>
                 </tr>
             </thead>
@@ -180,13 +187,13 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     <div class="modal-content">
         <form action="/biblioteca/classificar" method="POST">
             <div class="modal-header">
-                <h3 class="modal-title">Classificar Leitura Sugerida</h3>
+                <h3 class="modal-title">Definir grau recomendado</h3>
                 <p id="modal-livro-titulo" class="modal-description"></p>
             </div>
             <div class="modal-body">
                 <input type="hidden" name="livro_id" id="modal-livro-id">
                 <div>
-                    <label for="modal-grau" class="form-label">Grau Sugerido</label>
+                    <label for="modal-grau" class="form-label">Grau recomendado</label>
                     <select name="grau_recomendado" id="modal-grau" class="form-select">
                         <option value="Livre">Livre</option>
                         <option value="Aprendiz">Aprendiz</option>
@@ -201,7 +208,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             </div>
             <div class="modal-footer">
                 <button type="button" onclick="fecharModal()" class="btn btn-secondary">Cancelar</button>
-                <button type="submit" class="btn btn-primary-purple">Salvar Classificação</button>
+                <button type="submit" class="btn btn-primary-purple">Salvar recomendação</button>
             </div>
         </form>
     </div>

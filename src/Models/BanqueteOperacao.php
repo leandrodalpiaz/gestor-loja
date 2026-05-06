@@ -43,7 +43,9 @@ class BanqueteOperacao
                 ADD COLUMN IF NOT EXISTS financeiro_status VARCHAR(30) NOT NULL DEFAULT 'planejado',
                 ADD COLUMN IF NOT EXISTS financeiro_observacoes TEXT NULL,
                 ADD COLUMN IF NOT EXISTS receita_lancamento_id INT NULL,
-                ADD COLUMN IF NOT EXISTS despesa_lancamento_id INT NULL
+                ADD COLUMN IF NOT EXISTS despesa_lancamento_id INT NULL,
+                ADD COLUMN IF NOT EXISTS fluxo_financeiro VARCHAR(40) NOT NULL DEFAULT 'rateio_particular',
+                ADD COLUMN IF NOT EXISTS responsavel_pagamento VARCHAR(180) NULL
         ");
     }
 
@@ -83,11 +85,16 @@ class BanqueteOperacao
         if (!in_array($financeiroStatus, ['planejado', 'a_receber', 'a_pagar', 'conciliado'], true)) {
             $financeiroStatus = 'planejado';
         }
+        $fluxoFinanceiro = strtolower(trim((string) ($dados['fluxo_financeiro'] ?? 'rateio_particular')));
+        if (!in_array($fluxoFinanceiro, ['rateio_particular', 'caixa_loja', 'dispensa_ressarcimento'], true)) {
+            $fluxoFinanceiro = 'rateio_particular';
+        }
+        $responsavelPagamento = trim((string) ($dados['responsavel_pagamento'] ?? ''));
 
         $operacaoAtual = $this->obterPorSessao($sessaoId);
         $receitaLancamentoId = !empty($operacaoAtual['receita_lancamento_id']) ? (int) $operacaoAtual['receita_lancamento_id'] : null;
         $despesaLancamentoId = !empty($operacaoAtual['despesa_lancamento_id']) ? (int) $operacaoAtual['despesa_lancamento_id'] : null;
-        if (!empty($dados['registrar_financeiro'])) {
+        if (!empty($dados['registrar_financeiro']) && $fluxoFinanceiro !== 'rateio_particular') {
             $sessao = $this->obterSessao($sessaoId);
             $dataLancamento = substr((string) ($sessao['data_hora_inicio'] ?? date('Y-m-d')), 0, 10) ?: date('Y-m-d');
             $tituloSessao = trim((string) ($sessao['titulo'] ?? 'Sessão'));
@@ -141,6 +148,8 @@ class BanqueteOperacao
                 financeiro_observacoes,
                 receita_lancamento_id,
                 despesa_lancamento_id,
+                fluxo_financeiro,
+                responsavel_pagamento,
                 fechado_em,
                 created_by,
                 updated_by,
@@ -160,6 +169,8 @@ class BanqueteOperacao
                 :financeiro_observacoes,
                 :receita_lancamento_id,
                 :despesa_lancamento_id,
+                :fluxo_financeiro,
+                :responsavel_pagamento,
                 :fechado_em,
                 :created_by,
                 :updated_by,
@@ -180,6 +191,8 @@ class BanqueteOperacao
                 financeiro_observacoes = EXCLUDED.financeiro_observacoes,
                 receita_lancamento_id = COALESCE(EXCLUDED.receita_lancamento_id, banquete_operacoes.receita_lancamento_id),
                 despesa_lancamento_id = COALESCE(EXCLUDED.despesa_lancamento_id, banquete_operacoes.despesa_lancamento_id),
+                fluxo_financeiro = EXCLUDED.fluxo_financeiro,
+                responsavel_pagamento = EXCLUDED.responsavel_pagamento,
                 fechado_em = EXCLUDED.fechado_em,
                 updated_by = EXCLUDED.updated_by,
                 updated_at = CURRENT_TIMESTAMP
@@ -200,6 +213,8 @@ class BanqueteOperacao
             'financeiro_observacoes' => $financeiroObservacoes !== '' ? $financeiroObservacoes : null,
             'receita_lancamento_id' => $receitaLancamentoId,
             'despesa_lancamento_id' => $despesaLancamentoId,
+            'fluxo_financeiro' => $fluxoFinanceiro,
+            'responsavel_pagamento' => $responsavelPagamento !== '' ? $responsavelPagamento : null,
             'fechado_em' => $status === 'fechado' ? date('Y-m-d H:i:s') : null,
             'created_by' => $autorId,
             'updated_by' => $autorId,

@@ -57,7 +57,8 @@ class MestreBanquetesController
         }
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
-        $autorId = isset($_SESSION['usuario_id']) ? (int) $_SESSION['usuario_id'] : null;
+        $usuarioSessaoId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $autorId = ctype_digit($usuarioSessaoId) ? (int) $usuarioSessaoId : null;
         $ok = $sessaoId > 0 && (new BanqueteOperacao())->salvar($sessaoId, $_POST, $autorId);
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok

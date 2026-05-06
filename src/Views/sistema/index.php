@@ -65,8 +65,15 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         <p class="mt-2 text-sm text-slate-700">
             Este painel existe apenas para suporte do sistema. Ele não aparece como cargo, não entra na nominata e não deve ser usado como perfil de membro.
         </p>
+        <p class="mt-2 text-sm text-slate-700">
+            Acesso previsto para o administrador técnico do sistema e, quando configurado, para perfis explicitamente autorizados. Cargos de Loja não recebem este painel automaticamente.
+        </p>
 
-        <div class="mt-5 grid gap-3 md:grid-cols-2">
+        <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <a href="/admin/acessos" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 hover:bg-white hover:border-cobalto">
+                Usuários e permissões
+                <div class="mt-1 text-xs font-normal text-slate-600">Controle de acessos operacionais.</div>
+            </a>
             <a href="/admin/loja" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 hover:bg-white hover:border-cobalto">
                 Parâmetros da Loja
                 <div class="mt-1 text-xs font-normal text-slate-600">Configurações centrais e identidade institucional.</div>
@@ -74,6 +81,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <a href="/admin/auditoria" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 hover:bg-white hover:border-cobalto">
                 Auditoria
                 <div class="mt-1 text-xs font-normal text-slate-600">Leitura consolidada de ações críticas.</div>
+            </a>
+            <a href="/admin/conteudo-publico" class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 hover:bg-white hover:border-cobalto">
+                Integrações e conteúdo
+                <div class="mt-1 text-xs font-normal text-slate-600">Apoio a portal, Telegram e rotinas públicas.</div>
             </a>
         </div>
     </section>
