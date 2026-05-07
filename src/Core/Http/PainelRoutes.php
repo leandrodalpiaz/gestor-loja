@@ -6,10 +6,15 @@ use App\Controllers\ChancelerSessaoController;
 use App\Controllers\MestreBanquetesController;
 use App\Controllers\OradorController;
 use App\Controllers\PwaBibliotecaController;
+use App\Controllers\PwaCargosController;
+use App\Controllers\PwaChancelariaController;
 use App\Controllers\PwaComunicacaoController;
+use App\Controllers\PwaEfemeridesController;
 use App\Controllers\PwaAdminController;
 use App\Controllers\PwaHomeController;
+use App\Controllers\PwaSecretariaController;
 use App\Controllers\PwaSessoesController;
+use App\Controllers\PwaTesourariaController;
 use App\Controllers\VeneravelController;
 use App\Core\Authorization\Authorizer;
 use App\Core\Tenant\TenantAssetResolver;
@@ -33,6 +38,91 @@ class PainelRoutes
         callable $buildEfemeridesPreview,
         callable $canManageContentCategory
     ): bool {
+        if (in_array($requestUri, ['/pwa/chancelaria', '/pwa/chancelaria/presenca', '/pwa/chancelaria/visitante'], true)) {
+            WebGuards::requireLogin($openTestAccess, $session);
+            WebGuards::requirePermission(
+                $authorizer->hasPermission('chancelaria.manage'),
+                'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.'
+            );
+            $controller = new PwaChancelariaController();
+            if ($requestUri === '/pwa/chancelaria/presenca') {
+                $controller->presenca();
+            } elseif ($requestUri === '/pwa/chancelaria/visitante') {
+                $controller->visitante();
+            } else {
+                $controller->index();
+            }
+            return true;
+        }
+
+        if (in_array($requestUri, ['/pwa/chancelaria/efemerides', '/pwa/chancelaria/efemerides/salvar', '/pwa/chancelaria/efemerides/desativar', '/pwa/chancelaria/efemerides/excluir'], true)) {
+            WebGuards::requireLogin($openTestAccess, $session);
+            if (
+                !$authorizer->hasPermission('chancelaria.manage')
+                && !$canManageContentCategory('efemerides')
+            ) {
+                WebGuards::forbidHtml('Acesso restrito aos responsaveis pelas efemerides.');
+            }
+            $controller = new PwaEfemeridesController();
+            if ($requestUri === '/pwa/chancelaria/efemerides/salvar') {
+                $controller->salvar();
+            } elseif ($requestUri === '/pwa/chancelaria/efemerides/desativar') {
+                $controller->desativar();
+            } elseif ($requestUri === '/pwa/chancelaria/efemerides/excluir') {
+                $controller->excluir();
+            } else {
+                $controller->index();
+            }
+            return true;
+        }
+
+        if ($requestUri === '/pwa/tesouraria') {
+            WebGuards::requireLogin($openTestAccess, $session);
+            WebGuards::requirePermission(
+                $authorizer->hasPermission('tesouraria.manage'),
+                'Acesso restrito à Tesouraria.'
+            );
+            (new PwaTesourariaController())->index();
+            return true;
+        }
+
+        if (in_array($requestUri, ['/pwa/secretaria', '/pwa/secretaria/sessoes/publicar', '/pwa/secretaria/sessoes/cancelar', '/pwa/secretaria/sessoes/reabrir', '/pwa/secretaria/trabalhos/salvar', '/pwa/secretaria/publicacoes/salvar', '/pwa/secretaria/balaustres/salvar'], true)) {
+            WebGuards::requireLogin($openTestAccess, $session);
+            WebGuards::requirePermission(
+                $authorizer->hasPermission('secretaria.manage'),
+                'Acesso restrito a Secretaria.'
+            );
+            $controller = new PwaSecretariaController();
+            if ($requestUri === '/pwa/secretaria/sessoes/publicar') {
+                $controller->publicarSessao();
+            } elseif ($requestUri === '/pwa/secretaria/sessoes/cancelar') {
+                $controller->cancelarSessao();
+            } elseif ($requestUri === '/pwa/secretaria/sessoes/reabrir') {
+                $controller->reabrirSessao();
+            } elseif ($requestUri === '/pwa/secretaria/trabalhos/salvar') {
+                $controller->salvarTrabalho();
+            } elseif ($requestUri === '/pwa/secretaria/publicacoes/salvar') {
+                $controller->salvarPublicacao();
+            } elseif ($requestUri === '/pwa/secretaria/balaustres/salvar') {
+                $controller->salvarBalaustre();
+            } else {
+                $controller->index();
+            }
+            return true;
+        }
+
+        $pwaCargoSlugs = array_keys(PwaCargosController::modules());
+        if (preg_match('~^/pwa/([a-z0-9-]+)$~', $requestUri, $matches) === 1 && in_array($matches[1], $pwaCargoSlugs, true)) {
+            WebGuards::requireLogin($openTestAccess, $session);
+            $module = PwaCargosController::modules()[$matches[1]];
+            WebGuards::requirePermission(
+                $authorizer->hasPermission((string) $module['permission']),
+                'Acesso restrito ao modulo solicitado.'
+            );
+            (new PwaCargosController())->show($matches[1]);
+            return true;
+        }
+
         switch ($requestUri) {
             case '/':
             case '/index.php':
@@ -196,6 +286,66 @@ class PainelRoutes
                 (new PwaBibliotecaController())->classificar();
                 return true;
 
+            case '/pwa/biblioteca/solicitar':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('biblioteca.self') || $authorizer->hasPermission('biblioteca.manage'),
+                    'Acesso restrito ao módulo Biblioteca.'
+                );
+                if (!FeatureFlags::pwaBiblioteca()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaBibliotecaController())->solicitar();
+                return true;
+
+            case '/pwa/biblioteca/comentar':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('biblioteca.self') || $authorizer->hasPermission('biblioteca.manage'),
+                    'Acesso restrito ao módulo Biblioteca.'
+                );
+                if (!FeatureFlags::pwaBiblioteca()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaBibliotecaController())->comentar();
+                return true;
+
+            case '/pwa/biblioteca/reagir':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('biblioteca.self') || $authorizer->hasPermission('biblioteca.manage'),
+                    'Acesso restrito ao módulo Biblioteca.'
+                );
+                if (!FeatureFlags::pwaBiblioteca()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaBibliotecaController())->reagir();
+                return true;
+
+            case '/pwa/biblioteca/emprestimos':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('biblioteca.manage'),
+                    'Acesso restrito ao Bibliotecário e Administradores.'
+                );
+                if (!FeatureFlags::pwaBiblioteca()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaBibliotecaController())->emprestimos();
+                return true;
+
+            case '/pwa/biblioteca/devolver':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('biblioteca.manage'),
+                    'Acesso restrito ao Bibliotecário e Administradores.'
+                );
+                if (!FeatureFlags::pwaBiblioteca()) {
+                    WebGuards::forbidHtml('Recurso indisponível.');
+                }
+                (new PwaBibliotecaController())->devolver();
+                return true;
+
             case '/pwa/comunicacao':
                 WebGuards::requireLogin($openTestAccess, $session);
                 WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Acesso restrito ao painel.');
@@ -235,9 +385,6 @@ class PainelRoutes
             case '/pwa/admin':
                 WebGuards::requireLogin($openTestAccess, $session);
                 WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Acesso restrito ao painel.');
-                if (!FeatureFlags::pwaAdminCrud()) {
-                    WebGuards::forbidHtml('Recurso indisponível.');
-                }
                 (new PwaAdminController())->index();
                 return true;
 

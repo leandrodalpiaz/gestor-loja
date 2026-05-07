@@ -5,15 +5,23 @@ namespace App\Controllers;
 use App\Config\FeatureFlags;
 use App\Models\Acervo;
 use App\Models\BibliotecaLojaConfig;
+use App\Models\ComentarioBiblioteca;
 use App\Models\Emprestimo;
+use App\Models\ReacaoBiblioteca;
 
 class PwaBibliotecaController
 {
     private Acervo $acervoModel;
+    private Emprestimo $emprestimoModel;
+    private ComentarioBiblioteca $comentarioModel;
+    private ReacaoBiblioteca $reacaoModel;
 
     public function __construct()
     {
         $this->acervoModel = new Acervo();
+        $this->emprestimoModel = new Emprestimo();
+        $this->comentarioModel = new ComentarioBiblioteca();
+        $this->reacaoModel = new ReacaoBiblioteca();
     }
 
     public function index(): void
@@ -80,7 +88,7 @@ class PwaBibliotecaController
 
         $emprestimos = [];
         try {
-            $emprestimos = (new Emprestimo())->listarPendentesPorObreiro($usuarioId);
+            $emprestimos = $this->emprestimoModel->listarPorObreiro($usuarioId);
         } catch (\Throwable $e) {
             error_log('Falha ao listar emprestimos PWA: ' . $e->getMessage());
             $mensagemErro = 'Não foi possível carregar seus empréstimos.';
@@ -114,7 +122,7 @@ class PwaBibliotecaController
             exit;
         }
 
-        $comentarios = (new \App\Models\ComentarioBiblioteca())->listarPorLivro($id);
+        $comentarios = $this->comentarioModel->listarPorLivro($id);
         $permissoes = $this->resolverPermissoes();
 
         require __DIR__ . '/../Views/pwa/biblioteca_detalhes.php';
@@ -159,6 +167,89 @@ class PwaBibliotecaController
         }
         
         header('Location: /pwa/biblioteca/detalhes?id=' . $livroId);
+        exit;
+    }
+
+    public function solicitar(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /pwa/biblioteca');
+            exit;
+        }
+
+        $acervoId = (int) ($_POST['acervo_id'] ?? 0);
+        $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        if ($acervoId <= 0 || $obreiroId === '' || $obreiroId === '0') {
+            header('Location: ' . ($acervoId > 0 ? '/pwa/biblioteca/detalhes?id=' . $acervoId . '&erro=1' : '/pwa/biblioteca?erro=1'));
+            exit;
+        }
+
+        $ok = $this->emprestimoModel->solicitar($acervoId, $obreiroId);
+        header('Location: /pwa/biblioteca/detalhes?id=' . $acervoId . ($ok ? '&solicitado=1' : '&erro=1'));
+        exit;
+    }
+
+    public function comentar(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /pwa/biblioteca');
+            exit;
+        }
+
+        $acervoId = (int) ($_POST['acervo_id'] ?? 0);
+        $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $comentario = trim((string) ($_POST['comentario'] ?? ''));
+        $ok = $acervoId > 0 && $obreiroId !== '' && $obreiroId !== '0'
+            ? $this->comentarioModel->adicionar($acervoId, $obreiroId, $comentario)
+            : false;
+
+        header('Location: /pwa/biblioteca/detalhes?id=' . $acervoId . ($ok ? '&comentado=1' : '&erro=1'));
+        exit;
+    }
+
+    public function reagir(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /pwa/biblioteca');
+            exit;
+        }
+
+        $acervoId = (int) ($_POST['acervo_id'] ?? 0);
+        $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $gosteiRaw = strtolower(trim((string) ($_POST['gostei'] ?? '')));
+        $gostei = in_array($gosteiRaw, ['1', 'sim', 'true'], true);
+        $ok = $acervoId > 0 && $obreiroId !== '' && $obreiroId !== '0'
+            ? $this->reacaoModel->definir($acervoId, $obreiroId, $gostei)
+            : false;
+
+        header('Location: /pwa/biblioteca/detalhes?id=' . $acervoId . ($ok ? '&reagido=1' : '&erro=1'));
+        exit;
+    }
+
+    public function emprestimos(): void
+    {
+        $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
+        $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
+        unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
+
+        $emprestimos = $this->emprestimoModel->listarPendentes();
+        require __DIR__ . '/../Views/pwa/biblioteca_emprestimos.php';
+    }
+
+    public function devolver(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /pwa/biblioteca/emprestimos');
+            exit;
+        }
+
+        $id = (int) ($_POST['id'] ?? 0);
+        $ok = $id > 0 && $this->emprestimoModel->registrarDevolucao($id);
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Devolucao registrada com sucesso.'
+            : 'Nao foi possivel registrar a devolucao.';
+
+        header('Location: /pwa/biblioteca/emprestimos');
         exit;
     }
 

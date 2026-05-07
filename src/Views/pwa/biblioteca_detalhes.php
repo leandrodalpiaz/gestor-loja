@@ -78,7 +78,7 @@ ob_start();
             </div>
         <?php endif; ?>
 
-        <form method="post" action="/biblioteca/solicitar" class="pt-2">
+        <form method="post" action="/pwa/biblioteca/solicitar" class="pt-2">
             <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
             <input type="hidden" name="loja_id" value="<?= (int) ($item['loja_id'] ?? 0) ?>">
             <!-- Utiliza o mesmo form desktop, mas no PWA -->
@@ -86,6 +86,19 @@ ob_start();
                 <?= $disponivel ? 'Solicitar Empréstimo' : 'Indisponível no Momento' ?>
             </button>
         </form>
+
+        <div class="grid grid-cols-2 gap-2">
+            <form method="post" action="/pwa/biblioteca/reagir">
+                <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
+                <input type="hidden" name="gostei" value="1">
+                <button type="submit" class="w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">Gostei</button>
+            </form>
+            <form method="post" action="/pwa/biblioteca/reagir">
+                <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
+                <input type="hidden" name="gostei" value="0">
+                <button type="submit" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">Nao gostei</button>
+            </form>
+        </div>
     </div>
 
     <!-- Bloco Administrativo: Classificação -->
@@ -132,7 +145,16 @@ ob_start();
         </details>
     <?php endif; ?>
     
-    <!-- Comentários (apenas listagem simples para o PWA) -->
+    <div class="rounded-2xl border border-erpBorder bg-erpSurface p-5 shadow-sm">
+        <h3 class="font-bold text-erpNavy">Comentar</h3>
+        <form method="post" action="/pwa/biblioteca/comentar" class="mt-3 space-y-3">
+            <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
+            <textarea name="comentario" rows="3" class="w-full rounded-lg border border-erpBorder bg-white px-3 py-2 text-sm focus:border-erpNavy focus:outline-none" placeholder="Registre uma impressao ou recomendacao para os irmaos."></textarea>
+            <button type="submit" class="w-full rounded-lg bg-erpNavy px-4 py-2.5 text-sm font-semibold text-white">Publicar comentario</button>
+        </form>
+    </div>
+
+    <!-- Comentários -->
     <?php if ($comentarios !== []): ?>
         <div class="rounded-2xl border border-erpBorder bg-erpSurface p-5 shadow-sm space-y-4">
             <h3 class="font-bold text-erpNavy">Comentários dos Irmãos</h3>

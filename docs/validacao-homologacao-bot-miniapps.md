@@ -117,3 +117,7 @@ Formato sugerido:
 - ação: Sessão em Loja > Salvar rascunho do balaústre
 - resultado: OK
 - horário: 2026-04-27 20:10
+
+## Roteiro complementar
+
+Miniapps sao canal secundario. Para homologacao principal Desktop + PWA, usar `docs/homologacao-paridade-desktop-mobile.md`.
