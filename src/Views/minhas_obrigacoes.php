@@ -22,7 +22,6 @@ $rotulosAbas = [
 ];
 
 $resumoObreiro = $resumoObreiro ?? [];
-$obrigacoesObreiro = $obrigacoesObreiro ?? [];
 $dados_cadastro = $dados_cadastro ?? [];
 $dados_familia = $dados_familia ?? [];
 $dados_agenda_trabalhos = $dados_agenda_trabalhos ?? ['sessoes_futuras' => [], 'trabalhos' => []];
@@ -49,7 +48,7 @@ $proximoVencimento = (string) ($resumoObreiro['proximo_vencimento'] ?? '');
 $appShellEyebrow = 'Tesouraria';
 $appShellTitle = 'Minha Área';
 $appShellDescription = 'Hub pessoal do obreiro';
-$appShellActiveHref = '/minhas-obrigacoes';
+$appShellActiveHref = '/financeiro/minhas-obrigacoes';
 $appShellActions = [['label' => 'Voltar ao Painel', 'href' => '/dashboard']];
 require __DIR__ . '/partials/erp_shell_open.php';
 ?>
@@ -97,17 +96,13 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <div class="card-header"><h2 class="card-title"><?= htmlspecialchars($rotulosAbas[$abaAtiva] ?? 'Área') ?></h2></div>
         <div class="card-body text-sm space-y-2">
             <?php if ($abaAtiva === 'cadastro'): ?>
-                <div class="mb-2">
-                    <a class="btn btn-secondary" href="/meu-cadastro">Atualizar cadastro</a>
-                </div>
+                <div class="mb-2"><a class="btn btn-secondary" href="/meu-cadastro">Atualizar cadastro</a></div>
                 <?php foreach ($dados_cadastro as $campo => $valor): if ($campo === 'pendencias') continue; ?>
                     <div><strong><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) $campo))) ?>:</strong> <?= htmlspecialchars((string) ($valor !== '' ? $valor : '-')) ?></div>
                 <?php endforeach; ?>
                 <?php if (!empty($dados_cadastro['pendencias'])): ?><div class="alert alert-warning">Pendências: <?= htmlspecialchars(implode(', ', $dados_cadastro['pendencias'])) ?></div><?php endif; ?>
             <?php elseif ($abaAtiva === 'familia'): ?>
-                <div class="mb-2">
-                    <a class="btn btn-secondary" href="/meu-cadastro">Atualizar dados familiares</a>
-                </div>
+                <div class="mb-2"><a class="btn btn-secondary" href="/meu-cadastro">Atualizar dados familiares</a></div>
                 <div><strong>Estado civil:</strong> <?= htmlspecialchars((string) (($dados_familia['estado_civil'] ?? '') ?: '-')) ?></div>
                 <div><strong>Cônjuge:</strong> <?= htmlspecialchars((string) (($dados_familia['conjuge'] ?? '') ?: '-')) ?></div>
                 <div><strong>Filhos:</strong> <?= htmlspecialchars((string) (($dados_familia['filhos'] ?? '') ?: '-')) ?></div>
