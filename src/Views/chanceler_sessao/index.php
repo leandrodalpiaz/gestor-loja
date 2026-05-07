@@ -161,6 +161,17 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <div class="info-badge"><span>Ágape</span><strong><?= htmlspecialchars($descricaoAgape($sessaoEmFoco)) ?></strong></div>
                 <div class="info-badge"><span>Modelo Financeiro</span><strong><?= htmlspecialchars($descricaoModeloTesourariaAgape($sessaoEmFoco)) ?></strong></div>
             </div>
+
+            <div class="mt-5 flex flex-col md:flex-row md:items-center gap-3">
+                <form method="POST" action="/chanceler/sessao/cancelar" onsubmit="return confirm('Cancelar esta sessão?');">
+                    <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoEmFoco['id'] ?? 0) ?>">
+                    <button type="submit" class="btn btn-secondary w-full md:w-auto border border-rose-300 text-rose-700 hover:bg-rose-50">Cancelar sessão</button>
+                </form>
+                <form method="POST" action="/chanceler/sessao/excluir" onsubmit="return confirm('EXCLUIR definitivamente esta sessão e seus registros (presenças, visitantes, histórico etc.)?');">
+                    <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoEmFoco['id'] ?? 0) ?>">
+                    <button type="submit" class="btn w-full md:w-auto bg-rose-600 text-white hover:bg-rose-700">Excluir sessão</button>
+                </form>
+            </div>
         <?php else: ?>
             <div class="alert alert-info mt-6">Nenhuma sessão futura cadastrada.</div>
         <?php endif; ?>
@@ -326,5 +337,4 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
-
 

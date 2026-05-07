@@ -290,7 +290,7 @@ class Balaustre
         $dadosJson['blocos']['tronco_solidariedade'] = trim((string) ($dadosJson['blocos']['tronco_solidariedade'] ?? 'Sem coleta informada.'));
         $dadosJson['blocos']['conclusoes_orador'] = trim((string) ($dadosJson['blocos']['conclusoes_orador'] ?? 'Sem registro.'));
         $dadosJson['blocos']['encerramento'] = trim((string) ($dadosJson['blocos']['encerramento'] ?? $this->montarEncerramentoPadrao($dataFim)));
-        $dadosJson['blocos']['assinaturas'] = trim((string) ($dadosJson['blocos']['assinaturas'] ?? 'Secretario              Guarda da Lei              Veneravel Mestre'));
+        $dadosJson['blocos']['assinaturas'] = trim((string) ($dadosJson['blocos']['assinaturas'] ?? 'Secretário              Guarda da Lei              Venerável Mestre'));
 
         if ($palavraComposta !== '' && empty($dadosJson['palavra_bem_ordem']['obreiros']) && empty($dadosJson['palavra_bem_ordem']['visitantes'])) {
             $dadosJson['palavra_obreiros'] = [['nome' => '', 'fala' => $palavraComposta]];
@@ -314,7 +314,7 @@ class Balaustre
             'PALAVRA A BEM DA ORDEM EM GERAL E DO QUADRO EM PARTICULAR: ' . ($palavraComposta !== '' ? $palavraComposta : 'Nao utilizada.'),
             'CONCLUSOES DO ORADOR: ' . trim((string) ($dadosJson['blocos']['conclusoes_orador'] ?? 'Sem registro.')),
             'ENCERRAMENTO: ' . trim((string) ($dadosJson['blocos']['encerramento'] ?? $this->montarEncerramentoPadrao($dataFim))),
-            trim((string) ($dadosJson['blocos']['assinaturas'] ?? 'Secretario              Guarda da Lei              Veneravel Mestre')),
+            trim((string) ($dadosJson['blocos']['assinaturas'] ?? 'Secretário              Guarda da Lei              Venerável Mestre')),
         ];
 
         return trim(implode("\n\n", array_filter($linhas, static fn ($linha) => trim((string) $linha) !== '')));
@@ -905,6 +905,52 @@ class Balaustre
             }
             return ['ok' => false, 'erro' => 'Falha ao abrir votação: ' . $e->getMessage()];
         }
+    }
+
+    public function registrarSugestaoEdicao(int $balaustreId, string $observacao, ?string $autorId = null): bool
+    {
+        $balaustre = $this->buscarPorId($balaustreId);
+        if (!$balaustre) {
+            return false;
+        }
+
+        $observacao = trim($observacao);
+        if ($observacao === '') {
+            return false;
+        }
+
+        $dados = $balaustre['dados_capturados'] ?? null;
+        if (is_string($dados)) {
+            $dec = json_decode($dados, true);
+            $dados = is_array($dec) ? $dec : [];
+        }
+        $dados = is_array($dados) ? $dados : [];
+
+        $dados['observacoes_veneravel'] = [
+            'texto' => $observacao,
+            'registrado_em' => (new \DateTimeImmutable('now', new \DateTimeZone('America/Sao_Paulo')))->format(DATE_ATOM),
+            'registrado_por' => $autorId,
+        ];
+
+        $stmt = $this->db->prepare("
+            UPDATE balaustres
+               SET dados_capturados = CAST(:dados AS jsonb),
+                   updated_at = NOW()
+             WHERE id = :id
+               AND EXISTS (
+                   SELECT 1
+                   FROM balaustres b
+                   LEFT JOIN sessoes s ON s.id = b.sessao_id
+                   WHERE b.id = :id
+                     AND (s.id IS NULL OR s.loja_id = :loja_id)
+               )
+        ");
+
+        return (bool) $stmt->execute([
+            'id' => $balaustreId,
+            'dados' => json_encode($dados, JSON_UNESCAPED_UNICODE),
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
     }
 
     public function listarRecentes(int $limite = 30): array

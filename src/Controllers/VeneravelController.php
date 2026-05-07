@@ -4,8 +4,10 @@ namespace App\Controllers;
 
 use App\Models\Balaustre;
 use App\Models\Cargo;
+use App\Models\ConviteExterno;
 use App\Models\Obreiro;
 use App\Models\Sessao;
+use App\Models\TesourariaExecutive;
 
 class VeneravelController
 {
@@ -15,6 +17,8 @@ class VeneravelController
         $balaustreModel = new Balaustre();
         $cargoModel = new Cargo();
         $obreiroModel = new Obreiro();
+        $conviteModel = new ConviteExterno();
+        $tesourariaExec = new TesourariaExecutive();
 
         $proximaSessao = $sessaoModel->obterProximaSessao();
         $sessoes = $sessaoModel->listarFuturas(8);
@@ -34,6 +38,20 @@ class VeneravelController
         if (!$sessaoEmFoco && $proximaSessao && !empty($proximaSessao['id'])) {
             $sessaoEmFoco = $sessaoModel->findById((int) $proximaSessao['id']);
         }
+
+        $tz = new \DateTimeZone('America/Sao_Paulo');
+        $mesSelecionado = (int) ($_GET['mes'] ?? date('n'));
+        $anoSelecionado = (int) ($_GET['ano'] ?? date('Y'));
+        $mesSelecionado = max(1, min(12, $mesSelecionado));
+        $anoSelecionado = max(2000, min(2100, $anoSelecionado));
+        $inicioMes = new \DateTimeImmutable(sprintf('%04d-%02d-01', $anoSelecionado, $mesSelecionado), $tz);
+        $fimMes = $inicioMes->modify('last day of this month');
+
+        $sessoesDoMes = $sessaoModel->listarPorPeriodo($inicioMes->format('Y-m-d'), $fimMes->format('Y-m-d'));
+        $convitesDoMes = $conviteModel->listarPorPeriodo($inicioMes->format('Y-m-d'), $fimMes->format('Y-m-d'));
+        $tesourariaResumo = $tesourariaExec->resumoMes($mesSelecionado, $anoSelecionado);
+        $tesourariaSerie = $tesourariaExec->serieComparativaTresAnos($anoSelecionado);
+        $tesourariaSomatorios = $tesourariaExec->somatoriosAnoPorGrupo($anoSelecionado);
 
         $balaustresAptos = array_values(array_filter(
             $balaustresRecentes,
@@ -84,6 +102,8 @@ class VeneravelController
             ];
         }, array_slice($obreirosComPendencia, 0, 8));
 
+        $obreirosAtrasoFraterno = $this->listarAtrasosFraternos($anoSelecionado, $mesSelecionado);
+
         $formatarPercentual = static fn (float $valor): string => number_format($valor, 1, ',', '.') . '%';
         $balaustresConsolidados = array_values(array_filter(
             $balaustresRecentes,
@@ -104,7 +124,7 @@ class VeneravelController
         $agapePago = 0;
         $agapeGratuito = 0;
         $agapePorFaixa = [
-            'Ate R$ 20' => 0,
+            'Até R$ 20' => 0,
             'R$ 20 a R$ 40' => 0,
             'Acima de R$ 40' => 0,
         ];
@@ -123,7 +143,7 @@ class VeneravelController
             if ($modalidadeAgape === 'pago') {
                 $agapePago++;
                 if ($valorAgape <= 20) {
-                    $agapePorFaixa['Ate R$ 20']++;
+                    $agapePorFaixa['Até R$ 20']++;
                 } elseif ($valorAgape <= 40) {
                     $agapePorFaixa['R$ 20 a R$ 40']++;
                 } else {
@@ -221,7 +241,7 @@ class VeneravelController
                 ['title' => 'Ritmo por grau', 'text' => $sessaoSemGrau > 0 ? 'Existem sessões finalizadas sem grau classificado.' : 'Não há ausência de classificação de grau.', 'tone' => $sessaoSemGrau > 0 ? 'warning' : 'success'],
             ],
             'activity' => array_map(static fn (array $item): array => [
-                'item' => (string) ($item['sessao_titulo'] ?? $item['numero_balaustre'] ?? 'Balaustre'),
+                'item' => (string) ($item['sessao_titulo'] ?? $item['numero_balaustre'] ?? 'Balaústre'),
                 'meta' => 'Status: ' . (string) ($item['status'] ?? 'indefinido'),
             ], array_slice($balaustresPendentesDecisao, 0, 6)),
             'links' => [
@@ -231,7 +251,118 @@ class VeneravelController
             ],
         ];
 
+        // View-model explícito: mantém o controller como fonte e evita dependências
+        // em variáveis soltas com nomes históricos de outras telas.
+        $view = [
+            'mes' => $mesSelecionado,
+            'ano' => $anoSelecionado,
+            'inicio_mes' => $inicioMes,
+            'fim_mes' => $fimMes,
+            'sessoes_mes' => $sessoesDoMes,
+            'convites_mes' => $convitesDoMes,
+            'tesouraria_resumo' => $tesourariaResumo,
+            'tesouraria_serie' => $tesourariaSerie,
+            'tesouraria_somatorios' => $tesourariaSomatorios,
+            'balaustres_aptos' => $balaustresAptos,
+            'balaustres_em_votacao' => $balaustresEmVotacao,
+            'balaustres_pendentes_decisao' => $balaustresPendentesDecisao,
+            'obreiros_atraso_fraterno' => $obreirosAtrasoFraterno,
+            'nominata_principal' => $nominataPrincipal,
+            'cargos_criticos_pendentes' => $cargosCriticosPendentes,
+            'obreiros_pendentes_criticos' => $obreirosPendentesCriticos,
+            'dashboard' => $dashboard,
+        ];
+
         require_once __DIR__ . '/../Views/veneravel/index.php';
+    }
+
+    public function visualizarBalaustre(): void
+    {
+        $balaustreId = (int) ($_GET['id'] ?? 0);
+        if ($balaustreId <= 0) {
+            $_SESSION['mensagem_erro'] = 'Informe o Balaústre para visualizar.';
+            header('Location: /veneravel');
+            exit;
+        }
+
+        $balaustre = (new Balaustre())->buscarPorId($balaustreId);
+        if (!$balaustre) {
+            $_SESSION['mensagem_erro'] = 'Balaústre não encontrado ou indisponível para esta Loja.';
+            header('Location: /veneravel');
+            exit;
+        }
+
+        require_once __DIR__ . '/../Views/veneravel/visualizar_balaustre.php';
+    }
+
+    public function editarBalaustre(): void
+    {
+        // "Editar" é exceção; a rotina segue na Secretaria.
+        $sessaoId = (int) ($_GET['sessao_id'] ?? 0);
+        $balaustreSemSessao = (int) ($_GET['balaustre_sem_sessao'] ?? 0);
+
+        if ($sessaoId > 0) {
+            header('Location: /secretaria?sessao_id=' . urlencode((string) $sessaoId));
+            exit;
+        }
+
+        if ($balaustreSemSessao > 0) {
+            header('Location: /secretaria?balaustre_sem_sessao=1');
+            exit;
+        }
+
+        header('Location: /secretaria');
+        exit;
+    }
+
+    public function sugerirEdicaoBalaustre(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /veneravel');
+            exit;
+        }
+
+        $balaustreId = (int) ($_POST['balaustre_id'] ?? 0);
+        $observacao = trim((string) ($_POST['observacao'] ?? ''));
+        if ($balaustreId <= 0 || $observacao === '') {
+            $_SESSION['mensagem_erro'] = 'Informe o Balaústre e a observação para seguir.';
+            header('Location: /veneravel');
+            exit;
+        }
+
+        $autorId = (string) ($_SESSION['usuario_id'] ?? '');
+        $autorId = $autorId !== '' ? $autorId : null;
+        $ok = (new Balaustre())->registrarSugestaoEdicao($balaustreId, $observacao, $autorId);
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Sugestão de edição registrada e encaminhada para a Secretaria.'
+            : 'Não foi possível registrar a sugestão de edição.';
+        header('Location: /veneravel');
+        exit;
+    }
+
+    public function enviarBalaustreParaVotacao(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /veneravel');
+            exit;
+        }
+
+        $balaustreId = (int) ($_POST['balaustre_id'] ?? 0);
+        if ($balaustreId <= 0) {
+            $_SESSION['mensagem_erro'] = 'Balaústre inválido para envio à votação.';
+            header('Location: /veneravel');
+            exit;
+        }
+
+        $autorId = (string) ($_SESSION['usuario_id'] ?? '');
+        $autorId = $autorId !== '' ? $autorId : null;
+        $resultado = (new Balaustre())->abrirVotacao($balaustreId, $autorId);
+        $ok = (bool) ($resultado['ok'] ?? false);
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Balaústre enviado para votação.'
+            : (string) ($resultado['erro'] ?? 'Não foi possível enviar o Balaústre para votação.');
+        header('Location: /veneravel');
+        exit;
     }
 
     public function publicarSessao(): void
@@ -384,7 +515,7 @@ class VeneravelController
     public function executarAcaoBalaustreMiniapp(string $acao, int $balaustreId, ?string $autorId = null): array
     {
         if ($balaustreId <= 0) {
-            return ['ok' => false, 'erro' => 'Balaustre inválido para a ação solicitada.'];
+            return ['ok' => false, 'erro' => 'Balaústre inválido para a ação solicitada.'];
         }
 
         $model = new Balaustre();
@@ -403,6 +534,46 @@ class VeneravelController
         ];
     }
 
+    private function listarAtrasosFraternos(int $ano, int $mes): array
+    {
+        $ano = max(2000, min(2100, $ano));
+        $mes = max(1, min(12, $mes));
+
+        $tz = new \DateTimeZone('America/Sao_Paulo');
+        $inicioMes = new \DateTimeImmutable(sprintf('%04d-%02d-01', $ano, $mes), $tz);
+        $limite = $this->primeiroDiaUtilMesSeguinte($inicioMes);
+        $hoje = new \DateTimeImmutable('today', $tz);
+        if ($hoje < $limite) {
+            return [];
+        }
+
+        $obreiroModel = new Obreiro();
+        $lista = $obreiroModel->listarParaSecretaria(['ordenacao' => 'alerta']);
+        $atrasos = [];
+        foreach ($lista as $item) {
+            if (!empty($item['financeiro_pendente']) || !empty($item['pendencias_financeiras'])) {
+                $atrasos[] = [
+                    'id' => (string) ($item['id'] ?? ''),
+                    'nome' => (string) ($item['nome_historico'] ?? $item['nome'] ?? 'Obreiro'),
+                ];
+            }
+        }
+        return array_slice($atrasos, 0, 8);
+    }
+
+    private function primeiroDiaUtilMesSeguinte(\DateTimeImmutable $inicioMes): \DateTimeImmutable
+    {
+        $proximo = $inicioMes->modify('first day of next month');
+        $dow = (int) $proximo->format('N');
+        if ($dow === 6) {
+            return $proximo->modify('+2 days');
+        }
+        if ($dow === 7) {
+            return $proximo->modify('+1 day');
+        }
+        return $proximo;
+    }
+
     private function executarAcaoSessao(string $acao): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -418,8 +589,7 @@ class VeneravelController
         }
 
         $sessaoModel = new Sessao();
-        $autorId = (string) ($_SESSION['usuario_id'] ?? '');
-        $autorId = $autorId !== '' ? $autorId : null;
+        $autorId = $this->currentUserUuidOrNull();
 
         $ok = false;
         $mensagemSucesso = 'Ação concluída com sucesso.';
@@ -451,6 +621,15 @@ class VeneravelController
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok ? $mensagemSucesso : $mensagemErro;
         header('Location: /veneravel');
         exit;
+    }
+
+    private function currentUserUuidOrNull(): ?string
+    {
+        $id = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        if ($id === '' || $id === '0') {
+            return null;
+        }
+        return preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id) === 1 ? $id : null;
     }
 
     private function executarAcaoBalaustre(string $acao): void

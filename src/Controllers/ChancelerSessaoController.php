@@ -148,6 +148,55 @@ class ChancelerSessaoController
         exit;
     }
 
+    public function cancelarSessao(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /chanceler/sessao');
+            exit;
+        }
+
+        $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
+        if ($sessaoId <= 0) {
+            $_SESSION['mensagem_erro'] = 'Sessão inválida para cancelamento.';
+            header('Location: /chanceler/sessao');
+            exit;
+        }
+
+        $autorId = $this->currentUserUuidOrNull();
+        $ok = (new Sessao())->cancelar($sessaoId, $autorId, 'Cancelamento solicitado no painel do Chanceler.');
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Sessão cancelada com sucesso.'
+            : 'Não foi possível cancelar a sessão.';
+
+        header('Location: /chanceler/sessao?sessao_id=' . urlencode((string) $sessaoId));
+        exit;
+    }
+
+    public function excluirSessao(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /chanceler/sessao');
+            exit;
+        }
+
+        $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
+        if ($sessaoId <= 0) {
+            $_SESSION['mensagem_erro'] = 'Sessão inválida para exclusão.';
+            header('Location: /chanceler/sessao');
+            exit;
+        }
+
+        $ok = (new Sessao())->excluir($sessaoId);
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Sessão excluída com sucesso.'
+            : 'Não foi possível excluir a sessão.';
+
+        header('Location: /chanceler/sessao');
+        exit;
+    }
+
     public function montarPayloadMiniapp(?int $sessaoId = null): array
     {
         $sessaoModel = new Sessao();

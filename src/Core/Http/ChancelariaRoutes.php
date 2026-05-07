@@ -83,6 +83,26 @@ class ChancelariaRoutes
                 (new VeneravelController())->encerrarVotacaoBalaustre();
                 return true;
 
+            case '/veneravel/balaustre/visualizar':
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Venerável Mestre ou Administrador.');
+                (new VeneravelController())->visualizarBalaustre();
+                return true;
+
+            case '/veneravel/balaustre/enviar-votacao':
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Venerável Mestre ou Administrador.');
+                (new VeneravelController())->enviarBalaustreParaVotacao();
+                return true;
+
+            case '/veneravel/balaustre/sugerir-edicao':
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Venerável Mestre ou Administrador.');
+                (new VeneravelController())->sugerirEdicaoBalaustre();
+                return true;
+
+            case '/veneravel/balaustre/editar':
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Venerável Mestre ou Administrador.');
+                (new VeneravelController())->editarBalaustre();
+                return true;
+
             case '/chancelaria/efemerides/salvar-previa':
                 self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
                 if ($method !== 'POST') {

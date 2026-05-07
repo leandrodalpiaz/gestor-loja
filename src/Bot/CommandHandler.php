@@ -718,7 +718,7 @@ class CommandHandler
         $config = (new ConfiguracaoLoja())->obter();
         $nomeLoja = trim((string) ($config['nome_loja'] ?? ''));
         $numeroLoja = trim((string) ($config['numero_loja'] ?? ''));
-        $linhaLoja = trim($nomeLoja . ($numeroLoja !== '' ? ' nÃââ‚¬Å¡Âº ' . $numeroLoja : ''));
+        $linhaLoja = trim($nomeLoja . ($numeroLoja !== '' ? ' nº ' . $numeroLoja : ''));
         $ordemDia = trim((string) ($sessao['ordem_dia'] ?? $sessao['resumo_publico'] ?? ''));
 
         return "NOVA SESSÃO\n\n"
@@ -1022,7 +1022,7 @@ class CommandHandler
 
     private function handleBibliotecaCadastrar($chatId, $fromId = null)
     {
-        $mensagem = "<b>Cadastrar Novo Livro</b>\n\nEscolha o metodo de cadastro:";
+        $mensagem = "<b>Cadastrar Novo Livro</b>\n\nEscolha o método de cadastro:";
         $teclado = [
             'inline_keyboard' => [
                 [

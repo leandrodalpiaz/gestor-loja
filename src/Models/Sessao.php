@@ -171,6 +171,51 @@ class Sessao
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function listarPorPeriodo(string $inicio, string $fim): array
+    {
+        $inicio = trim($inicio);
+        $fim = trim($fim);
+        if (!preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $inicio) || !preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $fim)) {
+            return [];
+        }
+
+        $stmt = $this->db->prepare("
+            SELECT
+                s.id,
+                s.data_hora_inicio,
+                s.data_hora_fim,
+                s.tipo_sessao,
+                s.grau_sessao,
+                s.tipo_sessao_principal,
+                s.tipo_sessao_subtipo,
+                s.agape_modalidade,
+                s.agape_modelo_financeiro,
+                s.agape_valor,
+                s.titulo,
+                s.status,
+                COALESCE(confirmados.total_confirmados, 0) AS total_confirmados,
+                COALESCE(confirmados.total_agape, 0) AS total_agape
+            FROM sessoes s
+            LEFT JOIN (
+                SELECT
+                    sessao_id,
+                    COUNT(*) FILTER (WHERE status_confirmacao = 'confirmado') AS total_confirmados,
+                    COUNT(*) FILTER (WHERE status_confirmacao = 'confirmado' AND participara_agape = TRUE) AS total_agape
+                FROM confirmacoes_sessao
+                GROUP BY sessao_id
+            ) confirmados ON confirmados.sessao_id = s.id
+            WHERE s.loja_id = :loja_id
+              AND s.data_hora_inicio::date BETWEEN :inicio AND :fim
+            ORDER BY s.data_hora_inicio ASC
+        ");
+        $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
+            'inicio' => $inicio,
+            'fim' => $fim,
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public function obterPorDataControleChanceler(string $data): ?array
     {
         $data = trim($data);
@@ -451,6 +496,7 @@ class Sessao
 
     public function cancelar(int $id, ?string $autorId = null, ?string $observacao = null): bool
     {
+        $autorId = $this->normalizarUuidOuNull($autorId);
         $anterior = $this->findById($id);
         if (!$anterior) {
             return false;
@@ -481,6 +527,7 @@ class Sessao
 
     public function reabrir(int $id, ?string $autorId = null, ?string $observacao = null): bool
     {
+        $autorId = $this->normalizarUuidOuNull($autorId);
         $anterior = $this->findById($id);
         if (!$anterior) {
             return false;
@@ -511,6 +558,7 @@ class Sessao
 
     public function marcarPublicada(int $id, ?string $autorId = null, ?string $observacao = null): bool
     {
+        $autorId = $this->normalizarUuidOuNull($autorId);
         $anterior = $this->findById($id);
         if (!$anterior) {
             return false;
@@ -543,6 +591,7 @@ class Sessao
 
     public function marcarRealizada(int $id, ?string $autorId = null, ?string $observacao = null): bool
     {
+        $autorId = $this->normalizarUuidOuNull($autorId);
         $anterior = $this->findById($id);
         if (!$anterior) {
             return false;
@@ -569,6 +618,55 @@ class Sessao
         }
 
         return $ok;
+    }
+
+    /**
+     * Exclusao fisica (sem auditoria/historico), para corrigir sessoes abertas por engano/testes.
+     * Atenção: remove também os registros filhos conhecidos.
+     */
+    public function excluir(int $id): bool
+    {
+        $this->db->beginTransaction();
+        try {
+            $params = [
+                'id' => $id,
+                'loja_id' => $this->obterLojaAtualId(),
+            ];
+
+            // Remover dependencias para evitar violacao de FK, caso existam.
+            $this->db->prepare("DELETE FROM confirmacoes_sessao WHERE sessao_id = :id")->execute(['id' => $id]);
+            $this->db->prepare("DELETE FROM presencas_sessao WHERE sessao_id = :id")->execute(['id' => $id]);
+            $this->db->prepare("DELETE FROM publicacoes_sessao WHERE sessao_id = :id")->execute(['id' => $id]);
+            $this->db->prepare("DELETE FROM trabalhos_sessao WHERE sessao_id = :id")->execute(['id' => $id]);
+            $this->db->prepare("DELETE FROM eventos_sessao WHERE sessao_id = :id")->execute(['id' => $id]);
+            $this->db->prepare("DELETE FROM visitas_externas_sessao WHERE sessao_id = :id")->execute(['id' => $id]);
+            $this->db->prepare("DELETE FROM historico_sessao WHERE sessao_id = :id")->execute(['id' => $id]);
+
+            $stmt = $this->db->prepare("
+                DELETE FROM sessoes
+                 WHERE id = :id
+                   AND loja_id = :loja_id
+            ");
+            $ok = $stmt->execute($params);
+            $this->db->commit();
+            return $ok;
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    private function normalizarUuidOuNull(?string $id): ?string
+    {
+        $id = $id !== null ? trim($id) : '';
+        if ($id === '' || $id === '0') {
+            return null;
+        }
+        return preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $id) === 1
+            ? $id
+            : null;
     }
 
     public function obterResumoOperacional(int $id): ?array

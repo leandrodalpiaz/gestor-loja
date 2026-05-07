@@ -152,10 +152,14 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <div><label for="financeiro_status" class="form-label">Status financeiro</label><select name="financeiro_status" id="financeiro_status" class="form-select"><?php $finStatus = (string) ($operacaoBanquete['financeiro_status'] ?? 'planejado'); foreach (['planejado' => 'Planejado', 'a_receber' => 'A receber', 'a_pagar' => 'A pagar', 'conciliado' => 'Conciliado'] as $valor => $label): ?><option value="<?= $valor ?>" <?= $finStatus === $valor ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></div>
                         </div>
                         <div class="mt-4"><label for="financeiro_observacoes" class="form-label">Observações financeiras</label><textarea name="financeiro_observacoes" id="financeiro_observacoes" rows="2" class="form-textarea"><?= htmlspecialchars((string) ($operacaoBanquete['financeiro_observacoes'] ?? '')) ?></textarea></div>
-                        <label class="mt-4 flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300">
-                            <input type="checkbox" name="registrar_financeiro" value="1" class="mt-1 rounded border-gray-300">
-                            <span>Registrar no Livro-Caixa da Tesouraria somente quando o fluxo afetar o caixa da Loja ou exigir ressarcimento oficial.</span>
-                        </label>
+                        <?php
+                        $fluxoSelecionado = strtolower(trim((string) ($operacaoBanquete['fluxo_financeiro'] ?? 'rateio_particular')));
+                        $impactaCaixa = in_array($fluxoSelecionado, ['caixa_loja', 'dispensa_ressarcimento'], true);
+                        ?>
+                        <div class="mt-4 text-sm text-gray-700 dark:text-gray-300">
+                            <span class="font-semibold">Caixa da Loja:</span>
+                            <?= $impactaCaixa ? 'Esta operação impacta o Caixa da Loja.' : 'Esta operação não impacta o Caixa da Loja.' ?>
+                        </div>
                         <?php if (!empty($operacaoBanquete['receita_lancamento_id']) || !empty($operacaoBanquete['despesa_lancamento_id'])): ?>
                             <div class="mt-3 text-xs text-gray-500">Lançamentos vinculados: receita #<?= htmlspecialchars((string) ($operacaoBanquete['receita_lancamento_id'] ?? '-')) ?> · despesa #<?= htmlspecialchars((string) ($operacaoBanquete['despesa_lancamento_id'] ?? '-')) ?></div>
                         <?php endif; ?>

@@ -94,7 +94,10 @@ class BanqueteOperacao
         $operacaoAtual = $this->obterPorSessao($sessaoId);
         $receitaLancamentoId = !empty($operacaoAtual['receita_lancamento_id']) ? (int) $operacaoAtual['receita_lancamento_id'] : null;
         $despesaLancamentoId = !empty($operacaoAtual['despesa_lancamento_id']) ? (int) $operacaoAtual['despesa_lancamento_id'] : null;
-        if (!empty($dados['registrar_financeiro']) && $fluxoFinanceiro !== 'rateio_particular') {
+        // Regra automática: o tipo de fluxo define se impacta o Caixa da Loja.
+        // rateio_particular: não lança no Caixa da Loja.
+        // caixa_loja / dispensa_ressarcimento: sempre lança no Caixa da Loja.
+        if ($fluxoFinanceiro !== 'rateio_particular') {
             $sessao = $this->obterSessao($sessaoId);
             $dataLancamento = substr((string) ($sessao['data_hora_inicio'] ?? date('Y-m-d')), 0, 10) ?: date('Y-m-d');
             $tituloSessao = trim((string) ($sessao['titulo'] ?? 'Sessão'));

@@ -268,6 +268,47 @@ class ConviteExterno
         }
     }
 
+    public function listarPorPeriodo(string $inicio, string $fim): array
+    {
+        $inicio = trim($inicio);
+        $fim = trim($fim);
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $inicio) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fim)) {
+            return [];
+        }
+
+        try {
+            $stmt = $this->db->prepare("
+                SELECT
+                    id,
+                    tipo,
+                    titulo,
+                    potencia,
+                    grau,
+                    data_hora,
+                    cidade,
+                    local,
+                    status,
+                    fixado
+                FROM convites_externos
+                WHERE loja_id = :loja_id
+                  AND data_hora IS NOT NULL
+                  AND data_hora::date BETWEEN :inicio AND :fim
+                ORDER BY data_hora ASC, fixado DESC
+            ");
+            $stmt->execute([
+                'loja_id' => $this->obterLojaAtualId(),
+                'inicio' => $inicio,
+                'fim' => $fim,
+            ]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (PDOException $e) {
+            if (($e->getCode() ?? '') === '42P01') {
+                return [];
+            }
+            throw $e;
+        }
+    }
+
     public function definirPresenca(int $conviteId, string $obreiroId, string $status): bool
     {
         try {
