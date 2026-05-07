@@ -132,13 +132,13 @@ class PainelRoutes
 
             case '/veneravel':
             case '/veneravel/dashboard':
-                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Venerável Mestre ou Administrador.');
                 (new VeneravelController())->index();
                 return true;
 
             case '/orador':
             case '/orador/dashboard':
-                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'orador.view', 'Acesso restrito ao Orador, Veneravel Mestre ou Administrador.');
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'orador.view', 'Acesso restrito ao Orador, Venerável Mestre ou Administrador.');
                 (new OradorController())->index();
                 return true;
 
@@ -162,12 +162,12 @@ class PainelRoutes
 
             case '/mestre-banquetes':
             case '/mestre-banquetes/dashboard':
-                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'mestre_banquetes.manage', 'Acesso restrito ao Mestre de Banquetes, Veneravel Mestre ou Administrador.');
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'mestre_banquetes.manage', 'Acesso restrito ao Mestre de Banquetes, Venerável Mestre ou Administrador.');
                 (new MestreBanquetesController())->index();
                 return true;
 
             case '/mestre-banquetes/operacao/salvar':
-                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'mestre_banquetes.manage', 'Acesso restrito ao Mestre de Banquetes, Veneravel Mestre ou Administrador.');
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'mestre_banquetes.manage', 'Acesso restrito ao Mestre de Banquetes, Venerável Mestre ou Administrador.');
                 (new MestreBanquetesController())->salvarOperacao();
                 return true;
 
@@ -186,12 +186,12 @@ class PainelRoutes
                 return true;
 
             case '/chanceler/sessao/presenca':
-                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 (new ChancelerSessaoController())->registrarPresenca();
                 return true;
 
             case '/chanceler/sessao/visitante':
-                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 (new ChancelerSessaoController())->registrarVisitante();
                 return true;
 
@@ -479,32 +479,32 @@ class PainelRoutes
                 exit;
 
             case '/veneravel/sessoes/publicar':
-                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Venerável Mestre ou Administrador.');
                 (new VeneravelController())->publicarSessao();
                 return true;
 
             case '/veneravel/sessoes/cancelar':
-                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Venerável Mestre ou Administrador.');
                 (new VeneravelController())->cancelarSessao();
                 return true;
 
             case '/veneravel/sessoes/reabrir':
-                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Venerável Mestre ou Administrador.');
                 (new VeneravelController())->reabrirSessao();
                 return true;
 
             case '/veneravel/sessoes/realizar':
-                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Venerável Mestre ou Administrador.');
                 (new VeneravelController())->realizarSessao();
                 return true;
 
             case '/veneravel/balaustres/abrir-votacao':
-                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Venerável Mestre ou Administrador.');
                 (new VeneravelController())->abrirVotacaoBalaustre();
                 return true;
 
             case '/veneravel/balaustres/encerrar-votacao':
-                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Venerável Mestre ou Administrador.');
                 (new VeneravelController())->encerrarVotacaoBalaustre();
                 return true;
 

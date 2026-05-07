@@ -44,43 +44,13 @@ class ChancelariaRoutes
                 return true;
 
             case '/chanceler/sessao/presenca':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 (new ChancelerSessaoController())->registrarPresenca();
                 return true;
 
             case '/chanceler/sessao/visitante':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 (new ChancelerSessaoController())->registrarVisitante();
-                return true;
-
-            case '/veneravel/sessoes/publicar':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
-                (new VeneravelController())->publicarSessao();
-                return true;
-
-            case '/veneravel/sessoes/cancelar':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
-                (new VeneravelController())->cancelarSessao();
-                return true;
-
-            case '/veneravel/sessoes/reabrir':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
-                (new VeneravelController())->reabrirSessao();
-                return true;
-
-            case '/veneravel/sessoes/realizar':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
-                (new VeneravelController())->realizarSessao();
-                return true;
-
-            case '/veneravel/balaustres/abrir-votacao':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
-                (new VeneravelController())->abrirVotacaoBalaustre();
-                return true;
-
-            case '/veneravel/balaustres/encerrar-votacao':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Veneravel Mestre ou Administrador.');
-                (new VeneravelController())->encerrarVotacaoBalaustre();
                 return true;
 
             case '/veneravel/balaustre/visualizar':
@@ -104,7 +74,7 @@ class ChancelariaRoutes
                 return true;
 
             case '/chancelaria/efemerides/salvar-previa':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -123,7 +93,7 @@ class ChancelariaRoutes
                 $redirectEfemerides($ok ? ['sucesso' => 'previa_salva'] : ['erro' => 'falha_salvar_previa']);
 
             case '/chancelaria/efemerides/enviar-previa':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -145,7 +115,7 @@ class ChancelariaRoutes
                     : ['erro' => 'falha_enviar_previa', 'detalhe' => $telegramService->getLastError()]);
 
             case '/chancelaria/efemerides/enviar-grupo':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -163,7 +133,7 @@ class ChancelariaRoutes
                     : ['erro' => 'falha_enviar_grupo', 'detalhe' => $telegramService->getLastError()]);
 
             case '/chancelaria/efemerides/salvar':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -181,7 +151,7 @@ class ChancelariaRoutes
                 $redirectEfemerides($ok ? ['sucesso' => 'registro_salvo'] : ['erro' => 'falha_salvar_registro']);
 
             case '/chancelaria/efemerides/atualizar':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -200,7 +170,7 @@ class ChancelariaRoutes
                 $redirectEfemerides($ok ? ['sucesso' => 'registro_atualizado'] : ['erro' => 'falha_atualizar_registro']);
 
             case '/chancelaria/efemerides/desativar':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -216,7 +186,7 @@ class ChancelariaRoutes
             case '/chancelaria/efemerides/excluir':
                 WebGuards::requireLogin($openTestAccess, $session);
                 if (!$canManageContentCategory('efemerides')) {
-                    WebGuards::forbidHtml('Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                    WebGuards::forbidHtml('Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 }
                 if ($method !== 'POST') {
                     $redirectEfemerides();
@@ -323,7 +293,7 @@ class ChancelariaRoutes
                 $redirectEfemerides($ok ? ['sucesso' => 'palavra_excluida'] : ['erro' => 'falha_excluir_palavra']);
 
             case '/chancelaria/conteudo-permissoes/salvar':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -332,7 +302,7 @@ class ChancelariaRoutes
                 $redirectEfemerides(($okHistoria && $okPalavra) ? ['sucesso' => 'permissoes_salvas'] : ['erro' => 'falha_salvar_permissoes']);
 
             case '/chancelaria/efemerides':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
 
                 $sucessoMensagem = match ((string) ($_GET['sucesso'] ?? '')) {
                     'previa_salva' => 'Prévia salva com sucesso.',
