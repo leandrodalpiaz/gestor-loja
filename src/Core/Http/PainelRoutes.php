@@ -374,6 +374,12 @@ class PainelRoutes
         string $message,
     ): void {
         WebGuards::requireLogin($openTestAccess, $session);
+        $isSystemAdmin = !empty($session['is_system_admin'])
+            || !empty($session['force_system_admin'])
+            || (string) ($session['usuario_id'] ?? '') === '0';
+        if ($isSystemAdmin) {
+            return;
+        }
         if (!$sessionHasPermission($permission)) {
             WebGuards::forbidHtml($message);
         }
@@ -438,8 +444,8 @@ class PainelRoutes
 
             if ($sessaoId <= 0) {
                 $_SESSION['mensagem_erro'] = 'Sessão inválida para atualizar a confirmação.';
-            } elseif (!$dashboardObreiro || $dashboardUsuarioId === '' || $dashboardUsuarioId === '0') {
-                $_SESSION['mensagem_erro'] = 'A confirmacao direta no dashboard requer um obreiro real autenticado.';
+            } elseif (!$dashboardObreiro && $dashboardUsuarioId !== '0') {
+                $_SESSION['mensagem_erro'] = 'A confirmação direta no dashboard requer um obreiro autenticado.';
             } else {
                 try {
                     $presencaModel = new Presenca();

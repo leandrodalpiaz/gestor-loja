@@ -40,7 +40,7 @@ class AdminController
                 if ($ok) {
                     $_SESSION['mensagem_sucesso'] = 'Status de acesso atualizado com sucesso.';
                 } else {
-                    $_SESSION['mensagem_erro'] = 'Não foi possível atualizar o status de acesso.';
+                    $_SESSION['mensagem_erro'] = 'Não foi possível atualizar o status de acesso. Verifique os dados informados.';
                 }
             }
         }
@@ -65,7 +65,7 @@ class AdminController
                 $_SESSION['mensagem_sucesso'] = 'Conteúdo público atualizado com sucesso.';
             } catch (\Throwable $e) {
                 error_log('AdminController::salvarConteudoPublico - ' . $e->getMessage());
-                $_SESSION['mensagem_erro'] = 'Não foi possível salvar o conteúdo agora. Revise os dados e tente novamente.';
+                $_SESSION['mensagem_erro'] = 'Não foi possível salvar o conteúdo. Revise os dados informados.';
             }
         }
 
@@ -82,7 +82,7 @@ class AdminController
                 $_SESSION['mensagem_sucesso'] = 'Conteúdo removido com sucesso.';
             } catch (\Throwable $e) {
                 error_log('AdminController::excluirConteudoPublico - ' . $e->getMessage());
-                $_SESSION['mensagem_erro'] = 'Não foi possível remover o conteúdo agora. Tente novamente.';
+                $_SESSION['mensagem_erro'] = 'Não foi possível remover o conteúdo.';
             }
         }
 
@@ -126,7 +126,7 @@ class AdminController
                     $_SESSION['mensagem_sucesso'] = 'Titularidade atualizada com sucesso.';
                 } catch (\Throwable $e) {
                     error_log('AdminController::salvarCargo - ' . $e->getMessage());
-                    $_SESSION['mensagem_erro'] = 'Não foi possível atualizar o cargo agora. Confira os dados e tente novamente.';
+                    $_SESSION['mensagem_erro'] = 'Não foi possível atualizar o cargo. Confira os dados informados.';
                 }
             } else {
                 $_SESSION['mensagem_erro'] = 'Selecione um cargo e um obreiro para concluir a troca.';
@@ -152,7 +152,7 @@ class AdminController
                     $_SESSION['mensagem_sucesso'] = 'Gestão aberta com sucesso.';
                 } catch (\Throwable $e) {
                     error_log('AdminController::salvarGestao - ' . $e->getMessage());
-                    $_SESSION['mensagem_erro'] = 'Não foi possível abrir a gestão agora. Verifique as informações e tente novamente.';
+                    $_SESSION['mensagem_erro'] = 'Não foi possível abrir a gestão. Verifique os dados informados.';
                 }
             } else {
                 $_SESSION['mensagem_erro'] = 'Informe título e data de início para abrir a gestão.';
@@ -175,7 +175,7 @@ class AdminController
                     $_SESSION['mensagem_sucesso'] = 'Gestão encerrada com sucesso.';
                 } catch (\Throwable $e) {
                     error_log('AdminController::encerrarGestao - ' . $e->getMessage());
-                    $_SESSION['mensagem_erro'] = 'Não foi possível encerrar a gestão agora. Tente novamente.';
+                    $_SESSION['mensagem_erro'] = 'Não foi possível encerrar a gestão. Verifique o estado da gestão selecionada.';
                 }
             } else {
                 $_SESSION['mensagem_erro'] = 'Gestão inválida para encerramento.';
@@ -200,7 +200,7 @@ class AdminController
                 $_SESSION['mensagem_sucesso'] = 'Parâmetros gerais da Loja atualizados com sucesso.';
             } catch (\Throwable $e) {
                 error_log('AdminController::salvarConfiguracoesLoja - ' . $e->getMessage());
-                $_SESSION['mensagem_erro'] = 'Não foi possível salvar os parâmetros da Loja agora. Tente novamente.';
+                $_SESSION['mensagem_erro'] = 'Não foi possível salvar os parâmetros da Loja. Revise os campos obrigatórios e os formatos informados.';
             }
         }
 
@@ -322,7 +322,7 @@ class AdminController
         $titulo = trim($titulo);
         $inicioEm = trim($inicioEm);
         if ($titulo === '' || $inicioEm === '') {
-            return ['ok' => false, 'erro' => 'Titulo e data de inicio sao obrigatorios para abrir a gestao.'];
+            return ['ok' => false, 'erro' => 'Título e data de início são obrigatórios para abrir a gestão.'];
         }
 
         try {
@@ -330,7 +330,7 @@ class AdminController
             return ['ok' => true, 'erro' => null];
         } catch (\Throwable $e) {
             error_log('AdminController::abrirGestaoMiniapp - ' . $e->getMessage());
-            return ['ok' => false, 'erro' => 'Não foi possível abrir a gestão agora. Tente novamente em alguns minutos.'];
+            return ['ok' => false, 'erro' => 'Não foi possível abrir a gestão. Verifique os dados informados.'];
         }
     }
 
@@ -345,7 +345,7 @@ class AdminController
             return ['ok' => true, 'erro' => null];
         } catch (\Throwable $e) {
             error_log('AdminController::encerrarGestaoMiniapp - ' . $e->getMessage());
-            return ['ok' => false, 'erro' => 'Não foi possível encerrar a gestão agora. Tente novamente em alguns minutos.'];
+            return ['ok' => false, 'erro' => 'Não foi possível encerrar a gestão. Verifique o estado da gestão selecionada.'];
         }
     }
 
@@ -354,7 +354,7 @@ class AdminController
         $cargoCodigo = trim($cargoCodigo);
         $obreiroId = trim($obreiroId);
         if ($cargoCodigo === '' || $obreiroId === '') {
-            return ['ok' => false, 'erro' => 'Cargo e obreiro sao obrigatorios para a atribuicao.'];
+            return ['ok' => false, 'erro' => 'Cargo e obreiro são obrigatórios para a atribuição.'];
         }
 
         try {
@@ -362,7 +362,7 @@ class AdminController
             return ['ok' => true, 'erro' => null];
         } catch (\Throwable $e) {
             error_log('AdminController::atribuirCargoMiniapp - ' . $e->getMessage());
-            return ['ok' => false, 'erro' => 'Não foi possível atualizar o cargo agora. Tente novamente em alguns minutos.'];
+            return ['ok' => false, 'erro' => 'Não foi possível atualizar o cargo. Confira os dados informados.'];
         }
     }
 
@@ -375,7 +375,7 @@ class AdminController
             return ['ok' => true, 'erro' => null];
         } catch (\Throwable $e) {
             error_log('AdminController::salvarConfiguracaoMiniapp - ' . $e->getMessage());
-            return ['ok' => false, 'erro' => 'Não foi possível salvar as configurações agora. Tente novamente em alguns minutos.'];
+            return ['ok' => false, 'erro' => 'Não foi possível salvar as configurações. Revise os campos obrigatórios e os formatos informados.'];
         }
     }
 }
