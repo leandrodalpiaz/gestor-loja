@@ -1,274 +1,145 @@
 <?php
 declare(strict_types=1);
 
-// #############################################################################
-// LÓGICA DE NEGÓCIO E HELPERS
-// #############################################################################
-
 if (!isset($obreiroTesouraria) || !$obreiroTesouraria) {
-    http_response_code(401);
-    echo 'Acesso não autorizado.';
-    exit;
+    $isFallbackAdmin = !empty($mensagens_contextuais['financeiro']) && empty($dados_financeiro['obrigacoes']);
+    if (!$isFallbackAdmin) {
+        http_response_code(401);
+        echo 'Acesso não autorizado.';
+        exit;
+    }
 }
+
+$abaAtiva = $aba_ativa ?? 'financeiro';
+$abas = $abas_disponiveis ?? ['financeiro', 'cadastro', 'familia', 'agenda_trabalhos', 'presencas_eventos', 'alertas_recados'];
+$rotulosAbas = [
+    'financeiro' => 'Financeiro',
+    'cadastro' => 'Cadastro',
+    'familia' => 'Família',
+    'agenda_trabalhos' => 'Agenda/Trabalhos',
+    'presencas_eventos' => 'Presenças/Eventos',
+    'alertas_recados' => 'Alertas/Recados',
+];
 
 $resumoObreiro = $resumoObreiro ?? [];
 $obrigacoesObreiro = $obrigacoesObreiro ?? [];
-$configuracaoFinanceira = (new \App\Models\ConfiguracaoLoja())->obter();
+$dados_cadastro = $dados_cadastro ?? [];
+$dados_familia = $dados_familia ?? [];
+$dados_agenda_trabalhos = $dados_agenda_trabalhos ?? ['sessoes_futuras' => [], 'trabalhos' => []];
+$dados_presencas_eventos = $dados_presencas_eventos ?? ['confirmacoes' => []];
+$dados_alertas_recados = $dados_alertas_recados ?? ['alertas' => []];
+$mensagens_contextuais = $mensagens_contextuais ?? [];
+$estados_vazios = $estados_vazios ?? [];
+$acessos_hub = $acessos_hub ?? ['dashboard' => true, 'obreiros' => false, 'secretaria' => false, 'chancelaria' => false, 'tesouraria_manage' => false];
 
+$configuracaoFinanceira = (new \App\Models\ConfiguracaoLoja())->obter();
 $formatCurrency = static fn ($value): string => 'R$ ' . number_format((float) $value, 2, ',', '.');
 $formatDate = static fn (?string $date): string => $date ? (new DateTimeImmutable($date))->format('d/m/Y') : '-';
+$nomeObreiro = (string) ($obreiroTesouraria['nome_historico'] ?? $obreiroTesouraria['nome'] ?? 'Irmão');
 
-$mensalidadePadrao = (float) ($configuracaoFinanceira['mensalidade_valor_padrao'] ?? 150);
 $pixTipo = (string) ($configuracaoFinanceira['pix_chave_tipo'] ?? 'CNPJ');
 $pixValor = (string) ($configuracaoFinanceira['pix_chave_valor'] ?? '');
 $pixBeneficiario = (string) ($configuracaoFinanceira['pix_beneficiario'] ?? '');
-$hoje = date('Y-m-d');
-$mesAtualChave = date('Y-m');
-$anoPainel = 2026; // Ano fixo para o painel de ajuste
 
-// Simulação de dados da biblioteca
-$bibliotecaPorMes = [];
-try {
-    $dbTesouraria = \App\Config\Database::getConnection();
-    $stmtBiblioteca = $dbTesouraria->prepare("
-        SELECT mes_ref, valor_previsto
-        FROM public.biblioteca_contribuintes_mensal
-        WHERE ano_ref = :ano_ref AND obreiro_id = :obreiro_id
-    ");
-    $stmtBiblioteca->execute([
-        'ano_ref' => $anoPainel,
-        'obreiro_id' => (string) ($obreiroTesouraria['id'] ?? ''),
-    ]);
-    foreach ($stmtBiblioteca->fetchAll(PDO::FETCH_ASSOC) as $linhaBiblioteca) {
-        $bibliotecaPorMes[(int) ($linhaBiblioteca['mes_ref'] ?? 0)] = (float) ($linhaBiblioteca['valor_previsto'] ?? 0);
-    }
-} catch (\Throwable $e) {
-    // Silencia o erro se a tabela não existir ou houver outro problema
-    $bibliotecaPorMes = [];
-}
-
-$nomesMeses = [1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril', 5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto', 9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'];
-$mesesTesourarias = [];
-
-// Processamento de obrigações
-foreach ($obrigacoesObreiro as $obrigacao) {
-    foreach (($obrigacao['parcelas'] ?? []) as $parcela) {
-        $parcela['obrigacao_titulo'] = (string) ($parcela['obrigacao_titulo'] ?? $obrigacao['titulo'] ?? 'Obrigacao');
-        $parcela['tipo_obrigacao'] = (string) ($parcela['tipo_obrigacao'] ?? $obrigacao['tipo_obrigacao'] ?? 'outra');
-        $mesCompetencia = (int) ($parcela['competencia_mes'] ?? 0);
-        $anoCompetencia = (int) ($parcela['competencia_ano'] ?? 0);
-
-        if ($mesCompetencia > 0 && $anoCompetencia > 0) {
-            $chaveMes = sprintf('%04d-%02d', $anoCompetencia, $mesCompetencia);
-            if (!isset($mesesTesourarias[$chaveMes])) {
-                $mesesTesourarias[$chaveMes] = [
-                    'chave' => $chaveMes,
-                    'rotulo' => ($nomesMeses[$mesCompetencia] ?? 'Mês') . ' ' . $anoCompetencia,
-                    'total_pago' => 0.0, 'total_previsto' => 0.0, 'total_aberto' => 0.0,
-                    'pagos' => 0, 'abertos' => 0, 'atrasados' => 0, 'itens' => [],
-                ];
-            }
-            $mesesTesourarias[$chaveMes]['total_previsto'] += (float) ($parcela['valor_previsto'] ?? 0);
-            if (!empty($parcela['quitado_na_exibicao'])) {
-                $mesesTesourarias[$chaveMes]['total_pago'] += (float) ($parcela['valor_previsto'] ?? 0);
-                $mesesTesourarias[$chaveMes]['pagos']++;
-            } else {
-                $mesesTesourarias[$chaveMes]['total_aberto'] += (float) ($parcela['valor_previsto'] ?? 0);
-                $mesesTesourarias[$chaveMes]['abertos']++;
-                if (!empty($parcela['em_atraso'])) $mesesTesourarias[$chaveMes]['atrasados']++;
-            }
-            $mesesTesourarias[$chaveMes]['itens'][] = $parcela;
-        }
-    }
-}
-
-uasort($mesesTesourarias, static fn (array $a, array $b): int => strcmp((string) ($a['chave'] ?? ''), (string) ($b['chave'] ?? '')));
-
-$parcelasPagas = [];
-$parcelasAguardandoConfirmacao = [];
-$parcelasProgramadas = [];
-$parcelasAtrasadas = [];
-
-foreach ($mesesTesourarias as $mes) {
-    foreach (($mes['itens'] ?? []) as $p) {
-        if (!empty($p['quitado_na_exibicao'])) $parcelasPagas[] = $p;
-        elseif (!empty($p['em_atraso'])) $parcelasAtrasadas[] = $p;
-        elseif (!empty($p['vencimento']) && $p['vencimento'] <= $hoje) $parcelasAguardandoConfirmacao[] = $p;
-        else $parcelasProgramadas[] = $p;
-    }
-}
-
-$sortFn = static fn (array $a, array $b): int => strcmp((string) ($a['vencimento'] ?? ''), (string) ($b['vencimento'] ?? ''));
-usort($parcelasPagas, static fn (array $a, array $b): int => strcmp((string) ($b['pago_em'] ?? $b['vencimento']), (string) ($a['pago_em'] ?? $a['vencimento'])));
-usort($parcelasAguardandoConfirmacao, $sortFn);
-usort($parcelasProgramadas, $sortFn);
-usort($parcelasAtrasadas, $sortFn);
-
-$nomeObreiro = (string) ($obreiroTesouraria['nome_historico'] ?? $obreiroTesouraria['nome'] ?? 'Irmão');
-$totalPago = array_reduce($parcelasPagas, static fn ($c, $p) => $c + ($p['valor_previsto'] ?? 0), 0.0);
-$totalAberto = array_reduce(array_merge($parcelasAguardandoConfirmacao, $parcelasProgramadas, $parcelasAtrasadas), static fn ($c, $p) => $c + ($p['valor_previsto'] ?? 0), 0.0);
-$totalAtrasado = array_reduce($parcelasAtrasadas, static fn ($c, $p) => $c + ($p['valor_previsto'] ?? 0), 0.0);
-$proximaObrigacao = $parcelasAguardandoConfirmacao[0] ?? $parcelasProgramadas[0] ?? null;
-$alertaBiblioteca = null;
-$limiteAlertaBiblioteca = (new DateTimeImmutable('today'))->modify('+30 days')->format('Y-m-d');
-foreach (array_merge($parcelasAguardandoConfirmacao, $parcelasProgramadas) as $parcelaAlerta) {
-    $tipoAlerta = strtolower((string) ($parcelaAlerta['tipo_obrigacao'] ?? ''));
-    $tituloAlerta = strtolower((string) ($parcelaAlerta['obrigacao_titulo'] ?? ''));
-    $vencimentoAlerta = (string) ($parcelaAlerta['vencimento'] ?? '');
-    if (($tipoAlerta === 'biblioteca' || str_contains($tituloAlerta, 'biblioteca')) && $vencimentoAlerta !== '' && $vencimentoAlerta <= $limiteAlertaBiblioteca) {
-        $alertaBiblioteca = $parcelaAlerta;
-        break;
-    }
-}
-$totalEsperadoBiblioteca = $alertaBiblioteca ? $mensalidadePadrao + (float) ($alertaBiblioteca['valor_previsto'] ?? 0) : 0.0;
-
-// #############################################################################
-// CONFIGURAÇÃO DO APP SHELL
-// #############################################################################
+$totalAbertoResumo = (float) ($resumoObreiro['saldo_em_aberto'] ?? 0);
+$totalAtrasadoResumo = (float) ($resumoObreiro['saldo_em_atraso'] ?? 0);
+$parcelasAtrasadasResumo = (int) ($resumoObreiro['parcelas_atrasadas'] ?? 0);
+$proximoVencimento = (string) ($resumoObreiro['proximo_vencimento'] ?? '');
 
 $appShellEyebrow = 'Tesouraria';
-$appShellTitle = 'Minhas Obrigações';
-$appShellDescription = 'Painel financeiro pessoal do obreiro ' . htmlspecialchars($nomeObreiro);
+$appShellTitle = 'Minha Área';
+$appShellDescription = 'Hub pessoal do obreiro';
 $appShellActiveHref = '/minhas-obrigacoes';
 $appShellActions = [['label' => 'Voltar ao Painel', 'href' => '/dashboard']];
-
 require __DIR__ . '/partials/erp_shell_open.php';
-
 ?>
 
-<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 xl:gap-8">
-    <!-- Métricas Principais -->
-    <div class="metric-card bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
-        <div class="metric-label">Total Pago</div>
-        <div class="metric-value text-green-700 dark:text-green-300"><?= $formatCurrency($totalPago) ?></div>
-        <div class="metric-meta"><?= count($parcelasPagas) ?> compromissos quitados</div>
-    </div>
-    <div class="metric-card bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
-        <div class="metric-label">Próxima Obrigação</div>
-        <div class="metric-value text-yellow-700 dark:text-yellow-300"><?= $formatCurrency($proximaObrigacao['valor_previsto'] ?? 0) ?></div>
-        <div class="metric-meta"><?= $proximaObrigacao ? htmlspecialchars($proximaObrigacao['obrigacao_titulo']) . ' em ' . $formatDate($proximaObrigacao['vencimento']) : 'Nenhuma obrigação futura' ?></div>
-    </div>
-    <div class="metric-card bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
-        <div class="metric-label">Total em Aberto</div>
-        <div class="metric-value text-blue-700 dark:text-blue-300"><?= $formatCurrency($totalAberto) ?></div>
-        <div class="metric-meta"><?= count($parcelasProgramadas) + count($parcelasAguardandoConfirmacao) ?> compromissos programados</div>
-    </div>
-    <div class="metric-card bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800">
-        <div class="metric-label">Em Atraso</div>
-        <div class="metric-value text-red-700 dark:text-red-300"><?= $formatCurrency($totalAtrasado) ?></div>
-        <div class="metric-meta"><?= count($parcelasAtrasadas) ?> pendências</div>
+<div class="card mb-6">
+    <div class="card-body">
+        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
+            <?php foreach ($abas as $aba): ?>
+                <?php $isAtiva = $aba === $abaAtiva; ?>
+                <a href="/financeiro/minhas-obrigacoes?<?= htmlspecialchars(http_build_query(['aba' => $aba])) ?>"
+                   class="px-3 py-2 text-sm text-center rounded-lg border <?= $isAtiva ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700' ?>">
+                    <?= htmlspecialchars($rotulosAbas[$aba] ?? ucfirst($aba)) ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+        <?php if (!empty($mensagens_contextuais[$abaAtiva])): ?>
+            <div class="mt-3 alert alert-info"><?= htmlspecialchars((string) $mensagens_contextuais[$abaAtiva]) ?></div>
+        <?php endif; ?>
     </div>
 </div>
 
-<?php if ($alertaBiblioteca): ?>
-<div class="card mt-6 xl:mt-8 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
-    <div class="card-body flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            <h3 class="font-semibold text-amber-900 dark:text-amber-100">Alerta da Biblioteca</h3>
-            <p class="text-sm text-amber-800 dark:text-amber-200">
-                No vencimento de <?= $formatDate($alertaBiblioteca['vencimento'] ?? null) ?>, acrescente <?= $formatCurrency($alertaBiblioteca['valor_previsto'] ?? 0) ?> &agrave; contribuição mensal.
-                Total esperado: <?= $formatCurrency($totalEsperadoBiblioteca) ?>.
-            </p>
-        </div>
-        <span class="badge-status warning">Aviso 30 dias</span>
+<?php if ($abaAtiva === 'financeiro'): ?>
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div class="metric-card"><div class="metric-label">Obreiro</div><div class="metric-value"><?= htmlspecialchars($nomeObreiro) ?></div></div>
+        <div class="metric-card"><div class="metric-label">Saldo em aberto</div><div class="metric-value"><?= $formatCurrency($totalAbertoResumo) ?></div></div>
+        <div class="metric-card"><div class="metric-label">Saldo em atraso</div><div class="metric-value"><?= $formatCurrency($totalAtrasadoResumo) ?></div></div>
+        <div class="metric-card"><div class="metric-label">Parcelas atrasadas</div><div class="metric-value"><?= (int) $parcelasAtrasadasResumo ?></div></div>
     </div>
-</div>
+    <div class="card mt-6">
+        <div class="card-header"><h2 class="card-title">Contribuição via PIX</h2></div>
+        <div class="card-body text-sm">
+            <div>Chave <?= htmlspecialchars($pixTipo) ?>: <strong class="font-mono"><?= htmlspecialchars($pixValor !== '' ? $pixValor : 'Não informada') ?></strong></div>
+            <div>Beneficiário: <?= htmlspecialchars($pixBeneficiario) ?></div>
+            <div>Próximo vencimento: <?= htmlspecialchars($proximoVencimento !== '' ? $formatDate($proximoVencimento) : '-') ?></div>
+            <?php if ($pixValor !== ''): ?>
+                <button type="button" class="btn btn-secondary mt-3" onclick="navigator.clipboard.writeText('<?= htmlspecialchars(addslashes($pixValor)) ?>')">Copiar chave PIX</button>
+            <?php endif; ?>
+            <?php if (!empty($acessos_hub['tesouraria_manage'])): ?>
+                <a class="btn btn-secondary mt-3 ml-2" href="/tesouraria/obrigacoes">Abrir obrigações detalhadas</a>
+            <?php endif; ?>
+        </div>
+    </div>
+<?php else: ?>
+    <div class="card">
+        <div class="card-header"><h2 class="card-title"><?= htmlspecialchars($rotulosAbas[$abaAtiva] ?? 'Área') ?></h2></div>
+        <div class="card-body text-sm space-y-2">
+            <?php if ($abaAtiva === 'cadastro'): ?>
+                <div class="mb-2">
+                    <a class="btn btn-secondary" href="/meu-cadastro">Atualizar cadastro</a>
+                </div>
+                <?php foreach ($dados_cadastro as $campo => $valor): if ($campo === 'pendencias') continue; ?>
+                    <div><strong><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) $campo))) ?>:</strong> <?= htmlspecialchars((string) ($valor !== '' ? $valor : '-')) ?></div>
+                <?php endforeach; ?>
+                <?php if (!empty($dados_cadastro['pendencias'])): ?><div class="alert alert-warning">Pendências: <?= htmlspecialchars(implode(', ', $dados_cadastro['pendencias'])) ?></div><?php endif; ?>
+            <?php elseif ($abaAtiva === 'familia'): ?>
+                <div class="mb-2">
+                    <a class="btn btn-secondary" href="/meu-cadastro">Atualizar dados familiares</a>
+                </div>
+                <div><strong>Estado civil:</strong> <?= htmlspecialchars((string) (($dados_familia['estado_civil'] ?? '') ?: '-')) ?></div>
+                <div><strong>Cônjuge:</strong> <?= htmlspecialchars((string) (($dados_familia['conjuge'] ?? '') ?: '-')) ?></div>
+                <div><strong>Filhos:</strong> <?= htmlspecialchars((string) (($dados_familia['filhos'] ?? '') ?: '-')) ?></div>
+            <?php elseif ($abaAtiva === 'agenda_trabalhos'): ?>
+                <div class="mb-2">
+                    <?php if (!empty($acessos_hub['secretaria'])): ?>
+                        <a class="btn btn-secondary" href="/secretaria/sessoes">Ver agenda de sessões</a>
+                        <a class="btn btn-secondary ml-2" href="/secretaria">Registrar trabalho</a>
+                    <?php else: ?>
+                        <a class="btn btn-secondary" href="/dashboard">Abrir painel</a>
+                    <?php endif; ?>
+                </div>
+                <?php foreach (($dados_agenda_trabalhos['sessoes_futuras'] ?? []) as $sessao): ?><div><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Sessão')) ?> - <?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '-')) ?></div><?php endforeach; ?>
+                <?php foreach (($dados_agenda_trabalhos['trabalhos'] ?? []) as $trabalho): ?><div><?= htmlspecialchars((string) ($trabalho['titulo'] ?? 'Trabalho')) ?> - <?= htmlspecialchars((string) ($trabalho['status_envio_potencia'] ?? '-')) ?></div><?php endforeach; ?>
+            <?php elseif ($abaAtiva === 'presencas_eventos'): ?>
+                <div class="mb-2">
+                    <?php if (!empty($acessos_hub['chancelaria'])): ?><a class="btn btn-secondary" href="/chanceler/sessao">Atualizar presença</a><?php endif; ?>
+                    <?php if (!empty($acessos_hub['secretaria'])): ?><a class="btn btn-secondary ml-2" href="/secretaria/votacao">Ver eventos e votações</a><?php endif; ?>
+                    <?php if (empty($acessos_hub['chancelaria']) && empty($acessos_hub['secretaria'])): ?><a class="btn btn-secondary" href="/dashboard">Abrir painel</a><?php endif; ?>
+                </div>
+                <?php foreach (($dados_presencas_eventos['confirmacoes'] ?? []) as $c): ?><div><?= htmlspecialchars((string) ($c['sessao_titulo'] ?? 'Sessão')) ?> - <?= htmlspecialchars((string) ($c['data_hora_inicio'] ?? '-')) ?></div><?php endforeach; ?>
+            <?php elseif ($abaAtiva === 'alertas_recados'): ?>
+                <div class="mb-2">
+                    <?php if (!empty($acessos_hub['tesouraria_manage'])): ?><a class="btn btn-secondary" href="/tesouraria/obrigacoes">Resolver pendências financeiras</a><?php endif; ?>
+                    <?php if (!empty($acessos_hub['dashboard'])): ?><a class="btn btn-secondary ml-2" href="/dashboard">Abrir painel geral</a><?php endif; ?>
+                </div>
+                <?php foreach (($dados_alertas_recados['alertas'] ?? []) as $alerta): ?><div class="alert alert-warning"><?= htmlspecialchars((string) $alerta) ?></div><?php endforeach; ?>
+            <?php endif; ?>
+
+            <?php if (!empty($estados_vazios[$abaAtiva])): ?><div class="text-gray-500">Sem dados para esta aba.</div><?php endif; ?>
+        </div>
+    </div>
 <?php endif; ?>
 
-<!-- Chave PIX -->
-<div class="card mt-6 xl:mt-8">
-    <div class="card-body flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <h3 class="font-semibold text-gray-800 dark:text-gray-200">Contribuição via PIX</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-                Chave <?= htmlspecialchars($pixTipo) ?>: <strong class="font-mono"><?= htmlspecialchars($pixValor ?: 'Não informada') ?></strong>
-                (<?= htmlspecialchars($pixBeneficiario) ?>)
-            </p>
-        </div>
-        <button type="button" class="btn btn-secondary" onclick="navigator.clipboard.writeText('<?= htmlspecialchars(addslashes($pixValor)) ?>')">
-            Copiar Chave PIX
-        </button>
-    </div>
-</div>
-
-<!-- Painel de Obrigações Mensais -->
-<div class="card mt-6 xl:mt-8">
-    <div class="card-header">
-        <h2 class="card-title">Painel Mensal de Obrigações</h2>
-        <p class="card-subtitle">Detalhes de cada competência, incluindo o que foi pago e o que está pendente.</p>
-    </div>
-    <div class="card-body space-y-4">
-        <?php if (empty($mesesTesourarias)): ?>
-            <div class="text-center py-10 text-gray-500">Nenhuma obrigação encontrada para este período.</div>
-        <?php endif; ?>
-
-        <?php foreach ($mesesTesourarias as $mes): ?>
-            <?php
-            $mesPago = ($mes['abertos'] ?? 0) === 0 && ($mes['total_pago'] ?? 0) > 0;
-            $mesAtrasado = ($mes['atrasados'] ?? 0) > 0;
-            $cardMesClass = 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700';
-            if ($mesPago) $cardMesClass = 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
-            elseif ($mesAtrasado) $cardMesClass = 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
-            ?>
-            <details class="rounded-lg border <?= $cardMesClass ?>" <?= $mes['chave'] === $mesAtualChave ? 'open' : '' ?>>
-                <summary class="p-4 cursor-pointer flex justify-between items-center">
-                    <div>
-                        <h3 class="font-semibold text-lg text-gray-800 dark:text-gray-200"><?= htmlspecialchars($mes['rotulo']) ?></h3>
-                        <div class="text-sm text-gray-600 dark:text-gray-400">
-                            <span class="text-green-600 dark:text-green-400">Pago: <?= $formatCurrency($mes['total_pago']) ?></span> |
-                            <span class="text-yellow-600 dark:text-yellow-400">Aberto: <?= $formatCurrency($mes['total_aberto']) ?></span>
-                        </div>
-                    </div>
-                    <div class="text-sm font-semibold"><?= $mes['pagos'] ?> pagos | <?= $mes['abertos'] ?> abertos</div>
-                </summary>
-                <div class="px-4 pb-4 border-t border-[inherit]">
-                    <div class="divide-y divide-[inherit]">
-                        <?php foreach (($mes['itens'] ?? []) as $parcela): ?>
-                            <div class="py-3">
-                                <div class="flex flex-wrap justify-between items-start gap-2">
-                                    <div>
-                                        <div class="font-semibold text-gray-800 dark:text-gray-100"><?= htmlspecialchars($parcela['obrigacao_titulo']) ?></div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            Vencimento: <?= $formatDate($parcela['vencimento']) ?>
-                                            <?php if (!empty($parcela['pago_em'])): ?>
-                                                | Pago em: <?= $formatDate($parcela['pago_em']) ?>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="font-semibold text-lg"><?= $formatCurrency($parcela['valor_previsto'] ?? 0) ?></div>
-                                        <?php
-                                        $statusClass = 'badge-status-warning';
-                                        $statusLabel = 'Programada';
-                                        if (!empty($parcela['quitado_na_exibicao'])) {
-                                            $statusClass = 'badge-status-success';
-                                            $statusLabel = 'Pago';
-                                        } elseif (!empty($parcela['em_atraso'])) {
-                                            $statusClass = 'badge-status-danger';
-                                            $statusLabel = 'Atrasado';
-                                        }
-                                        ?>
-                                        <?php
-                                        $label = $statusLabel;
-                                        // Mapeando a classe de status para o type do componente (ex: badge-status-warning -> warning)
-                                        $type = str_replace('badge-status-', '', $statusClass);
-                                        require __DIR__ . '/components/badge-status.php';
-                                        ?>
-                                    </div>
-                                </div>
-                                <?php if (!empty($parcela['descricao_status'])): ?>
-                                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">"<?= htmlspecialchars($parcela['descricao_status']) ?>"</p>
-                                <?php endif; ?>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </details>
-        <?php endforeach; ?>
-    </div>
-</div>
-
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
-
-
-
