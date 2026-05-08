@@ -15,6 +15,7 @@ use App\Controllers\PwaHomeController;
 use App\Controllers\PwaSecretariaController;
 use App\Controllers\PwaSessoesController;
 use App\Controllers\PwaTesourariaController;
+use App\Controllers\PwaRolesController;
 use App\Controllers\VeneravelController;
 use App\Core\Authorization\Authorizer;
 use App\Core\Tenant\TenantAssetResolver;
@@ -42,7 +43,7 @@ class PainelRoutes
             WebGuards::requireLogin($openTestAccess, $session);
             WebGuards::requirePermission(
                 $authorizer->hasPermission('chancelaria.manage'),
-                'Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.'
+                'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.'
             );
             $controller = new PwaChancelariaController();
             if ($requestUri === '/pwa/chancelaria/presenca') {
@@ -55,13 +56,65 @@ class PainelRoutes
             return true;
         }
 
+        if (in_array($requestUri, [
+            '/pwa/veneravel',
+            '/pwa/orador',
+            '/pwa/mestre-banquetes',
+            '/pwa/mestre-banquetes/operacao/salvar',
+            '/pwa/mestre-harmonia',
+            '/pwa/hospitaleiro',
+            '/pwa/hospitaleiro/ocorrencias/salvar',
+            '/pwa/hospitaleiro/ocorrencias/status',
+            '/pwa/hospitaleiro/ocorrencias/visita',
+            '/pwa/primeiro-vigilante',
+            '/pwa/segundo-vigilante',
+        ], true)) {
+            WebGuards::requireLogin($openTestAccess, $session);
+            $controller = new PwaRolesController();
+            if ($requestUri === '/pwa/veneravel') {
+                WebGuards::requirePermission($authorizer->hasPermission('veneravel.manage'), 'Acesso restrito.');
+                $controller->veneravel();
+            } elseif ($requestUri === '/pwa/orador') {
+                WebGuards::requirePermission($authorizer->hasPermission('orador.view'), 'Acesso restrito.');
+                $controller->orador();
+            } elseif ($requestUri === '/pwa/mestre-banquetes' || $requestUri === '/pwa/mestre-banquetes/operacao/salvar') {
+                WebGuards::requirePermission($authorizer->hasPermission('mestre_banquetes.manage'), 'Acesso restrito.');
+                if ($requestUri === '/pwa/mestre-banquetes/operacao/salvar') {
+                    $controller->banquetesSalvarOperacao();
+                } else {
+                    $controller->banquetes();
+                }
+            } elseif ($requestUri === '/pwa/mestre-harmonia') {
+                WebGuards::requirePermission($authorizer->hasPermission('mestre_harmonia.manage'), 'Acesso restrito.');
+                $controller->harmonia();
+            } elseif (str_starts_with($requestUri, '/pwa/hospitaleiro')) {
+                WebGuards::requirePermission($authorizer->hasPermission('hospitaleiro.manage'), 'Acesso restrito.');
+                if ($requestUri === '/pwa/hospitaleiro/ocorrencias/salvar') {
+                    $controller->hospitaleiroSalvarOcorrencia();
+                } elseif ($requestUri === '/pwa/hospitaleiro/ocorrencias/status') {
+                    $controller->hospitaleiroAtualizarStatus();
+                } elseif ($requestUri === '/pwa/hospitaleiro/ocorrencias/visita') {
+                    $controller->hospitaleiroRegistrarVisita();
+                } else {
+                    $controller->hospitaleiro();
+                }
+            } elseif ($requestUri === '/pwa/primeiro-vigilante') {
+                WebGuards::requirePermission($authorizer->hasPermission('vigilancia.primeiro.manage'), 'Acesso restrito.');
+                $controller->primeiroVigilante();
+            } else {
+                WebGuards::requirePermission($authorizer->hasPermission('vigilancia.segundo.manage'), 'Acesso restrito.');
+                $controller->segundoVigilante();
+            }
+            return true;
+        }
+
         if (in_array($requestUri, ['/pwa/chancelaria/efemerides', '/pwa/chancelaria/efemerides/salvar', '/pwa/chancelaria/efemerides/desativar', '/pwa/chancelaria/efemerides/excluir'], true)) {
             WebGuards::requireLogin($openTestAccess, $session);
             if (
                 !$authorizer->hasPermission('chancelaria.manage')
                 && !$canManageContentCategory('efemerides')
             ) {
-                WebGuards::forbidHtml('Acesso restrito aos responsaveis pelas efemerides.');
+                WebGuards::forbidHtml('Acesso restrito aos responsáveis pelas efemérides.');
             }
             $controller = new PwaEfemeridesController();
             if ($requestUri === '/pwa/chancelaria/efemerides/salvar') {
@@ -86,14 +139,102 @@ class PainelRoutes
             return true;
         }
 
-        if (in_array($requestUri, ['/pwa/secretaria', '/pwa/secretaria/sessoes/publicar', '/pwa/secretaria/sessoes/cancelar', '/pwa/secretaria/sessoes/reabrir', '/pwa/secretaria/trabalhos/salvar', '/pwa/secretaria/publicacoes/salvar', '/pwa/secretaria/balaustres/salvar'], true)) {
+        if (in_array($requestUri, [
+            '/pwa/secretaria',
+            '/pwa/secretaria/sessoes',
+            '/pwa/secretaria/balaustres',
+            '/pwa/secretaria/trabalhos-publicacoes',
+            '/pwa/secretaria/convites-externos',
+            '/pwa/secretaria/votacao',
+            '/pwa/secretaria/relatorio-anual',
+            '/pwa/secretaria/relatorio-gestao',
+            '/pwa/secretaria/nominata',
+            '/pwa/secretaria/acessos',
+            '/pwa/secretaria/convites',
+            '/pwa/secretaria/conteudo-publico',
+            '/pwa/secretaria/balaustres/visualizar',
+            '/pwa/secretaria/sessoes/salvar',
+            '/pwa/secretaria/sessoes/publicar-rascunho',
+            '/pwa/secretaria/sessoes/cancelar-rascunho',
+            '/pwa/secretaria/sessoes/publicar',
+            '/pwa/secretaria/sessoes/cancelar',
+            '/pwa/secretaria/sessoes/reabrir',
+            '/pwa/secretaria/trabalhos/salvar',
+            '/pwa/secretaria/publicacoes/salvar',
+            '/pwa/secretaria/balaustres/salvar',
+            '/pwa/secretaria/balaustres/apto',
+            '/pwa/secretaria/balaustres/abrir-votacao',
+            '/pwa/secretaria/balaustres/votar',
+            '/pwa/secretaria/balaustres/encerrar-votacao',
+            '/pwa/secretaria/nominata/salvar',
+            '/pwa/secretaria/acessos/atualizar',
+            '/pwa/secretaria/convites/gerar',
+            '/pwa/secretaria/convites-externos/salvar',
+            '/pwa/secretaria/convites-externos/remover-anexo',
+            '/pwa/secretaria/convites-externos/presenca',
+            '/pwa/secretaria/conteudo-publico/salvar',
+            '/pwa/secretaria/conteudo-publico/excluir',
+        ], true)) {
             WebGuards::requireLogin($openTestAccess, $session);
-            WebGuards::requirePermission(
-                $authorizer->hasPermission('secretaria.manage'),
-                'Acesso restrito a Secretaria.'
-            );
             $controller = new PwaSecretariaController();
-            if ($requestUri === '/pwa/secretaria/sessoes/publicar') {
+            if ($requestUri === '/pwa/secretaria/nominata' || $requestUri === '/pwa/secretaria/nominata/salvar') {
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('admin.cargos.view') || $authorizer->hasPermission('admin.cargos.manage'),
+                    'Acesso restrito.'
+                );
+            } elseif ($requestUri === '/pwa/secretaria/acessos' || $requestUri === '/pwa/secretaria/acessos/atualizar' || $requestUri === '/pwa/secretaria/convites' || $requestUri === '/pwa/secretaria/convites/gerar') {
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('access.manage'),
+                    'Acesso restrito.'
+                );
+            } elseif ($requestUri === '/pwa/secretaria/conteudo-publico' || $requestUri === '/pwa/secretaria/conteudo-publico/salvar' || $requestUri === '/pwa/secretaria/conteudo-publico/excluir') {
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('public_content.manage'),
+                    'Acesso restrito.'
+                );
+            } elseif ($requestUri === '/pwa/secretaria/balaustres/abrir-votacao' || $requestUri === '/pwa/secretaria/balaustres/encerrar-votacao') {
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('veneravel.manage'),
+                    'Acesso restrito.'
+                );
+            } else {
+                WebGuards::requirePermission(
+                    $authorizer->hasPermission('secretaria.manage'),
+                    'Acesso restrito a Secretaria.'
+                );
+            }
+
+            if ($requestUri === '/pwa/secretaria/sessoes') {
+                $controller->sessoes();
+            } elseif ($requestUri === '/pwa/secretaria/balaustres') {
+                $controller->balaustres();
+            } elseif ($requestUri === '/pwa/secretaria/trabalhos-publicacoes') {
+                $controller->trabalhosPublicacoes();
+            } elseif ($requestUri === '/pwa/secretaria/convites-externos') {
+                $controller->convitesExternos();
+            } elseif ($requestUri === '/pwa/secretaria/votacao') {
+                $controller->votacao();
+            } elseif ($requestUri === '/pwa/secretaria/relatorio-anual') {
+                $controller->relatorioAnual();
+            } elseif ($requestUri === '/pwa/secretaria/relatorio-gestao') {
+                $controller->relatorioGestao();
+            } elseif ($requestUri === '/pwa/secretaria/nominata') {
+                $controller->nominata();
+            } elseif ($requestUri === '/pwa/secretaria/acessos') {
+                $controller->acessos();
+            } elseif ($requestUri === '/pwa/secretaria/convites') {
+                $controller->convites();
+            } elseif ($requestUri === '/pwa/secretaria/conteudo-publico') {
+                $controller->conteudoPublico();
+            } elseif ($requestUri === '/pwa/secretaria/balaustres/visualizar') {
+                $controller->visualizarBalaustre();
+            } elseif ($requestUri === '/pwa/secretaria/sessoes/salvar') {
+                $controller->salvarSessao();
+            } elseif ($requestUri === '/pwa/secretaria/sessoes/publicar-rascunho') {
+                $controller->publicarSessaoRascunho();
+            } elseif ($requestUri === '/pwa/secretaria/sessoes/cancelar-rascunho') {
+                $controller->cancelarRascunhoSessao();
+            } elseif ($requestUri === '/pwa/secretaria/sessoes/publicar') {
                 $controller->publicarSessao();
             } elseif ($requestUri === '/pwa/secretaria/sessoes/cancelar') {
                 $controller->cancelarSessao();
@@ -103,6 +244,30 @@ class PainelRoutes
                 $controller->salvarTrabalho();
             } elseif ($requestUri === '/pwa/secretaria/publicacoes/salvar') {
                 $controller->salvarPublicacao();
+            } elseif ($requestUri === '/pwa/secretaria/balaustres/apto') {
+                $controller->marcarBalaustreApto();
+            } elseif ($requestUri === '/pwa/secretaria/balaustres/abrir-votacao') {
+                $controller->abrirVotacaoBalaustre();
+            } elseif ($requestUri === '/pwa/secretaria/balaustres/votar') {
+                $controller->votarBalaustre();
+            } elseif ($requestUri === '/pwa/secretaria/balaustres/encerrar-votacao') {
+                $controller->encerrarVotacaoBalaustre();
+            } elseif ($requestUri === '/pwa/secretaria/nominata/salvar') {
+                $controller->salvarNominata();
+            } elseif ($requestUri === '/pwa/secretaria/acessos/atualizar') {
+                $controller->atualizarAcesso();
+            } elseif ($requestUri === '/pwa/secretaria/convites/gerar') {
+                $controller->gerarConvite();
+            } elseif ($requestUri === '/pwa/secretaria/convites-externos/salvar') {
+                $controller->salvarConviteExterno();
+            } elseif ($requestUri === '/pwa/secretaria/convites-externos/remover-anexo') {
+                $controller->removerAnexoConviteExterno();
+            } elseif ($requestUri === '/pwa/secretaria/convites-externos/presenca') {
+                $controller->confirmarConviteExterno();
+            } elseif ($requestUri === '/pwa/secretaria/conteudo-publico/salvar') {
+                $controller->salvarConteudoPublico();
+            } elseif ($requestUri === '/pwa/secretaria/conteudo-publico/excluir') {
+                $controller->excluirConteudoPublico();
             } elseif ($requestUri === '/pwa/secretaria/balaustres/salvar') {
                 $controller->salvarBalaustre();
             } else {
@@ -602,8 +767,8 @@ class PainelRoutes
 
                     if ($ok) {
                         $_SESSION['mensagem_sucesso'] = $acao === 'cancelar'
-                            ? 'Confirmacao cancelada com sucesso.'
-                            : 'Presenca confirmada com sucesso.';
+                            ? 'Confirmação cancelada com sucesso.'
+                            : 'Presença confirmada com sucesso.';
                     } else {
                         $_SESSION['mensagem_erro'] = 'Não foi possível atualizar a confirmação desta sessão.';
                     }

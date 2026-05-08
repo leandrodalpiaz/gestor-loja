@@ -11,6 +11,13 @@ use App\Models\TrabalhoSessao;
 
 class PwaSecretariaController
 {
+    private SecretariaController $secretaria;
+
+    public function __construct()
+    {
+        $this->secretaria = new SecretariaController();
+    }
+
     public function index(): void
     {
         $sessaoModel = new Sessao();
@@ -49,19 +56,48 @@ class PwaSecretariaController
 
     public function salvarTrabalho(): void
     {
-        $this->salvar(fn(): bool => (new TrabalhoSessao())->criar($_POST, $this->autorId()), 'Trabalho registrado.', 'Nao foi possivel registrar o trabalho.');
+        $this->salvar(fn(): bool => (new TrabalhoSessao())->criar($_POST, $this->autorId()), 'Trabalho registrado.', 'Não foi possível registrar o trabalho.');
     }
 
     public function salvarPublicacao(): void
     {
-        $this->salvar(fn(): bool => (new PublicacaoSecretaria())->criar($_POST, $this->autorId()), 'Publicacao registrada.', 'Nao foi possivel registrar a publicacao.');
+        $this->salvar(fn(): bool => (new PublicacaoSecretaria())->criar($_POST, $this->autorId()), 'Publicação registrada.', 'Não foi possível registrar a publicação.');
     }
 
     public function salvarBalaustre(): void
     {
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
-        $this->salvar(fn(): bool => $sessaoId > 0 && (new Balaustre())->salvarPorSessao($sessaoId, $_POST, $this->autorId()), 'Balaustre salvo.', 'Selecione uma sessao valida para salvar o balaustre.');
+        $this->salvar(fn(): bool => $sessaoId > 0 && (new Balaustre())->salvarPorSessao($sessaoId, $_POST, $this->autorId()), 'Balaustre salvo.', 'Selecione uma sessão válida para salvar o balaustre.');
     }
+
+    public function sessoes(): void { $this->secretaria->sessoes(); }
+    public function balaustres(): void { $this->secretaria->balaustres(); }
+    public function trabalhosPublicacoes(): void { $this->secretaria->trabalhosPublicacoes(); }
+    public function convitesExternos(): void { $this->secretaria->convitesExternos(); }
+    public function votacao(): void { $this->secretaria->votacao(); }
+    public function relatorioAnual(): void { $this->secretaria->relatorioAnual(); }
+    public function relatorioGestao(): void { $this->secretaria->relatorioGestao(); }
+    public function nominata(): void { $this->secretaria->nominata(); }
+    public function acessos(): void { $this->secretaria->acessos(); }
+    public function convites(): void { $this->secretaria->convites(); }
+    public function conteudoPublico(): void { $this->secretaria->conteudoPublico(); }
+    public function visualizarBalaustre(): void { $this->secretaria->visualizarBalaustre(); }
+
+    public function salvarSessao(): void { $this->secretaria->salvarSessao(); }
+    public function publicarSessaoRascunho(): void { $this->secretaria->publicarSessaoRascunho(); }
+    public function cancelarRascunhoSessao(): void { $this->secretaria->cancelarRascunhoSessao(); }
+    public function marcarBalaustreApto(): void { $this->secretaria->marcarBalaustreApto(); }
+    public function abrirVotacaoBalaustre(): void { $this->secretaria->abrirVotacaoBalaustre(); }
+    public function votarBalaustre(): void { $this->secretaria->votarBalaustre(); }
+    public function encerrarVotacaoBalaustre(): void { $this->secretaria->encerrarVotacaoBalaustre(); }
+    public function salvarNominata(): void { $this->secretaria->salvarNominata(); }
+    public function atualizarAcesso(): void { $this->secretaria->atualizarAcesso(); }
+    public function gerarConvite(): void { $this->secretaria->gerarConvite(); }
+    public function salvarConviteExterno(): void { $this->secretaria->salvarConviteExterno(); }
+    public function removerAnexoConviteExterno(): void { $this->secretaria->removerAnexoConviteExterno(); }
+    public function confirmarConviteExterno(): void { $this->secretaria->confirmarConviteExterno(); }
+    public function salvarConteudoPublico(): void { $this->secretaria->salvarConteudoPublico(); }
+    public function excluirConteudoPublico(): void { $this->secretaria->excluirConteudoPublico(); }
 
     private function acaoSessao(string $acao): void
     {
@@ -71,20 +107,20 @@ class PwaSecretariaController
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         if ($sessaoId <= 0) {
-            $_SESSION['mensagem_erro'] = 'Sessao invalida.';
+            $_SESSION['mensagem_erro'] = 'Sessão inválida.';
             $this->redirect();
         }
 
         $model = new Sessao();
         $autorId = $this->autorId();
         $ok = match ($acao) {
-            'publicar' => $model->marcarPublicada($sessaoId, $autorId, 'Publicacao operacional realizada pelo PWA Secretaria.'),
+            'publicar' => $model->marcarPublicada($sessaoId, $autorId, 'Publicação operacional realizada pelo PWA Secretaria.'),
             'cancelar' => $model->cancelar($sessaoId, $autorId, 'Cancelamento operacional realizado pelo PWA Secretaria.'),
             'reabrir' => $model->reabrir($sessaoId, $autorId, 'Reabertura operacional realizada pelo PWA Secretaria.'),
             default => false,
         };
 
-        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok ? 'Sessao atualizada.' : 'Nao foi possivel atualizar a sessao.';
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok ? 'Sessão atualizada.' : 'Não foi possível atualizar a sessão.';
         $this->redirect($sessaoId);
     }
 
