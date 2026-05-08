@@ -6,7 +6,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 $links = is_array($links ?? null) ? $links : [];
-$usuarioNome = (string) ($_SESSION['usuario_nome'] ?? 'Irmao');
+$usuarioNome = (string) ($_SESSION['usuario_nome'] ?? 'Irmão');
 $usuarioCargo = (string) ($_SESSION['usuario_cargo'] ?? '');
 $tenantSlug = (string) ($_SESSION['tenant_slug'] ?? '');
 $tenantName = trim((string) ($_SESSION['tenant_name'] ?? 'Oficina Digital'));
@@ -31,9 +31,9 @@ ob_start();
             <?php endif; ?>
             <div class="min-w-0">
                 <p class="pwa-eyebrow">Oficina Digital</p>
-                <h2 class="mt-1 truncate text-2xl font-bold tracking-tight text-white">Ola, <?= htmlspecialchars($usuarioNome) ?></h2>
+                <h2 class="mt-1 truncate text-2xl font-bold tracking-tight text-white">Olá, <?= htmlspecialchars($usuarioNome) ?></h2>
                 <p class="pwa-muted mt-0.5 truncate text-sm font-medium">
-                    <?= $usuarioCargo !== '' ? htmlspecialchars($usuarioCargo) . ' · ' : '' ?><?= htmlspecialchars($tenantName !== '' ? $tenantName : 'Acesso rapido') ?>
+                    <?= $usuarioCargo !== '' ? htmlspecialchars($usuarioCargo) . ' · ' : '' ?><?= htmlspecialchars($tenantName !== '' ? $tenantName : 'Acesso rápido') ?>
                 </p>
             </div>
         </div>
@@ -47,7 +47,7 @@ ob_start();
         if (!empty($proximaSessao['data_hora_inicio'])) {
             try {
                 $dtObj = new DateTimeImmutable($proximaSessao['data_hora_inicio'], new DateTimeZone('America/Sao_Paulo'));
-                $diasSemana = ['Domingo', 'Segunda-feira', 'Terca-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sabado'];
+                $diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
                 $diaSemana = $diasSemana[(int) $dtObj->format('w')];
                 $dataFormatada = $dtObj->format('d/m/Y');
                 $horaFormatada = $dtObj->format('H:i');
@@ -56,7 +56,7 @@ ob_start();
             }
         }
 
-        $tituloSessao = trim((string) ($proximaSessao['titulo'] ?? 'Sessao'));
+        $tituloSessao = trim((string) ($proximaSessao['titulo'] ?? 'Sessão'));
         $sessaoModel = new \App\Models\Sessao();
         $tipoDesc = $sessaoModel->obterDescricaoTipoSessao($proximaSessao);
         $trajeDesc = $sessaoModel->obterDescricaoTraje($proximaSessao);
@@ -69,7 +69,7 @@ ob_start();
         $participaAgape = (bool) ($proximaSessaoResposta['participara_agape'] ?? false);
         $badgeConf = match ($statusConf) {
             'confirmado' => $participaAgape
-                ? ['Confirmado com agape', 'border-emerald-300/30 bg-emerald-400/15 text-emerald-100']
+                ? ['Confirmado com ágape', 'border-emerald-300/30 bg-emerald-400/15 text-emerald-100']
                 : ['Confirmado', 'border-emerald-300/30 bg-emerald-400/15 text-emerald-100'],
             'ausente' => ['Ausente', 'border-rose-300/30 bg-rose-400/15 text-rose-100'],
             default => ['Sem resposta', 'border-amber-300/30 bg-amber-400/15 text-amber-100'],
@@ -83,7 +83,7 @@ ob_start();
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Proxima Sessao
+                        Próxima Sessão
                     </div>
                     <h3 class="mt-4 text-2xl font-bold leading-tight tracking-tight text-white"><?= htmlspecialchars($tituloSessao) ?></h3>
                 </div>
@@ -101,7 +101,7 @@ ob_start();
                     <?php endif; ?>
                 </div>
                 <div class="pwa-glass rounded-2xl p-3">
-                    <p class="pwa-muted text-[0.65rem] font-semibold uppercase tracking-[0.18em]">Agape</p>
+                    <p class="pwa-muted text-[0.65rem] font-semibold uppercase tracking-[0.18em]">Ágape</p>
                     <p class="mt-1 text-base font-bold text-white"><?= htmlspecialchars($agapeDesc !== '' ? $agapeDesc : 'A definir') ?></p>
                 </div>
             </div>
@@ -136,7 +136,7 @@ ob_start();
                 </span>
                 <a href="/pwa/sessoes"
                    class="pwa-cta inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition active:scale-95">
-                    <?= $statusConf === '' ? 'Confirmar Presenca' : 'Ver Detalhes' ?>
+                    <?= $statusConf === '' ? 'Confirmar Presença' : 'Ver Detalhes' ?>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
@@ -144,7 +144,7 @@ ob_start();
             </div>
 
             <?php if ($totalConfirmados > 0): ?>
-                <p class="pwa-muted mt-3 text-xs font-medium"><?= $totalConfirmados ?> irmao(s) confirmado(s)</p>
+                <p class="pwa-muted mt-3 text-xs font-medium"><?= $totalConfirmados ?> irmão(s) confirmado(s)</p>
             <?php endif; ?>
         </section>
     <?php else: ?>
@@ -156,9 +156,9 @@ ob_start();
                     </svg>
                 </div>
                 <div>
-                    <p class="pwa-eyebrow">Proxima Sessao</p>
-                    <h3 class="mt-1 text-2xl font-bold tracking-tight text-white">Nenhuma sessao futura</h3>
-                    <p class="pwa-muted mt-1 text-sm font-medium">Nao ha sessoes publicadas no momento.</p>
+                    <p class="pwa-eyebrow">Próxima Sessão</p>
+                    <h3 class="mt-1 text-2xl font-bold tracking-tight text-white">Nenhuma sessão futura</h3>
+                    <p class="pwa-muted mt-1 text-sm font-medium">Não há sessões publicadas no momento.</p>
                 </div>
             </div>
         </section>
@@ -168,7 +168,7 @@ ob_start();
         <section>
             <div class="mb-3 flex items-center justify-between">
                 <div>
-                    <p class="pwa-eyebrow">Comunicacao</p>
+                    <p class="pwa-eyebrow">Comunicação</p>
                     <h3 class="mt-1 text-lg font-bold text-white">Mural de Avisos</h3>
                 </div>
                 <a href="/pwa/comunicacao" class="pwa-glass rounded-full px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:text-white">Ver todos</a>
@@ -219,8 +219,8 @@ ob_start();
 
     <section>
         <div class="mb-3">
-            <p class="pwa-eyebrow">Acesso rapido</p>
-            <h3 class="mt-1 text-lg font-bold text-white">Modulos principais</h3>
+            <p class="pwa-eyebrow">Acesso rápido</p>
+            <h3 class="mt-1 text-lg font-bold text-white">Módulos principais</h3>
         </div>
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <?php
@@ -236,22 +236,28 @@ ob_start();
             };
 
             if (!empty($links['sessoes'])) {
-                $renderIcon('/pwa/sessoes', 'Sessoes', 'Frequencia e agape', '<path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />');
+                $renderIcon('/pwa/sessoes', 'Sessões', 'Frequência e ágape', '<path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />');
             }
             if (!empty($links['biblioteca'])) {
                 $renderIcon('/pwa/biblioteca', 'Biblioteca', 'Consultar acervo', '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />');
             }
             if (!empty($links['comunicacao'])) {
-                $renderIcon('/pwa/comunicacao', 'Comunicacao', 'Recados oficiais', '<path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />');
+                $renderIcon('/pwa/comunicacao', 'Comunicação', 'Recados oficiais', '<path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />');
+            }
+            if (!empty($links['tesouraria'])) {
+                $renderIcon('/pwa/tesouraria', 'Tesouraria', 'Caixa e obrigações', '<path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .672-3 1.5S10.343 11 12 11s3 .672 3 1.5S13.657 14 12 14m0-6v6m0 0v2m8-6a8 8 0 11-16 0 8 8 0 0116 0z" />');
+            }
+            if (!empty($links['chancelaria'])) {
+                $renderIcon('/pwa/chancelaria', 'Chancelaria', 'Presença e visitantes', '<path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5V4H2v16h5m10 0v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6m10 0H7" />');
             }
             if (!empty($_SESSION['is_system_admin']) && !empty($_ENV['FEATURE_PWA_ADMIN_CRUD']) && filter_var((string) $_ENV['FEATURE_PWA_ADMIN_CRUD'], FILTER_VALIDATE_BOOL)) {
-                $renderIcon('/pwa/admin', 'Sistema', 'Ajustes tecnicos', '<path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />');
+                $renderIcon('/pwa/admin', 'Sistema', 'Ajustes técnicos', '<path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />');
             }
             foreach ((array) ($links['cargo_modules'] ?? []) as $cargoModule) {
                 $renderIcon(
                     htmlspecialchars((string) ($cargoModule['href'] ?? '/pwa/admin')),
                     htmlspecialchars((string) ($cargoModule['label'] ?? 'Cargo')),
-                    htmlspecialchars((string) ($cargoModule['description'] ?? 'Modulo do cargo')),
+                    htmlspecialchars((string) ($cargoModule['description'] ?? 'Módulo do cargo')),
                     '<path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />'
                 );
             }

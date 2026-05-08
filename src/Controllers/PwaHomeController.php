@@ -19,6 +19,8 @@ class PwaHomeController
             'sessoes' => FeatureFlags::pwaSessoes(),
             'biblioteca' => FeatureFlags::pwaBiblioteca(),
             'comunicacao' => FeatureFlags::pwaComunicacao(),
+            'tesouraria' => $authorizer->hasPermission('tesouraria.manage'),
+            'chancelaria' => $authorizer->hasPermission('chancelaria.manage'),
             'cargo_modules' => $this->cargoModules($authorizer),
         ];
 

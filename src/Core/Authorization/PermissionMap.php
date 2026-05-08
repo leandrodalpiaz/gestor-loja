@@ -6,9 +6,12 @@ class PermissionMap
 {
     /**
      * Primeira matriz RBAC em modo compatível.
-     * Papeis operacionais existentes continuam convivendo com papeis-base.
+     * Papéis operacionais existentes continuam convivendo com papéis-base.
      */
     private const ROLE_PERMISSIONS = [
+        'admin' => [
+            '*',
+        ],
         'veneravel' => [
             'dashboard.view',
             'admin.cargos.view',

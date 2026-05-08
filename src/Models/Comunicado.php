@@ -41,7 +41,7 @@ class Comunicado
             LIMIT :limite
         ");
 
-        $stmt->bindValue('loja_id', $this->obterLojaAtualId(), PDO::PARAM_INT);
+        $stmt->bindValue('loja_id', $this->currentStoreId(), PDO::PARAM_INT);
         $stmt->bindValue('limite', $limite, PDO::PARAM_INT);
         $stmt->execute();
 
@@ -59,7 +59,7 @@ class Comunicado
         ");
         $stmt->execute([
             'id' => $id,
-            'loja_id' => $this->obterLojaAtualId(),
+            'loja_id' => $this->currentStoreId(),
         ]);
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -88,7 +88,7 @@ class Comunicado
         return $stmt->execute([
             'comunicado_id' => $comunicadoId,
             'obreiro_id' => $obreiroId,
-            'loja_id' => $this->obterLojaAtualId(),
+            'loja_id' => $this->currentStoreId(),
         ]);
     }
 
@@ -111,7 +111,7 @@ class Comunicado
         $stmt->execute([
             'comunicado_id' => $comunicadoId,
             'obreiro_id' => $obreiroId,
-            'loja_id' => $this->obterLojaAtualId(),
+            'loja_id' => $this->currentStoreId(),
         ]);
 
         return (bool) $stmt->fetchColumn();
@@ -151,7 +151,7 @@ class Comunicado
         ");
 
         $stmt->execute([
-            'loja_id' => $this->obterLojaAtualId(),
+            'loja_id' => $this->currentStoreId(),
             'titulo' => $titulo,
             'conteudo' => $conteudo,
             'categoria' => $categoria !== '' ? $categoria : 'geral',
@@ -160,5 +160,10 @@ class Comunicado
 
         $id = $stmt->fetchColumn();
         return $id !== false ? (int) $id : null;
+    }
+
+    private function currentStoreId(): int
+    {
+        return $this->resolveCurrentStoreId($this->db);
     }
 }

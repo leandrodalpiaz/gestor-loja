@@ -98,7 +98,7 @@ ob_start();
                            class="w-full rounded-lg border border-erpBorder bg-erpSurface px-4 py-2.5 text-center text-sm font-semibold text-erpNavy transition hover:bg-erpBg">
                             Ver detalhes
                         </a>
-                        <form method="post" action="/biblioteca/solicitar" class="w-full">
+                        <form method="post" action="/pwa/biblioteca/solicitar" class="w-full">
                             <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
                             <input type="hidden" name="scope" value="<?= htmlspecialchars($catalogScope) ?>">
                             <input type="hidden" name="loja_id" value="<?= (int) ($item['loja_id'] ?? 0) ?>">
