@@ -24,6 +24,9 @@ $formatarDataVisual = static fn (?string $valor): string =>
 
 $previewRaw = (string) ($mensagemPreview ?? '');
 $previewRender = nl2br(strip_tags($previewRaw, '<b><i><u><strong><em>'), false);
+$cardsEnabled = !empty($cardsEnabled);
+$cards = is_array($cards ?? null) ? $cards : [];
+$categoriasCards = is_array($categoriasCards ?? null) ? $categoriasCards : [];
 
 // #############################################################################
 // CONFIGURAÇÃO DO APP SHELL
@@ -81,6 +84,88 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <p class="form-hint mt-2">Sugestão: revise, envie no privado para conferência e, só então, publique no grupo.</p>
             </div>
         </div>
+        <?php if ($cardsEnabled): ?>
+        <div class="card" id="secao-cards">
+            <div class="card-header">
+                <h2 class="card-title">Esteira de Homologação de Cards</h2>
+                <p class="card-subtitle">1 evento = 1 card, com prévia desktop-first.</p>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/chancelaria/efemerides/cards-template-categorias" class="mb-4 p-3 rounded-lg border border-gray-200">
+                    <p class="text-sm font-semibold mb-2">Template padrão por categorias (selecionadas em tela)</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
+                        <?php foreach ($categoriasCards as $categoria): ?>
+                            <label class="inline-flex items-center gap-2 text-xs">
+                                <input type="checkbox" name="categorias[]" value="<?= htmlspecialchars($categoria) ?>">
+                                <span><?= htmlspecialchars($categoria) ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="flex gap-2">
+                        <select name="template_slug" class="form-select text-xs">
+                            <?php foreach ([
+                                'card_irmao_pop.png','card_cunhada_solar.png','card_familia_kids.png','card_sobrinho_jovem.png','card_sobrinho_adulto.png','card_sobrinha_adulta.png',
+                                'card_grau_iniciacao.png','card_grau_elevacao.png','card_grau_exaltacao.png','card_grau_instalacao.png',
+                                'card_memorial_eterno.png','card_historia_sepia.png','card_oficial_sessao.png','card_oficial_convite.png','card_especial_filiacao.png','card_especial_honorario.png','card_especial_grao_mestre.png'
+                            ] as $tpl): ?>
+                                <option value="<?= htmlspecialchars($tpl) ?>"><?= htmlspecialchars($tpl) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button type="submit" class="btn btn-secondary text-xs">Aplicar nas Categorias Selecionadas</button>
+                    </div>
+                </form>
+                <form method="POST" action="/chancelaria/efemerides/cards-aprovar-todos" class="mb-4">
+                    <button type="submit" class="btn btn-primary">Aprovar Todos</button>
+                </form>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <?php if (empty($cards)): ?>
+                        <div class="col-span-full rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                            Nenhum card gerado para hoje. Verifique se há registros ativos em efemérides para a data atual.
+                        </div>
+                    <?php endif; ?>
+                    <?php foreach ($cards as $card): ?>
+                        <article class="rounded-xl border border-gray-200 p-3 bg-white card-item" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>">
+                            <div class="aspect-[9/16] rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden mb-2">
+                                <?php if (!empty($card['image_url'])): ?>
+                                    <img src="<?= htmlspecialchars($card['image_url']) ?>" alt="Card" class="w-full h-full object-cover card-image">
+                                <?php else: ?>
+                                    <span class="text-xs text-gray-500">Prévia indisponível</span>
+                                <?php endif; ?>
+                            </div>
+                            <p class="text-sm font-semibold card-title"><?= htmlspecialchars($card['titulo'] ?? '-') ?></p>
+                            <p class="text-xs text-gray-600 card-template"><?= htmlspecialchars($card['template'] ?? '-') ?></p>
+                            <div class="mt-2 space-y-2">
+                                <p class="text-xs text-green-700 hidden card-status">Prévia atualizada.</p>
+                                <label class="inline-flex items-center gap-2 text-xs">
+                                    <input type="checkbox" class="card-toggle-idade" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>" <?= !empty($card['ocultar_idade']) ? 'checked' : '' ?>>
+                                    <span>Ocultar idade</span>
+                                </label>
+                                <textarea class="form-input text-xs card-texto-custom" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>" rows="2" placeholder="Texto custom do card"><?= htmlspecialchars($card['texto_custom_card'] ?? '') ?></textarea>
+                                <select class="form-select text-xs card-template-select" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>">
+                                    <?php
+                                    $templates = [
+                                        'card_irmao_pop.png','card_cunhada_solar.png','card_familia_kids.png','card_sobrinho_jovem.png','card_sobrinho_adulto.png','card_sobrinha_adulta.png',
+                                        'card_grau_iniciacao.png','card_grau_elevacao.png','card_grau_exaltacao.png','card_grau_instalacao.png',
+                                        'card_memorial_eterno.png','card_historia_sepia.png','card_oficial_sessao.png','card_oficial_convite.png','card_especial_filiacao.png','card_especial_honorario.png','card_especial_grao_mestre.png'
+                                    ];
+                                    foreach ($templates as $tpl): ?>
+                                        <option value="<?= htmlspecialchars($tpl) ?>" <?= (($card['template'] ?? '') === $tpl) ? 'selected' : '' ?>><?= htmlspecialchars($tpl) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <div class="flex gap-2">
+                                    <?php if (!empty($card['image_url'])): ?>
+                                        <a href="<?= htmlspecialchars($card['image_url']) ?>" download class="btn btn-secondary text-xs card-download">Salvar Imagem</a>
+                                    <?php endif; ?>
+                                    <button type="button" class="btn btn-secondary text-xs card-open-modal">Abrir</button>
+                                    <button type="button" class="btn btn-secondary text-xs card-btn-preview" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>">Atualizar Prévia</button>
+                                </div>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <!-- Lista de Registros -->
         <div class="card">
@@ -232,6 +317,18 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 </div>
 
+<div id="card-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl p-3 max-w-md w-full">
+        <div class="flex justify-between items-center mb-2">
+            <p class="font-semibold text-sm">Visualização do Card</p>
+            <button type="button" id="card-modal-close" class="btn btn-secondary text-xs">Fechar</button>
+        </div>
+        <div class="aspect-[9/16] rounded-lg bg-gray-100 overflow-hidden">
+            <img id="card-modal-image" src="" alt="Card ampliado" class="w-full h-full object-contain">
+        </div>
+    </div>
+</div>
+
 <script>
     function copiarPreview(text) {
         navigator.clipboard.writeText(text).then(() => {
@@ -250,6 +347,75 @@ require __DIR__ . '/partials/erp_shell_open.php';
             const targetId = editarId ? 'secao-dados' : `secao-${foco}`;
             document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+
+        document.querySelectorAll('.card-btn-preview').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const registroId = button.getAttribute('data-registro-id');
+                const hideInput = document.querySelector(`.card-toggle-idade[data-registro-id="${registroId}"]`);
+                const textInput = document.querySelector(`.card-texto-custom[data-registro-id="${registroId}"]`);
+                const templateInput = document.querySelector(`.card-template-select[data-registro-id="${registroId}"]`);
+                const response = await fetch('/chancelaria/efemerides/cards-configurar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        registro_id: registroId || '',
+                        ocultar_idade: hideInput && hideInput.checked ? '1' : '',
+                        texto_custom_card: textInput ? textInput.value : '',
+                        template_card: templateInput ? templateInput.value : ''
+                    }).toString()
+                });
+                const data = await response.json();
+                if (!data || !data.ok || !data.card) return;
+                const item = document.querySelector(`.card-item[data-registro-id="${registroId}"]`);
+                if (!item) return;
+                const image = item.querySelector('.card-image');
+                if (image && data.card.image_url) image.src = `${data.card.image_url}?t=${Date.now()}`;
+                const template = item.querySelector('.card-template');
+                if (template && data.card.template) template.textContent = data.card.template;
+                if (templateInput && data.card.template) templateInput.value = data.card.template;
+                const download = item.querySelector('.card-download');
+                if (download && data.card.image_url) download.setAttribute('href', data.card.image_url);
+                const status = item.querySelector('.card-status');
+                if (status) {
+                    status.classList.remove('hidden');
+                    setTimeout(() => status.classList.add('hidden'), 1800);
+                }
+            });
+        });
+
+        const modal = document.getElementById('card-modal');
+        const modalImage = document.getElementById('card-modal-image');
+        const modalClose = document.getElementById('card-modal-close');
+        document.querySelectorAll('.card-open-modal').forEach((button) => {
+            button.addEventListener('click', () => {
+                const item = button.closest('.card-item');
+                const image = item ? item.querySelector('.card-image') : null;
+                if (!modal || !modalImage || !image) return;
+                modalImage.src = image.getAttribute('src') || '';
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            });
+        });
+        if (modal && modalClose) {
+            modalClose.addEventListener('click', () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            });
+        }
+        if (modal) {
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }
+            });
+        }
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        });
     });
 </script>
 

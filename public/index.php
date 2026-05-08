@@ -338,12 +338,19 @@ $buildEfemeridesPreview = static function (): array {
     $registrosRecentes = $registroModel->getRecentes();
     $mensagemBase = $composer->composeDailyPreview($registrosHoje);
     $mensagemPreview = $previaModel->garantirPreviaDoDia($mensagemBase);
+    $cards = [];
+    $hoje = (new \DateTimeImmutable('today', new \DateTimeZone(trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo')))))->format('Y-m-d');
+    $cards = (new \App\Services\EfemeridesCardService())->buildCardsForDate($hoje, $registrosHoje);
+    $categoriasCards = array_values(array_unique(array_filter(array_map(static fn(array $c): string => (string) ($c['categoria'] ?? ''), $cards))));
 
     return [
         'registrosHoje' => $registrosHoje,
         'registrosRecentes' => $registrosRecentes,
         'mensagemBase' => $mensagemBase,
         'mensagemPreview' => $mensagemPreview,
+        'cardsEnabled' => true,
+        'cards' => $cards,
+        'categoriasCards' => $categoriasCards,
     ];
 };
 

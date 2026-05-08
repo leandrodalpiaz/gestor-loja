@@ -132,6 +132,81 @@ class ChancelariaRoutes
                     ? ['sucesso' => 'enviado']
                     : ['erro' => 'falha_enviar_grupo', 'detalhe' => $telegramService->getLastError()]);
 
+            case '/chancelaria/efemerides/cards-aprovar-todos':
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, VenerÃ¡vel Mestre ou Administrador.');
+                if ($method !== 'POST') {
+                    $redirectEfemerides();
+                }
+                $dadosEfemerides = $buildEfemeridesPreview();
+                $registrosHoje = is_array($dadosEfemerides['registrosHoje'] ?? null) ? $dadosEfemerides['registrosHoje'] : [];
+                $okCards = true;
+                if (!empty($registrosHoje)) {
+                    $hojeRef = $appToday()->format('Y-m-d');
+                    (new \App\Services\EfemeridesCardService())->buildCardsForDate($hojeRef, $registrosHoje);
+                }
+                $redirectEfemerides($okCards ? ['sucesso' => 'cards_aprovados'] : ['erro' => 'falha_cards_aprovar']);
+
+            case '/chancelaria/efemerides/cards-preview':
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, VenerÃ¡vel Mestre ou Administrador.');
+                $registroId = (int) ($_GET['registro_id'] ?? 0);
+                if ($registroId <= 0) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['ok' => false, 'error' => 'registro_invalido']);
+                    exit;
+                }
+                $hojeRef = $appToday()->format('Y-m-d');
+                $registro = (new EfemerideRegistro())->findById($registroId, true);
+                if (!$registro) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode(['ok' => false, 'error' => 'registro_nao_encontrado']);
+                    exit;
+                }
+                $card = (new \App\Services\EfemeridesCardService())->buildCardForRegistro($hojeRef, $registro);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => true, 'card' => $card], JSON_UNESCAPED_UNICODE);
+                exit;
+
+            case '/chancelaria/efemerides/cards-configurar':
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, VenerÃ¡vel Mestre ou Administrador.');
+                if ($method !== 'POST') {
+                    $redirectEfemerides();
+                }
+                $registroId = (int) ($_POST['registro_id'] ?? 0);
+                $ocultarIdade = !empty($_POST['ocultar_idade']);
+                $textoCustom = trim((string) ($_POST['texto_custom_card'] ?? ''));
+                $templateCard = trim((string) ($_POST['template_card'] ?? ''));
+                $hojeRef = $appToday()->format('Y-m-d');
+                $registro = (new EfemerideRegistro())->findById($registroId, true);
+                if (!$registro) {
+                    $redirectEfemerides(['erro' => 'registro_invalido']);
+                }
+                (new \App\Services\EfemeridesCardService())->buildCardForRegistro($hojeRef, $registro, $ocultarIdade, $textoCustom !== '' ? $textoCustom : null);
+                $card = (new \App\Services\EfemeridesCardService())->buildCardForRegistro($hojeRef, $registro, $ocultarIdade, $textoCustom !== '' ? $textoCustom : null, $templateCard !== '' ? $templateCard : null);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => true, 'card' => $card], JSON_UNESCAPED_UNICODE);
+                exit;
+
+            case '/chancelaria/efemerides/cards-template-categorias':
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, VenerÃ¡vel Mestre ou Administrador.');
+                if ($method !== 'POST') {
+                    $redirectEfemerides();
+                }
+                $categorias = isset($_POST['categorias']) && is_array($_POST['categorias']) ? $_POST['categorias'] : [];
+                $template = trim((string) ($_POST['template_slug'] ?? ''));
+                if ($template === '' || empty($categorias)) {
+                    $redirectEfemerides(['erro' => 'categorias_template_invalidas']);
+                }
+                $model = new \App\Models\EfemerideCardCategoriaTemplate();
+                $ok = true;
+                foreach ($categorias as $categoria) {
+                    $cat = trim((string) $categoria);
+                    if ($cat === '') {
+                        continue;
+                    }
+                    $ok = $ok && $model->salvar($cat, $template);
+                }
+                $redirectEfemerides($ok ? ['sucesso' => 'template_categoria_salvo'] : ['erro' => 'falha_template_categoria']);
+
             case '/chancelaria/efemerides/salvar':
                 self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 if ($method !== 'POST') {
