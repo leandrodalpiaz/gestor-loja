@@ -23,7 +23,7 @@ class EfemeridesCardService
                 $card['template_file'] = $categoriaTemplateMap[$categoria];
                 $card['template_slug'] = $categoriaTemplateMap[$categoria];
                 $card['gold_theme'] = $this->isGoldTheme($categoriaTemplateMap[$categoria]);
-                $card['cache_key'] = sha1(json_encode([$card['template'], $card['mensagem'], $card['ocultar_idade']], JSON_UNESCAPED_UNICODE) ?: uniqid('', true));
+                $card['cache_key'] = sha1(json_encode([$card['template'], $card['mensagem'], $card['ocultar_idade'], 'v2'], JSON_UNESCAPED_UNICODE) ?: uniqid('', true));
                 $card['card_hash'] = $card['cache_key'];
             }
             $compose = $imageComposer->compose($card);
@@ -85,7 +85,7 @@ class EfemeridesCardService
             $card['gold_theme'] = $this->isGoldTheme(trim($templateOverride));
         }
         $card['idade_exibida'] = !$card['ocultar_idade'] && !empty($card['idade_exibida']);
-        $card['cache_key'] = sha1(json_encode([$card['template'], $card['mensagem'], $card['ocultar_idade']], JSON_UNESCAPED_UNICODE) ?: uniqid('', true));
+        $card['cache_key'] = sha1(json_encode([$card['template'], $card['mensagem'], $card['ocultar_idade'], 'v2'], JSON_UNESCAPED_UNICODE) ?: uniqid('', true));
         $card['card_hash'] = $card['cache_key'];
         $compose = (new ImageComposer())->compose($card);
         if (!empty($compose['ok'])) {
