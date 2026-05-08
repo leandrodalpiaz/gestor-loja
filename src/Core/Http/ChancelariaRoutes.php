@@ -133,7 +133,7 @@ class ChancelariaRoutes
                     : ['erro' => 'falha_enviar_grupo', 'detalhe' => $telegramService->getLastError()]);
 
             case '/chancelaria/efemerides/cards-aprovar-todos':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, VenerÃ¡vel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -147,7 +147,7 @@ class ChancelariaRoutes
                 $redirectEfemerides($okCards ? ['sucesso' => 'cards_aprovados'] : ['erro' => 'falha_cards_aprovar']);
 
             case '/chancelaria/efemerides/cards-preview':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, VenerÃ¡vel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 $registroId = (int) ($_GET['registro_id'] ?? 0);
                 if ($registroId <= 0) {
                     header('Content-Type: application/json; charset=utf-8');
@@ -167,7 +167,7 @@ class ChancelariaRoutes
                 exit;
 
             case '/chancelaria/efemerides/cards-configurar':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, VenerÃ¡vel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }
@@ -187,7 +187,7 @@ class ChancelariaRoutes
                 exit;
 
             case '/chancelaria/efemerides/cards-template-categorias':
-                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, VenerÃ¡vel Mestre ou Administrador.');
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 if ($method !== 'POST') {
                     $redirectEfemerides();
                 }

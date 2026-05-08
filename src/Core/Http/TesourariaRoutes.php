@@ -65,7 +65,7 @@ class TesourariaRoutes
                 $gestaoIdSelecionada = (int) ($_GET['gestao_id'] ?? ($gestaoAtual['id'] ?? ($gestoes[0]['id'] ?? 0)));
                 if ($gestaoIdSelecionada <= 0) {
                     http_response_code(404);
-                    echo 'Nenhuma gestÃ£o cadastrada para consolidar o relatÃ³rio financeiro.';
+                    echo 'Nenhuma gestão cadastrada para consolidar o relatório financeiro.';
                     exit;
                 }
                 $encerramentoInformado = trim((string) ($_GET['encerramento_em'] ?? ''));
@@ -239,7 +239,7 @@ class TesourariaRoutes
                     $resultadoBiblioteca['geradas'],
                     $resultadoBiblioteca['ignoradas'],
                     $resultadoBiblioteca['isentas'],
-                    $naoEncontrados ? ' NÃ£o encontrados: ' . implode(', ', $naoEncontrados) . '.' : ''
+                    $naoEncontrados ? ' Não encontrados: ' . implode(', ', $naoEncontrados) . '.' : ''
                 );
                 header('Location: /tesouraria/obrigacoes');
                 exit;

@@ -28,9 +28,9 @@ use App\Models\Sessao;
 
 class PainelRoutes
 {
-    private const MSG_SECRETARIA = 'Esta aÃ§Ã£o Ã© realizada pela Secretaria.';
-    private const MSG_CHANCELER = 'Esta funÃ§Ã£o pertence ao Chanceler.';
-    private const MSG_GRAU = 'Este conteÃºdo Ã© reservado ao grau correspondente.';
+    private const MSG_SECRETARIA = 'Esta ação é realizada pela Secretaria.';
+    private const MSG_CHANCELER = 'Esta função pertence ao Chanceler.';
+    private const MSG_GRAU = 'Este conteúdo é reservado ao grau correspondente.';
     public static function dispatch(
         string $requestUri,
         string $method,

@@ -58,7 +58,7 @@ $linhasObreirosPalavraBalaustre = array_pad($palavrasObreirosBalaustre ?? [], ma
 $blocosBalaustre = is_array($blocosBalaustre ?? null) ? $blocosBalaustre : [];
 
 // #############################################################################
-// CONFIGURAÇÃƒO DO APP SHELL
+// CONFIGURAÇÃO DO APP SHELL
 // #############################################################################
 
 $appShellEyebrow = 'Secretaria';
