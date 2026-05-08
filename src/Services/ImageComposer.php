@@ -37,17 +37,21 @@ class ImageComposer
         }
 
         $width = imagesx($img);
+        $height = imagesy($img);
         $font = dirname(__DIR__, 2) . '/public/assets/fonts/Inter-Bold.ttf';
-        $fontSize = 24;
-        $y = 150;
+        
+        $fontSize = (int) round($width * 0.045); 
+        $lineHeight = (int) round($fontSize * 1.5);
+        $y = (int) round($height * 0.15);
+        
         $lines = preg_split('/\r\n|\r|\n/', $text) ?: [];
-        $color = $isGold ? imagecolorallocate($img, 255, 215, 0) : imagecolorallocate($img, 26, 26, 26);
-        $shadow = imagecolorallocatealpha($img, 0, 0, 0, 60);
+        $color = $isGold ? imagecolorallocate($img, 212, 175, 55) : imagecolorallocate($img, 40, 40, 40);
+        $shadow = imagecolorallocatealpha($img, 0, 0, 0, 80);
 
         foreach ($lines as $line) {
             $line = trim($line);
             if ($line === '') {
-                $y += 32;
+                $y += $lineHeight;
                 continue;
             }
             if (is_file($font)) {
@@ -55,7 +59,7 @@ class ImageComposer
                 $textWidth = abs(($box[2] ?? 0) - ($box[0] ?? 0));
                 $x = (int) floor(($width - $textWidth) / 2);
                 if ($isGold) {
-                    imagettftext($img, $fontSize, 0, $x + 2, $y + 2, $shadow, $font, $line);
+                    imagettftext($img, $fontSize, 0, $x + 3, $y + 3, $shadow, $font, $line);
                 }
                 imagettftext($img, $fontSize, 0, $x, $y, $color, $font, $line);
             } else {
@@ -64,7 +68,7 @@ class ImageComposer
                 $x = (int) floor(($width - $textWidth) / 2);
                 imagestring($img, 5, $x, max(0, $y - 14), $line, $color);
             }
-            $y += 34;
+            $y += $lineHeight;
         }
 
         imagesavealpha($img, true);
