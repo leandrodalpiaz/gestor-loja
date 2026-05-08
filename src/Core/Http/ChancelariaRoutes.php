@@ -487,6 +487,11 @@ class ChancelariaRoutes
                 $podeGerirHistoria = $canManageContentCategory('historia');
                 $podeGerirPalavraDia = $canManageContentCategory('palavra_dia');
 
+                $cardsEnabled = true;
+                $hojeRef = $appToday()->format('Y-m-d');
+                $cards = !empty($registrosHoje) ? (new \App\Services\EfemeridesCardService())->buildCardsForDate($hojeRef, $registrosHoje) : [];
+                $categoriasCards = array_values(array_unique(array_filter(array_map(static fn($r) => strtolower(trim((string) ($r['vinculo'] ?? $r['tipo'] ?? ''))), $registrosHoje))));
+
                 require __DIR__ . '/../../Views/efemerides_chanceler.php';
                 return true;
 
