@@ -3,7 +3,9 @@
 namespace App\Controllers;
 
 use App\Config\FeatureFlags;
+use App\Core\Auth\CurrentUser;
 use App\Core\Authorization\Authorizer;
+use App\Core\Authorization\PermissionMap;
 use App\Models\Comunicado;
 use App\Models\Presenca;
 use App\Models\Sessao;
@@ -12,7 +14,7 @@ class PwaHomeController
 {
     public function index(): void
     {
-        $authorizer = new Authorizer($_SESSION);
+        $authorizer = new Authorizer(new CurrentUser($_SESSION), new PermissionMap());
         $links = [
             'sessoes' => FeatureFlags::pwaSessoes(),
             'biblioteca' => FeatureFlags::pwaBiblioteca(),

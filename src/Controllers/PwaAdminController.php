@@ -2,13 +2,15 @@
 
 namespace App\Controllers;
 
+use App\Core\Auth\CurrentUser;
 use App\Core\Authorization\Authorizer;
+use App\Core\Authorization\PermissionMap;
 
 class PwaAdminController
 {
     public function index(): void
     {
-        $authorizer = new Authorizer($_SESSION);
+        $authorizer = new Authorizer(new CurrentUser($_SESSION), new PermissionMap());
         $links = [];
 
         foreach (PwaCargosController::modules() as $slug => $module) {
