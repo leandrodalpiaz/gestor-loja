@@ -292,6 +292,169 @@ class PainelRoutes
         }
 
         switch ($requestUri) {
+            case '/minha-loja':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
+                require __DIR__ . '/../../Views/minha_loja.php';
+                return true;
+
+            case '/minha-loja/familiares':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
+                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+                $familiares = [];
+                $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
+                $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
+                unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
+                if ($obreiroId !== '' && $obreiroId !== '0') {
+                    $familiares = (new \App\Models\FamiliarObreiro())->listarPorObreiro($obreiroId);
+                }
+                require __DIR__ . '/../../Views/minha_loja_familiares.php';
+                return true;
+
+            case '/minha-loja/irmaos':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
+                $q = trim((string) ($_GET['q'] ?? ''));
+                $selecionadoId = trim((string) ($_GET['id'] ?? ''));
+                $tenantId = (int) ($_SESSION['tenant_id'] ?? 0);
+                $db = \App\Config\Database::getConnection();
+
+                $sql = "
+                    SELECT id, nome, nome_historico
+                    FROM public.obreiros
+                    WHERE ativo = true
+                      AND loja_id = :loja_id
+                ";
+                $params = ['loja_id' => $tenantId];
+                if ($q !== '') {
+                    $sql .= " AND (lower(nome) LIKE :q OR lower(coalesce(nome_historico, '')) LIKE :q)";
+                    $params['q'] = '%' . strtolower($q) . '%';
+                }
+                $sql .= " ORDER BY COALESCE(NULLIF(nome_historico, ''), nome) ASC LIMIT 400";
+                $stmt = $db->prepare($sql);
+                $stmt->execute($params);
+                $obreiros = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+                $detalhe = null;
+                $familiaresDetalhe = [];
+                if ($selecionadoId !== '') {
+                    $detStmt = $db->prepare("
+                        SELECT id, nome, nome_historico, grau, telefone, email, data_nascimento_civil
+                        FROM public.obreiros
+                        WHERE ativo = true
+                          AND loja_id = :loja_id
+                          AND id = :id
+                        LIMIT 1
+                    ");
+                    $detStmt->execute(['loja_id' => $tenantId, 'id' => $selecionadoId]);
+                    $detalhe = $detStmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+
+                    if ($detalhe) {
+                        $familiaresDetalhe = (new \App\Models\FamiliarObreiro())->listarPorObreiro($selecionadoId);
+                    }
+                }
+
+                require __DIR__ . '/../../Views/minha_loja_irmaos.php';
+                return true;
+
+            case '/minha-loja/familiares/salvar':
+                WebGuards::requireLogin($openTestAccess, $session);
+                if ($method !== 'POST') {
+                    header('Location: /minha-loja/familiares');
+                    exit;
+                }
+                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+                $ok = $obreiroId !== '' && $obreiroId !== '0'
+                    ? (new \App\Models\FamiliarObreiro())->criar($_POST, $obreiroId)
+                    : false;
+                $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok ? 'Familiar registrado.' : 'Não foi possível registrar agora.';
+                header('Location: /minha-loja/familiares');
+                exit;
+
+            case '/minha-loja/familiares/atualizar':
+                WebGuards::requireLogin($openTestAccess, $session);
+                if ($method !== 'POST') {
+                    header('Location: /minha-loja/familiares');
+                    exit;
+                }
+                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+                $famId = trim((string) ($_POST['id'] ?? ''));
+                $ok = $obreiroId !== '' && $obreiroId !== '0' && $famId !== ''
+                    ? (new \App\Models\FamiliarObreiro())->atualizar($famId, $_POST, $obreiroId)
+                    : false;
+                $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok ? 'Familiar atualizado.' : 'Não foi possível atualizar agora.';
+                header('Location: /minha-loja/familiares');
+                exit;
+
+            case '/minha-loja/solicitacoes':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
+                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+                $solicitacoes = [];
+                $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
+                $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
+                unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
+                if ($obreiroId !== '' && $obreiroId !== '0') {
+                    $solicitacoes = (new \App\Models\SolicitacaoSecretariaObreiro())->listarPorObreiro($obreiroId);
+                }
+                require __DIR__ . '/../../Views/minha_loja_solicitacoes.php';
+                return true;
+
+            case '/minha-loja/solicitacoes/salvar':
+                WebGuards::requireLogin($openTestAccess, $session);
+                if ($method !== 'POST') {
+                    header('Location: /minha-loja/solicitacoes');
+                    exit;
+                }
+                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+                $ok = $obreiroId !== '' && $obreiroId !== '0'
+                    ? (new \App\Models\SolicitacaoSecretariaObreiro())->criar($_POST, $obreiroId)
+                    : false;
+                $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok ? 'Solicitação enviada.' : 'Não foi possível enviar agora.';
+                header('Location: /minha-loja/solicitacoes');
+                exit;
+
+            case '/minha-loja/trabalhos':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
+                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+                $db = \App\Config\Database::getConnection();
+                $tenantId = (int) ($_SESSION['tenant_id'] ?? 0);
+                $grau = '';
+                if ($obreiroId !== '') {
+                    $gStmt = $db->prepare("SELECT grau FROM public.obreiros WHERE loja_id = :loja_id AND id = :id LIMIT 1");
+                    $gStmt->execute(['loja_id' => $tenantId, 'id' => $obreiroId]);
+                    $grau = (string) ($gStmt->fetchColumn() ?: '');
+                }
+                $sessoes = (new \App\Models\Sessao())->listarRecentes(30);
+                $submissoes = $obreiroId !== '' ? (new \App\Models\TrabalhoSubmissao())->listarPorObreiro($obreiroId) : [];
+                $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
+                $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
+                unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
+                require __DIR__ . '/../../Views/minha_loja_trabalhos.php';
+                return true;
+
+            case '/minha-loja/trabalhos/enviar':
+                WebGuards::requireLogin($openTestAccess, $session);
+                if ($method !== 'POST') {
+                    header('Location: /minha-loja/trabalhos');
+                    exit;
+                }
+                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+                $tenantId = (int) ($_SESSION['tenant_id'] ?? 0);
+                $db = \App\Config\Database::getConnection();
+                $grau = '';
+                if ($obreiroId !== '') {
+                    $gStmt = $db->prepare("SELECT grau FROM public.obreiros WHERE loja_id = :loja_id AND id = :id LIMIT 1");
+                    $gStmt->execute(['loja_id' => $tenantId, 'id' => $obreiroId]);
+                    $grau = (string) ($gStmt->fetchColumn() ?: '');
+                }
+                $ok = $obreiroId !== '' ? (new \App\Models\TrabalhoSubmissao())->criar($_POST, $obreiroId, $grau) : false;
+                $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok ? 'Trabalho enviado para fluxo de validação.' : 'Não foi possível enviar agora.';
+                header('Location: /minha-loja/trabalhos');
+                exit;
+
             case '/':
             case '/index.php':
             case '/dashboard':

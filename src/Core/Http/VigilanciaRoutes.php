@@ -54,6 +54,18 @@ class VigilanciaRoutes
                 (new PrimeiroVigilanteController())->salvarLeituraSugerida();
                 return true;
 
+            case '/primeiro-vigilante/trabalhos':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission($sessionHasPermission('vigilancia.primeiro.manage'), 'Acesso restrito ao 1o Vigilante, Veneravel Mestre ou Administrador.');
+                (new PrimeiroVigilanteController())->trabalhosPendentes();
+                return true;
+
+            case '/primeiro-vigilante/trabalhos/decidir':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission($sessionHasPermission('vigilancia.primeiro.manage'), 'Acesso restrito ao 1o Vigilante, Veneravel Mestre ou Administrador.');
+                (new PrimeiroVigilanteController())->decidirTrabalho();
+                return true;
+
             case '/primeiro-vigilante/certificado/solicitar':
                 WebGuards::requireLogin($openTestAccess, $session);
                 WebGuards::requirePermission($sessionHasPermission('vigilancia.primeiro.manage'), 'Acesso restrito ao 1o Vigilante, Veneravel Mestre ou Administrador.');
@@ -97,6 +109,18 @@ class VigilanciaRoutes
                 WebGuards::requireLogin($openTestAccess, $session);
                 WebGuards::requirePermission($sessionHasPermission('vigilancia.segundo.manage'), 'Acesso restrito ao 2o Vigilante, Veneravel Mestre ou Administrador.');
                 (new SegundoVigilanteController())->salvarLeituraSugerida();
+                return true;
+
+            case '/segundo-vigilante/trabalhos':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission($sessionHasPermission('vigilancia.segundo.manage'), 'Acesso restrito ao 2o Vigilante, Veneravel Mestre ou Administrador.');
+                (new SegundoVigilanteController())->trabalhosPendentes();
+                return true;
+
+            case '/segundo-vigilante/trabalhos/decidir':
+                WebGuards::requireLogin($openTestAccess, $session);
+                WebGuards::requirePermission($sessionHasPermission('vigilancia.segundo.manage'), 'Acesso restrito ao 2o Vigilante, Veneravel Mestre ou Administrador.');
+                (new SegundoVigilanteController())->decidirTrabalho();
                 return true;
 
             case '/segundo-vigilante/certificado/solicitar':

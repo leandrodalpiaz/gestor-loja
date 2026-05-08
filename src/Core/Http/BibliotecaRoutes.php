@@ -32,6 +32,21 @@ class BibliotecaRoutes
                 $controller->meusEmprestimos(trim((string) ($session['usuario_id'] ?? '')));
                 return true;
 
+            case '/biblioteca/trabalhos':
+                ModuleGuards::requireBibliotecaAccess($openTestAccess, $session, $authorizer);
+                $controller->trabalhos();
+                return true;
+
+            case '/biblioteca/balaustres':
+                ModuleGuards::requireBibliotecaAccess($openTestAccess, $session, $authorizer);
+                $controller->arquivoBalaustres();
+                return true;
+
+            case '/biblioteca/balaustres/visualizar':
+                ModuleGuards::requireBibliotecaAccess($openTestAccess, $session, $authorizer);
+                $controller->visualizarBalaustreAprovado((int) ($_GET['id'] ?? 0), trim((string) ($session['usuario_id'] ?? '')));
+                return true;
+
             case '/biblioteca/solicitar':
                 ModuleGuards::requireBibliotecaAccess($openTestAccess, $session, $authorizer);
                 $controller->solicitar(

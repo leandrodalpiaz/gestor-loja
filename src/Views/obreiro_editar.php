@@ -20,16 +20,19 @@ $estadosCivis = ['solteiro' => 'Solteiro', 'casado' => 'Casado', 'divorciado' =>
 $escolaridades = ['fundamental_incompleto' => 'Fundamental incompleto', 'fundamental_completo' => 'Fundamental completo', 'medio_incompleto' => 'Médio incompleto', 'medio_completo' => 'Médio completo', 'tecnico' => 'Técnico', 'superior_incompleto' => 'Superior incompleto', 'superior_completo' => 'Superior completo', 'pos_graduacao' => 'Pós-graduação', 'mestrado' => 'Mestrado', 'doutorado' => 'Doutorado', 'nao_informado' => 'Não informado'];
 $faixasRenda = ['ate_1_sm' => 'Até 1 salário mínimo', 'de_1_a_3_sm' => 'De 1 a 3 salários mínimos', 'de_3_a_5_sm' => 'De 3 a 5 salários mínimos', 'de_5_a_10_sm' => 'De 5 a 10 salários mínimos', 'acima_10_sm' => 'Acima de 10 salários mínimos', 'nao_informado' => 'Não informado'];
 $situacoesQuadro = ['ativo' => 'Regular', 'licenciado' => 'Licenciado', 'suspenso' => 'Suspenso', 'desligado' => 'Desligado', 'falecido' => 'Falecido', 'oriente_eterno' => 'Oriente Eterno', 'inativo' => 'Afastado'];
+$isSelf = (bool) ($isSelf ?? false);
+$formAction = $isSelf ? '/meu-cadastro/atualizar' : '/obreiros/atualizar';
+$showAdminOnlyCards = !$isSelf;
 
 // #############################################################################
 // CONFIGURAÇÃO DO APP SHELL
 // #############################################################################
 
-$appShellEyebrow = 'Secretaria';
-$appShellTitle = 'Editar Obreiro';
+$appShellEyebrow = $isSelf ? 'Área do Irmão' : 'Secretaria';
+$appShellTitle = $isSelf ? 'Meu Cadastro' : 'Editar Obreiro';
 $appShellDescription = 'Manutenção do registro de ' . htmlspecialchars($obreiro['nome_historico'] ?? $obreiro['nome'] ?? 'Obreiro');
-$appShellActiveHref = '/obreiros';
-$appShellActions = [['label' => 'Voltar para a Lista', 'href' => '/obreiros']];
+$appShellActiveHref = $isSelf ? '/meu-cadastro' : '/obreiros';
+$appShellActions = $isSelf ? [['label' => 'Voltar', 'href' => '/minha-loja']] : [['label' => 'Voltar para a Lista', 'href' => '/obreiros']];
 
 require __DIR__ . '/partials/erp_shell_open.php';
 
@@ -42,20 +45,33 @@ require __DIR__ . '/partials/erp_shell_open.php';
     <div class="alert alert-danger mb-6">Não foi possível salvar. Verifique se o CIM informado já existe para outro obreiro.</div>
 <?php endif; ?>
 
-<form action="/obreiros/atualizar" method="POST" class="space-y-8">
+<?php if ($isSelf): ?>
+    <div class="card mb-6">
+        <div class="card-body flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="text-sm text-gray-600 dark:text-gray-300">Edite apenas o necessário. Correções passam a valer para suas efemérides.</div>
+            <div class="flex gap-2">
+                <button type="button" class="btn btn-secondary" data-self-edit-btn="start">Editar</button>
+                <button type="button" class="btn btn-secondary hidden" data-self-edit-btn="cancel">Cancelar</button>
+                <button type="button" class="btn btn-primary hidden" data-self-edit-btn="confirm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<form action="<?= htmlspecialchars($formAction) ?>" method="POST" class="space-y-8" <?= $isSelf ? 'data-self-form="1"' : '' ?>>
     <input type="hidden" name="id" value="<?= htmlspecialchars($obreiro['id'] ?? '') ?>">
 
     <!-- Card: Dados Civis -->
     <div class="card" id="dados-civis">
         <div class="card-header"><h2 class="card-title">Dados Civis</h2></div>
         <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="md:col-span-2"><label for="nome_completo" class="form-label">Nome Completo Civil</label><input id="nome_completo" type="text" name="nome_completo" required value="<?= htmlspecialchars($obreiro['nome'] ?? '') ?>" class="form-input"></div>
-            <div class="md:col-span-2"><label for="nome_historico" class="form-label">Nome Histórico</label><input id="nome_historico" type="text" name="nome_historico" value="<?= htmlspecialchars($obreiro['nome_historico'] ?? '') ?>" class="form-input"></div>
+            <div class="md:col-span-2"><label for="nome_completo" class="form-label">Nome Completo Civil</label><input id="nome_completo" type="text" name="nome_completo" required value="<?= htmlspecialchars($obreiro['nome'] ?? '') ?>" class="form-input" <?= $isSelf ? 'data-self-editable="1" disabled' : '' ?>></div>
+            <div class="md:col-span-2"><label for="nome_historico" class="form-label">Nome Histórico</label><input id="nome_historico" type="text" name="nome_historico" value="<?= htmlspecialchars($obreiro['nome_historico'] ?? '') ?>" class="form-input" <?= $isSelf ? 'data-self-editable="1" disabled' : '' ?>></div>
             <div><label for="cpf" class="form-label">CPF</label><input id="cpf" type="text" name="cpf" value="<?= htmlspecialchars($obreiro['cpf'] ?? '') ?>" class="form-input"></div>
-            <div><label for="data_nascimento_civil" class="form-label">Data de Nascimento</label><input id="data_nascimento_civil" type="date" name="data_nascimento_civil" value="<?= htmlspecialchars($obreiro['data_nascimento_civil'] ?? '') ?>" class="form-input"></div>
-            <div><label for="estado_civil" class="form-label">Estado Civil</label><select id="estado_civil" name="estado_civil" class="form-select"><?php foreach ($estadosCivis as $v => $r) echo "<option value=\"$v\" " . (($obreiro['estado_civil'] ?? '') === $v ? 'selected' : '') . ">$r</option>"; ?></select></div>
-            <div><label for="telefone" class="form-label">Telefone</label><input id="telefone" type="text" name="telefone" value="<?= htmlspecialchars($obreiro['telefone'] ?? '') ?>" class="form-input"></div>
-            <div class="md:col-span-2"><label for="email" class="form-label">E-mail</label><input id="email" type="email" name="email" value="<?= htmlspecialchars($obreiro['email'] ?? '') ?>" class="form-input"></div>
+            <div><label for="data_nascimento_civil" class="form-label">Data de Nascimento</label><input id="data_nascimento_civil" type="date" name="data_nascimento_civil" value="<?= htmlspecialchars($obreiro['data_nascimento_civil'] ?? '') ?>" class="form-input" <?= $isSelf ? 'data-self-editable="1" disabled' : '' ?>></div>
+            <div><label for="estado_civil" class="form-label">Estado Civil</label><select id="estado_civil" name="estado_civil" class="form-select" <?= $isSelf ? 'data-self-editable="1" disabled' : '' ?>><?php foreach ($estadosCivis as $v => $r) echo "<option value=\"$v\" " . (($obreiro['estado_civil'] ?? '') === $v ? 'selected' : '') . ">$r</option>"; ?></select></div>
+            <div><label for="telefone" class="form-label">Telefone</label><input id="telefone" type="text" name="telefone" value="<?= htmlspecialchars($obreiro['telefone'] ?? '') ?>" class="form-input" <?= $isSelf ? 'data-self-editable="1" disabled' : '' ?>></div>
+            <div class="md:col-span-2"><label for="email" class="form-label">E-mail</label><input id="email" type="email" name="email" value="<?= htmlspecialchars($obreiro['email'] ?? '') ?>" class="form-input" <?= $isSelf ? 'data-self-editable="1" disabled' : '' ?>></div>
         </div>
     </div>
 
@@ -76,6 +92,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
         </div>
     </div>
 
+    <?php if ($showAdminOnlyCards): ?>
     <!-- Card: Perfil Estatístico -->
     <div class="card" id="perfil-estatistico">
         <div class="card-header"><h2 class="card-title">Perfil Estatístico</h2></div>
@@ -114,17 +131,45 @@ require __DIR__ . '/partials/erp_shell_open.php';
         </div>
     </div>
 
+    <?php endif; ?>
+
     <!-- Ações -->
     <div class="card">
         <div class="card-body flex flex-col sm:flex-row justify-between items-center gap-4">
             <label class="form-checkbox-label"><input type="hidden" name="ativo" value="0"><input type="checkbox" id="ativo" name="ativo" value="1" <?= ($obreiro['ativo'] ?? true) ? 'checked' : '' ?> class="form-checkbox"> Registro habilitado no sistema</label>
             <div class="flex gap-3">
-                <a href="/obreiros" class="btn btn-secondary">Cancelar</a>
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                <a href="<?= $isSelf ? '/minha-loja' : '/obreiros' ?>" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary"><?= $isSelf ? 'Confirmar' : 'Salvar Alterações' ?></button>
             </div>
         </div>
     </div>
 </form>
+
+<?php if ($isSelf): ?>
+<script>
+(() => {
+  const form = document.querySelector('form[data-self-form="1"]');
+  if (!form) return;
+
+  const btnStart = document.querySelector('[data-self-edit-btn="start"]');
+  const btnCancel = document.querySelector('[data-self-edit-btn="cancel"]');
+  const btnConfirm = document.querySelector('[data-self-edit-btn="confirm"]');
+
+  const editable = Array.from(form.querySelectorAll('[data-self-editable="1"]'));
+  const setEditing = (on) => {
+    editable.forEach(el => { el.disabled = !on; });
+    if (btnStart) btnStart.classList.toggle('hidden', on);
+    if (btnCancel) btnCancel.classList.toggle('hidden', !on);
+    if (btnConfirm) btnConfirm.classList.toggle('hidden', !on);
+  };
+
+  setEditing(false);
+  btnStart && btnStart.addEventListener('click', () => setEditing(true));
+  btnCancel && btnCancel.addEventListener('click', () => window.location.reload());
+  btnConfirm && btnConfirm.addEventListener('click', () => form.submit());
+})();
+</script>
+<?php endif; ?>
 
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
 

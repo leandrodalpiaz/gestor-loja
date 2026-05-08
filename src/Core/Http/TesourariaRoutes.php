@@ -354,10 +354,36 @@ class TesourariaRoutes
                         $mensagens_contextuais['cadastro'] = 'Seu cadastro tem campos essenciais pendentes.';
                     }
 
+                    $familiares = [];
+                    try {
+                        $familiares = (new \App\Models\FamiliarObreiro())->listarPorObreiro((string) ($obreiroTesouraria['id'] ?? ''));
+                    } catch (\Throwable $e) {
+                        $familiares = [];
+                    }
+
+                    $conjuge = '';
+                    $filhos = [];
+                    foreach ($familiares as $f) {
+                        if (!empty($f['falecido'])) {
+                            continue;
+                        }
+                        $p = strtolower(trim((string) ($f['parentesco'] ?? '')));
+                        $nome = trim((string) ($f['nome_completo'] ?? ''));
+                        if ($nome === '') {
+                            continue;
+                        }
+                        if (in_array($p, ['esposa', 'esposo'], true) && $conjuge === '') {
+                            $conjuge = $nome;
+                        }
+                        if (in_array($p, ['filho', 'filha'], true)) {
+                            $filhos[] = $nome;
+                        }
+                    }
+
                     $dados_familia = [
                         'estado_civil' => (string) ($obreiroTesouraria['estado_civil'] ?? ''),
-                        'conjuge' => (string) ($obreiroTesouraria['nome_conjuge'] ?? ''),
-                        'filhos' => (string) ($obreiroTesouraria['filhos'] ?? ''),
+                        'conjuge' => $conjuge,
+                        'filhos' => $filhos ? implode(', ', array_values(array_unique($filhos))) : '',
                     ];
                     $estados_vazios['familia'] = trim((string) ($dados_familia['conjuge'] . $dados_familia['filhos'])) === '';
                     if ($estados_vazios['familia']) {

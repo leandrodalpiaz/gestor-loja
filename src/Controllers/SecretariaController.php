@@ -14,6 +14,7 @@ use App\Models\PublicacaoSecretaria;
 use App\Models\RelatorioSecretariaAnual;
 use App\Models\Sessao;
 use App\Models\TrabalhoSessao;
+use App\Models\TrabalhoSubmissao;
 use App\Core\Auth\CurrentUser;
 use App\Core\Authorization\Authorizer;
 use App\Core\Authorization\PermissionMap;
@@ -499,7 +500,40 @@ class SecretariaController
 
     public function trabalhosPublicacoes(): void
     {
-        $this->index();
+        $pendentes = (new TrabalhoSubmissao())->listarPendentesSecretaria(250);
+        $trabalhosRecentes = (new TrabalhoSessao())->listarRecentes(60);
+        $sessoes = (new Sessao())->listarRecentes(60);
+        require_once __DIR__ . '/../Views/secretaria/trabalhos_publicacoes.php';
+    }
+
+    public function arquivarTrabalhoSubmissao(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /secretaria/trabalhos-publicacoes');
+            exit;
+        }
+
+        $id = trim((string) ($_POST['id'] ?? ''));
+        $payload = [
+            'sessao_id' => (int) ($_POST['sessao_id'] ?? 0),
+            'tipo_trabalho' => trim((string) ($_POST['tipo_trabalho'] ?? 'peca_arquitetura')) ?: 'peca_arquitetura',
+            'titulo' => trim((string) ($_POST['titulo'] ?? '')),
+            'autor_id' => trim((string) ($_POST['autor_id'] ?? '')) ?: null,
+            'arquivo_pdf_path' => trim((string) ($_POST['arquivo_pdf_path'] ?? '')) ?: null,
+            'status_envio_potencia' => trim((string) ($_POST['status_envio_potencia'] ?? 'pendente')) ?: 'pendente',
+            'observacao' => trim((string) ($_POST['observacao'] ?? '')) ?: null,
+        ];
+
+        $ok = $id !== ''
+            ? (new TrabalhoSubmissao())->arquivarSecretaria($id, (string) ($_SESSION['usuario_id'] ?? ''), $payload)
+            : false;
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Trabalho arquivado e publicado na Biblioteca.'
+            : 'Não foi possível arquivar agora.';
+
+        header('Location: /secretaria/trabalhos-publicacoes');
+        exit;
     }
 
     public function convitesExternos(): void

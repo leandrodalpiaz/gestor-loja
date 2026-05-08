@@ -8,6 +8,9 @@ use App\Models\ComentarioBiblioteca;
 use App\Models\Emprestimo;
 use App\Models\EmprestimoInterloja;
 use App\Models\ReacaoBiblioteca;
+use App\Models\TrabalhoSessao;
+use App\Models\Balaustre;
+use App\Models\Obreiro;
 use App\Services\LivroMetadataService;
 
 class BibliotecaController
@@ -50,6 +53,86 @@ class BibliotecaController
         $bibliotecaRedeConfig = $redeConfig;
         $bibliotecaLojasRede = $lojasRede;
         require_once __DIR__ . '/../Views/biblioteca/index.php';
+    }
+
+    public function trabalhos(): void
+    {
+        // Área de pesquisa: trabalhos arquivados pela Secretaria (PDF quando disponível).
+        $itens = (new TrabalhoSessao())->listarRecentes(120);
+        require_once __DIR__ . '/../Views/biblioteca/trabalhos.php';
+    }
+
+    public function arquivoBalaustres(): void
+    {
+        // Área de pesquisa: balaústres aprovados.
+        $db = \App\Config\Database::getConnection();
+        $tenantId = (int) ($_SESSION['tenant_id'] ?? 0);
+        $stmt = $db->prepare("
+            SELECT b.id, b.numero_balaustre, b.status, b.updated_at, s.titulo AS sessao_titulo, s.data_hora_inicio, s.grau_sessao
+            FROM balaustres b
+            JOIN sessoes s ON s.id = b.sessao_id
+            WHERE s.loja_id = :loja_id
+              AND b.status = 'aprovado'
+            ORDER BY s.data_hora_inicio DESC, b.id DESC
+            LIMIT 200
+        ");
+        $stmt->execute(['loja_id' => $tenantId]);
+        $itens = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+        require_once __DIR__ . '/../Views/biblioteca/balaustres.php';
+    }
+
+    public function visualizarBalaustreAprovado(int $id, string $obreiroId): void
+    {
+        if ($id <= 0) {
+            header('Location: /biblioteca/balaustres');
+            exit;
+        }
+
+        $tenantId = (int) ($_SESSION['tenant_id'] ?? 0);
+        $balaustreModel = new Balaustre();
+        $balaustre = $balaustreModel->buscarPorId($id);
+        if (!$balaustre) {
+            header('Location: /biblioteca/balaustres');
+            exit;
+        }
+
+        // Garantir que o balaústre é da loja atual e está aprovado.
+        $db = \App\Config\Database::getConnection();
+        $stmt = $db->prepare("
+            SELECT b.*, s.grau_sessao, s.titulo AS sessao_titulo, s.data_hora_inicio
+            FROM balaustres b
+            JOIN sessoes s ON s.id = b.sessao_id
+            WHERE b.id = :id
+              AND s.loja_id = :loja_id
+              AND b.status = 'aprovado'
+            LIMIT 1
+        ");
+        $stmt->execute(['id' => $id, 'loja_id' => $tenantId]);
+        $balaustre = $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+        if (!$balaustre) {
+            header('Location: /biblioteca/balaustres');
+            exit;
+        }
+
+        // Filtro simples por grau (sem categorias especiais neste primeiro passo).
+        $obreiro = (new Obreiro())->findById($obreiroId);
+        $grauObreiro = strtolower((string) ($obreiro['grau'] ?? ''));
+        $grauBalaustre = strtolower((string) ($balaustre['grau_sessao'] ?? 'aprendiz'));
+
+        $ord = static function (string $g): int {
+            return match (true) {
+                str_contains($g, 'mestre') => 3,
+                str_contains($g, 'companheiro') => 2,
+                default => 1,
+            };
+        };
+
+        if ($ord($grauObreiro) < $ord($grauBalaustre)) {
+            header('Location: /biblioteca/balaustres');
+            exit;
+        }
+
+        require_once __DIR__ . '/../Views/biblioteca/balaustre_visualizar.php';
     }
 
     public function configurarRede(): void

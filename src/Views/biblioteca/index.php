@@ -48,6 +48,19 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     <?php unset($_SESSION['mensagem_erro']); ?>
 <?php endif; ?>
 
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Pesquisa da Loja</h2>
+            <p class="card-subtitle">Conteúdos arquivados pela Secretaria para consulta.</p>
+        </div>
+        <div class="card-body grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <a class="list-item-action" href="/biblioteca/trabalhos"><span>Trabalhos & publicações</span><span>›</span></a>
+            <a class="list-item-action" href="/biblioteca/balaustres"><span>Arquivo de balaústres</span><span>›</span></a>
+        </div>
+    </div>
+</div>
+
 <div class="card mb-6">
     <div class="card-body">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

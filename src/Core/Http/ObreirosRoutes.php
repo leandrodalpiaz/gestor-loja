@@ -31,6 +31,7 @@ class ObreirosRoutes
                     echo 'Cadastro de obreiro não encontrado.';
                     exit;
                 }
+                $isSelf = true;
                 require __DIR__ . '/../../Views/obreiro_editar.php';
                 return true;
 

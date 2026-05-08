@@ -37,6 +37,11 @@ class SecretariaRoutes
                 $controller->trabalhosPublicacoes();
                 return true;
 
+            case '/secretaria/trabalhos-publicacoes/arquivar':
+                ModuleGuards::requireSecretariaAccess($openTestAccess, $session, $authorizer);
+                $controller->arquivarTrabalhoSubmissao();
+                return true;
+
             case '/secretaria/convites-externos':
                 ModuleGuards::requireSecretariaAccess($openTestAccess, $session, $authorizer);
                 $controller->convitesExternos();

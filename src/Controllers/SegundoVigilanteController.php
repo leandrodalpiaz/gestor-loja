@@ -6,6 +6,7 @@ use App\Models\Acervo;
 use App\Models\Cargo;
 use App\Models\Obreiro;
 use App\Models\SegundoVigilanteAcompanhamento;
+use App\Models\TrabalhoSubmissao;
 use App\Models\TrilhaCompanheiro;
 
 class SegundoVigilanteController
@@ -231,6 +232,33 @@ class SegundoVigilanteController
             : 'Não foi possível aplicar a ação rápida.';
 
         header('Location: ' . $retorno . '#etapa-' . $etapaOrdem);
+        exit;
+    }
+
+    public function trabalhosPendentes(): void
+    {
+        $itens = (new TrabalhoSubmissao())->listarPendentesMentor('segundo_vigilante', 200);
+        require_once __DIR__ . '/../Views/segundo_vigilante/trabalhos.php';
+    }
+
+    public function decidirTrabalho(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /segundo-vigilante/trabalhos');
+            exit;
+        }
+        $id = trim((string) ($_POST['id'] ?? ''));
+        $acao = trim((string) ($_POST['acao'] ?? ''));
+        $obs = trim((string) ($_POST['observacao'] ?? ''));
+        $ok = $id !== '' && in_array($acao, ['aprovar', 'rejeitar'], true)
+            ? (new TrabalhoSubmissao())->decidirMentor($id, (string) ($_SESSION['usuario_id'] ?? ''), $acao, $obs !== '' ? $obs : null)
+            : false;
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Decisão registrada.'
+            : 'Não foi possível registrar agora.';
+
+        header('Location: /segundo-vigilante/trabalhos');
         exit;
     }
 
