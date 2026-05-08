@@ -11,7 +11,7 @@ class PwaComunicacaoController
     {
         if (!FeatureFlags::pwaComunicacao()) {
             http_response_code(404);
-            echo 'Recurso indisponível.';
+            echo 'Esta funcionalidade ainda não está habilitada nesta Loja.';
             return;
         }
 
@@ -32,7 +32,7 @@ class PwaComunicacaoController
     {
         if (!FeatureFlags::pwaComunicacao()) {
             http_response_code(404);
-            echo 'Recurso indisponível.';
+            echo 'Esta funcionalidade ainda não está habilitada nesta Loja.';
             return;
         }
 
@@ -64,7 +64,7 @@ class PwaComunicacaoController
     {
         if (!FeatureFlags::pwaComunicacao()) {
             http_response_code(404);
-            echo 'Recurso indisponível.';
+            echo 'Esta funcionalidade ainda não está habilitada nesta Loja.';
             return;
         }
 

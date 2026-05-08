@@ -47,7 +47,7 @@ HTML;
         exit;
     }
 
-    public static function forbidHtml(string $message = 'Acesso restrito.'): void
+    public static function forbidHtml(string $message = 'Esta ação segue regras de responsabilidade da Loja.'): void
     {
         http_response_code(403);
         echo $message;
@@ -65,7 +65,7 @@ HTML;
         }
     }
 
-    public static function requirePermission(bool $allowed, string $message = 'Acesso restrito.'): void
+    public static function requirePermission(bool $allowed, string $message = 'Esta ação segue regras de responsabilidade da Loja.'): void
     {
         if (!$allowed) {
             self::forbidHtml($message);
@@ -76,7 +76,7 @@ HTML;
         bool $openTestAccess,
         array $session,
         bool $allowed,
-        string $message = 'Acesso restrito.'
+        string $message = 'Esta ação segue regras de responsabilidade da Loja.'
     ): void {
         self::requireLogin($openTestAccess, $session);
 

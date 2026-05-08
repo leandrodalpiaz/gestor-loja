@@ -80,30 +80,30 @@ if ($shouldNormalizeHtmlOutput) {
         }
 
         return strtr($buffer, [
-            "\xC3\x83\xC2\xA1" => 'á',
-            "\xC3\x83\xC2\xA2" => 'â',
-            "\xC3\x83\xC2\xA3" => 'ã',
-            "\xC3\x83\xC2\xA0" => 'à',
-            "\xC3\x83\xC2\xA9" => 'é',
-            "\xC3\x83\xC2\xAA" => 'ê',
-            "\xC3\x83\xC2\xAD" => 'í',
-            "\xC3\x83\xC2\xB3" => 'ó',
-            "\xC3\x83\xC2\xB4" => 'ô',
-            "\xC3\x83\xC2\xB5" => 'õ',
-            "\xC3\x83\xC2\xBA" => 'ú',
-            "\xC3\x83\xC2\xA7" => 'ç',
-            "\xC3\x83\xC2\x81" => 'Á',
-            "\xC3\x83\xC2\x89" => 'É',
-            "\xC3\x83\xC2\x8D" => 'Í',
-            "\xC3\x83\xC2\x93" => 'Ó',
-            "\xC3\x83\xC2\x9A" => 'Ú',
-            "\xC3\x83\xC2\x87" => 'Ç',
-            "\xC3\xA2\xC2\x80\xC2\xA2" => '•',
-            "n\xC3\x82\xC2\xBA" => 'nº',
-            "N\xC3\x82\xC2\xBA" => 'Nº',
-            "\xC3\x82\xC2\xB7" => '·',
-            "\xC3\x82\xC2\xBA" => 'º',
-            "\xC3\x82\xC2\xAA" => 'ª',
+            "\xC3\x83\xC2\xA1" => 'Ã¡',
+            "\xC3\x83\xC2\xA2" => 'Ã¢',
+            "\xC3\x83\xC2\xA3" => 'Ã£',
+            "\xC3\x83\xC2\xA0" => 'Ã ',
+            "\xC3\x83\xC2\xA9" => 'Ã©',
+            "\xC3\x83\xC2\xAA" => 'Ãª',
+            "\xC3\x83\xC2\xAD" => 'Ã­',
+            "\xC3\x83\xC2\xB3" => 'Ã³',
+            "\xC3\x83\xC2\xB4" => 'Ã´',
+            "\xC3\x83\xC2\xB5" => 'Ãµ',
+            "\xC3\x83\xC2\xBA" => 'Ãº',
+            "\xC3\x83\xC2\xA7" => 'Ã§',
+            "\xC3\x83\xC2\x81" => 'Ã',
+            "\xC3\x83\xC2\x89" => 'Ã‰',
+            "\xC3\x83\xC2\x8D" => 'Ã',
+            "\xC3\x83\xC2\x93" => 'Ã“',
+            "\xC3\x83\xC2\x9A" => 'Ãš',
+            "\xC3\x83\xC2\x87" => 'Ã‡',
+            "\xC3\xA2\xC2\x80\xC2\xA2" => 'â€¢',
+            "n\xC3\x82\xC2\xBA" => 'nÂº',
+            "N\xC3\x82\xC2\xBA" => 'NÂº',
+            "\xC3\x82\xC2\xB7" => 'Â·',
+            "\xC3\x82\xC2\xBA" => 'Âº',
+            "\xC3\x82\xC2\xAA" => 'Âª',
         ]);
     });
 }
@@ -589,7 +589,7 @@ $sessionHasPermission = static function (string $permission) use (&$authorizer):
     return $authorizer->hasPermission($permission);
 };
 
-$requirePermission = static function (string $permission, string $message = 'Acesso restrito.') use ($sessionHasPermission): void {
+$requirePermission = static function (string $permission, string $message = 'Esta ação segue regras de responsabilidade da Loja.') use ($sessionHasPermission): void {
     WebGuards::requirePermission($sessionHasPermission($permission), $message);
 };
 
@@ -727,7 +727,7 @@ $requireTesourariaAccess = static function () use (
         $loginTelegramObreiroInSession($telegramObreiro);
     }
 
-    $requirePermission('tesouraria.manage', "Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.");
+    $requirePermission('tesouraria.manage', "Esta ação é realizada pela Tesouraria.");
 };
 
 $requireTesourariaApiAccess = static function () use (
@@ -747,7 +747,7 @@ $requireTesourariaApiAccess = static function () use (
     }
 
     if (!$sessionHasPermission('tesouraria.manage')) {
-        $jsonError('Acesso restrito ao Tesoureiro, Veneravel Mestre ou Administrador.', 403);
+        $jsonError('Esta ação é realizada pela Tesouraria.', 403);
     }
 };
 
@@ -910,7 +910,7 @@ if (!function_exists('requireMiniappAuth')) {
 
         if (!$temPermissaoMiniapp) {
             http_response_code(403);
-            echo 'Acesso restrito para este miniapp.';
+            echo 'Este miniapp está disponível conforme sua função ativa na Loja.';
             exit;
         }
 
@@ -959,7 +959,7 @@ if ($requestUri === '/chancelaria/certificado/gerar' && $method === 'POST') {
     $telegramObreiro = $sessionAutorizada ? null : $resolveAuthorizedTelegramObreiro('chanceler', 'veneravel', 'admin');
     if (!$sessionAutorizada && !$telegramObreiro) {
         http_response_code(403);
-        echo "<div style='padding: 20px; color: red; font-family: sans-serif;'>Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.</div>";
+        echo "<div style='padding: 20px; color: red; font-family: sans-serif;'>Esta função pertence ao Chanceler.</div>";
         exit;
     }
 
@@ -1018,12 +1018,12 @@ if ($requestUri === '/chancelaria/certificado' && $method === 'GET') {
         $telegramObreiro = $resolveAuthorizedTelegramObreiro('chanceler', 'veneravel', 'admin');
         if (!$telegramObreiro) {
             http_response_code(403);
-            echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
+            echo "Esta função pertence ao Chanceler.";
             exit;
         }
     } elseif (!$sessionHasRole('chanceler', 'veneravel', 'admin')) {
         http_response_code(403);
-        echo "Acesso restrito ao Chanceler, Veneravel Mestre ou Administrador.";
+        echo "Esta função pertence ao Chanceler.";
         exit;
     }
 
@@ -1387,7 +1387,7 @@ switch ($requestUri) {
     case "/sistema":
         WebGuards::requireLogin($openTestAccess, $_SESSION);
         if (empty($_SESSION['is_system_admin'])) {
-            WebGuards::forbidHtml('Acesso restrito ao administrador técnico do sistema.');
+            WebGuards::forbidHtml('Acesso restrito ao administrador técnico del sistema.');
         }
         $assistenteResumo = [
             'dias' => 14,

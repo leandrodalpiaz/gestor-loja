@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Homologar a paridade funcional entre Desktop e PWA. O Desktop continua sendo a superficie completa de gestao e o PWA passa a ser a superficie mobile oficial. Miniapps Telegram ficam como canal secundario/complementar e nao contam como paridade principal.
+Homologar a paridade funcional entre Desktop e PWA. O Desktop/PWA passa a ser a experiencia principal da Loja. Miniapps Telegram ficam como canal secundario/complementar (atalhos, lembretes e contingencia) e nao contam como paridade principal.
 
 ## Fontes de verdade
 

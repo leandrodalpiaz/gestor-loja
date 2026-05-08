@@ -28,7 +28,7 @@ class PwaBibliotecaController
     {
         if (!FeatureFlags::pwaBiblioteca()) {
             http_response_code(404);
-            echo 'Recurso indisponível.';
+            echo 'Esta funcionalidade ainda não está habilitada nesta Loja.';
             return;
         }
 
@@ -72,7 +72,7 @@ class PwaBibliotecaController
     {
         if (!FeatureFlags::pwaBiblioteca()) {
             http_response_code(404);
-            echo 'Recurso indisponível.';
+            echo 'Esta funcionalidade ainda não está habilitada nesta Loja.';
             return;
         }
 
@@ -101,7 +101,7 @@ class PwaBibliotecaController
     {
         if (!FeatureFlags::pwaBiblioteca()) {
             http_response_code(404);
-            echo 'Recurso indisponível.';
+            echo 'Esta funcionalidade ainda não está habilitada nesta Loja.';
             return;
         }
 
@@ -132,7 +132,7 @@ class PwaBibliotecaController
     {
         if (!FeatureFlags::pwaBiblioteca()) {
             http_response_code(404);
-            echo 'Recurso indisponível.';
+            echo 'Esta funcionalidade ainda não está habilitada nesta Loja.';
             return;
         }
 
@@ -246,8 +246,8 @@ class PwaBibliotecaController
         $id = (int) ($_POST['id'] ?? 0);
         $ok = $id > 0 && $this->emprestimoModel->registrarDevolucao($id);
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Devolucao registrada com sucesso.'
-            : 'Nao foi possivel registrar a devolucao.';
+            ? 'Devolução registrada com sucesso.'
+            : 'Não foi possível registrar a devolução.';
 
         header('Location: /pwa/biblioteca/emprestimos');
         exit;

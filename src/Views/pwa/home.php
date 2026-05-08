@@ -16,7 +16,7 @@ $proximaSessao = $proximaSessao ?? null;
 $proximaSessaoResposta = $proximaSessaoResposta ?? null;
 $ultimosComunicados = is_array($ultimosComunicados ?? null) ? $ultimosComunicados : [];
 
-$pwaPageTitle = 'Acesso PWA';
+$pwaPageTitle = 'Área do Irmão';
 $pwaActiveTab = 'inicio';
 
 ob_start();
@@ -30,12 +30,39 @@ ob_start();
                      class="h-14 w-14 shrink-0 rounded-2xl border border-white/10 bg-white p-1.5 object-contain shadow-lg shadow-slate-950/30">
             <?php endif; ?>
             <div class="min-w-0">
-                <p class="pwa-eyebrow">Oficina Digital</p>
-                <h2 class="mt-1 truncate text-2xl font-bold tracking-tight text-white">Olá, <?= htmlspecialchars($usuarioNome) ?></h2>
-                <p class="pwa-muted mt-0.5 truncate text-sm font-medium">
-                    <?= $usuarioCargo !== '' ? htmlspecialchars($usuarioCargo) . ' · ' : '' ?><?= htmlspecialchars($tenantName !== '' ? $tenantName : 'Acesso rápido') ?>
-                </p>
+                <p class="pwa-eyebrow">Área do Irmão</p>
+                <h2 class="mt-1 truncate text-2xl font-bold tracking-tight text-white">Seja bem-vindo, Irmão <?= htmlspecialchars($usuarioNome) ?></h2>
+                <p class="pwa-muted mt-0.5 truncate text-sm font-medium">Esta é a sua área da <?= htmlspecialchars($tenantName !== '' ? $tenantName : 'Loja') ?>.</p>
             </div>
+        </div>
+    </section>
+    <section class="pwa-card p-4">
+        <div class="mb-3">
+            <p class="pwa-eyebrow">Para sua atenção</p>
+            <h3 class="mt-1 text-lg font-bold text-white">Pendências e próximos passos</h3>
+        </div>
+        <?php $itensAtencao = is_array($paraSuaAtencao ?? null) ? $paraSuaAtencao : []; ?>
+        <?php if ($itensAtencao === []): ?>
+            <p class="pwa-muted text-sm">Nenhuma pendência no momento.</p>
+        <?php else: ?>
+            <ul class="space-y-2">
+                <?php foreach ($itensAtencao as $item): ?>
+                    <li class="rounded-xl border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-sm text-amber-100"><?= htmlspecialchars((string) $item) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+    </section>
+    <section class="pwa-card p-4">
+        <div class="mb-3">
+            <p class="pwa-eyebrow">Resumo financeiro próprio</p>
+            <h3 class="mt-1 text-lg font-bold text-white">Obrigações e pagamentos</h3>
+        </div>
+        <?php $rf = is_array($resumoFinanceiro ?? null) ? $resumoFinanceiro : []; ?>
+        <div class="grid grid-cols-2 gap-3">
+            <div class="pwa-glass rounded-xl p-3"><p class="pwa-muted text-xs">Parcelas em aberto</p><p class="text-lg font-bold text-white"><?= (int) ($rf['parcelas_em_aberto'] ?? 0) ?></p></div>
+            <div class="pwa-glass rounded-xl p-3"><p class="pwa-muted text-xs">Parcelas atrasadas</p><p class="text-lg font-bold text-white"><?= (int) ($rf['parcelas_atrasadas'] ?? 0) ?></p></div>
+            <div class="pwa-glass rounded-xl p-3"><p class="pwa-muted text-xs">Saldo em aberto</p><p class="text-sm font-bold text-white">R$ <?= number_format((float) ($rf['saldo_em_aberto'] ?? 0), 2, ',', '.') ?></p></div>
+            <div class="pwa-glass rounded-xl p-3"><p class="pwa-muted text-xs">Pagamentos realizados</p><p class="text-sm font-bold text-white">R$ <?= number_format((float) ($rf['total_pago'] ?? 0), 2, ',', '.') ?></p></div>
         </div>
     </section>
 
@@ -219,8 +246,8 @@ ob_start();
 
     <section>
         <div class="mb-3">
-            <p class="pwa-eyebrow">Acesso rápido</p>
-            <h3 class="mt-1 text-lg font-bold text-white">Módulos principais</h3>
+            <p class="pwa-eyebrow">Minha Loja</p>
+            <h3 class="mt-1 text-lg font-bold text-white">Acesso principal</h3>
         </div>
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <?php
@@ -274,3 +301,5 @@ ob_start();
 $pwaContent = ob_get_clean();
 require __DIR__ . '/shell.php';
 ?>
+            $renderIcon('/pwa/perfil', 'Meu Cadastro', 'Dados pessoais e familiares', '<path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />');
+            $renderIcon('/obreiros', 'Irmãos da Loja', 'Consulta fraterna', '<path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5V4H2v16h5m10 0v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6m10 0H7" />');

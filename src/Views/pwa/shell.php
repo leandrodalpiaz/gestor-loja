@@ -10,7 +10,7 @@ $usuarioCargo = strtolower(trim((string) ($_SESSION['usuario_cargo'] ?? '')));
 $tenantSlug = (string) ($_SESSION['tenant_slug'] ?? '');
 $logoUrl = \App\Core\Tenant\TenantAssetResolver::resolveLogo($tenantSlug);
 
-$pwaPageTitle = (string) ($pwaPageTitle ?? 'Acesso Rapido');
+$pwaPageTitle = (string) ($pwaPageTitle ?? 'Área do Irmão');
 $pwaShowBackButton = (bool) ($pwaShowBackButton ?? false);
 $pwaBackUrl = (string) ($pwaBackUrl ?? '/pwa');
 $pwaActiveTab = (string) ($pwaActiveTab ?? 'inicio');
@@ -38,7 +38,7 @@ $pwaNavTabs = [
     [
         'id' => 'inicio',
         'href' => '/pwa',
-        'label' => 'Inicio',
+        'label' => 'Minha Loja',
         'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />',
         'iconSolid' => '<path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.69-8.69a2.25 2.25 0 00-3.18 0l-8.69 8.69a.75.75 0 001.06 1.06l8.69-8.69z" /><path d="M12 5.43l8.25 8.25v6.2A2.12 2.12 0 0118.13 22h-3.38a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-2.5a.75.75 0 00-.75.75v4.5a.75.75 0 01-.75.75H5.88a2.12 2.12 0 01-2.13-2.12v-6.2L12 5.43z" />',
     ],
@@ -59,7 +59,7 @@ $pwaNavTabs = [
     [
         'id' => 'perfil',
         'href' => '/pwa/perfil',
-        'label' => 'Perfil',
+        'label' => 'Meu Cadastro',
         'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />',
         'iconSolid' => '<path fill-rule="evenodd" d="M12 2.25a4.5 4.5 0 100 9 4.5 4.5 0 000-9zM4.5 20.12a7.5 7.5 0 0115 0 .63.63 0 01-.63.63H5.13a.63.63 0 01-.63-.63z" clip-rule="evenodd" />',
     ],

@@ -28,6 +28,9 @@ use App\Models\Sessao;
 
 class PainelRoutes
 {
+    private const MSG_SECRETARIA = 'Esta aÃ§Ã£o Ã© realizada pela Secretaria.';
+    private const MSG_CHANCELER = 'Esta funÃ§Ã£o pertence ao Chanceler.';
+    private const MSG_GRAU = 'Este conteÃºdo Ã© reservado ao grau correspondente.';
     public static function dispatch(
         string $requestUri,
         string $method,
@@ -43,7 +46,7 @@ class PainelRoutes
             WebGuards::requireLogin($openTestAccess, $session);
             WebGuards::requirePermission(
                 $authorizer->hasPermission('chancelaria.manage'),
-                'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.'
+                self::MSG_CHANCELER
             );
             $controller = new PwaChancelariaController();
             if ($requestUri === '/pwa/chancelaria/presenca') {
@@ -72,23 +75,23 @@ class PainelRoutes
             WebGuards::requireLogin($openTestAccess, $session);
             $controller = new PwaRolesController();
             if ($requestUri === '/pwa/veneravel') {
-                WebGuards::requirePermission($authorizer->hasPermission('veneravel.manage'), 'Acesso restrito.');
+                WebGuards::requirePermission($authorizer->hasPermission('veneravel.manage'), self::MSG_SECRETARIA);
                 $controller->veneravel();
             } elseif ($requestUri === '/pwa/orador') {
-                WebGuards::requirePermission($authorizer->hasPermission('orador.view'), 'Acesso restrito.');
+                WebGuards::requirePermission($authorizer->hasPermission('orador.view'), self::MSG_SECRETARIA);
                 $controller->orador();
             } elseif ($requestUri === '/pwa/mestre-banquetes' || $requestUri === '/pwa/mestre-banquetes/operacao/salvar') {
-                WebGuards::requirePermission($authorizer->hasPermission('mestre_banquetes.manage'), 'Acesso restrito.');
+                WebGuards::requirePermission($authorizer->hasPermission('mestre_banquetes.manage'), self::MSG_SECRETARIA);
                 if ($requestUri === '/pwa/mestre-banquetes/operacao/salvar') {
                     $controller->banquetesSalvarOperacao();
                 } else {
                     $controller->banquetes();
                 }
             } elseif ($requestUri === '/pwa/mestre-harmonia') {
-                WebGuards::requirePermission($authorizer->hasPermission('mestre_harmonia.manage'), 'Acesso restrito.');
+                WebGuards::requirePermission($authorizer->hasPermission('mestre_harmonia.manage'), self::MSG_SECRETARIA);
                 $controller->harmonia();
             } elseif (str_starts_with($requestUri, '/pwa/hospitaleiro')) {
-                WebGuards::requirePermission($authorizer->hasPermission('hospitaleiro.manage'), 'Acesso restrito.');
+                WebGuards::requirePermission($authorizer->hasPermission('hospitaleiro.manage'), self::MSG_SECRETARIA);
                 if ($requestUri === '/pwa/hospitaleiro/ocorrencias/salvar') {
                     $controller->hospitaleiroSalvarOcorrencia();
                 } elseif ($requestUri === '/pwa/hospitaleiro/ocorrencias/status') {
@@ -99,10 +102,10 @@ class PainelRoutes
                     $controller->hospitaleiro();
                 }
             } elseif ($requestUri === '/pwa/primeiro-vigilante') {
-                WebGuards::requirePermission($authorizer->hasPermission('vigilancia.primeiro.manage'), 'Acesso restrito.');
+                WebGuards::requirePermission($authorizer->hasPermission('vigilancia.primeiro.manage'), self::MSG_SECRETARIA);
                 $controller->primeiroVigilante();
             } else {
-                WebGuards::requirePermission($authorizer->hasPermission('vigilancia.segundo.manage'), 'Acesso restrito.');
+                WebGuards::requirePermission($authorizer->hasPermission('vigilancia.segundo.manage'), self::MSG_SECRETARIA);
                 $controller->segundoVigilante();
             }
             return true;
@@ -180,27 +183,27 @@ class PainelRoutes
             if ($requestUri === '/pwa/secretaria/nominata' || $requestUri === '/pwa/secretaria/nominata/salvar') {
                 WebGuards::requirePermission(
                     $authorizer->hasPermission('admin.cargos.view') || $authorizer->hasPermission('admin.cargos.manage'),
-                    'Acesso restrito.'
+                    self::MSG_SECRETARIA
                 );
             } elseif ($requestUri === '/pwa/secretaria/acessos' || $requestUri === '/pwa/secretaria/acessos/atualizar' || $requestUri === '/pwa/secretaria/convites' || $requestUri === '/pwa/secretaria/convites/gerar') {
                 WebGuards::requirePermission(
                     $authorizer->hasPermission('access.manage'),
-                    'Acesso restrito.'
+                    self::MSG_SECRETARIA
                 );
             } elseif ($requestUri === '/pwa/secretaria/conteudo-publico' || $requestUri === '/pwa/secretaria/conteudo-publico/salvar' || $requestUri === '/pwa/secretaria/conteudo-publico/excluir') {
                 WebGuards::requirePermission(
                     $authorizer->hasPermission('public_content.manage'),
-                    'Acesso restrito.'
+                    self::MSG_SECRETARIA
                 );
             } elseif ($requestUri === '/pwa/secretaria/balaustres/abrir-votacao' || $requestUri === '/pwa/secretaria/balaustres/encerrar-votacao') {
                 WebGuards::requirePermission(
                     $authorizer->hasPermission('veneravel.manage'),
-                    'Acesso restrito.'
+                    self::MSG_GRAU
                 );
             } else {
                 WebGuards::requirePermission(
                     $authorizer->hasPermission('secretaria.manage'),
-                    'Acesso restrito a Secretaria.'
+                    self::MSG_SECRETARIA
                 );
             }
 
@@ -282,7 +285,7 @@ class PainelRoutes
             $module = PwaCargosController::modules()[$matches[1]];
             WebGuards::requirePermission(
                 $authorizer->hasPermission((string) $module['permission']),
-                'Acesso restrito ao modulo solicitado.'
+                self::MSG_GRAU
             );
             (new PwaCargosController())->show($matches[1]);
             return true;
@@ -443,7 +446,7 @@ class PainelRoutes
                 WebGuards::requireLogin($openTestAccess, $session);
                 WebGuards::requirePermission(
                     $authorizer->hasPermission('biblioteca.classificar'),
-                    'Acesso restrito.'
+                    self::MSG_SECRETARIA
                 );
                 if (!FeatureFlags::pwaBiblioteca()) {
                     WebGuards::forbidHtml('Recurso indisponível.');
@@ -513,7 +516,7 @@ class PainelRoutes
 
             case '/pwa/comunicacao':
                 WebGuards::requireLogin($openTestAccess, $session);
-                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Acesso restrito ao painel.');
+                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
                 if (!FeatureFlags::pwaComunicacao()) {
                     WebGuards::forbidHtml('Recurso indisponível.');
                 }
@@ -522,7 +525,7 @@ class PainelRoutes
 
             case '/pwa/comunicacao/ler':
                 WebGuards::requireLogin($openTestAccess, $session);
-                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Acesso restrito ao painel.');
+                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
                 if (!FeatureFlags::pwaComunicacao()) {
                     WebGuards::forbidHtml('Recurso indisponível.');
                 }
@@ -542,14 +545,15 @@ class PainelRoutes
                 return true;
 
             case '/pwa':
+            case '/pwa/area-do-irmao':
                 WebGuards::requireLogin($openTestAccess, $session);
-                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Acesso restrito ao painel.');
+                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
                 (new PwaHomeController())->index();
                 return true;
 
             case '/pwa/admin':
                 WebGuards::requireLogin($openTestAccess, $session);
-                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Acesso restrito ao painel.');
+                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
                 (new PwaAdminController())->index();
                 return true;
 
@@ -564,7 +568,7 @@ class PainelRoutes
 
             case '/pwa/obrigacoes':
                 WebGuards::requireLogin($openTestAccess, $session);
-                WebGuards::requirePermission($authorizer->hasPermission('financeiro.self'), 'Acesso restrito ao financeiro.');
+                WebGuards::requirePermission($authorizer->hasPermission('financeiro.self'), 'Esta visão financeira é pessoal do próprio irmão.');
                 $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
                 $obrigacaoModel = new \App\Models\ObrigacaoFinanceira();
                 $resumoObreiro = $obrigacaoModel->obterResumoObreiro($obreiroId);
@@ -707,7 +711,7 @@ class PainelRoutes
         callable $buildEfemeridesPreview
     ): void {
         WebGuards::requireLogin($openTestAccess, $session);
-        WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Acesso restrito ao painel principal.');
+        WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
 
         $dashboardMensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
         $dashboardMensagemErro = $_SESSION['mensagem_erro'] ?? null;

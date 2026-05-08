@@ -12,7 +12,7 @@ class PwaSessoesController
     {
         if (!FeatureFlags::pwaSessoes()) {
             http_response_code(404);
-            echo 'Recurso indisponível.';
+            echo 'Esta funcionalidade ainda não está habilitada nesta Loja.';
             return;
         }
 
@@ -44,7 +44,7 @@ class PwaSessoesController
     {
         if (!FeatureFlags::pwaSessoes()) {
             http_response_code(404);
-            echo 'Recurso indisponível.';
+            echo 'Esta funcionalidade ainda não está habilitada nesta Loja.';
             return;
         }
 
