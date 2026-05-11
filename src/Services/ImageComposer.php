@@ -77,7 +77,16 @@ class ImageComposer
         $lineHeight = (int) round($fontSize * 1.5);
         $y = (int) round($yBase);
         
-        $lines = preg_split('/\r\n|\r|\n/', $text) ?: [];
+        // Algoritmo dinâmico de quebra de linha baseado no template para acomodar textos longos (como História)
+        $wrapLimit = 42; 
+        if (str_contains($templateFile, 'sepia')) {
+            $wrapLimit = 45; // Permite linhas um pouco mais densas na tipografia menor
+        } elseif (str_contains($templateFile, 'kids') || str_contains($templateFile, 'bedrock')) {
+            $wrapLimit = 38; // Fontes mais robustas requerem quebra precoce
+        }
+
+        $wrappedText = wordwrap($text, $wrapLimit, "\n", true);
+        $lines = preg_split('/\r\n|\r|\n/', $wrappedText) ?: [];
         $color = imagecolorallocate($img, $colorArr[0], $colorArr[1], $colorArr[2]);
         $shadow = $shadowArr ? imagecolorallocatealpha($img, $shadowArr[0], $shadowArr[1], $shadowArr[2], $shadowArr[3]) : null;
 

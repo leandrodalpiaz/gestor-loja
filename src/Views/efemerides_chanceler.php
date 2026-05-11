@@ -52,6 +52,23 @@ require __DIR__ . '/partials/erp_shell_open.php';
 <div class="alert alert-danger mb-6"><?= htmlspecialchars($erroMensagem) ?></div>
 <?php endif; ?>
 
+<?php
+$historiasRecentes = is_array($historiasRecentes ?? []) ? $historiasRecentes : [];
+$palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
+?>
+
+<div class="mb-8 border-b border-gray-200 dark:border-gray-700">
+    <nav class="flex space-x-8" aria-label="Tabs">
+        <button type="button" onclick="switchTab('diaria')" id="btn-tab-diaria" class="border-[#C9A227] text-[#C9A227] border-b-2 py-4 px-1 text-sm font-medium uppercase tracking-wider tab-btn">
+            Dia a Dia (Efemérides)
+        </button>
+        <button type="button" onclick="switchTab('historia')" id="btn-tab-historia" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 py-4 px-1 text-sm font-medium uppercase tracking-wider tab-btn">
+            Nossa História
+        </button>
+    </nav>
+</div>
+
+<div id="pane-tab-diaria" class="tab-content-pane">
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Coluna Principal: Mensagem e Registros -->
     <div class="lg:col-span-2 space-y-8">
@@ -315,6 +332,143 @@ require __DIR__ . '/partials/erp_shell_open.php';
             </form>
         </div>
     </div>
+</div> <!-- Fim grid pane-tab-diaria -->
+</div> <!-- Fim pane-tab-diaria -->
+
+<!-- TELA: NOSSA HISTÓRIA -->
+<div id="pane-tab-historia" class="tab-content-pane hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Listagem Visual -->
+        <div class="lg:col-span-8 space-y-6">
+            <div class="card border-t-4 border-t-[#C9A227]">
+                <div class="card-header flex items-center justify-between bg-gradient-to-r from-[#0f1c2e] to-[#162a42] border-b-0 rounded-t-xl py-6 px-8">
+                    <div>
+                         <h2 class="font-cinzel text-xl text-white tracking-wider mb-1">Acervo da Memória da Loja</h2>
+                         <p class="text-xs text-slate-400">Toda a linha do tempo registrada que alimentará os cards históricos da dashboard.</p>
+                    </div>
+                </div>
+                <div class="card-body p-6 md:p-8">
+                    <?php if (empty($historiasRecentes)): ?>
+                        <div class="p-12 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl text-center">
+                            <div class="text-4xl mb-4 opacity-30">📜</div>
+                            <h3 class="font-cinzel text-lg font-bold text-gray-700 dark:text-gray-300">Nenhuma memória registrada</h3>
+                            <p class="text-sm text-gray-500 mt-1">Utilize o formulário ao lado para inaugurar o acervo histórico.</p>
+                        </div>
+                    <?php else: ?>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <?php foreach($historiasRecentes as $hist): ?>
+                                <div class="group border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-[#162a42] shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-[#C9A227]/50">
+                                    <div class="flex h-full">
+                                        <!-- Capa Visual (Sépia) -->
+                                        <div class="w-1/3 bg-[#fdf8f0] relative flex items-center justify-center p-3 border-r border-gray-100">
+                                             <img src="/assets/images/templates/efemerides/card_historia_sepia.png" class="w-full h-full object-contain drop-shadow-md transition-transform group-hover:scale-105">
+                                             <div class="absolute top-2 right-2 bg-black/60 text-white text-[8px] px-1.5 rounded font-bold">PREVIEW</div>
+                                        </div>
+                                        <!-- Conteúdo -->
+                                        <div class="w-2/3 p-5 flex flex-col">
+                                             <div class="flex items-center justify-between mb-2">
+                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 uppercase tracking-widest">
+                                                     <?= sprintf('%02d/%02d', $hist['dia'], $hist['mes']) ?><?= !empty($hist['ano_ref']) ? ' / ' . $hist['ano_ref'] : '' ?>
+                                                 </span>
+                                                 <?php if(empty($hist['ativo'])): ?>
+                                                     <span class="text-[9px] bg-red-100 text-red-800 px-1.5 rounded">Inativa</span>
+                                                 <?php endif; ?>
+                                             </div>
+                                             <h3 class="font-cinzel text-sm font-bold text-gray-900 dark:text-white mb-2 leading-tight group-hover:text-[#C9A227] transition-colors">
+                                                 <?= htmlspecialchars($hist['titulo'] ?? '') ?>
+                                             </h3>
+                                             <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-4 leading-relaxed flex-grow">
+                                                 <?= htmlspecialchars($hist['texto'] ?? '') ?>
+                                             </p>
+                                             <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                                                  <a href="/chancelaria/efemerides?editar_historia=<?= (int)($hist['id'] ?? 0) ?>" class="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline decoration-2">
+                                                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                                      Editar
+                                                  </a>
+                                                  <form method="POST" action="/chancelaria/historias/excluir" onsubmit="return confirm('Excluir esta memória permanentemente do registro?');" class="m-0">
+                                                      <input type="hidden" name="id" value="<?= (int)($hist['id'] ?? 0) ?>">
+                                                      <button type="submit" class="text-[10px] text-red-500 hover:text-red-700 font-medium opacity-60 group-hover:opacity-100 transition-opacity">Excluir</button>
+                                                  </form>
+                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar CRUD -->
+        <div class="lg:col-span-4">
+            <?php 
+                $histEdit = null;
+                if (isset($_GET['editar_historia'])) {
+                    foreach($historiasRecentes as $h) {
+                         if (($h['id'] ?? 0) == $_GET['editar_historia']) { 
+                             $histEdit = $h; 
+                             break; 
+                         }
+                    }
+                }
+                $actionHist = $histEdit ? '/chancelaria/historias/atualizar' : '/chancelaria/historias/salvar';
+            ?>
+            <div class="card sticky top-6 bg-white dark:bg-[#162a42] shadow-lg border border-gray-200 dark:border-gray-700">
+                <div class="card-header border-b border-gray-100 dark:border-gray-700 p-6">
+                    <h3 class="font-cinzel text-lg font-bold text-gray-900 dark:text-white">
+                        <?= $histEdit ? 'Editar Fato Histórico' : 'Nova Memória da Loja' ?>
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1">Preencha os dados que serão impressos no pergaminho.</p>
+                </div>
+                <form method="POST" action="<?= $actionHist ?>" class="card-body p-6 space-y-5">
+                    <?php if($histEdit): ?>
+                        <input type="hidden" name="id" value="<?= (int)$histEdit['id'] ?>">
+                    <?php endif; ?>
+
+                    <div>
+                        <label for="hist-titulo" class="form-label text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Título do Evento *</label>
+                        <input id="hist-titulo" type="text" name="titulo" required class="form-input rounded-lg" placeholder="Ex: Fundação da Oficina" value="<?= htmlspecialchars($histEdit['titulo'] ?? '') ?>">
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="form-label text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Dia *</label>
+                            <input type="number" name="dia" min="1" max="31" required class="form-input text-center font-bold" value="<?= (int)($histEdit['dia'] ?? date('d')) ?>">
+                        </div>
+                        <div>
+                            <label class="form-label text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Mês *</label>
+                            <input type="number" name="mes" min="1" max="12" required class="form-input text-center font-bold" value="<?= (int)($histEdit['mes'] ?? date('m')) ?>">
+                        </div>
+                        <div>
+                            <label class="form-label text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Ano</label>
+                            <input type="number" name="ano_ref" class="form-input text-center text-gray-500 placeholder-gray-300" placeholder="AAAA" value="<?= !empty($histEdit['ano_ref']) ? (int)$histEdit['ano_ref'] : '' ?>">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="hist-texto" class="form-label text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Narrativa da História *</label>
+                        <textarea id="hist-texto" name="texto" rows="8" required class="form-input text-sm leading-relaxed rounded-lg bg-amber-50/30 dark:bg-transparent" placeholder="Neste dia importante em nossa jornada..."><?= htmlspecialchars($histEdit['texto'] ?? '') ?></textarea>
+                        <p class="text-[10px] text-gray-400 mt-1">O motor gráfico quebrará as linhas automaticamente no pergaminho.</p>
+                    </div>
+
+                    <div>
+                        <label for="hist-fonte" class="form-label text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Fonte de Referência</label>
+                        <input id="hist-fonte" type="text" name="fonte" class="form-input text-xs placeholder-gray-400" placeholder="Ex: Livro de Arquitetura Vol. 1" value="<?= htmlspecialchars($histEdit['fonte'] ?? '') ?>">
+                    </div>
+
+                    <div class="pt-4 flex flex-col gap-3 border-t border-gray-100 dark:border-gray-700">
+                        <button type="submit" class="btn btn-primary py-3 text-sm font-bold uppercase tracking-widest w-full shadow-[0_4px_15px_rgba(25,118,210,0.3)]">
+                            <?= $histEdit ? 'Salvar Alterações' : 'Publicar Memória' ?>
+                        </button>
+                        <?php if($histEdit): ?>
+                            <a href="/chancelaria/efemerides?foco=historia" class="btn btn-secondary text-center py-3 text-sm">Cancelar Edição</a>
+                        <?php endif; ?>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="card-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
@@ -330,6 +484,32 @@ require __DIR__ . '/partials/erp_shell_open.php';
 </div>
 
 <script>
+    window.switchTab = function(tabId) {
+        // Oculta todos os paineis
+        document.querySelectorAll('.tab-content-pane').forEach(el => el.classList.add('hidden'));
+        
+        // Remove classes ativas dos botões
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('border-[#C9A227]', 'text-[#C9A227]');
+            btn.classList.add('border-transparent', 'text-gray-500');
+        });
+
+        // Ativa o selecionado
+        const activePane = document.getElementById('pane-tab-' + tabId);
+        if (activePane) activePane.classList.remove('hidden');
+
+        const activeBtn = document.getElementById('btn-tab-' + tabId);
+        if (activeBtn) {
+            activeBtn.classList.remove('border-transparent', 'text-gray-500');
+            activeBtn.classList.add('border-[#C9A227]', 'text-[#C9A227]');
+        }
+
+        // Salva na URL sem recarregar para persistência opcional ou deixa padrão
+        const url = new URL(window.location.href);
+        url.searchParams.set('active_tab', tabId);
+        window.history.replaceState({}, '', url);
+    };
+
     function copiarPreview(text) {
         navigator.clipboard.writeText(text).then(() => {
             alert('Texto copiado para a área de transferência.');
@@ -340,7 +520,18 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
     document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
+        
+        // Auto-seleção de abas baseada em URL ou Edição
+        const urlTab = urlParams.get('active_tab');
+        const editarHistoria = urlParams.get('editar_historia');
         const foco = urlParams.get('foco');
+        
+        if (editarHistoria || foco === 'historia' || urlTab === 'historia') {
+            window.switchTab('historia');
+        } else if (urlTab) {
+            window.switchTab(urlTab);
+        }
+
         const editarId = urlParams.get('editar');
 
         if (foco === 'mensagem' || foco === 'dados' || editarId) {

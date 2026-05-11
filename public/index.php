@@ -333,13 +333,39 @@ $buildEfemeridesPreview = static function (): array {
     $registroModel = new \App\Models\EfemerideRegistro();
     $previaModel = new \App\Models\EfemeridePreviaDiaria();
     $composer = new \App\Services\EfemeridesComposer();
+    $historiaModel = new \App\Models\HistoriaMaconica();
+
+    $timezone = new \DateTimeZone(trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo')));
+    $dtHoje = new \DateTimeImmutable('today', $timezone);
+    $diaHoje = (int) $dtHoje->format('d');
+    $mesHoje = (int) $dtHoje->format('m');
 
     $registrosHoje = $registroModel->getRegistrosDoDia();
+    
+    // Injetar fatos de "Nossa História" no pool do dia para virarem cards
+    try {
+        $historiasHoje = $historiaModel->buscarPorDiaMes($diaHoje, $mesHoje, true);
+        foreach ($historiasHoje as $hist) {
+            $ano = $hist['ano_ref'] ?? $dtHoje->format('Y');
+            $registrosHoje[] = [
+                'id' => (int) ($hist['id'] ?? 0),
+                'nome' => trim((string) ($hist['titulo'] ?? 'Nossa História')),
+                'tipo' => 'História',
+                'data_evento' => sprintf('%04d-%02d-%02d', $ano, $mesHoje, $diaHoje),
+                'mensagem_custom' => trim((string) ($hist['texto'] ?? '')),
+                'local' => trim((string) ($hist['fonte'] ?? '')),
+                'vinculo' => 'Nossa História',
+            ];
+        }
+    } catch (\Throwable $e) {
+        error_log('Erro ao injetar historias no buildEfemeridesPreview: ' . $e->getMessage());
+    }
+
     $registrosRecentes = $registroModel->getRecentes();
     $mensagemBase = $composer->composeDailyPreview($registrosHoje);
     $mensagemPreview = $previaModel->garantirPreviaDoDia($mensagemBase);
     $cards = [];
-    $hoje = (new \DateTimeImmutable('today', new \DateTimeZone(trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo')))))->format('Y-m-d');
+    $hoje = $dtHoje->format('Y-m-d');
     $cards = (new \App\Services\EfemeridesCardService())->buildCardsForDate($hoje, $registrosHoje);
     $categoriasCards = array_values(array_unique(array_filter(array_map(static fn(array $c): string => (string) ($c['categoria'] ?? ''), $cards))));
 

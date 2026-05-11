@@ -1007,11 +1007,13 @@ class PainelRoutes
         }
 
         $dashboardPalavraIrmao = '';
+        $dashboardEfemeridesCards = [];
         try {
             $dashboardEfemerides = $buildEfemeridesPreview();
             $dashboardPalavraIrmao = trim((string) ($dashboardEfemerides['mensagemPreview'] ?? ''));
+            $dashboardEfemeridesCards = is_array($dashboardEfemerides['cards'] ?? null) ? $dashboardEfemerides['cards'] : [];
         } catch (\Throwable $e) {
-            error_log('Falha ao carregar palavra do irmao no dashboard: ' . $e->getMessage());
+            error_log('Falha ao carregar efemerides no dashboard: ' . $e->getMessage());
         }
 
         require __DIR__ . '/../../Views/dashboard.php';

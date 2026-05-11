@@ -1111,6 +1111,24 @@ class CommandHandler
             return $tipo === 'historia' || $tipo === 'história';
         }));
 
+        // Adicionar os novos fatos da tabela HistoriaMaconica
+        try {
+            $historiaModel = new \App\Models\HistoriaMaconica();
+            $dia = (int)date('d');
+            $mes = (int)date('m');
+            $novosFatos = $historiaModel->buscarPorDiaMes($dia, $mes);
+            foreach ($novosFatos as $novo) {
+                $fatosHistoricos[] = [
+                    'tipo' => 'História',
+                    'nome' => $novo['titulo'] ?? '',
+                    'mensagem_custom' => $novo['texto'] ?? '',
+                    'data_evento' => !empty($novo['ano_ref']) ? sprintf('%04d-%02d-%02d', $novo['ano_ref'], $mes, $dia) : null
+                ];
+            }
+        } catch (\Throwable $e) {
+            error_log("[bot] Falha ao carregar HistoriaMaconica no handleFatosHistoricos: " . $e->getMessage());
+        }
+
         if (empty($fatosHistoricos)) {
             $msg = "Não há fatos históricos registrados para hoje.";
         } else {

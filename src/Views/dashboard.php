@@ -37,6 +37,7 @@ $dashboardSessoes = isset($dashboardSessoes) && is_array($dashboardSessoes) ? $d
 $dashboardRecados = isset($dashboardRecados) && is_array($dashboardRecados) ? $dashboardRecados : [];
 $dashboardPalavraIrmao = trim((string) ($dashboardPalavraIrmao ?? ''));
 $dashboardOutrasLojas = isset($dashboardOutrasLojas) && is_array($dashboardOutrasLojas) ? $dashboardOutrasLojas : [];
+$dashboardEfemeridesCards = isset($dashboardEfemeridesCards) && is_array($dashboardEfemeridesCards) ? $dashboardEfemeridesCards : [];
 
 $formatarDataHoraPainel = static function (?string $valor): string {
     if (empty(trim((string) $valor))) return 'Data a definir';
@@ -291,6 +292,47 @@ require __DIR__ . '/partials/erp_shell_open.php';
             </div>
         </div>
     </div>
+
+    <!-- Espaço de Publicação: Efemérides Visuais / Nossa História (FULL CARDS) -->
+    <?php
+    $cardsPorCategoria = [];
+    foreach ($dashboardEfemeridesCards as $c) {
+        $cat = trim((string) ($c['categoria'] ?? 'Geral'));
+        if ($cat === '') $cat = 'Geral';
+        $label = match(strtolower($cat)) {
+            'história', 'historia', 'nossa história', 'nossa historia' => 'Nossa História',
+            'aniversário', 'aniversario' => 'Aniversariantes do Dia',
+            default => mb_convert_case($cat, MB_CASE_TITLE, "UTF-8")
+        };
+        $cardsPorCategoria[$label][] = $c;
+    }
+    ?>
+
+    <?php if (!empty($cardsPorCategoria)): ?>
+        <div class="mt-12 pt-10 border-t border-white/10">
+            <?php foreach ($cardsPorCategoria as $label => $grupoCards): ?>
+                <div class="mb-12 last:mb-0">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-1 h-8 bg-[#C9A227] rounded-full shadow-[0_0_10px_rgba(201,162,39,0.4)]"></div>
+                        <h2 class="font-cinzel text-xl md:text-2xl text-white tracking-[0.15em] uppercase"><?= htmlspecialchars($label) ?></h2>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                        <?php foreach ($grupoCards as $c): ?>
+                            <?php if (!empty($c['image_url'])): ?>
+                                <div class="relative art-card p-0 bg-[#0D1117] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)] overflow-hidden aspect-[9/16] w-full max-w-[340px] mx-auto border border-white/10 hover:border-[#C9A227]/40 transition-all duration-500 hover:-translate-y-2">
+                                    <img src="<?= htmlspecialchars($c['image_url']) ?>" 
+                                         alt="<?= htmlspecialchars($c['titulo'] ?? 'Card') ?>" 
+                                         loading="lazy"
+                                         class="w-full h-full object-cover cursor-pointer" 
+                                         onclick="window.open(this.src, '_blank')">
+                                </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 
     <!-- Transparência & Arquivos -->
     <div class="mt-16 pt-10 border-t border-white/10">

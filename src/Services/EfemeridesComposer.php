@@ -25,18 +25,41 @@ class EfemeridesComposer
     public function gerarMensagemParaDia(?string $dataYmd = null): string
     {
         require_once __DIR__ . '/../Models/EfemerideRegistro.php';
+        require_once __DIR__ . '/../Models/HistoriaMaconica.php';
 
         $efemModel = new \App\Models\EfemerideRegistro();
+        $historiaModel = new \App\Models\HistoriaMaconica();
 
+        $diaMes = null;
         if ($dataYmd) {
             $dt = \DateTimeImmutable::createFromFormat('Y-m-d', $dataYmd);
             if ($dt !== false) {
-                $registros = $efemModel->getRegistrosPorDiaMes($dt->format('d/m'));
+                $diaMes = $dt->format('d/m');
+                $registros = $efemModel->getRegistrosPorDiaMes($diaMes);
             } else {
                 $registros = [];
             }
         } else {
             $registros = $efemModel->getRegistrosDoDia();
+            $diaMes = date('d/m');
+        }
+
+        // Injetar as histórias na mesma lista se tivermos o diaMes extraído
+        if ($diaMes !== null) {
+            $dmParts = explode('/', $diaMes);
+            $dia = (int)($dmParts[0] ?? 0);
+            $mes = (int)($dmParts[1] ?? 0);
+            if ($dia > 0 && $mes > 0) {
+                $historias = $historiaModel->buscarPorDiaMes($dia, $mes);
+                foreach ($historias as $hist) {
+                    $registros[] = [
+                        'nome' => $hist['titulo'] ?? 'História da Loja',
+                        'tipo' => 'História',
+                        'mensagem_custom' => $hist['texto'] ?? '',
+                        'local' => $hist['fonte'] ?? ''
+                    ];
+                }
+            }
         }
 
         return $this->composeDailyPreview($registros);
@@ -54,6 +77,13 @@ class EfemeridesComposer
         }
 
         $mensagens = [];
+
+        foreach (($porTipo['História'] ?? []) as $r) {
+            $msg = $this->formatarHistoria($r);
+            if ($msg !== '') {
+                $mensagens[] = $msg;
+            }
+        }
 
         foreach (['Posse Grão Mestre', 'Concessão de Membro Honorário', 'Filiação'] as $tipo) {
             foreach (($porTipo[$tipo] ?? []) as $r) {
@@ -95,6 +125,17 @@ class EfemeridesComposer
 
         $cabecalho = "🔨 <b>A:.R:.L:.S:. Renascença</b> - Efemérides do dia";
         return $cabecalho . "\n\n" . implode("\n\n", $mensagens);
+    }
+
+    private function formatarHistoria(array $r): string
+    {
+        $titulo = trim((string) ($r['nome'] ?? 'Fato Histórico'));
+        $texto = trim((string) ($r['mensagem_custom'] ?? ''));
+        if ($texto === '') return '';
+        
+        $msg = "📜 <b>Neste dia na História: {$titulo}</b>\n";
+        $msg .= "<i>{$texto}</i>";
+        return $msg;
     }
 
     /**

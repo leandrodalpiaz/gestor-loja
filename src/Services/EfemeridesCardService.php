@@ -125,6 +125,12 @@ class EfemeridesCardService
 
     private function resolverMensagem(array $registro, ?int $idade, bool $ocultar): string
     {
+        $tipo = strtolower(trim((string) ($registro['tipo'] ?? '')));
+        if (str_contains($tipo, 'historia') || str_contains($tipo, 'história')) {
+            // Retorna o texto narrativo integral para ser estampado no pergaminho
+            return trim((string) ($registro['mensagem_custom'] ?? $registro['texto'] ?? $registro['nome'] ?? ''));
+        }
+
         $nome = trim((string) ($registro['nome'] ?? ''));
         if ($ocultar || $idade === null) {
             return $nome . "\nParabéns pelo seu dia";
@@ -135,6 +141,7 @@ class EfemeridesCardService
     private function resolverTemplate(string $categoria, ?int $idade, string $tipo): string
     {
         $tipoNorm = strtolower($tipo);
+        if (str_contains($tipoNorm, 'historia') || str_contains($tipoNorm, 'história')) return 'card_historia_sepia.png';
         if (str_contains($tipoNorm, 'inicia')) return 'card_grau_iniciacao.png';
         if (str_contains($tipoNorm, 'eleva')) return 'card_grau_elevacao.png';
         if (str_contains($tipoNorm, 'exalta')) return 'card_grau_exaltacao.png';
