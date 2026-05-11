@@ -16,13 +16,24 @@ $formatDateTime = static function (?string $valor): string {
         return $valor;
     }
 };
-$formatInputDateTime = static function (?string $valor): string {
+$formatInputDate = static function (?string $valor): string {
     $valor = trim((string) $valor);
     if ($valor === '') {
         return '';
     }
     try {
-        return (new DateTimeImmutable($valor))->format('Y-m-d\TH:i');
+        return (new DateTimeImmutable($valor))->format('Y-m-d');
+    } catch (Throwable) {
+        return $valor;
+    }
+};
+$formatInputTime = static function (?string $valor): string {
+    $valor = trim((string) $valor);
+    if ($valor === '') {
+        return '';
+    }
+    try {
+        return (new DateTimeImmutable($valor))->format('H:i');
     } catch (Throwable) {
         return $valor;
     }
@@ -78,8 +89,9 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <input type="text" name="titulo" required value="<?= htmlspecialchars((string) ($sessaoEmFormulario['titulo'] ?? '')) ?>" class="form-input shadow-sm">
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div><label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Data e hora de início</label><input type="datetime-local" name="data_hora_inicio" required value="<?= $formatInputDateTime($sessaoEmFormulario['data_hora_inicio'] ?? null) ?>" class="form-input shadow-sm"></div>
-                        <div><label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Encerramento previsto</label><input type="datetime-local" name="data_hora_fim" value="<?= $formatInputDateTime($sessaoEmFormulario['data_hora_fim'] ?? null) ?>" class="form-input shadow-sm"></div>
+                        <div><label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Data da sessão</label><input type="date" name="data_inicio" required value="<?= $formatInputDate($sessaoEmFormulario['data_hora_inicio'] ?? null) ?>" class="form-input shadow-sm"></div>
+                        <div><label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Hora de início</label><input type="time" name="hora_inicio" required value="<?= $formatInputTime($sessaoEmFormulario['data_hora_inicio'] ?? null) ?>" class="form-input shadow-sm"></div>
+                        <div><label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Hora prevista de término</label><input type="time" name="hora_fim" value="<?= $formatInputTime($sessaoEmFormulario['data_hora_fim'] ?? null) ?>" class="form-input shadow-sm"></div>
                         <div><label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Grau</label><select name="grau_sessao" class="form-select shadow-sm"><?php foreach (['Aprendiz', 'Companheiro', 'Mestre', 'Outro'] as $grau): ?><option value="<?= $grau ?>" <?= (($sessaoEmFormulario['grau_sessao'] ?? '') === $grau) ? 'selected' : '' ?>><?= $grau ?></option><?php endforeach; ?></select></div>
                         <div><label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Grau livre</label><input name="grau_personalizado" value="<?= htmlspecialchars((string) ($sessaoEmFormulario['grau_personalizado'] ?? '')) ?>" class="form-input shadow-sm"></div>
                         <div><label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Tipo principal</label><select name="tipo_sessao_principal" class="form-select shadow-sm"><option value="economica" <?= (($sessaoEmFormulario['tipo_sessao_principal'] ?? 'economica') === 'economica') ? 'selected' : '' ?>>Econômica</option><option value="magna" <?= (($sessaoEmFormulario['tipo_sessao_principal'] ?? '') === 'magna') ? 'selected' : '' ?>>Magna</option><option value="outra" <?= (($sessaoEmFormulario['tipo_sessao_principal'] ?? '') === 'outra') ? 'selected' : '' ?>>Outra</option></select></div>

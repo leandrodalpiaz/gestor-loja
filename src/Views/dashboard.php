@@ -79,6 +79,23 @@ $appShellSidebarSections = array_merge(
 require __DIR__ . '/partials/erp_shell_open.php';
 ?>
 
+<style>
+.art-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.art-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    border-color: rgba(201, 162, 39, 0.2);
+}
+</style>
+
 <div class="space-y-6">
     <!-- Flash Messages -->
     <?php if (isset($dashboardMensagemSucesso)): ?>
@@ -102,7 +119,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 
                 <?php if (!empty($dashboardSessoes)): ?>
                     <?php foreach (array_slice($dashboardSessoes, 0, 1) as $sessao): ?>
-                        <div class="card flex flex-col md:flex-row bg-[#0f1c2e] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                        <div class="art-card p-0 overflow-hidden flex flex-col md:flex-row bg-[#0f1c2e] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
                             
                             <!-- "Image" Area (Overlay Artístico sobre a tela em branco) -->
                             <div class="w-full md:w-5/12 relative bg-[#0A1628] border-r border-white/5 overflow-hidden flex items-center justify-center group">
@@ -117,9 +134,11 @@ require __DIR__ . '/partials/erp_shell_open.php';
                                         <?= htmlspecialchars($dashboardNomeLoja) ?>
                                     </p>
                                     <h3 class="font-cinzel text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#3e2e1c] leading-tight mb-2 text-center drop-shadow-sm">
-                                        Trabalhos em Loja -<br>
-                                        <?= (new DateTimeImmutable($sessao['data_hora_inicio'] ?? 'now'))->format('d/m/Y') ?>
+                                        <?= htmlspecialchars(trim((string) ($sessao['titulo'] ?? '')) !== '' ? $sessao['titulo'] : ($sessao['tipo_sessao'] ?? 'Sessão Oficial')) ?>
                                     </h3>
+                                    <p class="text-[12px] sm:text-[14px] font-serif font-bold text-[#8a7342] mb-1 uppercase tracking-widest">
+                                        <?= (new DateTimeImmutable($sessao['data_hora_inicio'] ?? 'now'))->format('d/m/Y') ?>
+                                    </p>
                                     <p class="text-[11px] sm:text-[13px] font-serif italic text-[#5c472b] mb-6">
                                         <?= htmlspecialchars($formatarDataHoraPainel($sessao['data_hora_inicio'] ?? null)) ?>
                                     </p>
@@ -166,7 +185,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="card p-12 text-center border-dashed border-white/10">
+                    <div class="art-card p-12 text-center border-dashed border-white/10">
                         <p class="text-slate-400 text-sm font-medium tracking-widest uppercase">Nenhum trabalho programado</p>
                     </div>
                 <?php endif; ?>
@@ -183,7 +202,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <?php if (!empty($dashboardOutrasLojas)): ?>
                         <?php foreach ($dashboardOutrasLojas as $sessaoExterna): ?>
-                            <div class="card group cursor-pointer relative overflow-hidden aspect-[3/4] flex flex-col justify-end border border-white/10 hover:border-[#C9A227]/50 shadow-lg">
+                            <div class="art-card p-0 overflow-hidden group cursor-pointer relative aspect-[3/4] flex flex-col justify-end border border-white/10 hover:border-[#C9A227]/50 shadow-lg">
                                 <img src="/assets/images/templates/efemerides/card_oficial_convite.png" alt="Fundo Convite" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-90 transition-all duration-500 group-hover:scale-110">
                                 <div class="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-[#0A1628]/80 to-transparent"></div>
                                 
@@ -219,7 +238,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                     <div class="w-1 h-6 bg-white/20 rounded-full"></div>
                     <h2 class="font-cinzel text-lg text-slate-300 tracking-widest uppercase">Efemérides</h2>
                 </div>
-                <div class="card p-6 bg-gradient-to-b from-[#162a42] to-[#0f1c2e] relative overflow-hidden group">
+                <div class="art-card p-6 bg-gradient-to-b from-[#162a42] to-[#0f1c2e] relative overflow-hidden group">
                     <div class="absolute -right-4 -top-4 w-24 h-24 bg-[#C9A227] opacity-5 rounded-full blur-xl group-hover:opacity-10 transition-opacity"></div>
                     <?php if ($dashboardPalavraIrmao): ?>
                         <div class="mb-4 flex items-center justify-center">
@@ -248,24 +267,24 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <?php if (!empty($dashboardRecados)): ?>
                     <div class="space-y-3">
                         <?php foreach (array_slice($dashboardRecados, 0, 3) as $recado): ?>
-                            <div class="card p-4 border-l-2 border-l-[#C9A227] hover:bg-white/5 transition-colors">
+                            <div class="art-card p-4 border-l-2 border-l-[#C9A227] hover:bg-white/5 transition-colors">
                                 <h3 class="font-bold text-xs text-white mb-1 tracking-wide"><?= htmlspecialchars($recado['titulo'] ?? 'Recado') ?></h3>
                                 <p class="text-[11px] text-slate-400 leading-relaxed"><?= htmlspecialchars($resumirTexto($recado['conteudo'] ?? '', 100)) ?></p>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <div class="card p-6 text-center text-sm text-slate-500 border border-dashed border-white/10">Nenhum aviso afixado.</div>
+                    <div class="art-card p-6 text-center text-sm text-slate-500 border border-dashed border-white/10">Nenhum aviso afixado.</div>
                 <?php endif; ?>
             </section>
             
             <!-- Mini-Métricas Ocultas no Fundo -->
             <div class="grid grid-cols-2 gap-3 pt-4">
-                <div class="card p-3 text-center bg-white/5">
+                <div class="art-card p-3 text-center bg-white/5">
                     <div class="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Seu Perfil</div>
                     <div class="text-xs font-bold text-white truncate px-2"><?= htmlspecialchars($usuarioCargo ?: 'Geral') ?></div>
                 </div>
-                <div class="card p-3 text-center bg-white/5">
+                <div class="art-card p-3 text-center bg-white/5">
                     <div class="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Dia Fixo</div>
                     <div class="text-xs font-bold text-white"><?= htmlspecialchars($dashboardConfiguracaoLoja['dia_semana_reuniao'] ?? 'A definir') ?></div>
                 </div>
@@ -281,44 +300,44 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
             <!-- Prestação de Contas -->
-            <div class="group card p-6 flex flex-col items-center text-center hover:bg-white/5 cursor-pointer">
+            <a href="/tesouraria/obrigacoes" class="group art-card p-6 flex flex-col items-center text-center hover:bg-white/5 transition-colors cursor-pointer">
                 <div class="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
                 <h3 class="font-bold text-sm text-white uppercase tracking-widest mb-2">Tesouraria</h3>
                 <p class="text-xs text-slate-400 mb-4">Balancetes e prestação de contas mensal.</p>
                 <div class="mt-auto text-[10px] font-bold text-[#C9A227] uppercase tracking-widest">Ver Relatórios</div>
-            </div>
+            </a>
 
             <!-- Resumos do Secretário -->
-            <div class="group card p-6 flex flex-col items-center text-center hover:bg-white/5 cursor-pointer">
+            <a href="/secretaria/balaustres" class="group art-card p-6 flex flex-col items-center text-center hover:bg-white/5 transition-colors cursor-pointer">
                 <div class="w-12 h-12 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
                 <h3 class="font-bold text-sm text-white uppercase tracking-widest mb-2">Secretaria</h3>
                 <p class="text-xs text-slate-400 mb-4">Resumos das últimas pranchas e decretos.</p>
                 <div class="mt-auto text-[10px] font-bold text-[#C9A227] uppercase tracking-widest">Ler Resumos</div>
-            </div>
+            </a>
 
             <!-- Publicações Oficiais (PDFs) -->
-            <div class="group card p-6 flex flex-col items-center text-center hover:bg-white/5 cursor-pointer">
+            <a href="/biblioteca" class="group art-card p-6 flex flex-col items-center text-center hover:bg-white/5 transition-colors cursor-pointer">
                 <div class="w-12 h-12 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                 </div>
-                <h3 class="font-bold text-sm text-white uppercase tracking-widest mb-2">Potência</h3>
+                <h3 class="font-bold text-sm text-white uppercase tracking-widest mb-2">Biblioteca</h3>
                 <p class="text-xs text-slate-400 mb-4">Boletins oficiais e normativas em PDF.</p>
                 <div class="mt-auto text-[10px] font-bold text-[#C9A227] uppercase tracking-widest">Acessar Mural</div>
-            </div>
+            </a>
 
             <!-- Galeria de Imagens -->
-            <div class="group card p-6 flex flex-col items-center text-center hover:bg-white/5 cursor-pointer">
+            <a href="#" class="group art-card p-6 flex flex-col items-center text-center hover:bg-white/5 transition-colors cursor-pointer" onclick="alert('Funcionalidade em desenvolvimento'); return false;">
                 <div class="w-12 h-12 rounded-full bg-purple-500/10 text-purple-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
                 <h3 class="font-bold text-sm text-white uppercase tracking-widest mb-2">Galeria</h3>
                 <p class="text-xs text-slate-400 mb-4">Fotos e memórias das últimas sessões.</p>
                 <div class="mt-auto text-[10px] font-bold text-[#C9A227] uppercase tracking-widest">Ver Acervo</div>
-            </div>
+            </a>
 
         </div>
     </div>
@@ -326,3 +345,4 @@ require __DIR__ . '/partials/erp_shell_open.php';
 </div>
 
 <?php require __DIR__ . '/partials/erp_shell_close.php'; ?>
+

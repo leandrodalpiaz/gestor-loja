@@ -411,7 +411,9 @@ class SecretariaController
                 exit;
             }
         }
-        $sessaoEmFormulario = is_array($sessaoRascunho) ? $sessaoRascunho : (is_array($sessaoEdicao) ? $sessaoEdicao : []);
+        $sessaoFormErro = $_SESSION['secretaria_sessao_form_erro'] ?? null;
+        unset($_SESSION['secretaria_sessao_form_erro']);
+        $sessaoEmFormulario = is_array($sessaoFormErro) ? $sessaoFormErro : (is_array($sessaoRascunho) ? $sessaoRascunho : (is_array($sessaoEdicao) ? $sessaoEdicao : []));
         $modoEdicaoSessao = !is_array($sessaoRascunho) && is_array($sessaoEdicao);
         $resumoRascunhoSessao = is_array($sessaoRascunho) ? $sessaoModel->comporResumoPublicacao($sessaoRascunho, $configuracaoLoja) : null;
         $sessaoDuplicada = is_array($sessaoRascunho) ? $sessaoModel->buscarDuplicidade($sessaoRascunho) : null;
@@ -638,9 +640,28 @@ class SecretariaController
 
         $sessaoModel = new Sessao();
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
+        
+        $dataInicio = trim((string) ($_POST['data_inicio'] ?? ''));
+        $horaInicio = trim((string) ($_POST['hora_inicio'] ?? ''));
+        $horaFim = trim((string) ($_POST['hora_fim'] ?? ''));
+        
+        $dataHoraInicio = '';
+        if ($dataInicio !== '' && $horaInicio !== '') {
+            $dataHoraInicio = $dataInicio . ' ' . $horaInicio . ':00';
+        } elseif ($dataInicio !== '' || $horaInicio !== '') {
+            $dataHoraInicio = trim($dataInicio . ' ' . $horaInicio);
+        }
+        
+        $dataHoraFim = '';
+        if ($dataInicio !== '' && $horaFim !== '') {
+            $dataHoraFim = $dataInicio . ' ' . $horaFim . ':00';
+        } elseif ($horaFim !== '') {
+            $dataHoraFim = trim($dataInicio . ' ' . $horaFim);
+        }
+
         $payload = [
-            'data_hora_inicio' => trim((string) ($_POST['data_hora_inicio'] ?? '')),
-            'data_hora_fim' => trim((string) ($_POST['data_hora_fim'] ?? '')),
+            'data_hora_inicio' => $dataHoraInicio,
+            'data_hora_fim' => $dataHoraFim,
             'grau_sessao' => trim((string) ($_POST['grau_sessao'] ?? '')),
             'grau_personalizado' => trim((string) ($_POST['grau_personalizado'] ?? '')),
             'tipo_sessao_principal' => trim((string) ($_POST['tipo_sessao_principal'] ?? '')),
@@ -665,14 +686,16 @@ class SecretariaController
             'observacao_interna' => trim((string) ($_POST['observacao_interna'] ?? '')),
         ];
 
-        if (!$this->dataHoraFormularioValida($payload['data_hora_inicio'])) {
-            $_SESSION['mensagem_erro'] = 'Informe uma data e hora de inicio validas para revisar a sessao.';
+        if (!$this->dataHoraFormularioValida($payload['data_hora_inicio']) || $dataInicio === '' || $horaInicio === '') {
+            $_SESSION['mensagem_erro'] = 'Informe a data da sessao e o horario exato de inicio.';
+            $_SESSION['secretaria_sessao_form_erro'] = $payload;
             header('Location: /secretaria/sessoes' . ($sessaoId > 0 ? '?editar_sessao=' . $sessaoId : ''));
             exit;
         }
 
-        if ($payload['data_hora_fim'] !== '' && !$this->dataHoraFormularioValida($payload['data_hora_fim'])) {
-            $_SESSION['mensagem_erro'] = 'Informe uma data e hora de encerramento validas ou deixe o campo em branco.';
+        if ($payload['data_hora_fim'] !== '' && (!$this->dataHoraFormularioValida($payload['data_hora_fim']) || $horaFim === '')) {
+            $_SESSION['mensagem_erro'] = 'Informe a hora de encerramento valida ou deixe o campo em branco.';
+            $_SESSION['secretaria_sessao_form_erro'] = $payload;
             header('Location: /secretaria/sessoes' . ($sessaoId > 0 ? '?editar_sessao=' . $sessaoId : ''));
             exit;
         }
@@ -706,8 +729,8 @@ class SecretariaController
 
         $sessaoModel = new Sessao();
         $configuracaoLoja = (new ConfiguracaoLoja())->obter();
-        $autorId = (string) ($_SESSION['usuario_id'] ?? '');
-        $autorId = $autorId !== '' ? $autorId : null;
+        $autorId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $autorId = ($autorId !== '' && $autorId !== '0') ? $autorId : null;
         $sessaoIdExistente = (int) ($rascunho['id'] ?? 0);
 
         if ($sessaoIdExistente > 0) {

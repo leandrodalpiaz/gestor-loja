@@ -206,24 +206,35 @@ require __DIR__ . '/partials/erp_shell_open.php';
                     </select>
                 </form>
             </div>
-            <div class="max-h-[620px] overflow-y-auto p-4 space-y-2">
-                <?php foreach ($painelGeral as $reg):
-                    $isSelected = $selectedObreiroId === $reg['obreiro_id'];
-                    $statusClass = 'default';
-                    if (($reg['vencidos'] ?? 0) > 0) $statusClass = 'danger';
-                    elseif (($reg['aberto'] ?? 0) <= 0.01 && ($reg['pago'] ?? 0) > 0) $statusClass = 'success';
-                ?>
-                    <a href="/tesouraria/obrigacoes?obreiro_id=<?= urlencode($reg['obreiro_id']) ?>#detalhe-individual" class="obreiro-card <?= $statusClass ?> <?= $isSelected ? 'selected' : '' ?>">
-                        <div>
-                            <p class="font-semibold"><?= htmlspecialchars($reg['nome']) ?></p>
-                            <p class="text-xs">
-                                <?= $formatCurrency($reg['pago']) ?> pago • <?= $formatCurrency($reg['aberto']) ?> aberto
-                            </p>
-                        </div>
-                        <?php if ($statusClass === 'danger'): ?><span class="badge badge-danger">Atraso</span><?php endif; ?>
-                        <?php if ($statusClass === 'success'): ?><span class="badge badge-success">A Prumo</span><?php endif; ?>
-                    </a>
-                <?php endforeach; ?>
+            <div class="p-4 border-t border-erp-border/50">
+                <details class="group" <?= $selectedObreiroId !== '' ? 'open' : '' ?>>
+                    <summary class="flex justify-between items-center font-semibold cursor-pointer text-erp-gold hover:text-white transition-colors text-sm">
+                        <span>Visualizar Lista de Obreiros</span>
+                        <span class="transition-transform group-open:rotate-180">
+                            <svg fill="none" height="20" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="20"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                        </span>
+                    </summary>
+                    <div class="mt-5 max-h-[500px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                        <?php foreach ($painelGeral as $reg):
+                            $isSelected = $selectedObreiroId === $reg['obreiro_id'];
+                            $statusClass = 'default';
+                            if (($reg['vencidos'] ?? 0) > 0) $statusClass = 'danger';
+                            elseif (($reg['aberto'] ?? 0) <= 0.01 && ($reg['pago'] ?? 0) > 0) $statusClass = 'success';
+                        ?>
+                            <a href="/tesouraria/obrigacoes?obreiro_id=<?= urlencode($reg['obreiro_id']) ?>#detalhe-individual" 
+                               class="flex items-center justify-between p-3 rounded-xl border <?= $isSelected ? 'border-erp-gold bg-erp-surface-2' : 'border-erp-border/30 bg-erp-surface/50 hover:border-erp-gold/30' ?> transition-all">
+                                <div>
+                                    <p class="font-semibold text-white mb-0.5"><?= htmlspecialchars($reg['nome']) ?></p>
+                                    <p class="text-xs text-erp-muted">
+                                        <span class="text-green-500"><?= $formatCurrency($reg['pago']) ?> pago</span> • <span class="<?= $statusClass === 'danger' ? 'text-red-400 font-bold' : '' ?>"><?= $formatCurrency($reg['aberto']) ?> aberto</span>
+                                    </p>
+                                </div>
+                                <?php if ($statusClass === 'danger'): ?><span class="badge badge-danger">Atraso</span><?php endif; ?>
+                                <?php if ($statusClass === 'success'): ?><span class="badge badge-success">A Prumo</span><?php endif; ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </details>
             </div>
         </div>
 

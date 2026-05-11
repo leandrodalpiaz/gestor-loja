@@ -99,6 +99,22 @@ foreach ($appShellSidebarSections as $section) {
                 </div>
 
                 <nav class="flex-1 space-y-8 overflow-y-auto px-4 py-4 scrollbar-hide">
+                    <!-- Atalho Fixo Home -->
+                    <div>
+                        <div class="space-y-1">
+                            <?php $isHomeActive = $appShellActiveHref === '/dashboard' || $appShellActiveHref === '/'; ?>
+                            <a href="/dashboard" 
+                               class="group flex items-center rounded-xl px-4 py-3 text-sm font-semibold transition-all <?= $isHomeActive ? 'active' : '' ?>">
+                                <div class="mr-3 transition-transform group-hover:scale-110">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                    </svg>
+                                </div>
+                                <span>Painel Principal</span>
+                            </a>
+                        </div>
+                    </div>
+
                     <?php foreach ($appShellSidebarSections as $section): ?>
                         <div>
                             <h3 class="mb-3 px-4 text-[10px] font-bold uppercase tracking-[0.15em] text-erp-muted opacity-60">
