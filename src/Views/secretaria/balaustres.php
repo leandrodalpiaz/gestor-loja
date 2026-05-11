@@ -29,156 +29,343 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
 
 <style>
-    .form-input.\!bg-white,
-    .form-select.\!bg-white,
-    .form-textarea.\!bg-white {
-        background-color: #fff !important;
-        color: var(--erp-text) !important;
-        border-color: var(--erp-border) !important;
+    /* Estilos Premium Litúrgicos para o Formulário */
+    .balaustre-container {
+        font-family: 'Inter', sans-serif;
     }
+    .card-dark {
+        background: #0f1c2e;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+    .card-header-dark {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 24px;
+    }
+    .form-input-dark, .form-textarea-dark, .form-select-dark {
+        background: rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #e2e8f0 !important;
+        border-radius: 8px;
+        transition: all 0.2s;
+        width: 100%;
+        padding: 10px 14px;
+    }
+    .form-input-dark:focus, .form-textarea-dark:focus, .form-select-dark:focus {
+        border-color: #C9A227 !important;
+        box-shadow: 0 0 0 1px #C9A227 !important;
+        outline: none;
+    }
+    .form-label-gold {
+        color: #C9A227;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    /* Modo Pergaminho (Para a Prévia) */
+    .parchment-view {
+        background: #e8dcc4;
+        background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22 opacity=%220.06%22/%3E%3C/svg%3E');
+        box-shadow: inset 0 0 60px rgba(139, 69, 19, 0.15), 0 10px 25px rgba(0,0,0,0.3);
+        border: 1px solid #c2a77d;
+        border-radius: 4px;
+        color: #3e2e1c;
+        position: relative;
+    }
+    .parchment-view::before {
+        content: '';
+        position: absolute;
+        inset: 4px;
+        border: 1px solid rgba(139, 69, 19, 0.1);
+        pointer-events: none;
+    }
+    .font-cinzel { font-family: 'Cinzel', serif; }
+    
+    /* Botões Escuros */
+    .btn-gold {
+        background: #C9A227;
+        color: #111;
+        font-weight: bold;
+        border: none;
+        box-shadow: 0 4px 14px rgba(201, 162, 39, 0.2);
+        border-radius: 8px;
+        padding: 12px 24px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-gold:hover { background: #b08d22; transform: translateY(-1px); }
+    .btn-outline-gold {
+        background: transparent;
+        color: #C9A227;
+        border: 1px solid #C9A227;
+        font-weight: bold;
+        border-radius: 8px;
+        padding: 12px 24px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-outline-gold:hover { background: rgba(201, 162, 39, 0.1); }
 </style>
 
-<?php if ($mensagemSucesso): ?><div class="alert alert-success mb-8 depth-1"><?= htmlspecialchars($mensagemSucesso) ?></div><?php endif; ?>
-<?php if ($mensagemErro): ?><div class="alert alert-danger mb-8 depth-1"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
+<div class="balaustre-container">
+    <?php if ($mensagemSucesso): ?>
+        <div class="mb-8 p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 font-bold text-sm shadow-lg"><?= htmlspecialchars($mensagemSucesso) ?></div>
+    <?php endif; ?>
+    <?php if ($mensagemErro): ?>
+        <div class="mb-8 p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 font-bold text-sm shadow-lg"><?= htmlspecialchars($mensagemErro) ?></div>
+    <?php endif; ?>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-    <div class="lg:col-span-2 space-y-8">
-        <div class="card depth-1">
-            <div class="card-header border-b border-erp-border/50 p-6">
-                <h2 class="text-xl font-black text-erp-navy tracking-tight">Fonte do balaústre</h2>
-                <p class="text-sm text-erp-muted mt-1 font-medium">Vincule uma sessão para consumir dados da agenda ou redija de forma independente.</p>
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        
+        <!-- Lado Esquerdo: Formulários e Edição em Blocos -->
+        <div class="xl:col-span-7 space-y-6">
+            
+            <!-- Seleção de Fonte (Sessão Vinculada) -->
+            <div class="card-dark">
+                <div class="card-header-dark">
+                    <h2 class="font-cinzel text-xl text-white tracking-widest uppercase">Fonte do Balaústre</h2>
+                    <p class="text-xs text-slate-400 mt-1">Vincule uma sessão para herdar dados ou redija um documento independente.</p>
+                </div>
+                <div class="p-6">
+                    <form method="GET" action="/secretaria/balaustres" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="form-label-gold">Sessão Vinculada</label>
+                            <select name="sessao_resumo" class="form-select-dark">
+                                <option value="0" class="text-black">Balaústre independente</option>
+                                <?php foreach ($sessoes as $sessaoOpcao): ?>
+                                    <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>" <?= (int) ($sessaoResumo['id'] ?? 0) === (int) ($sessaoOpcao['id'] ?? 0) ? 'selected' : '' ?> class="text-black">
+                                        <?= htmlspecialchars((string) ($sessaoOpcao['titulo'] ?: (($sessaoOpcao['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="flex items-end"><button type="submit" class="btn-outline-gold w-full py-[11px]">Carregar Dados</button></div>
+                    </form>
+                </div>
             </div>
-            <div class="card-body p-6">
-                <form method="GET" action="/secretaria/balaustres" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="md:col-span-2">
-                        <label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Sessão vinculada</label>
-                        <select name="sessao_resumo" class="form-select shadow-sm !bg-white">
-                            <option value="0">Balaústre independente</option>
-                            <?php foreach ($sessoes as $sessaoOpcao): ?>
-                                <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>" <?= (int) ($sessaoResumo['id'] ?? 0) === (int) ($sessaoOpcao['id'] ?? 0) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars((string) ($sessaoOpcao['titulo'] ?: (($sessaoOpcao['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessaoOpcao['grau_sessao'] ?? '')))) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+
+            <form method="POST" action="/secretaria/balaustres/salvar" class="space-y-6">
+                <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoResumo['id'] ?? 0) ?>">
+                <input type="hidden" name="balaustre_id" value="<?= (int) ($balaustreSessao['id'] ?? 0) ?>">
+                <?php if (!empty($modoBalaustreIndependente)): ?><input type="hidden" name="balaustre_independente" value="1"><?php endif; ?>
+
+                <!-- Redação por Blocos -->
+                <div class="card-dark">
+                    <div class="card-header-dark flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h2 class="font-cinzel text-xl text-[#C9A227] tracking-widest uppercase"><?= htmlspecialchars((string) ($sessaoResumo['titulo'] ?? 'Balaústre Independente')) ?></h2>
+                            <p class="text-xs text-slate-400 mt-1"><?= $formatDateTime($sessaoResumo['data_hora_inicio'] ?? null) ?> · <?= (int) ($sessaoResumo['total_confirmados'] ?? 0) ?> presenças estimadas</p>
+                        </div>
+                        <?php if (!empty($balaustreSessao)): ?>
+                            <span class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] uppercase tracking-widest text-[#C9A227]">
+                                <?= htmlspecialchars((string) ($balaustreSessao['status'] ?? 'rascunho')) ?>
+                            </span>
+                        <?php endif; ?>
                     </div>
-                    <div class="flex items-end"><button type="submit" class="btn btn-primary w-full py-3">Carregar</button></div>
-                </form>
-            </div>
+                    <div class="p-6 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="form-label-gold">Número do Balaústre</label>
+                                <input name="numero_balaustre" value="<?= htmlspecialchars((string) ($balaustreSessao['numero_balaustre'] ?? '')) ?>" class="form-input-dark">
+                            </div>
+                            <div>
+                                <label class="form-label-gold">Modelo Base</label>
+                                <input name="template_versao" value="<?= htmlspecialchars((string) ($balaustreSessao['template_versao'] ?? 'oficial-v1')) ?>" class="form-input-dark">
+                            </div>
+                        </div>
+
+                        <div class="space-y-6 pt-4 border-t border-white/5">
+                            <h3 class="font-cinzel text-sm text-white tracking-widest uppercase mb-4">Estrutura Canônica (Blocos)</h3>
+                            <?php foreach ([
+                                'abertura' => 'Abertura',
+                                'balaustre' => 'Leitura do Balaústre Anterior',
+                                'expediente' => 'Expediente',
+                                'saco_propostas' => 'Saco de Propostas e Informações',
+                                'ordem_dia' => 'Ordem do Dia',
+                                'tronco_solidariedade' => 'Tronco de Solidariedade',
+                                'conclusoes_orador' => 'Conclusões do Orador',
+                                'encerramento' => 'Encerramento',
+                                'assinaturas' => 'Assinaturas Oficiais',
+                            ] as $campo => $label): ?>
+                                <div>
+                                    <label class="form-label-gold"><?= htmlspecialchars($label) ?></label>
+                                    <textarea name="bloco_<?= htmlspecialchars($campo) ?>" rows="<?= $campo === 'ordem_dia' ? 8 : 4 ?>" class="form-textarea-dark text-sm"><?= htmlspecialchars((string) ($blocos[$campo] ?? ($campo === 'assinaturas' ? 'Secretário              Guarda da Lei              Venerável Mestre' : ''))) ?></textarea>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gestão de Palavra e Presenças Extraordinárias -->
+                <div class="card-dark">
+                    <div class="card-header-dark"><h2 class="font-cinzel text-xl text-white tracking-widest uppercase">Uso da Palavra & Ocupantes</h2></div>
+                    <div class="p-6 space-y-8">
+                        
+                        <!-- Ocupantes -->
+                        <div class="space-y-4">
+                            <h3 class="form-label-gold border-b border-white/5 pb-2">Cargos em Loja</h3>
+                            <?php foreach ($cargosBalaustreSessao as $cargoSessao): ?>
+                                <div class="bg-white/5 rounded-xl p-4 border border-white/10 grid grid-cols-1 lg:grid-cols-4 gap-4 items-center">
+                                    <input type="hidden" name="cargo_sessao_codigo[]" value="<?= htmlspecialchars((string) ($cargoSessao['codigo'] ?? '')) ?>">
+                                    <input type="hidden" name="cargo_sessao_nome[]" value="<?= htmlspecialchars((string) ($cargoSessao['cargo_nome'] ?? $cargoSessao['label'] ?? '')) ?>">
+                                    <input type="hidden" name="cargo_sessao_titular_oficial[]" value="<?= htmlspecialchars((string) ($cargoSessao['titular_oficial'] ?? '')) ?>">
+                                    
+                                    <div><span class="text-[9px] text-slate-500 uppercase">Ofício</span><p class="text-sm font-bold text-[#C9A227]"><?= htmlspecialchars((string) ($cargoSessao['cargo_nome'] ?? $cargoSessao['label'] ?? '-')) ?></p></div>
+                                    <div><span class="text-[9px] text-slate-500 uppercase">Titular</span><p class="text-xs text-white"><?= htmlspecialchars((string) ($cargoSessao['titular_oficial'] ?? '-')) ?></p></div>
+                                    <div><label class="text-[9px] text-slate-500 uppercase">Irmão Ocupante</label><input name="cargo_sessao_ocupante_nome[]" value="<?= htmlspecialchars((string) ($cargoSessao['ocupante_nome'] ?? $cargoSessao['titular_oficial'] ?? '')) ?>" class="form-input-dark !py-1 !text-xs"></div>
+                                    <div><label class="text-[9px] text-slate-500 uppercase">Observações</label><input name="cargo_sessao_observacao[]" value="<?= htmlspecialchars((string) ($cargoSessao['observacao'] ?? '')) ?>" class="form-input-dark !py-1 !text-xs"></div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <!-- Palavra Quadro -->
+                        <div class="space-y-4">
+                            <h3 class="form-label-gold border-b border-white/5 pb-2">Irmãos do Quadro que Falaram</h3>
+                            <?php foreach ($linhasObreiros as $palavraObreiro): ?>
+                                <div class="bg-white/5 rounded-xl p-4 border border-white/10 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="text-[9px] text-slate-500 uppercase">Irmão</label>
+                                        <select name="palavra_obreiro_id[]" class="form-select-dark !py-1.5 !text-xs text-black">
+                                            <option value="" class="text-black">Selecionar...</option>
+                                            <?php foreach ($obreiros as $obreiro): ?>
+                                                <option value="<?= htmlspecialchars((string) ($obreiro['id'] ?? '')) ?>" <?= (string) ($palavraObreiro['obreiro_id'] ?? '') === (string) ($obreiro['id'] ?? '') ? 'selected' : '' ?> class="text-black">
+                                                    <?= htmlspecialchars((string) ($obreiro['nome'] ?? 'Obreiro')) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-[9px] text-slate-500 uppercase">Registro Adicional</label>
+                                        <input name="palavra_obreiro_nome[]" value="<?= htmlspecialchars((string) ($palavraObreiro['nome'] ?? '')) ?>" class="form-input-dark !py-1.5 !text-xs mb-2" placeholder="Nome avulso">
+                                        <input name="palavra_obreiro_cargo[]" value="<?= htmlspecialchars((string) ($palavraObreiro['cargo_no_momento'] ?? '')) ?>" class="form-input-dark !py-1.5 !text-xs" placeholder="Cargo que ocupava">
+                                    </div>
+                                    <div>
+                                        <label class="text-[9px] text-slate-500 uppercase">Resumo da Fala</label>
+                                        <textarea name="palavra_obreiro_fala[]" rows="3" class="form-textarea-dark !text-xs"><?= htmlspecialchars((string) ($palavraObreiro['fala_resumida'] ?? '')) ?></textarea>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <!-- Palavra Visitantes -->
+                        <div class="space-y-4">
+                            <h3 class="form-label-gold border-b border-white/5 pb-2">Visitantes que Falaram</h3>
+                            <?php foreach ($linhasVisitantes as $visitante): ?>
+                                <div class="bg-white/5 rounded-xl p-4 border border-white/10 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="text-[9px] text-slate-500 uppercase">Identificação</label>
+                                        <input name="palavra_visitante_nome[]" value="<?= htmlspecialchars((string) ($visitante['nome'] ?? '')) ?>" class="form-input-dark !py-1.5 !text-xs mb-2" placeholder="Nome Completo">
+                                        <input name="palavra_visitante_grau[]" value="<?= htmlspecialchars((string) ($visitante['grau'] ?? '')) ?>" class="form-input-dark !py-1.5 !text-xs" placeholder="Grau">
+                                    </div>
+                                    <div>
+                                        <label class="text-[9px] text-slate-500 uppercase">Origem</label>
+                                        <input name="palavra_visitante_loja[]" value="<?= htmlspecialchars((string) ($visitante['loja'] ?? '')) ?>" class="form-input-dark !py-1.5 !text-xs mb-2" placeholder="A∴R∴L∴S∴">
+                                        <input name="palavra_visitante_oriente[]" value="<?= htmlspecialchars((string) ($visitante['oriente'] ?? '')) ?>" class="form-input-dark !py-1.5 !text-xs" placeholder="Oriente">
+                                        <input type="hidden" name="palavra_visitante_potencia[]" value="<?= htmlspecialchars((string) ($visitante['potencia'] ?? '')) ?>">
+                                        <input type="hidden" name="palavra_visitante_dia_reuniao[]" value="<?= htmlspecialchars((string) ($visitante['dia_reuniao'] ?? '')) ?>">
+                                    </div>
+                                    <div>
+                                        <label class="text-[9px] text-slate-500 uppercase">Resumo da Fala</label>
+                                        <textarea name="palavra_visitante_fala[]" rows="3" class="form-textarea-dark !text-xs"><?= htmlspecialchars((string) ($visitante['fala_resumida'] ?? '')) ?></textarea>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-4 pt-4">
+                    <button type="submit" class="btn-gold px-10 py-4 text-sm tracking-widest uppercase">Salvar Rascunho Oficial</button>
+                    <?php if (!empty($balaustreSessao['id'])): ?>
+                        <a href="/secretaria/balaustres/visualizar?id=<?= (int) $balaustreSessao['id'] ?>" class="btn-outline-gold px-10 py-4 text-sm tracking-widest uppercase text-center">Ver Impressão Limpa</a>
+                    <?php endif; ?>
+                </div>
+            </form>
         </div>
 
-        <form method="POST" action="/secretaria/balaustres/salvar" class="space-y-8">
-            <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoResumo['id'] ?? 0) ?>">
-            <input type="hidden" name="balaustre_id" value="<?= (int) ($balaustreSessao['id'] ?? 0) ?>">
-            <?php if (!empty($modoBalaustreIndependente)): ?><input type="hidden" name="balaustre_independente" value="1"><?php endif; ?>
-
-            <div class="card depth-1">
-                <div class="card-header border-b border-erp-border/50 p-6">
-                    <div class="flex flex-wrap items-start justify-between gap-4">
-                        <div>
-                            <h2 class="text-xl font-black text-erp-navy tracking-tight"><?= htmlspecialchars((string) ($sessaoResumo['titulo'] ?? 'Balaústre independente')) ?></h2>
-                            <p class="text-sm text-erp-muted mt-1 font-medium"><?= $formatDateTime($sessaoResumo['data_hora_inicio'] ?? null) ?> · <?= (int) ($sessaoResumo['total_confirmados'] ?? 0) ?> confirmações</p>
+        <!-- Lado Direito: Prévia no formato de Pergaminho e Recentes -->
+        <div class="xl:col-span-5 space-y-6">
+            
+            <div class="parchment-view">
+                <div class="p-6 border-b border-[#8b4513]/10 flex items-center gap-3">
+                    <svg class="w-5 h-5 text-[#8b4513]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <h2 class="font-cinzel text-lg font-bold text-[#5c3a21] tracking-widest uppercase">Prévia do Balaústre</h2>
+                </div>
+                <div class="p-8 max-h-[800px] overflow-y-auto custom-scrollbar">
+                    
+                    <?php if ($previewTextoOficialBalaustre !== ''): ?>
+                        <!-- Timbrado Oficial (Template) -->
+                        <img src="/assets/images/templates/efemerides/balaustre.png" alt="Timbrado Oficial" class="w-full h-auto mb-6 mix-blend-multiply opacity-90 pointer-events-none" onerror="this.style.display='none'">
+                        
+                        <!-- Cabeçalho Dinâmico e Digitável -->
+                        <div class="text-center text-[#2c2014] mb-6" style="font-family: 'Times New Roman', Times, serif;">
+                            <p class="font-bold text-[13px] md:text-[14px]">Balaústre nº <?= htmlspecialchars((string) ($balaustreSessao['numero_balaustre'] ?? '___/____')) ?></p>
+                            <p class="font-bold text-[13px] md:text-[14px] uppercase underline mt-2 tracking-wide"><?= htmlspecialchars((string) ($sessaoResumo['titulo'] ?? 'SESSÃO ECONÔMICA DE 1º GRAU')) ?></p>
                         </div>
-                        <?php if (!empty($balaustreSessao)): ?><span class="badge badge-warning text-[10px] font-black uppercase tracking-widest"><?= htmlspecialchars((string) ($balaustreSessao['status'] ?? 'rascunho')) ?></span><?php endif; ?>
+                    <?php endif; ?>
+
+                    <div class="font-serif text-[13px] md:text-[14px] text-[#2c2014] leading-[1.65] text-justify whitespace-pre-wrap" style="font-family: 'Times New Roman', Times, serif;">
+                        <?php 
+                            if ($previewTextoOficialBalaustre !== '') {
+                                echo strip_tags($previewTextoOficialBalaustre, '<b><u><br>');
+                            } else {
+                                echo 'Redija os blocos à esquerda e salve o rascunho para gerar a prévia do documento canônico e contínuo.';
+                            }
+                        ?>
                     </div>
                 </div>
-                <div class="card-body p-6 space-y-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div><label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Número do balaústre</label><input name="numero_balaustre" value="<?= htmlspecialchars((string) ($balaustreSessao['numero_balaustre'] ?? '')) ?>" class="form-input shadow-sm !bg-white"></div>
-                        <div><label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Modelo</label><input name="template_versao" value="<?= htmlspecialchars((string) ($balaustreSessao['template_versao'] ?? 'oficial-v1')) ?>" class="form-input shadow-sm !bg-white"></div>
-                    </div>
-
-                    <div class="space-y-6">
-                        <?php foreach ([
-                            'abertura' => 'Abertura',
-                            'balaustre' => 'Balaústre anterior',
-                            'expediente' => 'Expediente',
-                            'saco_propostas' => 'Saco de Propostas e Informações',
-                            'ordem_dia' => 'Ordem do Dia',
-                            'tronco_solidariedade' => 'Tronco de Solidariedade',
-                            'conclusoes_orador' => 'Conclusões do Orador',
-                            'encerramento' => 'Encerramento',
-                            'assinaturas' => 'Assinaturas',
-                        ] as $campo => $label): ?>
-                            <div>
-                                <label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1"><?= htmlspecialchars($label) ?></label>
-                                <textarea name="bloco_<?= htmlspecialchars($campo) ?>" rows="<?= $campo === 'ordem_dia' ? 8 : 4 ?>" class="form-textarea shadow-sm !bg-white"><?= htmlspecialchars((string) ($blocos[$campo] ?? ($campo === 'assinaturas' ? 'Secretário              Guarda da Lei              Venerável Mestre' : ''))) ?></textarea>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card depth-1">
-                <div class="card-header border-b border-erp-border/50 p-6"><h2 class="text-xl font-black text-erp-navy tracking-tight">Cargos, presenças e palavra</h2></div>
-                <div class="card-body p-6 space-y-8">
-                    <div class="space-y-4">
-                        <h3 class="text-sm font-black text-erp-navy uppercase tracking-widest">Cargos e ocupantes</h3>
-                        <?php foreach ($cargosBalaustreSessao as $cargoSessao): ?>
-                            <div class="bg-erp-surface-2 rounded-2xl p-4 border border-erp-border/30 grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <input type="hidden" name="cargo_sessao_codigo[]" value="<?= htmlspecialchars((string) ($cargoSessao['codigo'] ?? '')) ?>">
-                                <input type="hidden" name="cargo_sessao_nome[]" value="<?= htmlspecialchars((string) ($cargoSessao['cargo_nome'] ?? $cargoSessao['label'] ?? '')) ?>">
-                                <input type="hidden" name="cargo_sessao_titular_oficial[]" value="<?= htmlspecialchars((string) ($cargoSessao['titular_oficial'] ?? '')) ?>">
-                                <div><span class="text-[9px] font-bold text-erp-muted uppercase tracking-widest">Cargo</span><p class="text-xs font-black text-erp-navy"><?= htmlspecialchars((string) ($cargoSessao['cargo_nome'] ?? $cargoSessao['label'] ?? '-')) ?></p></div>
-                                <div><span class="text-[9px] font-bold text-erp-muted uppercase tracking-widest">Titular</span><p class="text-xs font-black text-erp-navy"><?= htmlspecialchars((string) ($cargoSessao['titular_oficial'] ?? '-')) ?></p></div>
-                                <div><label class="text-[9px] font-bold text-erp-muted uppercase tracking-widest">Ocupante</label><input name="cargo_sessao_ocupante_nome[]" value="<?= htmlspecialchars((string) ($cargoSessao['ocupante_nome'] ?? $cargoSessao['titular_oficial'] ?? '')) ?>" class="form-input !py-1.5 !text-xs !bg-white"></div>
-                                <div><label class="text-[9px] font-bold text-erp-muted uppercase tracking-widest">Obs.</label><input name="cargo_sessao_observacao[]" value="<?= htmlspecialchars((string) ($cargoSessao['observacao'] ?? '')) ?>" class="form-input !py-1.5 !text-xs !bg-white"></div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-
-                    <div class="space-y-4">
-                        <h3 class="text-sm font-black text-erp-navy uppercase tracking-widest">Fizeram uso da palavra · quadro</h3>
-                        <?php foreach ($linhasObreiros as $palavraObreiro): ?>
-                            <div class="bg-erp-surface-2 rounded-2xl p-4 border border-erp-border/30 grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div><label class="text-[9px] font-bold text-erp-muted uppercase tracking-widest">Obreiro</label><select name="palavra_obreiro_id[]" class="form-select !py-1.5 !text-xs !bg-white"><option value="">Selecionar...</option><?php foreach ($obreiros as $obreiro): ?><option value="<?= htmlspecialchars((string) ($obreiro['id'] ?? '')) ?>" <?= (string) ($palavraObreiro['obreiro_id'] ?? '') === (string) ($obreiro['id'] ?? '') ? 'selected' : '' ?>><?= htmlspecialchars((string) ($obreiro['nome'] ?? 'Obreiro')) ?></option><?php endforeach; ?></select></div>
-                                <div><label class="text-[9px] font-bold text-erp-muted uppercase tracking-widest">Nome manual/cargo</label><input name="palavra_obreiro_nome[]" value="<?= htmlspecialchars((string) ($palavraObreiro['nome'] ?? '')) ?>" class="form-input !py-1.5 !text-xs !bg-white"><input name="palavra_obreiro_cargo[]" value="<?= htmlspecialchars((string) ($palavraObreiro['cargo_no_momento'] ?? '')) ?>" class="form-input !py-1.5 !text-xs !bg-white mt-2" placeholder="Cargo no momento"></div>
-                                <div><label class="text-[9px] font-bold text-erp-muted uppercase tracking-widest">Transcrição/resumo</label><textarea name="palavra_obreiro_fala[]" rows="3" class="form-textarea !text-xs !bg-white"><?= htmlspecialchars((string) ($palavraObreiro['fala_resumida'] ?? '')) ?></textarea></div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-
-                    <div class="space-y-4">
-                        <h3 class="text-sm font-black text-erp-navy uppercase tracking-widest">Fizeram uso da palavra · visitantes</h3>
-                        <?php foreach ($linhasVisitantes as $visitante): ?>
-                            <div class="bg-erp-surface-2 rounded-2xl p-4 border border-erp-border/30 grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div><label class="text-[9px] font-bold text-erp-muted uppercase tracking-widest">Visitante</label><input name="palavra_visitante_nome[]" value="<?= htmlspecialchars((string) ($visitante['nome'] ?? '')) ?>" class="form-input !py-1.5 !text-xs !bg-white"><input name="palavra_visitante_grau[]" value="<?= htmlspecialchars((string) ($visitante['grau'] ?? '')) ?>" class="form-input !py-1.5 !text-xs !bg-white mt-2" placeholder="Grau"></div>
-                                <div><label class="text-[9px] font-bold text-erp-muted uppercase tracking-widest">Loja/oriente</label><input name="palavra_visitante_loja[]" value="<?= htmlspecialchars((string) ($visitante['loja'] ?? '')) ?>" class="form-input !py-1.5 !text-xs !bg-white"><input name="palavra_visitante_oriente[]" value="<?= htmlspecialchars((string) ($visitante['oriente'] ?? '')) ?>" class="form-input !py-1.5 !text-xs !bg-white mt-2" placeholder="Oriente"><input type="hidden" name="palavra_visitante_potencia[]" value="<?= htmlspecialchars((string) ($visitante['potencia'] ?? '')) ?>"><input type="hidden" name="palavra_visitante_dia_reuniao[]" value="<?= htmlspecialchars((string) ($visitante['dia_reuniao'] ?? '')) ?>"></div>
-                                <div><label class="text-[9px] font-bold text-erp-muted uppercase tracking-widest">Transcrição/resumo</label><textarea name="palavra_visitante_fala[]" rows="3" class="form-textarea !text-xs !bg-white"><?= htmlspecialchars((string) ($visitante['fala_resumida'] ?? '')) ?></textarea></div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex flex-wrap gap-4">
-                <button type="submit" class="btn btn-primary px-10 py-4">Salvar rascunho oficial</button>
-                <?php if (!empty($balaustreSessao['id'])): ?><a href="/secretaria/balaustres/visualizar?id=<?= (int) $balaustreSessao['id'] ?>" class="btn btn-secondary px-10 py-4">Prévia Oficial</a><?php endif; ?>
-            </div>
-        </form>
-    </div>
-
-    <div class="space-y-6">
-        <div class="card depth-1">
-            <div class="card-header border-b border-erp-border/50 p-6"><h2 class="text-lg font-black text-erp-navy tracking-tight">Prévia oficial</h2></div>
-            <div class="card-body p-6">
-                <pre class="whitespace-pre-wrap text-sm font-mono text-erp-navy bg-erp-surface-2 rounded-2xl p-4 border border-erp-border/30 max-h-[520px] overflow-y-auto"><?= htmlspecialchars($previewTextoOficialBalaustre !== '' ? $previewTextoOficialBalaustre : 'Salve o rascunho para gerar a prévia oficial.') ?></pre>
                 <?php if (!empty($balaustreSessao['id'])): ?>
-                    <form method="POST" action="/secretaria/balaustres/apto" class="mt-4"><input type="hidden" name="balaustre_id" value="<?= (int) $balaustreSessao['id'] ?>"><button type="submit" class="btn btn-primary w-full py-3">Marcar apto para votação</button></form>
+                    <div class="p-6 border-t border-[#8b4513]/10 bg-[#8b4513]/5 rounded-b-4">
+                        <form method="POST" action="/secretaria/balaustres/apto">
+                            <input type="hidden" name="balaustre_id" value="<?= (int) $balaustreSessao['id'] ?>">
+                            <button type="submit" class="w-full py-3 bg-[#5c3a21] text-[#e8dcc4] font-cinzel font-bold tracking-widest uppercase text-xs rounded hover:bg-[#4a2e1a] transition-colors shadow-lg">Carimbar Apto para Votação</button>
+                        </form>
+                    </div>
                 <?php endif; ?>
             </div>
-        </div>
-        <div class="card depth-1">
-            <div class="card-header border-b border-erp-border/50 p-6"><h2 class="text-lg font-black text-erp-navy tracking-tight">Recentes</h2></div>
-            <div class="card-body p-6 space-y-3">
-                <?php foreach ($balaustres as $item): ?>
-                    <a href="/secretaria/balaustres<?= !empty($item['sessao_id']) ? '?sessao_resumo=' . (int) $item['sessao_id'] : '?balaustre_sem_sessao=1' ?>" class="block bg-erp-surface-2 rounded-xl p-4 border border-erp-border/30">
-                        <p class="text-sm font-black text-erp-navy"><?= htmlspecialchars((string) ($item['numero_balaustre'] ?: 'Sem número')) ?></p>
-                        <p class="text-xs font-bold text-erp-muted"><?= htmlspecialchars((string) ($item['sessao_titulo'] ?? 'Independente')) ?> · <?= htmlspecialchars((string) ($item['status'] ?? 'rascunho')) ?></p>
-                    </a>
-                <?php endforeach; ?>
+
+            <!-- Arquivo Recente -->
+            <div class="card-dark">
+                <div class="card-header-dark"><h2 class="font-cinzel text-sm text-[#C9A227] tracking-widest uppercase">Balaústres Recentes</h2></div>
+                <div class="p-6 space-y-3">
+                    <?php if(empty($balaustres)): ?>
+                        <p class="text-xs text-slate-500 italic">Nenhum balaústre encontrado.</p>
+                    <?php else: ?>
+                        <?php foreach ($balaustres as $item): ?>
+                            <a href="/secretaria/balaustres<?= !empty($item['sessao_id']) ? '?sessao_resumo=' . (int) $item['sessao_id'] : '?balaustre_sem_sessao=1' ?>" class="block bg-white/5 rounded-xl p-4 border border-white/5 hover:border-[#C9A227]/50 transition-all">
+                                <p class="font-cinzel text-sm font-bold text-white mb-1"><?= htmlspecialchars((string) ($item['numero_balaustre'] ?: 'Sem número')) ?></p>
+                                <p class="text-[10px] text-slate-400 uppercase tracking-widest"><?= htmlspecialchars((string) ($item['sessao_titulo'] ?? 'Independente')) ?> · <span class="text-[#C9A227]"><?= htmlspecialchars((string) ($item['status'] ?? 'rascunho')) ?></span></p>
+                            </a>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
             </div>
+
         </div>
     </div>
 </div>
+
+<style>
+/* Custom Scrollbar for Parchment */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(139, 69, 19, 0.05);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(139, 69, 19, 0.2);
+    border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 69, 19, 0.4);
+}
+</style>
 
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
