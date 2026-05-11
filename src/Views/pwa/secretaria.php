@@ -29,8 +29,8 @@ ob_start();
 
     <section class="pwa-hero p-5">
         <p class="pwa-eyebrow">Operação da Secretaria</p>
-        <h2 class="mt-3 text-2xl font-bold tracking-tight text-white"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Agenda e balaustres')) ?></h2>
-        <p class="pwa-muted mt-2 text-sm">Sessões, confirmados, ágape, trabalhos, publicações, balaustre e relatório anual.</p>
+        <h2 class="mt-3 text-2xl font-bold tracking-tight text-white"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Agenda e balaústres')) ?></h2>
+        <p class="pwa-muted mt-2 text-sm">Sessões, confirmados, ágape, trabalhos, publicações, balaústre e relatório anual.</p>
     </section>
 
     <section class="grid grid-cols-2 gap-2">
@@ -116,14 +116,14 @@ ob_start();
     </section>
 
     <section class="rounded-2xl border border-erpBorder bg-erpSurface p-4">
-        <h3 class="font-bold text-erpNavy">Balaustre rápido</h3>
+        <h3 class="font-bold text-erpNavy">Balaústre rápido</h3>
         <form method="post" action="/pwa/secretaria/balaustres/salvar" class="mt-3 space-y-3">
             <input type="hidden" name="sessao_id" value="<?= $sessaoId ?>">
-            <input name="numero_balaustre" class="w-full rounded-lg border border-erpBorder px-3 py-2 text-sm" placeholder="Número do balaustre">
+            <input name="numero_balaustre" class="w-full rounded-lg border border-erpBorder px-3 py-2 text-sm" placeholder="Número do balaústre">
             <textarea name="texto_final" rows="4" class="w-full rounded-lg border border-erpBorder px-3 py-2 text-sm" placeholder="Texto ou apontamentos"></textarea>
             <button class="w-full rounded-lg bg-erpNavy px-4 py-2.5 text-sm font-semibold text-white">Salvar rascunho</button>
         </form>
-        <a href="/secretaria/balaustres?sessao_resumo=<?= $sessaoId ?>" class="mt-3 block text-center text-sm font-semibold text-erpNavy">Compor balaustre completo no Desktop</a>
+        <a href="/secretaria/balaustres?sessao_resumo=<?= $sessaoId ?>" class="mt-3 block text-center text-sm font-semibold text-erpNavy">Compor balaústre completo no Desktop</a>
     </section>
 
     <section class="space-y-3">

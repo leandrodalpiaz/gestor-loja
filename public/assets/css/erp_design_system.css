@@ -9,58 +9,41 @@
     --erp-navy-deep:     #0E2640;
     --erp-gold:          #C9A227;
     --erp-gold-subtle:   #F5EDD4;
-    --erp-accent:        #4BACD4;
-    --erp-brand-vibrant: #4BACD4;
+    --erp-accent:        #C9A227;
+    --erp-brand-vibrant: #C9A227;
 
-    /* ── Surfaces (light) ── */
-    --erp-bg:       #F6F8FB;
-    --erp-surface:  #FFFFFF;
-    --erp-surface-2:#EDF1F7;
-    --erp-border:   #D1DAE6;
-    --erp-text:     #1A2B3D;
-    --erp-muted:    #6B7F94;
-
-    /* ── Intent ── */
-    --erp-brand:         var(--erp-navy);
-    --erp-accent-strong: var(--erp-gold);
-    --erp-focus:         #4BACD4;
-
-    /* ── Semantic ── */
-    --erp-success: #2E9E6F;
-    --erp-warning: #D4943A;
-    --erp-danger:  #A0422A;
-    --erp-info:    #4BACD4;
-
-    /* ── Elevation (navy-tinted) ── */
-    --erp-shadow-sm:  0 1px 3px rgba(27,58,92,0.06), 0 1px 2px rgba(27,58,92,0.04);
-    --erp-shadow:     0 4px 12px rgba(27,58,92,0.08), 0 2px 4px rgba(27,58,92,0.04);
-    --erp-shadow-lg:  0 12px 28px rgba(27,58,92,0.12), 0 4px 8px rgba(27,58,92,0.06);
-
-    /* ── Glass ── */
-    --erp-glass-bg:     rgba(255, 255, 255, 0.72);
-    --erp-glass-border: rgba(255, 255, 255, 0.35);
-}
-
-/* ── Dark Mode ── */
-html.dark {
+    /* ── Surfaces (Premium Dark Liturgico) ── */
     --erp-bg:       #0A1628;
-    --erp-surface:  #111D32;
-    --erp-surface-2:#1A2B42;
-    --erp-border:   #2A3E58;
-    --erp-text:     #E4EAF1;
+    --erp-surface:  #0f1c2e;
+    --erp-surface-2: rgba(255, 255, 255, 0.03);
+    --erp-border:   rgba(255, 255, 255, 0.08);
+    --erp-text:     #e2e8f0;
     --erp-muted:    #8899AD;
 
+    /* ── Intent ── */
+    --erp-brand:         var(--erp-gold);
+    --erp-accent-strong: var(--erp-gold);
+    --erp-focus:         #C9A227;
+
+    /* ── Semantic ── */
     --erp-success: #3DBDA0;
     --erp-warning: #E8AD5A;
     --erp-danger:  #D4725A;
     --erp-info:    #6BC4E0;
 
-    --erp-shadow-sm:  0 1px 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.15);
-    --erp-shadow:     0 6px 16px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.15);
-    --erp-shadow-lg:  0 16px 32px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.2);
+    /* ── Elevation (Premium Dark Shadows) ── */
+    --erp-shadow-sm:  0 4px 12px rgba(0,0,0,0.15);
+    --erp-shadow:     0 10px 30px rgba(0,0,0,0.3);
+    --erp-shadow-lg:  0 15px 35px rgba(0,0,0,0.4);
 
-    --erp-glass-bg:     rgba(17, 29, 50, 0.7);
-    --erp-glass-border: rgba(255, 255, 255, 0.06);
+    /* ── Glass ── */
+    --erp-glass-bg:     rgba(10, 22, 40, 0.85);
+    --erp-glass-border: rgba(255, 255, 255, 0.08);
+}
+
+/* ── O tema Escuro Premium agora é o padrao global absoluto ── */
+html.dark {
+    /* (Mantido vazio pois o root já é dark) */
 }
 
 /* ═══════════════════════════════════════
@@ -72,6 +55,7 @@ html {
 
 body {
     background-color: var(--erp-bg);
+    background-image: radial-gradient(circle at 50% 0%, rgba(201, 162, 39, 0.08) 0%, transparent 70%);
     color: var(--erp-text);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-size: 14px;
@@ -79,6 +63,7 @@ body {
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
 }
 
 /* ═══════════════════════════════════════
@@ -120,13 +105,16 @@ body {
 .erp-card, .card, .metric-card, .card-metric, .card-metric-simple {
     background: var(--erp-surface);
     border: 1px solid var(--erp-border);
-    border-radius: 12px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 16px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .card:hover {
-    border-color: color-mix(in srgb, var(--erp-brand) 25%, var(--erp-border));
-    box-shadow: var(--erp-shadow-sm);
+    transform: translateY(-2px);
+    border-color: rgba(201, 162, 39, 0.2);
+    box-shadow: var(--erp-shadow);
 }
 
 .card-header,
@@ -155,6 +143,10 @@ body {
     font-weight: 700;
     line-height: 1.3;
     letter-spacing: -0.01em;
+}
+
+.font-cinzel { 
+    font-family: 'Cinzel', serif; 
 }
 
 .card-subtitle,
@@ -253,23 +245,24 @@ body {
 }
 
 .btn-primary {
-    background: var(--erp-navy);
-    color: #fff;
-    box-shadow: 0 1px 3px rgba(27,58,92,0.15);
+    background: var(--erp-gold);
+    color: #111;
+    box-shadow: 0 4px 14px rgba(201,162,39,0.3);
 }
 .btn-primary:hover {
-    background: var(--erp-navy-deep);
-    box-shadow: 0 4px 12px rgba(27,58,92,0.2);
+    background: #b08d22;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(201,162,39,0.4);
 }
 
 .btn-secondary {
-    background: var(--erp-surface);
-    color: var(--erp-text);
-    border-color: var(--erp-border);
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    border-color: rgba(255,255,255,0.1);
 }
 .btn-secondary:hover {
-    background: var(--erp-surface-2);
-    border-color: color-mix(in srgb, var(--erp-navy) 20%, var(--erp-border));
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(201,162,39,0.5);
 }
 
 .btn-warning {
@@ -297,16 +290,18 @@ button[disabled] {
 }
 
 /* ═══════════════════════════════════════
-   FORM CONTROLS
+   FORM CONTROLS (GLASSMORPHISM DEFAULT)
    ═══════════════════════════════════════ */
 .form-label {
     display: block;
     margin-bottom: 0.375rem;
-    color: var(--erp-muted);
-    font-size: 0.75rem;
-    font-weight: 600;
+    color: var(--erp-gold, #C9A227);
+    font-size: 0.65rem;
+    font-weight: 800;
     line-height: 1.4;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.85;
 }
 
 .form-input,
@@ -315,14 +310,14 @@ button[disabled] {
 .form-static-field {
     width: 100%;
     min-height: 40px;
-    border: 1px solid var(--erp-border);
-    background: var(--erp-surface);
-    color: var(--erp-text);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff; /* Força o texto a ser legível no fundo escuro */
     border-radius: 8px;
     padding: 0.6rem 0.8rem;
     font-size: 0.8125rem;
     line-height: 1.35;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .form-textarea {
@@ -331,15 +326,17 @@ button[disabled] {
 }
 
 .form-static-field {
-    background: var(--erp-surface-2);
+    background: rgba(255, 255, 255, 0.02);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
     outline: none;
-    border-color: var(--erp-focus);
-    box-shadow: 0 0 0 3px rgba(75, 172, 212, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--erp-gold, #C9A227);
+    box-shadow: 0 0 0 1px var(--erp-gold, #C9A227);
 }
 
 .form-checkbox {

@@ -27,32 +27,32 @@ ob_start();
     <?php endif; ?>
 
     <section class="pwa-hero p-5">
-        <p class="pwa-eyebrow">Sessao em Loja</p>
-        <h2 class="mt-3 text-2xl font-bold tracking-tight text-white"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Controle de presenca')) ?></h2>
-        <p class="pwa-muted mt-2 text-sm"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? 'Selecione uma sessao')) ?></p>
+        <p class="pwa-eyebrow">Sessão em Loja</p>
+        <h2 class="mt-3 text-2xl font-bold tracking-tight text-white"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Controle de presença')) ?></h2>
+        <p class="pwa-muted mt-2 text-sm"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? 'Selecione uma sessão')) ?></p>
     </section>
 
     <a href="/pwa/chancelaria/efemerides" class="block rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
         <div class="flex items-center justify-between gap-3">
             <div>
                 <p class="text-xs font-bold uppercase tracking-wide text-amber-700">Urgente</p>
-                <h3 class="mt-1 text-base font-bold text-erpNavy">Gerenciar efemerides</h3>
-                <p class="mt-1 text-sm text-amber-900">Cadastrar, editar, ativar/desativar e excluir conteudos da Chancelaria pelo PWA.</p>
+                <h3 class="mt-1 text-base font-bold text-erpNavy">Gerenciar efemérides</h3>
+                <p class="mt-1 text-sm text-amber-900">Cadastrar, editar, ativar/desativar e excluir conteúdos da Chancelaria pelo PWA.</p>
             </div>
             <span class="rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white">Abrir</span>
         </div>
     </a>
 
     <form method="get" action="/pwa/chancelaria" class="rounded-2xl border border-erpBorder bg-erpSurface p-4">
-        <label class="block text-sm font-semibold text-erpNavy">Sessao</label>
+        <label class="block text-sm font-semibold text-erpNavy">Sessão</label>
         <select name="sessao_id" class="mt-2 w-full rounded-lg border border-erpBorder bg-white px-3 py-2 text-sm">
             <?php foreach ($sessoes as $opcao): ?>
                 <option value="<?= (int) ($opcao['id'] ?? 0) ?>" <?= (int) ($opcao['id'] ?? 0) === $sessaoId ? 'selected' : '' ?>>
-                    <?= htmlspecialchars((string) ($opcao['titulo'] ?? 'Sessao')) ?> - <?= htmlspecialchars((string) ($opcao['data_hora_inicio'] ?? '')) ?>
+                    <?= htmlspecialchars((string) ($opcao['titulo'] ?? 'Sessão')) ?> - <?= htmlspecialchars((string) ($opcao['data_hora_inicio'] ?? '')) ?>
                 </option>
             <?php endforeach; ?>
         </select>
-        <button type="submit" class="mt-3 w-full rounded-lg bg-erpNavy px-4 py-2.5 text-sm font-semibold text-white">Carregar sessao</button>
+        <button type="submit" class="mt-3 w-full rounded-lg bg-erpNavy px-4 py-2.5 text-sm font-semibold text-white">Carregar sessão</button>
     </form>
 
     <section class="grid grid-cols-3 gap-3">
@@ -85,7 +85,7 @@ ob_start();
     <section>
         <div class="mb-3">
             <p class="pwa-eyebrow">Check-in</p>
-            <h3 class="mt-1 text-lg font-bold text-white">Presenca efetiva</h3>
+            <h3 class="mt-1 text-lg font-bold text-white">Presença efetiva</h3>
         </div>
         <div class="space-y-3">
             <?php foreach ($presencas as $presenca): ?>

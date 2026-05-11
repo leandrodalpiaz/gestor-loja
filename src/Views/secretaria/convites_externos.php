@@ -77,7 +77,7 @@ $renderConvite = static function (array $convite, array $confirmados) use ($form
                                         <h4 class="text-[10px] font-black text-erp-navy uppercase tracking-widest">Confirmados (<?= count($confirmados) ?>)</h4>
                                         <button type="button" class="btn btn-secondary !py-1.5 !px-3 text-[9px] font-black uppercase tracking-widest" onclick="navigator.clipboard && navigator.clipboard.writeText(document.getElementById('confirmados-<?= $conviteId ?>').value)">Copiar confirmados</button>
                                     </div>
-                                    <textarea id="confirmados-<?= $conviteId ?>" readonly rows="5" class="form-textarea !text-xs !bg-white"><?= htmlspecialchars($textoCopiar) ?></textarea>
+                                    <textarea id="confirmados-<?= $conviteId ?>" readonly rows="5" class="form-textarea !text-xs"><?= htmlspecialchars($textoCopiar) ?></textarea>
                                 </div>
                             </div>
                         </details>
@@ -97,16 +97,6 @@ require __DIR__ . '/_sidebar.php';
 require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
 
-<style>
-    .form-input.\!bg-white,
-    .form-select.\!bg-white,
-    .form-textarea.\!bg-white {
-        background-color: #fff !important;
-        color: var(--erp-text) !important;
-        border-color: var(--erp-border) !important;
-    }
-</style>
-
 <?php if ($mensagemSucesso): ?><div class="alert alert-success mb-8 depth-1"><?= htmlspecialchars($mensagemSucesso) ?></div><?php endif; ?>
 <?php if ($mensagemErro): ?><div class="alert alert-danger mb-8 depth-1"><?= htmlspecialchars($mensagemErro) ?></div><?php endif; ?>
 
@@ -116,19 +106,19 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <div class="card-header border-b border-erp-border/50 p-6"><h2 class="text-xl font-black text-erp-navy tracking-tight">Novo Convite Externo</h2></div>
             <div class="card-body p-6">
                 <form method="POST" action="/secretaria/convites-externos/salvar" enctype="multipart/form-data" class="space-y-5">
-                    <select name="tipo" class="form-select shadow-sm !bg-white"><option value="sessao_magna">Sessão Magna</option><option value="palestra">Palestra</option><option value="evento">Evento</option><option value="outro">Outro</option></select>
-                    <input name="titulo" required class="form-input shadow-sm !bg-white" placeholder="Título">
-                    <input name="loja_origem" class="form-input shadow-sm !bg-white" placeholder="Loja de origem">
-                    <input name="potencia" class="form-input shadow-sm !bg-white" placeholder="Potência / jurisdição">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input name="grau" class="form-input shadow-sm !bg-white" placeholder="Grau"><input type="datetime-local" name="data_hora" class="form-input shadow-sm !bg-white"></div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input name="cidade" class="form-input shadow-sm !bg-white" placeholder="Cidade"><input name="local" class="form-input shadow-sm !bg-white" placeholder="Local"></div>
-                    <input type="datetime-local" name="prazo_confirmacao" class="form-input shadow-sm !bg-white">
-                    <input name="contatos" class="form-input shadow-sm !bg-white" placeholder="Contatos / RSVP">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input name="valor" class="form-input shadow-sm !bg-white" placeholder="Valor"><input name="traje" class="form-input shadow-sm !bg-white" placeholder="Traje"></div>
-                    <textarea name="descricao" rows="3" class="form-textarea shadow-sm !bg-white" placeholder="Descrição"></textarea>
-                    <textarea name="texto_original" rows="3" class="form-textarea shadow-sm !bg-white font-mono text-xs" placeholder="Texto recebido pelo WhatsApp"></textarea>
-                    <input type="file" name="anexo" accept="image/*,.pdf" class="form-input shadow-sm !bg-white">
-                    <div class="flex gap-4"><select name="status" class="form-select shadow-sm !bg-white"><option value="rascunho">Rascunho</option><option value="publicado">Publicado</option><option value="cancelado">Cancelado</option><option value="encerrado">Encerrado</option></select><label class="flex items-center gap-2 text-xs font-black text-erp-navy uppercase tracking-widest"><input type="checkbox" name="fixado" value="1">Fixado</label></div>
+                    <select name="tipo" class="form-select shadow-sm"><option value="sessao_magna">Sessão Magna</option><option value="palestra">Palestra</option><option value="evento">Evento</option><option value="outro">Outro</option></select>
+                    <input name="titulo" required class="form-input shadow-sm" placeholder="Título">
+                    <input name="loja_origem" class="form-input shadow-sm" placeholder="Loja de origem">
+                    <input name="potencia" class="form-input shadow-sm" placeholder="Potência / jurisdição">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input name="grau" class="form-input shadow-sm" placeholder="Grau"><input type="datetime-local" name="data_hora" class="form-input shadow-sm"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input name="cidade" class="form-input shadow-sm" placeholder="Cidade"><input name="local" class="form-input shadow-sm" placeholder="Local"></div>
+                    <input type="datetime-local" name="prazo_confirmacao" class="form-input shadow-sm">
+                    <input name="contatos" class="form-input shadow-sm" placeholder="Contatos / RSVP">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input name="valor" class="form-input shadow-sm" placeholder="Valor"><input name="traje" class="form-input shadow-sm" placeholder="Traje"></div>
+                    <textarea name="descricao" rows="3" class="form-textarea shadow-sm" placeholder="Descrição"></textarea>
+                    <textarea name="texto_original" rows="3" class="form-textarea shadow-sm font-mono text-xs" placeholder="Texto recebido pelo WhatsApp"></textarea>
+                    <input type="file" name="anexo" accept="image/*,.pdf" class="form-input shadow-sm">
+                    <div class="flex gap-4"><select name="status" class="form-select shadow-sm"><option value="rascunho">Rascunho</option><option value="publicado">Publicado</option><option value="cancelado">Cancelado</option><option value="encerrado">Encerrado</option></select><label class="flex items-center gap-2 text-xs font-black text-erp-navy uppercase tracking-widest"><input type="checkbox" name="fixado" value="1">Fixado</label></div>
                     <button type="submit" class="btn btn-primary w-full py-4">Salvar Convite</button>
                 </form>
             </div>

@@ -29,44 +29,6 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
 
 <style>
-    /* Estilos Premium Litúrgicos para o Formulário */
-    .balaustre-container {
-        font-family: 'Inter', sans-serif;
-    }
-    .card-dark {
-        background: #0f1c2e;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
-    .card-header-dark {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        padding: 24px;
-    }
-    .form-input-dark, .form-textarea-dark, .form-select-dark {
-        background: rgba(0, 0, 0, 0.2) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        color: #e2e8f0 !important;
-        border-radius: 8px;
-        transition: all 0.2s;
-        width: 100%;
-        padding: 10px 14px;
-    }
-    .form-input-dark:focus, .form-textarea-dark:focus, .form-select-dark:focus {
-        border-color: #C9A227 !important;
-        box-shadow: 0 0 0 1px #C9A227 !important;
-        outline: none;
-    }
-    .form-label-gold {
-        color: #C9A227;
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-bottom: 8px;
-        display: block;
-    }
-    
     /* Modo Pergaminho (Para a Prévia) */
     .parchment-view {
         background: #e8dcc4;
@@ -84,32 +46,6 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         border: 1px solid rgba(139, 69, 19, 0.1);
         pointer-events: none;
     }
-    .font-cinzel { font-family: 'Cinzel', serif; }
-    
-    /* Botões Escuros */
-    .btn-gold {
-        background: #C9A227;
-        color: #111;
-        font-weight: bold;
-        border: none;
-        box-shadow: 0 4px 14px rgba(201, 162, 39, 0.2);
-        border-radius: 8px;
-        padding: 12px 24px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .btn-gold:hover { background: #b08d22; transform: translateY(-1px); }
-    .btn-outline-gold {
-        background: transparent;
-        color: #C9A227;
-        border: 1px solid #C9A227;
-        font-weight: bold;
-        border-radius: 8px;
-        padding: 12px 24px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .btn-outline-gold:hover { background: rgba(201, 162, 39, 0.1); }
 </style>
 
 <div class="balaustre-container">
@@ -126,16 +62,16 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         <div class="xl:col-span-7 space-y-6">
             
             <!-- Seleção de Fonte (Sessão Vinculada) -->
-            <div class="card-dark">
-                <div class="card-header-dark">
+            <div class="card">
+                <div class="card-header">
                     <h2 class="font-cinzel text-xl text-white tracking-widest uppercase">Fonte do Balaústre</h2>
                     <p class="text-xs text-slate-400 mt-1">Vincule uma sessão para herdar dados ou redija um documento independente.</p>
                 </div>
                 <div class="p-6">
                     <form method="GET" action="/secretaria/balaustres" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="md:col-span-2">
-                            <label class="form-label-gold">Sessão Vinculada</label>
-                            <select name="sessao_resumo" class="form-select-dark">
+                            <label class="form-label">Sessão Vinculada</label>
+                            <select name="sessao_resumo" class="form-select">
                                 <option value="0" class="text-black">Balaústre independente</option>
                                 <?php foreach ($sessoes as $sessaoOpcao): ?>
                                     <option value="<?= (int) ($sessaoOpcao['id'] ?? 0) ?>" <?= (int) ($sessaoResumo['id'] ?? 0) === (int) ($sessaoOpcao['id'] ?? 0) ? 'selected' : '' ?> class="text-black">
@@ -144,7 +80,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="flex items-end"><button type="submit" class="btn-outline-gold w-full py-[11px]">Carregar Dados</button></div>
+                        <div class="flex items-end"><button type="submit" class="btn-secondary w-full py-[11px]">Carregar Dados</button></div>
                     </form>
                 </div>
             </div>
@@ -155,8 +91,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <?php if (!empty($modoBalaustreIndependente)): ?><input type="hidden" name="balaustre_independente" value="1"><?php endif; ?>
 
                 <!-- Redação por Blocos -->
-                <div class="card-dark">
-                    <div class="card-header-dark flex flex-wrap items-center justify-between gap-4">
+                <div class="card">
+                    <div class="card-header flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <h2 class="font-cinzel text-xl text-[#C9A227] tracking-widest uppercase"><?= htmlspecialchars((string) ($sessaoResumo['titulo'] ?? 'Balaústre Independente')) ?></h2>
                             <p class="text-xs text-slate-400 mt-1"><?= $formatDateTime($sessaoResumo['data_hora_inicio'] ?? null) ?> · <?= (int) ($sessaoResumo['total_confirmados'] ?? 0) ?> presenças estimadas</p>
@@ -170,12 +106,12 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <div class="p-6 space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="form-label-gold">Número do Balaústre</label>
-                                <input name="numero_balaustre" value="<?= htmlspecialchars((string) ($balaustreSessao['numero_balaustre'] ?? '')) ?>" class="form-input-dark">
+                                <label class="form-label">Número do Balaústre</label>
+                                <input name="numero_balaustre" value="<?= htmlspecialchars((string) ($balaustreSessao['numero_balaustre'] ?? '')) ?>" class="form-input">
                             </div>
                             <div>
-                                <label class="form-label-gold">Modelo Base</label>
-                                <input name="template_versao" value="<?= htmlspecialchars((string) ($balaustreSessao['template_versao'] ?? 'oficial-v1')) ?>" class="form-input-dark">
+                                <label class="form-label">Modelo Base</label>
+                                <input name="template_versao" value="<?= htmlspecialchars((string) ($balaustreSessao['template_versao'] ?? 'oficial-v1')) ?>" class="form-input">
                             </div>
                         </div>
 
@@ -193,8 +129,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                 'assinaturas' => 'Assinaturas Oficiais',
                             ] as $campo => $label): ?>
                                 <div>
-                                    <label class="form-label-gold"><?= htmlspecialchars($label) ?></label>
-                                    <textarea name="bloco_<?= htmlspecialchars($campo) ?>" rows="<?= $campo === 'ordem_dia' ? 8 : 4 ?>" class="form-textarea-dark text-sm"><?= htmlspecialchars((string) ($blocos[$campo] ?? ($campo === 'assinaturas' ? 'Secretário              Guarda da Lei              Venerável Mestre' : ''))) ?></textarea>
+                                    <label class="form-label"><?= htmlspecialchars($label) ?></label>
+                                    <textarea name="bloco_<?= htmlspecialchars($campo) ?>" rows="<?= $campo === 'ordem_dia' ? 8 : 4 ?>" class="form-textarea text-sm"><?= htmlspecialchars((string) ($blocos[$campo] ?? ($campo === 'assinaturas' ? 'Secretário              Guarda da Lei              Venerável Mestre' : ''))) ?></textarea>
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -202,13 +138,13 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 </div>
 
                 <!-- Gestão de Palavra e Presenças Extraordinárias -->
-                <div class="card-dark">
-                    <div class="card-header-dark"><h2 class="font-cinzel text-xl text-white tracking-widest uppercase">Uso da Palavra & Ocupantes</h2></div>
+                <div class="card">
+                    <div class="card-header"><h2 class="font-cinzel text-xl text-white tracking-widest uppercase">Uso da Palavra & Ocupantes</h2></div>
                     <div class="p-6 space-y-8">
                         
                         <!-- Ocupantes -->
                         <div class="space-y-4">
-                            <h3 class="form-label-gold border-b border-white/5 pb-2">Cargos em Loja</h3>
+                            <h3 class="form-label border-b border-white/5 pb-2">Cargos em Loja</h3>
                             <?php foreach ($cargosBalaustreSessao as $cargoSessao): ?>
                                 <div class="bg-white/5 rounded-xl p-4 border border-white/10 grid grid-cols-1 lg:grid-cols-4 gap-4 items-center">
                                     <input type="hidden" name="cargo_sessao_codigo[]" value="<?= htmlspecialchars((string) ($cargoSessao['codigo'] ?? '')) ?>">
@@ -217,20 +153,20 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                     
                                     <div><span class="text-[9px] text-slate-500 uppercase">Ofício</span><p class="text-sm font-bold text-[#C9A227]"><?= htmlspecialchars((string) ($cargoSessao['cargo_nome'] ?? $cargoSessao['label'] ?? '-')) ?></p></div>
                                     <div><span class="text-[9px] text-slate-500 uppercase">Titular</span><p class="text-xs text-white"><?= htmlspecialchars((string) ($cargoSessao['titular_oficial'] ?? '-')) ?></p></div>
-                                    <div><label class="text-[9px] text-slate-500 uppercase">Irmão Ocupante</label><input name="cargo_sessao_ocupante_nome[]" value="<?= htmlspecialchars((string) ($cargoSessao['ocupante_nome'] ?? $cargoSessao['titular_oficial'] ?? '')) ?>" class="form-input-dark !py-1 !text-xs"></div>
-                                    <div><label class="text-[9px] text-slate-500 uppercase">Observações</label><input name="cargo_sessao_observacao[]" value="<?= htmlspecialchars((string) ($cargoSessao['observacao'] ?? '')) ?>" class="form-input-dark !py-1 !text-xs"></div>
+                                    <div><label class="text-[9px] text-slate-500 uppercase">Irmão Ocupante</label><input name="cargo_sessao_ocupante_nome[]" value="<?= htmlspecialchars((string) ($cargoSessao['ocupante_nome'] ?? $cargoSessao['titular_oficial'] ?? '')) ?>" class="form-input !py-1 !text-xs"></div>
+                                    <div><label class="text-[9px] text-slate-500 uppercase">Observações</label><input name="cargo_sessao_observacao[]" value="<?= htmlspecialchars((string) ($cargoSessao['observacao'] ?? '')) ?>" class="form-input !py-1 !text-xs"></div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
 
                         <!-- Palavra Quadro -->
                         <div class="space-y-4">
-                            <h3 class="form-label-gold border-b border-white/5 pb-2">Irmãos do Quadro que Falaram</h3>
+                            <h3 class="form-label border-b border-white/5 pb-2">Irmãos do Quadro que Falaram</h3>
                             <?php foreach ($linhasObreiros as $palavraObreiro): ?>
                                 <div class="bg-white/5 rounded-xl p-4 border border-white/10 grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
                                         <label class="text-[9px] text-slate-500 uppercase">Irmão</label>
-                                        <select name="palavra_obreiro_id[]" class="form-select-dark !py-1.5 !text-xs text-black">
+                                        <select name="palavra_obreiro_id[]" class="form-select !py-1.5 !text-xs text-black">
                                             <option value="" class="text-black">Selecionar...</option>
                                             <?php foreach ($obreiros as $obreiro): ?>
                                                 <option value="<?= htmlspecialchars((string) ($obreiro['id'] ?? '')) ?>" <?= (string) ($palavraObreiro['obreiro_id'] ?? '') === (string) ($obreiro['id'] ?? '') ? 'selected' : '' ?> class="text-black">
@@ -241,12 +177,12 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                     </div>
                                     <div>
                                         <label class="text-[9px] text-slate-500 uppercase">Registro Adicional</label>
-                                        <input name="palavra_obreiro_nome[]" value="<?= htmlspecialchars((string) ($palavraObreiro['nome'] ?? '')) ?>" class="form-input-dark !py-1.5 !text-xs mb-2" placeholder="Nome avulso">
-                                        <input name="palavra_obreiro_cargo[]" value="<?= htmlspecialchars((string) ($palavraObreiro['cargo_no_momento'] ?? '')) ?>" class="form-input-dark !py-1.5 !text-xs" placeholder="Cargo que ocupava">
+                                        <input name="palavra_obreiro_nome[]" value="<?= htmlspecialchars((string) ($palavraObreiro['nome'] ?? '')) ?>" class="form-input !py-1.5 !text-xs mb-2" placeholder="Nome avulso">
+                                        <input name="palavra_obreiro_cargo[]" value="<?= htmlspecialchars((string) ($palavraObreiro['cargo_no_momento'] ?? '')) ?>" class="form-input !py-1.5 !text-xs" placeholder="Cargo que ocupava">
                                     </div>
                                     <div>
                                         <label class="text-[9px] text-slate-500 uppercase">Resumo da Fala</label>
-                                        <textarea name="palavra_obreiro_fala[]" rows="3" class="form-textarea-dark !text-xs"><?= htmlspecialchars((string) ($palavraObreiro['fala_resumida'] ?? '')) ?></textarea>
+                                        <textarea name="palavra_obreiro_fala[]" rows="3" class="form-textarea !text-xs"><?= htmlspecialchars((string) ($palavraObreiro['fala_resumida'] ?? '')) ?></textarea>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -254,24 +190,24 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
                         <!-- Palavra Visitantes -->
                         <div class="space-y-4">
-                            <h3 class="form-label-gold border-b border-white/5 pb-2">Visitantes que Falaram</h3>
+                            <h3 class="form-label border-b border-white/5 pb-2">Visitantes que Falaram</h3>
                             <?php foreach ($linhasVisitantes as $visitante): ?>
                                 <div class="bg-white/5 rounded-xl p-4 border border-white/10 grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
                                         <label class="text-[9px] text-slate-500 uppercase">Identificação</label>
-                                        <input name="palavra_visitante_nome[]" value="<?= htmlspecialchars((string) ($visitante['nome'] ?? '')) ?>" class="form-input-dark !py-1.5 !text-xs mb-2" placeholder="Nome Completo">
-                                        <input name="palavra_visitante_grau[]" value="<?= htmlspecialchars((string) ($visitante['grau'] ?? '')) ?>" class="form-input-dark !py-1.5 !text-xs" placeholder="Grau">
+                                        <input name="palavra_visitante_nome[]" value="<?= htmlspecialchars((string) ($visitante['nome'] ?? '')) ?>" class="form-input !py-1.5 !text-xs mb-2" placeholder="Nome Completo">
+                                        <input name="palavra_visitante_grau[]" value="<?= htmlspecialchars((string) ($visitante['grau'] ?? '')) ?>" class="form-input !py-1.5 !text-xs" placeholder="Grau">
                                     </div>
                                     <div>
                                         <label class="text-[9px] text-slate-500 uppercase">Origem</label>
-                                        <input name="palavra_visitante_loja[]" value="<?= htmlspecialchars((string) ($visitante['loja'] ?? '')) ?>" class="form-input-dark !py-1.5 !text-xs mb-2" placeholder="A∴R∴L∴S∴">
-                                        <input name="palavra_visitante_oriente[]" value="<?= htmlspecialchars((string) ($visitante['oriente'] ?? '')) ?>" class="form-input-dark !py-1.5 !text-xs" placeholder="Oriente">
+                                        <input name="palavra_visitante_loja[]" value="<?= htmlspecialchars((string) ($visitante['loja'] ?? '')) ?>" class="form-input !py-1.5 !text-xs mb-2" placeholder="A∴R∴L∴S∴">
+                                        <input name="palavra_visitante_oriente[]" value="<?= htmlspecialchars((string) ($visitante['oriente'] ?? '')) ?>" class="form-input !py-1.5 !text-xs" placeholder="Oriente">
                                         <input type="hidden" name="palavra_visitante_potencia[]" value="<?= htmlspecialchars((string) ($visitante['potencia'] ?? '')) ?>">
                                         <input type="hidden" name="palavra_visitante_dia_reuniao[]" value="<?= htmlspecialchars((string) ($visitante['dia_reuniao'] ?? '')) ?>">
                                     </div>
                                     <div>
                                         <label class="text-[9px] text-slate-500 uppercase">Resumo da Fala</label>
-                                        <textarea name="palavra_visitante_fala[]" rows="3" class="form-textarea-dark !text-xs"><?= htmlspecialchars((string) ($visitante['fala_resumida'] ?? '')) ?></textarea>
+                                        <textarea name="palavra_visitante_fala[]" rows="3" class="form-textarea !text-xs"><?= htmlspecialchars((string) ($visitante['fala_resumida'] ?? '')) ?></textarea>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -281,9 +217,9 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 </div>
 
                 <div class="flex flex-wrap gap-4 pt-4">
-                    <button type="submit" class="btn-gold px-10 py-4 text-sm tracking-widest uppercase">Salvar Rascunho Oficial</button>
+                    <button type="submit" class="btn-primary px-10 py-4 text-sm tracking-widest uppercase">Salvar Rascunho Oficial</button>
                     <?php if (!empty($balaustreSessao['id'])): ?>
-                        <a href="/secretaria/balaustres/visualizar?id=<?= (int) $balaustreSessao['id'] ?>" class="btn-outline-gold px-10 py-4 text-sm tracking-widest uppercase text-center">Ver Impressão Limpa</a>
+                        <a href="/secretaria/balaustres/visualizar?id=<?= (int) $balaustreSessao['id'] ?>" class="btn-secondary px-10 py-4 text-sm tracking-widest uppercase text-center">Ver Impressão Limpa</a>
                     <?php endif; ?>
                 </div>
             </form>
@@ -331,8 +267,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             </div>
 
             <!-- Arquivo Recente -->
-            <div class="card-dark">
-                <div class="card-header-dark"><h2 class="font-cinzel text-sm text-[#C9A227] tracking-widest uppercase">Balaústres Recentes</h2></div>
+            <div class="card">
+                <div class="card-header"><h2 class="font-cinzel text-sm text-[#C9A227] tracking-widest uppercase">Balaústres Recentes</h2></div>
                 <div class="p-6 space-y-3">
                     <?php if(empty($balaustres)): ?>
                         <p class="text-xs text-slate-500 italic">Nenhum balaústre encontrado.</p>
@@ -369,3 +305,4 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 </style>
 
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
+

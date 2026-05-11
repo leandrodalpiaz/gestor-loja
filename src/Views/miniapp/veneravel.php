@@ -47,7 +47,7 @@
                     <div id="meta-agape" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Balaustres aptos</div>
+                    <div class="text-gray-500">Balaústres aptos</div>
                     <div id="meta-aptos" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
@@ -65,14 +65,14 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Votações de balaustre</div>
+            <div class="text-sm font-semibold">Votações de balaústre</div>
             <div id="lista-balaustres-aptos" class="mt-3 space-y-2 text-sm"></div>
             <div id="lista-balaustres-votação" class="mt-3 space-y-2 text-sm"></div>
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
             <div class="card rounded-2xl p-4">
-                <div class="text-sm font-semibold">Cargos criticos pendentes</div>
+                <div class="text-sm font-semibold">Cargos críticos pendentes</div>
                 <div id="lista-cargos-pendentes" class="mt-3 space-y-2 text-sm"></div>
             </div>
             <div class="card rounded-2xl p-4">
@@ -175,8 +175,8 @@ function render() {
         select.appendChild(option);
     });
 
-    renderBalaustres('lista-balaustres-aptos', dashboard.balaustres_aptos, 'Nenhum balaustre apto para abrir votação.', 'abrir-votação', 'Abrir votação');
-    renderBalaustres('lista-balaustres-votação', dashboard.balaustres_em_votação, 'Nenhum balaustre em votação.', 'encerrar-votação', 'Encerrar votação');
+    renderBalaustres('lista-balaustres-aptos', dashboard.balaustres_aptos, 'Nenhum balaústre apto para abrir votação.', 'abrir-votação', 'Abrir votação');
+    renderBalaustres('lista-balaustres-votação', dashboard.balaustres_em_votação, 'Nenhum balaústre em votação.', 'encerrar-votação', 'Encerrar votação');
     renderListaSimples('lista-cargos-pendentes', dashboard.cargos_criticos_pendentes, 'Nenhum cargo crítico pendente.', item => ({
         nome: item.nome_exibicao || item.codigo,
         linha: item.codigo || ''

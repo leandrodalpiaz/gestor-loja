@@ -5,7 +5,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     @session_start();
 }
 
-$usuarioNome = (string) ($_SESSION['usuario_nome'] ?? 'Irmao');
+$usuarioNome = (string) ($_SESSION['usuario_nome'] ?? 'Irmão');
 $usuarioCargo = strtolower(trim((string) ($_SESSION['usuario_cargo'] ?? '')));
 $tenantSlug = (string) ($_SESSION['tenant_slug'] ?? '');
 $logoUrl = \App\Core\Tenant\TenantAssetResolver::resolveLogo($tenantSlug);
@@ -19,20 +19,20 @@ $cargoTabMap = [
     'secretario' => ['href' => '/pwa/secretaria', 'label' => 'Secretaria'],
     'tesoureiro' => ['href' => '/pwa/tesouraria', 'label' => 'Tesouraria'],
     'chanceler' => ['href' => '/pwa/chancelaria', 'label' => 'Chancelaria'],
-    'veneravel' => ['href' => '/pwa/veneravel', 'label' => 'Veneravel'],
+    'veneravel' => ['href' => '/pwa/veneravel', 'label' => 'Venerável'],
     'orador' => ['href' => '/pwa/orador', 'label' => 'Orador'],
-    '1_vigilante' => ['href' => '/pwa/primeiro-vigilante', 'label' => '1o Vigilante'],
-    '1 vigilante' => ['href' => '/pwa/primeiro-vigilante', 'label' => '1o Vigilante'],
-    'primeiro_vigilante' => ['href' => '/pwa/primeiro-vigilante', 'label' => '1o Vigilante'],
-    '2_vigilante' => ['href' => '/pwa/segundo-vigilante', 'label' => '2o Vigilante'],
-    '2 vigilante' => ['href' => '/pwa/segundo-vigilante', 'label' => '2o Vigilante'],
-    'segundo_vigilante' => ['href' => '/pwa/segundo-vigilante', 'label' => '2o Vigilante'],
+    '1_vigilante' => ['href' => '/pwa/primeiro-vigilante', 'label' => '1º Vigilante'],
+    '1 vigilante' => ['href' => '/pwa/primeiro-vigilante', 'label' => '1º Vigilante'],
+    'primeiro_vigilante' => ['href' => '/pwa/primeiro-vigilante', 'label' => '1º Vigilante'],
+    '2_vigilante' => ['href' => '/pwa/segundo-vigilante', 'label' => '2º Vigilante'],
+    '2 vigilante' => ['href' => '/pwa/segundo-vigilante', 'label' => '2º Vigilante'],
+    'segundo_vigilante' => ['href' => '/pwa/segundo-vigilante', 'label' => '2º Vigilante'],
     'hospitaleiro' => ['href' => '/pwa/hospitaleiro', 'label' => 'Hospitaleiro'],
     'mestre_banquetes' => ['href' => '/pwa/mestre-banquetes', 'label' => 'Banquetes'],
     'mestre_harmonia' => ['href' => '/pwa/mestre-harmonia', 'label' => 'Harmonia'],
     'admin' => ['href' => '/pwa/admin', 'label' => 'Sistema'],
 ];
-$cargoTab = $cargoTabMap[$usuarioCargo] ?? ['href' => '/pwa/obrigacoes', 'label' => 'Obrigacoes'];
+$cargoTab = $cargoTabMap[$usuarioCargo] ?? ['href' => '/pwa/obrigacoes', 'label' => 'Obrigações'];
 
 $pwaNavTabs = [
     [

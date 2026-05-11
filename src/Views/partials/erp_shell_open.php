@@ -145,7 +145,7 @@ foreach ($appShellSidebarSections as $section) {
                 </div>
             <?php endif; ?>
 
-            <header class="glass-surface sticky top-0 z-30 px-4 h-16 flex items-center justify-between sm:px-8">
+            <header class="glass-surface sticky top-0 z-30 px-4 min-h-[4rem] pt-[max(env(safe-area-inset-top),0.5rem)] pb-2 flex items-center justify-between sm:px-8">
                 <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-2 rounded-lg hover:bg-erp-surface-2 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />

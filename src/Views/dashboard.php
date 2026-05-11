@@ -79,57 +79,7 @@ $appShellSidebarSections = array_merge(
 require __DIR__ . '/partials/erp_shell_open.php';
 ?>
 
-<style>
-/* New Premium Dashboard Gallery Styles */
-.dashboard-gallery {
-    background: #0A1628;
-    background-image: radial-gradient(circle at 50% 0%, rgba(201, 162, 39, 0.08) 0%, transparent 70%);
-    min-height: calc(100vh - 100px);
-    border-radius: 20px;
-    padding: 32px;
-    color: #e2e8f0;
-    font-family: 'Inter', sans-serif;
-}
-.art-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-}
-.art-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-    border-color: rgba(201, 162, 39, 0.2);
-}
-.parchment-placeholder {
-    background: #e8dcc4;
-    background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22 opacity=%220.3%22/%3E%3C/svg%3E');
-    color: #4a3b2c;
-    border-right: 1px solid rgba(0,0,0,0.1);
-    box-shadow: inset 0 0 50px rgba(100, 80, 40, 0.15);
-}
-.font-cinzel { font-family: 'Cinzel', serif; }
-
-/* Override btn styles for dark theme */
-.dashboard-gallery .btn { 
-    display: inline-flex; align-items: center; justify-content: center; 
-    padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; 
-    text-decoration: none; cursor: pointer; transition: all 0.2s;
-}
-.dashboard-gallery .btn-primary { 
-    background: #C9A227; color: #111; border: none; box-shadow: 0 4px 14px rgba(201,162,39,0.3);
-}
-.dashboard-gallery .btn-primary:hover { background: #b08d22; transform: translateY(-1px); }
-.dashboard-gallery .btn-secondary { 
-    background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1);
-}
-.dashboard-gallery .btn-secondary:hover { background: rgba(255,255,255,0.1); }
-</style>
-
-<div class="dashboard-gallery">
+<div class="space-y-6">
     <!-- Flash Messages -->
     <?php if (isset($dashboardMensagemSucesso)): ?>
         <div class="mb-8 p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 font-bold text-sm"><?= htmlspecialchars($dashboardMensagemSucesso) ?></div>
@@ -152,7 +102,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 
                 <?php if (!empty($dashboardSessoes)): ?>
                     <?php foreach (array_slice($dashboardSessoes, 0, 1) as $sessao): ?>
-                        <div class="art-card flex flex-col md:flex-row bg-[#0f1c2e] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                        <div class="card flex flex-col md:flex-row bg-[#0f1c2e] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
                             
                             <!-- "Image" Area (Overlay Artístico sobre a tela em branco) -->
                             <div class="w-full md:w-5/12 relative bg-[#0A1628] border-r border-white/5 overflow-hidden flex items-center justify-center group">
@@ -216,7 +166,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="art-card p-12 text-center border-dashed border-white/10">
+                    <div class="card p-12 text-center border-dashed border-white/10">
                         <p class="text-slate-400 text-sm font-medium tracking-widest uppercase">Nenhum trabalho programado</p>
                     </div>
                 <?php endif; ?>
@@ -233,7 +183,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <?php if (!empty($dashboardOutrasLojas)): ?>
                         <?php foreach ($dashboardOutrasLojas as $sessaoExterna): ?>
-                            <div class="art-card group cursor-pointer relative overflow-hidden aspect-[3/4] flex flex-col justify-end border border-white/10 hover:border-[#C9A227]/50 shadow-lg">
+                            <div class="card group cursor-pointer relative overflow-hidden aspect-[3/4] flex flex-col justify-end border border-white/10 hover:border-[#C9A227]/50 shadow-lg">
                                 <img src="/assets/images/templates/efemerides/card_oficial_convite.png" alt="Fundo Convite" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-90 transition-all duration-500 group-hover:scale-110">
                                 <div class="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-[#0A1628]/80 to-transparent"></div>
                                 
@@ -269,7 +219,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                     <div class="w-1 h-6 bg-white/20 rounded-full"></div>
                     <h2 class="font-cinzel text-lg text-slate-300 tracking-widest uppercase">Efemérides</h2>
                 </div>
-                <div class="art-card p-6 bg-gradient-to-b from-[#162a42] to-[#0f1c2e] relative overflow-hidden group">
+                <div class="card p-6 bg-gradient-to-b from-[#162a42] to-[#0f1c2e] relative overflow-hidden group">
                     <div class="absolute -right-4 -top-4 w-24 h-24 bg-[#C9A227] opacity-5 rounded-full blur-xl group-hover:opacity-10 transition-opacity"></div>
                     <?php if ($dashboardPalavraIrmao): ?>
                         <div class="mb-4 flex items-center justify-center">
@@ -298,24 +248,24 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <?php if (!empty($dashboardRecados)): ?>
                     <div class="space-y-3">
                         <?php foreach (array_slice($dashboardRecados, 0, 3) as $recado): ?>
-                            <div class="art-card p-4 border-l-2 border-l-[#C9A227] hover:bg-white/5 transition-colors">
+                            <div class="card p-4 border-l-2 border-l-[#C9A227] hover:bg-white/5 transition-colors">
                                 <h3 class="font-bold text-xs text-white mb-1 tracking-wide"><?= htmlspecialchars($recado['titulo'] ?? 'Recado') ?></h3>
                                 <p class="text-[11px] text-slate-400 leading-relaxed"><?= htmlspecialchars($resumirTexto($recado['conteudo'] ?? '', 100)) ?></p>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <div class="art-card p-6 text-center text-sm text-slate-500 border border-dashed border-white/10">Nenhum aviso afixado.</div>
+                    <div class="card p-6 text-center text-sm text-slate-500 border border-dashed border-white/10">Nenhum aviso afixado.</div>
                 <?php endif; ?>
             </section>
             
             <!-- Mini-Métricas Ocultas no Fundo -->
             <div class="grid grid-cols-2 gap-3 pt-4">
-                <div class="art-card p-3 text-center bg-white/5">
+                <div class="card p-3 text-center bg-white/5">
                     <div class="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Seu Perfil</div>
                     <div class="text-xs font-bold text-white truncate px-2"><?= htmlspecialchars($usuarioCargo ?: 'Geral') ?></div>
                 </div>
-                <div class="art-card p-3 text-center bg-white/5">
+                <div class="card p-3 text-center bg-white/5">
                     <div class="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Dia Fixo</div>
                     <div class="text-xs font-bold text-white"><?= htmlspecialchars($dashboardConfiguracaoLoja['dia_semana_reuniao'] ?? 'A definir') ?></div>
                 </div>
@@ -331,7 +281,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
             <!-- Prestação de Contas -->
-            <div class="group art-card p-6 flex flex-col items-center text-center hover:bg-white/5 cursor-pointer">
+            <div class="group card p-6 flex flex-col items-center text-center hover:bg-white/5 cursor-pointer">
                 <div class="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
@@ -341,7 +291,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
             </div>
 
             <!-- Resumos do Secretário -->
-            <div class="group art-card p-6 flex flex-col items-center text-center hover:bg-white/5 cursor-pointer">
+            <div class="group card p-6 flex flex-col items-center text-center hover:bg-white/5 cursor-pointer">
                 <div class="w-12 h-12 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
@@ -351,7 +301,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
             </div>
 
             <!-- Publicações Oficiais (PDFs) -->
-            <div class="group art-card p-6 flex flex-col items-center text-center hover:bg-white/5 cursor-pointer">
+            <div class="group card p-6 flex flex-col items-center text-center hover:bg-white/5 cursor-pointer">
                 <div class="w-12 h-12 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                 </div>
@@ -361,7 +311,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
             </div>
 
             <!-- Galeria de Imagens -->
-            <div class="group art-card p-6 flex flex-col items-center text-center hover:bg-white/5 cursor-pointer">
+            <div class="group card p-6 flex flex-col items-center text-center hover:bg-white/5 cursor-pointer">
                 <div class="w-12 h-12 rounded-full bg-purple-500/10 text-purple-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>

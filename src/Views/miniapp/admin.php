@@ -15,7 +15,7 @@
 <div class="mx-auto max-w-lg space-y-4">
     <div>
         <h1 class="text-xl font-bold">Sistema</h1>
-        <p class="mt-1 text-sm text-gray-500">Ajustes tecnicos, cargos e auditoria critica.</p>
+        <p class="mt-1 text-sm text-gray-500">Ajustes técnicos, cargos e auditoria crítica.</p>
     </div>
 
     <div id="loading" class="text-sm text-gray-400">Carregando painel...</div>
@@ -57,12 +57,12 @@
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Gestoes cadastradas</div>
+            <div class="text-sm font-semibold">Gestões cadastradas</div>
             <div id="lista-gestoes" class="mt-3 space-y-2 text-sm"></div>
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Auditoria critica</div>
+            <div class="text-sm font-semibold">Auditoria crítica</div>
             <div id="lista-auditoria" class="mt-3 space-y-2 text-sm"></div>
         </div>
 
@@ -187,10 +187,10 @@ function render() {
 
     renderLista('lista-gestoes', dashboard.gestoes, 'Nenhuma gestão cadastrada.', item => `
         <div class="font-medium">${esc(item.titulo || 'Gestão')}</div>
-        <div class="mt-1 text-xs text-gray-500">${esc(item.status || '')} · inicio ${esc(item.inicio_em || '')}</div>
+        <div class="mt-1 text-xs text-gray-500">${esc(item.status || '')} · início ${esc(item.inicio_em || '')}</div>
     `);
 
-    renderLista('lista-auditoria', dashboard.auditoria, 'Nenhum registro critico de auditoria.', item => `
+    renderLista('lista-auditoria', dashboard.auditoria, 'Nenhum registro crítico de auditoria.', item => `
         <div class="font-medium">${esc(item.resumo || 'Registro')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.entidade || '')} · ${esc(item.acao || '')} · ${esc(item.created_at || '')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(item.criado_por_nome || 'Sistema')}</div>
@@ -317,7 +317,7 @@ document.getElementById('btn-assistente').addEventListener('click', async () => 
             box.textContent = message;
         }
     } catch (err) {
-        box.textContent = 'Nao foi possivel interpretar o comando agora.';
+        box.textContent = 'Não foi possível interpretar o comando agora.';
     }
 });
 

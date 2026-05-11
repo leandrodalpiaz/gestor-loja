@@ -332,7 +332,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <section class="card">
             <div class="card-header">
                 <h2 class="card-title">Nova Obrigação Financeira</h2>
-                <p class="card-description">Lançamento para registrar mensalidades, contribuições e jóias.</p>
+                <p class="card-description">Lançamento para registrar mensalidades, contribuições e joias.</p>
             </div>
             <form action="/tesouraria/obrigacoes/criar" method="post" class="card-body space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

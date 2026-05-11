@@ -9,7 +9,7 @@ $GLOBALS['gestor_loja_erp_head_rendered'] = true;
 <html lang="pt-BR" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title><?= htmlspecialchars($erpPageTitle) ?></title>
     <meta name="theme-color" content="#1B3A5C">
     <meta name="mobile-web-app-capable" content="yes">
@@ -23,7 +23,7 @@ $GLOBALS['gestor_loja_erp_head_rendered'] = true;
     <link rel="stylesheet" href="/assets/css/erp_design_system.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* Fallback crítico: evita layout quebrado quando utilitários Tailwind não carregam. */
         html, body { margin: 0; padding: 0; }
