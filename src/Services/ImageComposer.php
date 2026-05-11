@@ -40,13 +40,46 @@ class ImageComposer
         $height = imagesy($img);
         $font = dirname(__DIR__, 2) . '/public/assets/fonts/Inter-Bold.ttf';
         
-        $fontSize = (int) round($width * 0.045); 
+        $fontSizeBase = $width * 0.045;
+        $colorArr = [40, 40, 40];
+        $shadowArr = null;
+        $yBase = $height * 0.15;
+
+        // Configurações específicas por template para garantir legibilidade
+        if (str_contains($templateFile, 'bedrock') || str_contains($templateFile, 'eterno')) {
+            $colorArr = [255, 255, 255]; // Texto branco para fundos escuros
+            $shadowArr = [0, 0, 0, 80]; // Sombra para destacar
+            $fontSizeBase = $width * 0.050; // Pouco maior
+            $yBase = $height * 0.15;
+        } elseif (str_contains($templateFile, 'kids')) {
+            $colorArr = [20, 80, 160]; // Azul mais lúdico
+            $fontSizeBase = $width * 0.055;
+            $yBase = $height * 0.18;
+        } elseif (str_contains($templateFile, 'solar') || str_contains($templateFile, 'sobrinh')) {
+            $colorArr = [60, 40, 20]; // Marrom escuro / quente
+            $fontSizeBase = $width * 0.048;
+            $yBase = $height * 0.16;
+        } elseif (str_contains($templateFile, 'sepia')) {
+            $colorArr = [90, 60, 40]; // Marrom vintage
+            $fontSizeBase = $width * 0.040; // Menor para caber mais texto (história)
+            $yBase = $height * 0.18;
+        } elseif ($isGold || str_contains($templateFile, 'grao_mestre') || str_contains($templateFile, 'elevacao') || str_contains($templateFile, 'exaltacao') || str_contains($templateFile, 'instalacao')) {
+            $colorArr = [212, 175, 55]; // Dourado
+            $shadowArr = [0, 0, 0, 80];
+            $fontSizeBase = $width * 0.048;
+            $yBase = $height * 0.15;
+        } elseif (str_contains($templateFile, 'honorario') || str_contains($templateFile, 'filiacao')) {
+            $colorArr = [20, 40, 80]; // Azul marinho
+            $fontSizeBase = $width * 0.046;
+        }
+
+        $fontSize = (int) round($fontSizeBase); 
         $lineHeight = (int) round($fontSize * 1.5);
-        $y = (int) round($height * 0.15);
+        $y = (int) round($yBase);
         
         $lines = preg_split('/\r\n|\r|\n/', $text) ?: [];
-        $color = $isGold ? imagecolorallocate($img, 212, 175, 55) : imagecolorallocate($img, 40, 40, 40);
-        $shadow = imagecolorallocatealpha($img, 0, 0, 0, 80);
+        $color = imagecolorallocate($img, $colorArr[0], $colorArr[1], $colorArr[2]);
+        $shadow = $shadowArr ? imagecolorallocatealpha($img, $shadowArr[0], $shadowArr[1], $shadowArr[2], $shadowArr[3]) : null;
 
         foreach ($lines as $line) {
             $line = trim($line);
@@ -58,8 +91,8 @@ class ImageComposer
                 $box = imagettfbbox($fontSize, 0, $font, $line);
                 $textWidth = abs(($box[2] ?? 0) - ($box[0] ?? 0));
                 $x = (int) floor(($width - $textWidth) / 2);
-                if ($isGold) {
-                    imagettftext($img, $fontSize, 0, $x + 3, $y + 3, $shadow, $font, $line);
+                if ($shadow) {
+                    imagettftext($img, $fontSize, 0, $x + 2, $y + 2, $shadow, $font, $line);
                 }
                 imagettftext($img, $fontSize, 0, $x, $y, $color, $font, $line);
             } else {

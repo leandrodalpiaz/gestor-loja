@@ -104,7 +104,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                     <div class="flex gap-2">
                         <select name="template_slug" class="form-select text-xs">
                             <?php foreach ([
-                                'card_irmao_pop.png','card_cunhada_solar.png','card_familia_kids.png','card_sobrinho_jovem.png','card_sobrinho_adulto.png','card_sobrinha_adulta.png',
+                                'card_irmao_bedrock.png','card_cunhada_solar.png','card_familia_kids.png','card_sobrinho_jovem.png','card_sobrinho_adulto.png','card_sobrinha_adulta.png',
                                 'card_grau_iniciacao.png','card_grau_elevacao.png','card_grau_exaltacao.png','card_grau_instalacao.png',
                                 'card_memorial_eterno.png','card_historia_sepia.png','card_oficial_sessao.png','card_oficial_convite.png','card_especial_filiacao.png','card_especial_honorario.png','card_especial_grao_mestre.png'
                             ] as $tpl): ?>
@@ -144,7 +144,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                                 <select class="form-select text-xs card-template-select" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>">
                                     <?php
                                     $templates = [
-                                        'card_irmao_pop.png','card_cunhada_solar.png','card_familia_kids.png','card_sobrinho_jovem.png','card_sobrinho_adulto.png','card_sobrinha_adulta.png',
+                                        'card_irmao_bedrock.png','card_cunhada_solar.png','card_familia_kids.png','card_sobrinho_jovem.png','card_sobrinho_adulto.png','card_sobrinha_adulta.png',
                                         'card_grau_iniciacao.png','card_grau_elevacao.png','card_grau_exaltacao.png','card_grau_instalacao.png',
                                         'card_memorial_eterno.png','card_historia_sepia.png','card_oficial_sessao.png','card_oficial_convite.png','card_especial_filiacao.png','card_especial_honorario.png','card_especial_grao_mestre.png'
                                     ];

@@ -171,6 +171,27 @@ class Sessao
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function listarRecentes(int $limite = 50): array
+    {
+        $limite = max(1, min($limite, 300));
+        $stmt = $this->db->prepare("
+            SELECT
+                id,
+                data_hora_inicio,
+                titulo,
+                tipo_sessao,
+                grau_sessao,
+                status
+            FROM sessoes
+            WHERE loja_id = :loja_id
+            ORDER BY data_hora_inicio DESC
+            LIMIT {$limite}
+        ");
+        $stmt->execute(['loja_id' => $this->obterLojaAtualId()]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function listarPorPeriodo(string $inicio, string $fim): array
     {
         $inicio = trim($inicio);

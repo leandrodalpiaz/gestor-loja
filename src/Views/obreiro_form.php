@@ -25,7 +25,7 @@ $situacoesQuadro = ['ativo' => 'Regular', 'licenciado' => 'Licenciado', 'suspens
 
 $appShellEyebrow = 'Secretaria';
 $appShellTitle = 'Adicionar Obreiro';
-$appShellDescription = 'Ficha de registro para um novo membro da loja.';
+$appShellDescription = 'Ficha de registro para um novo Obreiro da Loja.';
 $appShellActiveHref = '/obreiros';
 $appShellActions = [['label' => 'Voltar para a Lista', 'href' => '/obreiros']];
 

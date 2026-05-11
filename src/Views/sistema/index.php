@@ -63,7 +63,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Acesso técnico</div>
         <h2 class="mt-2 text-2xl font-semibold text-erp-navy">Admin invisível para a Loja</h2>
         <p class="mt-2 text-sm text-slate-700">
-            Este painel existe apenas para suporte do sistema. Ele não aparece como cargo, não entra na nominata e não deve ser usado como perfil de membro.
+            Este painel existe apenas para suporte do sistema. Ele não aparece como cargo, não entra na nominata e não deve ser usado como perfil de Obreiro.
         </p>
         <p class="mt-2 text-sm text-slate-700">
             Acesso previsto para o administrador técnico do sistema e, quando configurado, para perfis explicitamente autorizados. Cargos de Loja não recebem este painel automaticamente.

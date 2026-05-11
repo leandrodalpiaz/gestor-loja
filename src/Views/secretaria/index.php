@@ -178,7 +178,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <strong class="text-erp-navy font-black"><?= htmlspecialchars((string) ($configuracaoLoja['nome_templo'] ?? '-')) ?></strong>
                     </div>
                     <div class="flex flex-col gap-1">
-                        <span class="text-[10px] font-bold text-erp-muted uppercase tracking-widest">Reuniões</span>
+                        <span class="text-[10px] font-bold text-erp-muted uppercase tracking-widest">Sessões</span>
                         <strong class="text-erp-navy font-black"><?= htmlspecialchars(trim((string) (($configuracaoLoja['dia_semana_reuniao'] ?? '') . ' • ' . ($configuracaoLoja['horario_reuniao'] ?? '') . ' • ' . ($configuracaoLoja['periodicidade_reuniao'] ?? '')), ' •')) ?></strong>
                     </div>
                 </div>
@@ -617,7 +617,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                 <input id="numero_balaustre" name="numero_balaustre" value="<?= htmlspecialchars((string) ($balaustreSessao['numero_balaustre'] ?? '')) ?>" class="form-input shadow-sm !bg-white" placeholder="Ex: 012/2026">
                             </div>
                             <div>
-                                <label for="template_versao" class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Modelo de Ata</label>
+                                <label for="template_versao" class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Modelo de Balaústre</label>
                                 <input id="template_versao" name="template_versao" value="<?= htmlspecialchars((string) ($balaustreSessao['template_versao'] ?? 'oficial-v1')) ?>" class="form-input shadow-sm !bg-white">
                             </div>
                         </div>

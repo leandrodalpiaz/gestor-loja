@@ -105,7 +105,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <span class="card-metric-context">Módulos liberados</span>
     </div>
     <div class="card-metric">
-        <span class="card-metric-label">Reunião Semanal</span>
+        <span class="card-metric-label">Sessão Semanal</span>
         <span class="card-metric-value"><?= htmlspecialchars($dashboardConfiguracaoLoja['dia_semana_reuniao'] ?? 'A definir') ?></span>
         <span class="card-metric-context"><?= htmlspecialchars($dashboardConfiguracaoLoja['horario_reuniao'] ?? 'Horário a definir') ?></span>
     </div>
