@@ -16,7 +16,7 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portal Público - <?= htmlspecialchars($tenantName ?: 'Gestor de Loja') ?></title>
+    <title>Átrio - <?= htmlspecialchars($tenantName ?: 'Gestor de Loja') ?></title>
     <meta name="theme-color" content="#0A1628">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/assets/css/erp_design_system.css">
@@ -162,8 +162,8 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
                         <img src="/assets/logo-renascenca.png" alt="Logo" class="w-full h-full object-contain p-2">
                     <?php endif; ?>
                 </div>
-                <h2 class="font-cinzel text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Acesso Restrito</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium tracking-wide">Identifique-se para entrar na Oficina</p>
+                <h2 class="font-cinzel text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Ingresso Restrito</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium tracking-wide">Identifique-se para adentrar aos trabalhos</p>
             </div>
 
             <?php if (!$tenantResolved): ?>
@@ -188,7 +188,7 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
                         placeholder="Seu CIM numérico">
                 </div>
                 <div>
-                    <label for="password" class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Senha de Acesso</label>
+                    <label for="password" class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Palavra de Passe</label>
                     <input id="password" name="password" type="password" required <?= !$tenantResolved ? 'disabled' : '' ?> 
                         class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-transparent transition-all" 
                         placeholder="••••••••">
@@ -205,7 +205,7 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
                 <div class="pt-4 text-center">
                     <button type="submit" name="acao" value="solicitar" <?= !$tenantResolved ? 'disabled' : '' ?> 
                         class="text-xs font-semibold text-slate-500 hover:text-[#C9A227] transition-colors tracking-wide">
-                        Primeiro acesso ou Esqueceu a senha?
+                        Primeiro acesso ou Esqueceu a Palavra?
                     </button>
                 </div>
             </form>
@@ -213,7 +213,7 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
             <div class="mt-12 text-center flex items-center justify-center gap-2">
                 <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                    Conexão Segura
+                    Ambiente Coberto
                 </p>
             </div>
         </div>
