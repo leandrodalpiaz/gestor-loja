@@ -83,6 +83,13 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                     <?= $previewRender ?>
                 </div>
 
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-6 text-sm text-blue-800">
+                    <strong>💡 Como ajustar hoje:</strong><br>
+                    - Se quiser mudar a imagem: role para baixo até o card desejado, ajuste o texto lá e salve individualmente.<br>
+                    - Se quiser mudar apenas o texto da mensagem do telegram: edite o campo abaixo e clique em Salvar Mensagem.<br>
+                    - Quando estiver satisfeito, clique no botão verde grande para propagar tudo!
+                </div>
+
                 <!-- NOVO FLUXO UNIFICADO -->
                 <div class="mb-6 bg-green-50 dark:bg-green-900/10 border border-green-200 rounded-xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
@@ -176,8 +183,13 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                                     <input type="checkbox" class="card-toggle-idade" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>" <?= !empty($card['ocultar_idade']) ? 'checked' : '' ?>>
                                     <span>Ocultar idade</span>
                                 </label>
-                                <textarea class="form-input text-xs card-texto-custom" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>" rows="2" placeholder="Texto custom do card"><?= htmlspecialchars($card['texto_custom_card'] ?? '') ?></textarea>
-                                <select class="form-select text-xs card-template-select" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>">
+                                <div class="pt-2 border-t border-gray-100">
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Texto para este card:</label>
+                                    <textarea class="form-input text-xs card-texto-custom w-full font-sans leading-snug" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>" rows="5" placeholder="Texto customizado para este card..."><?= htmlspecialchars($card['texto_custom_card'] ?? '') ?></textarea>
+                                </div>
+                                <div class="pt-1">
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Template Visual:</label>
+                                    <select class="form-select text-xs card-template-select w-full" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>">
                                     <?php
                                     $templates = [
                                         'card_irmao_bedrock.png','card_cunhada_solar.png','card_familia_kids.png','card_sobrinho_jovem.png','card_sobrinho_adulto.png','card_sobrinha_adulta.png',
@@ -188,16 +200,35 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                                         <option value="<?= htmlspecialchars($tpl) ?>" <?= (($card['template'] ?? '') === $tpl) ? 'selected' : '' ?>><?= htmlspecialchars($tpl) ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <div class="flex gap-2">
+                                <div class="grid grid-cols-2 gap-2 pt-2">
+                                    <button type="button" class="btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold w-full card-btn-preview" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>">
+                                        💾 Salvar & Atualizar
+                                    </button>
+                                    <button type="button" class="btn btn-secondary text-xs w-full card-open-modal">🔍 Ampliar</button>
                                     <?php if (!empty($card['image_url'])): ?>
-                                        <a href="<?= htmlspecialchars($card['image_url']) ?>" download class="btn btn-secondary text-xs card-download">Salvar Imagem</a>
+                                        <a href="<?= htmlspecialchars($card['image_url']) ?>" download class="btn btn-secondary text-[10px] w-full text-center card-download col-span-2">Baixar Arquivo</a>
                                     <?php endif; ?>
-                                    <button type="button" class="btn btn-secondary text-xs card-open-modal">Abrir</button>
-                                    <button type="button" class="btn btn-secondary text-xs card-btn-preview" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>">Atualizar Prévia</button>
                                 </div>
                             </div>
                         </article>
                     <?php endforeach; ?>
+                </div>
+                
+                <!-- REPLICA DO BOTÃO DE ENVIO NO FINAL DA ESTEIRA PARA MELHOR UX -->
+                <div class="mt-8 bg-green-50 dark:bg-green-900/10 border border-green-200 rounded-xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                        <h4 class="font-bold text-green-800 dark:text-green-200 text-lg flex items-center gap-2">
+                            🚀 Conferência Concluída?
+                        </h4>
+                        <p class="text-sm text-green-700 dark:text-green-300">
+                            Dispare a aprovação definitiva de Texto + Imagens agora.
+                        </p>
+                    </div>
+                    <form method="POST" action="/chancelaria/efemerides/aprovar-e-enviar-tudo" onsubmit="return confirm('Confirmar aprovação final e envio imediato de Texto + Imagens para o Grupo do Telegram?');" class="flex-shrink-0">
+                         <button type="submit" class="btn bg-green-600 text-white hover:bg-green-700 shadow-md px-8 py-4 text-base font-bold uppercase tracking-wider flex items-center gap-2">
+                             🚀 Publicar Tudo no Grupo
+                         </button>
+                    </form>
                 </div>
             </div>
         </div>
