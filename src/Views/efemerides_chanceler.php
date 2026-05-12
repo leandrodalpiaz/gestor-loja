@@ -83,11 +83,14 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                     <?= $previewRender ?>
                 </div>
 
-                <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-6 text-sm text-blue-800">
-                    <strong>💡 Como ajustar hoje:</strong><br>
-                    - Se quiser mudar a imagem: role para baixo até o card desejado, ajuste o texto lá e salve individualmente.<br>
-                    - Se quiser mudar apenas o texto da mensagem do telegram: edite o campo abaixo e clique em Salvar Mensagem.<br>
-                    - Quando estiver satisfeito, clique no botão verde grande para propagar tudo!
+                <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded shadow-sm">
+                    <div class="flex items-start gap-3">
+                        <div class="text-2xl mt-0.5">💡</div>
+                        <div class="text-sm text-amber-900">
+                            <p class="font-bold text-base mb-1">Modo Mais Simples:</p>
+                            <p>Role para baixo até os <b>Cards de Imagem</b> abaixo, cole seu texto LIMPO (sem códigos) na caixa do card e salve. O sistema atualizará a imagem e o texto do Telegram automaticamente, mantendo a formatação bonita pra você!</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- NOVO FLUXO UNIFICADO -->
@@ -97,34 +100,46 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                             🚀 Publicação Consolidada
                         </h4>
                         <p class="text-sm text-green-700 dark:text-green-300">
-                            Esta ação aprova o texto, <b>gera as imagens instantaneamente</b> (para o Dashboard e PWA) e envia <b>Texto + Imagens</b> juntos no Grupo Oficial.
+                            Aprova o texto final e dispara <b>Texto + Imagens</b> juntos para o Grupo Oficial.
                         </p>
                     </div>
                     <form method="POST" action="/chancelaria/efemerides/aprovar-e-enviar-tudo" onsubmit="return confirm('Confirmar aprovação final e envio imediato de Texto + Imagens para o Grupo do Telegram?');" class="flex-shrink-0">
                          <button type="submit" class="btn bg-green-600 text-white hover:bg-green-700 shadow-md px-6 py-4 text-base font-bold uppercase tracking-wider flex items-center gap-2">
                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                             Aprovar e Propagar
+                             Aprovar e Enviar Tudo
                          </button>
                     </form>
                 </div>
                 <!-- FIM NOVO FLUXO -->
-                <form method="POST" action="/chancelaria/efemerides/salvar-previa">
-                    <textarea name="mensagem_preview" class="form-input h-60" placeholder="A mensagem gerada aparecerá aqui para revisão..."><?= htmlspecialchars($previewRaw) ?></textarea>
-                    <p class="form-hint">Mantém tags HTML do Telegram (ex: &lt;b&gt; e &lt;i&gt;).</p>
-                    <div class="mt-4 flex flex-wrap gap-3">
-                        <button type="submit" class="btn btn-primary">Salvar Mensagem</button>
-                        <button type="button" onclick="copiarPreview('<?= htmlspecialchars($previewRaw, ENT_QUOTES) ?>')" class="btn btn-secondary">Copiar Texto</button>
+
+                <details class="group bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                    <summary class="flex items-center justify-between cursor-pointer p-4 bg-gray-100 dark:bg-gray-800 text-gray-600 hover:text-gray-900 font-semibold text-sm list-none select-none">
+                        <span class="flex items-center gap-2">
+                            ⚙️ Edição Avançada do Telegram (Com Códigos/Tags)
+                        </span>
+                        <span class="transition group-open:rotate-180">
+                            <svg fill="none" height="20" width="20" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </span>
+                    </summary>
+                    <div class="p-4 border-t border-gray-200">
+                        <form method="POST" action="/chancelaria/efemerides/salvar-previa">
+                            <textarea name="mensagem_preview" class="form-input h-60 font-mono text-sm" placeholder="A mensagem gerada aparecerá aqui para revisão..."><?= htmlspecialchars($previewRaw) ?></textarea>
+                            <p class="form-hint mt-1">Edite aqui somente se quiser manipular diretamente o HTML do Telegram.</p>
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                <button type="submit" class="btn btn-primary text-xs">Salvar Modificação Manual</button>
+                                <button type="button" onclick="copiarPreview('<?= htmlspecialchars($previewRaw, ENT_QUOTES) ?>')" class="btn btn-secondary text-xs">Copiar Texto Bruto</button>
+                            </div>
+                        </form>
+                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
+                            <form method="POST" action="/chancelaria/efemerides/enviar-previa" onsubmit="return confirm('Enviar a prévia para o Telegram privado do chanceler?');">
+                                <button type="submit" class="btn btn-secondary text-xs bg-indigo-600 text-white hover:bg-indigo-700">Enviar Prévia Privada</button>
+                            </form>
+                            <form method="POST" action="/chancelaria/efemerides/enviar-grupo" onsubmit="return confirm('Confirmar envio isolado no grupo oficial?');">
+                                <button type="submit" class="btn btn-primary text-xs bg-green-600 hover:bg-green-700">Enviar Apenas Texto no Grupo</button>
+                            </form>
+                        </div>
                     </div>
-                </form>
-                <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-3">
-                    <form method="POST" action="/chancelaria/efemerides/enviar-previa" onsubmit="return confirm('Enviar a prévia para o Telegram privado do chanceler?');">
-                        <button type="submit" class="btn btn-secondary bg-indigo-600 text-white hover:bg-indigo-700">Enviar Prévia no Privado</button>
-                    </form>
-                    <form method="POST" action="/chancelaria/efemerides/enviar-grupo" onsubmit="return confirm('Confirmar envio da mensagem no grupo oficial?');">
-                        <button type="submit" class="btn btn-primary bg-green-600 hover:bg-green-700">Enviar no Grupo Oficial</button>
-                    </form>
-                </div>
-                <p class="form-hint mt-2">Sugestão: revise, envie no privado para conferência e, só então, publique no grupo.</p>
+                </details>
             </div>
         </div>
         <?php if ($cardsEnabled): ?>
@@ -569,6 +584,13 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        // Restaurar scroll prévio após recarregamento (se salvo)
+        const savedScroll = localStorage.getItem('efemerides_scroll_pos');
+        if (savedScroll) {
+            window.scrollTo(0, parseInt(savedScroll, 10));
+            localStorage.removeItem('efemerides_scroll_pos');
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
         
         // Auto-seleção de abas baseada em URL ou Edição
@@ -619,7 +641,11 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                 const status = item.querySelector('.card-status');
                 if (status) {
                     status.classList.remove('hidden');
-                    setTimeout(() => status.classList.add('hidden'), 1800);
+                    // Recarrega para sincronizar a prévia consolidada do topo automaticamente após 1 segundo.
+                    setTimeout(() => {
+                        localStorage.setItem('efemerides_scroll_pos', window.scrollY);
+                        window.location.reload();
+                    }, 800);
                 }
             });
         });

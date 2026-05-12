@@ -362,6 +362,33 @@ $buildEfemeridesPreview = static function (): array {
     }
 
     $registrosRecentes = $registroModel->getRecentes();
+    
+    // Sincronização: Incorporar overrides do texto dos cards na mensagem consolidada
+    try {
+        $previaCardModel = new \App\Models\EfemerideCardPrevia();
+        $overrides = $previaCardModel->findByDate($dtHoje->format('Y-m-d'));
+        $mapOverrides = [];
+        foreach ($overrides as $ov) {
+            $rid = (int) ($ov['registro_id'] ?? 0);
+            if ($rid > 0 && !empty($ov['texto_custom_card'])) {
+                $mapOverrides[$rid] = trim((string) $ov['texto_custom_card']);
+            }
+        }
+        
+        if (!empty($mapOverrides)) {
+            foreach ($registrosHoje as &$regRef) {
+                $rid = (int) ($regRef['id'] ?? 0);
+                if ($rid > 0 && isset($mapOverrides[$rid])) {
+                    // Atualiza a mensagem que será consumida pelo composer
+                    $regRef['mensagem_custom'] = $mapOverrides[$rid];
+                }
+            }
+            unset($regRef);
+        }
+    } catch (\Throwable $e) {
+        error_log('Falha ao aplicar overrides no buildEfemeridesPreview: ' . $e->getMessage());
+    }
+
     $mensagemBase = $composer->composeDailyPreview($registrosHoje);
     $mensagemPreview = $previaModel->garantirPreviaDoDia($mensagemBase);
     $cards = [];
