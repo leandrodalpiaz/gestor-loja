@@ -128,7 +128,13 @@ class EfemeridesCardService
         $tipo = strtolower(trim((string) ($registro['tipo'] ?? '')));
         $rawMsg = '';
         if (str_contains($tipo, 'historia') || str_contains($tipo, 'história')) {
-            $rawMsg = trim((string) ($registro['mensagem_custom'] ?? $registro['texto'] ?? $registro['nome'] ?? ''));
+            $titulo = trim((string) ($registro['nome'] ?? ''));
+            $corpo = trim((string) ($registro['mensagem_custom'] ?? $registro['texto'] ?? ''));
+            if ($titulo !== '' && $corpo !== '') {
+                $rawMsg = $titulo . "\n\n" . $corpo;
+            } else {
+                $rawMsg = $corpo !== '' ? $corpo : $titulo;
+            }
         } else {
             $nome = trim((string) ($registro['nome'] ?? ''));
             if ($ocultar || $idade === null) {
