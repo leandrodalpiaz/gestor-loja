@@ -145,15 +145,16 @@ class ChancelariaRoutes
                 $errosFotos = 0;
                 $totalFotos = count($listaCards);
                 if ($okMsg && $totalFotos > 0) {
-                    $rootDir = dirname(__DIR__, 3); // Root path of project
                     foreach ($listaCards as $c) {
-                        $relPath = $c['caminho'] ?? '';
-                        if ($relPath !== '') {
-                            $absPath = $rootDir . '/public' . $relPath;
-                            $desc = $c['descricao'] ?? 'Efeméride';
-                            if (!$telegram->sendPhotoToGroup($absPath, "🖼 " . $desc)) {
+                        $absPath = $c['card_path'] ?? '';
+                        if ($absPath !== '' && file_exists($absPath)) {
+                            $desc = $c['titulo'] ?? $c['descricao'] ?? 'Efeméride';
+                            if (!$telegram->sendPhotoToGroup($absPath, "🖼 *Card:* " . $desc)) {
                                 $errosFotos++;
                             }
+                        } else {
+                            // Se não achou o caminho do arquivo, conta como erro
+                            $errosFotos++;
                         }
                     }
                 }
