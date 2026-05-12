@@ -867,8 +867,20 @@ class CommandHandler
         $teclado = [
             'inline_keyboard' => [
                 [
-                    ['text' => 'Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/chanceler')]],
-                    ['text' => 'Efemerides', 'callback_data' => 'chancelaria_neste_dia'],
+                    ['text' => '📱 App Em Loja', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/chanceler')]],
+                ],
+                [
+                    ['text' => '📋 Efemérides do Dia', 'callback_data' => 'chancelaria_neste_dia'],
+                ],
+                [
+                    ['text' => '📜 Nossa História', 'callback_data' => 'chancelaria_historico'],
+                    ['text' => '🎂 Aniversários', 'callback_data' => 'chancelaria_aniversarios'],
+                ],
+                [
+                    ['text' => '📐 Datas Maçônicas', 'callback_data' => 'chancelaria_datas'],
+                ],
+                [
+                    ['text' => '« Voltar', 'callback_data' => 'start_menu'],
                 ],
             ],
         ];
@@ -1127,6 +1139,24 @@ class CommandHandler
             }
         } catch (\Throwable $e) {
             error_log("[bot] Falha ao carregar HistoriaMaconica no handleFatosHistoricos: " . $e->getMessage());
+        }
+
+        // Adicionar eventos fixos do HistoricoEventos
+        try {
+            require_once __DIR__ . '/../Services/HistoricoEventos.php';
+            $diaMesChave = date('m-d');
+            $fixos = \App\Services\HistoricoEventos::getFixos();
+            if (isset($fixos[$diaMesChave])) {
+                $fx = $fixos[$diaMesChave];
+                $fatosHistoricos[] = [
+                    'tipo' => 'História',
+                    'nome' => $fx['titulo'] ?? 'Fato Histórico',
+                    'mensagem_custom' => $fx['texto'] ?? '',
+                    'data_evento' => !empty($fx['ano_ref']) ? sprintf('%04d-%02d-%02d', $fx['ano_ref'], (int)date('m'), (int)date('d')) : null
+                ];
+            }
+        } catch (\Throwable $e) {
+            error_log("[bot] Falha ao carregar HistoricoEventos: " . $e->getMessage());
         }
 
         if (empty($fatosHistoricos)) {

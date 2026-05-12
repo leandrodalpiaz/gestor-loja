@@ -18,7 +18,8 @@ class HistoricoEventos
         '01-08' => [
             'titulo'  => '08 de Janeiro – Fundação da Grande Loja Maçônica do Estado do Rio Grande do Sul',
             'ano_ref' => 1928,
-            'texto'   => 'Hoje celebramos o nascimento da nossa Grande Loja, um marco que redefiniu os rumos da Ordem no Rio Grande do Sul. Em 8 de janeiro de 1928, a cidade de Bagé tornou-se o berço de uma nova era de soberania para os graus simbólicos.'
+            'texto'   => 'Hoje celebramos o nascimento da nossa Grande Loja, um marco que redefiniu os rumos da Ordem no Rio Grande do Sul.'
+                . "\n\n" . 'Em 8 de janeiro de 1928, a cidade de Bagé tornou-se o berço de uma nova era de soberania para os graus simbólicos.'
                 . "\n\n" . '<i>Fonte: Registros históricos da Grande Loja do RS e Ato de Fundação de 1928.</i>',
         ],
         '01-27' => [
@@ -31,7 +32,8 @@ class HistoricoEventos
         '02-28' => [
             'titulo'  => '28 de Fevereiro – O Número 270',
             'ano_ref' => 2018,
-            'texto'   => 'Em comitiva histórica à Grande Loja, os fundadores protocolaram o pedido de instalação. Foi nesta data que nossa Oficina foi oficialmente acolhida sob o número 270, selando nosso compromisso com a Maçonaria regular gaúcha.'
+            'texto'   => 'Em comitiva histórica à Grande Loja, os fundadores protocolaram o pedido de instalação.'
+                . "\n\n" . 'Foi nesta data que nossa Oficina foi oficialmente acolhida sob o número 270, selando nosso compromisso com a Maçonaria regular gaúcha.'
                 . "\n\n" . '<i>Fonte: HISTÓRICO DA LOJA RENASCENÇA Nº 270 no site da Grande Loja do Rio Grande do Sul.</i>',
         ],
         '03-28' => [
@@ -58,7 +60,8 @@ class HistoricoEventos
         '05-12' => [
             'titulo'  => '12 de Maio – A Primeira Reunião de Planejamento',
             'ano_ref' => 2017,
-            'texto'   => 'Neste dia, em Arroio do Sal, os fundadores realizaram a primeira reunião oficial. Com a união de irmãos que comungavam dos mesmos ideais de retidão, definiu-se que a Oficina se chamaria Aug.: Resp.: Loj.: Simb.: Renascença. Um passo decisivo para o fortalecimento da nossa identidade.'
+            'texto'   => 'Neste dia, em Arroio do Sal, os fundadores realizaram a primeira reunião oficial.'
+                . "\n\n" . 'Com a união de irmãos que comungavam dos mesmos ideais de retidão, definiu-se que a Oficina se chamaria Aug.: Resp.: Loj.: Simb.: Renascença. Um passo decisivo para o fortalecimento da nossa identidade.'
                 . "\n\n" . '<i>Fonte: HISTÓRICO DA LOJA RENASCENÇA Nº 270 no site da Grande Loja do Rio Grande do Sul.</i>',
         ],
         '05-25' => [
@@ -80,13 +83,15 @@ class HistoricoEventos
         '10-25' => [
             'titulo'  => '25 de Outubro – Aprovação de Estatutos e Estandarte',
             'ano_ref' => 2017,
-            'texto'   => 'Um marco administrativo. Nesta data, foram aprovados por unanimidade o Estatuto, o Regimento Interno e o Estandarte da Loja. Também foi apresentada a primeira administração, consolidando as bases sólidas sobre as quais nossa Oficina foi erguida.'
+            'texto'   => 'Um marco administrativo. Nesta data, foram aprovados por unanimidade o Estatuto, o Regimento Interno e o Estandarte da Loja.'
+                . "\n\n" . 'Também foi apresentada a primeira administração, consolidando as bases sólidas sobre as quais nossa Oficina foi erguida.'
                 . "\n\n" . '<i>Fonte: HISTÓRICO DA LOJA RENASCENÇA Nº 270 no site da Grande Loja do Rio Grande do Sul.</i>',
         ],
         '12-20' => [
             'titulo'  => '20 de Dezembro – Fundação da Novel Loja',
             'ano_ref' => 2017,
-            'texto'   => 'Nesta data solene, foi realizada a Sessão de Fundação da Loja Renascença. Com o quadro de obreiros definido e os ideais renovados, a Oficina preparava-se para sua sagração, marcando o início de suas atividades em prol da Ordem e da sociedade.'
+            'texto'   => 'Nesta data solene, foi realizada a Sessão de Fundação da Loja Renascença.'
+                . "\n\n" . 'Com o quadro de obreiros definido e os ideais renovados, a Oficina preparava-se para sua sagração, marcando o início de suas atividades em prol da Ordem e da sociedade.'
                 . "\n\n" . '<i>Fonte: HISTÓRICO DA LOJA RENASCENÇA Nº 270 no site da Grande Loja do Rio Grande do Sul.</i>',
         ],
     ];

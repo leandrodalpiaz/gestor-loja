@@ -13,3 +13,5 @@ scripts/tmp/
 # Editor/backup artifacts
 *.bak
 node_modules/
+
+public/assets/images/efemerides_geradas/*

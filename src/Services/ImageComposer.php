@@ -38,7 +38,8 @@ class ImageComposer
 
         $width = imagesx($img);
         $height = imagesy($img);
-        $font = dirname(__DIR__, 2) . '/public/assets/fonts/Inter-Bold.ttf';
+        $fontRaw = dirname(__DIR__, 2) . '/public/assets/fonte.ttf';
+        $font = realpath($fontRaw) ?: $fontRaw;
         
         $fontSizeBase = $width * 0.045;
         $colorArr = [40, 40, 40];
@@ -73,19 +74,40 @@ class ImageComposer
             $fontSizeBase = $width * 0.046;
         }
 
-        $fontSize = (int) round($fontSizeBase); 
-        $lineHeight = (int) round($fontSize * 1.5);
-        $y = (int) round($yBase);
-        
-        // Algoritmo dinâmico de quebra de linha baseado no template para acomodar textos longos (como História)
-        $wrapLimit = 42; 
-        if (str_contains($templateFile, 'sepia')) {
-            $wrapLimit = 45; // Permite linhas um pouco mais densas na tipografia menor
-        } elseif (str_contains($templateFile, 'kids') || str_contains($templateFile, 'bedrock')) {
-            $wrapLimit = 38; // Fontes mais robustas requerem quebra precoce
+        // AUTOSCALING INTELIGENTE: Aumenta textos curtos para preencher e reduz textos longos
+        $textLen = mb_strlen($text, 'UTF-8');
+        $scaleFactor = 1.0;
+        $lineSpacingFactor = 1.5; // Espaçamento padrão
+
+        if ($textLen < 80) {
+            $scaleFactor = 1.40;       // Textos bem curtos ganham 40% extra
+            $lineSpacingFactor = 1.8; // E ficam mais espaçados verticalmente
+        } elseif ($textLen < 180) {
+            $scaleFactor = 1.15;       // Textos médios crescem um pouco
+            $lineSpacingFactor = 1.6;
+        } elseif ($textLen > 400 && $textLen <= 650) {
+            $scaleFactor = 0.90;       // Textos longos encolhem levemente
+            $lineSpacingFactor = 1.4;
+        } elseif ($textLen > 650) {
+            $scaleFactor = 0.80;       // Textos enormes encolhem mais
+            $lineSpacingFactor = 1.3;
         }
 
-        $wrappedText = wordwrap($text, $wrapLimit, "\n", true);
+        $fontSize = (int) round($fontSizeBase * $scaleFactor); 
+        $lineHeight = (int) round($fontSize * $lineSpacingFactor);
+        $y = (int) round($yBase);
+        
+        // Ajuste visual: se o texto é muito curto, descer levemente a posição inicial Y para centrar melhor verticalmente
+        if ($textLen < 120) {
+            $y += (int) ($height * 0.08); // Desce ~8% para evitar "colar" no topo com texto curto
+        }
+        
+        // 1. Definir largura máxima útil (Margem de 10% de cada lado)
+        $maxWidth = (int) ($width * 0.80);
+        $paddingX = (int) ($width * 0.10);
+        
+        // 2. Função de quebra baseada em pixels TrueType (não em contagem de caracteres)
+        $wrappedText = $this->wrapTextToPixels($text, $font, $fontSize, $maxWidth);
         $lines = preg_split('/\r\n|\r|\n/', $wrappedText) ?: [];
         $color = imagecolorallocate($img, $colorArr[0], $colorArr[1], $colorArr[2]);
         $shadow = $shadowArr ? imagecolorallocatealpha($img, $shadowArr[0], $shadowArr[1], $shadowArr[2], $shadowArr[3]) : null;
@@ -96,15 +118,28 @@ class ImageComposer
                 $y += $lineHeight;
                 continue;
             }
+            $fontLoaded = false;
+            $isAlignLeft = str_contains($templateFile, 'sepia'); // Histórias ficam melhores alinhadas à esquerda
+            
             if (is_file($font)) {
-                $box = imagettfbbox($fontSize, 0, $font, $line);
-                $textWidth = abs(($box[2] ?? 0) - ($box[0] ?? 0));
-                $x = (int) floor(($width - $textWidth) / 2);
-                if ($shadow) {
-                    imagettftext($img, $fontSize, 0, $x + 2, $y + 2, $shadow, $font, $line);
+                $box = @imagettfbbox($fontSize, 0, $font, $line);
+                if (is_array($box)) {
+                    $textWidth = abs($box[2] - $box[0]);
+                    if ($isAlignLeft) {
+                        $x = $paddingX; // Alinhamento fixo à esquerda com margem
+                    } else {
+                        $x = (int) max($paddingX, floor(($width - $textWidth) / 2)); // Centralizado, mas seguro
+                    }
+                    
+                    if ($shadow) {
+                        @imagettftext($img, $fontSize, 0, $x + 2, $y + 2, $shadow, $font, $line);
+                    }
+                    @imagettftext($img, $fontSize, 0, $x, $y, $color, $font, $line);
+                    $fontLoaded = true;
                 }
-                imagettftext($img, $fontSize, 0, $x, $y, $color, $font, $line);
-            } else {
+            }
+            
+            if (!$fontLoaded) {
                 $fw = imagefontwidth(5);
                 $textWidth = strlen($line) * $fw;
                 $x = (int) floor(($width - $textWidth) / 2);
@@ -118,5 +153,87 @@ class ImageComposer
         imagedestroy($img);
 
         return ['ok' => true, 'path' => $targetPath, 'cached' => false];
+    }
+
+    private function wrapTextToPixels(string $text, string $font, int $fontSize, int $maxWidth): string
+    {
+        // 1. Sanitização crítica de encoding: impede crash de regex e garante suporte a acentuação brasileira
+        if (!mb_check_encoding($text, 'UTF-8')) {
+            $text = mb_convert_encoding($text, 'UTF-8', 'ISO-8859-1');
+        }
+
+        if (!is_file($font)) {
+            return wordwrap($text, 40, "\n", true);
+        }
+
+        // 2. Quebra segura de parágrafos manuais
+        $paragraphs = preg_split('/\R/u', $text);
+        if ($paragraphs === false) {
+            // Fallback se até a quebra de parágrafo falhar (sem o /u)
+            $paragraphs = preg_split('/\r\n|\n|\r/', $text) ?: [$text];
+        }
+
+        $finalOutput = [];
+        $fontAvailable = true;
+
+        foreach ($paragraphs as $para) {
+            $para = trim($para);
+            if ($para === '') {
+                $finalOutput[] = '';
+                continue;
+            }
+
+            // 3. Split seguro de palavras usando espaço comum em vez de regex instável
+            $words = explode(' ', $para);
+            $currentLine = '';
+            
+            foreach ($words as $word) {
+                $word = trim($word);
+                if ($word === '') continue;
+                
+                $testLine = $currentLine === '' ? $word : $currentLine . ' ' . $word;
+                $box = null;
+                if ($fontAvailable) {
+                    $box = @imagettfbbox($fontSize, 0, $font, $testLine);
+                }
+                
+                if (is_array($box)) {
+                    $lineWidth = abs($box[2] - $box[0]);
+                    if ($lineWidth <= $maxWidth) {
+                        $currentLine = $testLine;
+                    } else {
+                        if ($currentLine !== '') {
+                            $finalOutput[] = $currentLine;
+                            $currentLine = $word;
+                        } else {
+                            $finalOutput[] = $word; // Palavra isolada gigante
+                            $currentLine = '';
+                        }
+                    }
+                } else {
+                    // EMERGÊNCIA: Falha catastrófica na leitura da fonte ou medição.
+                    // Usamos contagem de caracteres como último recurso de segurança.
+                    $lenCurrent = mb_strlen($currentLine, 'UTF-8');
+                    $lenWord = mb_strlen($word, 'UTF-8');
+                    if ($lenCurrent + $lenWord + 1 <= 45) {
+                        $currentLine = $testLine;
+                    } else {
+                        if ($currentLine !== '') {
+                            $finalOutput[] = $currentLine;
+                            $currentLine = $word;
+                        } else {
+                            $finalOutput[] = $word;
+                            $currentLine = '';
+                        }
+                    }
+                }
+            }
+            
+            if ($currentLine !== '') {
+                $finalOutput[] = $currentLine;
+            }
+        }
+
+        return implode("\n", $finalOutput);
     }
 }

@@ -772,7 +772,7 @@ class PainelRoutes
                 $tipoArquivo = 'desconhecido';
 
                 if (isset($_FILES['comprovante']) && $_FILES['comprovante']['error'] === UPLOAD_ERR_OK) {
-                    $uploadDir = __DIR__ . '/../../../../public/assets/uploads/comprovantes/';
+                    $uploadDir = __DIR__ . '/../../../public/assets/uploads/comprovantes/';
                     if (!is_dir($uploadDir)) {
                         @mkdir($uploadDir, 0755, true);
                     }

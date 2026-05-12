@@ -126,16 +126,18 @@ class EfemeridesCardService
     private function resolverMensagem(array $registro, ?int $idade, bool $ocultar): string
     {
         $tipo = strtolower(trim((string) ($registro['tipo'] ?? '')));
+        $rawMsg = '';
         if (str_contains($tipo, 'historia') || str_contains($tipo, 'história')) {
-            // Retorna o texto narrativo integral para ser estampado no pergaminho
-            return trim((string) ($registro['mensagem_custom'] ?? $registro['texto'] ?? $registro['nome'] ?? ''));
+            $rawMsg = trim((string) ($registro['mensagem_custom'] ?? $registro['texto'] ?? $registro['nome'] ?? ''));
+        } else {
+            $nome = trim((string) ($registro['nome'] ?? ''));
+            if ($ocultar || $idade === null) {
+                $rawMsg = $nome . "\nParabéns pelo seu dia";
+            } else {
+                $rawMsg = $nome . "\nFeliz {$idade} anos";
+            }
         }
-
-        $nome = trim((string) ($registro['nome'] ?? ''));
-        if ($ocultar || $idade === null) {
-            return $nome . "\nParabéns pelo seu dia";
-        }
-        return $nome . "\nFeliz {$idade} anos";
+        return trim(strip_tags($rawMsg));
     }
 
     private function resolverTemplate(string $categoria, ?int $idade, string $tipo): string

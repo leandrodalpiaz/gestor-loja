@@ -62,6 +62,29 @@ class EfemeridesComposer
             }
         }
 
+        // Injetar eventos fixos em código do HistoricoEventos
+        require_once __DIR__ . '/HistoricoEventos.php';
+        $diaMesChave = null;
+        if ($dataYmd) {
+            $dtC = \DateTimeImmutable::createFromFormat('Y-m-d', $dataYmd);
+            if ($dtC !== false) $diaMesChave = $dtC->format('m-d');
+        } else {
+            $diaMesChave = date('m-d');
+        }
+
+        if ($diaMesChave !== null) {
+            $fixos = \App\Services\HistoricoEventos::getFixos();
+            if (isset($fixos[$diaMesChave])) {
+                $eventoFixo = $fixos[$diaMesChave];
+                $registros[] = [
+                    'nome' => $eventoFixo['titulo'] ?? 'Fato Histórico',
+                    'tipo' => 'História',
+                    'mensagem_custom' => $eventoFixo['texto'] ?? '',
+                    'local' => 'Histórico Fixo'
+                ];
+            }
+        }
+
         return $this->composeDailyPreview($registros);
     }
 

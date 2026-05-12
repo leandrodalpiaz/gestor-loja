@@ -114,6 +114,59 @@ class ChancelariaRoutes
                     ? ['sucesso' => 'previa_enviada']
                     : ['erro' => 'falha_enviar_previa', 'detalhe' => $telegramService->getLastError()]);
 
+            case '/chancelaria/efemerides/aprovar-e-enviar-tudo':
+                self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
+                if ($method !== 'POST') {
+                    $redirectEfemerides();
+                }
+
+                // 1. Coletar e Salvar a mensagem do dia como Aprovada
+                $dadosEfemerides = $buildEfemeridesPreview();
+                $mensagemPreview = trim((string) ($dadosEfemerides['mensagemPreview'] ?? ''));
+                $registrosHoje = is_array($dadosEfemerides['registrosHoje'] ?? null) ? $dadosEfemerides['registrosHoje'] : [];
+                $hojeRef = $appToday()->format('Y-m-d');
+
+                if ($mensagemPreview !== '') {
+                    (new EfemeridePreviaDiaria())->salvarOuAtualizar($hojeRef, $mensagemPreview, true);
+                }
+
+                // 2. Gerar todos os cards e guardar a lista de arquivos absolutos
+                $service = new \App\Services\EfemeridesCardService();
+                $listaCards = !empty($registrosHoje) ? $service->buildCardsForDate($hojeRef, $registrosHoje) : [];
+                
+                // 3. Enviar Texto ao Grupo
+                $telegram = new TelegramService();
+                $okMsg = true;
+                if ($mensagemPreview !== '') {
+                    $okMsg = $telegram->sendMessageToGroup($mensagemPreview);
+                }
+
+                // 4. Enviar Imagens ao Grupo (se o texto enviou)
+                $errosFotos = 0;
+                $totalFotos = count($listaCards);
+                if ($okMsg && $totalFotos > 0) {
+                    $rootDir = dirname(__DIR__, 3); // Root path of project
+                    foreach ($listaCards as $c) {
+                        $relPath = $c['caminho'] ?? '';
+                        if ($relPath !== '') {
+                            $absPath = $rootDir . '/public' . $relPath;
+                            $desc = $c['descricao'] ?? 'Efeméride';
+                            if (!$telegram->sendPhotoToGroup($absPath, "🖼 " . $desc)) {
+                                $errosFotos++;
+                            }
+                        }
+                    }
+                }
+
+                if (!$okMsg) {
+                    $redirectEfemerides(['erro' => 'falha_enviar_grupo', 'detalhe' => $telegram->getLastError()]);
+                }
+
+                $redirectEfemerides([
+                    'sucesso' => 'enviado_tudo',
+                    'fotos_sucesso' => ($totalFotos - $errosFotos)
+                ]);
+
             case '/chancelaria/efemerides/enviar-grupo':
                 self::requirePermission($openTestAccess, $session, $sessionHasPermission, 'chancelaria.manage', 'Acesso restrito ao Chanceler, Venerável Mestre ou Administrador.');
                 if ($method !== 'POST') {
@@ -383,6 +436,7 @@ class ChancelariaRoutes
                     'previa_salva' => 'Prévia salva com sucesso.',
                     'previa_enviada' => 'Prévia enviada no privado do Chanceler.',
                     'enviado' => 'Mensagem enviada ao grupo oficial.',
+                    'enviado_tudo' => 'Aprovação concluída! Texto e Cards enviados ao grupo oficial com sucesso.',
                     'registro_salvo' => 'Registro salvo com sucesso.',
                     'registro_atualizado' => 'Registro atualizado com sucesso.',
                     'registro_desativado' => 'Registro desativado com sucesso.',

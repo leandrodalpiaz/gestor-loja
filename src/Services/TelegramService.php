@@ -32,6 +32,26 @@ class TelegramService
         return $this->sendMessageToChat($this->reviewChatId, $message);
     }
 
+    public function sendPhotoToGroup(string $absolutePath, string $caption = ''): bool
+    {
+        if (empty($this->botToken) || empty($this->groupChatId)) {
+            $this->lastError = 'Bot token ou chat_id do grupo não configurado.';
+            return false;
+        }
+
+        if (!file_exists($absolutePath)) {
+            $this->lastError = 'Arquivo de foto não encontrado localmente.';
+            return false;
+        }
+
+        if (\App\Config\AppEnv::telegramDryRun()) {
+            error_log("TelegramBot (DRY RUN PHOTO): [Chat {$this->groupChatId}] Sent path: $absolutePath Caption: $caption");
+            return true;
+        }
+
+        return $this->postPhotoToTelegram($this->groupChatId, $absolutePath, $caption);
+    }
+
     public function sendMessageToChat(string $chatId, string $message): bool
     {
         if (empty($this->botToken) || empty($chatId)) {
@@ -115,6 +135,48 @@ class TelegramService
             $descricao = is_array($payload) ? (string) ($payload['description'] ?? 'Resposta inválida da API Telegram.') : 'Resposta inválida da API Telegram.';
             $this->lastError = $descricao;
             error_log('TelegramBot Error: ' . $descricao . ' | Response: ' . (string) $response);
+            curl_close($ch);
+            return false;
+        }
+
+        curl_close($ch);
+        $this->lastError = '';
+        return true;
+    }
+
+    private function postPhotoToTelegram(string $chatId, string $filePath, string $caption): bool
+    {
+        $url = "https://api.telegram.org/bot{$this->botToken}/sendPhoto";
+
+        $payload = [
+            'chat_id' => $chatId,
+            'photo' => new \CURLFile($filePath),
+            'caption' => mb_substr($caption, 0, 1024),
+            'parse_mode' => 'HTML'
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 45);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if ($response === false || $httpCode !== 200) {
+            $this->lastError = 'PHOTO HTTP ' . $httpCode . ' | Response: ' . (string) $response;
+            error_log('TelegramBot Error: ' . $this->lastError);
+            curl_close($ch);
+            return false;
+        }
+
+        $resData = json_decode((string) $response, true);
+        if (!is_array($resData) || empty($resData['ok'])) {
+            $desc = is_array($resData) ? (string) ($resData['description'] ?? 'Rejeição API Photo.') : 'Rejeição API Photo.';
+            $this->lastError = $desc;
             curl_close($ch);
             return false;
         }

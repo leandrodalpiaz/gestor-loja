@@ -82,6 +82,25 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                 <div class="telegram-format mb-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
                     <?= $previewRender ?>
                 </div>
+
+                <!-- NOVO FLUXO UNIFICADO -->
+                <div class="mb-6 bg-green-50 dark:bg-green-900/10 border border-green-200 rounded-xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                        <h4 class="font-bold text-green-800 dark:text-green-200 text-lg flex items-center gap-2">
+                            🚀 Publicação Consolidada
+                        </h4>
+                        <p class="text-sm text-green-700 dark:text-green-300">
+                            Esta ação aprova o texto, <b>gera as imagens instantaneamente</b> (para o Dashboard e PWA) e envia <b>Texto + Imagens</b> juntos no Grupo Oficial.
+                        </p>
+                    </div>
+                    <form method="POST" action="/chancelaria/efemerides/aprovar-e-enviar-tudo" onsubmit="return confirm('Confirmar aprovação final e envio imediato de Texto + Imagens para o Grupo do Telegram?');" class="flex-shrink-0">
+                         <button type="submit" class="btn bg-green-600 text-white hover:bg-green-700 shadow-md px-6 py-4 text-base font-bold uppercase tracking-wider flex items-center gap-2">
+                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                             Aprovar e Propagar
+                         </button>
+                    </form>
+                </div>
+                <!-- FIM NOVO FLUXO -->
                 <form method="POST" action="/chancelaria/efemerides/salvar-previa">
                     <textarea name="mensagem_preview" class="form-input h-60" placeholder="A mensagem gerada aparecerá aqui para revisão..."><?= htmlspecialchars($previewRaw) ?></textarea>
                     <p class="form-hint">Mantém tags HTML do Telegram (ex: &lt;b&gt; e &lt;i&gt;).</p>
