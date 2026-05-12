@@ -995,12 +995,10 @@ if ($requestUri === '/api/cron/efemerides-diarias' && $method === 'GET') {
     require_once __DIR__ . '/../src/Models/EfemerideRegistro.php';
     require_once __DIR__ . '/../src/Services/EfemeridesComposer.php';
     require_once __DIR__ . '/../src/Bot/TelegramClient.php';
+    require_once __DIR__ . '/../src/Services/EfemeridesCardService.php';
 
     $efemerideModel = new \App\Models\EfemerideRegistro();
     $registros = $efemerideModel->getRegistrosDoDia();
-    $composer = new \App\Services\EfemeridesComposer();
-    $mensagem = $composer->composeDailyPreview($registros);
-
     $telegram = new \App\Bot\TelegramClient();
     $grupoId = $resolveTelegramGroupId();
     if (!$grupoId) {
@@ -1008,8 +1006,25 @@ if ($requestUri === '/api/cron/efemerides-diarias' && $method === 'GET') {
         echo json_encode(['status' => 'erro', 'mensagem' => 'ID do grupo nao configurado']);
         exit;
     }
-    $telegram->sendMessage($grupoId, $mensagem, ['parse_mode' => 'HTML']);
-    echo json_encode(['status' => 'ok']);
+
+    // Geração de Cards Dinâmica para o Cron
+    $service = new \App\Services\EfemeridesCardService();
+    $hojeRef = date('Y-m-d');
+    $listaCards = !empty($registros) ? $service->buildCardsForDate($hojeRef, $registros) : [];
+
+    $contagemFotos = 0;
+    if (!empty($listaCards)) {
+        foreach ($listaCards as $c) {
+            $absPath = $c['card_path'] ?? '';
+            if ($absPath !== '' && file_exists($absPath)) {
+                $desc = $c['titulo'] ?? $c['descricao'] ?? 'Efeméride';
+                $telegram->sendPhoto($grupoId, $absPath, "🖼 *Card:* " . $desc);
+                $contagemFotos++;
+            }
+        }
+    }
+
+    echo json_encode(['status' => 'ok', 'cards_enviados' => $contagemFotos]);
     exit;
 }
 // ROTEAMENTO PRINCIPAL

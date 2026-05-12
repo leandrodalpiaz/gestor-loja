@@ -134,14 +134,11 @@ class ChancelariaRoutes
                 $service = new \App\Services\EfemeridesCardService();
                 $listaCards = !empty($registrosHoje) ? $service->buildCardsForDate($hojeRef, $registrosHoje) : [];
                 
-                // 3. Enviar Texto ao Grupo
+                // 3. Enviar Imagens ao Grupo
                 $telegram = new TelegramService();
-                $okMsg = true;
-                if ($mensagemPreview !== '') {
-                    $okMsg = $telegram->sendMessageToGroup($mensagemPreview);
-                }
+                $okMsg = true; // Pula envio de texto para enviar APENAS imagens conforme solicitado
 
-                // 4. Enviar Imagens ao Grupo (se o texto enviou)
+                // 4. Enviar Imagens ao Grupo
                 $errosFotos = 0;
                 $totalFotos = count($listaCards);
                 if ($okMsg && $totalFotos > 0) {
@@ -437,7 +434,7 @@ class ChancelariaRoutes
                     'previa_salva' => 'Prévia salva com sucesso.',
                     'previa_enviada' => 'Prévia enviada no privado do Chanceler.',
                     'enviado' => 'Mensagem enviada ao grupo oficial.',
-                    'enviado_tudo' => 'Aprovação concluída! Texto e Cards enviados ao grupo oficial com sucesso.',
+                    'enviado_tudo' => 'Aprovação concluída! Cards de Imagem enviados ao grupo oficial com sucesso.',
                     'registro_salvo' => 'Registro salvo com sucesso.',
                     'registro_atualizado' => 'Registro atualizado com sucesso.',
                     'registro_desativado' => 'Registro desativado com sucesso.',
