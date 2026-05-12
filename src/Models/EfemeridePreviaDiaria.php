@@ -54,7 +54,7 @@ class EfemeridePreviaDiaria
         return $stmt->execute([
             'data_ref' => $dataRef,
             'mensagem' => $mensagem,
-            'gerada_automaticamente' => $geradaAutomaticamente,
+            'gerada_automaticamente' => $geradaAutomaticamente ? 1 : 0,
         ]);
     }
 
