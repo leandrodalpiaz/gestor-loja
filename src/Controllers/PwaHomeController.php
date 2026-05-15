@@ -119,6 +119,42 @@ class PwaHomeController
             }
         }
 
+        // ─── Efemérides do Dia ──────────────────────────────────────────
+        $efemerides_reais = [];
+        if ($usuarioId !== '' && $usuarioId !== '0') {
+            try {
+                $efemerideRegistroModel = new \App\Models\EfemerideRegistro();
+                $registrosDia = $efemerideRegistroModel->getRegistrosDoDia();
+                if (!empty($registrosDia)) {
+                    $timezone = trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo'));
+                    $hoje = new \DateTimeImmutable('today', new \DateTimeZone($timezone));
+                    $ymd = $hoje->format('Y-m-d');
+                    
+                    $cardService = new \App\Services\EfemeridesCardService();
+                    $cards = $cardService->buildCardsForDate($ymd, $registrosDia);
+                    
+                    foreach ($cards as $card) {
+                        if (!empty($card['image_url'])) {
+                            $legenda = match ($card['categoria']) {
+                                'aniversario' => 'Aniversário',
+                                'iniciacao', 'elevacao', 'exaltacao', 'instalacao' => 'Masonic',
+                                'casamento' => 'Casamento',
+                                default => 'Homenagem',
+                            };
+                            
+                            $efemerides_reais[] = [
+                                'url_imagem' => $card['image_url'],
+                                'legenda_tipo' => mb_strtoupper($legenda),
+                                'titulo_homenagem' => $card['titulo']
+                            ];
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                error_log('PWA Home - falha ao obter efemerides: ' . $e->getMessage());
+            }
+        }
+
         require __DIR__ . '/../Views/pwa/home.php';
     }
 

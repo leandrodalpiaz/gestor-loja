@@ -249,6 +249,7 @@ $pwaNavTabs = [
             <?= $pwaContent ?? '' ?>
         </main>
 
+        <?php if ($pwaActiveTab !== 'inicio'): ?>
         <nav class="app-nav border-t border-white/10 bg-slate-950 shadow-[0_-18px_40px_rgba(2,6,23,0.72)]">
             <div class="mx-auto grid max-w-5xl grid-cols-4 items-center justify-items-center px-2 py-2">
                 <?php foreach ($pwaNavTabs as $tab): ?>
@@ -264,6 +265,7 @@ $pwaNavTabs = [
                 <?php endforeach; ?>
             </div>
         </nav>
+        <?php endif; ?>
     </div>
 
     <script>
