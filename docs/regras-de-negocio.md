@@ -1,103 +1,96 @@
-# Gestor de Lojas - Cargos, Funções e Regras de Negócio
+﻿# Gestor de Lojas - Cargos, Funções e Regras de Negócio
 
-## 1) Visão geral do sistema
-O Gestor de Lojas é um ERP interno, server-rendered em PHP 8.2 com Tailwind, orientado a operação administrativa da Loja Maçônica.  
-Os dashboards priorizam a função prática de cada perfil (o que fazer agora), mantendo identidade institucional, densidade operacional e coerência entre módulos.
+## 1) Visão geral
+
+O Gestor de Lojas é um ERP interno (PHP 8.2 server-rendered + Tailwind + Supabase Postgres), orientado à operação administrativa da Loja Maçônica.
+
+Diretriz atual:
+- **Web desktop-first** para gestão completa.
+- **Mobile PWA-first**: a PWA é a experiência principal no mobile.
+- **Telegram secundário**: usado como complemento/atalhos quando fizer sentido (baixo engajamento).
 
 ## 2) Cargos da Loja x Administrador do Sistema
-- **Cargos da Loja**: representam funções rituais, administrativas e operacionais da oficina.
-- **Administrador do Sistema**: perfil técnico separado, não compõe nominata da Loja e não substitui cargos oficiais.
-- Regra central: não misturar semântica de gestão técnica com responsabilidades dos cargos da Loja.
 
-## 3) Perfis e função principal
+- **Cargos da Loja**: responsabilidades rituais/administrativas/operacionais.
+- **Administrador do Sistema**: perfil técnico separado, não compõe nominata e não substitui cargos oficiais.
+- Regra central: não misturar semântica de gestão técnica com responsabilidades oficiais.
+
+## 3) Perfis e foco do dashboard
+
+Regra: o dashboard mostra a **prioridade operacional do cargo**, não toda a amplitude de acesso possível.
 
 ### veneravel
-- **Tipo de dashboard**: estratégico, analítico e de supervisão.
-- **Foco**: ritmo de sessões, frequência, ágape e leitura executiva financeira.
-- **Operação**: decisões de abertura/encerramento de votação conforme regras vigentes.
+- Estratégico/analítico e de supervisão.
+- Sessões e decisões: publicar/cancelar/reabrir/realizar, e ações de balaústre conforme permissão.
 
 ### secretario
-- **Tipo de dashboard**: operacional e documental.
-- **Foco**: sessões, balaústres, publicações, trabalhos, obreiros, acessos e convites.
-- **Operação**: execução diária e controle de pendências.
+- Operacional e documental.
+- Sessões, balaústres, publicações/trabalhos, obreiros, acessos e convites.
 
 ### tesoureiro
-- **Tipo de dashboard**: operacional financeiro.
-- **Foco**: caixa, obrigações, inadimplência, comprovantes, regularidade, relatórios.
-- **Operação**: cobrança, quitação, recibos, fechamento e contexto de miniapp.
+- Operacional financeiro.
+- Caixa, obrigações, comprovantes, regularidade, relatórios e fechamento.
 
 ### chanceler
-- **Tipo de dashboard**: operacional específico de sessão.
-- **Foco**: sessão atual, presença, visitantes, consulta de obreiros em leitura.
-- **Operação**: abertura de sessão em foco e registro de presença.
+- Operacional de sessão.
+- Presença, visitantes e suporte à sessão em foco.
 
 ### primeiro_vigilante
-- **Tipo de dashboard**: operacional formativo (Aprendizes).
-- **Foco**: trilha, leituras, certificados, acompanhamento individual.
-- **Operação**: atualizar trilha, ação rápida, leitura e solicitação de certificado.
+- Formativo (Aprendizes).
+- Trilhas, leituras, acompanhamento e certificados.
 
 ### segundo_vigilante
-- **Tipo de dashboard**: operacional formativo (Companheiros).
-- **Foco**: trilha, leituras, certificados e recomendação de exaltação.
-- **Operação**: atualização de trilha, leituras, certificados e exaltação.
+- Formativo (Companheiros).
+- Trilhas, leituras, acompanhamento e certificados, incluindo recomendações quando previstas.
 
 ### hospitaleiro
-- **Tipo de dashboard**: operacional assistencial.
-- **Foco**: ocorrências abertas, visitas pendentes, status e retornos.
-- **Operação**: registrar ocorrência, atualizar status e registrar visita.
+- Assistencial.
+- Ocorrências, visitas, status e retornos.
 
 ### orador
-- **Tipo de dashboard**: operacional de pauta e leitura ritual.
-- **Foco**: sessão em foco, visitantes, cargos de sessão e eventos registrados.
-- **Operação**: painel web e miniapp do cargo como extensão do mesmo fluxo.
+- Pauta e leitura ritual.
+- Sessão em foco, visitantes e rotinas do cargo.
 
 ### mestre_banquetes
-- **Tipo de dashboard**: operacional de execução.
-- **Foco**: operação do ágape, sessões relacionadas e histórico simples.
-- **Operação**: registro de operação e leitura de participantes.
+- Execução do ágape.
+- Operação e consolidação simples de presença/itens ligados ao ágape.
 
 ### mestre_harmonia / mestre_de_harmonia
-- **Tipo de dashboard**: operacional técnico do cargo.
-- **Foco**: estado operacional, execuções, acesso ao miniapp e APIs do módulo.
-- **Operação**: scan, áudio, operador e condução da sessão musical.
+- Operação técnica do cargo.
+- Painel, scan/áudio/operador e condução operacional.
 
 ### bibliotecario
-- **Tipo de dashboard**: operacional de gestão completa da biblioteca.
-- **Foco**: acervo, empréstimos, devoluções, itens recentes e classificação.
-- **Operação**: adicionar/editar/excluir item, registrar empréstimo/devolução e classificar.
+- Gestão completa da biblioteca.
+- Acervo, empréstimos/devoluções e classificação.
 
 ### obreiro
-- **Tipo de dashboard**: consumo pessoal.
-- **Foco**: obrigações pessoais, biblioteca, empréstimos e interações.
-- **Operação**: consultar obrigações, solicitar item e acompanhar empréstimos.
+- Consumo pessoal.
+- Financeiro pessoal, biblioteca (consulta/solicitação conforme regras) e acompanhamento.
 
 ### administrador do sistema
-- **Tipo de dashboard**: técnico exclusivo.
-- **Foco**: parâmetros do sistema, integrações, logs e auditoria técnica.
-- **Operação**: sustentação da aplicação, sem papel ritual/oficial de cargo da Loja.
+- Técnico exclusivo.
+- Parâmetros, integrações, logs e auditoria técnica.
 
-## 4) Miniapps (regra funcional)
-- Miniapps são **extensões de perfil**, não um sistema paralelo.
-- Aparição obrigatória como ação contextual de cargo:
-  - tesoureiro -> `/miniapp/tesouraria`
-  - orador -> `/miniapp/orador`
-  - mestre_harmonia / mestre_de_harmonia -> `/miniapp/mestre-harmonia`
-- Não deslocar miniapps para uma navegação global independente.
+## 4) PWA (regra funcional)
 
-## 5) Reutilização de dados entre módulos
-- Cada dashboard **consome** dados oficiais produzidos por módulos responsáveis.
+- A PWA é o canal mobile principal e deve concentrar os fluxos de consulta e ação rápida.
+- No mobile, preferir cards a tabelas e evitar scroll horizontal.
+
+## 5) Telegram (papel secundário)
+
+- Telegram é secundário e não deve ser tratado como fonte principal de engajamento.
+- Quando existir integração, usar como atalho/deeplink e contingência, sem duplicar regra de negócio.
+
+## 6) Fontes de verdade e reuso de dados
+
+- Cada dashboard consome dados oficiais produzidos por módulos responsáveis.
 - Evitar cálculo duplicado no frontend.
-- Evitar fluxo paralelo de dados entre web, dashboard e miniapp.
-- Toda informação compartilhada deve manter coerência intermodular.
+- Evitar fluxos paralelos de dados entre web e PWA.
 
-## 6) Balaústre como fonte de verdade (analytics do Venerável)
-- Para indicadores analíticos do Venerável, considerar sessões realizadas com balaústre consolidado/finalizado.
-- Balaústre é a referência institucional para frequência, ágape, participantes e visitantes.
+## 7) Balaústre como fonte institucional
 
-## 7) Tesouraria como fonte oficial do resumo financeiro
-- Leituras financeiras executivas devem consumir a origem de dados da Tesouraria.
-- O dashboard de outros perfis não deve replicar regras de cálculo financeiro operacional.
+Para indicadores e auditoria, considerar sessões realizadas com balaústre consolidado/finalizado.
 
-## 8) Prioridade funcional do dashboard
-- Dashboard mostra a **prioridade operacional do cargo**, não toda a amplitude de acesso possível.
-- Acesso amplo pode existir por permissão, mas a tela principal deve manter foco do papel institucional.
+## 8) Tesouraria como fonte oficial do resumo financeiro
+
+Leituras financeiras executivas devem consumir a origem de dados da Tesouraria; outros perfis não devem replicar regra financeira operacional.

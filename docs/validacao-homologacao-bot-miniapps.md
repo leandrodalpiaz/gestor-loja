@@ -1,4 +1,4 @@
-# Validação e Homologacao - Bot e Miniapps
+﻿# Validação e Homologacao - Bot e Miniapps
 
 Objetivo: executar um roteiro único de validação antes de deploy para evitar multiplos deploys.
 
@@ -120,4 +120,4 @@ Formato sugerido:
 
 ## Roteiro complementar
 
-Miniapps sao canal secundario. Para homologacao principal Desktop + PWA, usar `docs/homologacao-paridade-desktop-mobile.md`.
+Miniapps/Telegram são evidência secundária. Para homologacao principal Desktop + PWA, usar `docs/homologacao-paridade-desktop-mobile.md`.

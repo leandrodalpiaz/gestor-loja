@@ -1,8 +1,14 @@
-# Relatorio de Homologacao - Paridade Desktop + PWA
+﻿# Relatório de Homologação (HISTÓRICO) - Paridade Desktop + PWA
 
 Data: 2026-05-07
 
-Mudanca de rumo aplicada: o alvo oficial do projeto passa a ser Desktop + PWA. Miniapps Telegram ficam secundarios e nao contam como paridade principal.
+⚠️ **Status atual (2026-05-14): diretriz atualizada.**  
+Este relatório registra uma rodada histórica em que o alvo foi “Desktop + PWA”. A diretriz vigente do projeto é:
+- Web: gestão completa (desktop-first);
+- Mobile principal: **PWA**;
+- Telegram: **secundário** (baixo engajamento), usado como complemento.
+
+Mudança de rumo aplicada na época: o alvo oficial do projeto passou a ser Desktop + PWA, com Mini Apps tratadas como secundárias.
 
 Escopo executado: validacao tecnica local, smoke test HTTP de PWA, consulta secundaria de miniapps, simulacao de convites WebApp como evidencia complementar e cruzamento estatico entre Desktop, PWA e permissoes.
 
