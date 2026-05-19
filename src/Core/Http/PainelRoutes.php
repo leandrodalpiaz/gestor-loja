@@ -756,6 +756,7 @@ class PainelRoutes
                     header('Location: /pwa/obrigacoes');
                     exit;
                 }
+                WebGuards::requireValidCsrf('/pwa/obrigacoes');
                 $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
                 $valor = (float) ($_POST['valor'] ?? 0);
                 $mes = (int) ($_POST['mes'] ?? date('n'));
@@ -772,14 +773,40 @@ class PainelRoutes
                 $tipoArquivo = 'desconhecido';
 
                 if (isset($_FILES['comprovante']) && $_FILES['comprovante']['error'] === UPLOAD_ERR_OK) {
+                    $tmpName = (string) ($_FILES['comprovante']['tmp_name'] ?? '');
+                    $fileSize = (int) ($_FILES['comprovante']['size'] ?? 0);
+                    $maxBytes = 5 * 1024 * 1024;
+                    if (!is_uploaded_file($tmpName) || $fileSize <= 0 || $fileSize > $maxBytes) {
+                        $_SESSION['mensagem_erro'] = 'Arquivo invalido ou acima de 5MB.';
+                        header('Location: /pwa/obrigacoes');
+                        exit;
+                    }
+
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $detectedMime = $finfo ? (string) finfo_file($finfo, $tmpName) : '';
+                    if ($finfo) {
+                        finfo_close($finfo);
+                    }
+                    $allowedByMime = [
+                        'application/pdf' => 'pdf',
+                        'image/jpeg' => 'jpg',
+                        'image/png' => 'png',
+                        'image/webp' => 'webp',
+                    ];
+                    if (!isset($allowedByMime[$detectedMime])) {
+                        $_SESSION['mensagem_erro'] = 'Formato nao permitido. Use PDF, JPG, PNG ou WEBP.';
+                        header('Location: /pwa/obrigacoes');
+                        exit;
+                    }
+
                     $uploadDir = __DIR__ . '/../../../public/assets/uploads/comprovantes/';
                     if (!is_dir($uploadDir)) {
                         @mkdir($uploadDir, 0755, true);
                     }
-                    $ext = strtolower(pathinfo($_FILES['comprovante']['name'], PATHINFO_EXTENSION));
+                    $ext = $allowedByMime[$detectedMime];
                     $nomeArquivo = 'comprovante_' . time() . '_' . uniqid() . '.' . $ext;
-                    if (@move_uploaded_file($_FILES['comprovante']['tmp_name'], $uploadDir . $nomeArquivo)) {
-                        $tipoArquivo = $_FILES['comprovante']['type'];
+                    if (@move_uploaded_file($tmpName, $uploadDir . $nomeArquivo)) {
+                        $tipoArquivo = $detectedMime;
                     } else {
                         $_SESSION['mensagem_erro'] = 'Erro ao salvar o arquivo do comprovante.';
                         header('Location: /pwa/obrigacoes');

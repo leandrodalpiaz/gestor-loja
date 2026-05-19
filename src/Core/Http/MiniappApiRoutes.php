@@ -24,7 +24,8 @@ class MiniappApiRoutes
         callable $resolveObreiroByInitData,
         callable $normalizeRole,
         PermissionMap $permissionMap,
-        callable $contentPermissionService
+        callable $contentPermissionService,
+        callable $buildEfemeridesPreview
     ): bool {
         if (!preg_match('~^/api/miniapp~', $requestUri)) {
             return false;
@@ -230,6 +231,46 @@ class MiniappApiRoutes
 
         if ($requestUri === '/api/miniapp/efemerides/listar' && $method === 'GET') {
             JsonResponse::send(['ok' => true, 'registros' => $resolveEfemerideModel()->buscarComFiltros(['ativo' => 'all'], 300)]);
+        }
+
+        if ($requestUri === '/api/miniapp/efemerides/preview' && $method === 'GET') {
+            $dadosEfemerides = $buildEfemeridesPreview();
+            $mensagemPreview = trim((string) ($dadosEfemerides['mensagemPreview'] ?? ''));
+            $cards = is_array($dadosEfemerides['cards'] ?? null) ? $dadosEfemerides['cards'] : [];
+            JsonResponse::send([
+                'ok' => true,
+                'mensagem_preview' => $mensagemPreview,
+                'cards_total' => count($cards),
+            ]);
+        }
+
+        if ($requestUri === '/api/miniapp/efemerides/enviar-grupo' && $method === 'POST') {
+            $dadosEfemerides = $buildEfemeridesPreview();
+            $mensagemPreview = trim((string) ($dadosEfemerides['mensagemPreview'] ?? ''));
+            $cards = is_array($dadosEfemerides['cards'] ?? null) ? $dadosEfemerides['cards'] : [];
+
+            if ($mensagemPreview === '') {
+                JsonResponse::send(['ok' => false, 'erro' => 'Previa vazia.']);
+            }
+
+            $telegramService = new \App\Services\TelegramService();
+            if (!$telegramService->sendMessageToGroup($mensagemPreview)) {
+                JsonResponse::send(['ok' => false, 'erro' => $telegramService->getLastError()]);
+            }
+
+            $cardsEnviados = 0;
+            foreach ($cards as $card) {
+                $absPath = trim((string) ($card['card_path'] ?? ''));
+                if ($absPath === '' || !file_exists($absPath)) {
+                    continue;
+                }
+                $caption = trim((string) ($card['titulo'] ?? $card['descricao'] ?? 'Efemeride'));
+                if ($telegramService->sendPhotoToGroup($absPath, $caption)) {
+                    $cardsEnviados++;
+                }
+            }
+
+            JsonResponse::send(['ok' => true, 'cards_enviados' => $cardsEnviados]);
         }
 
         if ($requestUri === '/api/miniapp/efemerides/excluir' && $method === 'POST') {

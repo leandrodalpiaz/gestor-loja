@@ -22,6 +22,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
 <div class="card">
     <form action="/biblioteca/adicionar" method="POST" class="card-body space-y-6">
+        <?= \App\Core\Http\WebGuards::csrfField() ?>
         <div class="rounded-xl border border-erp-border bg-erp-surface-2 p-4">
             <div class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                 <div>
@@ -105,6 +106,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         <p class="card-subtitle">Use colunas como titulo, autor, isbn, quantidade, grau_recomendado, resumo e observacao.</p>
     </div>
     <form action="/biblioteca/importar" method="POST" enctype="multipart/form-data" class="card-body space-y-4">
+        <?= \App\Core\Http\WebGuards::csrfField() ?>
         <input type="file" name="arquivo_acervo" accept=".csv,text/csv" class="form-input" required>
         <div class="alert alert-info text-xs">Para planilhas Excel ou Google Sheets, exporte como CSV antes de importar nesta primeira versão.</div>
         <div class="flex justify-end">

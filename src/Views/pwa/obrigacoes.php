@@ -275,6 +275,7 @@ ob_start();
 
             <!-- Formulário -->
             <form action="/pwa/obrigacoes/enviar-comprovante" method="POST" enctype="multipart/form-data" class="p-5 overflow-y-auto space-y-4">
+                <?= \App\Core\Http\WebGuards::csrfField() ?>
                 <input type="hidden" name="mes" x-model="drawerMes">
                 <input type="hidden" name="ano" x-model="drawerAno">
 

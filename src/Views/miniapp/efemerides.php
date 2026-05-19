@@ -17,6 +17,14 @@
         <h1 class="text-xl font-bold">Efemérides</h1>
         <p class="text-sm text-gray-500">Cadastre e mantenha datas do calendário da Loja.</p>
     </div>
+    <div class="rounded-2xl border border-slate-200 p-4 space-y-3">
+        <h2 class="font-semibold">Fluxo Telegram (texto + imagem)</h2>
+        <p id="preview-status" class="text-xs text-gray-500">Valide a prévia e envie para o grupo com os cards.</p>
+        <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="btn-preview" class="rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold">Ver prévia do dia</button>
+            <button type="button" id="btn-enviar-grupo" class="rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white">Enviar ao grupo</button>
+        </div>
+    </div>
 
     <div class="rounded-2xl border border-slate-200 p-4">
         <h2 class="font-semibold mb-3">Nova efeméride</h2>
@@ -163,6 +171,30 @@ form.addEventListener('submit', async (event) => {
 });
 
 cancel.addEventListener('click', resetForm);
+
+document.getElementById('btn-preview').addEventListener('click', async () => {
+    const status = document.getElementById('preview-status');
+    status.textContent = 'Carregando prévia...';
+    const json = await request('/api/miniapp/efemerides/preview', {method: 'GET'});
+    if (!json.ok) {
+        status.textContent = json.erro || 'Falha ao carregar prévia.';
+        return;
+    }
+    status.textContent = `Prévia pronta: ${json.cards_total || 0} card(s) e mensagem com ${String(json.mensagem_preview || '').length} caracteres.`;
+});
+
+document.getElementById('btn-enviar-grupo').addEventListener('click', async () => {
+    const status = document.getElementById('preview-status');
+    if (!confirm('Enviar efemérides no grupo com texto + imagens?')) return;
+    status.textContent = 'Enviando mensagem e cards no grupo...';
+    const json = await request('/api/miniapp/efemerides/enviar-grupo', {method: 'POST', body: {}});
+    if (!json.ok) {
+        status.textContent = json.erro || 'Falha no envio ao grupo.';
+        return;
+    }
+    status.textContent = `Envio concluído. Cards enviados: ${json.cards_enviados || 0}.`;
+});
+
 carregar();
 </script>
 </body>

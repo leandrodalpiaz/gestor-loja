@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Core\Http\WebGuards;
 use App\Models\Obreiro;
 use App\Models\Balaustre;
 use App\Models\BalaustreComposer;
@@ -559,6 +560,7 @@ class SecretariaController
             header('Location: /secretaria/convites-externos');
             exit;
         }
+        WebGuards::requireValidCsrf('/secretaria/convites-externos');
 
         $conviteId = (int) ($_POST['convite_id'] ?? 0);
         $status = trim((string) ($_POST['status'] ?? 'pendente'));
@@ -1422,6 +1424,7 @@ class SecretariaController
             header('Location: /secretaria/convites-externos');
             exit;
         }
+        WebGuards::requireValidCsrf('/secretaria/convites-externos');
 
         $arquivo = is_array($_FILES['anexo'] ?? null) ? $_FILES['anexo'] : [];
         $ok = (new ConviteExterno())->criar($_POST, $arquivo, (string) ($_SESSION['usuario_id'] ?? '') ?: null);
@@ -1439,6 +1442,7 @@ class SecretariaController
             header('Location: /secretaria/convites-externos');
             exit;
         }
+        WebGuards::requireValidCsrf('/secretaria/convites-externos');
 
         $id = (int) ($_POST['convite_id'] ?? 0);
         $ok = $id > 0 && (new ConviteExterno())->removerAnexo($id);

@@ -1199,7 +1199,8 @@ if (MiniappApiRoutes::dispatch(
     $resolveObreiroByInitData,
     $normalizeRole,
     $permissionMap,
-    $contentPermissionService
+    $contentPermissionService,
+    $buildEfemeridesPreview
 )) {
     return;
 }

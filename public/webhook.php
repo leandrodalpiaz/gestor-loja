@@ -12,6 +12,17 @@ require_once __DIR__ . '/../src/autoload.php';
 
 Env::load(__DIR__ . '/../.env');
 
+$configuredWebhookSecret = trim((string) ($_ENV['TELEGRAM_WEBHOOK_SECRET'] ?? ''));
+if ($configuredWebhookSecret !== '') {
+    $receivedWebhookSecret = trim((string) ($_SERVER['HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN'] ?? ''));
+    if ($receivedWebhookSecret === '' || !hash_equals($configuredWebhookSecret, $receivedWebhookSecret)) {
+        error_log('[webhook] rejeitado: secret token ausente ou invalido');
+        http_response_code(403);
+        echo 'FORBIDDEN';
+        exit;
+    }
+}
+
 $content = file_get_contents("php://input");
 $update = json_decode($content, true);
 

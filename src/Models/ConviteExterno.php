@@ -87,10 +87,27 @@ class ConviteExterno
         $anexoMime = null;
         $anexoNome = null;
         if (($arquivo['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK && is_uploaded_file((string) ($arquivo['tmp_name'] ?? ''))) {
-            $conteudo = file_get_contents((string) $arquivo['tmp_name']);
+            $tmpName = (string) ($arquivo['tmp_name'] ?? '');
+            $fileSize = (int) ($arquivo['size'] ?? 0);
+            $maxBytes = 5 * 1024 * 1024;
+            if ($fileSize <= 0 || $fileSize > $maxBytes) {
+                return false;
+            }
+
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $detectedMime = $finfo ? (string) finfo_file($finfo, $tmpName) : '';
+            if ($finfo) {
+                finfo_close($finfo);
+            }
+            $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+            if (!in_array($detectedMime, $allowedMimes, true)) {
+                return false;
+            }
+
+            $conteudo = file_get_contents($tmpName);
             if ($conteudo !== false) {
                 $anexoBytes = base64_encode($conteudo);
-                $anexoMime = trim((string) ($arquivo['type'] ?? '')) ?: null;
+                $anexoMime = $detectedMime;
                 $anexoNome = trim((string) ($arquivo['name'] ?? '')) ?: null;
             }
         }

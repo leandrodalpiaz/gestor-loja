@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Core\Http\WebGuards;
 use App\Models\Acervo;
 use App\Models\BibliotecaLojaConfig;
 use App\Models\ComentarioBiblioteca;
@@ -204,6 +205,7 @@ class BibliotecaController
             header('Location: /biblioteca/adicionar');
             exit;
         }
+        WebGuards::requireValidCsrf('/biblioteca/adicionar');
 
         $arquivo = $_FILES['arquivo_acervo'] ?? null;
         if (!is_array($arquivo) || (int) ($arquivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {

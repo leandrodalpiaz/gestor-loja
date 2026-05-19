@@ -52,8 +52,8 @@ $renderConvite = static function (array $convite, array $confirmados) use ($form
                     </div>
 
                     <div class="mt-4 flex flex-wrap gap-2">
-                        <form method="POST" action="/secretaria/convites-externos/presenca"><input type="hidden" name="convite_id" value="<?= $conviteId ?>"><input type="hidden" name="status" value="confirmado"><button class="btn btn-primary !py-2 !px-4 text-[10px] font-black uppercase tracking-widest">Confirmar</button></form>
-                        <form method="POST" action="/secretaria/convites-externos/presenca"><input type="hidden" name="convite_id" value="<?= $conviteId ?>"><input type="hidden" name="status" value="cancelado"><button class="btn btn-secondary !py-2 !px-4 text-[10px] font-black uppercase tracking-widest">Cancelar</button></form>
+                        <form method="POST" action="/secretaria/convites-externos/presenca"><?= \App\Core\Http\WebGuards::csrfField() ?><input type="hidden" name="convite_id" value="<?= $conviteId ?>"><input type="hidden" name="status" value="confirmado"><button class="btn btn-primary !py-2 !px-4 text-[10px] font-black uppercase tracking-widest">Confirmar</button></form>
+                        <form method="POST" action="/secretaria/convites-externos/presenca"><?= \App\Core\Http\WebGuards::csrfField() ?><input type="hidden" name="convite_id" value="<?= $conviteId ?>"><input type="hidden" name="status" value="cancelado"><button class="btn btn-secondary !py-2 !px-4 text-[10px] font-black uppercase tracking-widest">Cancelar</button></form>
                         <details class="flex-1 min-w-full md:min-w-0">
                             <summary class="btn btn-secondary !py-2 !px-4 text-[10px] font-black uppercase tracking-widest cursor-pointer inline-block">Ver</summary>
                             <div class="mt-4 bg-erp-surface-2 rounded-2xl p-5 border border-erp-border/30 space-y-4">
@@ -69,7 +69,7 @@ $renderConvite = static function (array $convite, array $confirmados) use ($form
                                 <?php if ($temAnexo): ?>
                                     <div class="flex flex-wrap items-center gap-3 text-xs font-bold text-erp-muted">
                                         <span>Anexo: <?= htmlspecialchars((string) $convite['anexo_nome']) ?></span>
-                                        <form method="POST" action="/secretaria/convites-externos/remover-anexo"><input type="hidden" name="convite_id" value="<?= $conviteId ?>"><button class="text-danger font-black uppercase tracking-widest">Remover anexo</button></form>
+                                        <form method="POST" action="/secretaria/convites-externos/remover-anexo"><?= \App\Core\Http\WebGuards::csrfField() ?><input type="hidden" name="convite_id" value="<?= $conviteId ?>"><button class="text-danger font-black uppercase tracking-widest">Remover anexo</button></form>
                                     </div>
                                 <?php endif; ?>
                                 <div>
@@ -106,6 +106,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <div class="card-header border-b border-erp-border/50 p-6"><h2 class="text-xl font-black text-erp-navy tracking-tight">Novo Convite Externo</h2></div>
             <div class="card-body p-6">
                 <form method="POST" action="/secretaria/convites-externos/salvar" enctype="multipart/form-data" class="space-y-5">
+                    <?= \App\Core\Http\WebGuards::csrfField() ?>
                     <select name="tipo" class="form-select shadow-sm"><option value="sessao_magna">Sessão Magna</option><option value="palestra">Palestra</option><option value="evento">Evento</option><option value="outro">Outro</option></select>
                     <input name="titulo" required class="form-input shadow-sm" placeholder="Título">
                     <input name="loja_origem" class="form-input shadow-sm" placeholder="Loja de origem">

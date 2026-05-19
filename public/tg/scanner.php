@@ -130,7 +130,7 @@ declare(strict_types=1);
                 });
                 const data = await res.json();
                 if (!data.ok) {
-                    throw new Error(data.error || "Nao foi possivel cadastrar o livro por ISBN agora.");
+                    throw new Error(data.erro || data.error || "Nao foi possivel cadastrar o livro por ISBN agora.");
                 }
 
                 info.innerHTML =

@@ -4,6 +4,7 @@ namespace App\Core\Http;
 
 class WebGuards
 {
+    private const CSRF_SESSION_KEY = 'csrf_token';
     public static function renderTelegramWebAppBridge(): void
     {
         $requestUri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
@@ -95,6 +96,38 @@ HTML;
         if (trim((string) ($session['tenant_id'] ?? '')) === '') {
             header('Content-Type: application/json; charset=utf-8');
             JsonResponse::error('Loja nao identificada. Verifique a configuracao do ambiente.', 503);
+        }
+    }
+
+    public static function csrfToken(): string
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            @session_start();
+        }
+        $token = (string) ($_SESSION[self::CSRF_SESSION_KEY] ?? '');
+        if ($token === '') {
+            $token = bin2hex(random_bytes(32));
+            $_SESSION[self::CSRF_SESSION_KEY] = $token;
+        }
+        return $token;
+    }
+
+    public static function csrfField(): string
+    {
+        return '<input type="hidden" name="_csrf" value="' . htmlspecialchars(self::csrfToken(), ENT_QUOTES, 'UTF-8') . '">';
+    }
+
+    public static function requireValidCsrf(string $redirectOnFailure = '/'): void
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            @session_start();
+        }
+        $expected = (string) ($_SESSION[self::CSRF_SESSION_KEY] ?? '');
+        $provided = trim((string) ($_POST['_csrf'] ?? ''));
+        if ($expected === '' || $provided === '' || !hash_equals($expected, $provided)) {
+            $_SESSION['mensagem_erro'] = 'Sessao expirada ou requisicao invalida. Tente novamente.';
+            header('Location: ' . $redirectOnFailure);
+            exit;
         }
     }
 }
