@@ -310,41 +310,6 @@ class CommandHandler
         return true;
     }
 
-    private function getEfemeridesDoDiaPorTipos(array $tipos): array
-    {
-        $tiposNormalizados = array_values(array_unique(array_filter(array_map(
-            static fn (string $tipo): string => strtolower(trim($tipo)),
-            $tipos
-        ))));
-
-        $registros = (new EfemerideRegistro())->getRegistrosDoDia();
-
-        return array_values(array_filter($registros, static function (array $registro) use ($tiposNormalizados): bool {
-            $tipo = strtolower(trim((string) ($registro['tipo'] ?? '')));
-            return in_array($tipo, $tiposNormalizados, true);
-        }));
-    }
-
-    private function formatarLinhaEfemeride(array $registro): string
-    {
-        $nome = trim((string) ($registro['nome'] ?? '')) ?: 'Registro sem nome';
-        $texto = trim((string) ($registro['mensagem_custom'] ?? ''));
-        $dataAtividade = trim((string) ($registro['data_evento'] ?? ''));
-        $tipo = trim((string) ($registro['tipo'] ?? ''));
-
-        if ($texto !== '') {
-            return "- <b>{$nome}</b>: {$texto}";
-        }
-
-        $sufixo = $tipo !== '' ? " ({$tipo})" : '';
-        if ($dataAtividade !== '') {
-            $timestamp = strtotime($dataAtividade);
-            $dataAtividade = $timestamp ? date('d/m/Y', $timestamp) : $dataAtividade;
-            $sufixo .= " - {$dataAtividade}";
-        }
-
-        return "- <b>{$nome}</b>{$sufixo}";
-    }
 
     public function handlePainelAdmin($chatId, $requesterTelegramId)
     {
@@ -872,13 +837,7 @@ class CommandHandler
                 [
                     ['text' => '📋 Efemérides do Dia', 'callback_data' => 'chancelaria_neste_dia'],
                 ],
-                [
-                    ['text' => '📜 Nossa História', 'callback_data' => 'chancelaria_historico'],
-                    ['text' => '🎂 Aniversários', 'callback_data' => 'chancelaria_aniversarios'],
-                ],
-                [
-                    ['text' => '📐 Datas Maçônicas', 'callback_data' => 'chancelaria_datas'],
-                ],
+
                 [
                     ['text' => '« Voltar', 'callback_data' => 'start_menu'],
                 ],
@@ -949,10 +908,7 @@ class CommandHandler
         $mensagem = "<b>Biblioteca da Loja</b>\n\nSelecione uma opção:";
         $botoes = [];
 
-        $botoes[] = [
-            ['text' => 'Meus Empréstimos', 'callback_data' => 'biblioteca_meus_emprestimos'],
-            ['text' => 'Ver Acervo', 'callback_data' => 'biblioteca_acervo'],
-        ];
+
         $botoes[] = [
             ['text' => 'Abrir Biblioteca Web', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca')]],
             ['text' => 'Biblioteca Mobile', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/biblioteca')]],
@@ -980,211 +936,6 @@ class CommandHandler
         $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML', 'reply_markup' => ['inline_keyboard' => $botoes]]);
     }
 
-    public function handleBibliotecaMeusEmprestimos($chatId, $requesterTelegramId)
-    {
-        $obreiroModel = new \App\Models\Obreiro();
-        $emprestimoModel = new \App\Models\Emprestimo();
-
-        $obreiro = $this->findObreiroByTelegramId($requesterTelegramId);
-        if (!$obreiro) {
-            $this->telegram->sendMessage($chatId, "Não foi possível localizar seu cadastro agora. Tente novamente ou contate a Secretaria.");
-            return;
-        }
-
-        $emprestimos = $emprestimoModel->listarPendentesPorObreiro($obreiro['id']);
-
-        if (empty($emprestimos)) {
-            $mensagem = "<b>Meus Empréstimos</b>\n\nVocê não possui empréstimos ativos.";
-        } else {
-            $mensagem = "<b>Meus Empréstimos</b>\n\n";
-            foreach ($emprestimos as $e) {
-                $mensagem .= "- <b>" . htmlspecialchars($e['titulo']) . "</b> - Devolução prevista: " . date('d/m/Y', strtotime($e['data_devolucao_prevista'])) . "\n";
-            }
-        }
-
-        $this->telegram->sendMessage($chatId, $mensagem, [
-            'parse_mode' => 'HTML',
-            'reply_markup' => ['inline_keyboard' => [[['text' => 'Voltar', 'callback_data' => 'biblioteca_menu']]]],
-        ]);
-    }
-
-    private function handleBibliotecaAcervo($chatId)
-    {
-        $acervoModel = new \App\Models\Acervo();
-        $livros = $acervoModel->listarTodos();
-
-        if (empty($livros)) {
-            $mensagem = "<b>Acervo da Biblioteca</b>\n\nNenhum livro cadastrado.";
-        } else {
-            $mensagem = "<b>Acervo da Biblioteca</b>\n\n";
-            foreach ($livros as $i => $livro) {
-                $mensagem .= ($i + 1) . ". <b>" . htmlspecialchars($livro['titulo']) . "</b> - " . htmlspecialchars($livro['autor']);
-                if (!empty($livro['grau_recomendado'])) {
-                    $mensagem .= " (Grau: " . htmlspecialchars($livro['grau_recomendado']) . ")";
-                }
-                $mensagem .= "\n";
-            }
-        }
-
-        $this->telegram->sendMessage($chatId, $mensagem, [
-            'parse_mode' => 'HTML',
-            'reply_markup' => ['inline_keyboard' => [[['text' => 'Voltar', 'callback_data' => 'biblioteca_menu']]]],
-        ]);
-    }
-
-    private function handleBibliotecaCadastrar($chatId, $fromId = null)
-    {
-        $mensagem = "<b>Cadastrar Novo Livro</b>\n\nEscolha o método de cadastro:";
-        $teclado = [
-            'inline_keyboard' => [
-                [
-                    ['text' => 'Ler Codigo de Barras', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca/scanner')]],
-                ],
-                [
-                    ['text' => 'Preencher Manualmente', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca/novo')]],
-                ],
-                [
-                    ['text' => 'Voltar', 'callback_data' => 'biblioteca_menu'],
-                ],
-            ],
-        ];
-
-        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
-    }
-
-    private function handleBibliotecaGerenciar($chatId, $fromId = null)
-    {
-        $mensagem = "<b>Gerenciar Empréstimos</b>\n\nUse o painel web da biblioteca para aprovar devoluções e acompanhar pendências.";
-        $this->telegram->sendMessage($chatId, $mensagem, [
-            'parse_mode' => 'HTML',
-            'reply_markup' => ['inline_keyboard' => [
-                [['text' => 'Abrir painel', 'web_app' => ['url' => $this->buildAppUrl('/biblioteca/emprestimos')]],
-                ['text' => 'Voltar', 'callback_data' => 'biblioteca_menu']]
-            ]],
-        ]);
-    }
-
-    private function handleAniversarios($chatId)
-    {
-        $aniversariantes = $this->getEfemeridesDoDiaPorTipos(['aniversário', 'aniversario']);
-
-        if (empty($aniversariantes)) {
-            $msg = "Não há aniversariantes de vida registrados para hoje.";
-        } else {
-            $msg = "<b>Aniversariantes de Vida Hoje</b>\n\n";
-            foreach ($aniversariantes as $o) {
-                $msg .= $this->formatarLinhaEfemeride($o) . "\n";
-            }
-        }
-
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
-    }
-
-    private function handleDatasMaconicas($chatId)
-    {
-        $maconicos = $this->getEfemeridesDoDiaPorTipos([
-            'iniciação',
-            'iniciacao',
-            'elevação',
-            'elevacao',
-            'exaltação',
-            'exaltacao',
-            'instalação',
-            'instalacao',
-            'filiação',
-            'filiacao',
-            'posse grão mestre',
-            'posse grao mestre',
-            'concessão de membro honorário',
-            'concessao de membro honorario',
-            'oriente eterno',
-        ]);
-
-        if (empty($maconicos)) {
-            $msg = "Não há aniversários maçônicos registrados para hoje.";
-        } else {
-            $msg = "<b>Aniversários Maçônicos Hoje</b>\n\n";
-            foreach ($maconicos as $o) {
-                $msg .= $this->formatarLinhaEfemeride($o) . "\n";
-            }
-        }
-
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
-    }
-
-    private function handleFatosHistoricos($chatId)
-    {
-        $efemerideModel = new \App\Models\EfemerideRegistro();
-        $hoje = date('m-d');
-        $fatos = $efemerideModel->buscarPorData($hoje);
-
-        $fatosHistoricos = array_values(array_filter($fatos, static function (array $item): bool {
-            $tipo = strtolower(trim((string) ($item['tipo'] ?? '')));
-            return $tipo === 'historia' || $tipo === 'história';
-        }));
-
-        // Adicionar os novos fatos da tabela HistoriaMaconica
-        try {
-            $historiaModel = new \App\Models\HistoriaMaconica();
-            $dia = (int)date('d');
-            $mes = (int)date('m');
-            $novosFatos = $historiaModel->buscarPorDiaMes($dia, $mes);
-            foreach ($novosFatos as $novo) {
-                $fatosHistoricos[] = [
-                    'tipo' => 'História',
-                    'nome' => $novo['titulo'] ?? '',
-                    'mensagem_custom' => $novo['texto'] ?? '',
-                    'data_evento' => !empty($novo['ano_ref']) ? sprintf('%04d-%02d-%02d', $novo['ano_ref'], $mes, $dia) : null
-                ];
-            }
-        } catch (\Throwable $e) {
-            error_log("[bot] Falha ao carregar HistoriaMaconica no handleFatosHistoricos: " . $e->getMessage());
-        }
-
-        // Adicionar eventos fixos do HistoricoEventos
-        try {
-            require_once __DIR__ . '/../Services/HistoricoEventos.php';
-            $diaMesChave = date('m-d');
-            $fixos = \App\Services\HistoricoEventos::getFixos();
-            if (isset($fixos[$diaMesChave])) {
-                $fx = $fixos[$diaMesChave];
-                $fatosHistoricos[] = [
-                    'tipo' => 'História',
-                    'nome' => $fx['titulo'] ?? 'Fato Histórico',
-                    'mensagem_custom' => $fx['texto'] ?? '',
-                    'data_evento' => !empty($fx['ano_ref']) ? sprintf('%04d-%02d-%02d', $fx['ano_ref'], (int)date('m'), (int)date('d')) : null
-                ];
-            }
-        } catch (\Throwable $e) {
-            error_log("[bot] Falha ao carregar HistoricoEventos: " . $e->getMessage());
-        }
-
-        if (empty($fatosHistoricos)) {
-            $msg = "Não há fatos históricos registrados para hoje.";
-        } else {
-            $msg = "<b>Fatos Históricos do Dia</b>\n\n";
-            foreach ($fatosHistoricos as $f) {
-                $texto = trim((string) ($f['mensagem_custom'] ?? ''));
-                if ($texto === '') {
-                    $texto = trim((string) ($f['nome'] ?? ''));
-                }
-
-                $dataAtividade = '';
-                if (!empty($f['data_evento'])) {
-                    $timestamp = strtotime((string) $f['data_evento']);
-                    $dataAtividade = $timestamp ? date('d/m/Y', $timestamp) : (string) $f['data_evento'];
-                }
-
-                $linha = htmlspecialchars($texto !== '' ? $texto : 'Registro histórico sem descrição.');
-                if ($dataAtividade !== '') {
-                    $linha .= " ({$dataAtividade})";
-                }
-                $msg .= "- {$linha}\n";
-            }
-        }
-
-        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
-    }
 
     private function getRegistrosConsolidadosDoDia(string $dataYmd): array
     {
@@ -1479,18 +1230,7 @@ class CommandHandler
                     case 'chancelaria_aprovar_efemeride':
                         $this->handleAprovarEfemeride($chatId, (int) $fromId);
                         break;
-                    case 'chancelaria_aniversarios':
-                        if (!$this->ensureChancelariaAccess($chatId, (int) $fromId)) { break; }
-                        $this->handleAniversarios($chatId);
-                        break;
-                    case 'chancelaria_datas':
-                        if (!$this->ensureChancelariaAccess($chatId, (int) $fromId)) { break; }
-                        $this->handleDatasMaconicas($chatId);
-                        break;
-                    case 'chancelaria_historico':
-                        if (!$this->ensureChancelariaAccess($chatId, (int) $fromId)) { break; }
-                        $this->handleFatosHistoricos($chatId);
-                        break;
+
 
                     case 'admin_tesouraria':
                     case 'tesouraria_menu':
@@ -1519,12 +1259,7 @@ class CommandHandler
                     case 'biblioteca_menu':
                         $this->handleBiblioteca($chatId, $fromId);
                         break;
-                    case 'biblioteca_meus_emprestimos':
-                        $this->handleBibliotecaMeusEmprestimos($chatId, $fromId);
-                        break;
-                    case 'biblioteca_acervo':
-                        $this->handleBibliotecaAcervo($chatId);
-                        break;
+
                     case 'biblioteca_cadastrar':
                         $this->handleBibliotecaCadastrar($chatId, $fromId);
                         break;
