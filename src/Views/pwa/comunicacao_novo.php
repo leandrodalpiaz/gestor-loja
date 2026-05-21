@@ -19,7 +19,7 @@ ob_start();
 
 <div class="p-4 sm:p-6 space-y-4">
     <?php if ($erroDb): ?>
-        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div class="rounded-xl p-4 text-sm" style="background:rgba(251,191,36,0.15);color:#fde68a;border:1px solid rgba(251,191,36,0.25);">
             <p class="font-semibold">Erro de Acesso</p>
             <p><?= htmlspecialchars((string) $erroDb) ?></p>
             <p class="mt-1 text-xs">Ação: Aplique a migração `database/phase2_comunicacao.sql` no schema do ambiente e tente novamente.</p>
@@ -27,39 +27,42 @@ ob_start();
     <?php endif; ?>
 
     <?php if ($mensagemSucesso): ?>
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+        <div class="rounded-xl px-4 py-3 text-sm font-medium" style="background:rgba(52,211,153,0.15);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25);">
             <?= htmlspecialchars((string) $mensagemSucesso) ?>
         </div>
     <?php endif; ?>
     <?php if ($mensagemErro): ?>
-        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">
+        <div class="rounded-xl px-4 py-3 text-sm font-medium" style="background:rgba(248,113,113,0.12);color:#fca5a5;border:1px solid rgba(248,113,113,0.25);">
             <?= htmlspecialchars((string) $mensagemErro) ?>
         </div>
     <?php endif; ?>
 
-    <form method="post" action="/pwa/comunicacao/novo" class="rounded-2xl border border-erpBorder bg-erpSurface p-5 space-y-4 shadow-sm">
+    <form method="post" action="/pwa/comunicacao/novo" class="rounded-2xl p-5 space-y-4 shadow-sm" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);">
         <div>
-            <label class="block text-sm font-semibold text-erpText">Título</label>
+            <label class="block text-sm font-semibold" style="color:#e2e8f0;">Título</label>
             <input name="titulo" value="<?= htmlspecialchars((string) ($payload['titulo'] ?? '')) ?>"
-                   class="mt-1 block w-full rounded-xl border border-erpBorder bg-erpBg px-4 py-3 text-sm placeholder-erpMuted focus:border-erpNavy focus:outline-none"
+                   class="mt-1 block w-full rounded-xl px-4 py-3 text-sm placeholder:color:#94a3b8 focus:outline-none"
+                   style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);color:#f1f5f9;"
                    placeholder="Ex.: Orientações para a próxima sessão">
         </div>
 
         <div>
-            <label class="block text-sm font-semibold text-erpText">Categoria</label>
+            <label class="block text-sm font-semibold" style="color:#e2e8f0;">Categoria</label>
             <input name="categoria" value="<?= htmlspecialchars((string) ($payload['categoria'] ?? 'geral')) ?>"
-                   class="mt-1 block w-full rounded-xl border border-erpBorder bg-erpBg px-4 py-3 text-sm placeholder-erpMuted focus:border-erpNavy focus:outline-none"
+                   class="mt-1 block w-full rounded-xl px-4 py-3 text-sm placeholder:color:#94a3b8 focus:outline-none"
+                   style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);color:#f1f5f9;"
                    placeholder="Ex.: geral, secretaria, tesouraria">
         </div>
 
         <div>
-            <label class="block text-sm font-semibold text-erpText">Conteúdo do Comunicado</label>
+            <label class="block text-sm font-semibold" style="color:#e2e8f0;">Conteúdo do Comunicado</label>
             <textarea name="conteudo" rows="8"
-                      class="mt-1 block w-full rounded-xl border border-erpBorder bg-erpBg px-4 py-3 text-sm placeholder-erpMuted focus:border-erpNavy focus:outline-none"
+                      class="mt-1 block w-full rounded-xl px-4 py-3 text-sm placeholder:color:#94a3b8 focus:outline-none"
+                      style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);color:#f1f5f9;"
                       placeholder="Digite aqui o texto completo do comunicado..."><?= htmlspecialchars((string) ($payload['conteudo'] ?? '')) ?></textarea>
         </div>
 
-        <button class="w-full rounded-xl bg-erpNavy px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90">
+        <button class="w-full rounded-xl px-5 py-3 text-sm font-semibold transition hover:opacity-90" style="background:#C9A227;color:#0f172a;">
             Publicar Comunicado
         </button>
     </form>

@@ -1,6 +1,6 @@
 <?php
 /**
- * Componente Drawer (Painel Inferior Deslizante) — PWA Mobile
+ * Componente Drawer (Painel Inferior Deslizante) — PWA Mobile Dark
  *
  * Uso:
  *   $drawerId      = 'meu-drawer';         // ID único no DOM
@@ -11,11 +11,11 @@
  * O drawer é controlado via AlpineJS. Para abri-lo externamente:
  *   <button @click="$dispatch('open-drawer', { id: 'meu-drawer' })">Abrir</button>
  *
- * Dependências: AlpineJS (já carregado no shell via CDN ou via erp_head.php).
+ * Dependências: AlpineJS (já carregado no shell via CDN).
  */
 
-$drawerId = (string) ($drawerId ?? 'pwa-drawer');
-$drawerTitle = (string) ($drawerTitle ?? '');
+$drawerId      = (string) ($drawerId ?? 'pwa-drawer');
+$drawerTitle   = (string) ($drawerTitle ?? '');
 $drawerContent = (string) ($drawerContent ?? '');
 ?>
 
@@ -34,10 +34,10 @@ $drawerContent = (string) ($drawerContent ?? '');
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
          @click="open = false"
-         class="fixed inset-0 bg-black/50 backdrop-blur-sm"
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm"
          style="display: none;"></div>
 
-    <!-- Painel inferior deslizante -->
+    <!-- Painel inferior deslizante — dark -->
     <div x-show="open"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="translate-y-full"
@@ -46,34 +46,54 @@ $drawerContent = (string) ($drawerContent ?? '');
          x-transition:leave-start="translate-y-0"
          x-transition:leave-end="translate-y-full"
          class="fixed inset-x-0 bottom-0 z-50 transform"
-         style="display: none;">
+         style="display: none; padding-bottom: env(safe-area-inset-bottom, 0px);">
 
-        <div class="mx-auto max-w-lg rounded-t-2xl bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.15)]"
-             style="max-height: 85vh; padding-bottom: env(safe-area-inset-bottom, 0px);">
+        <div style="
+            max-width: 32rem;
+            margin: 0 auto;
+            max-height: 85vh;
+            border-radius: 1.25rem 1.25rem 0 0;
+            background: #0f172a;
+            border: 1px solid rgba(255,255,255,0.10);
+            border-bottom: none;
+            box-shadow: 0 -20px 60px rgba(2,6,23,0.65);
+            display: flex;
+            flex-direction: column;
+        ">
 
-            <!-- Indicador de arrasto (handle) -->
-            <div class="flex justify-center pt-3 pb-1">
-                <div class="h-1 w-10 rounded-full bg-gray-300"></div>
+            <!-- Handle de arrasto -->
+            <div style="display:flex;justify-content:center;padding:0.75rem 0 0.5rem;">
+                <div style="width:2.5rem;height:4px;border-radius:999px;background:rgba(255,255,255,0.20);"></div>
             </div>
 
             <!-- Cabeçalho do Drawer -->
-            <div class="flex items-center justify-between border-b border-gray-100 px-5 pb-3">
+            <div style="
+                display:flex;align-items:center;justify-content:space-between;
+                padding:0 1.25rem 0.75rem;
+                border-bottom:1px solid rgba(255,255,255,0.08);
+            ">
                 <?php if ($drawerTitle !== ''): ?>
-                    <h2 class="text-base font-bold text-erpNavy"><?= htmlspecialchars($drawerTitle) ?></h2>
+                    <h2 style="font-size:0.9375rem;font-weight:700;color:#f1f5f9;margin:0;"><?= htmlspecialchars($drawerTitle) ?></h2>
                 <?php else: ?>
                     <div></div>
                 <?php endif; ?>
                 <button @click="open = false"
-                        class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                        style="
+                            width:32px;height:32px;border-radius:50%;
+                            background:rgba(255,255,255,0.08);
+                            border:1px solid rgba(255,255,255,0.10);
+                            display:flex;align-items:center;justify-content:center;
+                            color:#94a3b8;cursor:pointer;
+                        "
                         aria-label="Fechar">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
 
-            <!-- Conteúdo do Drawer (scroll interno) -->
-            <div class="overflow-y-auto overscroll-contain px-5 py-4" style="max-height: calc(85vh - 80px);">
+            <!-- Conteúdo scrollável -->
+            <div style="overflow-y:auto;overscroll-behavior:contain;padding:1rem 1.25rem 1.5rem;flex:1;-webkit-overflow-scrolling:touch;">
                 <?= $drawerContent ?>
             </div>
         </div>

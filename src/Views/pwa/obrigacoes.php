@@ -95,9 +95,9 @@ ob_start();
 
     <!-- Mensagens de Feedback -->
     <?php if ($mensagemSucesso): ?>
-        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-sm">
+        <div class="rounded-2xl p-4 text-sm shadow-sm" style="background:rgba(52,211,153,0.15);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25)">
             <div class="flex gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" style="color:#6ee7b7">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                 </svg>
                 <span><?= htmlspecialchars($mensagemSucesso) ?></span>
@@ -106,9 +106,9 @@ ob_start();
     <?php endif; ?>
 
     <?php if ($mensagemErro): ?>
-        <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 shadow-sm">
+        <div class="rounded-2xl p-4 text-sm shadow-sm" style="background:rgba(248,113,113,0.12);color:#fca5a5;border:1px solid rgba(248,113,113,0.25)">
             <div class="flex gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-rose-600" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" style="color:#fca5a5">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                 </svg>
                 <span><?= htmlspecialchars($mensagemErro) ?></span>
@@ -118,36 +118,37 @@ ob_start();
 
     <!-- Métricas Financeiras Mobile -->
     <div class="grid grid-cols-3 gap-3">
-        <div class="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-3 text-center shadow-sm">
-            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-emerald-800">Total Pago</span>
-            <div class="mt-1 text-sm font-extrabold text-emerald-700"><?= $formatCurrency($totalPagoGeral) ?></div>
+        <div class="rounded-2xl p-3 text-center shadow-sm" style="background:rgba(52,211,153,0.10);border:1px solid rgba(52,211,153,0.2)">
+            <span class="text-[0.62rem] font-bold uppercase tracking-wider" style="color:#6ee7b7">Total Pago</span>
+            <div class="mt-1 text-sm font-extrabold" style="color:#6ee7b7"><?= $formatCurrency($totalPagoGeral) ?></div>
         </div>
-        <div class="rounded-2xl border border-amber-100 bg-amber-50/40 p-3 text-center shadow-sm">
-            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-amber-800">Em Aberto</span>
-            <div class="mt-1 text-sm font-extrabold text-amber-700"><?= $formatCurrency($totalAbertoGeral) ?></div>
+        <div class="rounded-2xl p-3 text-center shadow-sm" style="background:rgba(251,191,36,0.10);border:1px solid rgba(251,191,36,0.2)">
+            <span class="text-[0.62rem] font-bold uppercase tracking-wider" style="color:#fde68a">Em Aberto</span>
+            <div class="mt-1 text-sm font-extrabold" style="color:#fde68a"><?= $formatCurrency($totalAbertoGeral) ?></div>
         </div>
-        <div class="rounded-2xl border border-rose-100 bg-rose-50/40 p-3 text-center shadow-sm">
-            <span class="text-[0.62rem] font-bold uppercase tracking-wider text-rose-800">Atrasado</span>
-            <div class="mt-1 text-sm font-extrabold text-rose-700"><?= $formatCurrency($totalAtrasadoGeral) ?></div>
+        <div class="rounded-2xl p-3 text-center shadow-sm" style="background:rgba(248,113,113,0.10);border:1px solid rgba(248,113,113,0.2)">
+            <span class="text-[0.62rem] font-bold uppercase tracking-wider" style="color:#fca5a5">Atrasado</span>
+            <div class="mt-1 text-sm font-extrabold" style="color:#fca5a5"><?= $formatCurrency($totalAtrasadoGeral) ?></div>
         </div>
     </div>
 
     <!-- Chave PIX Rápida -->
-    <div class="rounded-2xl border border-erpBorder bg-erpSurface p-4 shadow-sm">
+    <div class="p-4 shadow-sm" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);border-radius:1rem;">
         <div class="flex items-center justify-between gap-4">
             <div class="min-w-0">
-                <span class="text-[0.62rem] font-bold uppercase tracking-wider text-erpMuted">Contribuição via PIX</span>
-                <p class="mt-0.5 text-xs font-semibold text-erpNavy truncate">
+                <span class="text-[0.62rem] font-bold uppercase tracking-wider" style="color:#94a3b8">Contribuição via PIX</span>
+                <p class="mt-0.5 text-xs font-semibold truncate" style="color:#f1f5f9">
                     Chave <?= htmlspecialchars($pixTipo) ?>: <strong class="font-mono text-erpGold"><?= htmlspecialchars($pixValor ?: 'Não configurada') ?></strong>
                 </p>
                 <?php if ($pixBeneficiario): ?>
-                    <p class="text-[0.65rem] text-erpMuted mt-0.5"><?= htmlspecialchars($pixBeneficiario) ?></p>
+                    <p class="text-[0.65rem] mt-0.5" style="color:#94a3b8"><?= htmlspecialchars($pixBeneficiario) ?></p>
                 <?php endif; ?>
             </div>
             <?php if ($pixValor): ?>
                 <button type="button" 
                         onclick="navigator.clipboard.writeText('<?= htmlspecialchars(addslashes($pixValor)) ?>'); alert('Chave PIX copiada!');"
-                        class="shrink-0 rounded-xl bg-erpBg border border-erpBorder px-3 py-1.5 text-xs font-bold text-erpNavy active:scale-95 transition-transform">
+                        class="shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold active:scale-95 transition-transform"
+                        style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);color:#f1f5f9">
                     Copiar
                 </button>
             <?php endif; ?>
@@ -156,10 +157,10 @@ ob_start();
 
     <!-- Pilha Vertical de Cards de Mensalidades (100% de largura) -->
     <div class="space-y-4">
-        <h3 class="text-sm font-bold uppercase tracking-widest text-erpNavy">Minhas Mensalidades</h3>
+        <h3 class="text-sm font-bold uppercase tracking-widest" style="color:#f1f5f9">Minhas Mensalidades</h3>
 
         <?php if (empty($mesesTesourarias)): ?>
-            <div class="rounded-2xl border border-dashed border-erpBorder p-8 text-center text-sm text-erpMuted bg-erpSurface/20">
+            <div class="p-8 text-center text-sm" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);border-style:dashed;border-radius:1rem;color:#94a3b8">
                 Nenhum compromisso financeiro encontrado.
             </div>
         <?php endif; ?>
@@ -169,59 +170,67 @@ ob_start();
             $isPago = ($mes['abertos'] === 0) && ($mes['total_pago'] > 0);
             $isAtrasado = ($mes['atrasados'] > 0);
 
-            $statusBadge = ['Em aberto', 'bg-amber-100 text-amber-800 border-amber-300'];
             if ($isPago) {
-                $statusBadge = ['Pago', 'bg-emerald-100 text-emerald-800 border-emerald-300'];
+                $cardBorderStyle = 'background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:1rem;';
+                $badgeStyle = 'background:rgba(52,211,153,0.15);color:#6ee7b7;border-radius:999px;padding:0.2rem 0.55rem;font-size:0.65rem;font-weight:700;';
+                $badgeLabel = 'Pago';
             } elseif ($isAtrasado) {
-                $statusBadge = ['Atrasado', 'bg-rose-100 text-rose-800 border-rose-300'];
+                $cardBorderStyle = 'background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);border-radius:1rem;';
+                $badgeStyle = 'background:rgba(248,113,113,0.12);color:#fca5a5;border-radius:999px;padding:0.2rem 0.55rem;font-size:0.65rem;font-weight:700;';
+                $badgeLabel = 'Atrasado';
+            } else {
+                $cardBorderStyle = 'background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);border-radius:1rem;';
+                $badgeStyle = 'background:rgba(251,191,36,0.15);color:#fde68a;border-radius:999px;padding:0.2rem 0.55rem;font-size:0.65rem;font-weight:700;';
+                $badgeLabel = 'Em aberto';
             }
             ?>
-            <div class="rounded-2xl border bg-erpSurface p-4 shadow-sm space-y-3 <?= $isPago ? 'border-emerald-100 bg-emerald-50/5' : ($isAtrasado ? 'border-rose-100 bg-rose-50/5' : 'border-erpBorder') ?>">
+            <div class="p-4 shadow-sm space-y-3" style="<?= $cardBorderStyle ?>">
                 
                 <!-- Topo: Mês/Ano e Badge de Status -->
                 <div class="flex items-center justify-between gap-3">
-                    <h4 class="text-base font-bold text-erpNavy"><?= htmlspecialchars($mes['rotulo']) ?></h4>
-                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider <?= htmlspecialchars($statusBadge[1]) ?>">
-                        <?= htmlspecialchars($statusBadge[0]) ?>
+                    <h4 class="text-base font-bold" style="color:#f1f5f9"><?= htmlspecialchars($mes['rotulo']) ?></h4>
+                    <span class="inline-flex items-center uppercase tracking-wider" style="<?= htmlspecialchars($badgeStyle) ?>">
+                        <?= htmlspecialchars($badgeLabel) ?>
                     </span>
                 </div>
 
                 <!-- Detalhes do Valor -->
                 <div class="flex items-baseline justify-between gap-3">
-                    <div class="text-xs text-erpMuted">
+                    <div class="text-xs" style="color:#94a3b8">
                         <?php if ($mes['total_pago'] > 0): ?>
-                            <span class="text-emerald-600 font-semibold">Pago: <?= $formatCurrency($mes['total_pago']) ?></span>
+                            <span class="font-semibold" style="color:#6ee7b7">Pago: <?= $formatCurrency($mes['total_pago']) ?></span>
                         <?php endif; ?>
                         <?php if ($mes['total_aberto'] > 0): ?>
                             <?php if ($mes['total_pago'] > 0): ?> <span class="mx-1">·</span> <?php endif; ?>
-                            <span class="text-amber-600 font-semibold">Aberto: <?= $formatCurrency($mes['total_aberto']) ?></span>
+                            <span class="font-semibold" style="color:#fde68a">Aberto: <?= $formatCurrency($mes['total_aberto']) ?></span>
                         <?php endif; ?>
                     </div>
-                    <div class="text-lg font-extrabold text-erpNavy">
+                    <div class="text-lg font-extrabold" style="color:#f1f5f9">
                         <?= $formatCurrency($mes['total_previsto']) ?>
                     </div>
                 </div>
 
                 <!-- Sub-itens (As parcelas em si) -->
-                <div class="border-t border-erpBorder/50 pt-2 space-y-1.5 text-xs text-erpMuted">
+                <div class="pt-2 space-y-1.5 text-xs" style="border-top:1px solid rgba(255,255,255,0.07);color:#94a3b8">
                     <?php foreach (($mes['itens'] ?? []) as $item): ?>
                         <div class="flex items-center justify-between gap-2">
-                            <span class="truncate text-erpNavy font-medium"><?= htmlspecialchars($item['obrigacao_titulo']) ?></span>
-                            <span class="font-semibold text-erpNavy"><?= $formatCurrency($item['valor_previsto']) ?></span>
+                            <span class="truncate font-medium" style="color:#e2e8f0"><?= htmlspecialchars($item['obrigacao_titulo']) ?></span>
+                            <span class="font-semibold" style="color:#e2e8f0"><?= $formatCurrency($item['valor_previsto']) ?></span>
                         </div>
                     <?php endforeach; ?>
                 </div>
 
                 <!-- Botão de Ação: Enviar Comprovante ( Progressive disclosure no card ) -->
                 <?php if (!$isPago): ?>
-                    <div class="border-t border-erpBorder/50 pt-3">
+                    <div class="pt-3" style="border-top:1px solid rgba(255,255,255,0.07)">
                         <?php
                         $mesNum = (int) substr($mes['chave'], 5, 2);
                         $anoNum = (int) substr($mes['chave'], 0, 4);
                         ?>
                         <button type="button"
                                 @click="drawerMes = '<?= $mesNum ?>'; drawerAno = '<?= $anoNum ?>'; drawerValor = '<?= $mes['total_aberto'] ?>'; openUploadDrawer = true"
-                                class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-erpNavy px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-erpNavyDeep active:scale-[0.98] transition-transform">
+                                class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold shadow-sm active:scale-[0.98] transition-transform"
+                                style="background:#C9A227;color:#0f172a">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
@@ -251,7 +260,8 @@ ob_start();
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="openUploadDrawer = false"></div>
 
         <!-- Painel Deslizante -->
-        <div class="absolute inset-x-0 bottom-0 max-h-[90dvh] rounded-t-3xl border-t border-erpBorder bg-erpSurface pb-safe shadow-2xl flex flex-col"
+        <div class="absolute inset-x-0 bottom-0 max-h-[90dvh] rounded-t-3xl pb-safe shadow-2xl flex flex-col"
+             style="background:rgba(255,255,255,0.055);border-top:1px solid rgba(255,255,255,0.09);"
              x-show="openUploadDrawer"
              x-transition:enter="transition ease-out duration-300 transform"
              x-transition:enter-start="translate-y-full"
@@ -261,12 +271,12 @@ ob_start();
              x-transition:leave-end="translate-y-full">
             
             <!-- Handle Visual -->
-            <div class="mx-auto my-3 h-1.5 w-12 rounded-full bg-erpMuted/30"></div>
+            <div class="mx-auto my-3 h-1.5 w-12 rounded-full" style="background:rgba(148,163,184,0.3)"></div>
 
             <!-- Cabeçalho -->
-            <div class="flex items-center justify-between px-5 pb-3 border-b border-erpBorder">
-                <h3 class="text-base font-bold text-erpNavy">Enviar Comprovante</h3>
-                <button type="button" @click="openUploadDrawer = false" class="rounded-full bg-erpBg p-1.5 text-erpMuted hover:text-erpNavy active:scale-90 transition-transform">
+            <div class="flex items-center justify-between px-5 pb-3" style="border-bottom:1px solid rgba(255,255,255,0.09)">
+                <h3 class="text-base font-bold" style="color:#f1f5f9">Enviar Comprovante</h3>
+                <button type="button" @click="openUploadDrawer = false" class="rounded-full p-1.5 active:scale-90 transition-transform" style="background:rgba(255,255,255,0.03);color:#94a3b8">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
@@ -280,38 +290,41 @@ ob_start();
                 <input type="hidden" name="ano" x-model="drawerAno">
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-erpMuted">Valor Pago (R$) *</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider" style="color:#94a3b8">Valor Pago (R$) *</label>
                     <input type="number" name="valor" step="0.01" min="0.01" required x-model="drawerValor"
-                           class="mt-1 block w-full rounded-xl border border-erpBorder bg-erpBg p-3 text-sm text-erpNavy focus:border-erpNavy focus:ring-1 focus:ring-erpNavy">
+                           class="mt-1 block w-full focus:outline-none focus:ring-1 focus:ring-white/20"
+                           style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);color:#f1f5f9;border-radius:0.5rem;padding:0.6rem 0.875rem;">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-erpMuted">Arquivo do Comprovante *</label>
-                    <div class="mt-1 flex justify-center rounded-xl border-2 border-dashed border-erpBorder bg-erpBg px-6 py-5">
+                    <label class="block text-xs font-bold uppercase tracking-wider" style="color:#94a3b8">Arquivo do Comprovante *</label>
+                    <div class="mt-1 flex justify-center rounded-xl px-6 py-5" style="border:2px dashed rgba(255,255,255,0.12);background:rgba(255,255,255,0.03)">
                         <div class="space-y-1 text-center">
-                            <svg class="mx-auto h-10 w-10 text-erpMuted" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                            <svg class="mx-auto h-10 w-10" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true" style="color:#94a3b8">
                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
-                            <div class="flex text-xs text-erpMuted">
-                                <label for="file-upload" class="relative cursor-pointer rounded-md bg-white font-semibold text-erpNavy focus-within:outline-none focus-within:ring-2 focus-within:ring-erpNavy focus-within:ring-offset-2 hover:text-erpNavyDeep">
+                            <div class="flex text-xs" style="color:#94a3b8">
+                                <label for="file-upload" class="relative cursor-pointer rounded-md font-semibold focus-within:outline-none hover:opacity-80" style="color:#f1f5f9;background:transparent">
                                     <span>Tirar foto ou selecionar</span>
                                     <input id="file-upload" name="comprovante" type="file" accept="image/*,application/pdf" class="sr-only" required>
                                 </label>
                             </div>
-                            <p class="text-[0.62rem] text-erpMuted">Imagem (JPEG, PNG) ou PDF de até 5MB</p>
+                            <p class="text-[0.62rem]" style="color:#94a3b8">Imagem (JPEG, PNG) ou PDF de até 5MB</p>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-erpMuted">Observação (Opcional)</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider" style="color:#94a3b8">Observação (Opcional)</label>
                     <input type="text" name="descricao" placeholder="Ex: Mensalidade mais biblioteca"
-                           class="mt-1 block w-full rounded-xl border border-erpBorder bg-erpBg p-3 text-sm text-erpNavy focus:border-erpNavy focus:ring-1 focus:ring-erpNavy">
+                           class="mt-1 block w-full focus:outline-none focus:ring-1 focus:ring-white/20"
+                           style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);color:#f1f5f9;border-radius:0.5rem;padding:0.6rem 0.875rem;">
                 </div>
 
                 <div class="pt-2">
                     <button type="submit"
-                            class="w-full inline-flex items-center justify-center rounded-xl bg-erpNavy p-3 text-sm font-bold text-white shadow-lg hover:bg-erpNavyDeep active:scale-[0.98] transition-transform">
+                            class="w-full inline-flex items-center justify-center rounded-xl p-3 text-sm font-bold shadow-lg active:scale-[0.98] transition-transform"
+                            style="background:#C9A227;color:#0f172a">
                         Confirmar e Enviar
                     </button>
                 </div>

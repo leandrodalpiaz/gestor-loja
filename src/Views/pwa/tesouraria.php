@@ -30,102 +30,102 @@ ob_start();
         <p class="pwa-muted mt-2 text-sm">Caixa, comprovantes, regularidade, obrigações, fechamento e sessões financeiras.</p>
     </section>
 
-    <form method="get" action="/pwa/tesouraria" class="grid grid-cols-3 gap-2 rounded-2xl border border-erpBorder bg-erpSurface p-4">
-        <input name="mes" value="<?= $mes ?>" type="number" min="1" max="12" class="rounded-lg border border-erpBorder px-3 py-2 text-sm">
-        <input name="ano" value="<?= $ano ?>" type="number" min="2020" class="rounded-lg border border-erpBorder px-3 py-2 text-sm">
-        <button class="rounded-lg bg-erpNavy px-3 py-2 text-sm font-semibold text-white">Filtrar</button>
+    <form method="get" action="/pwa/tesouraria" class="pwa-card grid grid-cols-3 gap-2" style="padding:1rem;">
+        <input name="mes" value="<?= $mes ?>" type="number" min="1" max="12" class="pwa-input">
+        <input name="ano" value="<?= $ano ?>" type="number" min="2020" class="pwa-input">
+        <button class="pwa-btn-primary">Filtrar</button>
     </form>
 
     <section class="grid grid-cols-3 gap-3">
-        <div class="rounded-2xl border border-erpBorder bg-erpSurface p-3">
-            <div class="text-xs text-erpMuted">Entradas</div>
-            <div class="mt-1 text-lg font-bold text-emerald-700"><?= $formatCurrency($totais['entrada'] ?? 0) ?></div>
+        <div class="pwa-card p-3">
+            <div class="text-xs" style="color:#94a3b8;">Entradas</div>
+            <div class="mt-1 text-lg font-bold" style="color:#34d399;"><?= $formatCurrency($totais['entrada'] ?? 0) ?></div>
         </div>
-        <div class="rounded-2xl border border-erpBorder bg-erpSurface p-3">
-            <div class="text-xs text-erpMuted">Saídas</div>
-            <div class="mt-1 text-lg font-bold text-rose-700"><?= $formatCurrency($totais['saida'] ?? 0) ?></div>
+        <div class="pwa-card p-3">
+            <div class="text-xs" style="color:#94a3b8;">Saídas</div>
+            <div class="mt-1 text-lg font-bold" style="color:#f87171;"><?= $formatCurrency($totais['saida'] ?? 0) ?></div>
         </div>
-        <div class="rounded-2xl border border-erpBorder bg-erpSurface p-3">
-            <div class="text-xs text-erpMuted">Saldo</div>
-            <div class="mt-1 text-lg font-bold text-erpNavy"><?= $formatCurrency($saldo) ?></div>
+        <div class="pwa-card p-3">
+            <div class="text-xs" style="color:#94a3b8;">Saldo</div>
+            <div class="mt-1 text-lg font-bold" style="color:#f1f5f9;"><?= $formatCurrency($saldo) ?></div>
         </div>
     </section>
 
     <section class="grid grid-cols-2 gap-3">
-        <a href="/pwa/comprovantes" class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <div class="text-2xl font-bold text-amber-800"><?= count($comprovantesPendentes) ?></div>
-            <div class="text-sm font-semibold text-amber-900">Comprovantes pendentes</div>
+        <a href="/pwa/comprovantes" class="pwa-card p-4" style="display:block;">
+            <div class="text-2xl font-bold pwa-badge pwa-badge-warn" style="display:inline-block;margin-bottom:0.25rem;"><?= count($comprovantesPendentes) ?></div>
+            <div class="text-sm font-semibold" style="color:#f1f5f9;">Comprovantes pendentes</div>
         </a>
-        <a href="/tesouraria/fechamento" class="rounded-2xl border border-erpBorder bg-erpSurface p-4">
-            <div class="text-sm font-semibold text-erpNavy">Fechamento</div>
-            <div class="mt-1 text-xs text-erpMuted"><?= $fechamento ? 'Competência aberta/registrada' : 'Sem fechamento criado' ?></div>
+        <a href="/tesouraria/fechamento" class="pwa-card p-4" style="display:block;">
+            <div class="text-sm font-semibold" style="color:#f1f5f9;">Fechamento</div>
+            <div class="mt-1 text-xs" style="color:#94a3b8;"><?= $fechamento ? 'Competência aberta/registrada' : 'Sem fechamento criado' ?></div>
         </a>
     </section>
 
-    <section class="rounded-2xl border border-erpBorder bg-erpSurface p-4">
+    <section class="pwa-card" style="padding:1rem;">
         <div class="flex items-center justify-between gap-3">
             <div>
-                <h3 class="font-bold text-erpNavy">Regularidade</h3>
-                <p class="text-xs text-erpMuted">Regulares: <?= (int) ($regularidadeResumo['regular'] ?? 0) ?> · Irregulares: <?= (int) ($regularidadeResumo['irregular'] ?? 0) ?></p>
+                <h3 class="font-bold" style="color:#f1f5f9;">Regularidade</h3>
+                <p class="text-xs" style="color:#94a3b8;">Regulares: <?= (int) ($regularidadeResumo['regular'] ?? 0) ?> · Irregulares: <?= (int) ($regularidadeResumo['irregular'] ?? 0) ?></p>
             </div>
-            <a href="/tesouraria/regularidade" class="rounded-lg bg-erpNavy px-3 py-2 text-xs font-semibold text-white">Gerir</a>
+            <a href="/tesouraria/regularidade" class="pwa-btn-primary" style="padding:0.5rem 0.75rem;font-size:0.75rem;">Gerir</a>
         </div>
         <div class="mt-3 space-y-2">
             <?php foreach ($regularidadeLista as $registro): ?>
                 <?php $status = (string) ($registro['status'] ?? 'pendente'); ?>
-                <div class="flex items-center justify-between gap-3 rounded-lg bg-erpBg px-3 py-2">
-                    <span class="truncate text-sm font-medium text-erpNavy"><?= htmlspecialchars((string) ($registro['obreiro_nome'] ?? 'Obreiro')) ?></span>
-                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold <?= $status === 'regular' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' ?>"><?= htmlspecialchars($status) ?></span>
+                <div class="flex items-center justify-between gap-3 rounded-lg px-3 py-2" style="background:rgba(255,255,255,0.03);">
+                    <span class="truncate text-sm font-medium" style="color:#f1f5f9;"><?= htmlspecialchars((string) ($registro['obreiro_nome'] ?? 'Obreiro')) ?></span>
+                    <span class="pwa-badge <?= $status === 'regular' ? 'pwa-badge-success' : 'pwa-badge-warn' ?>"><?= htmlspecialchars($status) ?></span>
                 </div>
             <?php endforeach; ?>
         </div>
     </section>
 
-    <section class="rounded-2xl border border-erpBorder bg-erpSurface p-4">
+    <section class="pwa-card" style="padding:1rem;">
         <div class="flex items-center justify-between gap-3">
             <div>
-                <h3 class="font-bold text-erpNavy">Obrigações em aberto</h3>
-                <p class="text-xs text-erpMuted">Principais obreiros com pendência financeira.</p>
+                <h3 class="font-bold" style="color:#f1f5f9;">Obrigações em aberto</h3>
+                <p class="text-xs" style="color:#94a3b8;">Principais obreiros com pendência financeira.</p>
             </div>
-            <a href="/tesouraria/obrigacoes" class="rounded-lg bg-erpNavy px-3 py-2 text-xs font-semibold text-white">Gerir</a>
+            <a href="/tesouraria/obrigacoes" class="pwa-btn-primary" style="padding:0.5rem 0.75rem;font-size:0.75rem;">Gerir</a>
         </div>
         <div class="mt-3 space-y-2">
             <?php foreach ($obreirosPainel as $item): ?>
-                <div class="rounded-lg bg-erpBg px-3 py-2">
-                    <div class="text-sm font-semibold text-erpNavy"><?= htmlspecialchars((string) ($item['nome'] ?? $item['nome_historico'] ?? 'Obreiro')) ?></div>
-                    <div class="text-xs text-erpMuted">Aberto: <?= $formatCurrency($item['total_em_aberto'] ?? $item['saldo_aberto'] ?? 0) ?></div>
+                <div class="rounded-lg px-3 py-2" style="background:rgba(255,255,255,0.03);">
+                    <div class="text-sm font-semibold" style="color:#f1f5f9;"><?= htmlspecialchars((string) ($item['nome'] ?? $item['nome_historico'] ?? 'Obreiro')) ?></div>
+                    <div class="text-xs" style="color:#94a3b8;">Aberto: <?= $formatCurrency($item['total_em_aberto'] ?? $item['saldo_aberto'] ?? 0) ?></div>
                 </div>
             <?php endforeach; ?>
         </div>
     </section>
 
-    <section class="rounded-2xl border border-erpBorder bg-erpSurface p-4">
-        <h3 class="font-bold text-erpNavy">Últimos lançamentos</h3>
+    <section class="pwa-card" style="padding:1rem;">
+        <h3 class="font-bold" style="color:#f1f5f9;">Últimos lançamentos</h3>
         <div class="mt-3 space-y-2">
             <?php foreach ($lancamentos as $lancamento): ?>
-                <div class="flex items-center justify-between gap-3 rounded-lg bg-erpBg px-3 py-2">
+                <div class="flex items-center justify-between gap-3 rounded-lg px-3 py-2" style="background:rgba(255,255,255,0.03);">
                     <div class="min-w-0">
-                        <div class="truncate text-sm font-medium text-erpNavy"><?= htmlspecialchars((string) ($lancamento['descricao'] ?? 'Lançamento')) ?></div>
-                        <div class="text-xs text-erpMuted"><?= htmlspecialchars((string) ($lancamento['data_lancamento'] ?? '')) ?></div>
+                        <div class="truncate text-sm font-medium" style="color:#f1f5f9;"><?= htmlspecialchars((string) ($lancamento['descricao'] ?? 'Lançamento')) ?></div>
+                        <div class="text-xs" style="color:#94a3b8;"><?= htmlspecialchars((string) ($lancamento['data_lancamento'] ?? '')) ?></div>
                     </div>
-                    <span class="text-sm font-bold <?= ($lancamento['tipo'] ?? '') === 'saida' ? 'text-rose-700' : 'text-emerald-700' ?>"><?= $formatCurrency($lancamento['valor'] ?? 0) ?></span>
+                    <span class="text-sm font-bold" style="color:<?= ($lancamento['tipo'] ?? '') === 'saida' ? '#f87171' : '#34d399' ?>;"><?= $formatCurrency($lancamento['valor'] ?? 0) ?></span>
                 </div>
             <?php endforeach; ?>
         </div>
-        <a href="/tesouraria/caixa" class="mt-3 block rounded-lg border border-erpBorder px-3 py-2 text-center text-sm font-semibold text-erpNavy">Abrir livro-caixa completo</a>
+        <a href="/tesouraria/caixa" class="mt-3 block rounded-lg px-3 py-2 text-center text-sm font-semibold" style="border:1px solid rgba(255,255,255,0.09);color:#f1f5f9;">Abrir livro-caixa completo</a>
     </section>
 
-    <section class="rounded-2xl border border-erpBorder bg-erpSurface p-4">
-        <h3 class="font-bold text-erpNavy">Sessões financeiras</h3>
+    <section class="pwa-card" style="padding:1rem;">
+        <h3 class="font-bold" style="color:#f1f5f9;">Sessões financeiras</h3>
         <div class="mt-3 space-y-2">
             <?php foreach ($sessoesFinanceiras as $sessao): ?>
-                <div class="rounded-lg bg-erpBg px-3 py-2">
-                    <div class="text-sm font-semibold text-erpNavy"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Sessão')) ?></div>
-                    <div class="text-xs text-erpMuted">Ágape: <?= htmlspecialchars((string) ($sessao['agape_modalidade'] ?? '')) ?> · Confirmados: <?= (int) ($sessao['total_confirmados'] ?? 0) ?></div>
+                <div class="rounded-lg px-3 py-2" style="background:rgba(255,255,255,0.03);">
+                    <div class="text-sm font-semibold" style="color:#f1f5f9;"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Sessão')) ?></div>
+                    <div class="text-xs" style="color:#94a3b8;">Ágape: <?= htmlspecialchars((string) ($sessao['agape_modalidade'] ?? '')) ?> · Confirmados: <?= (int) ($sessao['total_confirmados'] ?? 0) ?></div>
                 </div>
             <?php endforeach; ?>
         </div>
-        <a href="/tesouraria/sessoes" class="mt-3 block rounded-lg border border-erpBorder px-3 py-2 text-center text-sm font-semibold text-erpNavy">Abrir sessões financeiras</a>
+        <a href="/tesouraria/sessoes" class="mt-3 block rounded-lg px-3 py-2 text-center text-sm font-semibold" style="border:1px solid rgba(255,255,255,0.09);color:#f1f5f9;">Abrir sessões financeiras</a>
     </section>
 </div>
 

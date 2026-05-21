@@ -163,7 +163,7 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
                     <?php endif; ?>
                 </div>
                 <h2 class="font-cinzel text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Ingresso Restrito</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium tracking-wide">Identifique-se para adentrar aos trabalhos</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium tracking-wide">Identifique-se para adentrar ao Átrio</p>
             </div>
 
             <?php if (!$tenantResolved): ?>
@@ -182,10 +182,10 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
 
             <form action="/login" method="POST" class="space-y-5">
                 <div>
-                    <label for="matricula" class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">CIM / Matrícula</label>
+                    <label for="matricula" class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">C.I.M.</label>
                     <input id="matricula" name="matricula" type="text" required <?= !$tenantResolved ? 'disabled' : '' ?> 
                         class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-transparent transition-all" 
-                        placeholder="Seu CIM numérico">
+                        placeholder="Seu C.I.M. numérico">
                 </div>
                 <div>
                     <label for="password" class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Senha</label>
@@ -197,7 +197,7 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
                 <div class="pt-6">
                     <button type="submit" name="acao" value="login" <?= !$tenantResolved ? 'disabled' : '' ?> 
                         class="w-full py-4 bg-[#1B3A5C] hover:bg-[#12273F] text-white rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-[#1B3A5C]/30 transition-all flex justify-center items-center gap-2 group">
-                        Entrar
+                        Adentrar
                         <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                     </button>
                 </div>
@@ -205,7 +205,7 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
                 <div class="pt-4 text-center">
                     <button type="submit" name="acao" value="solicitar" <?= !$tenantResolved ? 'disabled' : '' ?> 
                         class="text-xs font-semibold text-slate-500 hover:text-[#C9A227] transition-colors tracking-wide">
-                        Primeiro acesso ou Esqueceu a senha?
+                        Solicitar acesso ou recuperar senha?
                     </button>
                 </div>
             </form>

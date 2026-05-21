@@ -1299,29 +1299,29 @@ switch ($requestUri) {
             $publicConteudos = [
                 [
                     'tipo' => 'agenda',
-                    'titulo' => 'Sessao Magna Branca - Programacao Publica',
-                    'resumo' => 'Encontro de carater cultural e fraterno com participacao da comunidade convidada.',
+                    'titulo' => 'Sessão Magna Branca - Programação Pública',
+                    'resumo' => 'Encontro de caráter cultural e fraterno com participação da comunidade convidada.',
                     'inicio_em' => '15/05/2026',
                     'link_url' => 'https://www.glojars.org.br/',
                 ],
                 [
                     'tipo' => 'noticia',
-                    'titulo' => 'Acoes de solidariedade em destaque no trimestre',
-                    'resumo' => 'Painel de impacto social com foco em arrecadacoes e apoio institucional.',
+                    'titulo' => 'Ações de solidariedade em destaque no trimestre',
+                    'resumo' => 'Painel de impacto social com foco em arrecadações e apoio institucional.',
                     'inicio_em' => '10/05/2026',
                     'link_url' => 'https://www.gob.org.br/',
                 ],
                 [
                     'tipo' => 'comunicado',
-                    'titulo' => 'Calendario de eventos publicos da Loja',
-                    'resumo' => 'Programacao oficial em atualizacao continua para visitantes e convidados.',
+                    'titulo' => 'Calendário de atividades públicas da Loja',
+                    'resumo' => 'Programação oficial em atualização contínua para visitantes e convidados.',
                     'inicio_em' => '06/05/2026',
                     'link_url' => 'https://www.gorgs.org.br/',
                 ],
                 [
                     'tipo' => 'agenda',
-                    'titulo' => 'Palestra aberta: etica, cidadania e fraternidade',
-                    'resumo' => 'Espaco de dialogo com convidados para aproximacao da Loja com a comunidade.',
+                    'titulo' => 'Palestra aberta: ética, cidadania e fraternidade',
+                    'resumo' => 'Espaço de diálogo com convidados para aproximação da Loja com a comunidade.',
                     'inicio_em' => '30/05/2026',
                     'link_url' => 'https://www.glojars.org.br/',
                 ],
@@ -1332,20 +1332,20 @@ switch ($requestUri) {
             $publicAdsEnabled = true;
             $publicAds = [
                 [
-                    'titulo' => 'Espaco reservado para publicidade institucional',
-                    'resumo' => 'Sua marca pode apoiar projetos da Loja com presenca discreta e qualificada.',
+                    'titulo' => 'Espaço reservado para publicidade institucional',
+                    'resumo' => 'Sua marca pode apoiar projetos da Loja com presença discreta e qualificada.',
                     'link_url' => '#',
                     'imagem_url' => '/assets/portal/publicidade/banners/banner-reservado-01.svg',
                 ],
                 [
-                    'titulo' => 'Apoio local de alto valor comunitario',
-                    'resumo' => 'Cota de parceiro com exibicao em card e banner, sem rastreadores.',
+                    'titulo' => 'Apoio local de alto valor comunitário',
+                    'resumo' => 'Cota de parceiro com exibição em card e banner, sem rastreadores.',
                     'link_url' => '#',
                     'imagem_url' => '/assets/portal/publicidade/cards/card-reservado-01.svg',
                 ],
                 [
-                    'titulo' => 'Espaco premium para patrocinador',
-                    'resumo' => 'Visibilidade institucional para negocios alinhados a valores de etica e servico.',
+                    'titulo' => 'Espaço premium para patrocinador',
+                    'resumo' => 'Visibilidade institucional para negócios alinhados a valores de ética e serviço.',
                     'link_url' => '#',
                     'imagem_url' => '/assets/portal/publicidade/cards/card-reservado-01.svg',
                 ],
@@ -1364,7 +1364,7 @@ switch ($requestUri) {
             $acao = trim((string) ($_POST['acao'] ?? 'login'));
 
             if (empty($matricula) || empty($password)) {
-                $erroLogin = "Informe CIM e senha para acessar.";
+                $erroLogin = "Informe o C.I.M. e a senha para acessar.";
             } else {
                 // Login técnico (admin do sistema) - não é membro da Loja e não entra em nominata/listas.
                 // Admin técnico (web): por padrão exige senha via env.
@@ -1405,24 +1405,24 @@ switch ($requestUri) {
                 if ($acao === 'solicitar') {
                     $solicitacao = $obreiroModel->solicitarAcessoPorCim((string) $matricula, (string) $password);
                     if (!($solicitacao['ok'] ?? false)) {
-                        $erroLogin = "Procure o secretario para cadastro";
+                        $erroLogin = "Procure a Secretaria para regularizar seu registro.";
                     } else {
-                        $erroLogin = "Solicitacao registrada. Aguarde aprovacao do secretario/admin.";
+                        $erroLogin = "Solicitação de acesso registrada. Aguarde a aprovação do Secretário.";
                     }
                     require_once __DIR__ . "/../src/Views/login.php";
                     break;
                 }
 
                 if ($estado === 'inexistente') {
-                    $erroLogin = "Procure o secretario para cadastro";
+                    $erroLogin = "Procure a Secretaria para regularizar seu registro.";
                 } elseif ($estado === 'pendente') {
-                    $erroLogin = "Seu acesso esta pendente. Aguarde aprovacao do secretario/admin.";
+                    $erroLogin = "Seu acesso está em análise. Aguarde a aprovação do Secretário.";
                 } elseif ($estado === 'inativo') {
-                    $erroLogin = "Seu acesso esta inativo. Procure o secretario/admin.";
+                    $erroLogin = "Seu registro está Afastado. Procure a Secretaria.";
                 } else {
                     $usuario = $obreiroModel->autenticar((string) $matricula, (string) $password);
                     if (!$usuario) {
-                        $erroLogin = "Credenciais invalidas.";
+                        $erroLogin = "C.I.M. ou senha inválidos.";
                         require_once __DIR__ . "/../src/Views/login.php";
                         break;
                     }
