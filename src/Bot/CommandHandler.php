@@ -1186,15 +1186,84 @@ class CommandHandler
         $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML']);
     }
 
+    private function getRegistrosConsolidadosDoDia(string $dataYmd): array
+    {
+        $registroModel = new \App\Models\EfemerideRegistro();
+        $historiaModel = new \App\Models\HistoriaMaconica();
+        
+        $timezone = new \DateTimeZone(trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo')));
+        $dtHoje = \DateTimeImmutable::createFromFormat('Y-m-d', $dataYmd, $timezone);
+        if ($dtHoje === false) {
+            $dtHoje = new \DateTimeImmutable('today', $timezone);
+        }
+
+        $diaHoje = (int) $dtHoje->format('d');
+        $mesHoje = (int) $dtHoje->format('m');
+        
+        $registros = $registroModel->getRegistrosDoDia();
+
+        try {
+            $historiasHoje = $historiaModel->buscarPorDiaMes($diaHoje, $mesHoje, true);
+            foreach ($historiasHoje as $hist) {
+                $ano = $hist['ano_ref'] ?? $dtHoje->format('Y');
+                $registros[] = [
+                    'id' => (int) ($hist['id'] ?? 0),
+                    'nome' => trim((string) ($hist['titulo'] ?? 'Nossa História')),
+                    'tipo' => 'História',
+                    'data_evento' => sprintf('%04d-%02d-%02d', $ano, $mesHoje, $diaHoje),
+                    'mensagem_custom' => trim((string) ($hist['texto'] ?? '')),
+                    'local' => trim((string) ($hist['fonte'] ?? '')),
+                    'vinculo' => 'Nossa História',
+                ];
+            }
+        } catch (\Throwable $e) {
+            error_log('[bot] Erro ao injetar historias: ' . $e->getMessage());
+        }
+
+        try {
+            $previaCardModel = new \App\Models\EfemerideCardPrevia();
+            $overrides = $previaCardModel->findByDate($dtHoje->format('Y-m-d'));
+            $mapOverrides = [];
+            foreach ($overrides as $ov) {
+                $rid = (int) ($ov['registro_id'] ?? 0);
+                if ($rid > 0 && !empty($ov['texto_custom_card'])) {
+                    $mapOverrides[$rid] = trim((string) $ov['texto_custom_card']);
+                }
+            }
+            if (!empty($mapOverrides)) {
+                foreach ($registros as &$regRef) {
+                    $rid = (int) ($regRef['id'] ?? 0);
+                    if ($rid > 0 && isset($mapOverrides[$rid])) {
+                        $regRef['mensagem_custom'] = $mapOverrides[$rid];
+                    }
+                }
+                unset($regRef);
+            }
+        } catch (\Throwable $e) {
+            error_log('[bot] Falha ao aplicar overrides: ' . $e->getMessage());
+        }
+
+        return $registros;
+    }
+
     private function handleNesteDia($chatId, int $requesterTelegramId)
     {
         if (!$this->ensureChancelariaAccess($chatId, $requesterTelegramId)) {
             return;
         }
 
-        $composer = new \App\Services\EfemeridesComposer();
         $hoje = date('Y-m-d');
-        $msg = $composer->gerarMensagemParaDia($hoje);
+        $registros = $this->getRegistrosConsolidadosDoDia($hoje);
+        
+        $cards = [];
+        if (!empty($registros)) {
+            $cards = (new \App\Services\EfemeridesCardService())->buildCardsForDate($hoje, $registros);
+        }
+
+        if (empty($cards)) {
+            $this->telegram->sendMessage($chatId, "Nenhuma efeméride encontrada para hoje.");
+            return;
+        }
 
         $teclado = [
             'inline_keyboard' => [
@@ -1213,18 +1282,29 @@ class CommandHandler
             ],
         ];
 
+        $erros = 0;
+        foreach ($cards as $c) {
+            $absPath = $c['card_path'] ?? '';
+            if ($absPath !== '' && file_exists($absPath)) {
+                if (!$this->telegram->sendPhoto($requesterTelegramId, $absPath)) {
+                    $erros++;
+                }
+            } else {
+                $erros++;
+            }
+        }
+
         $enviadoNoPrivado = $this->telegram->sendMessage(
             $requesterTelegramId,
-            $msg,
-            ['parse_mode' => 'HTML', 'reply_markup' => $teclado]
+            "Prévia gerada com " . count($cards) . " cards. Verifique as imagens acima.",
+            ['reply_markup' => $teclado]
         );
 
         if ($enviadoNoPrivado) {
             if ((string) $chatId !== (string) $requesterTelegramId) {
                 $this->telegram->sendMessage(
                     $chatId,
-                    "A prévia de 'Neste Dia' foi enviada no seu privado para revisão.",
-                    ['parse_mode' => 'HTML']
+                    "A prévia de 'Neste Dia' foi enviada no seu privado para revisão."
                 );
             }
             return;
@@ -1232,8 +1312,7 @@ class CommandHandler
 
         $this->telegram->sendMessage(
             $chatId,
-                "Não consegui entregar a prévia no privado. Abra o chat com o bot e tente novamente.",
-            ['parse_mode' => 'HTML']
+            "Não consegui entregar a prévia no privado. Abra o chat com o bot e tente novamente."
         );
     }
 
@@ -1243,32 +1322,50 @@ class CommandHandler
             return;
         }
 
-        $previaModel = new \App\Models\EfemeridePreviaDiaria();
-        $hoje = date('Y-m-d');
-        $previa = $previaModel->buscarPorData($hoje);
-
-        $mensagem = trim((string) ($previa['mensagem'] ?? ''));
-        if ($mensagem === '') {
-            $composer = new \App\Services\EfemeridesComposer();
-            $mensagem = trim($composer->gerarMensagemParaDia($hoje));
-            if ($mensagem !== '') {
-                $previaModel->salvarOuAtualizar($hoje, $mensagem, true);
-            }
-        }
-
-        if ($mensagem !== '') {
-            $grupoId = $this->getGroupChatId();
-            if (!$grupoId) {
-                $this->telegram->sendMessage($chatId, "Não foi possível enviar: o grupo oficial ainda não está configurado.", ['parse_mode' => 'HTML']);
-                return;
-            }
-
-            $this->telegram->sendMessage($grupoId, $mensagem, ['parse_mode' => 'HTML']);
-            $this->telegram->sendMessage($chatId, "Mensagem enviada para o grupo oficial com sucesso.", ['parse_mode' => 'HTML']);
+        $grupoId = $this->getGroupChatId();
+        if (!$grupoId) {
+            $this->telegram->sendMessage($chatId, "Não foi possível enviar: o grupo oficial ainda não está configurado.");
             return;
         }
 
-        $this->telegram->sendMessage($chatId, "Não encontrei a mensagem de hoje para envio. Gere a prévia e tente novamente.");
+        $hoje = date('Y-m-d');
+        $registros = $this->getRegistrosConsolidadosDoDia($hoje);
+        
+        $cards = [];
+        if (!empty($registros)) {
+            $cards = (new \App\Services\EfemeridesCardService())->buildCardsForDate($hoje, $registros);
+        }
+
+        if (empty($cards)) {
+            $this->telegram->sendMessage($chatId, "Nenhuma efeméride encontrada para envio.");
+            return;
+        }
+
+        $erros = 0;
+        foreach ($cards as $c) {
+            $absPath = $c['card_path'] ?? '';
+            if ($absPath !== '' && file_exists($absPath)) {
+                $desc = $c['titulo'] ?? $c['descricao'] ?? 'Efeméride';
+                if (!$this->telegram->sendPhoto($grupoId, $absPath, "🖼 *Card:* " . $desc)) {
+                    $erros++;
+                }
+            } else {
+                $erros++;
+            }
+        }
+
+        $composer = new \App\Services\EfemeridesComposer();
+        $mensagem = trim($composer->composeDailyPreview($registros));
+        if ($mensagem !== '') {
+            $previaModel = new \App\Models\EfemeridePreviaDiaria();
+            $previaModel->salvarOuAtualizar($hoje, $mensagem, true);
+        }
+
+        if ($erros === 0) {
+            $this->telegram->sendMessage($chatId, "Cards enviados para o grupo oficial com sucesso.");
+        } else {
+            $this->telegram->sendMessage($chatId, "Cards enviados, porém houve falha no envio de $erros imagens.");
+        }
     }
 
     public function handle($update)
