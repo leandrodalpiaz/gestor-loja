@@ -8,12 +8,7 @@ use App\Models\MensagemComplementar;
 
 class EfemeridesCardService
 {
-    private MensagemComplementar $mensagensComplementares;
-
-    public function __construct()
-    {
-        $this->mensagensComplementares = new MensagemComplementar();
-    }
+    private ?MensagemComplementar $mensagensComplementares = null;
 
     public function buildCardsForDate(string $ymd, array $registros): array
     {
@@ -287,6 +282,9 @@ class EfemeridesCardService
         }
 
         try {
+            if (!$this->mensagensComplementares instanceof MensagemComplementar) {
+                $this->mensagensComplementares = new MensagemComplementar();
+            }
             return trim($this->mensagensComplementares->sortear($tipo));
         } catch (\Throwable $e) {
             error_log('Falha ao sortear mensagem complementar do card: ' . $e->getMessage());
