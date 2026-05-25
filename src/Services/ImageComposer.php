@@ -85,12 +85,18 @@ class ImageComposer
         } elseif ($textLen < 180) {
             $scaleFactor = 1.15;       // Textos médios crescem um pouco
             $lineSpacingFactor = 1.6;
+        } elseif ($textLen <= 300) {
+            $scaleFactor = 0.92;
+            $lineSpacingFactor = 1.35;
+        } elseif ($textLen <= 400) {
+            $scaleFactor = 0.84;
+            $lineSpacingFactor = 1.28;
         } elseif ($textLen > 400 && $textLen <= 650) {
-            $scaleFactor = 0.90;       // Textos longos encolhem levemente
-            $lineSpacingFactor = 1.4;
+            $scaleFactor = 0.76;
+            $lineSpacingFactor = 1.22;
         } elseif ($textLen > 650) {
-            $scaleFactor = 0.80;       // Textos enormes encolhem mais
-            $lineSpacingFactor = 1.3;
+            $scaleFactor = 0.68;
+            $lineSpacingFactor = 1.18;
         }
 
         $fontSize = (int) round($fontSizeBase * $scaleFactor); 
@@ -119,7 +125,7 @@ class ImageComposer
                 continue;
             }
             $fontLoaded = false;
-            $isAlignLeft = str_contains($templateFile, 'sepia'); // Histórias ficam melhores alinhadas à esquerda
+            $isAlignLeft = str_contains($templateFile, 'sepia') || $textLen > 180; // Textos completos ficam mais legíveis alinhados à esquerda
             
             if (is_file($font)) {
                 $box = @imagettfbbox($fontSize, 0, $font, $line);

@@ -38,6 +38,37 @@ $safeCommand = $command !== '' ? explode(' ', $command)[0] : 'unknown';
 $safeAppUrl = $appUrl !== '' ? $appUrl : 'missing';
 error_log("[webhook] recebido update_id={$updateId} message={$hasMessage} callback={$hasCallback} chat_type={$chatType} chat_id={$chatId} user_id={$userId} comando={$safeCommand} app_url={$safeAppUrl}");
 
+if (is_scalar($updateId) && preg_match('/^\d+$/', (string) $updateId)) {
+    $dedupeDir = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'gestor_loja_webhook_updates';
+    if (!is_dir($dedupeDir)) {
+        @mkdir($dedupeDir, 0775, true);
+    }
+
+    if (is_dir($dedupeDir)) {
+        $now = time();
+        foreach (glob($dedupeDir . DIRECTORY_SEPARATOR . 'update_*.lock') ?: [] as $oldLock) {
+            if (is_file($oldLock) && ($now - (int) @filemtime($oldLock)) > 3600) {
+                @unlink($oldLock);
+            }
+        }
+
+        $lockPath = $dedupeDir . DIRECTORY_SEPARATOR . 'update_' . (string) $updateId . '.lock';
+        $lockHandle = @fopen($lockPath, 'x');
+        if ($lockHandle === false) {
+            $idadeLock = is_file($lockPath) ? ($now - (int) @filemtime($lockPath)) : 0;
+            if ($idadeLock >= 0 && $idadeLock < 900) {
+                error_log("[webhook] update duplicado ignorado update_id={$updateId}");
+                http_response_code(200);
+                echo "OK";
+                exit;
+            }
+        } else {
+            fwrite($lockHandle, (string) $now);
+            fclose($lockHandle);
+        }
+    }
+}
+
 if ($update) {
     try {
         $client = new TelegramClient();

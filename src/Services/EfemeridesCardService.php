@@ -4,9 +4,17 @@ namespace App\Services;
 
 use App\Models\EfemerideCardPrevia;
 use App\Models\EfemerideCardCategoriaTemplate;
+use App\Models\MensagemComplementar;
 
 class EfemeridesCardService
 {
+    private MensagemComplementar $mensagensComplementares;
+
+    public function __construct()
+    {
+        $this->mensagensComplementares = new MensagemComplementar();
+    }
+
     public function buildCardsForDate(string $ymd, array $registros): array
     {
         $templateDir = dirname(__DIR__, 2) . '/public/assets/images/templates/efemerides';
@@ -126,24 +134,251 @@ class EfemeridesCardService
     private function resolverMensagem(array $registro, ?int $idade, bool $ocultar): string
     {
         $tipo = strtolower(trim((string) ($registro['tipo'] ?? '')));
-        $rawMsg = '';
         if (str_contains($tipo, 'historia') || str_contains($tipo, 'história')) {
             $titulo = trim((string) ($registro['nome'] ?? ''));
             $corpo = trim((string) ($registro['mensagem_custom'] ?? $registro['texto'] ?? ''));
             if ($titulo !== '' && $corpo !== '') {
-                $rawMsg = $titulo . "\n\n" . $corpo;
-            } else {
-                $rawMsg = $corpo !== '' ? $corpo : $titulo;
+                return $this->limparTextoCard($titulo . "\n\n" . $corpo);
             }
-        } else {
-            $nome = trim((string) ($registro['nome'] ?? ''));
-            if ($ocultar || $idade === null) {
-                $rawMsg = $nome . "\nParabéns pelo seu dia";
-            } else {
-                $rawMsg = $nome . "\nFeliz {$idade} anos";
-            }
+
+            return $this->limparTextoCard($corpo !== '' ? $corpo : $titulo);
         }
-        return trim(strip_tags($rawMsg));
+
+        $custom = trim((string) ($registro['mensagem_custom'] ?? ''));
+        if ($custom !== '') {
+            return $this->limparTextoCard($custom);
+        }
+
+        $tipoOriginal = trim((string) ($registro['tipo'] ?? ''));
+        $tipoNorm = $this->normalizarTipo($tipoOriginal);
+
+        if ($tipoNorm === 'aniversario') {
+            return $this->montarMensagemAniversario($registro, $idade, $ocultar);
+        }
+
+        if (in_array($tipoNorm, ['iniciacao', 'elevacao', 'exaltacao', 'instalacao'], true)) {
+            return $this->montarMensagemCerimonia($registro, $tipoOriginal !== '' ? $tipoOriginal : 'Efeméride', $idade);
+        }
+
+        if (in_array($tipoNorm, ['possegraomestre', 'concessaodemembrohonorario', 'filiacao'], true)) {
+            return $this->montarMensagemEspecial($registro, $tipoOriginal !== '' ? $tipoOriginal : 'Efeméride', $idade);
+        }
+
+        if ($tipoNorm === 'orienteeterno') {
+            return $this->montarMensagemOrienteEterno($registro);
+        }
+
+        return $this->montarMensagemGenerica($registro, $tipoOriginal, $idade);
+    }
+
+    private function montarMensagemAniversario(array $registro, ?int $idade, bool $ocultar): string
+    {
+        $nome = trim((string) ($registro['nome'] ?? '')) ?: 'Nome não informado';
+        $tratamento = $this->tratamentoPorVinculo(
+            (int) ($registro['cod_vinculo'] ?? 0),
+            (string) ($registro['vinculo'] ?? ''),
+            (string) ($registro['parentesco'] ?? '')
+        );
+        $tratamentoNorm = $this->normalizarTipo($tratamento);
+        $complementar = $this->mensagemComplementar('aniversario_' . $tratamentoNorm);
+        $idadeTexto = ($idade !== null && !$ocultar) ? $this->textoAnos($idade) : '';
+        $parentesco = $this->normalizarParentesco((string) ($registro['parentesco'] ?? ''));
+        $vinculo = trim((string) ($registro['vinculo'] ?? ''));
+
+        if ($tratamentoNorm === 'irmao') {
+            $base = $idadeTexto !== ''
+                ? "Com fraterna alegria, hoje celebramos os {$idadeTexto} de vida do nosso Irmão {$nome}."
+                : "Com fraterna alegria, hoje celebramos o aniversário do nosso Irmão {$nome}.";
+        } elseif ($tratamentoNorm === 'cunhada') {
+            $referencia = $parentesco !== '' ? " do nosso Irmão {$parentesco}" : '';
+            $vinculoTexto = $vinculo !== '' ? ", {$vinculo}{$referencia}" : $referencia;
+            $base = "Hoje celebramos, com fraterna alegria, o aniversário de nossa {$tratamento} {$nome}{$vinculoTexto}.";
+        } else {
+            $artigo = in_array($tratamentoNorm, ['filha', 'sobrinha'], true) ? 'nossa' : 'nosso';
+            $referencia = $parentesco !== '' ? " do nosso Irmão {$parentesco}" : '';
+            $vinculoTexto = $vinculo !== '' ? ", {$vinculo}{$referencia}" : $referencia;
+            $idadeParte = $idadeTexto !== '' ? " os {$idadeTexto} de vida de" : " o aniversário de";
+            $base = "Hoje celebramos, com fraterna alegria,{$idadeParte} {$artigo} {$tratamento} {$nome}{$vinculoTexto}.";
+        }
+
+        return $this->limparTextoCard($this->comMensagemComplementar($base, $complementar));
+    }
+
+    private function montarMensagemCerimonia(array $registro, string $tipo, ?int $idade): string
+    {
+        $nome = trim((string) ($registro['nome'] ?? '')) ?: 'Nome não informado';
+        $anos = $idade !== null ? $this->textoAnos($idade) : 'mais um marco';
+        $data = $this->formatarData((string) ($registro['data_evento'] ?? ''));
+        $local = $this->formatarLocal((string) ($registro['local'] ?? ''));
+        $sufixoLocal = $local !== '' ? " ({$local})" : '';
+        $complementar = $this->mensagemComplementar($this->normalizarTipo($tipo));
+
+        $base = "Neste dia, registramos com honra {$anos} da {$tipo} do querido Irmão {$nome}";
+        if ($data !== '') {
+            $base .= " - {$data}{$sufixoLocal}";
+        } elseif ($sufixoLocal !== '') {
+            $base .= " {$sufixoLocal}";
+        }
+        $base .= '.';
+
+        return $this->limparTextoCard($this->comMensagemComplementar($base, $complementar));
+    }
+
+    private function montarMensagemEspecial(array $registro, string $tipo, ?int $idade): string
+    {
+        $nome = trim((string) ($registro['nome'] ?? '')) ?: 'Nome não informado';
+        $anos = $idade !== null ? $this->textoAnos($idade) : 'esta data';
+        $data = $this->formatarData((string) ($registro['data_evento'] ?? ''));
+        $local = $this->formatarLocal((string) ($registro['local'] ?? ''));
+        $sufixoLocal = $local !== '' ? " ({$local})" : '';
+        $complementar = $this->mensagemComplementar($this->normalizarTipo($tipo));
+
+        $base = "Neste dia, registramos com honra {$anos} da {$tipo} do querido Irmão {$nome}";
+        if ($data !== '') {
+            $base .= " - {$data}{$sufixoLocal}";
+        } elseif ($sufixoLocal !== '') {
+            $base .= " {$sufixoLocal}";
+        }
+        $base .= '.';
+
+        return $this->limparTextoCard($this->comMensagemComplementar($base, $complementar));
+    }
+
+    private function montarMensagemOrienteEterno(array $registro): string
+    {
+        $nome = trim((string) ($registro['nome'] ?? '')) ?: 'Nome não informado';
+        $data = $this->formatarData((string) ($registro['data_evento'] ?? ''));
+        $base = "Com profundo pesar e saudade, lembramos de nosso Irmão {$nome}";
+        if ($data !== '') {
+            $base .= ", que partiu para o Oriente Eterno em {$data}";
+        }
+        $base .= '.';
+
+        return $this->limparTextoCard($this->comMensagemComplementar($base, $this->mensagemComplementar('orienteeterno')));
+    }
+
+    private function montarMensagemGenerica(array $registro, string $tipo, ?int $idade): string
+    {
+        $nome = trim((string) ($registro['nome'] ?? '')) ?: 'Nome não informado';
+        $tipoTexto = $tipo !== '' ? $tipo : 'efeméride';
+        $anos = $idade !== null ? $this->textoAnos($idade) . ' de ' : '';
+        $data = $this->formatarData((string) ($registro['data_evento'] ?? ''));
+        $base = "Neste dia, registramos com honra {$anos}{$tipoTexto} de {$nome}";
+        if ($data !== '') {
+            $base .= " - {$data}";
+        }
+        $base .= '.';
+
+        return $this->limparTextoCard($this->comMensagemComplementar($base, $this->mensagemComplementar($this->normalizarTipo($tipoTexto))));
+    }
+
+    private function comMensagemComplementar(string $base, string $complementar): string
+    {
+        $base = trim($base);
+        $complementar = trim($complementar);
+        return $complementar !== '' ? $base . "\n\n" . $complementar : $base;
+    }
+
+    private function mensagemComplementar(string $tipo): string
+    {
+        $tipo = trim($tipo);
+        if ($tipo === '') {
+            return '';
+        }
+
+        try {
+            return trim($this->mensagensComplementares->sortear($tipo));
+        } catch (\Throwable $e) {
+            error_log('Falha ao sortear mensagem complementar do card: ' . $e->getMessage());
+            return '';
+        }
+    }
+
+    private function tratamentoPorVinculo(int $codVinculo, string $vinculo = '', string $parentesco = ''): string
+    {
+        $porCodigo = [
+            1 => 'Irmão',
+            2 => 'Cunhada',
+            3 => 'Filho',
+            4 => 'Filha',
+            5 => 'Sobrinho',
+            6 => 'Sobrinha',
+        ];
+
+        if (isset($porCodigo[$codVinculo])) {
+            return $porCodigo[$codVinculo];
+        }
+
+        $texto = $this->toLower($vinculo . ' ' . $parentesco);
+        if (str_contains($texto, 'cunhada') || str_contains($texto, 'esposa')) return 'Cunhada';
+        if (str_contains($texto, 'filha')) return 'Filha';
+        if (str_contains($texto, 'filho')) return 'Filho';
+        if (str_contains($texto, 'sobrinha')) return 'Sobrinha';
+        if (str_contains($texto, 'sobrinho')) return 'Sobrinho';
+        return 'Irmão';
+    }
+
+    private function normalizarParentesco(string $parentesco): string
+    {
+        $parentesco = trim($parentesco);
+        if ($parentesco === '') {
+            return '';
+        }
+
+        $parentesco = preg_replace('/^\s*irm[aã]o\s+/iu', '', $parentesco) ?? $parentesco;
+        return trim($parentesco);
+    }
+
+    private function textoAnos(int $anos): string
+    {
+        return $anos === 1 ? '1 ano' : "{$anos} anos";
+    }
+
+    private function formatarData(string $data): string
+    {
+        if ($data === '') {
+            return '';
+        }
+
+        try {
+            return (new \DateTimeImmutable($data))->format('d/m/Y');
+        } catch (\Throwable $e) {
+            return '';
+        }
+    }
+
+    private function formatarLocal(string $local): string
+    {
+        $local = trim($local);
+        if ($local === '') {
+            return '';
+        }
+
+        return preg_match('/^loja\b/iu', $local) ? $local : "Loja {$local}";
+    }
+
+    private function normalizarTipo(string $tipo): string
+    {
+        $tipo = $this->toLower(trim($tipo));
+        $tipo = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $tipo) ?: $tipo;
+        $tipo = preg_replace('/[^a-z0-9]+/', '', $tipo) ?? '';
+
+        return $tipo;
+    }
+
+    private function toLower(string $value): string
+    {
+        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+    }
+
+    private function limparTextoCard(string $texto): string
+    {
+        $texto = html_entity_decode(strip_tags($texto), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $texto = str_replace(["\r\n", "\r"], "\n", $texto);
+        $texto = preg_replace("/[ \t]+/", ' ', $texto) ?? $texto;
+        $texto = preg_replace("/\n{3,}/", "\n\n", $texto) ?? $texto;
+
+        return trim($texto);
     }
 
     private function resolverTemplate(string $categoria, ?int $idade, string $tipo): string
