@@ -1002,79 +1002,7 @@ class CommandHandler
         if (!$this->ensureChancelariaAccess($chatId, $requesterTelegramId)) {
             return;
         }
-
-        $hoje = date('Y-m-d');
-        $registros = $this->getRegistrosConsolidadosDoDia($hoje);
-        $composer = new \App\Services\EfemeridesComposer();
-        $mensagemBase = trim($composer->composeDailyPreview($registros));
-        $mensagemPreview = trim((new \App\Models\EfemeridePreviaDiaria())->garantirPreviaDoDia($mensagemBase));
-        
-        $cards = [];
-        if (!empty($registros)) {
-            $cards = (new \App\Services\EfemeridesCardService())->buildCardsForDate($hoje, $registros);
-        }
-
-        if ($mensagemPreview === '' && empty($cards)) {
-            $this->telegram->sendMessage($chatId, "Nenhuma efeméride encontrada para hoje.");
-            return;
-        }
-
-        $teclado = [
-            'inline_keyboard' => [
-                [
-                    ['text' => 'Aprovar e Enviar p/ Grupo', 'callback_data' => 'chancelaria_aprovar_efemeride'],
-                ],
-                [
-                    ['text' => 'Revisar Mensagem', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/chanceler?foco=mensagem')]],
-                ],
-                [
-                    ['text' => 'Corrigir Dados', 'web_app' => ['url' => $this->buildAppUrl('/miniapp/chanceler?foco=dados')]],
-                ],
-                [
-                    ['text' => 'Voltar', 'callback_data' => 'admin_chancelaria'],
-                ],
-            ],
-        ];
-
-        $enviadoNoPrivado = $this->telegram->sendMessage(
-            $requesterTelegramId,
-            $mensagemPreview,
-            ['parse_mode' => 'HTML', 'reply_markup' => $teclado]
-        );
-
-        if ($enviadoNoPrivado) {
-            $erros = 0;
-            foreach ($cards as $c) {
-                $absPath = $c['card_path'] ?? '';
-                if ($absPath !== '' && file_exists($absPath)) {
-                    if (!$this->telegram->sendPhoto($requesterTelegramId, $absPath, '')) {
-                        $erros++;
-                    }
-                } else {
-                    $erros++;
-                }
-            }
-
-            $this->telegram->sendMessage(
-                $requesterTelegramId,
-                $erros === 0
-                    ? "Prévia gerada com " . count($cards) . " cards individualizados. Confira a mensagem e as imagens acima."
-                    : "Prévia gerada, porém houve falha em $erros cards. Confira a mensagem acima."
-            );
-
-            if ((string) $chatId !== (string) $requesterTelegramId) {
-                $this->telegram->sendMessage(
-                    $chatId,
-                    "A prévia de 'Neste Dia' foi enviada no seu privado para revisão."
-                );
-            }
-            return;
-        }
-
-        $this->telegram->sendMessage(
-            $chatId,
-            "Não consegui entregar a prévia no privado. Abra o chat com o bot e tente novamente."
-        );
+        $this->handleEfemeridesMenu($chatId, $requesterTelegramId);
     }
 
     private function handleAprovarEfemeride($chatId, int $requesterTelegramId)
@@ -1134,6 +1062,302 @@ class CommandHandler
         } else {
             $this->telegram->sendMessage($chatId, "Mensagem enviada, porém houve falha no envio de $erros cards.");
         }
+    }
+
+    private function handleEfemeridesMenu($chatId, int $requesterTelegramId): void
+    {
+        $hoje = date('Y-m-d');
+        $sel = new \App\Models\EfemeridesSelecaoEnvio();
+        $selected = $sel->getSelectedIds($hoje, $requesterTelegramId);
+
+        $msg = "<b>Efemérides do Dia</b>\n\n";
+        $msg .= "Seleção atual: <b>" . count($selected) . "</b> item(ns).";
+
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => '📄 Prévia (texto)', 'callback_data' => 'ef_prev_text'],
+                ],
+                [
+                    ['text' => '🖼️ Prévia (texto + cards)', 'callback_data' => 'ef_prev_cards'],
+                ],
+                [
+                    ['text' => '✅ Selecionar itens', 'callback_data' => 'ef_sel_menu'],
+                ],
+                [
+                    ['text' => '📤 Enviar selecionados', 'callback_data' => 'ef_send_menu'],
+                ],
+                [
+                    ['text' => '🧹 Limpar seleção', 'callback_data' => 'ef_sel_clear'],
+                    ['text' => 'Voltar', 'callback_data' => 'admin_chancelaria'],
+                ],
+            ],
+        ];
+
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
+    }
+
+    /**
+     * @return array<int, array<string,mixed>>
+     */
+    private function getEfemeridesSelecionadasOuTodas(string $dataRef, int $telegramId): array
+    {
+        $registros = $this->getRegistrosConsolidadosDoDia($dataRef);
+        $sel = new \App\Models\EfemeridesSelecaoEnvio();
+        $selected = $sel->getSelectedIds($dataRef, $telegramId);
+        if (empty($selected)) {
+            return $registros;
+        }
+
+        $map = [];
+        foreach ($registros as $r) {
+            $rid = (int) ($r['id'] ?? 0);
+            if ($rid > 0) {
+                $map[$rid] = $r;
+            }
+        }
+
+        $out = [];
+        foreach ($selected as $rid) {
+            if (isset($map[$rid])) {
+                $out[] = $map[$rid];
+            }
+        }
+
+        return $out;
+    }
+
+    private function handleEfemeridesPreviewTexto($chatId, int $requesterTelegramId): void
+    {
+        $hoje = date('Y-m-d');
+        $registros = $this->getEfemeridesSelecionadasOuTodas($hoje, $requesterTelegramId);
+        $composer = new \App\Services\EfemeridesComposer();
+        $mensagem = trim($composer->composeDailyPreview($registros));
+        if ($mensagem === '') {
+            $this->telegram->sendMessage($chatId, "Nenhuma efeméride encontrada para hoje.");
+            return;
+        }
+
+        $teclado = ['inline_keyboard' => [[['text' => 'Voltar', 'callback_data' => 'chancelaria_neste_dia']]]];
+        $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
+    }
+
+    private function handleEfemeridesPreviewTextoECards($chatId, int $requesterTelegramId): void
+    {
+        $hoje = date('Y-m-d');
+        $registros = $this->getEfemeridesSelecionadasOuTodas($hoje, $requesterTelegramId);
+        $composer = new \App\Services\EfemeridesComposer();
+        $mensagem = trim($composer->composeDailyPreview($registros));
+        $cards = [];
+        if (!empty($registros)) {
+            $cards = (new \App\Services\EfemeridesCardService())->buildCardsForDate($hoje, $registros);
+        }
+
+        if ($mensagem === '' && empty($cards)) {
+            $this->telegram->sendMessage($chatId, "Nenhuma efeméride encontrada para hoje.");
+            return;
+        }
+
+        $teclado = ['inline_keyboard' => [[['text' => 'Voltar', 'callback_data' => 'chancelaria_neste_dia']]]];
+        if ($mensagem !== '') {
+            $this->telegram->sendMessage($chatId, $mensagem, ['parse_mode' => 'HTML', 'reply_markup' => $teclado]);
+        }
+
+        $erros = 0;
+        foreach ($cards as $c) {
+            $absPath = $c['card_path'] ?? '';
+            if ($absPath !== '' && file_exists($absPath)) {
+                if (!$this->telegram->sendPhoto($chatId, $absPath, '')) {
+                    $erros++;
+                }
+            } else {
+                $erros++;
+            }
+        }
+
+        $this->telegram->sendMessage(
+            $chatId,
+            $erros === 0
+                ? "Prévia gerada com " . count($cards) . " cards. Use o menu para enviar apenas o que desejar."
+                : "Prévia gerada, porém houve falha em $erros cards. Use o menu para enviar apenas o que desejar."
+        );
+    }
+
+    private function handleEfemeridesSelecaoMenu($chatId, int $requesterTelegramId): void
+    {
+        $hoje = date('Y-m-d');
+        $registros = $this->getRegistrosConsolidadosDoDia($hoje);
+        if (empty($registros)) {
+            $this->telegram->sendMessage($chatId, "Nenhuma efeméride encontrada para hoje.");
+            return;
+        }
+
+        $sel = new \App\Models\EfemeridesSelecaoEnvio();
+        $selected = $sel->getSelectedIds($hoje, $requesterTelegramId);
+        $selectedMap = array_fill_keys($selected, true);
+
+        $botoes = [];
+        $max = min(20, count($registros));
+        for ($i = 0; $i < $max; $i++) {
+            $r = $registros[$i];
+            $rid = (int) ($r['id'] ?? 0);
+            if ($rid <= 0) {
+                continue;
+            }
+            $mark = isset($selectedMap[$rid]) ? '✅' : '☑️';
+            $tipo = trim((string) ($r['tipo'] ?? ''));
+            $nome = trim((string) ($r['nome'] ?? ''));
+            $label = trim($tipo . ': ' . $nome);
+            if (mb_strlen($label, 'UTF-8') > 34) {
+                $label = mb_substr($label, 0, 33, 'UTF-8') . '…';
+            }
+            $botoes[] = [[
+                'text' => $mark . ' ' . $label,
+                'callback_data' => 'ef_t_' . $rid,
+            ]];
+        }
+
+        $botoes[] = [
+            ['text' => 'Voltar', 'callback_data' => 'chancelaria_neste_dia'],
+            ['text' => 'Enviar', 'callback_data' => 'ef_send_menu'],
+        ];
+
+        $msg = "<b>Selecionar itens</b>\n\n";
+        $msg .= "Marcados: <b>" . count($selected) . "</b>\n";
+        if (count($registros) > $max) {
+            $msg .= "<i>Mostrando os primeiros {$max} itens.</i>\n";
+        }
+
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML', 'reply_markup' => ['inline_keyboard' => $botoes]]);
+    }
+
+    private function handleEfemeridesToggleSelecao($chatId, int $requesterTelegramId, int $registroId): void
+    {
+        $hoje = date('Y-m-d');
+        (new \App\Models\EfemeridesSelecaoEnvio())->toggle($hoje, $requesterTelegramId, $registroId);
+        $this->handleEfemeridesSelecaoMenu($chatId, $requesterTelegramId);
+    }
+
+    private function handleEfemeridesClearSelecao($chatId, int $requesterTelegramId): void
+    {
+        $hoje = date('Y-m-d');
+        (new \App\Models\EfemeridesSelecaoEnvio())->clear($hoje, $requesterTelegramId);
+        $this->telegram->sendMessage($chatId, "Seleção limpa.");
+        $this->handleEfemeridesMenu($chatId, $requesterTelegramId);
+    }
+
+    private function handleEfemeridesSendMenu($chatId, int $requesterTelegramId): void
+    {
+        $hoje = date('Y-m-d');
+        $sel = new \App\Models\EfemeridesSelecaoEnvio();
+        $selected = $sel->getSelectedIds($hoje, $requesterTelegramId);
+        if (empty($selected)) {
+            $this->telegram->sendMessage($chatId, "Nenhum item selecionado. Use 'Selecionar itens' para marcar o que vai para o grupo.");
+            return;
+        }
+
+        $msg = "<b>Enviar selecionados</b>\n\n";
+        $msg .= "Itens marcados: <b>" . count($selected) . "</b>\n";
+        $msg .= "Escolha o que enviar ao grupo:";
+
+        $kb = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Enviar texto', 'callback_data' => 'ef_send_text'],
+                ],
+                [
+                    ['text' => 'Enviar cards', 'callback_data' => 'ef_send_cards'],
+                ],
+                [
+                    ['text' => 'Enviar texto + cards', 'callback_data' => 'ef_send_both'],
+                ],
+                [
+                    ['text' => 'Voltar', 'callback_data' => 'chancelaria_neste_dia'],
+                ],
+            ],
+        ];
+
+        $this->telegram->sendMessage($chatId, $msg, ['parse_mode' => 'HTML', 'reply_markup' => $kb]);
+    }
+
+    private function handleEfemeridesSendSelecionados($chatId, int $requesterTelegramId, string $modo): void
+    {
+        $grupoId = $this->getGroupChatId();
+        if (!$grupoId) {
+            $this->telegram->sendMessage($chatId, "Não foi possível enviar: o grupo oficial ainda não está configurado.");
+            return;
+        }
+
+        $hoje = date('Y-m-d');
+        $sel = new \App\Models\EfemeridesSelecaoEnvio();
+        $selected = $sel->getSelectedIds($hoje, $requesterTelegramId);
+        if (empty($selected)) {
+            $this->telegram->sendMessage($chatId, "Nenhum item selecionado.");
+            return;
+        }
+
+        $registrosAll = $this->getRegistrosConsolidadosDoDia($hoje);
+        $map = [];
+        foreach ($registrosAll as $r) {
+            $rid = (int) ($r['id'] ?? 0);
+            if ($rid > 0) {
+                $map[$rid] = $r;
+            }
+        }
+        $registros = [];
+        foreach ($selected as $rid) {
+            if (isset($map[$rid])) {
+                $registros[] = $map[$rid];
+            }
+        }
+
+        if (empty($registros)) {
+            $this->telegram->sendMessage($chatId, "Nenhum item selecionado válido para envio.");
+            return;
+        }
+
+        $hashBase = implode(',', $selected);
+        $actionHash = sha1($hoje . '|' . $requesterTelegramId . '|' . $modo . '|' . $hashBase);
+        $log = new \App\Models\EfemeridesEnvioLog();
+        if (!$log->tryRegister($hoje, $requesterTelegramId, $modo, $actionHash)) {
+            $this->telegram->sendMessage($chatId, "Envio já registrado. Se precisar reenviar, limpe e refaça a seleção.");
+            return;
+        }
+
+        $composer = new \App\Services\EfemeridesComposer();
+        $mensagem = trim($composer->composeDailyPreview($registros));
+        $cards = [];
+        if ($modo !== 'text' && !empty($registros)) {
+            $cards = (new \App\Services\EfemeridesCardService())->buildCardsForDate($hoje, $registros);
+        }
+
+        if (($modo === 'text' || $modo === 'both') && $mensagem !== '') {
+            if (!$this->telegram->sendMessage($grupoId, $mensagem, ['parse_mode' => 'HTML'])) {
+                $this->telegram->sendMessage($chatId, "Falha ao enviar texto ao grupo.");
+                return;
+            }
+        }
+
+        if ($modo === 'cards' || $modo === 'both') {
+            $erros = 0;
+            foreach ($cards as $c) {
+                $absPath = $c['card_path'] ?? '';
+                if ($absPath !== '' && file_exists($absPath)) {
+                    if (!$this->telegram->sendPhoto($grupoId, $absPath, '')) {
+                        $erros++;
+                    }
+                } else {
+                    $erros++;
+                }
+            }
+
+            if ($erros > 0) {
+                $this->telegram->sendMessage($chatId, "Envio concluído, mas houve falha em $erros card(s).");
+                return;
+            }
+        }
+
+        $this->telegram->sendMessage($chatId, "Envio concluído para o grupo (modo: {$modo}).");
     }
 
     public function handle($update)
@@ -1242,10 +1466,34 @@ class CommandHandler
                         $this->handleChancelaria($chatId, $fromId);
                         break;
                     case 'chancelaria_neste_dia':
-                        $this->handleNesteDia($chatId, (int) $fromId);
+                        $this->handleEfemeridesMenu($chatId, (int) $fromId);
                         break;
                     case 'chancelaria_aprovar_efemeride':
                         $this->handleAprovarEfemeride($chatId, (int) $fromId);
+                        break;
+                    case 'ef_prev_text':
+                        $this->handleEfemeridesPreviewTexto($chatId, (int) $fromId);
+                        break;
+                    case 'ef_prev_cards':
+                        $this->handleEfemeridesPreviewTextoECards($chatId, (int) $fromId);
+                        break;
+                    case 'ef_sel_menu':
+                        $this->handleEfemeridesSelecaoMenu($chatId, (int) $fromId);
+                        break;
+                    case 'ef_send_menu':
+                        $this->handleEfemeridesSendMenu($chatId, (int) $fromId);
+                        break;
+                    case 'ef_sel_clear':
+                        $this->handleEfemeridesClearSelecao($chatId, (int) $fromId);
+                        break;
+                    case 'ef_send_text':
+                        $this->handleEfemeridesSendSelecionados($chatId, (int) $fromId, 'text');
+                        break;
+                    case 'ef_send_cards':
+                        $this->handleEfemeridesSendSelecionados($chatId, (int) $fromId, 'cards');
+                        break;
+                    case 'ef_send_both':
+                        $this->handleEfemeridesSendSelecionados($chatId, (int) $fromId, 'both');
                         break;
 
 
@@ -1359,6 +1607,13 @@ class CommandHandler
                         break;
 
                     default:
+                        if (is_string($data) && preg_match('/^ef_t_(\d+)$/', $data, $m)) {
+                            $rid = (int) ($m[1] ?? 0);
+                            if ($rid > 0) {
+                                $this->handleEfemeridesToggleSelecao($chatId, (int) $fromId, $rid);
+                                break;
+                            }
+                        }
                         $this->telegram->sendMessage($chatId, "Não reconheci esta ação. Volte ao menu principal e tente novamente.");
                         break;
                 }
