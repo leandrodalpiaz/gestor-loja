@@ -136,7 +136,10 @@ class ChancelariaRoutes
                 
                 // 3. Enviar Imagens ao Grupo
                 $telegram = new TelegramService();
-                $okMsg = true; // Pula envio de texto para enviar APENAS imagens conforme solicitado
+                $okMsg = true;
+                if ($mensagemPreview !== '') {
+                    $okMsg = $telegram->sendMessageToGroup($mensagemPreview);
+                }
 
                 // 4. Enviar Imagens ao Grupo
                 $errosFotos = 0;
@@ -434,7 +437,7 @@ class ChancelariaRoutes
                     'previa_salva' => 'Prévia salva com sucesso.',
                     'previa_enviada' => 'Prévia enviada no privado do Chanceler.',
                     'enviado' => 'Mensagem enviada ao grupo oficial.',
-                    'enviado_tudo' => 'Aprovação concluída! Cards de Imagem enviados ao grupo oficial com sucesso.',
+                    'enviado_tudo' => 'Aprovação concluída! Mensagem e cards enviados ao grupo oficial com sucesso.',
                     'registro_salvo' => 'Registro salvo com sucesso.',
                     'registro_atualizado' => 'Registro atualizado com sucesso.',
                     'registro_desativado' => 'Registro desativado com sucesso.',

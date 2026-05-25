@@ -1005,13 +1005,16 @@ class CommandHandler
 
         $hoje = date('Y-m-d');
         $registros = $this->getRegistrosConsolidadosDoDia($hoje);
+        $composer = new \App\Services\EfemeridesComposer();
+        $mensagemBase = trim($composer->composeDailyPreview($registros));
+        $mensagemPreview = trim((new \App\Models\EfemeridePreviaDiaria())->garantirPreviaDoDia($mensagemBase));
         
         $cards = [];
         if (!empty($registros)) {
             $cards = (new \App\Services\EfemeridesCardService())->buildCardsForDate($hoje, $registros);
         }
 
-        if (empty($cards)) {
+        if ($mensagemPreview === '' && empty($cards)) {
             $this->telegram->sendMessage($chatId, "Nenhuma efeméride encontrada para hoje.");
             return;
         }
@@ -1033,25 +1036,32 @@ class CommandHandler
             ],
         ];
 
-        $erros = 0;
-        foreach ($cards as $c) {
-            $absPath = $c['card_path'] ?? '';
-            if ($absPath !== '' && file_exists($absPath)) {
-                if (!$this->telegram->sendPhoto($requesterTelegramId, $absPath)) {
-                    $erros++;
-                }
-            } else {
-                $erros++;
-            }
-        }
-
         $enviadoNoPrivado = $this->telegram->sendMessage(
             $requesterTelegramId,
-            "Prévia gerada com " . count($cards) . " cards. Verifique as imagens acima.",
-            ['reply_markup' => $teclado]
+            $mensagemPreview,
+            ['parse_mode' => 'HTML', 'reply_markup' => $teclado]
         );
 
         if ($enviadoNoPrivado) {
+            $erros = 0;
+            foreach ($cards as $c) {
+                $absPath = $c['card_path'] ?? '';
+                if ($absPath !== '' && file_exists($absPath)) {
+                    if (!$this->telegram->sendPhoto($requesterTelegramId, $absPath, '')) {
+                        $erros++;
+                    }
+                } else {
+                    $erros++;
+                }
+            }
+
+            $this->telegram->sendMessage(
+                $requesterTelegramId,
+                $erros === 0
+                    ? "Prévia gerada com " . count($cards) . " cards individualizados. Confira a mensagem e as imagens acima."
+                    : "Prévia gerada, porém houve falha em $erros cards. Confira a mensagem acima."
+            );
+
             if ((string) $chatId !== (string) $requesterTelegramId) {
                 $this->telegram->sendMessage(
                     $chatId,
@@ -1081,14 +1091,29 @@ class CommandHandler
 
         $hoje = date('Y-m-d');
         $registros = $this->getRegistrosConsolidadosDoDia($hoje);
+        $previaModel = new \App\Models\EfemeridePreviaDiaria();
+        $previa = $previaModel->buscarPorData($hoje);
+        $mensagem = trim((string) ($previa['mensagem'] ?? ''));
+        if ($mensagem === '') {
+            $composer = new \App\Services\EfemeridesComposer();
+            $mensagem = trim($composer->composeDailyPreview($registros));
+            if ($mensagem !== '') {
+                $previaModel->salvarOuAtualizar($hoje, $mensagem, true);
+            }
+        }
         
         $cards = [];
         if (!empty($registros)) {
             $cards = (new \App\Services\EfemeridesCardService())->buildCardsForDate($hoje, $registros);
         }
 
-        if (empty($cards)) {
+        if ($mensagem === '' && empty($cards)) {
             $this->telegram->sendMessage($chatId, "Nenhuma efeméride encontrada para envio.");
+            return;
+        }
+
+        if ($mensagem !== '' && !$this->telegram->sendMessage($grupoId, $mensagem, ['parse_mode' => 'HTML'])) {
+            $this->telegram->sendMessage($chatId, "Não foi possível enviar a mensagem escrita ao grupo oficial.");
             return;
         }
 
@@ -1096,8 +1121,7 @@ class CommandHandler
         foreach ($cards as $c) {
             $absPath = $c['card_path'] ?? '';
             if ($absPath !== '' && file_exists($absPath)) {
-                $desc = $c['titulo'] ?? $c['descricao'] ?? 'Efeméride';
-                if (!$this->telegram->sendPhoto($grupoId, $absPath, "🖼 *Card:* " . $desc)) {
+                if (!$this->telegram->sendPhoto($grupoId, $absPath, '')) {
                     $erros++;
                 }
             } else {
@@ -1105,17 +1129,10 @@ class CommandHandler
             }
         }
 
-        $composer = new \App\Services\EfemeridesComposer();
-        $mensagem = trim($composer->composeDailyPreview($registros));
-        if ($mensagem !== '') {
-            $previaModel = new \App\Models\EfemeridePreviaDiaria();
-            $previaModel->salvarOuAtualizar($hoje, $mensagem, true);
-        }
-
         if ($erros === 0) {
-            $this->telegram->sendMessage($chatId, "Cards enviados para o grupo oficial com sucesso.");
+            $this->telegram->sendMessage($chatId, "Mensagem e cards enviados para o grupo oficial com sucesso.");
         } else {
-            $this->telegram->sendMessage($chatId, "Cards enviados, porém houve falha no envio de $erros imagens.");
+            $this->telegram->sendMessage($chatId, "Mensagem enviada, porém houve falha no envio de $erros cards.");
         }
     }
 
