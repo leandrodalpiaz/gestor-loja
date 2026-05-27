@@ -60,6 +60,37 @@ class BibliotecaController
     {
         // Área de pesquisa: trabalhos arquivados pela Secretaria (PDF quando disponível).
         $itens = (new TrabalhoSessao())->listarRecentes(120);
+
+        $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+        $grauObreiro = 'aprendiz';
+        $isSystemAdmin = !empty($_SESSION['is_system_admin']) || !empty($_SESSION['force_system_admin']) || $obreiroId === '0';
+
+        if ($obreiroId !== '' && !$isSystemAdmin) {
+            $obreiro = (new Obreiro())->findById($obreiroId);
+            $grauObreiro = strtolower((string) ($obreiro['grau'] ?? 'aprendiz'));
+        } elseif ($isSystemAdmin) {
+            $grauObreiro = 'mestre';
+        }
+
+        $ord = static function (string $g): int {
+            $g = strtolower($g);
+            return match (true) {
+                str_contains($g, 'mestre') => 3,
+                str_contains($g, 'companheiro') => 2,
+                default => 1,
+            };
+        };
+
+        $grauUserVal = $ord($grauObreiro);
+        $itensFiltrados = [];
+        foreach ($itens as $item) {
+            $grauSessao = strtolower((string) ($item['grau_sessao'] ?? 'aprendiz'));
+            if ($grauUserVal >= $ord($grauSessao)) {
+                $itensFiltrados[] = $item;
+            }
+        }
+        $itens = $itensFiltrados;
+
         require_once __DIR__ . '/../Views/biblioteca/trabalhos.php';
     }
 

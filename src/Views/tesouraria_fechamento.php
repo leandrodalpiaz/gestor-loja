@@ -82,7 +82,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                     </select>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Status: <span id="status-fechamento" class="font-bold text-blue-600 dark:text-blue-400">Aberto</span></p>
+                    <p class="text-sm text-gray-400">Status: <span id="status-fechamento" class="badge badge-info">Aberto</span></p>
                 </div>
             </div>
         </div>
@@ -92,20 +92,20 @@ require __DIR__ . '/partials/erp_shell_open.php';
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="card-metric">
             <p class="card-metric-label">Saldo Inicial</p>
-            <p class="card-metric-value text-blue-600 dark:text-blue-400" id="saldo-inicial">R$ 0,00</p>
-            <button onclick="editarSaldoInicial()" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mt-2">EDITAR SALDO</button>
+            <p class="card-metric-value text-sky-400" id="saldo-inicial">R$ 0,00</p>
+            <button onclick="editarSaldoInicial()" class="text-xs font-semibold text-sky-400/95 hover:text-sky-300 hover:underline mt-2">EDITAR SALDO</button>
         </div>
         <div class="card-metric">
             <p class="card-metric-label">Total Entradas</p>
-            <p class="card-metric-value text-green-600 dark:text-green-400" id="total-entradas">R$ 0,00</p>
+            <p class="card-metric-value text-emerald-400" id="total-entradas">R$ 0,00</p>
         </div>
         <div class="card-metric">
             <p class="card-metric-label">Total Saídas</p>
-            <p class="card-metric-value text-red-600 dark:text-red-400" id="total-saidas">R$ 0,00</p>
+            <p class="card-metric-value text-rose-400" id="total-saidas">R$ 0,00</p>
         </div>
         <div class="card-metric">
             <p class="card-metric-label">Saldo Final</p>
-            <p class="card-metric-value text-purple-600 dark:text-purple-400" id="saldo-final">R$ 0,00</p>
+            <p class="card-metric-value text-purple-400" id="saldo-final">R$ 0,00</p>
         </div>
     </div>
 

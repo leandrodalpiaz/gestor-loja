@@ -39,11 +39,11 @@ require __DIR__ . '/partials/erp_shell_open.php';
         </div>
         <div class="card">
             <div class="card-header"><h2 class="card-title">Fluxo de Trabalho</h2></div>
-            <ul class="card-body space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">1.</span> <span>Preencha os dados do visitante e da sessão no formulário.</span></li>
-                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">2.</span> <span>Se estiver no Telegram, o certificado será enviado diretamente no chat.</span></li>
-                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">3.</span> <span>Caso contrário, o download do certificado será iniciado no navegador.</span></li>
-                <li class="flex items-start gap-3"><span class="font-bold text-blue-500">4.</span> <span>Os dados da sessão podem ser pré-preenchidos a partir da tela de efemérides.</span></li>
+            <ul class="card-body space-y-3 text-sm text-slate-300">
+                <li class="flex items-start gap-3"><span class="font-bold text-erp-gold">1.</span> <span>Preencha os dados do visitante e da sessão no formulário.</span></li>
+                <li class="flex items-start gap-3"><span class="font-bold text-erp-gold">2.</span> <span>Se estiver no Telegram, o certificado será enviado diretamente no chat.</span></li>
+                <li class="flex items-start gap-3"><span class="font-bold text-erp-gold">3.</span> <span>Caso contrário, o download do certificado será iniciado no navegador.</span></li>
+                <li class="flex items-start gap-3"><span class="font-bold text-erp-gold">4.</span> <span>Os dados da sessão podem ser pré-preenchidos a partir da tela de efemérides.</span></li>
             </ul>
         </div>
     </div>
@@ -92,7 +92,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         </select>
                     </div>
                 </div>
-                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="mt-6 pt-6 border-t border-white/10">
                     <button type="submit" class="btn btn-primary w-full">Gerar e Enviar Certificado</button>
                 </div>
             </form>

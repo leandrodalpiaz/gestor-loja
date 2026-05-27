@@ -106,6 +106,58 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <div class="mb-8 p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 font-bold text-sm"><?= htmlspecialchars($dashboardMensagemErro) ?></div>
     <?php endif; ?>
 
+    <!-- Welcome Card -->
+    <div class="card p-6 bg-gradient-to-r from-erp-navy-deep to-erp-navy relative overflow-hidden border border-white/5 shadow-lg">
+        <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-erp-gold/5 rounded-full blur-3xl"></div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+            <div>
+                <p class="text-[10px] font-bold text-erp-gold uppercase tracking-widest mb-1">
+                    <?= htmlspecialchars($dashboardNomeLoja) ?>
+                </p>
+                <h2 class="text-2xl font-cinzel font-bold text-white leading-tight">
+                    Saudações, <?= htmlspecialchars($usuarioNome) ?>!
+                </h2>
+                <p class="text-xs text-erp-muted mt-1 leading-relaxed">
+                    A Oficina está operacional. Reuniões ordinárias: <strong class="text-slate-300"><?= htmlspecialchars($dashboardConfiguracaoLoja['dia_semana_reuniao'] ?? 'A definir') ?></strong>.
+                </p>
+            </div>
+            <?php if ($usuarioCargo !== ''): ?>
+                <div class="shrink-0 flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl">
+                    <div class="w-8 h-8 rounded-lg bg-erp-gold/15 text-erp-gold flex items-center justify-center text-xs font-bold font-cinzel">
+                        ★
+                    </div>
+                    <div>
+                        <p class="text-[9px] text-erp-muted uppercase font-bold tracking-wider">Cargo / Função</p>
+                        <p class="text-xs font-semibold text-white"><?= htmlspecialchars($usuarioCargo) ?></p>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Quick Shortcuts Grid -->
+    <?php if (!empty($atalhosOperacionais)): ?>
+        <section class="mb-2">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-1 h-5 bg-erp-gold rounded-full"></div>
+                <h3 class="font-cinzel text-sm text-white tracking-widest uppercase">Atalhos Operacionais</h3>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                <?php foreach ($atalhosOperacionais as $atalho): ?>
+                    <a href="<?= htmlspecialchars((string) ($atalho['href'] ?? '#')) ?>" 
+                       class="glass-surface hover-lift flex flex-col items-center justify-center p-4 rounded-2xl border border-white/5 hover:border-erp-gold/40 transition-all text-center group">
+                        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-erp-gold mb-3 group-hover:scale-110 transition-transform shadow-inner">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <?= $getSidebarIcon((string) ($atalho['label'] ?? '')) ?>
+                            </svg>
+                        </div>
+                        <span class="text-xs font-bold text-white line-clamp-1"><?= htmlspecialchars((string) ($atalho['label'] ?? 'Item')) ?></span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </section>
+    <?php endif; ?>
+
     <!-- Main Grid -->
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
         
@@ -186,8 +238,14 @@ require __DIR__ . '/partials/erp_shell_open.php';
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="art-card p-12 text-center border-dashed border-white/10">
-                        <p class="text-slate-400 text-sm font-medium tracking-widest uppercase">Nenhum trabalho programado</p>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <h3 class="empty-state-title">Nenhum trabalho programado</h3>
+                        <p class="empty-state-description">A Oficina está com a agenda em dia. Novas sessões e convocações aparecerão aqui.</p>
                     </div>
                 <?php endif; ?>
             </section>
@@ -221,8 +279,16 @@ require __DIR__ . '/partials/erp_shell_open.php';
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <div class="col-span-full p-8 text-center text-sm text-slate-500 glass-panel rounded-xl border border-dashed border-white/10">
-                            Não há convites ativos no momento.
+                        <div class="col-span-full">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                                    </svg>
+                                </div>
+                                <h3 class="empty-state-title">Sem convites ativos</h3>
+                                <p class="empty-state-description">Não há convocações ou convites de outras Lojas Co-Irmãs registrados no momento.</p>
+                            </div>
                         </div>
                     <?php endif; ?>
                 </div>

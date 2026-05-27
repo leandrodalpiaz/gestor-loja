@@ -128,6 +128,7 @@ class SecretariaController
         $obreiros = $obreiroModel->getAllAtivos();
         $resumoCadastros = $obreiroModel->obterResumoSecretaria();
         $trabalhos = $trabalhoModel->listarRecentes(8);
+        $submissoesPendentes = (new TrabalhoSubmissao())->listarPendentesSecretaria(10);
         $publicacoes = $publicacaoModel->listarRecentes(8);
         $balaustres = $balaustreModel->listarRecentes(8);
         $configuracaoLoja = (new ConfiguracaoLoja())->obter();

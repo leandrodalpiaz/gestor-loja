@@ -39,8 +39,8 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
         }
         .bg-liturgical {
             background-color: #0A1628;
-            background-image: radial-gradient(circle at 20% 30%, rgba(201, 162, 39, 0.08) 0%, transparent 50%),
-                              radial-gradient(circle at 80% 80%, rgba(27, 58, 92, 0.3) 0%, transparent 50%);
+            background-image: radial-gradient(circle at 30% 20%, rgba(201, 162, 39, 0.12) 0%, transparent 60%),
+                              radial-gradient(circle at 80% 80%, rgba(27, 58, 92, 0.5) 0%, transparent 50%);
         }
         /* Custom scrollbar for the left panel */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -147,7 +147,7 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
     </div>
 
     <!-- Right Panel: Login Form (Glassmorphism / Clean Premium) -->
-    <aside class="w-full lg:w-[480px] shrink-0 bg-white dark:bg-[#0f1c2e] min-h-screen flex flex-col justify-center relative shadow-[-20px_0_40px_rgba(0,0,0,0.3)] z-20">
+    <aside class="w-full lg:w-[480px] shrink-0 bg-white dark:bg-[#0f1c2e] min-h-screen flex flex-col justify-center relative shadow-[-30px_0_60px_rgba(0,0,0,0.6)] z-20 border-l border-white/5">
         
         <!-- Mobile background fallback -->
         <div class="lg:hidden absolute inset-0 bg-liturgical opacity-10 pointer-events-none"></div>
@@ -196,7 +196,7 @@ $publicAdsEnabled = (bool) ($publicAdsEnabled ?? false);
                 
                 <div class="pt-6">
                     <button type="submit" name="acao" value="login" <?= !$tenantResolved ? 'disabled' : '' ?> 
-                        class="w-full py-4 bg-[#1B3A5C] hover:bg-[#12273F] text-white rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-[#1B3A5C]/30 transition-all flex justify-center items-center gap-2 group">
+                        class="w-full py-4 bg-[#1B3A5C] hover:bg-[#12273F] text-white rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-[#1B3A5C]/30 hover:shadow-[#1B3A5C]/50 hover-lift flex justify-center items-center gap-2 group">
                         Adentrar
                         <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                     </button>

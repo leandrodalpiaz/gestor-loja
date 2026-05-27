@@ -51,34 +51,34 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <div class="flex-grow">
                 <div class="flex items-center gap-3 mb-4">
                     <span class="badge bg-erp-gold text-erp-navy px-3 py-1 text-[9px] font-black uppercase tracking-widest shadow-sm">Institucional</span>
-                    <h2 class="text-2xl font-black text-erp-navy tracking-tight">
+                    <h2 class="text-2xl font-black text-white tracking-tight">
                         <?= htmlspecialchars((string) (($relatorio['loja']['nome_loja'] ?? '') ?: 'Loja não configurada')) ?>
                     </h2>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
                     <div class="flex flex-col gap-1">
                         <span class="text-[10px] font-bold text-erp-muted uppercase tracking-widest">Potência</span>
-                        <strong class="text-sm text-erp-navy font-black"><?= htmlspecialchars(trim((string) (($relatorio['loja']['potencia_nome'] ?? 'não informada') . (!empty($relatorio['loja']['potencia_sigla']) ? ' (' . $relatorio['loja']['potencia_sigla'] . ')' : '')))) ?></strong>
+                        <strong class="text-sm text-slate-200 font-black"><?= htmlspecialchars(trim((string) (($relatorio['loja']['potencia_nome'] ?? 'não informada') . (!empty($relatorio['loja']['potencia_sigla']) ? ' (' . $relatorio['loja']['potencia_sigla'] . ')' : '')))) ?></strong>
                     </div>
                     <div class="flex flex-col gap-1">
                         <span class="text-[10px] font-bold text-erp-muted uppercase tracking-widest">Oriente</span>
-                        <strong class="text-sm text-erp-navy font-black"><?= htmlspecialchars((string) (($relatorio['loja']['oriente'] ?? '') ?: 'não informado')) ?></strong>
+                        <strong class="text-sm text-slate-200 font-black"><?= htmlspecialchars((string) (($relatorio['loja']['oriente'] ?? '') ?: 'não informado')) ?></strong>
                     </div>
                     <div class="flex flex-col gap-1">
                         <span class="text-[10px] font-bold text-erp-muted uppercase tracking-widest">Localidade</span>
-                        <strong class="text-sm text-erp-navy font-black"><?= htmlspecialchars(trim((string) (($relatorio['loja']['cidade'] ?? '') . ' / ' . ($relatorio['loja']['uf'] ?? '')), ' /')) ?></strong>
+                        <strong class="text-sm text-slate-200 font-black"><?= htmlspecialchars(trim((string) (($relatorio['loja']['cidade'] ?? '') . ' / ' . ($relatorio['loja']['uf'] ?? '')), ' /')) ?></strong>
                     </div>
                     <div class="flex flex-col gap-1">
                         <span class="text-[10px] font-bold text-erp-muted uppercase tracking-widest">Rito</span>
-                        <strong class="text-sm text-erp-navy font-black"><?= htmlspecialchars((string) (($relatorio['loja']['rito'] ?? '') ?: 'não informado')) ?></strong>
+                        <strong class="text-sm text-slate-200 font-black"><?= htmlspecialchars((string) (($relatorio['loja']['rito'] ?? '') ?: 'não informado')) ?></strong>
                     </div>
                     <div class="flex flex-col gap-1">
                         <span class="text-[10px] font-bold text-erp-muted uppercase tracking-widest">Fundação</span>
-                        <strong class="text-sm text-erp-navy font-black"><?= $formatDate($relatorio['loja']['data_fundacao'] ?? null) ?></strong>
+                        <strong class="text-sm text-slate-200 font-black"><?= $formatDate($relatorio['loja']['data_fundacao'] ?? null) ?></strong>
                     </div>
                     <div class="flex flex-col gap-1">
                         <span class="text-[10px] font-bold text-erp-muted uppercase tracking-widest">Instalação</span>
-                        <strong class="text-sm text-erp-navy font-black"><?= $formatDate($relatorio['loja']['data_instalacao'] ?? null) ?></strong>
+                        <strong class="text-sm text-slate-200 font-black"><?= $formatDate($relatorio['loja']['data_instalacao'] ?? null) ?></strong>
                     </div>
                 </div>
             </div>
@@ -96,23 +96,23 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-12">
     <div class="card-metric depth-1 hover-lift border-t-4 border-t-erp-navy">
         <p class="card-metric-label uppercase tracking-widest font-bold opacity-60">Visitantes</p>
-        <p class="card-metric-value text-erp-navy"><?= (int) ($relatorio['visitantes']['total'] ?? 0) ?></p>
+        <p class="card-metric-value text-white"><?= (int) ($relatorio['visitantes']['total'] ?? 0) ?></p>
     </div>
     <div class="card-metric depth-1 hover-lift border-t-4 border-t-erp-gold">
         <p class="card-metric-label uppercase tracking-widest font-bold opacity-60">Visitas Externas</p>
-        <p class="card-metric-value text-erp-navy"><?= (int) ($relatorio['visitas_externas']['total'] ?? 0) ?></p>
+        <p class="card-metric-value text-white"><?= (int) ($relatorio['visitas_externas']['total'] ?? 0) ?></p>
     </div>
     <div class="card-metric depth-1 hover-lift border-t-4 border-t-erp-brand-vibrant">
         <p class="card-metric-label uppercase tracking-widest font-bold opacity-60">Congressos</p>
-        <p class="card-metric-value text-erp-navy"><?= (int) ($relatorio['congressos']['total'] ?? 0) ?></p>
+        <p class="card-metric-value text-white"><?= (int) ($relatorio['congressos']['total'] ?? 0) ?></p>
     </div>
     <div class="card-metric depth-1 hover-lift border-t-4 border-t-erp-muted">
         <p class="card-metric-label uppercase tracking-widest font-bold opacity-60">Palestras</p>
-        <p class="card-metric-value text-erp-navy"><?= (int) ($relatorio['palestras']['total'] ?? 0) ?></p>
+        <p class="card-metric-value text-white"><?= (int) ($relatorio['palestras']['total'] ?? 0) ?></p>
     </div>
     <div class="card-metric depth-1 hover-lift border-t-4 border-t-erp-success">
         <p class="card-metric-label uppercase tracking-widest font-bold opacity-60">Total Sessões</p>
-        <p class="card-metric-value text-erp-navy"><?= (int) ($relatorio['sessoes_por_grau']['total'] ?? 0) ?></p>
+        <p class="card-metric-value text-white"><?= (int) ($relatorio['sessoes_por_grau']['total'] ?? 0) ?></p>
     </div>
 </div>
 
@@ -121,14 +121,14 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     <div class="card depth-1 p-8 flex items-center justify-between hover-lift">
         <div>
             <p class="text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-1">Obreiros no Quadro</p>
-            <p class="text-3xl font-black text-erp-navy"><?= (int) ($relatorio['perfil_quadro']['total'] ?? 0) ?></p>
+            <p class="text-3xl font-black text-white"><?= (int) ($relatorio['perfil_quadro']['total'] ?? 0) ?></p>
         </div>
         <div class="text-3xl opacity-20">👥</div>
     </div>
     <div class="card depth-1 p-8 flex items-center justify-between hover-lift">
         <div>
             <p class="text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-1">Idade Média</p>
-            <p class="text-3xl font-black text-erp-navy"><?= ($relatorio['perfil_quadro']['idade_media'] ?? null) !== null ? round((float)$relatorio['perfil_quadro']['idade_media']) . ' anos' : '-' ?></p>
+            <p class="text-3xl font-black text-white"><?= ($relatorio['perfil_quadro']['idade_media'] ?? null) !== null ? round((float)$relatorio['perfil_quadro']['idade_media']) . ' anos' : '-' ?></p>
         </div>
         <div class="text-3xl opacity-20">🎂</div>
     </div>
@@ -146,12 +146,12 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     <div class="space-y-10">
         <div class="card depth-1">
             <div class="card-header border-b border-erp-border/50 p-6">
-                <h3 class="text-lg font-black text-erp-navy tracking-tight">Frequência e Intercâmbio</h3>
+                <h3 class="text-lg font-black text-white tracking-tight">Frequência e Intercâmbio</h3>
                 <p class="text-xs text-erp-muted mt-1 font-bold uppercase tracking-widest opacity-60">Visitantes recebidos e visitas realizadas</p>
             </div>
             <div class="card-body p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <h4 class="text-[11px] font-black text-erp-navy uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-6 flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-erp-gold"></span> Lojas Visitantes
                     </h4>
                     <div class="space-y-3">
@@ -160,15 +160,15 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <?php else: ?>
                             <?php foreach ($relatorio['visitantes']['lojas_mais_frequentes'] as $linha): ?>
                                 <div class="flex items-center justify-between p-3 bg-erp-surface-2 rounded-xl border border-erp-border/30">
-                                    <span class="text-xs font-bold text-erp-navy"><?= htmlspecialchars((string) ($linha['loja'] ?? 'N/A')) ?></span>
-                                    <strong class="text-sm font-black text-erp-navy"><?= (int) ($linha['total'] ?? 0) ?></strong>
+                                    <span class="text-xs font-bold text-slate-300"><?= htmlspecialchars((string) ($linha['loja'] ?? 'N/A')) ?></span>
+                                    <strong class="text-sm font-black text-white"><?= (int) ($linha['total'] ?? 0) ?></strong>
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
                 </div>
                 <div>
-                    <h4 class="text-[11px] font-black text-erp-navy uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-6 flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-erp-navy"></span> Lojas Visitadas
                     </h4>
                     <div class="space-y-3">
@@ -177,8 +177,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <?php else: ?>
                             <?php foreach ($relatorio['visitas_externas']['lojas_mais_visitadas'] as $linha): ?>
                                 <div class="flex items-center justify-between p-3 bg-erp-surface-2 rounded-xl border border-erp-border/30">
-                                    <span class="text-xs font-bold text-erp-navy"><?= htmlspecialchars((string) ($linha['loja'] ?? 'N/A')) ?></span>
-                                    <strong class="text-sm font-black text-erp-navy"><?= (int) ($linha['total'] ?? 0) ?></strong>
+                                    <span class="text-xs font-bold text-slate-300"><?= htmlspecialchars((string) ($linha['loja'] ?? 'N/A')) ?></span>
+                                    <strong class="text-sm font-black text-white"><?= (int) ($linha['total'] ?? 0) ?></strong>
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -189,12 +189,12 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
         <div class="card depth-1">
             <div class="card-header border-b border-erp-border/50 p-6">
-                <h3 class="text-lg font-black text-erp-navy tracking-tight">Atividade Ritualística</h3>
+                <h3 class="text-lg font-black text-white tracking-tight">Atividade Ritualística</h3>
                 <p class="text-xs text-erp-muted mt-1 font-bold uppercase tracking-widest opacity-60">Sessões ordinárias e eventos especiais</p>
             </div>
             <div class="card-body p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <h4 class="text-[11px] font-black text-erp-navy uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-6 flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-erp-brand-vibrant"></span> Por Grau
                     </h4>
                     <div class="space-y-3">
@@ -203,29 +203,29 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <?php else: ?>
                             <?php foreach ($relatorio['sessoes_por_grau']['itens'] as $linha): ?>
                                 <div class="flex items-center justify-between p-3 bg-erp-surface-2 rounded-xl border border-erp-border/30">
-                                    <span class="text-xs font-bold text-erp-navy"><?= htmlspecialchars((string) ($linha['grau_sessao'] ?? 'N/A')) ?></span>
-                                    <strong class="text-sm font-black text-erp-navy"><?= (int) ($linha['total'] ?? 0) ?></strong>
+                                    <span class="text-xs font-bold text-slate-300"><?= htmlspecialchars((string) ($linha['grau_sessao'] ?? 'N/A')) ?></span>
+                                    <strong class="text-sm font-black text-white"><?= (int) ($linha['total'] ?? 0) ?></strong>
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
                 </div>
                 <div>
-                    <h4 class="text-[11px] font-black text-erp-navy uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-6 flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-erp-muted"></span> Outros Eventos
                     </h4>
                     <div class="space-y-4">
                         <div class="p-4 bg-erp-surface-2 rounded-2xl border border-erp-border/30">
                             <div class="flex justify-between mb-1">
                                 <span class="text-[10px] font-bold text-erp-muted uppercase tracking-widest">Congressos</span>
-                                <strong class="text-lg font-black text-erp-navy"><?= (int) ($relatorio['congressos']['total'] ?? 0) ?></strong>
+                                <strong class="text-lg font-black text-white"><?= (int) ($relatorio['congressos']['total'] ?? 0) ?></strong>
                             </div>
                             <p class="text-[9px] text-erp-muted/60 font-bold uppercase tracking-widest">Fonte: <?= htmlspecialchars((string) ($relatorio['congressos']['fonte'] ?? 'N/A')) ?></p>
                         </div>
                         <div class="p-4 bg-erp-surface-2 rounded-2xl border border-erp-border/30">
                             <div class="flex justify-between mb-1">
                                 <span class="text-[10px] font-bold text-erp-muted uppercase tracking-widest">Palestras</span>
-                                <strong class="text-lg font-black text-erp-navy"><?= (int) ($relatorio['palestras']['total'] ?? 0) ?></strong>
+                                <strong class="text-lg font-black text-white"><?= (int) ($relatorio['palestras']['total'] ?? 0) ?></strong>
                             </div>
                             <p class="text-[9px] text-erp-muted/60 font-bold uppercase tracking-widest">Fonte: <?= htmlspecialchars((string) ($relatorio['palestras']['fonte'] ?? 'N/A')) ?></p>
                         </div>
@@ -236,7 +236,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
         <div class="card depth-1">
             <div class="card-header border-b border-erp-border/50 p-6">
-                <h3 class="text-lg font-black text-erp-navy tracking-tight">Amostra Cadastral</h3>
+                <h3 class="text-lg font-black text-white tracking-tight">Amostra Cadastral</h3>
                 <p class="text-xs text-erp-muted mt-1 font-bold uppercase tracking-widest opacity-60">Leitura rápida para conferência de dados</p>
             </div>
             <div class="card-body p-6 space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar">
@@ -246,21 +246,21 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <?php foreach ($relatorio['perfil_quadro']['amostra_cadastral'] as $item): ?>
                         <div class="bg-erp-surface-2 rounded-2xl p-5 border border-erp-border/30 hover:border-erp-brand-vibrant transition-colors">
                             <div class="flex items-center justify-between gap-4 mb-4">
-                                <p class="font-black text-erp-navy leading-tight"><?= htmlspecialchars((string) ($item['nome_exibicao'] ?? '-')) ?></p>
-                                <span class="badge bg-erp-navy/5 text-erp-navy border border-erp-navy/10 px-2 py-1 text-[9px] font-black uppercase tracking-widest"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($item['situacao_quadro'] ?? 'N/A')))) ?></span>
+                                <p class="font-black text-white leading-tight"><?= htmlspecialchars((string) ($item['nome_exibicao'] ?? '-')) ?></p>
+                                <span class="badge bg-white/5 text-slate-300 border border-white/10 px-2 py-1 text-[9px] font-black uppercase tracking-widest"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($item['situacao_quadro'] ?? 'N/A')))) ?></span>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="flex flex-col gap-0.5">
                                     <span class="text-[9px] font-bold text-erp-muted uppercase tracking-widest">Grau</span>
-                                    <strong class="text-[11px] text-erp-navy font-black"><?= htmlspecialchars((string) ($item['grau'] ?? 'N/A')) ?></strong>
+                                    <strong class="text-[11px] text-white font-black"><?= htmlspecialchars((string) ($item['grau'] ?? 'N/A')) ?></strong>
                                 </div>
                                 <div class="flex flex-col gap-0.5">
                                     <span class="text-[9px] font-bold text-erp-muted uppercase tracking-widest">Profissão</span>
-                                    <strong class="text-[11px] text-erp-navy font-black"><?= htmlspecialchars((string) ($item['profissao'] ?? 'N/A')) ?></strong>
+                                    <strong class="text-[11px] text-white font-black"><?= htmlspecialchars((string) ($item['profissao'] ?? 'N/A')) ?></strong>
                                 </div>
                                 <div class="flex flex-col gap-0.5 col-span-2">
                                     <span class="text-[9px] font-bold text-erp-muted uppercase tracking-widest">Escolaridade</span>
-                                    <strong class="text-[11px] text-erp-navy font-black"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($item['escolaridade'] ?? 'N/A')))) ?></strong>
+                                    <strong class="text-[11px] text-white font-black"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($item['escolaridade'] ?? 'N/A')))) ?></strong>
                                 </div>
                             </div>
                         </div>
@@ -274,7 +274,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     <div class="space-y-10">
         <div class="card depth-1">
             <div class="card-header border-b border-erp-border/50 p-6">
-                <h3 class="text-lg font-black text-erp-navy tracking-tight">Movimentação Anual</h3>
+                <h3 class="text-lg font-black text-white tracking-tight">Movimentação Anual</h3>
                 <p class="text-xs text-erp-muted mt-1 font-bold uppercase tracking-widest opacity-60">Evolução do quadro de obreiros</p>
             </div>
             <div class="card-body p-8">
@@ -297,8 +297,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <?php foreach (['filiacoes' => 'Filiações', 'regularizacoes' => 'Regularizações', 'reintegracoes' => 'Reintegrações', 'suspensoes' => 'Suspensões', 'desligamentos' => 'Desligamentos', 'oriente_eterno' => 'Oriente Eterno'] as $chave => $label): ?>
                             <div class="flex items-center justify-between p-4 bg-erp-surface-2 rounded-2xl border border-erp-border/30">
-                                <span class="text-xs font-bold text-erp-navy"><?= htmlspecialchars($label) ?></span>
-                                <strong class="text-base font-black text-erp-navy"><?= (int) ($relatorio['quadro']['movimentacao'][$chave] ?? 0) ?></strong>
+                                <span class="text-xs font-bold text-slate-300"><?= htmlspecialchars($label) ?></span>
+                                <strong class="text-base font-black text-white"><?= (int) ($relatorio['quadro']['movimentacao'][$chave] ?? 0) ?></strong>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -308,45 +308,45 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
         <div class="card depth-1">
             <div class="card-header border-b border-erp-border/50 p-6">
-                <h3 class="text-lg font-black text-erp-navy tracking-tight">Perfil Demográfico</h3>
+                <h3 class="text-lg font-black text-white tracking-tight">Perfil Demográfico</h3>
                 <p class="text-xs text-erp-muted mt-1 font-bold uppercase tracking-widest opacity-60">Recorte estatístico do cadastro</p>
             </div>
             <div class="card-body p-8 space-y-10">
                 <div>
-                    <h4 class="text-[11px] font-black text-erp-navy uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-6 flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-erp-navy"></span> Escolaridade
                     </h4>
                     <div class="space-y-3">
                         <?php foreach (($relatorio['perfil_quadro']['escolaridade'] ?? []) as $linha): ?>
                             <div class="flex items-center justify-between p-3 bg-erp-surface-2 rounded-xl border border-erp-border/30">
-                                <span class="text-xs font-bold text-erp-navy"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($linha['categoria'] ?? 'N/A')))) ?></span>
-                                <strong class="text-sm font-black text-erp-navy"><?= (int) ($linha['total'] ?? 0) ?></strong>
+                                <span class="text-xs font-bold text-slate-300"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($linha['categoria'] ?? 'N/A')))) ?></span>
+                                <strong class="text-sm font-black text-white"><?= (int) ($linha['total'] ?? 0) ?></strong>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
                 <div>
-                    <h4 class="text-[11px] font-black text-erp-navy uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-6 flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-erp-gold"></span> Situação no Quadro
                     </h4>
                     <div class="space-y-3">
                         <?php foreach (($relatorio['perfil_quadro']['situacoes'] ?? []) as $linha): ?>
                             <div class="flex items-center justify-between p-3 bg-erp-surface-2 rounded-xl border border-erp-border/30">
-                                <span class="text-xs font-bold text-erp-navy"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($linha['categoria'] ?? 'N/A')))) ?></span>
-                                <strong class="text-sm font-black text-erp-navy"><?= (int) ($linha['total'] ?? 0) ?></strong>
+                                <span class="text-xs font-bold text-slate-300"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($linha['categoria'] ?? 'N/A')))) ?></span>
+                                <strong class="text-sm font-black text-white"><?= (int) ($linha['total'] ?? 0) ?></strong>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
                 <div>
-                    <h4 class="text-[11px] font-black text-erp-navy uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <h4 class="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-6 flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-erp-brand-vibrant"></span> Distribuição por Grau
                     </h4>
                     <div class="space-y-3">
                         <?php foreach (($relatorio['perfil_quadro']['graus'] ?? []) as $linha): ?>
                             <div class="flex items-center justify-between p-3 bg-erp-surface-2 rounded-xl border border-erp-border/30">
-                                <span class="text-xs font-bold text-erp-navy"><?= htmlspecialchars((string) ($linha['categoria'] ?? 'N/A')) ?></span>
-                                <strong class="text-sm font-black text-erp-navy"><?= (int) ($linha['total'] ?? 0) ?></strong>
+                                <span class="text-xs font-bold text-slate-300"><?= htmlspecialchars((string) ($linha['categoria'] ?? 'N/A')) ?></span>
+                                <strong class="text-sm font-black text-white"><?= (int) ($linha['total'] ?? 0) ?></strong>
                             </div>
                         <?php endforeach; ?>
                     </div>

@@ -27,8 +27,8 @@ $obreiroId = (string) ($obreiro['id'] ?? '');
     <div class="card-body">
         <div class="flex justify-between items-start gap-2">
             <div>
-                <h3 class="font-bold text-lg text-erpNavy leading-tight"><?= htmlspecialchars($nomeExibicao) ?></h3>
-                <p class="text-sm text-erpMuted mt-1">CIM: <?= htmlspecialchars($cim) ?> | Grau: <?= htmlspecialchars($grau) ?></p>
+                <h3 class="font-bold text-lg text-white leading-tight"><?= htmlspecialchars($nomeExibicao) ?></h3>
+                <p class="text-sm text-slate-400 mt-1">CIM: <?= htmlspecialchars($cim) ?> | Grau: <?= htmlspecialchars($grau) ?></p>
             </div>
             <div>
                 <?php 
@@ -49,11 +49,11 @@ $obreiroId = (string) ($obreiro['id'] ?? '');
             </div>
         <?php endif; ?>
         
-        <div class="mt-4 pt-4 border-t border-erpBorder">
-            <h4 class="text-xs uppercase tracking-wider font-semibold text-erpMuted mb-2">Cargos em Exercício</h4>
+        <div class="mt-4 pt-4 border-t border-white/10">
+            <h4 class="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2">Cargos em Exercício</h4>
             <div class="flex flex-wrap gap-1.5">
                 <?php if (empty($cargosAtuais)): ?>
-                    <span class="text-xs text-erpMuted italic">Nenhum cargo atual.</span>
+                    <span class="text-xs text-slate-400 italic">Nenhum cargo atual.</span>
                 <?php else: ?>
                     <?php foreach ($cargosAtuais as $codigo): ?>
                         <?php 
@@ -67,7 +67,7 @@ $obreiroId = (string) ($obreiro['id'] ?? '');
         </div>
         
         <?php if ($podeGerenciarObreiros || $podeGerarConvitesAcesso): ?>
-        <div class="mt-4 pt-4 border-t border-erpBorder flex flex-wrap gap-2">
+        <div class="mt-4 pt-4 border-t border-white/10 flex flex-wrap gap-2">
             <?php if ($podeGerenciarObreiros): ?>
                 <a href="/obreiros/editar?id=<?= $obreiroId ?>" class="btn btn-primary text-sm flex-1 text-center">Editar</a>
                 <form method="post" action="/obreiros/inativar" onsubmit="return confirm('Inativar este obreiro?');" class="flex-1">
@@ -76,7 +76,7 @@ $obreiroId = (string) ($obreiro['id'] ?? '');
                 </form>
                 <form method="post" action="/obreiros/excluir" onsubmit="return confirm('Excluir este obreiro da gestão? Esta ação pode ser irreversível.');" class="w-full mt-2">
                     <input type="hidden" name="id" value="<?= htmlspecialchars($obreiroId) ?>">
-                    <button type="submit" class="btn border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:border-rose-300 text-sm w-full">Excluir Registro</button>
+                    <button type="submit" class="btn border border-danger/30 text-danger hover:bg-danger/10 text-sm w-full">Excluir Registro</button>
                 </form>
             <?php endif; ?>
             <?php if ($podeGerarConvitesAcesso): ?>

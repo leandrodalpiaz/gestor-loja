@@ -117,6 +117,46 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
                         <div class="space-y-6 pt-4 border-t border-white/5">
                             <h3 class="font-cinzel text-sm text-white tracking-widest uppercase mb-4">Estrutura Canônica (Blocos)</h3>
+                            <?php
+                            $ajudaCampos = [
+                                'abertura' => [
+                                    'ajuda' => 'Abertura ritualística da sessão, registro de data/hora de início, grau de funcionamento e presidência.',
+                                    'placeholder' => 'Ex: Às 20h00, no Templo da A.R.L.S. Renascença, sob a presidência do Venerável Mestre, foram abertos os trabalhos no grau de Aprendiz...'
+                                ],
+                                'balaustre' => [
+                                    'ajuda' => 'Leitura, discussão, votação e assinatura da ata (balaústre) da sessão ordinária anterior.',
+                                    'placeholder' => 'Ex: Foi lido o balaústre da sessão anterior de data..., o qual foi posto em discussão e aprovado sem restrições...'
+                                ],
+                                'expediente' => [
+                                    'ajuda' => 'Registro de pranchas (correspondências) recebidas de Lojas Co-Irmãs, circulares da Potência, correspondência expedida e outras comunicações oficiais.',
+                                    'placeholder' => 'Ex: Foram lidas as circulares nº 12 e 13 da Potência, prancha de agradecimento da Loja... e convite para a sessão magna da Loja...'
+                                ],
+                                'saco_propostas' => [
+                                    'ajuda' => 'Relatar se o Saco de Propostas e Informações colheu alguma prancha, proposta ou notícia.',
+                                    'placeholder' => 'Ex: O Saco de Propostas e Informações circulou e produziu um pedaço de prancha contendo solicitação de auxílio...'
+                                ],
+                                'ordem_dia' => [
+                                    'ajuda' => 'Apresentação de trabalhos escritos (peças de arquitetura), palestras, votações de propostas e debates do dia.',
+                                    'placeholder' => 'Ex: O Irmão... apresentou uma rica peça de arquitetura intitulada "O Templo Interior". Em seguida, procedeu-se à votação...'
+                                ],
+                                'tronco_solidariedade' => [
+                                    'ajuda' => 'Registro da circulação do Tronco de Solidariedade, valor total arrecadado e destinação para a Hospitália (beneficência).',
+                                    'placeholder' => 'Ex: O Tronco de Solidariedade circulou e arrecadou a importância de R$ 150,00, que foi entregue ao Irmão Hospitaleiro...'
+                                ],
+                                'conclusoes_orador' => [
+                                    'ajuda' => 'Parecer final do Irmão Orador sobre a justeza e a perfeição dos trabalhos realizados na sessão.',
+                                    'placeholder' => 'Ex: O Irmão Orador usou da palavra para agradecer a presença dos visitantes e dar o seu parecer legal de que os trabalhos transcorreram justos e perfeitos...'
+                                ],
+                                'encerramento' => [
+                                    'ajuda' => 'Fechamento ritualístico dos trabalhos, agradecimentos finais e encerramento das atividades do dia.',
+                                    'placeholder' => 'Ex: Nada mais havendo a tratar, o Venerável Mestre encerrou os trabalhos às 22h00 na forma da lei...'
+                                ],
+                                'assinaturas' => [
+                                    'ajuda' => 'Identificação de quem assina fisicamente ou valida digitalmente o balaústre.',
+                                    'placeholder' => 'Ex: Secretário              Guarda da Lei              Venerável Mestre'
+                                ],
+                            ];
+                            ?>
                             <?php foreach ([
                                 'abertura' => 'Abertura',
                                 'balaustre' => 'Leitura do Balaústre Anterior',
@@ -127,10 +167,14 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                 'conclusoes_orador' => 'Conclusões do Orador',
                                 'encerramento' => 'Encerramento',
                                 'assinaturas' => 'Assinaturas Oficiais',
-                            ] as $campo => $label): ?>
-                                <div>
-                                    <label class="form-label"><?= htmlspecialchars($label) ?></label>
-                                    <textarea name="bloco_<?= htmlspecialchars($campo) ?>" rows="<?= $campo === 'ordem_dia' ? 8 : 4 ?>" class="form-textarea text-sm"><?= htmlspecialchars((string) ($blocos[$campo] ?? ($campo === 'assinaturas' ? 'Secretário              Guarda da Lei              Venerável Mestre' : ''))) ?></textarea>
+                            ] as $campo => $label): 
+                                $ajuda = $ajudaCampos[$campo]['ajuda'] ?? '';
+                                $place = $ajudaCampos[$campo]['placeholder'] ?? '';
+                            ?>
+                                <div class="space-y-1">
+                                    <label class="form-label mb-0.5"><?= htmlspecialchars($label) ?></label>
+                                    <span class="text-[11px] text-slate-400 block mb-1.5"><?= htmlspecialchars($ajuda) ?></span>
+                                    <textarea name="bloco_<?= htmlspecialchars($campo) ?>" rows="<?= $campo === 'ordem_dia' ? 8 : 4 ?>" class="form-textarea text-sm" placeholder="<?= htmlspecialchars($place) ?>"><?= htmlspecialchars((string) ($blocos[$campo] ?? ($campo === 'assinaturas' ? 'Secretário              Guarda da Lei              Venerável Mestre' : ''))) ?></textarea>
                                 </div>
                             <?php endforeach; ?>
                         </div>

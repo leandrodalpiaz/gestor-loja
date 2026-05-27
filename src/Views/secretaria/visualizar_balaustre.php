@@ -25,11 +25,11 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
     <div class="card depth-1">
         <div class="card-header border-b border-erp-border/50 p-6">
-            <h1 class="text-2xl font-black text-erp-navy tracking-tight">Balaústre <?= htmlspecialchars((string) ($balaustre['numero_balaustre'] ?: 'S/N')) ?></h1>
+            <h1 class="text-2xl font-black text-white print:text-black tracking-tight">Balaústre <?= htmlspecialchars((string) ($balaustre['numero_balaustre'] ?: 'S/N')) ?></h1>
             <p class="text-xs font-bold text-erp-muted uppercase tracking-widest mt-2"><?= htmlspecialchars((string) ($balaustre['sessao_titulo'] ?: 'Documento independente')) ?> · <?= htmlspecialchars((string) ($balaustre['status'] ?? 'rascunho')) ?></p>
         </div>
         <div class="card-body p-8 md:p-10">
-            <pre id="texto-balaustre-oficial" class="whitespace-pre-wrap font-serif text-base leading-relaxed text-erp-navy"><?= htmlspecialchars($textoOficial) ?></pre>
+            <pre id="texto-balaustre-oficial" class="whitespace-pre-wrap font-serif text-base leading-relaxed text-slate-200 print:text-slate-950"><?= htmlspecialchars($textoOficial) ?></pre>
         </div>
     </div>
 </div>

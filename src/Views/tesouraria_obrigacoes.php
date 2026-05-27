@@ -183,9 +183,9 @@ require __DIR__ . '/partials/erp_shell_open.php';
 <!-- Métricas Gerais -->
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
     <div class="card-metric"><p class="card-metric-label">Resumo do Passado</p><p class="card-metric-value"><?= $formatCurrency($totalPassado) ?></p><p class="card-metric-sublabel">Entradas antes de <?= htmlspecialchars($tituloMesAtual) ?></p></div>
-    <div class="card-metric"><p class="card-metric-label">Pago no Mês</p><p class="card-metric-value text-green-600 dark:text-green-400"><?= $formatCurrency($recebidoMes) ?></p><p class="card-metric-sublabel">Competência: <?= htmlspecialchars($competenciaAtual) ?></p></div>
-    <div class="card-metric"><p class="card-metric-label">Falta no Mês</p><p class="card-metric-value text-red-600 dark:text-red-400"><?= $formatCurrency($faltanteMes) ?></p><p class="card-metric-sublabel">Obrigações em aberto do mês</p></div>
-    <div class="card-metric"><p class="card-metric-label">A Prumo</p><p class="card-metric-value text-blue-600 dark:text-blue-400"><?= $irmaosAPrumo ?></p><p class="card-metric-sublabel">Obreiros sem pendências no mês</p></div>
+    <div class="card-metric"><p class="card-metric-label">Pago no Mês</p><p class="card-metric-value text-emerald-400"><?= $formatCurrency($recebidoMes) ?></p><p class="card-metric-sublabel">Competência: <?= htmlspecialchars($competenciaAtual) ?></p></div>
+    <div class="card-metric"><p class="card-metric-label">Falta no Mês</p><p class="card-metric-value text-rose-400"><?= $formatCurrency($faltanteMes) ?></p><p class="card-metric-sublabel">Obrigações em aberto do mês</p></div>
+    <div class="card-metric"><p class="card-metric-label">A Prumo</p><p class="card-metric-value text-sky-400"><?= $irmaosAPrumo ?></p><p class="card-metric-sublabel">Obreiros sem pendências no mês</p></div>
 </div>
 
 <div class="grid grid-cols-1 xl:grid-cols-[420px_minmax(0,1fr)] gap-8">
@@ -226,7 +226,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                                 <div>
                                     <p class="font-semibold text-white mb-0.5"><?= htmlspecialchars($reg['nome']) ?></p>
                                     <p class="text-xs text-erp-muted">
-                                        <span class="text-green-500"><?= $formatCurrency($reg['pago']) ?> pago</span> • <span class="<?= $statusClass === 'danger' ? 'text-red-400 font-bold' : '' ?>"><?= $formatCurrency($reg['aberto']) ?> aberto</span>
+                                        <span class="text-emerald-400"><?= $formatCurrency($reg['pago']) ?> pago</span> • <span class="<?= $statusClass === 'danger' ? 'text-rose-400 font-bold' : '' ?>"><?= $formatCurrency($reg['aberto']) ?> aberto</span>
                                     </p>
                                 </div>
                                 <?php if ($statusClass === 'danger'): ?><span class="badge badge-danger">Atraso</span><?php endif; ?>
@@ -270,13 +270,13 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 <div class="card-header"><h2 class="card-title">Detalhe de <?= htmlspecialchars($selectedObreiroNome) ?></h2></div>
                 <div class="card-body">
                     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 mb-6">
-                        <div class="card-metric-simple"><p class="card-metric-label">Já Pago</p><p class="card-metric-value text-green-600"><?= $formatCurrency($registroSelecionado['pago']) ?></p></div>
-                        <div class="card-metric-simple"><p class="card-metric-label">Falta no Mês</p><p class="card-metric-value text-red-600"><?= $formatCurrency($registroSelecionado['aberto']) ?></p></div>
-                        <div class="card-metric-simple"><p class="card-metric-label">Próxima obrigação</p><p class="card-metric-value text-blue-600"><?= $formatCurrency($valorProximaObrigacao) ?></p><p class="card-metric-sublabel">Soma atrasados + itens a vencer</p></div>
+                        <div class="card-metric-simple"><p class="card-metric-label">Já Pago</p><p class="card-metric-value text-emerald-400"><?= $formatCurrency($registroSelecionado['pago']) ?></p></div>
+                        <div class="card-metric-simple"><p class="card-metric-label">Falta no Mês</p><p class="card-metric-value text-rose-400"><?= $formatCurrency($registroSelecionado['aberto']) ?></p></div>
+                        <div class="card-metric-simple"><p class="card-metric-label">Próxima obrigação</p><p class="card-metric-value text-sky-400"><?= $formatCurrency($valorProximaObrigacao) ?></p><p class="card-metric-sublabel">Soma atrasados + itens a vencer</p></div>
                         <?php if (($registroSelecionado['vencidos'] ?? 0) > 0): ?>
-                            <div class="card-metric-simple border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20"><p class="card-metric-label text-red-600 dark:text-red-400">Atenção</p><p class="card-metric-value text-red-700 dark:text-red-300"><?= (int) $registroSelecionado['vencidos'] ?> pendência(s)</p></div>
+                            <div class="card-metric-simple border-rose-500/20 bg-rose-500/10"><p class="card-metric-label text-rose-400">Atenção</p><p class="card-metric-value text-rose-300"><?= (int) $registroSelecionado['vencidos'] ?> pendência(s)</p></div>
                         <?php else: ?>
-                            <div class="card-metric-simple border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20"><p class="font-semibold text-green-700 dark:text-green-300 text-center py-4">A Prumo com a Tesouraria</p></div>
+                            <div class="card-metric-simple border-emerald-500/20 bg-emerald-500/10"><p class="font-semibold text-emerald-400 text-center py-4">A Prumo com a Tesouraria</p></div>
                         <?php endif; ?>
                     </div>
 
@@ -291,7 +291,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                                         <p class="text-xs text-gray-500">Pago em <?= htmlspecialchars(date('d/m/Y', strtotime($item['pago_em']))) ?></p>
                                     </div>
                                     <div class="text-right">
-                                        <p class="font-semibold text-green-600"><?= $formatCurrency($item['valor_previsto']) ?></p>
+                                        <p class="font-semibold text-emerald-400"><?= $formatCurrency($item['valor_previsto']) ?></p>
                                         <a href="/tesouraria/obrigacoes/parcela/recibo?id=<?= (int) $item['parcela_id'] ?>" target="_blank" class="text-xs text-gray-500 hover:underline">Recibo</a>
                                     </div>
                                 </div>
@@ -309,7 +309,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                                             <p class="text-xs text-gray-500">Vence em <?= htmlspecialchars(date('d/m/Y', strtotime($item['vencimento']))) ?> · <?= htmlspecialchars((string) ($item['tipo_obrigacao'] ?? 'obrigacao')) ?></p>
                                             <span class="badge <?= $badgeParcela($statusTemporalItem) ?> mt-2"><?= htmlspecialchars($labelParcela($statusTemporalItem)) ?></span>
                                         </div>
-                                        <p class="font-semibold text-red-600"><?= $formatCurrency($item['valor_previsto']) ?></p>
+                                        <p class="font-semibold text-rose-400"><?= $formatCurrency($item['valor_previsto']) ?></p>
                                     </div>
                                     <?php if ((int) ($item['parcela_id'] ?? 0) > 0): ?>
                                         <form action="/tesouraria/obrigacoes/parcela/quitar" method="post" class="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">

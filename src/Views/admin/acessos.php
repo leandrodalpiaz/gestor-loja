@@ -31,10 +31,10 @@ require __DIR__ . '/../partials/erp_head.php';
 require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
 
-<section class="rounded-2xl border border-erpBorder bg-white">
-    <div class="border-b border-erpBorder px-6 py-5">
-                <div class="text-sm font-semibold text-erpNavy">Em análises de aprovação</div>
-        <div class="mt-1 text-sm text-erpMuted">Somente secretário/admin devem concluir esta etapa.</div>
+<section class="card">
+    <div class="card-header">
+        <h2 class="card-title">Em análises de aprovação</h2>
+        <p class="card-subtitle">Somente secretário/admin devem concluir esta etapa.</p>
     </div>
 
     <?php if ($mensagem): ?>
@@ -64,14 +64,14 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                             <form method="POST" action="/admin/acessos/atualizar">
                                 <input type="hidden" name="id" value="<?= htmlspecialchars((string) ($item['id'] ?? '')) ?>">
                                 <input type="hidden" name="status" value="ativo">
-                                <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-erpNavyDeep px-5 py-2.5 text-sm font-semibold text-white hover:opacity-95">
+                                <button type="submit" class="btn btn-success text-xs">
                                     Aprovar
                                 </button>
                             </form>
                             <form method="POST" action="/admin/acessos/atualizar">
                                 <input type="hidden" name="id" value="<?= htmlspecialchars((string) ($item['id'] ?? '')) ?>">
                                 <input type="hidden" name="status" value="inativo">
-                                <button type="submit" class="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100">
+                                <button type="submit" class="btn btn-danger text-xs">
                                     Inativar
                                 </button>
                             </form>

@@ -17,28 +17,13 @@ class ObreirosRoutes
     ): bool {
         switch ($requestUri) {
             case '/meu-cadastro':
-                WebGuards::requireLogin($openTestAccess, $session);
-                $selfId = trim((string) ($session['usuario_id'] ?? ''));
-                if ($selfId === '' || $selfId === '0') {
-                    http_response_code(403);
-                    echo 'Não foi possível identificar seu cadastro de obreiro.';
-                    exit;
-                }
-                $obreiroModel = new Obreiro();
-                $obreiro = $obreiroModel->findById($selfId);
-                if (!$obreiro) {
-                    http_response_code(404);
-                    echo 'Cadastro de obreiro não encontrado.';
-                    exit;
-                }
-                $isSelf = true;
-                require __DIR__ . '/../../Views/obreiro_editar.php';
-                return true;
+                header('Location: /minha-loja?aba=cadastro');
+                exit;
 
             case '/meu-cadastro/atualizar':
                 WebGuards::requireLogin($openTestAccess, $session);
                 if ($method !== 'POST') {
-                    header('Location: /meu-cadastro');
+                    header('Location: /minha-loja?aba=cadastro');
                     exit;
                 }
                 $selfId = trim((string) ($session['usuario_id'] ?? ''));
@@ -50,7 +35,7 @@ class ObreirosRoutes
                 }
                 $obreiroModel = new Obreiro();
                 $ok = $obreiroModel->update($_POST);
-                header('Location: /meu-cadastro?' . ($ok ? 'sucesso=1' : 'erro=1'));
+                header('Location: /minha-loja?aba=cadastro&' . ($ok ? 'sucesso=1' : 'erro=1'));
                 exit;
 
             case '/obreiros':

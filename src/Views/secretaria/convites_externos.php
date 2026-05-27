@@ -41,14 +41,14 @@ $renderConvite = static function (array $convite, array $confirmados) use ($form
                 <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                            <div class="flex flex-wrap gap-2 mb-2">
-                                <span class="badge bg-erp-gold/20 text-erp-navy border border-erp-gold/30 text-[9px] font-black uppercase tracking-widest">Convite Externo</span>
+                             <div class="flex flex-wrap gap-2 mb-2">
+                                <span class="badge bg-erp-gold/10 text-erp-gold border border-erp-gold/20 text-[9px] font-black uppercase tracking-widest">Convite Externo</span>
                                 <?php if (!empty($convite['fixado'])): ?><span class="badge badge-warning text-[9px] font-black uppercase tracking-widest">Fixado</span><?php endif; ?>
-                            </div>
-                            <h3 class="font-black text-erp-navy leading-tight"><?= htmlspecialchars((string) ($convite['titulo'] ?? 'Convite')) ?></h3>
-                            <p class="text-xs font-bold text-erp-muted mt-1"><?= htmlspecialchars((string) ($convite['loja_origem'] ?? '-')) ?> · <?= $formatDateTime($convite['data_hora'] ?? null) ?> · <?= htmlspecialchars((string) ($convite['cidade'] ?? $convite['local'] ?? '-')) ?></p>
+                             </div>
+                             <h3 class="font-black text-white leading-tight"><?= htmlspecialchars((string) ($convite['titulo'] ?? 'Convite')) ?></h3>
+                             <p class="text-xs font-bold text-erp-muted mt-1"><?= htmlspecialchars((string) ($convite['loja_origem'] ?? '-')) ?> · <?= $formatDateTime($convite['data_hora'] ?? null) ?> · <?= htmlspecialchars((string) ($convite['cidade'] ?? $convite['local'] ?? '-')) ?></p>
                         </div>
-                        <span class="badge bg-erp-navy/5 text-erp-navy border border-erp-navy/10 text-[9px] font-black uppercase tracking-widest"><?= htmlspecialchars((string) ($convite['status'] ?? 'rascunho')) ?></span>
+                        <span class="badge bg-white/5 text-slate-300 border border-white/10 text-[9px] font-black uppercase tracking-widest"><?= htmlspecialchars((string) ($convite['status'] ?? 'rascunho')) ?></span>
                     </div>
 
                     <div class="mt-4 flex flex-wrap gap-2">
@@ -58,12 +58,12 @@ $renderConvite = static function (array $convite, array $confirmados) use ($form
                             <summary class="btn btn-secondary !py-2 !px-4 text-[10px] font-black uppercase tracking-widest cursor-pointer inline-block">Ver</summary>
                             <div class="mt-4 bg-erp-surface-2 rounded-2xl p-5 border border-erp-border/30 space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-bold text-erp-muted">
-                                    <p><strong class="text-erp-navy">Tipo:</strong> <?= htmlspecialchars((string) ($convite['tipo'] ?? '-')) ?></p>
-                                    <p><strong class="text-erp-navy">Grau:</strong> <?= htmlspecialchars((string) ($convite['grau'] ?? '-')) ?></p>
-                                    <p><strong class="text-erp-navy">Local:</strong> <?= htmlspecialchars((string) ($convite['local'] ?? '-')) ?></p>
-                                    <p><strong class="text-erp-navy">Prazo:</strong> <?= $formatDateTime($convite['prazo_confirmacao'] ?? null) ?></p>
-                                    <p><strong class="text-erp-navy">Contato:</strong> <?= htmlspecialchars((string) ($convite['contatos'] ?? '-')) ?></p>
-                                    <p><strong class="text-erp-navy">Valor/traje:</strong> <?= htmlspecialchars(trim((string) (($convite['valor'] ?? '') . ' ' . ($convite['traje'] ?? ''))) ?: '-') ?></p>
+                                    <p><strong class="text-white">Tipo:</strong> <?= htmlspecialchars((string) ($convite['tipo'] ?? '-')) ?></p>
+                                    <p><strong class="text-white">Grau:</strong> <?= htmlspecialchars((string) ($convite['grau'] ?? '-')) ?></p>
+                                    <p><strong class="text-white">Local:</strong> <?= htmlspecialchars((string) ($convite['local'] ?? '-')) ?></p>
+                                    <p><strong class="text-white">Prazo:</strong> <?= $formatDateTime($convite['prazo_confirmacao'] ?? null) ?></p>
+                                    <p><strong class="text-white">Contato:</strong> <?= htmlspecialchars((string) ($convite['contatos'] ?? '-')) ?></p>
+                                    <p><strong class="text-white">Valor/traje:</strong> <?= htmlspecialchars(trim((string) (($convite['valor'] ?? '') . ' ' . ($convite['traje'] ?? ''))) ?: '-') ?></p>
                                 </div>
                                 <?php if (!empty($convite['descricao'])): ?><p class="text-sm text-erp-text leading-relaxed"><?= nl2br(htmlspecialchars((string) $convite['descricao'])) ?></p><?php endif; ?>
                                 <?php if ($temAnexo): ?>
@@ -74,7 +74,7 @@ $renderConvite = static function (array $convite, array $confirmados) use ($form
                                 <?php endif; ?>
                                 <div>
                                     <div class="flex items-center justify-between gap-3 mb-2">
-                                        <h4 class="text-[10px] font-black text-erp-navy uppercase tracking-widest">Confirmados (<?= count($confirmados) ?>)</h4>
+                                        <h4 class="text-[10px] font-black text-white uppercase tracking-widest">Confirmados (<?= count($confirmados) ?>)</h4>
                                         <button type="button" class="btn btn-secondary !py-1.5 !px-3 text-[9px] font-black uppercase tracking-widest" onclick="navigator.clipboard && navigator.clipboard.writeText(document.getElementById('confirmados-<?= $conviteId ?>').value)">Copiar confirmados</button>
                                     </div>
                                     <textarea id="confirmados-<?= $conviteId ?>" readonly rows="5" class="form-textarea !text-xs"><?= htmlspecialchars($textoCopiar) ?></textarea>
@@ -103,7 +103,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
     <div class="lg:col-span-1">
         <div class="card depth-1 sticky top-8">
-            <div class="card-header border-b border-erp-border/50 p-6"><h2 class="text-xl font-black text-erp-navy tracking-tight">Novo Convite Externo</h2></div>
+            <div class="card-header border-b border-erp-border/50 p-6"><h2 class="text-xl font-black text-white tracking-tight">Novo Convite Externo</h2></div>
             <div class="card-body p-6">
                 <form method="POST" action="/secretaria/convites-externos/salvar" enctype="multipart/form-data" class="space-y-5">
                     <?= \App\Core\Http\WebGuards::csrfField() ?>
@@ -119,7 +119,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                     <textarea name="descricao" rows="3" class="form-textarea shadow-sm" placeholder="Descrição"></textarea>
                     <textarea name="texto_original" rows="3" class="form-textarea shadow-sm font-mono text-xs" placeholder="Texto recebido pelo WhatsApp"></textarea>
                     <input type="file" name="anexo" accept="image/*,.pdf" class="form-input shadow-sm">
-                    <div class="flex gap-4"><select name="status" class="form-select shadow-sm"><option value="rascunho">Rascunho</option><option value="publicado">Publicado</option><option value="cancelado">Cancelado</option><option value="encerrado">Encerrado</option></select><label class="flex items-center gap-2 text-xs font-black text-erp-navy uppercase tracking-widest"><input type="checkbox" name="fixado" value="1">Fixado</label></div>
+                    <div class="flex gap-4"><select name="status" class="form-select shadow-sm"><option value="rascunho">Rascunho</option><option value="publicado">Publicado</option><option value="cancelado">Cancelado</option><option value="encerrado">Encerrado</option></select><label class="flex items-center gap-2 text-xs font-black text-slate-200 uppercase tracking-widest"><input type="checkbox" name="fixado" value="1">Fixado</label></div>
                     <button type="submit" class="btn btn-primary w-full py-4">Salvar Convite</button>
                 </form>
             </div>
@@ -133,10 +133,10 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <?php endforeach; ?>
         </div>
         <?php if ($fixados !== []): ?>
-            <section class="space-y-4"><h2 class="text-lg font-black text-erp-navy tracking-tight">Convites em destaque</h2><?php foreach ($fixados as $convite): $renderConvite($convite, $confirmadosPorConvite[(int) ($convite['id'] ?? 0)] ?? []); endforeach; ?></section>
+            <section class="space-y-4"><h2 class="text-lg font-black text-white tracking-tight">Convites em destaque</h2><?php foreach ($fixados as $convite): $renderConvite($convite, $confirmadosPorConvite[(int) ($convite['id'] ?? 0)] ?? []); endforeach; ?></section>
         <?php endif; ?>
         <section class="space-y-4">
-            <h2 class="text-lg font-black text-erp-navy tracking-tight">Todos os convites</h2>
+            <h2 class="text-lg font-black text-white tracking-tight">Todos os convites</h2>
             <?php foreach ($demais as $convite): $renderConvite($convite, $confirmadosPorConvite[(int) ($convite['id'] ?? 0)] ?? []); endforeach; ?>
             <?php if ($fixados === [] && $demais === []): ?><div class="card depth-1"><div class="card-body p-8 text-center text-sm text-erp-muted font-medium">Nenhum convite externo cadastrado para este filtro.</div></div><?php endif; ?>
         </section>

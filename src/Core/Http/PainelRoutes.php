@@ -291,26 +291,135 @@ class PainelRoutes
             return true;
         }
 
+        $isValidUuid = static function (string $id): bool {
+            return (bool) preg_match(
+                '/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/',
+                $id
+            );
+        };
+
         switch ($requestUri) {
             case '/minha-loja':
                 WebGuards::requireLogin($openTestAccess, $session);
                 WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
+                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
+                $tenantId = (int) ($_SESSION['tenant_id'] ?? 0);
+                $db = \App\Config\Database::getConnection();
+
+                if ($method === 'POST' && ($_POST['action'] ?? '') === 'sessao_confirmacao') {
+                    $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
+                    $acao = trim((string) ($_POST['acao'] ?? ''));
+
+                    if ($sessaoId <= 0) {
+                        $_SESSION['mensagem_erro'] = 'Sessão inválida para atualizar a confirmação.';
+                    } elseif ($obreiroId === '' || !$isValidUuid($obreiroId)) {
+                        $_SESSION['mensagem_erro'] = 'A confirmação requer um obreiro autenticado.';
+                    } else {
+                        try {
+                            $presencaModel = new \App\Models\Presenca();
+                            $ok = $acao === 'cancelar'
+                                ? $presencaModel->cancelar($sessaoId, $obreiroId)
+                                : $presencaModel->registrar($sessaoId, $obreiroId, 'confirmado', false);
+
+                            if ($ok) {
+                                $_SESSION['mensagem_sucesso'] = $acao === 'cancelar'
+                                    ? 'Confirmação cancelada com sucesso.'
+                                    : 'Presença confirmada com sucesso.';
+                            } else {
+                                $_SESSION['mensagem_erro'] = 'Não foi possível atualizar a confirmação desta sessão.';
+                            }
+                        } catch (\Throwable $e) {
+                            $_SESSION['mensagem_erro'] = 'Falha ao atualizar a confirmação.';
+                            error_log('Falha no POST de minha-loja RSVP: ' . $e->getMessage());
+                        }
+                    }
+                    header('Location: /minha-loja?aba=compromissos');
+                    exit;
+                }
+
+                $obreiro = null;
+                $resumoObreiro = [];
+                $obrigacoesObreiro = [];
+                $familiares = [];
+                $sessoes = [];
+                $submissoes = [];
+                $trabalhosPublicados = [];
+                $sessoesFuturas = [];
+                $alertas = [];
+                $dados_cadastro = [];
+                $solicitacoes = [];
+                $comunicados = [];
+                $recados = [];
+
+                if ($obreiroId !== '' && $isValidUuid($obreiroId)) {
+                    $obreiro = (new \App\Models\Obreiro())->findById($obreiroId);
+                    if ($obreiro) {
+                        $obrigacaoModel = new \App\Models\ObrigacaoFinanceira();
+                        $resumoObreiro = $obrigacaoModel->obterResumoObreiro($obreiroId);
+                        $obrigacoesObreiro = $obrigacaoModel->listarPorObreiro($obreiroId);
+                        
+                        $familiares = (new \App\Models\FamiliarObreiro())->listarPorObreiro($obreiroId);
+                        $solicitacoes = (new \App\Models\SolicitacaoSecretariaObreiro())->listarPorObreiro($obreiroId);
+
+                        $sessoes = (new \App\Models\Sessao())->listarRecentes(30);
+                        $submissoes = (new \App\Models\TrabalhoSubmissao())->listarPorObreiro($obreiroId);
+
+                        $trabalhosPublicados = array_values(array_filter(
+                            (new \App\Models\TrabalhoSessao())->listarRecentes(100),
+                            static fn (array $item): bool => (string) ($item['autor_id'] ?? '') === $obreiroId
+                        ));
+
+                        $sessoesFuturasRaw = (new \App\Models\Sessao())->listarFuturas(8);
+                        $presencaModel = new \App\Models\Presenca();
+                        foreach ($sessoesFuturasRaw as $sf) {
+                            $sessaoId = (int) ($sf['id'] ?? 0);
+                            $resposta = $presencaModel->obterResposta($sessaoId, $obreiroId);
+                            $sf['resposta_usuario'] = is_array($resposta) ? (string) ($resposta['status_confirmacao'] ?? '') : '';
+                            $sf['confirmado'] = is_array($resposta) && (string) ($resposta['status_confirmacao'] ?? '') === 'confirmado';
+                            $sessoesFuturas[] = $sf;
+                        }
+
+                        $comunicados = (new \App\Models\Comunicado())->listarRecentes(10);
+                        $recados = (new \App\Models\PublicacaoSecretaria())->listarRecentes(10);
+
+                        $dados_cadastro = [
+                            'nome' => (string) ($obreiro['nome_historico'] ?? $obreiro['nome'] ?? ''),
+                            'cim' => (string) ($obreiro['cim'] ?? ''),
+                            'email' => (string) ($obreiro['email'] ?? ''),
+                            'telefone' => (string) ($obreiro['telefone'] ?? ''),
+                            'data_nascimento_civil' => (string) ($obreiro['data_nascimento_civil'] ?? ''),
+                            'estado_civil' => (string) ($obreiro['estado_civil'] ?? ''),
+                            'profissao' => (string) ($obreiro['profissao'] ?? ''),
+                            'escolaridade' => (string) ($obreiro['escolaridade'] ?? ''),
+                            'faixa_renda' => (string) ($obreiro['faixa_renda'] ?? ''),
+                        ];
+
+                        $pendenciasCadastro = [];
+                        foreach (['nome', 'cim', 'email', 'telefone', 'data_nascimento_civil'] as $campo) {
+                            if (trim((string) ($dados_cadastro[$campo] ?? '')) === '') {
+                                $pendenciasCadastro[] = $campo;
+                            }
+                        }
+                        if ($pendenciasCadastro !== []) {
+                            $alertas[] = 'Cadastro incompleto.';
+                        }
+                        if (!empty($resumoObreiro['parcelas_atrasadas'])) {
+                            $alertas[] = 'Pendências financeiras em atraso.';
+                        }
+                    }
+                }
+
+                $aba_ativa = trim((string) ($_GET['aba'] ?? 'dashboard'));
+                $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
+                $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
+                unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
+
                 require __DIR__ . '/../../Views/minha_loja.php';
                 return true;
 
             case '/minha-loja/familiares':
-                WebGuards::requireLogin($openTestAccess, $session);
-                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
-                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-                $familiares = [];
-                $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
-                $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
-                unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
-                if ($obreiroId !== '' && $obreiroId !== '0') {
-                    $familiares = (new \App\Models\FamiliarObreiro())->listarPorObreiro($obreiroId);
-                }
-                require __DIR__ . '/../../Views/minha_loja_familiares.php';
-                return true;
+                header('Location: /minha-loja?aba=cadastro');
+                exit;
 
             case '/minha-loja/irmaos':
                 WebGuards::requireLogin($openTestAccess, $session);
@@ -321,7 +430,7 @@ class PainelRoutes
                 $db = \App\Config\Database::getConnection();
 
                 $sql = "
-                    SELECT id, nome, nome_historico
+                    SELECT id, nome, nome_historico, grau, telefone, email
                     FROM public.obreiros
                     WHERE ativo = true
                       AND loja_id = :loja_id
@@ -338,7 +447,9 @@ class PainelRoutes
 
                 $detalhe = null;
                 $familiaresDetalhe = [];
-                if ($selecionadoId !== '') {
+                $estatisticasLoja = [];
+                $aniversariantesMes = [];
+                if ($selecionadoId !== '' && $isValidUuid($selecionadoId)) {
                     $detStmt = $db->prepare("
                         SELECT id, nome, nome_historico, grau, telefone, email, data_nascimento_civil
                         FROM public.obreiros
@@ -353,6 +464,45 @@ class PainelRoutes
                     if ($detalhe) {
                         $familiaresDetalhe = (new \App\Models\FamiliarObreiro())->listarPorObreiro($selecionadoId);
                     }
+                } else {
+                    $totalStmt = $db->prepare("SELECT COUNT(*) FROM public.obreiros WHERE ativo = true AND loja_id = :loja_id");
+                    $totalStmt->execute(['loja_id' => $tenantId]);
+                    $totalAtivos = (int) $totalStmt->fetchColumn();
+
+                    $grausStmt = $db->prepare("
+                        SELECT grau, COUNT(*) as qtd 
+                        FROM public.obreiros 
+                        WHERE ativo = true AND loja_id = :loja_id 
+                        GROUP BY grau 
+                        ORDER BY 
+                          CASE grau 
+                            WHEN 'Aprendiz' THEN 1 
+                            WHEN 'Companheiro' THEN 2 
+                            WHEN 'Mestre' THEN 3 
+                            WHEN 'Mestre Instalado' THEN 4 
+                            ELSE 5 
+                          END
+                    ");
+                    $grausStmt->execute(['loja_id' => $tenantId]);
+                    $distribuicaoGraus = $grausStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+                    $estatisticasLoja = [
+                        'total_ativos' => $totalAtivos,
+                        'graus' => $distribuicaoGraus
+                    ];
+
+                    $niverStmt = $db->prepare("
+                        SELECT nome, nome_historico, grau, data_nascimento_civil,
+                               EXTRACT(DAY FROM data_nascimento_civil) as dia
+                        FROM public.obreiros
+                        WHERE ativo = true
+                          AND loja_id = :loja_id
+                          AND data_nascimento_civil IS NOT NULL
+                          AND EXTRACT(MONTH FROM data_nascimento_civil) = EXTRACT(MONTH FROM CURRENT_DATE)
+                        ORDER BY EXTRACT(DAY FROM data_nascimento_civil) ASC, nome ASC
+                    ");
+                    $niverStmt->execute(['loja_id' => $tenantId]);
+                    $aniversariantesMes = $niverStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
                 }
 
                 require __DIR__ . '/../../Views/minha_loja_irmaos.php';
@@ -361,98 +511,74 @@ class PainelRoutes
             case '/minha-loja/familiares/salvar':
                 WebGuards::requireLogin($openTestAccess, $session);
                 if ($method !== 'POST') {
-                    header('Location: /minha-loja/familiares');
+                    header('Location: /minha-loja?aba=cadastro');
                     exit;
                 }
                 $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-                $ok = $obreiroId !== '' && $obreiroId !== '0'
+                $ok = $obreiroId !== '' && $isValidUuid($obreiroId)
                     ? (new \App\Models\FamiliarObreiro())->criar($_POST, $obreiroId)
                     : false;
                 $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok ? 'Familiar registrado.' : 'Não foi possível registrar agora.';
-                header('Location: /minha-loja/familiares');
+                header('Location: /minha-loja?aba=cadastro');
                 exit;
 
             case '/minha-loja/familiares/atualizar':
                 WebGuards::requireLogin($openTestAccess, $session);
                 if ($method !== 'POST') {
-                    header('Location: /minha-loja/familiares');
+                    header('Location: /minha-loja?aba=cadastro');
                     exit;
                 }
                 $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
                 $famId = trim((string) ($_POST['id'] ?? ''));
-                $ok = $obreiroId !== '' && $obreiroId !== '0' && $famId !== ''
+                $ok = $obreiroId !== '' && $isValidUuid($obreiroId) && $famId !== ''
                     ? (new \App\Models\FamiliarObreiro())->atualizar($famId, $_POST, $obreiroId)
                     : false;
                 $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok ? 'Familiar atualizado.' : 'Não foi possível atualizar agora.';
-                header('Location: /minha-loja/familiares');
+                header('Location: /minha-loja?aba=cadastro');
                 exit;
 
             case '/minha-loja/solicitacoes':
-                WebGuards::requireLogin($openTestAccess, $session);
-                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
-                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-                $solicitacoes = [];
-                $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
-                $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
-                unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
-                if ($obreiroId !== '' && $obreiroId !== '0') {
-                    $solicitacoes = (new \App\Models\SolicitacaoSecretariaObreiro())->listarPorObreiro($obreiroId);
-                }
-                require __DIR__ . '/../../Views/minha_loja_solicitacoes.php';
-                return true;
+                header('Location: /minha-loja?aba=cadastro');
+                exit;
 
             case '/minha-loja/solicitacoes/salvar':
                 WebGuards::requireLogin($openTestAccess, $session);
                 if ($method !== 'POST') {
-                    header('Location: /minha-loja/solicitacoes');
+                    header('Location: /minha-loja?aba=cadastro');
                     exit;
                 }
                 $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-                $ok = $obreiroId !== '' && $obreiroId !== '0'
+                $ok = $obreiroId !== '' && $isValidUuid($obreiroId)
                     ? (new \App\Models\SolicitacaoSecretariaObreiro())->criar($_POST, $obreiroId)
                     : false;
                 $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok ? 'Solicitação enviada.' : 'Não foi possível enviar agora.';
-                header('Location: /minha-loja/solicitacoes');
+                header('Location: /minha-loja?aba=cadastro');
                 exit;
 
             case '/minha-loja/trabalhos':
-                WebGuards::requireLogin($openTestAccess, $session);
-                WebGuards::requirePermission($authorizer->hasPermission('dashboard.view'), 'Esta área é destinada aos irmãos autenticados da Loja.');
-                $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-                $db = \App\Config\Database::getConnection();
-                $tenantId = (int) ($_SESSION['tenant_id'] ?? 0);
-                $grau = '';
-                if ($obreiroId !== '') {
-                    $gStmt = $db->prepare("SELECT grau FROM public.obreiros WHERE loja_id = :loja_id AND id = :id LIMIT 1");
-                    $gStmt->execute(['loja_id' => $tenantId, 'id' => $obreiroId]);
-                    $grau = (string) ($gStmt->fetchColumn() ?: '');
-                }
-                $sessoes = (new \App\Models\Sessao())->listarRecentes(30);
-                $submissoes = $obreiroId !== '' ? (new \App\Models\TrabalhoSubmissao())->listarPorObreiro($obreiroId) : [];
-                $mensagemSucesso = $_SESSION['mensagem_sucesso'] ?? null;
-                $mensagemErro = $_SESSION['mensagem_erro'] ?? null;
-                unset($_SESSION['mensagem_sucesso'], $_SESSION['mensagem_erro']);
-                require __DIR__ . '/../../Views/minha_loja_trabalhos.php';
-                return true;
+                header('Location: /minha-loja?aba=trabalhos');
+                exit;
 
             case '/minha-loja/trabalhos/enviar':
                 WebGuards::requireLogin($openTestAccess, $session);
                 if ($method !== 'POST') {
-                    header('Location: /minha-loja/trabalhos');
+                    header('Location: /minha-loja?aba=trabalhos');
                     exit;
                 }
                 $obreiroId = trim((string) ($_SESSION['usuario_id'] ?? ''));
                 $tenantId = (int) ($_SESSION['tenant_id'] ?? 0);
                 $db = \App\Config\Database::getConnection();
                 $grau = '';
-                if ($obreiroId !== '') {
+                if ($obreiroId !== '' && $isValidUuid($obreiroId)) {
                     $gStmt = $db->prepare("SELECT grau FROM public.obreiros WHERE loja_id = :loja_id AND id = :id LIMIT 1");
                     $gStmt->execute(['loja_id' => $tenantId, 'id' => $obreiroId]);
                     $grau = (string) ($gStmt->fetchColumn() ?: '');
+                } else {
+                    $grau = 'Mestre';
                 }
-                $ok = $obreiroId !== '' ? (new \App\Models\TrabalhoSubmissao())->criar($_POST, $obreiroId, $grau) : false;
+                $ok = ($obreiroId !== '' && $isValidUuid($obreiroId)) ? (new \App\Models\TrabalhoSubmissao())->criar($_POST, $obreiroId, $grau) : false;
                 $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok ? 'Trabalho enviado para fluxo de validação.' : 'Não foi possível enviar agora.';
-                header('Location: /minha-loja/trabalhos');
+                header('Location: /minha-loja?aba=trabalhos');
                 exit;
 
             case '/':

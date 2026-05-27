@@ -61,8 +61,8 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
     <!-- Métricas -->
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        <div class="card-metric"><p class="card-metric-label">Total Entradas</p><p class="card-metric-value text-green-600 dark:text-green-400" id="total-entradas">R$ 0,00</p></div>
-        <div class="card-metric"><p class="card-metric-label">Total Saídas</p><p class="card-metric-value text-red-600 dark:text-red-400" id="total-saidas">R$ 0,00</p></div>
+        <div class="card-metric"><p class="card-metric-label">Total Entradas</p><p class="card-metric-value text-emerald-400" id="total-entradas">R$ 0,00</p></div>
+        <div class="card-metric"><p class="card-metric-label">Total Saídas</p><p class="card-metric-value text-rose-400" id="total-saidas">R$ 0,00</p></div>
         <div class="card-metric"><p class="card-metric-label">Saldo do Período</p><p class="card-metric-value" id="saldo-liquido">R$ 0,00</p></div>
         <div class="card-metric"><p class="card-metric-label">Saldo Acumulado</p><p class="card-metric-value" id="saldo-acumulado">R$ 0,00</p></div>
     </div>
@@ -76,11 +76,11 @@ require __DIR__ . '/partials/erp_shell_open.php';
         <div id="sugestoes-panel" class="card-body">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-green-600 dark:text-green-400">Sugestões de Entradas</p>
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-emerald-400">Sugestões de Entradas</p>
                     <div id="sugestoes-entradas" class="flex flex-wrap gap-2"><span class="text-sm text-gray-500">Carregando...</span></div>
                 </div>
                 <div>
-                    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">Sugestões de Saídas</p>
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-rose-400">Sugestões de Saídas</p>
                     <div id="sugestoes-saidas" class="flex flex-wrap gap-2"><span class="text-sm text-gray-500">Carregando...</span></div>
                 </div>
             </div>
@@ -117,7 +117,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
             <div class="text-center text-sm text-gray-500 py-4">Carregando...</div>
         </div>
         <div class="hidden md:block overflow-x-auto">
-            <table class="table-default">
+            <table class="table-base">
                 <thead>
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-erp-muted">Data</th>

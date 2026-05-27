@@ -41,18 +41,16 @@ require __DIR__ . '/partials/erp_shell_open.php';
     </div>
 
     <!-- Abas de Status -->
-    <div class="border-b border-gray-200 dark:border-gray-700">
-        <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-            <button type="button" data-status="pendente" onclick="filtrarStatus('pendente')" class="tab-status active">
-                Pendentes (<span id="count-pendentes">0</span>)
-            </button>
-            <button type="button" data-status="aprovado" onclick="filtrarStatus('aprovado')" class="tab-status">
-                Aprovados (<span id="count-aprovados">0</span>)
-            </button>
-            <button type="button" data-status="rejeitado" onclick="filtrarStatus('rejeitado')" class="tab-status">
-                Rejeitados (<span id="count-rejeitados">0</span>)
-            </button>
-        </nav>
+    <div class="erp-tab-nav">
+        <button type="button" data-status="pendente" onclick="filtrarStatus('pendente')" class="erp-tab-link active">
+            Pendentes (<span id="count-pendentes">0</span>)
+        </button>
+        <button type="button" data-status="aprovado" onclick="filtrarStatus('aprovado')" class="erp-tab-link">
+            Aprovados (<span id="count-aprovados">0</span>)
+        </button>
+        <button type="button" data-status="rejeitado" onclick="filtrarStatus('rejeitado')" class="erp-tab-link">
+            Rejeitados (<span id="count-rejeitados">0</span>)
+        </button>
     </div>
 
     <!-- Container de Comprovantes -->

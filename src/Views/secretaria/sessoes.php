@@ -57,15 +57,15 @@ require __DIR__ . '/../partials/erp_shell_open.php';
         <?php if ($resumoRascunhoSessao): ?>
             <div class="card depth-1">
                 <div class="card-header border-b border-erp-border/50 p-6">
-                    <h2 class="text-xl font-black text-erp-navy tracking-tight"><?= $rascunhoEditaSessaoExistente ? 'Revisão final da atualização' : 'Revisão final da nova sessão' ?></h2>
+                    <h2 class="text-xl font-black text-white tracking-tight"><?= $rascunhoEditaSessaoExistente ? 'Revisão final da atualização' : 'Revisão final da nova sessão' ?></h2>
                     <p class="text-sm text-erp-muted mt-1 font-medium">Confirme o texto que será publicado na agenda e usado pelos fluxos de presença, ágape e balaústre.</p>
                 </div>
                 <div class="card-body p-6 space-y-6">
                     <?php if ($sessaoDuplicada): ?><span class="badge badge-warning text-[10px] font-black uppercase tracking-widest">Sessão semelhante encontrada</span><?php endif; ?>
-                    <pre class="whitespace-pre-wrap text-sm font-mono text-erp-navy bg-erp-surface-2 rounded-2xl p-6 border border-erp-border/30"><?= htmlspecialchars((string) $resumoRascunhoSessao) ?></pre>
+                    <pre class="whitespace-pre-wrap text-sm font-mono text-slate-300 bg-erp-surface-2 rounded-2xl p-6 border border-erp-border/30"><?= htmlspecialchars((string) $resumoRascunhoSessao) ?></pre>
                     <div class="flex flex-wrap gap-2">
                         <?php foreach ($acoesConfirmacaoRascunho as $acaoRascunho): ?>
-                            <span class="badge bg-erp-navy/5 text-erp-navy border border-erp-navy/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest"><?= htmlspecialchars((string) ($acaoRascunho['label'] ?? '')) ?></span>
+                            <span class="badge bg-white/5 text-slate-300 border border-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest"><?= htmlspecialchars((string) ($acaoRascunho['label'] ?? '')) ?></span>
                         <?php endforeach; ?>
                     </div>
                     <div class="flex flex-wrap gap-4">
@@ -78,7 +78,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
         <div class="card depth-1">
             <div class="card-header border-b border-erp-border/50 p-6">
-                <h2 class="text-xl font-black text-erp-navy tracking-tight"><?= $modoEdicaoSessao ? 'Editar sessão' : 'Nova sessão' ?></h2>
+                <h2 class="text-xl font-black text-white tracking-tight"><?= $modoEdicaoSessao ? 'Editar sessão' : 'Nova sessão' ?></h2>
                 <p class="text-sm text-erp-muted mt-1 font-medium">A publicação alimenta Agenda/Mural, confirmações, ágape, balaústre e relatórios.</p>
             </div>
             <div class="card-body p-6">
@@ -103,7 +103,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                         <div><label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Valor do ágape</label><input name="agape_valor" value="<?= htmlspecialchars((string) ($sessaoEmFormulario['agape_valor'] ?? '')) ?>" class="form-input shadow-sm"></div>
                     </div>
                     <div><label class="block text-[10px] font-bold text-erp-muted uppercase tracking-widest mb-3 ml-1">Ordem do dia / observações</label><textarea name="ordem_dia" rows="4" class="form-textarea shadow-sm"><?= htmlspecialchars((string) ($sessaoEmFormulario['ordem_dia'] ?? '')) ?></textarea></div>
-                    <label class="flex items-center gap-3 bg-erp-surface-2 p-4 rounded-xl border border-erp-border/30 text-sm font-bold text-erp-navy"><input type="checkbox" name="conta_relatorio_potencia" value="1" class="form-checkbox h-5 w-5 rounded text-erp-navy" <?= !array_key_exists('conta_relatorio_potencia', $sessaoEmFormulario) || !empty($sessaoEmFormulario['conta_relatorio_potencia']) ? 'checked' : '' ?>>Contabilizar no relatório oficial da potência</label>
+                    <label class="flex items-center gap-3 bg-erp-surface-2 p-4 rounded-xl border border-erp-border/30 text-sm font-bold text-slate-200"><input type="checkbox" name="conta_relatorio_potencia" value="1" class="form-checkbox h-5 w-5 rounded text-erp-gold focus:ring-erp-gold/50 bg-erp-surface border-erp-border" <?= !array_key_exists('conta_relatorio_potencia', $sessaoEmFormulario) || !empty($sessaoEmFormulario['conta_relatorio_potencia']) ? 'checked' : '' ?>>Contabilizar no relatório oficial da potência</label>
                     <button type="submit" class="btn btn-primary px-10 py-4"><?= $modoEdicaoSessao ? 'Revisar Atualização' : 'Continuar para Revisão' ?></button>
                 </form>
             </div>
@@ -112,12 +112,12 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
     <div class="space-y-6">
         <div class="card depth-1">
-            <div class="card-header border-b border-erp-border/50 p-6"><h2 class="text-lg font-black text-erp-navy tracking-tight">Agenda de sessões</h2></div>
+            <div class="card-header border-b border-erp-border/50 p-6"><h2 class="text-lg font-black text-white tracking-tight">Agenda de sessões</h2></div>
             <div class="card-body p-6 space-y-4">
                 <?php foreach ($sessoes as $sessao): ?>
                     <div class="bg-erp-surface-2 rounded-2xl p-4 border border-erp-border/30">
                         <div class="flex items-start justify-between gap-3">
-                            <div><p class="font-black text-erp-navy"><?= htmlspecialchars((string) ($sessao['titulo'] ?: (($sessao['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessao['grau_sessao'] ?? '')))) ?></p><p class="text-xs font-bold text-erp-muted mt-1"><?= $formatDateTime($sessao['data_hora_inicio'] ?? null) ?></p></div>
+                            <div><p class="font-black text-white"><?= htmlspecialchars((string) ($sessao['titulo'] ?: (($sessao['tipo_sessao'] ?? 'Sessão') . ' - ' . ($sessao['grau_sessao'] ?? '')))) ?></p><p class="text-xs font-bold text-erp-muted mt-1"><?= $formatDateTime($sessao['data_hora_inicio'] ?? null) ?></p></div>
                             <span class="badge <?= $badgeStatusSessao($sessao['status'] ?? null) ?> text-[9px] font-black uppercase tracking-widest"><?= htmlspecialchars((string) ($sessao['status'] ?: 'planejada')) ?></span>
                         </div>
                         <div class="mt-4 flex flex-wrap gap-2">

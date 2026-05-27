@@ -57,12 +57,12 @@ $historiasRecentes = is_array($historiasRecentes ?? []) ? $historiasRecentes : [
 $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
 ?>
 
-<div class="mb-8 border-b border-gray-200 dark:border-gray-700">
+<div class="mb-8 border-b border-white/10">
     <nav class="flex space-x-8" aria-label="Tabs">
         <button type="button" onclick="switchTab('diaria')" id="btn-tab-diaria" class="border-[#C9A227] text-[#C9A227] border-b-2 py-4 px-1 text-sm font-medium uppercase tracking-wider tab-btn">
             Dia a Dia (Efemérides)
         </button>
-        <button type="button" onclick="switchTab('historia')" id="btn-tab-historia" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 py-4 px-1 text-sm font-medium uppercase tracking-wider tab-btn">
+        <button type="button" onclick="switchTab('historia')" id="btn-tab-historia" class="border-transparent text-slate-400 hover:text-white hover:border-white/20 border-b-2 py-4 px-1 text-sm font-medium uppercase tracking-wider tab-btn">
             Nossa História
         </button>
     </nav>
@@ -79,32 +79,32 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                 <p class="card-subtitle">Esta edição altera somente a mensagem de hoje. Os registros oficiais não são modificados aqui.</p>
             </div>
             <div class="card-body">
-                <div class="telegram-format mb-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                <div class="telegram-format mb-4 p-4 rounded-lg bg-white/5 border border-white/10 text-white">
                     <?= $previewRender ?>
                 </div>
 
-                <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 rounded shadow-sm">
+                <div class="bg-warning/5 border-l-4 border-warning p-4 mb-6 rounded-xl border border-warning/20 shadow-sm">
                     <div class="flex items-start gap-3">
                         <div class="text-2xl mt-0.5">💡</div>
-                        <div class="text-sm text-amber-900">
-                            <p class="font-bold text-base mb-1">Modo Mais Simples:</p>
+                        <div class="text-sm text-slate-300">
+                            <p class="font-bold text-base mb-1 text-warning">Modo Mais Simples:</p>
                             <p>Role para baixo até os <b>Cards de Imagem</b> abaixo, cole seu texto LIMPO (sem códigos) na caixa do card e salve. O sistema atualizará a imagem e o texto do Telegram automaticamente, mantendo a formatação bonita pra você!</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- NOVO FLUXO UNIFICADO -->
-                <div class="mb-6 bg-green-50 dark:bg-green-900/10 border border-green-200 rounded-xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="mb-6 bg-success/10 border border-success/20 rounded-xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
-                        <h4 class="font-bold text-green-800 dark:text-green-200 text-lg flex items-center gap-2">
+                        <h4 class="font-bold text-success text-lg flex items-center gap-2">
                             🚀 Publicação Consolidada
                         </h4>
-                        <p class="text-sm text-green-700 dark:text-green-300">
+                        <p class="text-sm text-slate-300">
                             Aprova o texto final e dispara <b>Texto + Imagens</b> juntos para o Grupo Oficial.
                         </p>
                     </div>
                     <form method="POST" action="/chancelaria/efemerides/aprovar-e-enviar-tudo" onsubmit="return confirm('Confirmar aprovação final e envio imediato de Texto + Imagens para o Grupo do Telegram?');" class="flex-shrink-0">
-                         <button type="submit" class="btn bg-green-600 text-white hover:bg-green-700 shadow-md px-6 py-4 text-base font-bold uppercase tracking-wider flex items-center gap-2">
+                         <button type="submit" class="btn bg-success text-[#0E2640] hover:bg-success/80 shadow-md px-6 py-4 text-base font-bold uppercase tracking-wider flex items-center gap-2">
                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                              Aprovar e Enviar Tudo
                          </button>
@@ -112,8 +112,8 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                 </div>
                 <!-- FIM NOVO FLUXO -->
 
-                <details class="group bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                    <summary class="flex items-center justify-between cursor-pointer p-4 bg-gray-100 dark:bg-gray-800 text-gray-600 hover:text-gray-900 font-semibold text-sm list-none select-none">
+                <details class="group bg-white/[0.02] border border-white/10 rounded-lg overflow-hidden">
+                    <summary class="flex items-center justify-between cursor-pointer p-4 bg-white/5 text-slate-300 hover:text-white font-semibold text-sm list-none select-none">
                         <span class="flex items-center gap-2">
                             ⚙️ Edição Avançada do Telegram (Com Códigos/Tags)
                         </span>
@@ -121,7 +121,7 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                             <svg fill="none" height="20" width="20" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </span>
                     </summary>
-                    <div class="p-4 border-t border-gray-200">
+                    <div class="p-4 border-t border-white/10 text-slate-300">
                         <form method="POST" action="/chancelaria/efemerides/salvar-previa">
                             <textarea name="mensagem_preview" class="form-input h-60 font-mono text-sm" placeholder="A mensagem gerada aparecerá aqui para revisão..."><?= htmlspecialchars($previewRaw) ?></textarea>
                             <p class="form-hint mt-1">Edite aqui somente se quiser manipular diretamente o HTML do Telegram.</p>
@@ -130,12 +130,12 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                                 <button type="button" onclick="copiarPreview('<?= htmlspecialchars($previewRaw, ENT_QUOTES) ?>')" class="btn btn-secondary text-xs">Copiar Texto Bruto</button>
                             </div>
                         </form>
-                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
+                        <div class="mt-3 pt-3 border-t border-white/10 flex flex-wrap gap-2">
                             <form method="POST" action="/chancelaria/efemerides/enviar-previa" onsubmit="return confirm('Enviar a prévia para o Telegram privado do chanceler?');">
                                 <button type="submit" class="btn btn-secondary text-xs bg-indigo-600 text-white hover:bg-indigo-700">Enviar Prévia Privada</button>
                             </form>
                             <form method="POST" action="/chancelaria/efemerides/enviar-grupo" onsubmit="return confirm('Confirmar envio isolado no grupo oficial?');">
-                                <button type="submit" class="btn btn-primary text-xs bg-green-600 hover:bg-green-700">Enviar Apenas Texto no Grupo</button>
+                                <button type="submit" class="btn btn-primary text-xs bg-success text-[#0E2640] hover:bg-success/80">Enviar Apenas Texto no Grupo</button>
                             </form>
                         </div>
                     </div>
@@ -149,12 +149,12 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                 <p class="card-subtitle">1 evento = 1 card, com prévia desktop-first.</p>
             </div>
             <div class="card-body">
-                <form method="POST" action="/chancelaria/efemerides/cards-template-categorias" class="mb-4 p-3 rounded-lg border border-gray-200">
-                    <p class="text-sm font-semibold mb-2">Template padrão por categorias (selecionadas em tela)</p>
+                <form method="POST" action="/chancelaria/efemerides/cards-template-categorias" class="mb-4 p-3 rounded-lg border border-white/10 bg-white/[0.01]">
+                    <p class="text-sm font-semibold text-white mb-2">Template padrão por categorias (selecionadas em tela)</p>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
                         <?php foreach ($categoriasCards as $categoria): ?>
-                            <label class="inline-flex items-center gap-2 text-xs">
-                                <input type="checkbox" name="categorias[]" value="<?= htmlspecialchars($categoria) ?>">
+                            <label class="inline-flex items-center gap-2 text-xs text-slate-300">
+                                <input type="checkbox" name="categorias[]" value="<?= htmlspecialchars($categoria) ?>" class="form-checkbox">
                                 <span><?= htmlspecialchars($categoria) ?></span>
                             </label>
                         <?php endforeach; ?>
@@ -177,33 +177,33 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                 </form>
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     <?php if (empty($cards)): ?>
-                        <div class="col-span-full rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                        <div class="col-span-full rounded-lg border border-warning/20 bg-warning/5 p-3 text-sm text-warning">
                             Nenhum card gerado para hoje. Verifique se há registros ativos em efemérides para a data atual.
                         </div>
                     <?php endif; ?>
                     <?php foreach ($cards as $card): ?>
-                        <article class="rounded-xl border border-gray-200 p-3 bg-white card-item" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>">
-                            <div class="aspect-[9/16] rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden mb-2">
+                        <article class="rounded-xl border border-white/10 p-3 bg-white/5 card-item" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>">
+                            <div class="aspect-[9/16] rounded-lg bg-black/20 flex items-center justify-center overflow-hidden mb-2">
                                 <?php if (!empty($card['image_url'])): ?>
                                     <img src="<?= htmlspecialchars($card['image_url']) ?>" alt="Card" class="w-full h-full object-cover card-image">
                                 <?php else: ?>
-                                    <span class="text-xs text-gray-500">Prévia indisponível</span>
+                                    <span class="text-xs text-slate-400">Prévia indisponível</span>
                                 <?php endif; ?>
                             </div>
-                            <p class="text-sm font-semibold card-title"><?= htmlspecialchars($card['titulo'] ?? '-') ?></p>
-                            <p class="text-xs text-gray-600 card-template"><?= htmlspecialchars($card['template'] ?? '-') ?></p>
+                            <p class="text-sm font-semibold card-title text-white"><?= htmlspecialchars($card['titulo'] ?? '-') ?></p>
+                            <p class="text-xs text-slate-400 card-template"><?= htmlspecialchars($card['template'] ?? '-') ?></p>
                             <div class="mt-2 space-y-2">
-                                <p class="text-xs text-green-700 hidden card-status">Prévia atualizada.</p>
-                                <label class="inline-flex items-center gap-2 text-xs">
-                                    <input type="checkbox" class="card-toggle-idade" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>" <?= !empty($card['ocultar_idade']) ? 'checked' : '' ?>>
+                                <p class="text-xs text-success hidden card-status">Prévia atualizada.</p>
+                                <label class="inline-flex items-center gap-2 text-xs text-slate-300">
+                                    <input type="checkbox" class="card-toggle-idade form-checkbox" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>" <?= !empty($card['ocultar_idade']) ? 'checked' : '' ?>>
                                     <span>Ocultar idade</span>
                                 </label>
-                                <div class="pt-2 border-t border-gray-100">
-                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Texto para este card:</label>
+                                <div class="pt-2 border-t border-white/10">
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Texto para este card:</label>
                                     <textarea class="form-input text-xs card-texto-custom w-full font-sans leading-snug" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>" rows="5" placeholder="Texto customizado para este card..."><?= htmlspecialchars($card['texto_custom_card'] ?? '') ?></textarea>
                                 </div>
                                 <div class="pt-1">
-                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Template Visual:</label>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Template Visual:</label>
                                     <select class="form-select text-xs card-template-select w-full" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>">
                                     <?php
                                     $templates = [
@@ -216,7 +216,7 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                                     <?php endforeach; ?>
                                 </select>
                                 <div class="grid grid-cols-2 gap-2 pt-2">
-                                    <button type="button" class="btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold w-full card-btn-preview" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>">
+                                    <button type="button" class="btn btn-primary text-xs font-bold w-full card-btn-preview" data-registro-id="<?= (int) ($card['registro_id'] ?? 0) ?>">
                                         💾 Salvar & Atualizar
                                     </button>
                                     <button type="button" class="btn btn-secondary text-xs w-full card-open-modal">🔍 Ampliar</button>
@@ -230,17 +230,17 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                 </div>
                 
                 <!-- REPLICA DO BOTÃO DE ENVIO NO FINAL DA ESTEIRA PARA MELHOR UX -->
-                <div class="mt-8 bg-green-50 dark:bg-green-900/10 border border-green-200 rounded-xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="mt-8 bg-success/10 border border-success/20 rounded-xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
-                        <h4 class="font-bold text-green-800 dark:text-green-200 text-lg flex items-center gap-2">
+                        <h4 class="font-bold text-success text-lg flex items-center gap-2">
                             🚀 Conferência Concluída?
                         </h4>
-                        <p class="text-sm text-green-700 dark:text-green-300">
+                        <p class="text-sm text-slate-300">
                             Dispare a aprovação definitiva de Texto + Imagens agora.
                         </p>
                     </div>
                     <form method="POST" action="/chancelaria/efemerides/aprovar-e-enviar-tudo" onsubmit="return confirm('Confirmar aprovação final e envio imediato de Texto + Imagens para o Grupo do Telegram?');" class="flex-shrink-0">
-                         <button type="submit" class="btn bg-green-600 text-white hover:bg-green-700 shadow-md px-8 py-4 text-base font-bold uppercase tracking-wider flex items-center gap-2">
+                         <button type="submit" class="btn bg-success text-[#0E2640] hover:bg-success/80 shadow-md px-8 py-4 text-base font-bold uppercase tracking-wider flex items-center gap-2">
                              🚀 Publicar Tudo no Grupo
                          </button>
                     </form>
@@ -316,7 +316,7 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                                         <?php if (empty($r['origem_fixa']) && !empty($r['ativo'])): ?>
                                             <a href="/chancelaria/efemerides?foco=dados&editar=<?= (int)($r['id'] ?? 0) ?>#secao-dados" class="btn btn-secondary text-xs">Editar</a>
                                         <?php else: ?>
-                                            <span class="text-xs text-gray-400">N/A</span>
+                                            <span class="text-xs text-slate-500">N/A</span>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
@@ -388,7 +388,7 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                     <label for="form-mensagem" class="form-label">Mensagem Complementar</label>
                     <textarea id="form-mensagem" name="mensagem_custom" rows="3" class="form-input" placeholder="Para 'História', informe o texto completo aqui."><?= htmlspecialchars($registroEdicao['mensagem_custom'] ?? '') ?></textarea>
                 </div>
-                <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex flex-wrap gap-3 pt-4 border-t border-white/10">
                     <button type="submit" class="btn btn-primary"><?= $registroEdicao ? 'Salvar Alterações' : 'Adicionar Registro' ?></button>
                     <?php if ($registroEdicao): ?>
                         <a href="/chancelaria/efemerides" class="btn btn-secondary">Cancelar Edição</a>
@@ -414,39 +414,39 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                 </div>
                 <div class="card-body p-6 md:p-8">
                     <?php if (empty($historiasRecentes)): ?>
-                        <div class="p-12 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl text-center">
+                        <div class="p-12 border-2 border-dashed border-white/10 rounded-2xl text-center">
                             <div class="text-4xl mb-4 opacity-30">📜</div>
-                            <h3 class="font-cinzel text-lg font-bold text-gray-700 dark:text-gray-300">Nenhuma memória registrada</h3>
-                            <p class="text-sm text-gray-500 mt-1">Utilize o formulário ao lado para inaugurar o acervo histórico.</p>
+                            <h3 class="font-cinzel text-lg font-bold text-white">Nenhuma memória registrada</h3>
+                            <p class="text-sm text-slate-400 mt-1">Utilize o formulário ao lado para inaugurar o acervo histórico.</p>
                         </div>
                     <?php else: ?>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <?php foreach($historiasRecentes as $hist): ?>
-                                <div class="group border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-[#162a42] shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-[#C9A227]/50">
+                                <div class="group border border-white/10 rounded-xl overflow-hidden bg-[#162a42] shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-[#C9A227]/50">
                                     <div class="flex h-full">
                                         <!-- Capa Visual (Sépia) -->
-                                        <div class="w-1/3 bg-[#fdf8f0] relative flex items-center justify-center p-3 border-r border-gray-100">
+                                        <div class="w-1/3 bg-[#fdf8f0] relative flex items-center justify-center p-3 border-r border-white/10">
                                              <img src="/assets/images/templates/efemerides/card_historia_sepia.png" class="w-full h-full object-contain drop-shadow-md transition-transform group-hover:scale-105">
                                              <div class="absolute top-2 right-2 bg-black/60 text-white text-[8px] px-1.5 rounded font-bold">PREVIEW</div>
                                         </div>
                                         <!-- Conteúdo -->
                                         <div class="w-2/3 p-5 flex flex-col">
                                              <div class="flex items-center justify-between mb-2">
-                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 uppercase tracking-widest">
+                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-warning/10 text-warning uppercase tracking-widest">
                                                      <?= sprintf('%02d/%02d', $hist['dia'], $hist['mes']) ?><?= !empty($hist['ano_ref']) ? ' / ' . $hist['ano_ref'] : '' ?>
                                                  </span>
                                                  <?php if(empty($hist['ativo'])): ?>
                                                      <span class="text-[9px] bg-red-100 text-red-800 px-1.5 rounded">Inativa</span>
                                                  <?php endif; ?>
                                              </div>
-                                             <h3 class="font-cinzel text-sm font-bold text-gray-900 dark:text-white mb-2 leading-tight group-hover:text-[#C9A227] transition-colors">
+                                             <h3 class="font-cinzel text-sm font-bold text-white mb-2 leading-tight group-hover:text-[#C9A227] transition-colors">
                                                  <?= htmlspecialchars($hist['titulo'] ?? '') ?>
                                              </h3>
-                                             <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-4 leading-relaxed flex-grow">
+                                             <p class="text-xs text-slate-300 line-clamp-4 leading-relaxed flex-grow">
                                                  <?= htmlspecialchars($hist['texto'] ?? '') ?>
                                              </p>
-                                             <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                                                  <a href="/chancelaria/efemerides?editar_historia=<?= (int)($hist['id'] ?? 0) ?>" class="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline decoration-2">
+                                             <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                                                  <a href="/chancelaria/efemerides?editar_historia=<?= (int)($hist['id'] ?? 0) ?>" class="inline-flex items-center gap-1 text-xs font-bold text-info hover:underline decoration-2">
                                                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                                       Editar
                                                   </a>
@@ -479,12 +479,12 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                 }
                 $actionHist = $histEdit ? '/chancelaria/historias/atualizar' : '/chancelaria/historias/salvar';
             ?>
-            <div class="card sticky top-6 bg-white dark:bg-[#162a42] shadow-lg border border-gray-200 dark:border-gray-700">
-                <div class="card-header border-b border-gray-100 dark:border-gray-700 p-6">
-                    <h3 class="font-cinzel text-lg font-bold text-gray-900 dark:text-white">
+            <div class="card sticky top-6 bg-[#162a42] shadow-lg border border-white/10">
+                <div class="card-header border-b border-white/10 p-6">
+                    <h3 class="font-cinzel text-lg font-bold text-white">
                         <?= $histEdit ? 'Editar Fato Histórico' : 'Nova Memória da Loja' ?>
                     </h3>
-                    <p class="text-xs text-gray-500 mt-1">Preencha os dados que serão impressos no pergaminho.</p>
+                    <p class="text-xs text-slate-400 mt-1">Preencha os dados que serão impressos no pergaminho.</p>
                 </div>
                 <form method="POST" action="<?= $actionHist ?>" class="card-body p-6 space-y-5">
                     <?php if($histEdit): ?>
@@ -492,38 +492,38 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                     <?php endif; ?>
 
                     <div>
-                        <label for="hist-titulo" class="form-label text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Título do Evento *</label>
+                        <label for="hist-titulo" class="form-label text-xs font-bold uppercase tracking-wider text-slate-400">Título do Evento *</label>
                         <input id="hist-titulo" type="text" name="titulo" required class="form-input rounded-lg" placeholder="Ex: Fundação da Oficina" value="<?= htmlspecialchars($histEdit['titulo'] ?? '') ?>">
                     </div>
 
                     <div class="grid grid-cols-3 gap-3">
                         <div>
-                            <label class="form-label text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Dia *</label>
+                            <label class="form-label text-xs font-bold uppercase tracking-wider text-slate-400">Dia *</label>
                             <input type="number" name="dia" min="1" max="31" required class="form-input text-center font-bold" value="<?= (int)($histEdit['dia'] ?? date('d')) ?>">
                         </div>
                         <div>
-                            <label class="form-label text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Mês *</label>
+                            <label class="form-label text-xs font-bold uppercase tracking-wider text-slate-400">Mês *</label>
                             <input type="number" name="mes" min="1" max="12" required class="form-input text-center font-bold" value="<?= (int)($histEdit['mes'] ?? date('m')) ?>">
                         </div>
                         <div>
-                            <label class="form-label text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Ano</label>
-                            <input type="number" name="ano_ref" class="form-input text-center text-gray-500 placeholder-gray-300" placeholder="AAAA" value="<?= !empty($histEdit['ano_ref']) ? (int)$histEdit['ano_ref'] : '' ?>">
+                            <label class="form-label text-xs font-bold uppercase tracking-wider text-slate-400">Ano</label>
+                            <input type="number" name="ano_ref" class="form-input text-center text-slate-300 placeholder-slate-500" placeholder="AAAA" value="<?= !empty($histEdit['ano_ref']) ? (int)$histEdit['ano_ref'] : '' ?>">
                         </div>
                     </div>
 
                     <div>
-                        <label for="hist-texto" class="form-label text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Narrativa da História *</label>
-                        <textarea id="hist-texto" name="texto" rows="8" required class="form-input text-sm leading-relaxed rounded-lg bg-amber-50/30 dark:bg-transparent" placeholder="Neste dia importante em nossa jornada..."><?= htmlspecialchars($histEdit['texto'] ?? '') ?></textarea>
-                        <p class="text-[10px] text-gray-400 mt-1">O motor gráfico quebrará as linhas automaticamente no pergaminho.</p>
+                        <label for="hist-texto" class="form-label text-xs font-bold uppercase tracking-wider text-slate-400">Narrativa da História *</label>
+                        <textarea id="hist-texto" name="texto" rows="8" required class="form-input text-sm leading-relaxed rounded-lg bg-transparent" placeholder="Neste dia importante em nossa jornada..."><?= htmlspecialchars($histEdit['texto'] ?? '') ?></textarea>
+                        <p class="text-[10px] text-slate-400 mt-1">O motor gráfico quebrará as linhas automaticamente no pergaminho.</p>
                     </div>
 
                     <div>
-                        <label for="hist-fonte" class="form-label text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Fonte de Referência</label>
-                        <input id="hist-fonte" type="text" name="fonte" class="form-input text-xs placeholder-gray-400" placeholder="Ex: Livro de Arquitetura Vol. 1" value="<?= htmlspecialchars($histEdit['fonte'] ?? '') ?>">
+                        <label for="hist-fonte" class="form-label text-xs font-bold uppercase tracking-wider text-slate-400">Fonte de Referência</label>
+                        <input id="hist-fonte" type="text" name="fonte" class="form-input text-xs placeholder-slate-500" placeholder="Ex: Livro de Arquitetura Vol. 1" value="<?= htmlspecialchars($histEdit['fonte'] ?? '') ?>">
                     </div>
 
-                    <div class="pt-4 flex flex-col gap-3 border-t border-gray-100 dark:border-gray-700">
-                        <button type="submit" class="btn btn-primary py-3 text-sm font-bold uppercase tracking-widest w-full shadow-[0_4px_15px_rgba(25,118,210,0.3)]">
+                    <div class="pt-4 flex flex-col gap-3 border-t border-white/10">
+                        <button type="submit" class="btn btn-primary py-3 text-sm font-bold uppercase tracking-widest w-full">
                             <?= $histEdit ? 'Salvar Alterações' : 'Publicar Memória' ?>
                         </button>
                         <?php if($histEdit): ?>
@@ -537,12 +537,12 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
 </div>
 
 <div id="card-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl p-3 max-w-md w-full">
-        <div class="flex justify-between items-center mb-2">
-            <p class="font-semibold text-sm">Visualização do Card</p>
+    <div class="bg-erp-surface border border-white/10 rounded-xl p-4 max-w-md w-full">
+        <div class="flex justify-between items-center mb-3">
+            <p class="font-semibold text-sm text-white">Visualização do Card</p>
             <button type="button" id="card-modal-close" class="btn btn-secondary text-xs">Fechar</button>
         </div>
-        <div class="aspect-[9/16] rounded-lg bg-gray-100 overflow-hidden">
+        <div class="aspect-[9/16] rounded-lg bg-black/20 overflow-hidden">
             <img id="card-modal-image" src="" alt="Card ampliado" class="w-full h-full object-contain">
         </div>
     </div>
@@ -556,7 +556,7 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
         // Remove classes ativas dos botões
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('border-[#C9A227]', 'text-[#C9A227]');
-            btn.classList.add('border-transparent', 'text-gray-500');
+            btn.classList.add('border-transparent', 'text-slate-400');
         });
 
         // Ativa o selecionado
@@ -565,7 +565,7 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
 
         const activeBtn = document.getElementById('btn-tab-' + tabId);
         if (activeBtn) {
-            activeBtn.classList.remove('border-transparent', 'text-gray-500');
+            activeBtn.classList.remove('border-transparent', 'text-slate-400');
             activeBtn.classList.add('border-[#C9A227]', 'text-[#C9A227]');
         }
 

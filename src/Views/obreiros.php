@@ -76,7 +76,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
     <div class="metric-card"><div class="metric-label">Total Filtrado</div><div class="metric-value"><?= (int) $resumoObreiros['total'] ?></div></div>
     <div class="metric-card"><div class="metric-label">Regulares</div><div class="metric-value"><?= (int) $resumoObreiros['ativos'] ?></div></div>
-    <div class="metric-card"><div class="metric-label">Com Alerta</div><div class="metric-value text-yellow-600 dark:text-yellow-400"><?= (int) $resumoObreiros['com_alerta'] ?></div></div>
+    <div class="metric-card"><div class="metric-label">Com Alerta</div><div class="metric-value text-warning"><?= (int) $resumoObreiros['com_alerta'] ?></div></div>
     <div class="metric-card"><div class="metric-label">Bot Vinculado</div><div class="metric-value"><?= (int) $resumoObreiros['com_telegram'] ?></div></div>
     <div class="metric-card"><div class="metric-label">Mestres</div><div class="metric-value"><?= (int) $resumoObreiros['mestres'] ?></div></div>
 </div>
@@ -132,7 +132,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
                 </select>
             </div>
         </div>
-        <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex justify-end gap-3 pt-4 border-t border-white/10">
             <a href="/obreiros" class="btn btn-secondary">Limpar Filtros</a>
             <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
         </div>
@@ -141,9 +141,10 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
 <!-- Lista de Obreiros -->
 <?php if (empty($obreiros)): ?>
-    <div class="card text-center py-12">
-        <h3 class="text-lg font-semibold">Nenhum Obreiro Encontrado</h3>
-        <p class="text-gray-500 mt-1">Tente ajustar os filtros para encontrar resultados.</p>
+    <div class="text-center py-12 bg-white/[0.01] border border-white/5 rounded-2xl">
+        <span class="text-4xl block mb-3 opacity-30">👥</span>
+        <h3 class="text-sm font-bold text-white mb-1">Nenhum Obreiro Encontrado</h3>
+        <p class="text-xs text-slate-400 max-w-md mx-auto">Tente ajustar os filtros de busca para localizar os membros.</p>
     </div>
 <?php else: ?>
     <!-- Tabela para Desktop -->
@@ -166,14 +167,14 @@ require __DIR__ . '/partials/erp_shell_open.php';
                     ?>
                     <tr>
                         <td>
-                            <div class="font-semibold"><?= htmlspecialchars($nomeExibicao) ?></div>
-                            <div class="text-xs text-gray-500">CIM: <?= htmlspecialchars($obreiro['cim'] ?? '-') ?> | Grau: <?= htmlspecialchars($obreiro['grau'] ?? '-') ?></div>
+                            <div class="font-semibold text-white"><?= htmlspecialchars($nomeExibicao) ?></div>
+                            <div class="text-xs text-slate-400">CIM: <?= htmlspecialchars($obreiro['cim'] ?? '-') ?> | Grau: <?= htmlspecialchars($obreiro['grau'] ?? '-') ?></div>
                         </td>
                         <td><?php $label = $situacao; $type = 'info'; require __DIR__ . '/components/badge-status.php'; ?></td>
                         <td>
                             <div class="flex flex-wrap gap-1">
                                 <?php if (empty($cargosAtuais)): ?>
-                                    <span class="text-xs text-gray-500">Nenhum</span>
+                                    <span class="text-xs text-slate-500">Nenhum</span>
                                 <?php else: ?>
                                     <?php foreach ($cargosAtuais as $codigo): ?>
                                         <?php $label = Cargo::rotuloOficial($codigo); $type = 'neutral'; require __DIR__ . '/components/badge-status.php'; ?>
@@ -185,20 +186,20 @@ require __DIR__ . '/partials/erp_shell_open.php';
                             <div class="flex justify-end gap-2">
                                 <?php if ($podeGerenciarObreiros): ?>
                                     <a href="/obreiros/editar?id=<?= $obreiro['id'] ?>" class="btn btn-secondary text-xs">Editar</a>
-                                    <form method="post" action="/obreiros/inativar" onsubmit="return confirm('Inativar este obreiro?');">
+                                    <form method="post" action="/obreiros/inativar" onsubmit="return confirm('Inativar este obreiro?');" class="inline">
                                         <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
                                         <button type="submit" class="btn btn-secondary text-xs">Inativar</button>
                                     </form>
-                                    <form method="post" action="/obreiros/excluir" onsubmit="return confirm('Excluir este obreiro da gestão? Esta ação pode ser irreversível.');">
+                                    <form method="post" action="/obreiros/excluir" onsubmit="return confirm('Excluir este obreiro da gestão? Esta ação pode ser irreversível.');" class="inline">
                                         <input type="hidden" name="id" value="<?= htmlspecialchars((string) $obreiro['id']) ?>">
-                                        <button type="submit" class="btn btn-secondary text-xs bg-red-100 text-red-800 hover:bg-red-200">Excluir</button>
+                                        <button type="submit" class="btn btn-secondary text-xs border border-danger/30 text-danger hover:bg-danger/10">Excluir</button>
                                     </form>
                                 <?php endif; ?>
                                 <?php if ($podeGerarConvitesAcesso): ?>
-                                    <form method="post" action="/admin/convites/gerar" onsubmit="return confirm('Gerar convite de acesso para este obreiro?');">
+                                    <form method="post" action="/admin/convites/gerar" onsubmit="return confirm('Gerar convite de acesso para este obreiro?');" class="inline">
                                         <input type="hidden" name="obreiro_id" value="<?= $obreiro['id'] ?>">
                                         <input type="hidden" name="return_to" value="<?= htmlspecialchars($returnToAtual) ?>">
-                                        <button type="submit" class="btn btn-secondary text-xs bg-green-100 text-green-800 hover:bg-green-200">Gerar Convite</button>
+                                        <button type="submit" class="btn btn-secondary text-xs border border-success/30 text-success hover:bg-success/10">Gerar Convite</button>
                                     </form>
                                 <?php endif; ?>
                             </div>

@@ -74,6 +74,7 @@ class TrabalhoSessao
             SELECT
                 ts.*,
                 s.titulo AS sessao_titulo,
+                s.grau_sessao,
                 s.data_hora_inicio,
                 COALESCE(o.nome_historico, o.nome) AS autor_nome
             FROM trabalhos_sessao ts

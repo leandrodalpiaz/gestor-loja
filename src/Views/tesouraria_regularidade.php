@@ -55,8 +55,8 @@ require __DIR__ . '/partials/erp_shell_open.php';
 
 <!-- Métricas de Resumo -->
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-    <div class="card-metric"><p class="card-metric-label">Regulares</p><p id="count-regular" class="card-metric-value text-green-600 dark:text-green-400">0</p></div>
-    <div class="card-metric"><p class="card-metric-label">Irregulares</p><p id="count-irregular" class="card-metric-value text-red-600 dark:text-red-400">0</p></div>
+    <div class="card-metric"><p class="card-metric-label">Regulares</p><p id="count-regular" class="card-metric-value text-emerald-400">0</p></div>
+    <div class="card-metric"><p class="card-metric-label">Irregulares</p><p id="count-irregular" class="card-metric-value text-rose-400">0</p></div>
 </div>
 
 <!-- Conteúdo Principal: Tabela e Cards -->
@@ -68,7 +68,7 @@ require __DIR__ . '/partials/erp_shell_open.php';
         </div>
         <!-- Visão em Tabela para Desktop -->
         <div class="hidden md:block overflow-x-auto">
-            <table class="table-default">
+            <table class="table-base">
                 <thead>
                     <tr>
                         <th class="text-left">Obreiro</th>

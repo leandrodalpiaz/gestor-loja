@@ -6,7 +6,7 @@
     <div class="px-4 py-3 sm:px-6 lg:px-8">
         <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-                <div class="text-sm font-semibold text-erp-navy">
+                <div class="text-sm font-semibold text-erp-gold">
                     Competência <span id="teso-competencia" class="font-bold">--/----</span>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 text-xs">

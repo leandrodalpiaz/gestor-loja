@@ -155,21 +155,36 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
         <?php if ($sessaoEmFoco): ?>
             <div class="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-sm">
-                <div class="info-badge"><span>Nominata Prevista</span><strong><?= count($mapaPresencas) ?></strong></div>
-                <div class="info-badge"><span>Presentes Efetivos</span><strong><?= count($presentesEfetivos) ?></strong></div>
-                <div class="info-badge"><span>Visitantes</span><strong><?= count($visitantesResumo) ?></strong></div>
-                <div class="info-badge"><span>Ágape</span><strong><?= htmlspecialchars($descricaoAgape($sessaoEmFoco)) ?></strong></div>
-                <div class="info-badge"><span>Modelo Financeiro</span><strong><?= htmlspecialchars($descricaoModeloTesourariaAgape($sessaoEmFoco)) ?></strong></div>
+                <div class="rounded-xl border border-white/5 bg-white/[0.02] p-3 flex flex-col justify-between">
+                    <span class="text-xs text-slate-400">Nominata Prevista</span>
+                    <strong class="text-lg font-bold text-white mt-1"><?= count($mapaPresencas) ?></strong>
+                </div>
+                <div class="rounded-xl border border-white/5 bg-white/[0.02] p-3 flex flex-col justify-between">
+                    <span class="text-xs text-slate-400">Presentes Efetivos</span>
+                    <strong class="text-lg font-bold text-white mt-1"><?= count($presentesEfetivos) ?></strong>
+                </div>
+                <div class="rounded-xl border border-white/5 bg-white/[0.02] p-3 flex flex-col justify-between">
+                    <span class="text-xs text-slate-400">Visitantes</span>
+                    <strong class="text-lg font-bold text-white mt-1"><?= count($visitantesResumo) ?></strong>
+                </div>
+                <div class="rounded-xl border border-white/5 bg-white/[0.02] p-3 flex flex-col justify-between">
+                    <span class="text-xs text-slate-400">Ágape</span>
+                    <strong class="text-lg font-bold text-white mt-1"><?= htmlspecialchars($descricaoAgape($sessaoEmFoco)) ?></strong>
+                </div>
+                <div class="rounded-xl border border-white/5 bg-white/[0.02] p-3 flex flex-col justify-between">
+                    <span class="text-xs text-slate-400">Modelo Financeiro</span>
+                    <strong class="text-lg font-bold text-white mt-1"><?= htmlspecialchars($descricaoModeloTesourariaAgape($sessaoEmFoco)) ?></strong>
+                </div>
             </div>
 
             <div class="mt-5 flex flex-col md:flex-row md:items-center gap-3">
                 <form method="POST" action="/chanceler/sessao/cancelar" onsubmit="return confirm('Cancelar esta sessão?');">
                     <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoEmFoco['id'] ?? 0) ?>">
-                    <button type="submit" class="btn btn-secondary w-full md:w-auto border border-rose-300 text-rose-700 hover:bg-rose-50">Cancelar sessão</button>
+                    <button type="submit" class="btn btn-secondary w-full md:w-auto border border-danger/30 text-danger hover:bg-danger/10">Cancelar sessão</button>
                 </form>
                 <form method="POST" action="/chanceler/sessao/excluir" onsubmit="return confirm('EXCLUIR definitivamente esta sessão e seus registros (presenças, visitantes, histórico etc.)?');">
                     <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoEmFoco['id'] ?? 0) ?>">
-                    <button type="submit" class="btn w-full md:w-auto bg-rose-600 text-white hover:bg-rose-700">Excluir sessão</button>
+                    <button type="submit" class="btn w-full md:w-auto bg-danger text-white hover:bg-danger/80">Excluir sessão</button>
                 </form>
             </div>
         <?php else: ?>
@@ -202,18 +217,18 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-4">
                 <?php if (!empty($presencasFiltradas)): ?>
                     <?php foreach ($presencasFiltradas as $registro): ?>
-                        <form method="POST" action="/chanceler/sessao/presenca" class="checkin-card">
+                        <form method="POST" action="/chanceler/sessao/presenca" class="checkin-card flex flex-col justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
                             <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoEmFoco['id'] ?? 0) ?>">
                             <input type="hidden" name="obreiro_id" value="<?= htmlspecialchars((string) ($registro['id'] ?? '')) ?>">
                             <div>
-                                <div class="font-bold text-gray-800 dark:text-gray-100"><?= htmlspecialchars((string) ($registro['nome'] ?? 'Obreiro')) ?></div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                <div class="font-bold text-white"><?= htmlspecialchars((string) ($registro['nome'] ?? 'Obreiro')) ?></div>
+                                <div class="text-xs text-slate-400 mt-1">
                                     CIM: <?= htmlspecialchars((string) ($registro['cim'] ?? '-')) ?> &middot; Grau: <?= htmlspecialchars((string) ($registro['grau'] ?? '-')) ?>
                                 </div>
                             </div>
                             <div class="flex gap-2 mt-3">
-                                <button type="submit" name="presente" value="1" class="btn-checkin <?= !empty($registro['presente']) ? 'presente' : '' ?>">Presente</button>
-                                <button type="submit" name="presente" value="0" class="btn-checkin <?= empty($registro['presente']) ? 'ausente' : '' ?>">Ausente</button>
+                                <button type="submit" name="presente" value="1" class="btn-checkin flex-1 text-center py-1.5 px-3 rounded-lg text-xs font-semibold transition-all <?= !empty($registro['presente']) ? 'bg-success text-black font-bold' : 'bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-white' ?>">Presente</button>
+                                <button type="submit" name="presente" value="0" class="btn-checkin flex-1 text-center py-1.5 px-3 rounded-lg text-xs font-semibold transition-all <?= empty($registro['presente']) ? 'bg-danger text-white font-bold' : 'bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-white' ?>">Ausente</button>
                             </div>
                         </form>
                     <?php endforeach; ?>
@@ -232,8 +247,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <?php if (!empty($presentesEfetivos)): ?>
                     <?php foreach ($presentesEfetivos as $presente): ?>
                         <div class="list-item-condensed">
-                            <div class="font-medium text-gray-800 dark:text-gray-100"><?= htmlspecialchars((string) ($presente['nome'] ?? 'Obreiro')) ?></div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-medium text-white"><?= htmlspecialchars((string) ($presente['nome'] ?? 'Obreiro')) ?></div>
+                            <div class="text-xs text-slate-400">
                                 CIM: <?= htmlspecialchars((string) ($presente['cim'] ?? '-')) ?> &middot; Grau: <?= htmlspecialchars((string) ($presente['grau'] ?? '-')) ?>
                             </div>
                         </div>
@@ -256,7 +271,7 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <?php if ($sessaoEmFoco): ?>
                     <form method="POST" action="/chanceler/sessao/visitante" class="rounded-2xl border border-erp-border bg-erp-surface/60 p-4 space-y-3" id="visitante-form">
                         <input type="hidden" name="sessao_id" value="<?= (int) ($sessaoEmFoco['id'] ?? 0) ?>">
-                        <div class="font-semibold text-gray-800 dark:text-gray-100">Registrar visitante em Loja</div>
+                        <div class="font-semibold text-white">Registrar visitante em Loja</div>
                         <div>
                             <label for="visitante_texto_livre" class="form-label">Entrada rápida</label>
                             <textarea id="visitante_texto_livre" rows="2" class="form-textarea" placeholder="Ex: João Henrique, mestre, loja estrela do litoral, 155, arroio do sal - rs, GL-RS"></textarea>
@@ -280,8 +295,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <?php if (!empty($visitantesResumo)): ?>
                     <?php foreach ($visitantesResumo as $visitante): ?>
                         <div class="list-item-condensed">
-                            <div class="font-medium text-gray-800 dark:text-gray-100"><?= htmlspecialchars((string) ($visitante['nome'] ?? 'Visitante')) ?></div>
-                            <div class="text-sm text-gray-600 dark:text-gray-400"><?= htmlspecialchars((string) ($visitante['linha_resumida'] ?? '')) ?></div>
+                            <div class="font-medium text-white"><?= htmlspecialchars((string) ($visitante['nome'] ?? 'Visitante')) ?></div>
+                            <div class="text-sm text-slate-400"><?= htmlspecialchars((string) ($visitante['linha_resumida'] ?? '')) ?></div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -299,8 +314,8 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                 <?php if (!empty($confirmados)): ?>
                     <?php foreach ($confirmados as $confirmado): ?>
                         <div class="list-item-condensed">
-                            <div class="font-medium text-gray-800 dark:text-gray-100"><?= htmlspecialchars((string) ($confirmado['nome'] ?? 'Obreiro')) ?></div>
-                            <div class="text-sm text-gray-600 dark:text-gray-400"><?= !empty($confirmado['participara_agape']) ? 'Confirmado com ágape' : 'Confirmado sem ágape' ?></div>
+                            <div class="font-medium text-white"><?= htmlspecialchars((string) ($confirmado['nome'] ?? 'Obreiro')) ?></div>
+                            <div class="text-sm text-slate-400"><?= !empty($confirmado['participara_agape']) ? 'Confirmado com ágape' : 'Confirmado sem ágape' ?></div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>

@@ -19,8 +19,8 @@ $GLOBALS['gestor_loja_erp_head_rendered'] = true;
     <link rel="manifest" href="/manifest.php">
     <link rel="apple-touch-icon" href="<?= htmlspecialchars($appleTouchIcon) ?>">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
-    <link rel="stylesheet" href="/assets/css/erp_design_system.css">
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css?v=<?= filemtime(dirname(__DIR__, 3) . '/public/assets/css/tailwind.generated.css') ?>">
+    <link rel="stylesheet" href="/assets/css/erp_design_system.css?v=<?= filemtime(dirname(__DIR__, 3) . '/public/assets/css/erp_design_system.css') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@400;600;700;800&display=swap" rel="stylesheet">
