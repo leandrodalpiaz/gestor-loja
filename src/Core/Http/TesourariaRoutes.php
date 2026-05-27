@@ -259,11 +259,10 @@ class TesourariaRoutes
                     . ($ok ? 'sucesso=1' : 'erro=1')
                 );
                 exit;
+
             case '/financeiro/minhas-obrigacoes':
+                // Preserva fluxo de autenticação via Telegram (miniapp / bot)
                 $obreiroFinanceiro = $session['usuario_logado'] ?? null;
-                $isSystemAdmin = !empty($session['is_system_admin'])
-                    || !empty($session['force_system_admin'])
-                    || (string) ($session['usuario_id'] ?? '') === '0';
                 if (!$openTestAccess && !$obreiroFinanceiro) {
                     $initData = trim((string) ($_GET['init_data'] ?? ''));
                     if ($initData !== '') {
@@ -277,173 +276,9 @@ class TesourariaRoutes
                     header('Location: /login');
                     exit;
                 }
-
-                if (!$isSystemAdmin) {
-                    $requirePermission('financeiro.self', 'Acesso restrito ao financeiro do obreiro.');
-                }
-
-                $obreiroFinanceiroId = trim((string) ($obreiroFinanceiro['id'] ?? $session['usuario_id'] ?? ''));
-                $aba_ativa = trim((string) ($_GET['aba'] ?? 'financeiro'));
-                $abas_disponiveis = ['financeiro', 'cadastro', 'familia', 'agenda_trabalhos', 'presencas_eventos', 'alertas_recados'];
-                if (!in_array($aba_ativa, $abas_disponiveis, true)) {
-                    $aba_ativa = 'financeiro';
-                }
-
-                $dados_financeiro = ['resumo' => [], 'obrigacoes' => []];
-                $dados_cadastro = [];
-                $dados_familia = [];
-                $dados_agenda_trabalhos = ['sessoes_futuras' => [], 'trabalhos' => []];
-                $dados_presencas_eventos = ['confirmacoes' => []];
-                $dados_alertas_recados = ['alertas' => []];
-                $estados_vazios = [];
-                $mensagens_contextuais = [];
-                $obreiroTesouraria = null;
-                $acessos_hub = [
-                    'dashboard' => $isSystemAdmin || $authorizer->hasPermission('dashboard.view'),
-                    'obreiros' => $isSystemAdmin || $authorizer->hasPermission('obreiros.view') || $authorizer->hasPermission('obreiros.manage'),
-                    'secretaria' => $isSystemAdmin || $authorizer->hasPermission('secretaria.manage'),
-                    'chancelaria' => $isSystemAdmin || $authorizer->hasPermission('chancelaria.manage'),
-                    'tesouraria_manage' => $isSystemAdmin || $authorizer->hasPermission('tesouraria.manage'),
-                ];
-
-                $obrigacaoModel = new ObrigacaoFinanceira();
-                if ($obreiroFinanceiroId !== '' && $obreiroFinanceiroId !== '0') {
-                    $obreiroTesouraria = (new \App\Models\Obreiro())->findById($obreiroFinanceiroId);
-                }
-
-                if (!$obreiroTesouraria && !$isSystemAdmin) {
-                    http_response_code(403);
-                    echo 'Não foi possível identificar seu vínculo de obreiro. Atualize seu cadastro com a Secretaria.';
-                    exit;
-                }
-
-                if ($isSystemAdmin && !$obreiroTesouraria) {
-                    $mensagens_contextuais['financeiro'] = 'Administrador do sistema sem vínculo de obreiro. Use o painel da Tesouraria para consultar um obreiro específico.';
-                    $estados_vazios['financeiro'] = true;
-                    $resumoObreiro = [];
-                    $obrigacoesObreiro = [];
-                } else {
-                    $resumoObreiro = $obrigacaoModel->obterResumoObreiro((string) ($obreiroTesouraria['id'] ?? ''));
-                    $obrigacoesObreiro = $obrigacaoModel->listarPorObreiro((string) ($obreiroTesouraria['id'] ?? ''));
-                    $dados_financeiro = ['resumo' => $resumoObreiro, 'obrigacoes' => $obrigacoesObreiro];
-                    $estados_vazios['financeiro'] = $obrigacoesObreiro === [];
-                    if ($estados_vazios['financeiro']) {
-                        $mensagens_contextuais['financeiro'] = 'Você não possui obrigações financeiras ativas no momento.';
-                    }
-
-                    $dados_cadastro = [
-                        'nome' => (string) ($obreiroTesouraria['nome_historico'] ?? $obreiroTesouraria['nome'] ?? ''),
-                        'cim' => (string) ($obreiroTesouraria['cim'] ?? ''),
-                        'email' => (string) ($obreiroTesouraria['email'] ?? ''),
-                        'telefone' => (string) ($obreiroTesouraria['telefone'] ?? ''),
-                        'data_nascimento' => (string) ($obreiroTesouraria['data_nascimento'] ?? ''),
-                        'estado_civil' => (string) ($obreiroTesouraria['estado_civil'] ?? ''),
-                        'endereco' => (string) ($obreiroTesouraria['endereco'] ?? ''),
-                        'cidade' => (string) ($obreiroTesouraria['cidade'] ?? ''),
-                        'uf' => (string) ($obreiroTesouraria['uf'] ?? ''),
-                    ];
-                    $pendenciasCadastro = [];
-                    foreach (['nome', 'cim', 'email', 'telefone', 'data_nascimento'] as $campo) {
-                        if (trim((string) ($dados_cadastro[$campo] ?? '')) === '') {
-                            $pendenciasCadastro[] = $campo;
-                        }
-                    }
-                    $dados_cadastro['pendencias'] = $pendenciasCadastro;
-                    $estados_vazios['cadastro'] = false;
-                    if ($pendenciasCadastro !== []) {
-                        $mensagens_contextuais['cadastro'] = 'Seu cadastro tem campos essenciais pendentes.';
-                    }
-
-                    $familiares = [];
-                    try {
-                        $familiares = (new \App\Models\FamiliarObreiro())->listarPorObreiro((string) ($obreiroTesouraria['id'] ?? ''));
-                    } catch (\Throwable $e) {
-                        $familiares = [];
-                    }
-
-                    $conjuge = '';
-                    $filhos = [];
-                    foreach ($familiares as $f) {
-                        if (!empty($f['falecido'])) {
-                            continue;
-                        }
-                        $p = strtolower(trim((string) ($f['parentesco'] ?? '')));
-                        $nome = trim((string) ($f['nome_completo'] ?? ''));
-                        if ($nome === '') {
-                            continue;
-                        }
-                        if (in_array($p, ['esposa', 'esposo'], true) && $conjuge === '') {
-                            $conjuge = $nome;
-                        }
-                        if (in_array($p, ['filho', 'filha'], true)) {
-                            $filhos[] = $nome;
-                        }
-                    }
-
-                    $dados_familia = [
-                        'estado_civil' => (string) ($obreiroTesouraria['estado_civil'] ?? ''),
-                        'conjuge' => $conjuge,
-                        'filhos' => $filhos ? implode(', ', array_values(array_unique($filhos))) : '',
-                    ];
-                    $estados_vazios['familia'] = trim((string) ($dados_familia['conjuge'] . $dados_familia['filhos'])) === '';
-                    if ($estados_vazios['familia']) {
-                        $mensagens_contextuais['familia'] = 'Dados familiares ainda não informados.';
-                    }
-
-                    $sessoesFuturas = (new \App\Models\Sessao())->listarFuturas(8);
-                    $trabalhosObreiro = array_values(array_filter(
-                        (new \App\Models\TrabalhoSessao())->listarRecentes(30),
-                        static fn (array $item): bool => (string) ($item['autor_id'] ?? '') === (string) ($obreiroTesouraria['id'] ?? '')
-                    ));
-                    $dados_agenda_trabalhos = ['sessoes_futuras' => $sessoesFuturas, 'trabalhos' => $trabalhosObreiro];
-                    $estados_vazios['agenda_trabalhos'] = ($sessoesFuturas === [] && $trabalhosObreiro === []);
-                    if ($estados_vazios['agenda_trabalhos']) {
-                        $mensagens_contextuais['agenda_trabalhos'] = 'Sem compromissos ou trabalhos previstos.';
-                    }
-
-                    $confirmacoes = [];
-                    $presencaModel = new \App\Models\Presenca();
-                    foreach (array_slice($sessoesFuturas, 0, 6) as $sessaoItem) {
-                        $sessaoId = (int) ($sessaoItem['id'] ?? 0);
-                        if ($sessaoId <= 0) {
-                            continue;
-                        }
-                        foreach ($presencaModel->listarConfirmadosPorSessao($sessaoId) as $confirmado) {
-                            if ((string) ($confirmado['id'] ?? '') === (string) ($obreiroTesouraria['id'] ?? '')) {
-                                $confirmacoes[] = [
-                                    'sessao_titulo' => (string) ($sessaoItem['titulo'] ?? 'Sessão'),
-                                    'data_hora_inicio' => (string) ($sessaoItem['data_hora_inicio'] ?? ''),
-                                    'status_confirmacao' => 'confirmado',
-                                ];
-                                break;
-                            }
-                        }
-                    }
-                    $dados_presencas_eventos = ['confirmacoes' => $confirmacoes];
-                    $estados_vazios['presencas_eventos'] = $confirmacoes === [];
-                    if ($estados_vazios['presencas_eventos']) {
-                        $mensagens_contextuais['presencas_eventos'] = 'Sem confirmações de presença registradas.';
-                    }
-
-                    $alertas = [];
-                    if ($pendenciasCadastro !== []) {
-                        $alertas[] = 'Pendências cadastrais essenciais.';
-                    }
-                    if (!empty($resumoObreiro['parcelas_atrasadas'])) {
-                        $alertas[] = 'Existem parcelas financeiras em atraso.';
-                    }
-                    if ($confirmacoes === []) {
-                        $alertas[] = 'Sem confirmações recentes de presença.';
-                    }
-                    $dados_alertas_recados = ['alertas' => $alertas];
-                    $estados_vazios['alertas_recados'] = $alertas === [];
-                    if ($estados_vazios['alertas_recados']) {
-                        $mensagens_contextuais['alertas_recados'] = 'Nenhum alerta crítico no momento.';
-                    }
-                }
-
-                require __DIR__ . '/../../Views/minhas_obrigacoes.php';
-                return true;
+                // Redireciona para o hub unificado Minha Loja, aba financeiro
+                header('Location: /minha-loja?aba=financeiro');
+                exit;
 
             default:
                 return false;
