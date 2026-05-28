@@ -9,6 +9,26 @@ use App\Services\EfemeridesComposer;
 
 Env::load(__DIR__ . '/../.env');
 
+// Aumentar o limite de tempo para evitar timeout durante o aquecimento do Render
+set_time_limit(120);
+
+// Forçar o despertar do servidor web Render (se estiver dormindo) para evitar delays de cold start aos usuários
+$appUrl = trim((string) (Env::get('APP_URL') ?: ''));
+if ($appUrl !== '') {
+    echo "Acordando o servidor web Render em: $appUrl ...\n";
+    $pingUrl = rtrim($appUrl, '/') . '/health.php';
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $pingUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 60); // Aguarda até 60 segundos pela inicialização fria do Render
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    echo "Ping de aquecimento concluído com status HTTP: $httpCode\n";
+}
+
 $registroModel = new EfemerideRegistro();
 $composer = new EfemeridesComposer();
 $previaModel = new EfemeridePreviaDiaria();

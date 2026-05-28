@@ -79,7 +79,8 @@ class MiniappApiRoutes
         };
 
         $authorizedBySession = isset($session['usuario_logado']) && (
-            $sessionHasRole(...$miniappAllowedRoles)
+            !empty($session['is_system_admin'])
+            || $sessionHasRole(...$miniappAllowedRoles)
             || ($miniappRequiredPermission !== null && $sessionHasPermission($miniappRequiredPermission))
         );
 
@@ -91,29 +92,34 @@ class MiniappApiRoutes
                 JsonResponse::error('Nao autenticado no miniapp.', 401);
             }
 
-            $rolesSource = $miniappObreiro['cargos'] ?? null;
-            if (!is_array($rolesSource) || $rolesSource === []) {
-                $rolesSource = [$miniappObreiro['cargo_principal'] ?? $miniappObreiro['cargo'] ?? ''];
-            }
+            if (!empty($miniappObreiro['is_system_admin'])) {
+                $temPermissaoMiniapp = true;
+            } else {
+                $rolesSource = $miniappObreiro['cargos'] ?? null;
+                if (!is_array($rolesSource) || $rolesSource === []) {
+                    $rolesSource = [$miniappObreiro['cargo_principal'] ?? $miniappObreiro['cargo'] ?? ''];
+                }
 
-            $roles = array_values(array_unique(array_filter(array_map(
-                $normalizeRole,
-                $rolesSource
-            ))));
-            if (!in_array('obreiro', $roles, true)) {
-                $roles[] = 'obreiro';
-            }
-            $temPermissaoMiniapp = false;
-            foreach ($miniappAllowedRoles as $allowedRole) {
-                if (in_array($allowedRole, $roles, true)) {
-                    $temPermissaoMiniapp = true;
-                    break;
+                $roles = array_values(array_unique(array_filter(array_map(
+                    $normalizeRole,
+                    $rolesSource
+                ))));
+                if (!in_array('obreiro', $roles, true)) {
+                    $roles[] = 'obreiro';
+                }
+                $temPermissaoMiniapp = false;
+                foreach ($miniappAllowedRoles as $allowedRole) {
+                    if (in_array($allowedRole, $roles, true)) {
+                        $temPermissaoMiniapp = true;
+                        break;
+                    }
+                }
+                if (!$temPermissaoMiniapp && $miniappRequiredPermission !== null) {
+                    $miniappPermissions = $permissionMap->permissionsForRoles($roles);
+                    $temPermissaoMiniapp = in_array('*', $miniappPermissions, true) || in_array($miniappRequiredPermission, $miniappPermissions, true);
                 }
             }
-            if (!$temPermissaoMiniapp && $miniappRequiredPermission !== null) {
-                $miniappPermissions = $permissionMap->permissionsForRoles($roles);
-                $temPermissaoMiniapp = in_array('*', $miniappPermissions, true) || in_array($miniappRequiredPermission, $miniappPermissions, true);
-            }
+
             if (!$temPermissaoMiniapp) {
                 JsonResponse::error('Acesso restrito para este miniapp.', 403);
             }
@@ -145,6 +151,10 @@ class MiniappApiRoutes
         ): bool {
             if ($authorizedBySession) {
                 return $sessionHasPermission($permission);
+            }
+
+            if (!empty($miniappObreiro['is_system_admin'])) {
+                return true;
             }
 
             $rolesSource = $miniappObreiro['cargos'] ?? null;

@@ -24,7 +24,7 @@ if ($target === '') {
 $options = [
     'http' => [
         'method' => 'GET',
-        'timeout' => 20,
+        'timeout' => 60,
         'ignore_errors' => true,
         'header' => "User-Agent: gestor-loja-keepalive/1.0\r\n",
     ],

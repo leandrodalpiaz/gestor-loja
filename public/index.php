@@ -556,9 +556,9 @@ $syncSessionRoles = static function (?array $usuario = null) use ($normalizeRole
         $slugs = [$fallback];
     }
 
-    // "Admin tecnico" (fora do RBAC da loja) so existe via login tecnico (SYSTEM_ADMIN_WEB_*).
+    // "Admin tecnico" (fora do RBAC da loja) so existe via login tecnico (SYSTEM_ADMIN_WEB_*) ou via flag de Telegram.
     // Obreiros nunca devem herdar "admin" por cadastro/cargo, para evitar vinculo do admin a um membro.
-    $isSystemAdmin = !empty($_SESSION['force_system_admin']);
+    $isSystemAdmin = !empty($_SESSION['force_system_admin']) || !empty($usuario['is_system_admin']) || !empty($_SESSION['is_system_admin']);
     $_SESSION['is_system_admin'] = $isSystemAdmin;
 
     $slugsEfetivos = array_values(array_unique($slugs));
