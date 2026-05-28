@@ -118,6 +118,25 @@ class TroncoSolidariedade
         return $totais;
     }
 
+    /**
+     * Lista movimentações recentes do tronco
+     */
+    public function listarRecentes(int $limite = 50): array
+    {
+        $sql = "
+            SELECT * FROM tronco_solidariedade
+            WHERE loja_id = :loja_id
+            ORDER BY data_mov DESC, id DESC
+            LIMIT :limite
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':loja_id', $this->obterLojaAtualId(), PDO::PARAM_INT);
+        $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     private function obterLojaAtualId(): int
     {
         return $this->resolveCurrentStoreId($this->db);

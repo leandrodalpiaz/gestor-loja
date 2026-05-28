@@ -45,7 +45,7 @@ $migrations = [
     '034' => [
         'file'   => '034_financeiro_agregados_multitenant.sql',
         'checks' => [
-            ['table' => 'obrigacoes_financeiras', 'column' => 'loja_id'],
+            ['table' => 'tronco_solidariedade', 'column' => 'loja_id'],
         ],
     ],
     '035' => [

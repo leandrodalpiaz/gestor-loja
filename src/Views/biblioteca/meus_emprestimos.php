@@ -10,14 +10,14 @@ $formatDate = static fn($dateStr) => !empty($dateStr) ? (new DateTime($dateStr))
 function getStatusInfo(string $status): array
 {
     return match ($status) {
-        'atrasado' => ['label' => 'Atrasado', 'badge' => 'badge-status danger'],
-        'pendente' => ['label' => 'Pendente', 'badge' => 'badge-status warning'],
-        'devolvido' => ['label' => 'Devolvido', 'badge' => 'badge-status success'],
-        'solicitado' => ['label' => 'Solicitado', 'badge' => 'badge-status warning'],
-        'aprovado' => ['label' => 'Aprovado', 'badge' => 'badge-status success'],
-        'negado' => ['label' => 'Negado', 'badge' => 'badge-status danger'],
-        'cancelado' => ['label' => 'Cancelado', 'badge' => 'badge-status neutral'],
-        default => ['label' => ucfirst($status), 'badge' => 'badge-status neutral'],
+        'atrasado' => ['label' => 'Atrasado', 'badge' => 'badge-status-danger'],
+        'pendente' => ['label' => 'Pendente', 'badge' => 'badge-status-warning'],
+        'devolvido' => ['label' => 'Devolvido', 'badge' => 'badge-status-success'],
+        'solicitado' => ['label' => 'Solicitado', 'badge' => 'badge-status-warning'],
+        'aprovado' => ['label' => 'Aprovado', 'badge' => 'badge-status-success'],
+        'negado' => ['label' => 'Negado', 'badge' => 'badge-status-danger'],
+        'cancelado' => ['label' => 'Cancelado', 'badge' => 'badge-status-secondary'],
+        default => ['label' => ucfirst($status), 'badge' => 'badge-status-secondary'],
     };
 }
 
@@ -27,125 +27,102 @@ function getStatusInfo(string $status): array
 
 $appShellEyebrow = 'Biblioteca';
 $appShellTitle = 'Meus Empréstimos';
-$appShellDescription = 'Acompanhe seu histórico de leitura, prazos e situação de devolução.';
+$appShellDescription = 'Acompanhe suas solicitações de leitura, prazos de devolução e histórico de leituras concluídas.';
 $appShellActiveHref = '/biblioteca/meus-emprestimos';
+$appShellActions = [
+    ['label' => 'Catálogo', 'href' => '/biblioteca'],
+    ['label' => 'Painel', 'href' => '/dashboard'],
+];
 
 require __DIR__ . '/../partials/erp_shell_open.php';
-
 ?>
 
-<div class="mb-6 flex justify-end">
-    <a href="/biblioteca" class="btn btn-secondary">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+<!-- Botão Voltar -->
+<div class="mb-6 flex justify-between">
+    <a href="/biblioteca" class="btn border border-white/10 text-slate-300 hover:bg-white/5 py-2 px-4 text-xs font-semibold inline-flex items-center gap-1.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
         Voltar ao Catálogo
     </a>
 </div>
 
-<!-- Lista de Empréstimos (Cards para Mobile) -->
-<div class="card mb-6">
-    <div class="card-header">
-        <div>
-            <h2 class="card-title">Solicitacoes interloja</h2>
-            <p class="card-description">Pedidos feitos para acervos compartilhados por outras lojas.</p>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Empréstimos Locais (2/3) -->
+    <div class="lg:col-span-2 space-y-6">
+        <div class="card depth-1">
+            <div class="card-header border-b border-white/5 p-6">
+                <h2 class="card-title text-white">Minhas Leituras & Empréstimos</h2>
+                <p class="card-subtitle mt-0.5">Físicos obtidos no templo local.</p>
+            </div>
+            
+            <div class="card-body p-6 space-y-4">
+                <?php if (empty($emprestimos)): ?>
+                    <p class="text-center text-slate-400 py-8 text-xs">Você não possui nenhum empréstimo ativo ou concluído registrado.</p>
+                <?php else: ?>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <?php foreach ($emprestimos as $emp): 
+                            $statusInfo = getStatusInfo(strtolower(trim((string) ($emp['status'] ?? ''))));
+                        ?>
+                            <div class="rounded-xl border border-white/5 bg-white/[0.01] p-4 flex flex-col justify-between hover:bg-white/[0.02] transition">
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-start gap-2">
+                                        <h3 class="font-bold text-white text-sm leading-tight line-clamp-2"><?= htmlspecialchars((string) ($emp['titulo'] ?? '-')) ?></h3>
+                                        <span class="badge-status <?= $statusInfo['badge'] ?> text-[10px] shrink-0"><?= $statusInfo['label'] ?></span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 font-mono">Cód: <?= htmlspecialchars((string) ($emp['codigo_acervo'] ?? '')) ?></p>
+                                </div>
+                                
+                                <div class="mt-4 pt-3 border-t border-white/5 grid grid-cols-2 gap-2 text-xs text-slate-400">
+                                    <div>
+                                        <p class="text-[9px] uppercase tracking-wider text-slate-500">Retirado em</p>
+                                        <p class="font-semibold text-slate-300 mt-0.5"><?= $formatDate((string) ($emp['data_emprestimo'] ?? '')) ?></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] uppercase tracking-wider text-slate-500">Devolução Prevista</p>
+                                        <p class="font-semibold text-white mt-0.5"><?= $formatDate((string) ($emp['data_devolucao_prevista'] ?? '')) ?></p>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
-    <div class="card-body">
-        <?php if (empty($pedidosInterloja ?? [])): ?>
-            <div class="card-placeholder">Nenhuma solicitacao interloja registrada.</div>
-        <?php else: ?>
-            <div class="space-y-3">
-                <?php foreach ($pedidosInterloja as $pedido): ?>
-                    <?php $statusInfo = getStatusInfo(strtolower(trim((string) ($pedido['status'] ?? '')))); ?>
-                    <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                            <div>
-                                <h3 class="font-bold text-gray-900 dark:text-white"><?= htmlspecialchars((string) ($pedido['titulo'] ?? '-')) ?></h3>
-                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                    Loja <?= htmlspecialchars((string) ($pedido['loja_origem_numero'] ?? '')) ?>
-                                    <?= htmlspecialchars((string) ($pedido['loja_origem_sigla'] ?? '')) ?>
-                                    <?= htmlspecialchars((string) ($pedido['loja_origem_nome'] ?? '')) ?>
-                                </p>
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Codigo <?= htmlspecialchars((string) ($pedido['codigo_acervo'] ?? '')) ?>
-                                    - Solicitado em <?= $formatDate((string) ($pedido['solicitado_em'] ?? '')) ?>
-                                </p>
-                            </div>
-                            <span class="<?= $statusInfo['badge'] ?>"><?= $statusInfo['label'] ?></span>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
 
-<div class="space-y-4 md:hidden">
-    <?php if (empty($emprestimos)): ?>
-        <div class="card-placeholder">Nenhum empréstimo registrado em seu nome.</div>
-    <?php else: ?>
-        <?php foreach ($emprestimos as $emp): ?>
-            <?php $statusInfo = getStatusInfo(strtolower(trim((string) ($emp['status'] ?? '')))); ?>
-            <div class="card">
-                <div class="p-4">
-                    <div class="flex justify-between items-start gap-3">
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-base leading-tight"><?= htmlspecialchars((string) ($emp['titulo'] ?? '-')) ?></h3>
-                            <p class="text-xs text-gray-500 font-mono mt-1"><?= htmlspecialchars((string) ($emp['codigo_acervo'] ?? '')) ?></p>
-                        </div>
-                        <span class="<?= $statusInfo['badge'] ?>"><?= $statusInfo['label'] ?></span>
-                    </div>
-                    <div class="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Data do Empréstimo:</span>
-                            <strong><?= $formatDate((string) ($emp['data_emprestimo'] ?? '')) ?></strong>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Devolução Prevista:</span>
-                            <strong><?= $formatDate((string) ($emp['data_devolucao_prevista'] ?? '')) ?></strong>
-                        </div>
-                    </div>
-                </div>
+    <!-- Pedidos Interloja (1/3) -->
+    <div class="space-y-6">
+        <div class="card depth-1 p-6">
+            <div class="card-header border-b border-white/5 pb-3 mb-4">
+                <h2 class="card-title text-white">Solicitações Interloja</h2>
+                <p class="card-subtitle mt-0.5">Livros solicitados de outras lojas da rede.</p>
             </div>
-        <?php endforeach; ?>
-    <?php endif; ?>
-</div>
-
-<!-- Tabela de Empréstimos (Desktop) -->
-<div class="card hidden md:block">
-    <div class="overflow-x-auto">
-        <table class="table-base">
-            <thead>
-                <tr>
-                    <th>Livro</th>
-                    <th>Empréstimo</th>
-                    <th>Devolução Prevista</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($emprestimos)): ?>
-                    <tr>
-                        <td colspan="4" class="text-center py-10 text-gray-500">Nenhum empréstimo registrado em seu nome.</td>
-                    </tr>
+            
+            <div class="card-body space-y-4">
+                <?php if (empty($pedidosInterloja ?? [])): ?>
+                    <p class="text-center text-slate-400 py-6 text-xs">Nenhuma solicitação de rede pendente.</p>
                 <?php else: ?>
-                    <?php foreach ($emprestimos as $emp): ?>
-                        <?php $statusInfo = getStatusInfo(strtolower(trim((string) ($emp['status'] ?? '')))); ?>
-                        <tr>
-                            <td>
-                                <div class="font-bold"><?= htmlspecialchars((string) ($emp['titulo'] ?? '-')) ?></div>
-                                <div class="text-xs text-gray-500 font-mono"><?= htmlspecialchars((string) ($emp['codigo_acervo'] ?? '')) ?></div>
-                            </td>
-                            <td><?= $formatDate((string) ($emp['data_emprestimo'] ?? '')) ?></td>
-                            <td><?= $formatDate((string) ($emp['data_devolucao_prevista'] ?? '')) ?></td>
-                            <td><span class="<?= $statusInfo['badge'] ?>"><?= $statusInfo['label'] ?></span></td>
-                        </tr>
-                    <?php endforeach; ?>
+                    <div class="space-y-3">
+                        <?php foreach ($pedidosInterloja as $pedido): 
+                            $statusInfo = getStatusInfo(strtolower(trim((string) ($pedido['status'] ?? ''))));
+                        ?>
+                            <div class="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-xs space-y-2">
+                                <div class="flex justify-between items-start gap-2">
+                                    <p class="font-bold text-white truncate max-w-[12rem]"><?= htmlspecialchars((string) ($pedido['titulo'] ?? '-')) ?></p>
+                                    <span class="badge-status <?= $statusInfo['badge'] ?> text-[9px] shrink-0"><?= $statusInfo['label'] ?></span>
+                                </div>
+                                <div class="text-[10px] text-slate-400 space-y-1">
+                                    <p>Loja de Origem: <span class="text-white font-medium"><?= htmlspecialchars((string) ($pedido['loja_origem_nome'] ?? 'Loja Coirmã')) ?></span></p>
+                                    <p>Cód: <span class="font-mono text-white"><?= htmlspecialchars((string) ($pedido['codigo_acervo'] ?? '')) ?></span></p>
+                                    <p>Data Pedido: <span class="text-white"><?= $formatDate((string) ($pedido['solicitado_em'] ?? '')) ?></span></p>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
-            </tbody>
-        </table>
+            </div>
+        </div>
     </div>
 </div>
 
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
-
-

@@ -162,6 +162,33 @@ class OcorrenciaAssistencial
         ]);
     }
 
+    public function decidirApoio(int $id, string $status, ?float $valorAprovado, ?string $justificativa, ?string $autorId): bool
+    {
+        if ($id <= 0) {
+            return false;
+        }
+
+        $stmt = $this->db->prepare("
+            UPDATE ocorrencias_assistenciais
+               SET status = :status,
+                   valor_aprovado = :valor_aprovado,
+                   observacao_status = :justificativa,
+                   updated_by = :updated_by,
+                   updated_at = NOW()
+             WHERE id = :id
+               AND loja_id = :loja_id
+        ");
+
+        return $stmt->execute([
+            'id' => $id,
+            'status' => $this->normalizarStatus($status),
+            'valor_aprovado' => $valorAprovado,
+            'justificativa' => $this->limparTexto($justificativa),
+            'updated_by' => $this->limparTexto($autorId),
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
+    }
+
     public function registrarVisita(int $id, ?string $autorId = null, ?string $observacao = null, ?string $dataProximaAcao = null): bool
     {
         if ($id <= 0) {

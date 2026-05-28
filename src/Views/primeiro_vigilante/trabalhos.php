@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 $appShellEyebrow = 'Primeiro Vigilante';
-$appShellTitle = 'Validação de Trabalhos';
-$appShellDescription = 'Pendentes de validação (Aprendizes).';
+$appShellTitle = 'Mentoria de Trabalhos';
+$appShellDescription = 'Peças de Arquitetura em fase de mentoria formativa (Aprendizes).';
 $appShellActiveHref = '/primeiro-vigilante/trabalhos';
 $appShellActions = [['label' => 'Voltar', 'href' => '/primeiro-vigilante']];
 
@@ -12,33 +12,43 @@ $itens = is_array($itens ?? null) ? $itens : [];
 require __DIR__ . '/../partials/erp_shell_open.php';
 ?>
 
-<?php if (!empty($_SESSION['mensagem_sucesso'])): ?><div class="alert alert-success mb-6"><?= htmlspecialchars((string) $_SESSION['mensagem_sucesso']) ?></div><?php unset($_SESSION['mensagem_sucesso']); endif; ?>
-<?php if (!empty($_SESSION['mensagem_erro'])): ?><div class="alert alert-danger mb-6"><?= htmlspecialchars((string) $_SESSION['mensagem_erro']) ?></div><?php unset($_SESSION['mensagem_erro']); endif; ?>
+<?php if (!empty($_SESSION['mensagem_sucesso'])): ?>
+    <div class="alert alert-success mb-6"><?= htmlspecialchars((string) $_SESSION['mensagem_sucesso']) ?></div>
+    <?php unset($_SESSION['mensagem_sucesso']); ?>
+<?php endif; ?>
+<?php if (!empty($_SESSION['mensagem_erro'])): ?>
+    <div class="alert alert-danger mb-6"><?= htmlspecialchars((string) $_SESSION['mensagem_erro']) ?></div>
+    <?php unset($_SESSION['mensagem_erro']); ?>
+<?php endif; ?>
 
-<div class="card">
-    <div class="card-header"><h2 class="card-title">Pendentes</h2></div>
-    <div class="card-body space-y-3">
+<div class="card depth-1 p-6">
+    <div class="card-header border-b border-white/5 pb-3 mb-4">
+        <h2 class="card-title">Trabalhos sob Mentoria</h2>
+    </div>
+    <div class="card-body space-y-4">
         <?php if ($itens === []): ?>
-            <div class="alert alert-info">Nenhum trabalho pendente.</div>
+            <div class="alert alert-info">Nenhuma peça sob mentoria no momento.</div>
         <?php else: ?>
             <?php foreach ($itens as $t): ?>
-                <div class="list-item-condensed">
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="font-semibold"><?= htmlspecialchars((string) ($t['titulo'] ?? '')) ?></div>
-                        <span class="text-xs text-gray-500"><?= htmlspecialchars((string) ($t['obreiro_nome'] ?? '')) ?></span>
+                <div class="rounded-xl border border-white/5 bg-white/[0.02] p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="min-w-0 flex-grow">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="font-bold text-white text-base"><?= htmlspecialchars((string) ($t['titulo'] ?? '')) ?></div>
+                            <span class="text-xs text-slate-400 font-medium"><?= htmlspecialchars((string) ($t['obreiro_nome'] ?? '')) ?></span>
+                        </div>
+                        <div class="text-xs text-slate-300 mt-1">
+                            Tipo: <span class="font-semibold text-white"><?= htmlspecialchars((string) ($t['tipo_trabalho'] ?? '')) ?></span>
+                        </div>
                     </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                        <?= htmlspecialchars((string) ($t['tipo_trabalho'] ?? '')) ?>
-                    </div>
-                    <div class="mt-3 flex flex-wrap items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-3 flex-shrink-0">
                         <?php if (!empty($t['arquivo_pdf_path'])): ?>
-                            <a class="btn btn-secondary btn-sm" href="<?= htmlspecialchars((string) $t['arquivo_pdf_path']) ?>" target="_blank" rel="noopener">Abrir PDF</a>
+                            <a class="btn border border-white/10 text-slate-300 hover:bg-white/5 py-1.5 px-3 text-xs font-semibold" href="<?= htmlspecialchars((string) $t['arquivo_pdf_path']) ?>" target="_blank" rel="noopener">Abrir PDF</a>
                         <?php endif; ?>
-                        <form method="POST" action="/primeiro-vigilante/trabalhos/decidir" class="flex flex-wrap gap-2">
+                        <form method="POST" action="/primeiro-vigilante/trabalhos/decidir" class="flex flex-wrap items-center gap-2">
                             <input type="hidden" name="id" value="<?= htmlspecialchars((string) ($t['id'] ?? '')) ?>">
-                            <input class="form-input form-input-sm" name="observacao" placeholder="Observação (opcional)">
-                            <button class="btn btn-primary btn-sm" name="acao" value="aprovar" type="submit">Aprovar</button>
-                            <button class="btn btn-secondary btn-sm" name="acao" value="rejeitar" type="submit">Rejeitar</button>
+                            <input class="form-input text-xs py-1.5 px-3 md:w-64" name="observacao" placeholder="Orientação/Ajuste (opcional)">
+                            <button class="btn btn-success py-1.5 px-3 text-xs" name="acao" value="aprovar" type="submit">Orientação Concluída</button>
+                            <button class="btn btn-warning py-1.5 px-3 text-xs text-black" name="acao" value="rejeitar" type="submit">Solicitar Ajustes</button>
                         </form>
                     </div>
                 </div>
@@ -48,4 +58,3 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 </div>
 
 <?php require __DIR__ . '/../partials/erp_shell_close.php'; ?>
-

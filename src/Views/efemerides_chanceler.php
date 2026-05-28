@@ -310,7 +310,15 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                                     <td><?= htmlspecialchars($formatarDataVisual($r['data_evento'] ?? null)) ?></td>
                                     <td><?= htmlspecialchars($r['nome'] ?? '') ?></td>
                                     <td><?= htmlspecialchars($r['tipo'] ?? '') ?></td>
-                                    <td><?= htmlspecialchars(($r['vinculo'] ?? '-') . ($r['parentesco'] ? ' (' . $r['parentesco'] . ')' : '')) ?></td>
+                                    <td>
+                                        <?php
+                                        $vinculoExibido = (string) ($r['vinculo'] ?? '-');
+                                        if (strtolower($vinculoExibido) === 'esposa') {
+                                            $vinculoExibido = 'Cunhada';
+                                        }
+                                        echo htmlspecialchars($vinculoExibido . ($r['parentesco'] ? ' (' . $r['parentesco'] . ')' : ''));
+                                        ?>
+                                    </td>
                                     <td><span class="badge-status <?= !empty($r['ativo']) ? 'badge-status-success' : 'badge-status-danger' ?>"><?= !empty($r['ativo']) ? 'Regular' : 'Afastado' ?></span></td>
                                     <td>
                                         <?php if (empty($r['origem_fixa']) && !empty($r['ativo'])): ?>
@@ -372,7 +380,14 @@ $palavrasDia = is_array($palavrasDia ?? []) ? $palavrasDia : [];
                     <select id="form-vinculo" name="vinculo" class="form-select">
                         <option value="">Sem vínculo</option>
                         <?php foreach ($vinculosPadrao as $vinculo): ?>
-                            <option value="<?= htmlspecialchars($vinculo['nome']) ?>" <?= ($registroEdicao['vinculo'] ?? '') === $vinculo['nome'] ? 'selected' : '' ?>><?= htmlspecialchars($vinculo['nome']) ?></option>
+                            <?php
+                            $nomeVinculo = (string) ($vinculo['nome'] ?? '');
+                            $labelVinculo = $nomeVinculo;
+                            if (strtolower($nomeVinculo) === 'esposa') {
+                                $labelVinculo = 'Cunhada';
+                            }
+                            ?>
+                            <option value="<?= htmlspecialchars($nomeVinculo) ?>" <?= ($registroEdicao['vinculo'] ?? '') === $nomeVinculo ? 'selected' : '' ?>><?= htmlspecialchars(mb_convert_case($labelVinculo, MB_CASE_TITLE, "UTF-8")) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>

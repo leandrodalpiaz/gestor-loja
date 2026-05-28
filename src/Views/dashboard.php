@@ -365,9 +365,11 @@ require __DIR__ . '/partials/erp_shell_open.php';
     foreach ($dashboardEfemeridesCards as $c) {
         $cat = trim((string) ($c['categoria'] ?? 'Geral'));
         if ($cat === '') $cat = 'Geral';
-        $label = match(strtolower($cat)) {
-            'história', 'historia', 'nossa história', 'nossa historia' => 'Nossa História',
-            'aniversário', 'aniversario' => 'Aniversariantes do Dia',
+        $catNorm = strtolower($cat);
+        $label = match(true) {
+            str_contains($catNorm, 'história') || str_contains($catNorm, 'historia') => 'Nossa História',
+            str_contains($catNorm, 'aniversário') || str_contains($catNorm, 'aniversario') ||
+            in_array($catNorm, ['esposa', 'cunhada', 'filho', 'filha', 'sobrinho', 'sobrinha', 'membro', 'irmao', 'irmão', 'familiar'], true) => 'Aniversariantes do Dia',
             default => mb_convert_case($cat, MB_CASE_TITLE, "UTF-8")
         };
         $cardsPorCategoria[$label][] = $c;

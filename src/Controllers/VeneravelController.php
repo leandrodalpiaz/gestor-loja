@@ -271,6 +271,12 @@ class VeneravelController
             'cargos_criticos_pendentes' => $cargosCriticosPendentes,
             'obreiros_pendentes_criticos' => $obreirosPendentesCriticos,
             'dashboard' => $dashboard,
+            'auxilios_pendentes' => array_values(array_filter(
+                (new \App\Models\OcorrenciaAssistencial())->listarRecentes(150),
+                static fn (array $item): bool => 
+                    !empty($item['necessita_apoio_financeiro']) 
+                    && (string) ($item['status'] ?? '') === 'aberta'
+            )),
         ];
 
         require_once __DIR__ . '/../Views/veneravel/index.php';
@@ -674,5 +680,55 @@ class VeneravelController
             'status' => (string) ($item['status'] ?? ''),
         ];
     }
-}
 
+    public function decidirApoioHospitaleiro(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /veneravel');
+            exit;
+        }
+
+        $id = (int) ($_POST['ocorrencia_id'] ?? 0);
+        $acao = trim((string) ($_POST['acao'] ?? ''));
+        $valorStr = trim((string) ($_POST['valor_aprovado'] ?? '0'));
+        $justificativa = trim((string) ($_POST['justificativa'] ?? ''));
+
+        if ($id <= 0 || !in_array($acao, ['aprovar', 'recusar'], true)) {
+            $_SESSION['mensagem_erro'] = 'Dados inválidos para decidir sobre a solicitação.';
+            header('Location: /veneravel');
+            exit;
+        }
+
+        $valorAprovado = 0.0;
+        $status = 'cancelada';
+        if ($acao === 'aprovar') {
+            $valorStr = str_replace(' ', '', $valorStr);
+            if (str_contains($valorStr, ',') && str_contains($valorStr, '.')) {
+                $valorStr = str_replace('.', '', $valorStr);
+                $valorStr = str_replace(',', '.', $valorStr);
+            } elseif (str_contains($valorStr, ',')) {
+                $valorStr = str_replace(',', '.', $valorStr);
+            }
+            $valorAprovado = is_numeric($valorStr) ? (float) $valorStr : 0.0;
+
+            if ($valorAprovado <= 0) {
+                $_SESSION['mensagem_erro'] = 'Para aprovar, informe um valor maior que zero.';
+                header('Location: /veneravel');
+                exit;
+            }
+            $status = 'em_acompanhamento';
+        }
+
+        $autorId = $this->currentUserUuidOrNull();
+        $model = new \App\Models\OcorrenciaAssistencial();
+        
+        $ok = $model->decidirApoio($id, $status, $valorAprovado, $justificativa !== '' ? $justificativa : null, $autorId);
+        
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Decisão sobre auxílio assistencial gravada com sucesso.'
+            : 'Não foi possível gravar a decisão sobre o auxílio.';
+
+        header('Location: /veneravel');
+        exit;
+    }
+}

@@ -44,6 +44,9 @@ class EfemeridesCardService
     private function buildCardPayload(array $registro, string $templateDir): array
     {
         $categoria = strtolower(trim((string) ($registro['vinculo'] ?? $registro['tipo'] ?? '')));
+        if ($categoria === 'esposa') {
+            $categoria = 'cunhada';
+        }
         $idade = $this->calcularIdade((string) ($registro['data_evento'] ?? ''));
         $ocultar = $this->defaultOcultarIdade($categoria, $idade);
         $template = $this->resolverTemplate($categoria, $idade, (string) ($registro['tipo'] ?? ''));
@@ -182,18 +185,18 @@ class EfemeridesCardService
 
         if ($tratamentoNorm === 'irmao') {
             $base = $idadeTexto !== ''
-                ? "Com fraterna alegria, hoje celebramos os {$idadeTexto} de vida do nosso Irmão {$nome}."
-                : "Com fraterna alegria, hoje celebramos o aniversário do nosso Irmão {$nome}.";
+                ? "Com fraterna alegria, hoje celebramos os **{$idadeTexto}** de vida do nosso Irmão **{$nome}**."
+                : "Com fraterna alegria, hoje celebramos o aniversário do nosso Irmão **{$nome}**.";
         } elseif ($tratamentoNorm === 'cunhada') {
-            $referencia = $parentesco !== '' ? " do nosso Irmão {$parentesco}" : '';
+            $referencia = $parentesco !== '' ? " do nosso Irmão **{$parentesco}**" : '';
             $vinculoTexto = $vinculo !== '' ? ", {$vinculo}{$referencia}" : $referencia;
-            $base = "Hoje celebramos, com fraterna alegria, o aniversário de nossa {$tratamento} {$nome}{$vinculoTexto}.";
+            $base = "Hoje celebramos, com fraterna alegria, o aniversário de nossa Cunhada **{$nome}**{$vinculoTexto}.";
         } else {
             $artigo = in_array($tratamentoNorm, ['filha', 'sobrinha'], true) ? 'nossa' : 'nosso';
-            $referencia = $parentesco !== '' ? " do nosso Irmão {$parentesco}" : '';
+            $referencia = $parentesco !== '' ? " do nosso Irmão **{$parentesco}**" : '';
             $vinculoTexto = $vinculo !== '' ? ", {$vinculo}{$referencia}" : $referencia;
-            $idadeParte = $idadeTexto !== '' ? " os {$idadeTexto} de vida de" : " o aniversário de";
-            $base = "Hoje celebramos, com fraterna alegria,{$idadeParte} {$artigo} {$tratamento} {$nome}{$vinculoTexto}.";
+            $idadeParte = $idadeTexto !== '' ? " os **{$idadeTexto}** de vida de" : " o aniversário de";
+            $base = "Hoje celebramos, com fraterna alegria,{$idadeParte} {$artigo} {$tratamento} **{$nome}**{$vinculoTexto}.";
         }
 
         return $this->limparTextoCard($this->comMensagemComplementar($base, $complementar));
@@ -208,7 +211,7 @@ class EfemeridesCardService
         $sufixoLocal = $local !== '' ? " ({$local})" : '';
         $complementar = $this->mensagemComplementar($this->normalizarTipo($tipo));
 
-        $base = "Neste dia, registramos com honra {$anos} da {$tipo} do querido Irmão {$nome}";
+        $base = "Neste dia, registramos com honra **{$anos}** da **{$tipo}** do querido Irmão **{$nome}**";
         if ($data !== '') {
             $base .= " - {$data}{$sufixoLocal}";
         } elseif ($sufixoLocal !== '') {
@@ -228,7 +231,7 @@ class EfemeridesCardService
         $sufixoLocal = $local !== '' ? " ({$local})" : '';
         $complementar = $this->mensagemComplementar($this->normalizarTipo($tipo));
 
-        $base = "Neste dia, registramos com honra {$anos} da {$tipo} do querido Irmão {$nome}";
+        $base = "Neste dia, registramos com honra **{$anos}** da **{$tipo}** do querido Irmão **{$nome}**";
         if ($data !== '') {
             $base .= " - {$data}{$sufixoLocal}";
         } elseif ($sufixoLocal !== '') {
@@ -243,7 +246,7 @@ class EfemeridesCardService
     {
         $nome = trim((string) ($registro['nome'] ?? '')) ?: 'Nome não informado';
         $data = $this->formatarData((string) ($registro['data_evento'] ?? ''));
-        $base = "Com profundo pesar e saudade, lembramos de nosso Irmão {$nome}";
+        $base = "Com profundo pesar e saudade, lembramos de nosso Irmão **{$nome}**";
         if ($data !== '') {
             $base .= ", que partiu para o Oriente Eterno em {$data}";
         }
@@ -258,7 +261,7 @@ class EfemeridesCardService
         $tipoTexto = $tipo !== '' ? $tipo : 'efeméride';
         $anos = $idade !== null ? $this->textoAnos($idade) . ' de ' : '';
         $data = $this->formatarData((string) ($registro['data_evento'] ?? ''));
-        $base = "Neste dia, registramos com honra {$anos}{$tipoTexto} de {$nome}";
+        $base = "Neste dia, registramos com honra **{$anos}**{$tipoTexto} de **{$nome}**";
         if ($data !== '') {
             $base .= " - {$data}";
         }

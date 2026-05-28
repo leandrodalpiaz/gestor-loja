@@ -963,6 +963,11 @@ class PainelRoutes
                 header('Location: /pwa/obrigacoes');
                 exit;
 
+            case '/veneravel/assistencia/decidir':
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Venerável Mestre ou Administrador.');
+                (new VeneravelController())->decidirApoioHospitaleiro();
+                return true;
+
             case '/veneravel/sessoes/publicar':
                 self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'veneravel.manage', 'Acesso restrito ao Venerável Mestre ou Administrador.');
                 (new VeneravelController())->publicarSessao();

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\Obreiro;
 use App\Models\OcorrenciaAssistencial;
+use App\Models\TroncoSolidariedade;
 
 class HospitaleiroController
 {
@@ -11,11 +12,15 @@ class HospitaleiroController
     {
         $ocorrenciaModel = new OcorrenciaAssistencial();
         $obreiroModel = new Obreiro();
+        $troncoModel = new TroncoSolidariedade();
 
         $ocorrencias = $ocorrenciaModel->listarRecentes(80);
         $pendenciasVisita = $ocorrenciaModel->listarPendentesVisita(20);
         $resumo = $ocorrenciaModel->contarResumo();
         $obreiros = $obreiroModel->getAllAtivos();
+
+        $saldoTronco = $troncoModel->obterSaldo();
+        $movimentosTronco = $troncoModel->listarRecentes(50);
 
         $roles = array_values(array_unique(array_map(
             static fn ($role) => strtolower((string) $role),
@@ -137,6 +142,127 @@ class HospitaleiroController
         exit;
     }
 
+    public function registrarMovimentoTronco(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /assistencia');
+            exit;
+        }
+
+        $tipo = trim((string) ($_POST['tipo'] ?? 'entrada'));
+        $valorStr = trim((string) ($_POST['valor'] ?? '0'));
+        $descricao = trim((string) ($_POST['descricao'] ?? ''));
+
+        $valor = $this->normalizarValor($valorStr);
+
+        if ($valor <= 0) {
+            $_SESSION['mensagem_erro'] = 'Informe um valor válido maior que zero.';
+            header('Location: /assistencia');
+            exit;
+        }
+
+        $autorId = (string) ($_SESSION['usuario_id'] ?? '');
+        $troncoModel = new TroncoSolidariedade();
+
+        $ok = $troncoModel->registrar([
+            'tipo' => $tipo === 'saida' ? 'saida' : 'entrada',
+            'valor' => $valor,
+            'descricao' => $descricao !== '' ? $descricao : null,
+            'created_by' => $autorId !== '' ? $autorId : null,
+        ]);
+
+        $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+            ? 'Movimentação do Tronco registrada com sucesso.'
+            : 'Não foi possível registrar a movimentação.';
+
+        header('Location: /assistencia');
+        exit;
+    }
+
+    public function registrarRepasseApoio(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /assistencia');
+            exit;
+        }
+
+        $ocorrenciaId = (int) ($_POST['ocorrencia_id'] ?? 0);
+        if ($ocorrenciaId <= 0) {
+            $_SESSION['mensagem_erro'] = 'Ocorrência inválida para registrar repasse.';
+            header('Location: /assistencia');
+            exit;
+        }
+
+        $ocorrenciaModel = new OcorrenciaAssistencial();
+        $lista = $ocorrenciaModel->listarRecentes(200);
+        $ocorrencia = null;
+        foreach ($lista as $item) {
+            if ((int) $item['id'] === $ocorrenciaId) {
+                $ocorrencia = $item;
+                break;
+            }
+        }
+
+        if (!$ocorrencia) {
+            $_SESSION['mensagem_erro'] = 'Ocorrência não encontrada.';
+            header('Location: /assistencia');
+            exit;
+        }
+
+        $valorAprovado = (float) ($ocorrencia['valor_aprovado'] ?? 0);
+        if ($valorAprovado <= 0) {
+            $_SESSION['mensagem_erro'] = 'Esta ocorrência não possui valor aprovado para repasse.';
+            header('Location: /assistencia');
+            exit;
+        }
+
+        $autorId = (string) ($_SESSION['usuario_id'] ?? '');
+        $troncoModel = new TroncoSolidariedade();
+
+        $desc = 'Repasse Assistencial - Ocorrência #' . $ocorrenciaId;
+        if (!empty($ocorrencia['obreiro_nome'])) {
+            $desc .= ' (Beneficiário: ' . $ocorrencia['obreiro_nome'] . ')';
+        }
+        $ok = $troncoModel->registrar([
+            'tipo' => 'saida',
+            'valor' => $valorAprovado,
+            'descricao' => $desc,
+            'created_by' => $autorId !== '' ? $autorId : null,
+        ]);
+
+        if ($ok) {
+            $ocorrenciaModel->atualizarStatus($ocorrenciaId, 'concluida', $autorId !== '' ? $autorId : null, 'Repasse do auxílio financeiro efetuado via Tronco de Solidariedade.');
+            $_SESSION['mensagem_sucesso'] = 'Repasse registrado e ocorrência concluída com sucesso.';
+        } else {
+            $_SESSION['mensagem_erro'] = 'Falha ao registrar a saída no saldo do Tronco.';
+        }
+
+        header('Location: /assistencia');
+        exit;
+    }
+
+    private function normalizarValor(mixed $valor): float
+    {
+        if ($valor === null) {
+            return 0.0;
+        }
+
+        $texto = trim((string) $valor);
+        if ($texto === '') {
+            return 0.0;
+        }
+
+        $texto = str_replace(' ', '', $texto);
+        if (str_contains($texto, ',') && str_contains($texto, '.')) {
+            $texto = str_replace('.', '', $texto);
+            $texto = str_replace(',', '.', $texto);
+        } elseif (str_contains($texto, ',')) {
+            $texto = str_replace(',', '.', $texto);
+        }
+
+        return is_numeric($texto) ? (float) $texto : 0.0;
+    }
+
     public function montarPayloadMiniapp(): array
     {
         $ocorrenciaModel = new OcorrenciaAssistencial();
@@ -160,7 +286,7 @@ class HospitaleiroController
     {
         $descricao = trim((string) ($dados['descricao'] ?? ''));
         if ($descricao === '') {
-        return ['ok' => false, 'erro' => 'Informe a descrição da ocorrência assistencial.'];
+            return ['ok' => false, 'erro' => 'Informe a descrição da ocorrência assistencial.'];
         }
 
         $payload = [

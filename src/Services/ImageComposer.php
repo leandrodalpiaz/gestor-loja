@@ -39,7 +39,20 @@ class ImageComposer
         $width = imagesx($img);
         $height = imagesy($img);
         $fontRaw = dirname(__DIR__, 2) . '/public/assets/fonte.ttf';
-        $font = realpath($fontRaw) ?: $fontRaw;
+        $fontNormal = realpath($fontRaw) ?: $fontRaw;
+
+        $fontCursiveRaw = dirname(__DIR__, 2) . '/public/assets/fonts/AlexBrush-Regular.ttf';
+        $fontCursive = realpath($fontCursiveRaw) ?: $fontCursiveRaw;
+        if (!is_file($fontCursive)) {
+            $fontCursive = $fontNormal;
+        }
+
+        // Determina se é um evento festivo/aniversário
+        $isCelebration = (str_contains($templateFile, 'solar') || str_contains($templateFile, 'kids') || str_contains($templateFile, 'sobrinh') || str_contains($templateFile, 'bedrock') || str_contains($templateFile, 'simpsons'));
+
+        // Define as fontes apropriadas por tipo de evento
+        $fontHeader = $isCelebration ? $fontCursive : $fontNormal;
+        $fontBold = $isCelebration ? $fontCursive : $fontNormal;
 
         $colorArr = [40, 40, 40];
         $shadowArr = null;
@@ -50,7 +63,7 @@ class ImageComposer
         $textTop = (int) round($height * 0.12);
         $textBottom = (int) round($height * 0.58);
         $lineSpacingFactor = 1.36;
-        $alignLeft = true;
+        $alignLeft = false; // Centralizado por padrão para cartões festivos
 
         if (str_contains($templateFile, 'bedrock') || str_contains($templateFile, 'eterno')) {
             $colorArr = [255, 255, 255];
@@ -91,6 +104,28 @@ class ImageComposer
             $textBottom = (int) round($height * 0.58);
         }
 
+        $color = imagecolorallocate($img, $colorArr[0], $colorArr[1], $colorArr[2]);
+        $shadow = $shadowArr ? imagecolorallocatealpha($img, $shadowArr[0], $shadowArr[1], $shadowArr[2], $shadowArr[3]) : null;
+
+        // Gerar e desenhar o cabeçalho decorativo
+        $cabecalho = $this->obterCabecalhoCard($templateFile, (string) ($cardPayload['categoria'] ?? ''));
+        if ($cabecalho !== '') {
+            $fontSizeHeader = $isCelebration ? (int) round($fontSizeBase * 1.55) : (int) round($fontSizeBase * 1.12);
+            $boxHeader = is_file($fontHeader) ? @imagettfbbox($fontSizeHeader, 0, $fontHeader, $cabecalho) : null;
+            $widthHeader = is_array($boxHeader) ? abs($boxHeader[2] - $boxHeader[0]) : 0;
+            $xHeader = (int) max($paddingX, floor(($width - $widthHeader) / 2));
+
+            if (is_file($fontHeader)) {
+                if ($shadow) {
+                    @imagettftext($img, $fontSizeHeader, 0, $xHeader + 1, $textTop + 1, $shadow, $fontHeader, $cabecalho);
+                }
+                @imagettftext($img, $fontSizeHeader, 0, $xHeader, $textTop, $color, $fontHeader, $cabecalho);
+            }
+
+            // Desloca o topo do corpo do cartão para baixo para deixar espaço elegante
+            $textTop += $isCelebration ? (int) round($fontSizeHeader * 1.3) : (int) round($fontSizeHeader * 2.1);
+        }
+
         $textLen = mb_strlen($text, 'UTF-8');
         if ($textLen < 80) {
             $lineSpacingFactor = 1.50;
@@ -104,7 +139,7 @@ class ImageComposer
         $maxHeight = max(80, $textBottom - $textTop);
         $fit = $this->fitTextToArea(
             $text,
-            $font,
+            $fontNormal,
             (int) round($fontSizeBase * $maxFontMultiplier),
             (int) round($fontSizeBase * $minFontMultiplier),
             $lineSpacingFactor,
@@ -120,9 +155,6 @@ class ImageComposer
         $baseY = $textTop + (int) max(0, floor(($maxHeight - $contentHeight) / 2));
         $y = $baseY + $lineHeight;
 
-        $color = imagecolorallocate($img, $colorArr[0], $colorArr[1], $colorArr[2]);
-        $shadow = $shadowArr ? imagecolorallocatealpha($img, $shadowArr[0], $shadowArr[1], $shadowArr[2], $shadowArr[3]) : null;
-
         foreach ($lines as $line) {
             $line = trim($line);
             if ($line === '') {
@@ -131,25 +163,71 @@ class ImageComposer
             }
 
             $fontLoaded = false;
-            if (is_file($font)) {
-                $box = @imagettfbbox($fontSize, 0, $font, $line);
-                if (is_array($box)) {
-                    $textWidth = abs($box[2] - $box[0]);
-                    $x = $alignLeft ? $paddingX : (int) max($paddingX, floor(($width - $textWidth) / 2));
-
-                    if ($shadow) {
-                        @imagettftext($img, $fontSize, 0, $x + 2, $y + 2, $shadow, $font, $line);
+            if (is_file($fontNormal)) {
+                $totalWidth = 0;
+                $segments = [];
+                $parts = explode('**', $line);
+                foreach ($parts as $idx => $part) {
+                    $isBold = ($idx % 2 !== 0);
+                    $segmentFont = $isBold ? $fontBold : $fontNormal;
+                    $box = @imagettfbbox($fontSize, 0, $segmentFont, $part);
+                    $w = is_array($box) ? abs($box[2] - $box[0]) : 0;
+                    
+                    // Adiciona offset de largura se for bold artificial (sans-serif)
+                    if ($isBold && !$isCelebration) {
+                        $w += 1;
                     }
-                    @imagettftext($img, $fontSize, 0, $x, $y, $color, $font, $line);
-                    $fontLoaded = true;
+                    
+                    $segments[] = [
+                        'text' => $part,
+                        'isBold' => $isBold,
+                        'width' => $w
+                    ];
+                    $totalWidth += $w;
                 }
+
+                $x = $alignLeft ? $paddingX : (int) max($paddingX, floor(($width - $totalWidth) / 2));
+
+                foreach ($segments as $seg) {
+                    if ($seg['text'] === '') {
+                        continue;
+                    }
+                    $segmentFont = $seg['isBold'] ? $fontBold : $fontNormal;
+                    
+                    if ($seg['isBold']) {
+                        if ($isCelebration) {
+                            // Cursiva elegante (AlexBrush) para nomes de aniversariantes
+                            if ($shadow) {
+                                @imagettftext($img, $fontSize, 0, $x + 1, $y + 1, $shadow, $segmentFont, $seg['text']);
+                            }
+                            @imagettftext($img, $fontSize, 0, $x, $y, $color, $segmentFont, $seg['text']);
+                        } else {
+                            // Bold artificial para fontes sans-serif
+                            for ($offset = 0; $offset <= 1; $offset++) {
+                                if ($shadow) {
+                                    @imagettftext($img, $fontSize, 0, $x + $offset + 1, $y + 1, $shadow, $segmentFont, $seg['text']);
+                                }
+                                @imagettftext($img, $fontSize, 0, $x + $offset, $y, $color, $segmentFont, $seg['text']);
+                            }
+                        }
+                    } else {
+                        // Texto normal
+                        if ($shadow) {
+                            @imagettftext($img, $fontSize, 0, $x + 1, $y + 1, $shadow, $segmentFont, $seg['text']);
+                        }
+                        @imagettftext($img, $fontSize, 0, $x, $y, $color, $segmentFont, $seg['text']);
+                    }
+                    $x += $seg['width'];
+                }
+                $fontLoaded = true;
             }
 
             if (!$fontLoaded) {
+                $lineClean = str_replace('**', '', $line);
                 $fw = imagefontwidth(5);
-                $textWidth = strlen($line) * $fw;
+                $textWidth = strlen($lineClean) * $fw;
                 $x = $alignLeft ? $paddingX : (int) floor(($width - $textWidth) / 2);
-                imagestring($img, 5, $x, max(0, $y - 14), $line, $color);
+                imagestring($img, 5, $x, max(0, $y - 14), $lineClean, $color);
             }
 
             $y += $lineHeight;
@@ -233,7 +311,8 @@ class ImageComposer
                 }
 
                 $testLine = $currentLine === '' ? $word : $currentLine . ' ' . $word;
-                $box = @imagettfbbox($fontSize, 0, $font, $testLine);
+                $testLineClean = str_replace('**', '', $testLine);
+                $box = @imagettfbbox($fontSize, 0, $font, $testLineClean);
                 if (is_array($box)) {
                     $lineWidth = abs($box[2] - $box[0]);
                     if ($lineWidth <= $maxWidth) {
@@ -270,5 +349,35 @@ class ImageComposer
         }
 
         return implode("\n", $finalOutput);
+    }
+
+    private function obterCabecalhoCard(string $templateFile, string $categoria): string
+    {
+        $templateFile = strtolower($templateFile);
+        $categoria = strtolower($categoria);
+
+        if (str_contains($templateFile, 'iniciacao')) {
+            return 'INICIAÇÃO';
+        }
+        if (str_contains($templateFile, 'elevacao')) {
+            return 'ELEVAÇÃO';
+        }
+        if (str_contains($templateFile, 'exalta')) {
+            return 'EXALTAÇÃO';
+        }
+        if (str_contains($templateFile, 'instala')) {
+            return 'INSTALAÇÃO';
+        }
+        if (str_contains($templateFile, 'memorial') || str_contains($templateFile, 'eterno')) {
+            return 'EM MEMÓRIA';
+        }
+        if (str_contains($templateFile, 'historia') || str_contains($templateFile, 'sepia') || $categoria === 'nossa história' || $categoria === 'nossa historia') {
+            return 'NOSSA HISTÓRIA';
+        }
+        if (str_contains($templateFile, 'solar') || str_contains($templateFile, 'kids') || str_contains($templateFile, 'sobrinh') || str_contains($templateFile, 'bedrock') || str_contains($templateFile, 'simpsons') || $categoria === 'aniversario' || $categoria === 'aniversário' || $categoria === 'cunhada') {
+            return 'FELIZ ANIVERSÁRIO!';
+        }
+
+        return 'EFEMÉRIDE';
     }
 }

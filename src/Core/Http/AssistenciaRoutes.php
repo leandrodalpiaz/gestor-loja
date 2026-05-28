@@ -13,12 +13,12 @@ class AssistenciaRoutes
 
         switch ($requestUri) {
             case '/assistencia':
-                ModuleGuards::requireAssistenciaAccess($openTestAccess, $session, $authorizer);
+                ModuleGuards::requireBibliotecaAccess($openTestAccess, $session, $authorizer); // Apenas login
                 $controller->index();
                 return true;
 
             case '/assistencia/ocorrencias/salvar':
-                ModuleGuards::requireAssistenciaAccess($openTestAccess, $session, $authorizer);
+                ModuleGuards::requireAssistenciaAccess($openTestAccess, $session, $authorizer); // Exige hospitaleiro.manage
                 $controller->salvarOcorrencia();
                 return true;
 
@@ -30,6 +30,16 @@ class AssistenciaRoutes
             case '/assistencia/ocorrencias/visita':
                 ModuleGuards::requireAssistenciaAccess($openTestAccess, $session, $authorizer);
                 $controller->registrarVisita();
+                return true;
+
+            case '/assistencia/tronco/registrar':
+                ModuleGuards::requireAssistenciaAccess($openTestAccess, $session, $authorizer);
+                $controller->registrarMovimentoTronco();
+                return true;
+
+            case '/assistencia/ocorrencias/repasse':
+                ModuleGuards::requireAssistenciaAccess($openTestAccess, $session, $authorizer);
+                $controller->registrarRepasseApoio();
                 return true;
 
             default:
