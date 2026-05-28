@@ -16,45 +16,33 @@ $pwaActiveTab      = 'cargo';
 ob_start();
 ?>
 
-<div class="pwa-premium-page">
+<div class="px-4 py-4 space-y-4">
 
     <!-- Alertas -->
     <?php if ($mensagemSucesso): ?>
-        <div class="pwa-alert-success" style="margin-bottom:1rem;">
-            <?= htmlspecialchars((string) $mensagemSucesso) ?>
-        </div>
+        <div class="pwa-alert-success"><?= htmlspecialchars((string) $mensagemSucesso) ?></div>
     <?php endif; ?>
     <?php if ($mensagemErro): ?>
-        <div class="pwa-alert-error" style="margin-bottom:1rem;">
-            <?= htmlspecialchars((string) $mensagemErro) ?>
-        </div>
+        <div class="pwa-alert-error"><?= htmlspecialchars((string) $mensagemErro) ?></div>
     <?php endif; ?>
 
     <!-- Hero -->
-    <div class="pwa-hero" style="padding:1.25rem;margin-bottom:1.25rem;">
+    <div class="pwa-hero">
         <p class="pwa-eyebrow">Chancelaria</p>
-        <h2 style="font-size:1.375rem;font-weight:800;color:#f8fafc;margin:0.375rem 0 0;letter-spacing:-0.02em;">
-            Efemérides da Loja
-        </h2>
-        <p class="pwa-muted" style="font-size:0.8125rem;margin:0.375rem 0 0;line-height:1.5;">
-            Aniversários, datas maçônicas, família e fatos históricos.
-        </p>
+        <h2 class="mt-2 text-xl font-bold tracking-tight text-white">Efemérides da Loja</h2>
+        <p class="pwa-muted mt-1.5 text-xs">Gerencie aniversários, datas maçônicas, família e fatos históricos.</p>
     </div>
 
     <!-- Formulário novo/editar -->
-    <div class="pwa-card" style="padding:1.25rem;margin-bottom:1.25rem;">
-        <h3 style="font-size:0.875rem;font-weight:700;color:#f1f5f9;margin:0 0 1rem;display:flex;align-items:center;gap:0.5rem;">
-            <span style="
-                width:26px;height:26px;border-radius:6px;
-                background:rgba(201,162,39,0.18);border:1px solid rgba(201,162,39,0.3);
-                display:inline-flex;align-items:center;justify-content:center;
-                font-size:0.75rem;color:#C9A227;
-            "><?= $registroEditar ? '✏' : '+' ?></span>
+    <div class="pwa-card space-y-3.5">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2 select-none">
+            <span class="w-6 h-6 rounded-md bg-amber-500/10 border border-amber-500/20 inline-flex items-center justify-center font-bold text-amber-500">
+                <?= $registroEditar ? '✏' : '+' ?>
+            </span>
             <?= $registroEditar ? 'Editar efeméride' : 'Nova efeméride' ?>
         </h3>
 
-        <form method="post" action="/pwa/chancelaria/efemerides/salvar"
-              style="display:flex;flex-direction:column;gap:0.75rem;">
+        <form method="post" action="/pwa/chancelaria/efemerides/salvar" class="space-y-3">
             <input type="hidden" name="id" value="<?= (int) ($registroEditar['id'] ?? 0) ?>">
 
             <div>
@@ -65,7 +53,7 @@ ob_start();
                        placeholder="Ex: João da Silva">
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+            <div class="grid grid-cols-2 gap-2">
                 <div>
                     <label class="pwa-label">Tipo *</label>
                     <select name="tipo" required class="pwa-select">
@@ -85,7 +73,7 @@ ob_start();
                 </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+            <div class="grid grid-cols-2 gap-2">
                 <div>
                     <label class="pwa-label">Vínculo</label>
                     <input name="vinculo"
@@ -122,12 +110,12 @@ ob_start();
                           placeholder="Texto a ser usado no card da efeméride..."><?= htmlspecialchars((string) ($registroEditar['mensagem_custom'] ?? '')) ?></textarea>
             </div>
 
-            <button type="submit" class="pwa-btn-primary" style="margin-top:0.25rem;">
+            <button type="submit" class="pwa-btn-primary mt-2 select-none">
                 <?= $registroEditar ? 'Salvar alterações' : 'Registrar efeméride' ?>
             </button>
 
             <?php if ($registroEditar): ?>
-                <a href="/pwa/chancelaria/efemerides" class="pwa-btn-secondary" style="text-align:center;font-size:0.8125rem;">
+                <a href="/pwa/chancelaria/efemerides" class="pwa-btn-secondary text-xs select-none">
                     Cancelar edição
                 </a>
             <?php endif; ?>
@@ -135,114 +123,81 @@ ob_start();
     </div>
 
     <!-- Filtro de busca -->
-    <form method="get" action="/pwa/chancelaria/efemerides"
-          style="display:flex;gap:0.5rem;margin-bottom:1.25rem;">
+    <form method="get" action="/pwa/chancelaria/efemerides" class="flex gap-2 select-none">
         <input name="q"
                value="<?= htmlspecialchars((string) ($_GET['q'] ?? '')) ?>"
-               class="pwa-input"
-               style="flex:1;"
+               class="pwa-input flex-1"
                placeholder="Buscar efemérides...">
-        <button type="submit" class="pwa-btn-primary" style="width:auto;padding:0 1rem;white-space:nowrap;">
+        <button type="submit" class="pwa-btn-primary py-0 w-auto px-4 text-xs">
             Filtrar
         </button>
     </form>
 
     <!-- Lista de registros -->
-    <div style="display:flex;flex-direction:column;gap:0.625rem;">
+    <div class="space-y-3 pb-4">
+        <div class="flex items-center gap-3">
+            <p class="text-[10px] font-bold tracking-wider uppercase text-slate-500">
+                Registros Cadastrados
+            </p>
+            <div class="flex-1 h-[1px] bg-white/5"></div>
+        </div>
+
         <?php if (empty($registros)): ?>
-            <div style="
-                border:1px solid rgba(255,255,255,0.08);
-                background:rgba(255,255,255,0.03);
-                border-radius:1.125rem;
-                padding:2rem 1rem;
-                text-align:center;
-            ">
-                <div style="font-size:2rem;margin-bottom:0.5rem;">📅</div>
-                <p style="font-size:0.875rem;color:#94a3b8;margin:0;">Nenhuma efeméride encontrada.</p>
+            <div class="p-8 text-center text-xs text-slate-500 bg-slate-900/40 rounded-2xl border border-dashed border-white/10 select-none">
+                <div class="text-xl mb-1.5 select-none">📅</div>
+                <p>Nenhuma efeméride encontrada.</p>
             </div>
         <?php else: ?>
-        <?php foreach ($registros as $registro): ?>
-        <?php $ativo = (bool) ($registro['ativo'] ?? false); ?>
-        <div class="pwa-card" style="padding:1rem;">
-            <!-- Cabeçalho do card -->
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:0.75rem;">
-                <div style="min-width:0;flex:1;">
-                    <h3 style="font-size:0.9375rem;font-weight:700;color:#f1f5f9;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                        <?= htmlspecialchars((string) ($registro['nome'] ?? 'Efeméride')) ?>
-                    </h3>
-                    <p style="font-size:0.75rem;color:#94a3b8;margin:0.2rem 0 0;">
-                        <?= htmlspecialchars((string) ($registro['tipo'] ?? '')) ?>
-                        <?php if (!empty($registro['data_evento'])): ?>
-                            · <?= htmlspecialchars((string) $registro['data_evento']) ?>
-                        <?php endif; ?>
-                    </p>
+            <?php foreach ($registros as $registro): ?>
+                <?php $ativo = (bool) ($registro['ativo'] ?? false); ?>
+                <div class="pwa-card border border-white/5 flex flex-col gap-3">
+                    <!-- Cabeçalho do card -->
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <h3 class="text-xs font-bold text-slate-200 truncate">
+                                <?= htmlspecialchars((string) ($registro['nome'] ?? 'Efeméride')) ?>
+                            </h3>
+                            <p class="text-[10px] text-slate-400 mt-0.5">
+                                <?= htmlspecialchars((string) ($registro['tipo'] ?? '')) ?>
+                                <?php if (!empty($registro['data_evento'])): ?>
+                                    · <?= htmlspecialchars((string) $registro['data_evento']) ?>
+                                <?php endif; ?>
+                            </p>
+                        </div>
+                        <span class="pwa-badge <?= $ativo ? 'pwa-badge-success' : 'pwa-badge-muted' ?> shrink-0 select-none">
+                            <?= $ativo ? 'Ativa' : 'Inativa' ?>
+                        </span>
+                    </div>
+
+                    <!-- Mensagem custom (se houver) -->
+                    <?php if (!empty($registro['mensagem_custom'])): ?>
+                        <p class="text-[11px] text-slate-400 bg-slate-950 border border-white/5 rounded-lg p-2.5 leading-relaxed">
+                            <?= nl2br(htmlspecialchars((string) $registro['mensagem_custom'])) ?>
+                        </p>
+                    <?php endif; ?>
+
+                    <!-- Ações -->
+                    <div class="grid grid-cols-3 gap-2 mt-1 select-none">
+                        <a href="/pwa/chancelaria/efemerides?editar=<?= (int) ($registro['id'] ?? 0) ?>"
+                           class="pwa-btn-secondary py-1.5 px-1 text-center font-bold text-[10px] truncate bg-amber-500/10 border-amber-500/20 text-amber-400 active:scale-95 transition-transform">
+                            Editar
+                        </a>
+                        <form method="post" action="/pwa/chancelaria/efemerides/desativar" class="w-full">
+                            <input type="hidden" name="id" value="<?= (int) ($registro['id'] ?? 0) ?>">
+                            <button class="pwa-btn-secondary py-1.5 px-1 font-bold text-[10px] truncate w-full select-none">
+                                <?= $ativo ? 'Desativar' : 'Reativar' ?>
+                            </button>
+                        </form>
+                        <form method="post" action="/pwa/chancelaria/efemerides/excluir"
+                              onsubmit="return confirm('Excluir esta efeméride permanentemente?')" class="w-full">
+                            <input type="hidden" name="id" value="<?= (int) ($registro['id'] ?? 0) ?>">
+                            <button class="pwa-btn-secondary py-1.5 px-1 font-bold text-[10px] truncate w-full select-none border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-300">
+                                Excluir
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <span class="pwa-badge <?= $ativo ? 'pwa-badge-success' : 'pwa-badge-muted' ?>" style="flex-shrink:0;">
-                    <?= $ativo ? 'Ativa' : 'Inativa' ?>
-                </span>
-            </div>
-
-            <!-- Mensagem custom (se houver) -->
-            <?php if (!empty($registro['mensagem_custom'])): ?>
-                <p style="
-                    font-size:0.8rem;color:#94a3b8;
-                    background:rgba(255,255,255,0.04);
-                    border:1px solid rgba(255,255,255,0.07);
-                    border-radius:0.625rem;
-                    padding:0.625rem 0.875rem;
-                    margin:0 0 0.75rem;
-                    line-height:1.5;
-                ">
-                    <?= nl2br(htmlspecialchars((string) $registro['mensagem_custom'])) ?>
-                </p>
-            <?php endif; ?>
-
-            <!-- Ações -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.4rem;">
-                <a href="/pwa/chancelaria/efemerides?editar=<?= (int) ($registro['id'] ?? 0) ?>"
-                   style="
-                       display:flex;align-items:center;justify-content:center;
-                       padding:0.5rem 0.25rem;
-                       background:rgba(201,162,39,0.15);
-                       border:1px solid rgba(201,162,39,0.25);
-                       border-radius:0.625rem;
-                       font-size:0.72rem;font-weight:700;
-                       color:#fde68a;text-decoration:none;
-                   ">
-                    Editar
-                </a>
-                <form method="post" action="/pwa/chancelaria/efemerides/desativar">
-                    <input type="hidden" name="id" value="<?= (int) ($registro['id'] ?? 0) ?>">
-                    <button style="
-                        width:100%;
-                        padding:0.5rem 0.25rem;
-                        background:rgba(148,163,184,0.10);
-                        border:1px solid rgba(148,163,184,0.2);
-                        border-radius:0.625rem;
-                        font-size:0.72rem;font-weight:700;
-                        color:#94a3b8;cursor:pointer;font-family:inherit;
-                    ">
-                        <?= $ativo ? 'Desativar' : 'Reativar' ?>
-                    </button>
-                </form>
-                <form method="post" action="/pwa/chancelaria/efemerides/excluir"
-                      onsubmit="return confirm('Excluir esta efeméride permanentemente?')">
-                    <input type="hidden" name="id" value="<?= (int) ($registro['id'] ?? 0) ?>">
-                    <button style="
-                        width:100%;
-                        padding:0.5rem 0.25rem;
-                        background:rgba(248,113,113,0.12);
-                        border:1px solid rgba(248,113,113,0.25);
-                        border-radius:0.625rem;
-                        font-size:0.72rem;font-weight:700;
-                        color:#fca5a5;cursor:pointer;font-family:inherit;
-                    ">
-                        Excluir
-                    </button>
-                </form>
-            </div>
-        </div>
-        <?php endforeach; ?>
+            <?php endforeach; ?>
         <?php endif; ?>
     </div>
 </div>

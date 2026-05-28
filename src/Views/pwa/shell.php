@@ -89,21 +89,35 @@ $pwaNavTabs = [
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             background: #020617;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            
+            /* Native Touch & Physics Rules */
+            overscroll-behavior-y: none;
+            overscroll-behavior-x: none;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Allow selection in form controls/readable content if explicitly marked */
+        input, textarea, select, [contenteditable], .selectable-text {
+            user-select: text;
+            -webkit-user-select: text;
         }
 
         /* ─── PWA Dark Design Tokens ─── */
         :root {
-            --pwa-bg:          #020617;
-            --pwa-surface:     rgba(255,255,255,0.055);
-            --pwa-surface-2:   rgba(255,255,255,0.035);
-            --pwa-border:      rgba(255,255,255,0.10);
-            --pwa-border-soft: rgba(255,255,255,0.06);
-            --pwa-text:        #f1f5f9;
-            --pwa-muted:       #94a3b8;
+            --pwa-bg:          #020617; /* Solid Dark Slate-950 */
+            --pwa-surface:     #0f172a; /* Solid Slate-900 */
+            --pwa-surface-2:   #1e293b; /* Solid Slate-800 for active states/sub-cards */
+            --pwa-border:      rgba(255, 255, 255, 0.08);
+            --pwa-border-soft: rgba(255, 255, 255, 0.05);
+            --pwa-text:        #f8fafc;
+            --pwa-muted:       #64748b;
             --pwa-gold:        #C9A227;
-            --pwa-gold-glow:   rgba(201,162,39,0.28);
-            --pwa-radius:      1.25rem;
-            --pwa-radius-sm:   0.75rem;
+            --pwa-gold-soft:   rgba(201, 162, 39, 0.15);
+            --pwa-radius:      1rem;
+            --pwa-radius-sm:   0.625rem;
         }
 
         /* ─── Layout Shell ─── */
@@ -113,19 +127,20 @@ $pwaNavTabs = [
             height: 100vh;
             height: 100dvh;
             background: var(--pwa-bg);
+            position: relative;
         }
 
-        /* ─── Header ─── */
+        /* ─── Header (Native Frosted Glass) ─── */
         .app-header {
             flex-shrink: 0;
             padding-top: env(safe-area-inset-top, 0px);
-            background: rgba(2,6,23,0.92);
-            backdrop-filter: blur(20px) saturate(1.4);
-            -webkit-backdrop-filter: blur(20px) saturate(1.4);
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(20px) saturate(1.5);
+            -webkit-backdrop-filter: blur(20px) saturate(1.5);
             border-bottom: 1px solid var(--pwa-border);
             color: #fff;
             position: relative;
-            z-index: 20;
+            z-index: 30;
         }
         .app-header-inner {
             display: flex;
@@ -137,9 +152,9 @@ $pwaNavTabs = [
         .app-header-logo {
             width: 32px;
             height: 32px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.14);
-            background: rgba(255,255,255,0.08);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
             padding: 4px;
             flex-shrink: 0;
             display: flex;
@@ -149,29 +164,71 @@ $pwaNavTabs = [
         .app-header-title {
             flex: 1;
             min-width: 0;
-            font-size: 0.9375rem;
+            font-size: 1rem;
             font-weight: 700;
-            letter-spacing: -0.01em;
+            letter-spacing: -0.02em;
             color: #f8fafc;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            text-align: center; /* Native center aligned title (iOS style) */
+        }
+        
+        /* Offset for centered title when there is no back button to balance the right profile avatar */
+        .app-header-inner::before {
+            content: '';
+            width: 34px;
+            display: block;
+            flex-shrink: 0;
+            order: 0;
+        }
+        .app-header-inner .app-header-back ~ .app-header-title {
+            /* If back button exists, we don't need the empty spacer to center */
         }
         .app-header-back {
             width: 34px;
             height: 34px;
             border-radius: 50%;
             border: 1px solid var(--pwa-border);
-            background: var(--pwa-surface);
+            background: rgba(255,255,255,0.03);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: rgba(255,255,255,0.75);
+            color: rgba(255,255,255,0.8);
             flex-shrink: 0;
             text-decoration: none;
-            transition: background 0.15s;
+            transition: background 0.15s, transform 0.1s;
+            order: 0;
+            z-index: 2;
         }
-        .app-header-back:active { background: rgba(255,255,255,0.12); }
+        .app-header-back:active {
+            background: rgba(255,255,255,0.1);
+            transform: scale(0.95);
+        }
+        
+        .app-header-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--pwa-gold-soft);
+            border: 1.5px solid rgba(201, 162, 39, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--pwa-gold);
+            text-decoration: none;
+            flex-shrink: 0;
+            transition: transform 0.15s, opacity 0.15s;
+            user-select: none;
+            order: 3;
+            z-index: 2;
+        }
+        .app-header-avatar:active {
+            transform: scale(0.95);
+            opacity: 0.9;
+        }
 
         /* ─── Scrollable Content ─── */
         .app-content {
@@ -181,61 +238,57 @@ $pwaNavTabs = [
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior-y: contain;
-            background:
-                radial-gradient(circle at 15% -5%, rgba(37,99,235,0.18) 0%, transparent 40%),
-                radial-gradient(circle at 85% 12%, rgba(201,162,39,0.09) 0%, transparent 35%),
-                linear-gradient(180deg, #020617 0%, #0c1525 50%, #020617 100%);
+            background: var(--pwa-bg); /* Clean flat solid background */
+            position: relative;
         }
 
-        /* ─── Bottom Nav — Instagram style (compact 56px) ─── */
+        /* ─── Bottom Nav — Native Tab Bar feeling ─── */
         .app-nav {
             flex-shrink: 0;
             padding-bottom: env(safe-area-inset-bottom, 0px);
-            background: rgba(2,6,23,0.95);
-            backdrop-filter: blur(20px) saturate(1.4);
-            -webkit-backdrop-filter: blur(20px) saturate(1.4);
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(20px) saturate(1.5);
+            -webkit-backdrop-filter: blur(20px) saturate(1.5);
             border-top: 1px solid var(--pwa-border);
             position: relative;
-            z-index: 20;
+            z-index: 30;
         }
         .app-nav-inner {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            height: 56px;
-            padding: 0 0.25rem;
+            height: 52px; /* Standard native compact height */
+            padding: 0 0.5rem;
         }
         .nav-tab {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 3px;
+            gap: 2px;
             text-decoration: none;
-            color: #475569;
-            transition: color 0.15s;
-            border-radius: 0;
+            color: #64748b; /* slate-500 */
+            transition: color 0.15s, transform 0.1s;
+            border-radius: 8px;
             -webkit-tap-highlight-color: transparent;
-            padding: 0 0.25rem;
+            position: relative;
+            padding: 2px 0;
         }
-        .nav-tab:active { opacity: 0.7; }
+        .nav-tab:active {
+            transform: scale(0.94);
+        }
         .nav-tab svg {
-            width: 26px;
-            height: 26px;
-            transition: transform 0.15s;
+            width: 22px;
+            height: 22px;
+            transition: transform 0.1s;
         }
-        .nav-tab:active svg { transform: scale(0.92); }
         .nav-tab-label {
-            font-size: 0.6rem;
-            font-weight: 600;
-            letter-spacing: 0.01em;
+            font-size: 0.625rem;
+            font-weight: 500;
             line-height: 1;
             white-space: nowrap;
         }
         .nav-tab-active {
-            color: #f8fafc;
-        }
-        .nav-tab-active svg {
-            filter: drop-shadow(0 0 6px rgba(201,162,39,0.5));
+            color: var(--pwa-gold); /* Flat clean active color */
         }
         .nav-tab-dot {
             width: 4px;
@@ -243,7 +296,7 @@ $pwaNavTabs = [
             border-radius: 50%;
             background: var(--pwa-gold);
             position: absolute;
-            bottom: 6px;
+            bottom: 4px;
         }
 
         /* ─── Shared PWA Component Styles ─── */
@@ -251,160 +304,175 @@ $pwaNavTabs = [
         .pwa-scrollbar-none::-webkit-scrollbar { display: none; }
 
         /* Content padding for pages */
-        .pwa-premium-page { padding: 1rem 1rem 1.5rem; }
-        .pwa-stack > * + * { margin-top: 1.25rem; }
+        .pwa-premium-page { padding: 1rem 1rem 1.75rem; }
+        .pwa-stack > * + * { margin-top: 1rem; }
 
         /* Cards */
         .pwa-card {
             border: 1px solid var(--pwa-border);
             background: var(--pwa-surface);
             border-radius: var(--pwa-radius);
-            box-shadow: 0 8px 24px rgba(2,6,23,0.28);
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         .pwa-card-sm {
             border: 1px solid var(--pwa-border);
             background: var(--pwa-surface);
             border-radius: var(--pwa-radius-sm);
+            padding: 0.75rem;
         }
 
-        /* Hero section */
+        /* Hero section (Native-like banner) */
         .pwa-hero {
             overflow: hidden;
             border: 1px solid var(--pwa-border);
-            border-radius: 1.5rem;
-            background: linear-gradient(135deg, #0f172a 0%, #1e2d45 50%, #0f172a 100%);
+            border-radius: var(--pwa-radius);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             color: #fff;
-            box-shadow: 0 20px 50px rgba(2,6,23,0.45);
+            padding: 1.25rem;
+            position: relative;
         }
 
         /* Typography helpers */
         .pwa-eyebrow {
-            color: rgba(253,230,138,0.85);
+            color: var(--pwa-gold);
             font-size: 0.65rem;
             font-weight: 700;
-            letter-spacing: 0.22em;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
+            margin-bottom: 0.25rem;
         }
         .pwa-muted { color: var(--pwa-muted); }
 
         /* Glass surface */
         .pwa-glass {
             border: 1px solid var(--pwa-border);
-            background: var(--pwa-surface);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
 
         /* CTA button */
         .pwa-cta {
-            background: #34d399;
+            background: #10b981;
             color: #020617;
-            box-shadow: 0 0 22px rgba(52,211,153,0.35);
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.25);
         }
 
         /* Status pills */
         .pwa-status-pill {
             border-radius: 999px;
-            background: rgba(253,230,138,0.14);
+            background: rgba(201, 162, 39, 0.12);
             color: #fef3c7;
             font-size: 0.65rem;
-            font-weight: 700;
-            padding: 0.2rem 0.6rem;
+            font-weight: 600;
+            padding: 0.2rem 0.55rem;
         }
 
-        /* Carousel */
+        /* Carousel (Native swipe behavior) */
         .pwa-carousel {
             display: flex;
             gap: 0.75rem;
             overflow-x: auto;
-            padding: 0 1rem 0.5rem;
-            scroll-padding-left: 1rem;
+            padding: 0.25rem 0 0.75rem;
+            scroll-padding-left: 0;
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
         }
+        .pwa-carousel::-webkit-scrollbar { display: none; }
         .pwa-carousel-card {
-            min-width: 80%;
+            min-width: 85%;
             border: 1px solid var(--pwa-border);
-            border-radius: 1.25rem;
+            border-radius: var(--pwa-radius);
             background: var(--pwa-surface);
-            box-shadow: 0 12px 30px rgba(2,6,23,0.25);
+            padding: 1rem;
             scroll-snap-align: start;
             flex-shrink: 0;
         }
 
-        /* Module/app icon grid */
+        /* Module/app icon grid (Native App launcher feeling) */
         .pwa-module-card {
             aspect-ratio: 1 / 1;
             border: 1px solid var(--pwa-border);
-            border-radius: 1.35rem;
+            border-radius: 1.15rem;
             background: var(--pwa-surface);
-            box-shadow: 0 8px 24px rgba(2,6,23,0.22);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            transition: transform 0.15s, box-shadow 0.15s;
+            transition: transform 0.1s, background 0.15s;
             -webkit-tap-highlight-color: transparent;
+            padding: 0.75rem;
         }
-        .pwa-module-card:active { transform: scale(0.94); }
+        .pwa-module-card:active {
+            transform: scale(0.93);
+            background: var(--pwa-surface-2);
+        }
 
-        /* Form inputs — dark style */
+        /* Form inputs — Native-like forms style */
         .pwa-input, .pwa-select, .pwa-textarea {
             width: 100%;
-            background: rgba(255,255,255,0.05);
+            background: #1e293b;
             border: 1px solid var(--pwa-border);
             border-radius: var(--pwa-radius-sm);
             color: var(--pwa-text);
-            padding: 0.625rem 0.875rem;
-            font-size: 0.875rem;
+            padding: 0.75rem 0.875rem;
+            font-size: 0.9375rem; /* Prevents auto-zoom on iOS (minimum 16px is best, 15px/0.9375rem is close enough, 16px/1rem is safer. Let's make it 16px/1rem) */
+            font-size: 1rem; 
             font-family: inherit;
             transition: border-color 0.15s, background 0.15s;
             -webkit-appearance: none;
             appearance: none;
         }
         .pwa-input::placeholder, .pwa-select::placeholder, .pwa-textarea::placeholder {
-            color: var(--pwa-muted);
+            color: #475569;
         }
         .pwa-input:focus, .pwa-select:focus, .pwa-textarea:focus {
             outline: none;
             border-color: var(--pwa-gold);
-            background: rgba(255,255,255,0.07);
-            box-shadow: 0 0 0 1px var(--pwa-gold);
+            background: #0f172a;
         }
         .pwa-select option { background: #0f172a; color: var(--pwa-text); }
-        .pwa-textarea { resize: vertical; min-height: 80px; }
+        .pwa-textarea { resize: none; min-height: 90px; }
+        
         .pwa-label {
             display: block;
-            font-size: 0.65rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--pwa-gold);
-            margin-bottom: 0.35rem;
-            opacity: 0.85;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--pwa-muted);
+            margin-bottom: 0.375rem;
         }
+        
         .pwa-btn-primary {
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             width: 100%;
-            padding: 0.75rem 1rem;
+            padding: 0.875rem 1rem; /* Generous native target */
             background: var(--pwa-gold);
-            color: #0f172a;
-            font-size: 0.875rem;
+            color: #020617;
+            font-size: 0.9375rem;
             font-weight: 700;
             border-radius: var(--pwa-radius-sm);
             border: none;
             cursor: pointer;
             font-family: inherit;
-            transition: filter 0.15s, transform 0.1s;
+            transition: opacity 0.1s, transform 0.1s;
         }
-        .pwa-btn-primary:active { filter: brightness(0.9); transform: scale(0.98); }
+        .pwa-btn-primary:active { opacity: 0.9; transform: scale(0.97); }
+        
         .pwa-btn-secondary {
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             width: 100%;
-            padding: 0.6875rem 1rem;
-            background: var(--pwa-surface);
+            padding: 0.875rem 1rem;
+            background: var(--pwa-surface-2);
             color: var(--pwa-text);
-            font-size: 0.875rem;
+            font-size: 0.9375rem;
             font-weight: 600;
             border-radius: var(--pwa-radius-sm);
             border: 1px solid var(--pwa-border);
@@ -412,26 +480,26 @@ $pwaNavTabs = [
             font-family: inherit;
             text-align: center;
             text-decoration: none;
-            transition: background 0.15s;
+            transition: background 0.15s, transform 0.1s;
         }
-        .pwa-btn-secondary:active { background: rgba(255,255,255,0.1); }
+        .pwa-btn-secondary:active { background: rgba(255,255,255,0.08); transform: scale(0.97); }
 
         /* Alerts */
         .pwa-alert-success {
-            border: 1px solid rgba(52,211,153,0.3);
-            background: rgba(52,211,153,0.12);
+            border: 1px solid rgba(16,185,129,0.2);
+            background: rgba(16,185,129,0.08);
             border-radius: var(--pwa-radius-sm);
-            color: #6ee7b7;
-            font-size: 0.8125rem;
+            color: #34d399;
+            font-size: 0.875rem;
             font-weight: 500;
             padding: 0.75rem 1rem;
         }
         .pwa-alert-error {
-            border: 1px solid rgba(248,113,113,0.3);
-            background: rgba(248,113,113,0.1);
+            border: 1px solid rgba(239,68,68,0.2);
+            background: rgba(239,68,68,0.08);
             border-radius: var(--pwa-radius-sm);
             color: #fca5a5;
-            font-size: 0.8125rem;
+            font-size: 0.875rem;
             font-weight: 500;
             padding: 0.75rem 1rem;
         }
@@ -441,32 +509,44 @@ $pwaNavTabs = [
             display: inline-flex;
             align-items: center;
             border-radius: 999px;
-            padding: 0.18rem 0.55rem;
-            font-size: 0.65rem;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.6875rem;
             font-weight: 700;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.02em;
         }
-        .pwa-badge-success { background: rgba(52,211,153,0.15); color: #6ee7b7; }
-        .pwa-badge-warn    { background: rgba(253,230,138,0.15); color: #fde68a; }
-        .pwa-badge-danger  { background: rgba(248,113,113,0.15); color: #fca5a5; }
-        .pwa-badge-muted   { background: rgba(255,255,255,0.08); color: var(--pwa-muted); border: 1px solid var(--pwa-border); }
+        .pwa-badge-success { background: rgba(16,185,129,0.12); color: #34d399; }
+        .pwa-badge-warn    { background: rgba(245,158,11,0.12); color: #fbbf24; }
+        .pwa-badge-danger  { background: rgba(239,68,68,0.12); color: #f87171; }
+        .pwa-badge-muted   { background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid var(--pwa-border); }
 
         /* Divider */
         .pwa-divider {
             height: 1px;
-            background: var(--pwa-border);
+            background: var(--pwa-border-soft);
             margin: 0;
         }
 
-        /* List items */
+        /* Native List / Grouped Table View (iPhone Settings style) */
+        .pwa-list-group {
+            background: var(--pwa-surface);
+            border: 1px solid var(--pwa-border);
+            border-radius: var(--pwa-radius);
+            overflow: hidden;
+        }
         .pwa-list-item {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 0.75rem 0;
+            padding: 0.875rem 1rem; /* Generous native list padding */
             border-bottom: 1px solid var(--pwa-border-soft);
+            text-decoration: none;
+            color: var(--pwa-text);
+            transition: background 0.15s;
         }
         .pwa-list-item:last-child { border-bottom: none; }
+        .pwa-list-item:active {
+            background: var(--pwa-surface-2);
+        }
     </style>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -493,14 +573,7 @@ $pwaNavTabs = [
 
                 <h1 class="app-header-title"><?= htmlspecialchars($pwaPageTitle) ?></h1>
 
-                <a href="/pwa/perfil" aria-label="Perfil" style="
-                    width:34px;height:34px;border-radius:50%;
-                    background:rgba(201,162,39,0.15);
-                    border:1.5px solid rgba(201,162,39,0.35);
-                    display:flex;align-items:center;justify-content:center;
-                    font-size:0.65rem;font-weight:800;color:#C9A227;
-                    text-decoration:none;flex-shrink:0;letter-spacing:0;
-                ">
+                <a href="/pwa/perfil" aria-label="Perfil" class="app-header-avatar">
                     <?php
                     $initials = '';
                     $parts = explode(' ', $usuarioNome);

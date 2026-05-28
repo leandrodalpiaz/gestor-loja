@@ -18,22 +18,18 @@ $pwaActiveTab = 'cargo';
 ob_start();
 ?>
 
-<div class="p-4 sm:p-6 space-y-4">
+<div class="px-4 py-4 space-y-4">
     <?php if ($mensagemSucesso): ?>
-        <div class="rounded-xl px-4 py-3 text-sm font-medium" style="background:rgba(52,211,153,0.15);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25)">
-            <?= htmlspecialchars((string) $mensagemSucesso) ?>
-        </div>
+        <div class="pwa-alert-success"><?= htmlspecialchars((string) $mensagemSucesso) ?></div>
     <?php endif; ?>
     <?php if ($mensagemErro): ?>
-        <div class="rounded-xl px-4 py-3 text-sm font-medium" style="background:rgba(248,113,113,0.12);color:#fca5a5;border:1px solid rgba(248,113,113,0.25)">
-            <?= htmlspecialchars((string) $mensagemErro) ?>
-        </div>
+        <div class="pwa-alert-error"><?= htmlspecialchars((string) $mensagemErro) ?></div>
     <?php endif; ?>
 
     <?php if (empty($sessoesFuturas)): ?>
-        <div class="p-5 text-center" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);border-radius:1rem;">
-            <div class="text-lg font-semibold" style="color:#f1f5f9">Nenhuma sessão futura</div>
-            <p class="mt-1 text-sm" style="color:#94a3b8">Não há sessões publicadas para a Loja no momento.</p>
+        <div class="p-8 text-center text-xs text-slate-500 bg-slate-900/40 rounded-2xl border border-dashed border-white/10 select-none">
+            <div class="text-sm font-semibold text-slate-300">Nenhuma sessão futura</div>
+            <p class="mt-1">Não há sessões publicadas para a Loja no momento.</p>
         </div>
     <?php else: ?>
         <div class="space-y-4">
@@ -44,12 +40,10 @@ ob_start();
             $participaraAgape = (bool) ($resposta['participara_agape'] ?? false);
             $observacaoAtual = trim((string) ($resposta['observacao'] ?? ''));
 
-            $statusBadgeStyle = match ($statusConfirmacao) {
-                'confirmado' => $participaraAgape
-                    ? 'background:rgba(52,211,153,0.15);color:#6ee7b7;border-radius:999px;padding:0.2rem 0.55rem;font-size:0.65rem;font-weight:700;'
-                    : 'background:rgba(52,211,153,0.15);color:#6ee7b7;border-radius:999px;padding:0.2rem 0.55rem;font-size:0.65rem;font-weight:700;',
-                'ausente' => 'background:rgba(248,113,113,0.12);color:#fca5a5;border-radius:999px;padding:0.2rem 0.55rem;font-size:0.65rem;font-weight:700;',
-                default => 'background:rgba(148,163,184,0.15);color:#94a3b8;border-radius:999px;padding:0.2rem 0.55rem;font-size:0.65rem;font-weight:700;',
+            $statusBadgeClass = match ($statusConfirmacao) {
+                'confirmado' => 'pwa-badge-success',
+                'ausente' => 'pwa-badge-danger',
+                default => 'pwa-badge-muted',
             };
             $statusBadgeLabel = match ($statusConfirmacao) {
                 'confirmado' => $participaraAgape ? 'Confirmado (com ágape)' : 'Confirmado',
@@ -57,43 +51,42 @@ ob_start();
                 default => 'Sem resposta',
             };
             
-            // Primeira sessão aparece expandida, as demais aparecem fechadas
             $isOpen = ($index === 0) ? 'open' : '';
             ?>
             
-            <details class="group rounded-2xl shadow-sm overflow-hidden" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);border-radius:1rem;" <?= $isOpen ?>>
-                <summary class="cursor-pointer p-5 list-none flex items-start justify-between gap-3 transition-colors hover:bg-white/5">
-                    <div>
-                        <h2 class="text-xl font-bold leading-tight" style="color:#f1f5f9"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Sessão')) ?></h2>
-                        <p class="mt-1 text-sm" style="color:#94a3b8">
+            <details class="group pwa-card p-0 overflow-hidden border border-white/5" <?= $isOpen ?>>
+                <summary class="cursor-pointer p-4 list-none flex items-start justify-between gap-3 select-none active:bg-slate-800/30 transition-colors">
+                    <div class="min-w-0 flex-1">
+                        <h2 class="text-sm font-bold leading-snug text-slate-100"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Sessão')) ?></h2>
+                        <p class="mt-1.5 text-xs text-slate-400">
                             <?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? '')) ?>
                             <?php if (!empty($sessao['tipo_sessao'])): ?> · <?= htmlspecialchars((string) $sessao['tipo_sessao']) ?><?php endif; ?>
                         </p>
                     </div>
-                    <div class="flex flex-col items-end gap-2">
-                        <span class="inline-flex items-center uppercase tracking-wider" style="<?= htmlspecialchars($statusBadgeStyle) ?>">
+                    <div class="flex flex-col items-end gap-2 shrink-0">
+                        <span class="pwa-badge <?= $statusBadgeClass ?> font-bold shrink-0 select-none">
                             <?= htmlspecialchars($statusBadgeLabel) ?>
                         </span>
-                        <div class="transition-transform group-open:rotate-180" style="color:#94a3b8">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <div class="transition-transform group-open:rotate-180 text-slate-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                             </svg>
                         </div>
                     </div>
                 </summary>
                 
-                <div class="p-5 pt-0 mt-2 space-y-4" style="border-top:1px solid rgba(255,255,255,0.09)">
-                    <div class="pt-4">
+                <div class="p-4 pt-0 space-y-4 border-t border-white/5">
+                    <div class="pt-3.5 space-y-3">
                         <?php if (!empty($sessao['resumo_publico'])): ?>
-                            <div class="rounded-lg p-3 text-sm whitespace-pre-line" style="background:rgba(255,255,255,0.03);color:#e2e8f0">
+                            <div class="rounded-xl p-3 text-xs whitespace-pre-line bg-slate-950 border border-white/5 text-slate-300">
                                 <?= htmlspecialchars((string) $sessao['resumo_publico']) ?>
                             </div>
                         <?php endif; ?>
 
                         <?php if (!empty($sessao['ordem_dia'])): ?>
-                            <details class="rounded-lg p-3 mt-3" style="background:rgba(255,255,255,0.03)">
-                                <summary class="cursor-pointer text-sm font-semibold" style="color:#f1f5f9">Ordem do dia</summary>
-                                <div class="mt-2 text-sm whitespace-pre-line" style="color:#e2e8f0"><?= htmlspecialchars((string) $sessao['ordem_dia']) ?></div>
+                            <details class="rounded-xl p-3 bg-slate-950 border border-white/5">
+                                <summary class="cursor-pointer text-xs font-semibold text-slate-200 select-none">Ordem do dia</summary>
+                                <div class="mt-2 text-xs whitespace-pre-line text-slate-300"><?= htmlspecialchars((string) $sessao['ordem_dia']) ?></div>
                             </details>
                         <?php endif; ?>
                     </div>
@@ -101,37 +94,37 @@ ob_start();
                     <form method="post" action="/pwa/sessoes/atualizar" class="space-y-4 pt-2">
                         <input type="hidden" name="sessao_id" value="<?= (int) ($sessao['id'] ?? 0) ?>">
 
-                        <div class="space-y-3">
-                            <p class="text-sm font-semibold" style="color:#f1f5f9">1. Confirmação de Presença</p>
-                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <button name="acao" value="confirmar_agape" class="w-full rounded-lg px-4 py-3 text-sm font-semibold transition hover:opacity-90" style="background:#1e3a5f;color:#f1f5f9">
-                                    Confirmar com Ágape
+                        <div class="space-y-2 select-none">
+                            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">1. Confirmação de Presença</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button name="acao" value="confirmar_agape" class="pwa-btn-primary text-xs font-bold py-2.5">
+                                    Com Ágape
                                 </button>
-                                <button name="acao" value="confirmar_sem_agape" class="w-full rounded-lg px-4 py-3 text-sm font-semibold transition hover:bg-white/10" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);color:#f1f5f9">
-                                    Confirmar sem Ágape
+                                <button name="acao" value="confirmar_sem_agape" class="pwa-btn-secondary text-xs font-bold py-2.5">
+                                    Sem Ágape
                                 </button>
                             </div>
                         </div>
 
-                        <div class="space-y-3">
-                            <p class="text-sm font-semibold" style="color:#f1f5f9">2. Justificar Ausência</p>
-                            <div class="rounded-lg p-3 space-y-3" style="border:1px solid rgba(255,255,255,0.09)">
-                                <textarea name="observacao" rows="2" class="w-full focus:outline-none focus:ring-1 focus:ring-white/20" placeholder="Motivo: compromisso, viagem, saúde..." style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);color:#f1f5f9;border-radius:0.5rem;padding:0.6rem 0.875rem;"><?= htmlspecialchars($observacaoAtual) ?></textarea>
-                                <button name="acao" value="ausencia" class="w-full rounded-lg px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-700" style="background:rgba(248,113,113,0.20)">
-                                    Informar Ausência
+                        <div class="space-y-2">
+                            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">2. Justificar Ausência</p>
+                            <div class="pwa-card p-3 border border-white/5 space-y-3 bg-slate-950/40">
+                                <textarea name="observacao" rows="2" class="pwa-textarea text-xs" placeholder="Motivo: compromisso, viagem, saúde..."><?= htmlspecialchars($observacaoAtual) ?></textarea>
+                                <button name="acao" value="ausencia" class="pwa-btn-secondary text-xs font-bold py-2 border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-300 select-none w-full">
+                                    Justificar Ausência
                                 </button>
                             </div>
                         </div>
                         
-                        <div class="space-y-3">
-                            <p class="text-sm font-semibold" style="color:#f1f5f9">3. Limpar Resposta</p>
-                            <button name="acao" value="cancelar" class="w-full rounded-lg px-4 py-3 text-sm font-semibold transition hover:border-rose-500 hover:text-rose-400" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);color:#94a3b8">
+                        <div class="space-y-2 select-none">
+                            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">3. Limpar Resposta</p>
+                            <button name="acao" value="cancelar" class="pwa-btn-secondary text-xs font-bold py-2 w-full">
                                 Limpar minha resposta
                             </button>
                         </div>
 
                         <?php if ($isTestSession): ?>
-                            <div class="text-xs" style="color:#94a3b8">Modo teste: algumas ações podem ser bloqueadas pela configuração da Loja.</div>
+                            <div class="text-[10px] text-slate-500">Modo teste: algumas ações podem ser bloqueadas pela configuração da Loja.</div>
                         <?php endif; ?>
                     </form>
                 </div>
@@ -140,7 +133,7 @@ ob_start();
         </div>
     <?php endif; ?>
 
-    <div class="text-center text-xs" style="color:#94a3b8">
+    <div class="text-center text-[10px] text-slate-500 mt-4 select-none">
         O Telegram agora é um canal de notificação. Use este app para confirmar sua presença.
     </div>
 </div>

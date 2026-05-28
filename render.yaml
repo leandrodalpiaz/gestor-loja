@@ -33,7 +33,7 @@ services:
   - type: cron
     name: gestor-loja-preparar-efemerides
     runtime: docker
-    schedule: "0 8 * * *"
+    schedule: "0 9 * * *"
     plan: free
     startCommand: php scripts/prepare_daily_preview.php
     envVars:

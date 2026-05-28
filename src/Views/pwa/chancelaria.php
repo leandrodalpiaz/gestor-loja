@@ -18,94 +18,108 @@ $pwaActiveTab = 'cargo';
 ob_start();
 ?>
 
-<div class="p-4 sm:p-6 space-y-4">
+<div class="px-4 py-4 space-y-4">
     <?php if ($mensagemSucesso): ?>
-        <div class="rounded-xl px-4 py-3 text-sm font-medium" style="background:rgba(52,211,153,0.15);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25);"><?= htmlspecialchars((string) $mensagemSucesso) ?></div>
+        <div class="pwa-alert-success"><?= htmlspecialchars((string) $mensagemSucesso) ?></div>
     <?php endif; ?>
     <?php if ($mensagemErro): ?>
-        <div class="rounded-xl px-4 py-3 text-sm font-medium" style="background:rgba(248,113,113,0.12);color:#fca5a5;border:1px solid rgba(248,113,113,0.25);"><?= htmlspecialchars((string) $mensagemErro) ?></div>
+        <div class="pwa-alert-error"><?= htmlspecialchars((string) $mensagemErro) ?></div>
     <?php endif; ?>
 
-    <section class="pwa-hero p-5">
-        <p class="pwa-eyebrow">Sessão em Loja</p>
-        <h2 class="mt-3 text-2xl font-bold tracking-tight text-white"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Controle de presença')) ?></h2>
-        <p class="pwa-muted mt-2 text-sm"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? 'Selecione uma sessão')) ?></p>
+    <section class="pwa-hero">
+        <p class="pwa-eyebrow text-amber-400">Sessão em Loja</p>
+        <h2 class="mt-2 text-xl font-bold tracking-tight text-white"><?= htmlspecialchars((string) ($sessao['titulo'] ?? 'Controle de presença')) ?></h2>
+        <p class="pwa-muted mt-1.5 text-xs font-medium"><?= htmlspecialchars((string) ($sessao['data_hora_inicio'] ?? 'Selecione uma sessão')) ?></p>
     </section>
 
-    <a href="/pwa/chancelaria/efemerides" class="block rounded-2xl p-4 shadow-sm" style="background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.25);">
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <p class="text-xs font-bold uppercase tracking-wide" style="color:#fde68a;">Urgente</p>
-                <h3 class="mt-1 text-base font-bold" style="color:#f1f5f9;">Gerenciar efemérides</h3>
-                <p class="mt-1 text-sm" style="color:#fde68a;">Cadastrar, editar, ativar/desativar e excluir conteúdos da Chancelaria pelo PWA.</p>
+    <!-- Gerenciar efemérides link widget -->
+    <a href="/pwa/chancelaria/efemerides" class="block pwa-card border-amber-500/20 bg-amber-500/5 active:scale-[0.98] transition-transform no-underline">
+        <div class="flex items-center justify-between gap-3.5">
+            <div class="min-w-0">
+                <p class="pwa-eyebrow text-amber-500">Módulos</p>
+                <h3 class="text-xs font-bold text-slate-100">Gerenciar Efemérides</h3>
+                <p class="text-[11px] text-slate-400 mt-1 leading-snug">Cadastrar, editar, ativar/desativar e excluir efemérides do chanceler pelo PWA.</p>
             </div>
-            <span class="rounded-full px-3 py-1 text-xs font-bold" style="background:#C9A227;color:#0f172a;">Abrir</span>
+            <span class="pwa-badge bg-amber-500 text-slate-950 font-bold select-none shrink-0">Abrir</span>
         </div>
     </a>
 
-    <form method="get" action="/pwa/chancelaria" class="rounded-2xl p-4" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);">
-        <label class="block text-sm font-semibold" style="color:#f1f5f9;">Sessão</label>
-        <select name="sessao_id" class="mt-2 w-full rounded-lg px-3 py-2 text-sm" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);color:#f1f5f9;">
-            <?php foreach ($sessoes as $opcao): ?>
-                <option value="<?= (int) ($opcao['id'] ?? 0) ?>" <?= (int) ($opcao['id'] ?? 0) === $sessaoId ? 'selected' : '' ?>>
-                    <?= htmlspecialchars((string) ($opcao['titulo'] ?? 'Sessão')) ?> - <?= htmlspecialchars((string) ($opcao['data_hora_inicio'] ?? '')) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-        <button type="submit" class="mt-3 w-full px-4 py-2.5 text-sm font-semibold" style="background:#1e3a5f;color:#f1f5f9;border-radius:0.625rem;">Carregar sessão</button>
+    <!-- Selecionar Sessão Form -->
+    <form method="get" action="/pwa/chancelaria" class="pwa-card">
+        <label class="pwa-label">Carregar Sessão</label>
+        <div class="relative mt-1">
+            <select name="sessao_id" class="pwa-select pr-10">
+                <?php foreach ($sessoes as $opcao): ?>
+                    <option value="<?= (int) ($opcao['id'] ?? 0) ?>" <?= (int) ($opcao['id'] ?? 0) === $sessaoId ? 'selected' : '' ?>>
+                        <?= htmlspecialchars((string) ($opcao['titulo'] ?? 'Sessão')) ?> - <?= htmlspecialchars((string) ($opcao['data_hora_inicio'] ?? '')) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+            </div>
+        </div>
+        <button type="submit" class="pwa-btn-secondary mt-3">Carregar Sessão</button>
     </form>
 
-    <section class="grid grid-cols-3 gap-3">
-        <div class="rounded-2xl p-3 text-center" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);">
-            <div class="text-2xl font-bold" style="color:#f1f5f9;"><?= count($confirmados) ?></div>
-            <div class="text-xs" style="color:#94a3b8;">Confirmados</div>
+    <!-- Indicadores Rápidos -->
+    <section class="grid grid-cols-3 gap-2.5">
+        <div class="pwa-card p-3 text-center border border-white/5 flex flex-col items-center justify-center">
+            <div class="text-xl font-bold text-slate-100"><?= count($confirmados) ?></div>
+            <div class="text-[9px] text-slate-500 font-semibold uppercase mt-0.5 tracking-wider">Confirmados</div>
         </div>
-        <div class="rounded-2xl p-3 text-center" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);">
-            <div class="text-2xl font-bold" style="color:#f1f5f9;"><?= count(array_filter($presencas, static fn($p): bool => !empty($p['presente']))) ?></div>
-            <div class="text-xs" style="color:#94a3b8;">Presentes</div>
+        <div class="pwa-card p-3 text-center border border-white/5 flex flex-col items-center justify-center">
+            <div class="text-xl font-bold text-slate-100"><?= count(array_filter($presencas, static fn($p): bool => !empty($p['presente']))) ?></div>
+            <div class="text-[9px] text-slate-500 font-semibold uppercase mt-0.5 tracking-wider">Presentes</div>
         </div>
-        <div class="rounded-2xl p-3 text-center" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);">
-            <div class="text-2xl font-bold" style="color:#f1f5f9;"><?= count($visitantes) ?></div>
-            <div class="text-xs" style="color:#94a3b8;">Visitantes</div>
+        <div class="pwa-card p-3 text-center border border-white/5 flex flex-col items-center justify-center">
+            <div class="text-xl font-bold text-slate-100"><?= count($visitantes) ?></div>
+            <div class="text-[9px] text-slate-500 font-semibold uppercase mt-0.5 tracking-wider">Visitantes</div>
         </div>
     </section>
 
+    <!-- Registrar Visitante Form -->
     <?php if ($sessaoId > 0): ?>
-        <section class="rounded-2xl p-4" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);">
-            <h3 class="font-bold" style="color:#f1f5f9;">Registrar visitante</h3>
-            <form method="post" action="/pwa/chancelaria/visitante" class="mt-3 space-y-3">
+        <section class="pwa-card space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Registrar visitante</h3>
+            <form method="post" action="/pwa/chancelaria/visitante" class="space-y-3">
                 <input type="hidden" name="sessao_id" value="<?= $sessaoId ?>">
-                <input name="nome" class="w-full rounded-lg px-3 py-2 text-sm" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);color:#f1f5f9;" placeholder="Nome do visitante">
-                <input name="loja_origem" class="w-full rounded-lg px-3 py-2 text-sm" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);color:#f1f5f9;" placeholder="Loja / Oriente">
-                <button type="submit" class="w-full px-4 py-2.5 text-sm font-semibold" style="background:#1e3a5f;color:#f1f5f9;border-radius:0.625rem;">Registrar visitante</button>
+                <input name="nome" class="pwa-input" placeholder="Nome do visitante">
+                <input name="loja_origem" class="pwa-input" placeholder="Loja / Oriente">
+                <button type="submit" class="pwa-btn-primary">Registrar visitante</button>
             </form>
         </section>
     <?php endif; ?>
 
-    <section>
-        <div class="mb-3">
-            <p class="pwa-eyebrow">Check-in</p>
-            <h3 class="mt-1 text-lg font-bold text-white">Presença efetiva</h3>
+    <!-- Lista de Presenças -->
+    <section class="space-y-3 pb-4">
+        <div class="flex items-center gap-3">
+            <p class="text-[10px] font-bold tracking-wider uppercase text-slate-500">
+                Check-in / Presença efetiva
+            </p>
+            <div class="flex-1 h-[1px] bg-white/5"></div>
         </div>
-        <div class="space-y-3">
+        <div class="space-y-2.5">
             <?php foreach ($presencas as $presenca): ?>
                 <?php $presente = !empty($presenca['presente']); ?>
-                <div class="rounded-2xl p-4" style="background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.09);">
+                <div class="pwa-card border border-white/5 flex flex-col gap-3">
                     <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <div class="font-semibold" style="color:#f1f5f9;"><?= htmlspecialchars((string) ($presenca['nome'] ?? 'Obreiro')) ?></div>
-                            <div class="text-xs" style="color:#94a3b8;">CIM <?= htmlspecialchars((string) ($presenca['cim'] ?? '-')) ?> <?= htmlspecialchars((string) ($presenca['grau'] ?? '')) ?></div>
+                        <div class="min-w-0">
+                            <div class="font-bold text-slate-200 text-xs truncate"><?= htmlspecialchars((string) ($presenca['nome'] ?? 'Obreiro')) ?></div>
+                            <div class="text-[10px] text-slate-400 mt-0.5">CIM <?= htmlspecialchars((string) ($presenca['cim'] ?? '-')) ?> · <?= htmlspecialchars((string) ($presenca['grau'] ?? '')) ?></div>
                         </div>
-                        <span class="rounded-full px-3 py-1 text-xs font-semibold" style="<?= $presente ? 'background:rgba(52,211,153,0.15);color:#6ee7b7;' : 'background:rgba(255,255,255,0.04);color:#94a3b8;' ?>">
+                        <span class="pwa-badge <?= $presente ? 'pwa-badge-success' : 'pwa-badge-muted' ?> shrink-0 select-none">
                             <?= $presente ? 'Presente' : 'Pendente' ?>
                         </span>
                     </div>
                     <?php if ($sessaoId > 0): ?>
-                        <form method="post" action="/pwa/chancelaria/presenca" class="mt-3 grid grid-cols-2 gap-2">
+                        <form method="post" action="/pwa/chancelaria/presenca" class="grid grid-cols-2 gap-2 mt-1 select-none">
                             <input type="hidden" name="sessao_id" value="<?= $sessaoId ?>">
                             <input type="hidden" name="obreiro_id" value="<?= htmlspecialchars((string) ($presenca['id'] ?? '')) ?>">
-                            <button name="presente" value="1" class="rounded-lg px-3 py-2 text-sm font-semibold" style="background:rgba(52,211,153,0.2);color:#6ee7b7;border:1px solid rgba(52,211,153,0.3);">Presente</button>
-                            <button name="presente" value="0" class="rounded-lg px-3 py-2 text-sm font-semibold" style="background:rgba(255,255,255,0.04);color:#94a3b8;border:1px solid rgba(255,255,255,0.09);">Ausente</button>
+                            <button name="presente" value="1" class="py-1.5 px-3 rounded-lg text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 active:scale-[0.97] transition-transform">Presente</button>
+                            <button name="presente" value="0" class="py-1.5 px-3 rounded-lg text-xs font-bold text-slate-400 bg-slate-900 border border-white/5 active:scale-[0.97] transition-transform">Ausente</button>
                         </form>
                     <?php endif; ?>
                 </div>

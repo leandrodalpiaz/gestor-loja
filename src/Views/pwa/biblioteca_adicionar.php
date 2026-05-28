@@ -14,82 +14,49 @@ $pwaActiveTab      = 'biblioteca';
 ob_start();
 ?>
 
-<div class="pwa-premium-page">
+<div class="px-4 py-4 space-y-4">
 
     <!-- Alertas -->
-    <div id="isbn-toast" style="display:none;margin-bottom:1rem;"
-         class="pwa-alert-success">
+    <div id="isbn-toast" style="display:none;" class="pwa-alert-success">
         📖 ISBN detectado — enviando para busca automática...
     </div>
 
     <?php if ($erro === 'isbn_vazio'): ?>
-        <div class="pwa-alert-error" style="margin-bottom:1rem;">
+        <div class="pwa-alert-error">
             Por favor, informe um ISBN válido (10 ou 13 dígitos).
         </div>
     <?php elseif ($erro): ?>
-        <div class="pwa-alert-error" style="margin-bottom:1rem;">
+        <div class="pwa-alert-error">
             Não foi possível adicionar o livro. Verifique o ISBN e tente novamente.
         </div>
     <?php endif; ?>
 
     <!-- Card principal de cadastro -->
-    <div class="pwa-card" style="padding:1.25rem;">
+    <div class="pwa-card space-y-3.5">
         <!-- Ícone + Título -->
-        <div style="display:flex;align-items:center;gap:0.875rem;margin-bottom:1rem;">
-            <div style="
-                width:48px;height:48px;
-                border-radius:0.875rem;
-                background:rgba(99,102,241,0.2);
-                border:1px solid rgba(99,102,241,0.3);
-                display:flex;align-items:center;justify-content:center;
-                flex-shrink:0;
-            ">
-                <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#a5b4fc" stroke-width="1.8">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#a5b4fc" stroke-width="1.8">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                 </svg>
             </div>
             <div>
-                <h2 style="font-size:1rem;font-weight:800;color:#f1f5f9;margin:0;">Cadastrar por ISBN</h2>
-                <p style="font-size:0.775rem;color:#94a3b8;margin:0.15rem 0 0;">
+                <h2 class="text-sm font-bold text-slate-100">Cadastrar por ISBN</h2>
+                <p class="text-[10px] text-slate-400 mt-0.5">
                     Escaneie o código de barras ou digite o ISBN
                 </p>
             </div>
         </div>
 
         <!-- Painel do Scanner (oculto por padrão) -->
-        <div id="isbn-scanner-panel" style="display:none;margin-bottom:1rem;">
+        <div id="isbn-scanner-panel" style="display:none;" class="space-y-3">
             <!-- Viewfinder dark -->
-            <div style="
-                position:relative;
-                border-radius:0.875rem;
-                overflow:hidden;
-                background:#000;
-                border:1px solid rgba(99,102,241,0.35);
-            ">
-                <video id="isbn-video"
-                       style="width:100%;height:200px;object-fit:cover;display:block;"
-                       playsinline muted></video>
+            <div class="relative rounded-2xl overflow-hidden bg-black border border-indigo-500/20">
+                <video id="isbn-video" class="w-full h-[200px] object-cover block" playsinline muted></video>
                 <!-- Mira de leitura -->
-                <div style="
-                    position:absolute;
-                    top:50%;left:50%;
-                    transform:translate(-50%,-50%);
-                    width:75%;height:50px;
-                    border:2px solid #a5b4fc;
-                    border-radius:0.5rem;
-                    box-shadow:0 0 0 2000px rgba(0,0,0,0.45);
-                    pointer-events:none;
-                "></div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] h-[50px] border-2 border-indigo-400 rounded-lg shadow-[0_0_0_2000px_rgba(0,0,0,0.55)] pointer-events-none"></div>
                 <!-- Linha de scan animada -->
-                <div id="scan-line" style="
-                    position:absolute;
-                    left:12.5%;width:75%;
-                    height:2px;
-                    background:linear-gradient(to right, transparent, #a5b4fc, transparent);
-                    border-radius:1px;
-                    animation:scanMove 2s linear infinite;
-                    pointer-events:none;
-                "></div>
+                <div id="scan-line" class="absolute left-[12.5%] w-[75%] h-[2px] bg-gradient-to-r from-transparent via-indigo-400 to-transparent rounded-full animate-[scanMove_2s_linear_infinite] pointer-events-none"></div>
             </div>
             <style>
                 @keyframes scanMove {
@@ -99,17 +66,16 @@ ob_start();
                 }
             </style>
 
-            <p id="isbn-scan-status"
-               style="font-size:0.75rem;color:#94a3b8;text-align:center;margin:0.625rem 0 0.5rem;font-weight:500;">
+            <p id="isbn-scan-status" class="text-[10px] text-slate-400 text-center font-medium mt-1">
                 Aponte a câmera para o código de barras do livro
             </p>
-            <button type="button" id="isbn-stop-scan" class="pwa-btn-secondary" style="font-size:0.8125rem;">
+            <button type="button" id="isbn-stop-scan" class="pwa-btn-secondary text-xs select-none">
                 ✕ Cancelar leitura
             </button>
         </div>
 
         <!-- Formulário ISBN -->
-        <form method="post" action="/pwa/biblioteca/adicionar" style="display:flex;flex-direction:column;gap:0.75rem;">
+        <form method="post" action="/pwa/biblioteca/adicionar" class="space-y-3.5">
             <div>
                 <label for="isbn" class="pwa-label">Código ISBN</label>
                 <input type="text" inputmode="numeric" name="isbn" id="isbn" required
@@ -120,31 +86,23 @@ ob_start();
                        spellcheck="false">
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
-                <button type="button" id="isbn-start-scan" style="
-                    display:flex;align-items:center;justify-content:center;gap:0.5rem;
-                    padding:0.75rem 0.5rem;
-                    background:rgba(99,102,241,0.18);
-                    border:1px solid rgba(99,102,241,0.3);
-                    border-radius:0.75rem;
-                    font-size:0.8125rem;font-weight:700;
-                    color:#a5b4fc;cursor:pointer;font-family:inherit;
-                ">
-                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <div class="grid grid-cols-2 gap-2 select-none">
+                <button type="button" id="isbn-start-scan" class="pwa-btn-secondary py-2.5 text-xs font-bold bg-indigo-500/10 border-indigo-500/20 text-indigo-300">
+                    <svg class="h-4.5 w-4.5 mr-1.5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     Câmera
                 </button>
-                <button type="submit" class="pwa-btn-primary" style="font-size:0.8125rem;">
-                    Buscar e Adicionar
+                <button type="submit" class="pwa-btn-primary py-2.5 text-xs font-bold">
+                    Buscar e Salvar
                 </button>
             </div>
         </form>
     </div>
 
     <!-- Info extra -->
-    <p style="font-size:0.75rem;color:#475569;text-align:center;margin-top:0.875rem;line-height:1.5;">
+    <p class="text-[10px] text-slate-500 text-center leading-relaxed select-none">
         O livro é cadastrado automaticamente via Google Books<br>e adicionado ao acervo da sua Loja.
     </p>
 </div>

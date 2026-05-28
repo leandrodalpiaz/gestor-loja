@@ -13,42 +13,32 @@ $pwaActiveTab     = 'biblioteca';
 ob_start();
 ?>
 
-<div class="pwa-premium-page" style="padding-top:0.75rem;">
+<div class="px-4 py-4 space-y-4">
 
     <!-- Barra de busca + ações -->
-    <div style="display:flex;flex-direction:column;gap:0.625rem;margin-bottom:1rem;">
-        <form method="get" action="/pwa/biblioteca" style="display:flex;gap:0.5rem;">
+    <div class="space-y-3">
+        <form method="get" action="/pwa/biblioteca" class="flex gap-2 select-none">
             <input type="text" name="q" value="<?= htmlspecialchars($q) ?>"
-                   class="pwa-input"
-                   style="flex:1;"
+                   class="pwa-input flex-1"
                    placeholder="Buscar no acervo...">
-            <button type="submit" class="pwa-btn-primary" style="width:auto;padding:0 1.125rem;white-space:nowrap;">
+            <button type="submit" class="pwa-btn-primary py-0 w-auto px-4 text-xs font-bold">
                 Buscar
             </button>
         </form>
 
-        <div style="display:flex;gap:0.5rem;">
-            <a href="/pwa/biblioteca/meus-emprestimos" class="pwa-btn-secondary" style="flex:1;text-align:center;font-size:0.8125rem;">
+        <div class="flex gap-2 select-none">
+            <a href="/pwa/biblioteca/meus-emprestimos" class="pwa-btn-secondary flex-1 text-xs font-bold py-2">
                 Meus Empréstimos
             </a>
             <?php
             $authorizer = $GLOBALS['gestor_loja_authorizer'] ?? null;
             if ($authorizer instanceof \App\Core\Authorization\Authorizer && $authorizer->hasPermission('biblioteca.manage')):
             ?>
-                <a href="/pwa/biblioteca/adicionar" style="
-                    flex:1;display:flex;align-items:center;justify-content:center;gap:0.35rem;
-                    padding:0.6875rem 0.75rem;
-                    background:rgba(99,102,241,0.22);
-                    border:1px solid rgba(99,102,241,0.35);
-                    border-radius:0.75rem;
-                    font-size:0.8125rem;font-weight:700;
-                    color:#a5b4fc;text-decoration:none;
-                    white-space:nowrap;
-                ">
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <a href="/pwa/biblioteca/adicionar" class="pwa-btn-secondary flex-1 text-xs font-bold py-2 bg-indigo-500/10 border-indigo-500/20 text-indigo-300">
+                    <svg class="h-4 w-4 mr-1.5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                     </svg>
-                    Adicionar
+                    Adicionar Livro
                 </a>
             <?php endif; ?>
         </div>
@@ -56,99 +46,87 @@ ob_start();
 
     <!-- Filtros de escopo (rede) -->
     <?php if ($redeHabilitada): ?>
-    <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+    <div class="flex bg-slate-900/60 p-1 rounded-lg border border-white/5 select-none">
         <a href="/pwa/biblioteca?scope=minha<?= $q !== '' ? '&q=' . urlencode($q) : '' ?>"
-           style="
-               flex:1;text-align:center;padding:0.5rem 0.75rem;border-radius:999px;
-               font-size:0.75rem;font-weight:700;text-decoration:none;
-               <?= $catalogScope === 'minha'
-                   ? 'background:#C9A227;color:#0f172a;'
-                   : 'background:rgba(255,255,255,0.06);color:#94a3b8;border:1px solid rgba(255,255,255,0.10);' ?>
-           ">Acervo da Loja</a>
+           class="flex-1 py-1.5 text-center text-xs rounded-md transition-all active:scale-[0.98] no-underline font-semibold <?= $catalogScope === 'minha' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400' ?>">
+            Acervo da Loja
+        </a>
         <a href="/pwa/biblioteca?scope=rede<?= $q !== '' ? '&q=' . urlencode($q) : '' ?>"
-           style="
-               flex:1;text-align:center;padding:0.5rem 0.75rem;border-radius:999px;
-               font-size:0.75rem;font-weight:700;text-decoration:none;
-               <?= $catalogScope === 'rede'
-                   ? 'background:#C9A227;color:#0f172a;'
-                   : 'background:rgba(255,255,255,0.06);color:#94a3b8;border:1px solid rgba(255,255,255,0.10);' ?>
-           ">Acervo da Rede</a>
+           class="flex-1 py-1.5 text-center text-xs rounded-md transition-all active:scale-[0.98] no-underline font-semibold <?= $catalogScope === 'rede' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400' ?>">
+            Acervo da Rede
+        </a>
     </div>
     <?php endif; ?>
 
     <!-- Lista de livros -->
-    <?php if ($lista === []): ?>
-        <div style="
-            border:1px solid rgba(255,255,255,0.09);
-            background:rgba(255,255,255,0.04);
-            border-radius:1.25rem;
-            padding:2rem 1rem;
-            text-align:center;
-        ">
-            <div style="font-size:2.5rem;margin-bottom:0.5rem;">📚</div>
-            <p style="font-size:0.875rem;font-weight:700;color:#f1f5f9;margin:0 0 0.25rem;">Nenhum livro encontrado</p>
-            <p style="font-size:0.8rem;color:#94a3b8;margin:0;">Ajuste os filtros ou busque por outro termo.</p>
+    <div class="space-y-3.5 pb-4">
+        <div class="flex items-center gap-3">
+            <p class="text-[10px] font-bold tracking-wider uppercase text-slate-500">
+                Acervo Disponível
+            </p>
+            <div class="flex-1 h-[1px] bg-white/5"></div>
         </div>
-    <?php else: ?>
-        <div style="display:flex;flex-direction:column;gap:0.625rem;">
-            <?php foreach ($lista as $item): ?>
-            <?php
-            $titulo          = (string) ($item['titulo'] ?? 'Livro');
-            $autor           = (string) ($item['autor'] ?? '');
-            $tipo            = (string) ($item['tipo'] ?? '');
-            $lojaNome        = (string) ($item['loja_nome'] ?? '');
-            $disponivel      = (bool)   ($item['disponivel'] ?? false);
-            $grauRecomendado = (string) ($item['grau_recomendado'] ?? 'Livre');
-            ?>
-            <div style="
-                border:1px solid rgba(255,255,255,0.09);
-                background:rgba(255,255,255,0.05);
-                border-radius:1.125rem;
-                padding:1rem;
-            ">
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;">
-                    <div style="min-width:0;flex:1;">
-                        <h3 style="font-size:0.9375rem;font-weight:700;color:#f1f5f9;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                            <?= htmlspecialchars($titulo) ?>
-                        </h3>
-                        <p style="font-size:0.8125rem;color:#94a3b8;margin:0.15rem 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                            <?= $autor !== '' ? htmlspecialchars($autor) : 'Autor não informado' ?>
-                        </p>
-                        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:0.4rem;margin-top:0.5rem;">
-                            <?php if ($tipo !== ''): ?>
-                            <span class="pwa-badge pwa-badge-muted"><?= htmlspecialchars($tipo) ?></span>
-                            <?php endif; ?>
-                            <?php if ($grauRecomendado !== 'Livre'): ?>
-                            <span class="pwa-badge" style="background:rgba(167,139,250,0.18);color:#c4b5fd;"><?= htmlspecialchars($grauRecomendado) ?></span>
-                            <?php endif; ?>
-                            <?php if ($lojaNome !== ''): ?>
-                            <span class="pwa-badge pwa-badge-muted"><?= htmlspecialchars($lojaNome) ?></span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <span class="pwa-badge <?= $disponivel ? 'pwa-badge-success' : 'pwa-badge-muted' ?>" style="flex-shrink:0;">
-                        <?= $disponivel ? 'Disponível' : 'Indisponível' ?>
-                    </span>
-                </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.875rem;">
-                    <a href="/pwa/biblioteca/detalhes?id=<?= (int) ($item['id'] ?? 0) ?><?= $catalogScope === 'rede' ? '&loja_id=' . (int)($item['loja_id']??0) : '' ?>"
-                       class="pwa-btn-secondary" style="font-size:0.8125rem;text-align:center;">
-                        Ver detalhes
-                    </a>
-                    <form method="post" action="/pwa/biblioteca/solicitar">
-                        <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
-                        <input type="hidden" name="scope" value="<?= htmlspecialchars($catalogScope) ?>">
-                        <input type="hidden" name="loja_id" value="<?= (int) ($item['loja_id'] ?? 0) ?>">
-                        <button class="pwa-btn-primary" style="font-size:0.8125rem;" <?= $disponivel ? '' : 'disabled' ?>>
-                            Solicitar
-                        </button>
-                    </form>
-                </div>
+        <?php if ($lista === []): ?>
+            <div class="p-8 text-center text-xs text-slate-500 bg-slate-900/40 rounded-2xl border border-dashed border-white/10 select-none">
+                <div class="text-xl mb-1.5 select-none">📚</div>
+                <p class="font-bold text-slate-300">Nenhum livro encontrado</p>
+                <p class="mt-0.5">Ajuste os filtros ou busque por outro termo.</p>
             </div>
+        <?php else: ?>
+            <?php foreach ($lista as $item): ?>
+                <?php
+                $titulo          = (string) ($item['titulo'] ?? 'Livro');
+                $autor           = (string) ($item['autor'] ?? '');
+                $tipo            = (string) ($item['tipo'] ?? '');
+                $lojaNome        = (string) ($item['loja_nome'] ?? '');
+                $disponivel      = (bool)   ($item['disponivel'] ?? false);
+                $grauRecomendado = (string) ($item['grau_recomendado'] ?? 'Livre');
+                ?>
+                <div class="pwa-card border border-white/5 flex flex-col gap-3 bg-slate-900/40">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <h3 class="text-xs font-bold text-slate-200 truncate">
+                                <?= htmlspecialchars($titulo) ?>
+                            </h3>
+                            <p class="text-[10px] text-slate-400 mt-0.5 truncate">
+                                <?= $autor !== '' ? htmlspecialchars($autor) : 'Autor não informado' ?>
+                            </p>
+                            <div class="flex items-center flex-wrap gap-1.5 mt-2 select-none">
+                                <?php if ($tipo !== ''): ?>
+                                    <span class="pwa-badge pwa-badge-muted"><?= htmlspecialchars($tipo) ?></span>
+                                <?php endif; ?>
+                                <?php if ($grauRecomendado !== 'Livre'): ?>
+                                    <span class="pwa-badge bg-indigo-500/10 text-indigo-300"><?= htmlspecialchars($grauRecomendado) ?></span>
+                                <?php endif; ?>
+                                <?php if ($lojaNome !== ''): ?>
+                                    <span class="pwa-badge pwa-badge-muted"><?= htmlspecialchars($lojaNome) ?></span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <span class="pwa-badge <?= $disponivel ? 'pwa-badge-success' : 'pwa-badge-muted' ?> shrink-0 select-none">
+                            <?= $disponivel ? 'Disponível' : 'Indisponível' ?>
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mt-1 select-none">
+                        <a href="/pwa/biblioteca/detalhes?id=<?= (int) ($item['id'] ?? 0) ?><?= $catalogScope === 'rede' ? '&loja_id=' . (int)($item['loja_id']??0) : '' ?>"
+                           class="pwa-btn-secondary py-1.5 text-[11px] font-bold">
+                            Detalhes
+                        </a>
+                        <form method="post" action="/pwa/biblioteca/solicitar" class="w-full">
+                            <input type="hidden" name="acervo_id" value="<?= (int) ($item['id'] ?? 0) ?>">
+                            <input type="hidden" name="scope" value="<?= htmlspecialchars($catalogScope) ?>">
+                            <input type="hidden" name="loja_id" value="<?= (int) ($item['loja_id'] ?? 0) ?>">
+                            <button class="pwa-btn-primary py-1.5 text-[11px] font-bold disabled:opacity-50" <?= $disponivel ? '' : 'disabled' ?>>
+                                Solicitar
+                            </button>
+                        </form>
+                    </div>
+                </div>
             <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
+        <?php endif; ?>
+    </div>
 </div>
 
 <?php

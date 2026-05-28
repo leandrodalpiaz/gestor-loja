@@ -723,6 +723,10 @@ class Obreiro
 
     public function findById(string $id): ?array
     {
+        if (!preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $id)) {
+            return null;
+        }
+
         if ($this->suportaLojaId()) {
             $stmt = $this->db->prepare("SELECT * FROM public.obreiros WHERE id = :id AND loja_id = :loja_id LIMIT 1");
             $stmt->execute([

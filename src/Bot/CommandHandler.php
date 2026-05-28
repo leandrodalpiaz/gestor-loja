@@ -291,12 +291,49 @@ class CommandHandler
             $this->telegram->sendMessage($chatId, 'Solicitação registrada. Aguarde aprovação do secretário.');
     }
 
+    private function getBotUsername(): string
+    {
+        $username = trim((string) (Env::get('TELEGRAM_BOT_USERNAME', '') ?: ''));
+        if ($username !== '') {
+            return ltrim($username, '@');
+        }
+
+        // Fallback dinâmico: tenta buscar via getMe da API
+        $token = trim((string) (Env::get('TELEGRAM_BOT_TOKEN', '') ?: ''));
+        if ($token !== '') {
+            try {
+                $response = @file_get_contents('https://api.telegram.org/bot' . rawurlencode($token) . '/getMe');
+                if (is_string($response) && $response !== '') {
+                    $payload = json_decode($response, true);
+                    $apiUsername = trim((string) ($payload['result']['username'] ?? ''));
+                    if ($apiUsername !== '') {
+                        return ltrim($apiUsername, '@');
+                    }
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        return 'gestor_lojas_Ld_bot'; // Fallback final conhecido do projeto
+    }
+
     private function notifyPrivateOnly($chatId): void
     {
-        $this->telegram->sendMessage(
-            $chatId,
-            'Para acessar o sistema, fale comigo no privado.'
-        );
+        $botUsername = $this->getBotUsername();
+        $deepLink = "https://t.me/" . $botUsername . "?start=painel";
+
+        $mensagem = "🔒 <b>Painel Privado do Obreiro</b>\n\nPor motivos de segurança e privacidade, a interação com o painel do obreiro deve ser feita em uma conversa privada comigo.\n\nClique no botão abaixo para abrir o seu painel de forma segura.";
+        $teclado = [
+            'inline_keyboard' => [
+                [
+                    ['text' => '📱 Abrir Meu Painel Privado', 'url' => $deepLink]
+                ]
+            ]
+        ];
+
+        $this->telegram->sendMessage($chatId, $mensagem, [
+            'parse_mode' => 'HTML',
+            'reply_markup' => $teclado
+        ]);
     }
 
     private function ensureChancelariaAccess($chatId, int $requesterTelegramId): bool

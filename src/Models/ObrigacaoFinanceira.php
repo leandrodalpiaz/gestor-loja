@@ -602,6 +602,10 @@ class ObrigacaoFinanceira
 
     public function listarPorObreiro(string $obreiroId): array
     {
+        if (!preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $obreiroId)) {
+            return [];
+        }
+
         $stmt = $this->db->prepare("
             SELECT
                 ofi.*,
@@ -710,6 +714,10 @@ class ObrigacaoFinanceira
 
     public function listarParcelasEmAbertoObreiro(string $obreiroId): array
     {
+        if (!preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $obreiroId)) {
+            return [];
+        }
+
         $stmt = $this->db->prepare("
             SELECT
                 ofp.id,
@@ -959,6 +967,10 @@ class ObrigacaoFinanceira
 
     private function obrigacaoJaExiste(string $obreiroId, string $titulo): bool
     {
+        if (!preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $obreiroId)) {
+            return false;
+        }
+
         $stmt = $this->db->prepare("
             SELECT 1
             FROM obrigacoes_financeiras
@@ -983,6 +995,10 @@ class ObrigacaoFinanceira
 
     private function bibliotecaJaDesignada(string $obreiroId, int $mes, int $ano): bool
     {
+        if (!preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $obreiroId)) {
+            return false;
+        }
+
         $stmt = $this->db->prepare("
             SELECT 1
             FROM biblioteca_contribuintes_mensal
@@ -1028,6 +1044,10 @@ class ObrigacaoFinanceira
 
     private function obreiroEstaIsento(string $obreiroId, string $tipoObrigacao, DateTimeImmutable $competencia): bool
     {
+        if (!preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $obreiroId)) {
+            return false;
+        }
+
         $stmt = $this->db->prepare("
             SELECT 1
             FROM isencoes_financeiras
