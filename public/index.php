@@ -320,6 +320,17 @@ if (isset($_SESSION['usuario_logado']) && !in_array($requestUri, ['/login', '/lo
     }
 }
 
+// Guardrail de Primeiro Acesso com Senha Provisória
+if (!empty($_SESSION['exigir_nova_senha']) && !in_array($requestUri, ['/definir-senha', '/logout', '/health'], true)) {
+    if (str_starts_with($requestUri, '/api/')) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['error' => 'Definição de nova senha obrigatória.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    header('Location: /definir-senha');
+    exit;
+}
+
 $appToday = static function (): \DateTimeImmutable {
     $timezone = trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo'));
     try {
@@ -1442,6 +1453,12 @@ switch ($requestUri) {
                     $syncTenantSessionFromObreiro($usuario);
                     $syncSessionRoles($usuario);
 
+                    if (!empty($usuario['primeiro_acesso_provisorio'])) {
+                        $_SESSION['exigir_nova_senha'] = true;
+                        header("Location: /definir-senha");
+                        exit;
+                    }
+
                     if ($temAcessoPainel) {
                         header("Location: /dashboard");
                         exit;
@@ -1453,6 +1470,65 @@ switch ($requestUri) {
             }
         }
         require_once __DIR__ . "/../src/Views/login.php";
+        break;
+
+    case "/definir-senha":
+        if (!isset($_SESSION['usuario_logado'])) {
+            header("Location: /login");
+            exit;
+        }
+
+        if (empty($_SESSION['exigir_nova_senha'])) {
+            header("Location: /dashboard");
+            exit;
+        }
+
+        $erroDefinirSenha = null;
+        $tenantSlug = trim((string) ($_SESSION['tenant_slug'] ?? ''));
+        $tenantName = trim((string) ($_SESSION['tenant_name'] ?? ''));
+
+        if ($method === "POST") {
+            $novaSenha = $_POST['nova_senha'] ?? '';
+            $confirmarSenha = $_POST['confirmar_senha'] ?? '';
+
+            if (strlen($novaSenha) < 6) {
+                $erroDefinirSenha = "A nova senha deve possuir pelo menos 6 caracteres.";
+            } elseif ($novaSenha !== $confirmarSenha) {
+                $erroDefinirSenha = "As senhas não coincidem. Digite novamente.";
+            } else {
+                $obreiroModel = new \App\Models\Obreiro();
+                $usuarioId = $_SESSION['usuario_logado']['id'] ?? '';
+                
+                if ($obreiroModel->atualizarSenha($usuarioId, $novaSenha)) {
+                    unset($_SESSION['exigir_nova_senha']);
+                    
+                    $usuarioAtualizado = $obreiroModel->findById($usuarioId);
+                    if ($usuarioAtualizado) {
+                        $_SESSION["usuario_logado"] = $usuarioAtualizado;
+                    }
+
+                    $cargo = $normalizeRole((string) ($_SESSION['usuario_logado']['cargo_principal'] ?? $_SESSION['usuario_logado']['cargo'] ?? ''));
+                    $cargosAtivos = array_values(array_unique(array_filter(array_map(
+                        $normalizeRole,
+                        $_SESSION['usuario_logado']['cargos'] ?? [$cargo]
+                    ))));
+                    $temAcessoPainel =
+                        count(array_intersect($cargosAtivos, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "tesoureiro", "chanceler", "admin", "bibliotecario", "mestre_banquetes", "hospitaleiro", "mestre_de_harmonia"])) > 0
+                        || in_array($cargo, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "secretario", "tesoureiro", "chanceler", "admin", "hospitaleiro", "mestre_de_harmonia"], true);
+
+                    if ($temAcessoPainel) {
+                        header("Location: /dashboard");
+                    } else {
+                        header("Location: /biblioteca");
+                    }
+                    exit;
+                } else {
+                    $erroDefinirSenha = "Falha ao gravar a nova senha. Tente novamente ou procure a Secretaria.";
+                }
+            }
+        }
+
+        require_once __DIR__ . "/../src/Views/definir_senha.php";
         break;
 
     case "/logout":

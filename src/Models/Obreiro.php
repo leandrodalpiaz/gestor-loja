@@ -1002,11 +1002,48 @@ class Obreiro
             return null;
         }
 
-        if (!empty($usuario['senha_hash']) && password_verify($senha, $usuario['senha_hash'])) {
+        // Se o obreiro já possui senha cadastrada
+        if (!empty($usuario['senha_hash'])) {
+            if (password_verify($senha, $usuario['senha_hash'])) {
+                return $usuario;
+            }
+            return null;
+        }
+
+        // Se o obreiro não tem senha cadastrada (primeiro acesso)
+        // Verificamos se ele usou a senha provisória padrão
+        $senhaProvisoria = trim((string) ($_ENV['APP_DEFAULT_PROVISORY_PASSWORD'] ?? getenv('APP_DEFAULT_PROVISORY_PASSWORD') ?: ''));
+        if ($senhaProvisoria !== '' && $senha === $senhaProvisoria) {
+            $usuario['primeiro_acesso_provisorio'] = true;
             return $usuario;
         }
 
         return null;
+    }
+
+    public function atualizarSenha(string $id, string $senha): bool
+    {
+        $id = trim($id);
+        if ($id === '' || !$this->isUuid($id)) {
+            return false;
+        }
+
+        $params = [
+            'id' => $id,
+            'senha_hash' => password_hash($senha, PASSWORD_DEFAULT),
+        ];
+
+        $sql = "UPDATE obreiros SET senha_hash = :senha_hash";
+
+        if ($this->suportaLojaId() && $this->deveAplicarEscopoTenantNaIdentidade()) {
+            $sql .= " WHERE id = :id AND loja_id = :loja_id";
+            $params['loja_id'] = $this->obterLojaAtualId();
+        } else {
+            $sql .= " WHERE id = :id";
+        }
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
     }
 
     public function resolverAcessoStatus(array $obreiro): string
@@ -1336,5 +1373,13 @@ class Obreiro
         }
 
         return $pendencias;
+    }
+
+    private function isUuid(string $value): bool
+    {
+        return (bool) preg_match(
+            '/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/',
+            trim($value)
+        );
     }
 }
