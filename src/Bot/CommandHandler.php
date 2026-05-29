@@ -1101,6 +1101,61 @@ class CommandHandler
         }
     }
 
+    private function handleEfemeridesDoDiaDireto($chatId, int $requesterTelegramId): void
+    {
+        if (!$this->ensureChancelariaAccess($chatId, $requesterTelegramId)) {
+            return;
+        }
+
+        $hoje = date('Y-m-d');
+        $registrosHoje = $this->getRegistrosConsolidadosDoDia($hoje);
+
+        if (empty($registrosHoje)) {
+            $this->telegram->sendMessage($chatId, "Nenhuma efeméride encontrada para hoje.");
+            return;
+        }
+
+        $composer = new \App\Services\EfemeridesComposer();
+        $cardService = new \App\Services\EfemeridesCardService();
+
+        foreach ($registrosHoje as $reg) {
+            $textoReg = $composer->composeDailyPreview([$reg]);
+            
+            // Gerar cartão
+            $cards = $cardService->buildCardsForDate($hoje, [$reg]);
+            $card = !empty($cards) ? $cards[0] : null;
+            $cardPath = $card['card_path'] ?? '';
+
+            // Botões
+            $source = ($reg['tipo'] === 'História') ? 'his' : 'reg';
+            $id = $reg['id'];
+            $keyboard = [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '📄 Enviar Texto', 'callback_data' => "ef_tx_{$source}_{$id}"],
+                        ['text' => '🖼️ Enviar Cartão', 'callback_data' => "ef_cd_{$source}_{$id}"],
+                    ],
+                    [
+                        ['text' => '✨ Enviar Texto + Cartão', 'callback_data' => "ef_bo_{$source}_{$id}"],
+                    ],
+                    [
+                        ['text' => '❌ Não enviar', 'callback_data' => "ef_no_{$source}_{$id}"],
+                    ]
+                ]
+            ];
+
+            if ($cardPath !== '' && file_exists($cardPath)) {
+                $this->telegram->sendPhoto($chatId, $cardPath, $textoReg, ['reply_markup' => $keyboard]);
+            } else {
+                $this->telegram->sendMessage($chatId, $textoReg, ['reply_markup' => $keyboard]);
+            }
+        }
+
+        // Enviar dica final
+        $dica = "💡 <b>Dica:</b> Para ajustes e correções (nomes, datas, parentescos ou motivos), faça a alteração diretamente no sistema no computador. Desta forma, a correção é salva e estará pronta no próximo envio.";
+        $this->telegram->sendMessage($chatId, $dica, ['parse_mode' => 'HTML']);
+    }
+
     private function handleEfemeridesMenu($chatId, int $requesterTelegramId): void
     {
         $hoje = date('Y-m-d');
@@ -1601,7 +1656,7 @@ class CommandHandler
                         $this->handleChancelaria($chatId, $fromId);
                         break;
                     case 'chancelaria_neste_dia':
-                        $this->handleEfemeridesMenu($chatId, (int) $fromId);
+                        $this->handleEfemeridesDoDiaDireto($chatId, (int) $fromId);
                         break;
                     case 'chancelaria_aprovar_efemeride':
                         $this->handleAprovarEfemeride($chatId, (int) $fromId);
