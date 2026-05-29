@@ -6,6 +6,9 @@ use App\Config\Env;
 use App\Models\EfemerideRegistro;
 use App\Models\EfemeridePreviaDiaria;
 use App\Services\EfemeridesComposer;
+use App\Bot\TelegramClient;
+use App\Services\EfemeridesCardService;
+use App\Models\HistoriaMaconica;
 
 Env::load(__DIR__ . '/../.env');
 
@@ -30,12 +33,36 @@ if ($appUrl !== '') {
 }
 
 $registroModel = new EfemerideRegistro();
+$historiaModel = new HistoriaMaconica();
 $composer = new EfemeridesComposer();
 $previaModel = new EfemeridePreviaDiaria();
 
-$registrosHoje = $registroModel->getRegistrosDoDia();
-$mensagemBase = $composer->composeDailyPreview($registrosHoje);
+$timezone = new \DateTimeZone('America/Sao_Paulo');
+$dtHoje = new \DateTimeImmutable('today', $timezone);
+$hoje = $dtHoje->format('Y-m-d');
+$diaHoje = (int) $dtHoje->format('d');
+$mesHoje = (int) $dtHoje->format('m');
 
+$registrosHoje = $registroModel->getRegistrosDoDia();
+try {
+    $historiasHoje = $historiaModel->buscarPorDiaMes($diaHoje, $mesHoje, true);
+    foreach ($historiasHoje as $hist) {
+        $ano = $hist['ano_ref'] ?? $dtHoje->format('Y');
+        $registrosHoje[] = [
+            'id' => (int) ($hist['id'] ?? 0),
+            'nome' => trim((string) ($hist['titulo'] ?? 'Nossa História')),
+            'tipo' => 'História',
+            'data_evento' => sprintf('%04d-%02d-%02d', $ano, $mesHoje, $diaHoje),
+            'mensagem_custom' => trim((string) ($hist['texto'] ?? '')),
+            'local' => trim((string) ($hist['fonte'] ?? '')),
+            'vinculo' => 'Nossa História',
+        ];
+    }
+} catch (\Throwable $e) {
+    error_log('prepare_daily_preview.php: erro ao buscar historias: ' . $e->getMessage());
+}
+
+$mensagemBase = $composer->composeDailyPreview($registrosHoje);
 $ok = $previaModel->prepararAutomaticaDoDia($mensagemBase);
 
 if (!$ok) {
@@ -46,10 +73,8 @@ if (!$ok) {
 echo "Prévia diária preparada com sucesso.\n";
 
 // --- DISPARO AUTOMÁTICO VIA TELEGRAM ---
-use App\Services\TelegramService;
 use App\Models\Obreiro;
 
-$telegramService = new TelegramService();
 $targetChatIds = [];
 
 // 1. Chanceler direto do arquivo .env (se definido)
@@ -92,13 +117,62 @@ $targetChatIds = array_values(array_unique(array_filter($targetChatIds)));
 
 if (!empty($targetChatIds)) {
     echo "Disparando prévia de efemérides para os IDs de Telegram: " . implode(', ', $targetChatIds) . "\n";
+    
+    $telegramClient = new TelegramClient();
+    $cardService = new EfemeridesCardService();
+
     foreach ($targetChatIds as $chatId) {
-        $sent = $telegramService->sendMessageToChat($chatId, $mensagemBase);
-        if ($sent) {
-            echo "Enviado com sucesso para o ID: $chatId\n";
-        } else {
-            echo "Falha ao enviar para o ID: $chatId | Erro: " . $telegramService->getLastError() . "\n";
+        if (empty($registrosHoje)) {
+            $telegramClient->sendMessage($chatId, "Nenhuma efeméride para hoje.");
+            continue;
         }
+
+        foreach ($registrosHoje as $reg) {
+            $textoReg = $composer->composeDailyPreview([$reg]);
+            
+            // Gerar cartão
+            $cards = $cardService->buildCardsForDate($hoje, [$reg]);
+            $card = !empty($cards) ? $cards[0] : null;
+            $cardPath = $card['card_path'] ?? '';
+
+            // Botões
+            $source = ($reg['tipo'] === 'História') ? 'his' : 'reg';
+            $id = $reg['id'];
+            $keyboard = [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '📄 Enviar Texto', 'callback_data' => "ef_tx_{$source}_{$id}"],
+                        ['text' => '🖼️ Enviar Cartão', 'callback_data' => "ef_cd_{$source}_{$id}"],
+                    ],
+                    [
+                        ['text' => '✨ Enviar Texto + Cartão', 'callback_data' => "ef_bo_{$source}_{$id}"],
+                    ],
+                    [
+                        ['text' => '❌ Não enviar', 'callback_data' => "ef_no_{$source}_{$id}"],
+                    ]
+                ]
+            ];
+
+            if ($cardPath !== '' && file_exists($cardPath)) {
+                $res = $telegramClient->sendPhoto($chatId, $cardPath, $textoReg, ['reply_markup' => $keyboard]);
+                if ($res) {
+                    echo "Foto de efeméride enviada para ID: $chatId\n";
+                } else {
+                    echo "Falha ao enviar foto para ID: $chatId\n";
+                }
+            } else {
+                $res = $telegramClient->sendMessage($chatId, $textoReg, ['reply_markup' => $keyboard]);
+                if ($res) {
+                    echo "Texto de efeméride enviado para ID: $chatId\n";
+                } else {
+                    echo "Falha ao enviar texto para ID: $chatId\n";
+                }
+            }
+        }
+
+        // Dica final
+        $dica = "💡 <b>Dica:</b> Para ajustes e correções (nomes, datas, parentescos ou motivos), faça a alteração diretamente no sistema no computador. Desta forma, a correção é salva e estará pronta no próximo envio.";
+        $telegramClient->sendMessage($chatId, $dica, ['parse_mode' => 'HTML']);
     }
 } else {
     echo "Nenhum ID de Telegram de Chanceler ou Administrador configurado para o disparo automático.\n";

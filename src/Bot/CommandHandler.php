@@ -1397,6 +1397,104 @@ class CommandHandler
         $this->telegram->sendMessage($chatId, "Envio concluído para o grupo (modo: {$modo}).");
     }
 
+    private function handleEfemerideIndividualAction($chatId, int $requesterTelegramId, string $action, string $source, int $id, array $callback): void
+    {
+        $grupoId = $this->getGroupChatId();
+        if (!$grupoId) {
+            $this->telegram->sendMessage($chatId, "Não foi possível enviar: o grupo oficial ainda não está configurado.");
+            return;
+        }
+
+        $messageId = (int) ($callback['message']['message_id'] ?? 0);
+        $isPhoto = isset($callback['message']['photo']);
+
+        if ($action === 'no') {
+            $msgDesc = "❌ Descartado (não enviado).";
+            if ($isPhoto && $messageId > 0) {
+                $this->telegram->editMessageCaption($chatId, $messageId, $msgDesc, ['reply_markup' => ['inline_keyboard' => []]]);
+            } elseif ($messageId > 0) {
+                $this->telegram->editMessageText($chatId, $messageId, $msgDesc, ['reply_markup' => ['inline_keyboard' => []]]);
+            }
+            return;
+        }
+
+        // Carregar registro
+        $registro = null;
+        if ($source === 'reg') {
+            $registro = (new \App\Models\EfemerideRegistro())->findById($id);
+        } elseif ($source === 'his') {
+            $stmt = \App\Config\Database::getConnection()->prepare("SELECT * FROM historias_maconicas WHERE id = :id LIMIT 1");
+            $stmt->execute(['id' => $id]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if ($row) {
+                $registro = [
+                    'id' => (int) ($row['id'] ?? 0),
+                    'nome' => trim((string) ($row['titulo'] ?? 'Nossa História')),
+                    'tipo' => 'História',
+                    'data_evento' => sprintf('%04d-%02d-%02d', $row['ano_ref'] ?? date('Y'), $row['mes'] ?? date('m'), $row['dia'] ?? date('d')),
+                    'mensagem_custom' => trim((string) ($row['texto'] ?? '')),
+                    'local' => trim((string) ($row['fonte'] ?? '')),
+                    'vinculo' => 'Nossa História',
+                ];
+            }
+        }
+
+        if (!$registro) {
+            $this->telegram->sendMessage($chatId, "Erro: Efeméride não encontrada no banco de dados.");
+            return;
+        }
+
+        // Compor mensagem
+        $composer = new \App\Services\EfemeridesComposer();
+        $textoGrupo = $composer->composeDailyPreview([$registro]);
+
+        // Gerar card se necessário
+        $cardPath = '';
+        if ($action === 'cd' || $action === 'bo') {
+            $hoje = date('Y-m-d');
+            $cards = (new \App\Services\EfemeridesCardService())->buildCardsForDate($hoje, [$registro]);
+            if (!empty($cards)) {
+                $cardPath = $cards[0]['card_path'] ?? '';
+            }
+        }
+
+        $sucesso = true;
+
+        if ($action === 'tx') {
+            $sucesso = $this->telegram->sendMessage($grupoId, $textoGrupo, ['parse_mode' => 'HTML']);
+            $confText = "✅ Enviado apenas o texto para o grupo.";
+        } elseif ($action === 'cd') {
+            if ($cardPath !== '' && file_exists($cardPath)) {
+                $sucesso = (bool) $this->telegram->sendPhoto($grupoId, $cardPath, '');
+            } else {
+                $sucesso = false;
+                $this->telegram->sendMessage($chatId, "Erro ao gerar ou localizar a imagem do cartão.");
+            }
+            $confText = "✅ Enviado apenas o cartão para o grupo.";
+        } elseif ($action === 'bo') {
+            $sucesso = $this->telegram->sendMessage($grupoId, $textoGrupo, ['parse_mode' => 'HTML']);
+            if ($sucesso) {
+                if ($cardPath !== '' && file_exists($cardPath)) {
+                    $sucessoCard = $this->telegram->sendPhoto($grupoId, $cardPath, '');
+                    if (!$sucessoCard) {
+                        $this->telegram->sendMessage($chatId, "Texto enviado, mas houve falha ao enviar o cartão.");
+                    }
+                } else {
+                    $this->telegram->sendMessage($chatId, "Texto enviado, mas não foi possível gerar o cartão.");
+                }
+            }
+            $confText = "✅ Enviados o texto e o cartão para o grupo.";
+        }
+
+        if ($sucesso && $messageId > 0) {
+            if ($isPhoto) {
+                $this->telegram->editMessageCaption($chatId, $messageId, $confText, ['reply_markup' => ['inline_keyboard' => []]]);
+            } else {
+                $this->telegram->editMessageText($chatId, $messageId, $confText, ['reply_markup' => ['inline_keyboard' => []]]);
+            }
+        }
+    }
+
     public function handle($update)
     {
         try {
@@ -1644,6 +1742,15 @@ class CommandHandler
                         break;
 
                     default:
+                        if (is_string($data) && preg_match('/^ef_(tx|cd|bo|no)_(reg|his)_(\d+)$/', $data, $m)) {
+                            $action = $m[1];
+                            $source = $m[2];
+                            $rid = (int) ($m[3] ?? 0);
+                            if ($rid > 0) {
+                                $this->handleEfemerideIndividualAction($chatId, (int) $fromId, $action, $source, $rid, $callback);
+                                break;
+                            }
+                        }
                         if (is_string($data) && preg_match('/^ef_t_(\d+)$/', $data, $m)) {
                             $rid = (int) ($m[1] ?? 0);
                             if ($rid > 0) {

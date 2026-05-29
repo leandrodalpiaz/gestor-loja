@@ -150,7 +150,7 @@ class TelegramClient
         return is_array($payload) && !empty($payload['ok']);
     }
 
-    public function sendPhoto($chatId, $photoPath, $caption = '') {
+    public function sendPhoto($chatId, $photoPath, $caption = '', array $options = []) {
         if (AppEnv::telegramDryRun()) {
             error_log('[telegram][dry-run] sendPhoto chat_id=' . $chatId . ' photo=' . (string) $photoPath);
             return true;
@@ -163,12 +163,21 @@ class TelegramClient
             return false;
         }
 
+        $caption = $this->normalizeMojibake((string) $caption);
+        $options = $this->normalizeArrayStrings($options);
+
         $postFields = [
             'chat_id' => $chatId,
             'photo' => new \CURLFile(realpath($photoPath)),
-            'caption' => $this->normalizeMojibake((string) $caption),
-            'parse_mode' => 'Markdown'
+            'caption' => $caption,
+            'parse_mode' => (string) ($options['parse_mode'] ?? 'HTML')
         ];
+
+        if (isset($options['reply_markup']) && is_array($options['reply_markup'])) {
+            $postFields['reply_markup'] = json_encode($options['reply_markup']);
+        } elseif (isset($options['inline_keyboard']) || isset($options['keyboard'])) {
+            $postFields['reply_markup'] = json_encode($options);
+        }
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -181,5 +190,99 @@ class TelegramClient
         curl_close($ch);
 
         return $response;
+    }
+
+    public function editMessageText(int|string $chatId, int $messageId, string $text, array $options = []): bool
+    {
+        if (AppEnv::telegramDryRun()) {
+            error_log('[telegram][dry-run] editMessageText chat_id=' . $chatId . ' message_id=' . $messageId . ' text_len=' . strlen($text));
+            return true;
+        }
+
+        $text = $this->normalizeMojibake($text);
+        $options = $this->normalizeArrayStrings($options);
+
+        $data = [
+            'chat_id' => $chatId,
+            'message_id' => $messageId,
+            'text' => $text,
+            'parse_mode' => (string) ($options['parse_mode'] ?? 'HTML'),
+        ];
+
+        if (isset($options['reply_markup']) && is_array($options['reply_markup'])) {
+            $data['reply_markup'] = json_encode($options['reply_markup']);
+        } elseif (isset($options['inline_keyboard']) || isset($options['keyboard'])) {
+            $data['reply_markup'] = json_encode($options);
+        } else {
+            $data['reply_markup'] = json_encode(['inline_keyboard' => []]);
+        }
+
+        $requestOptions = [
+            'http' => [
+                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method'  => 'POST',
+                'content' => http_build_query($data),
+                'ignore_errors' => true
+            ]
+        ];
+
+        $context = stream_context_create($requestOptions);
+        $result = @file_get_contents($this->apiUrl . 'editMessageText', false, $context);
+
+        if ($result === false) {
+            $error = error_get_last();
+            error_log("ERRO API TELEGRAM editMessageText: " . ($error['message'] ?? 'Desconhecido'));
+            return false;
+        }
+
+        $payload = json_decode((string) $result, true);
+        return is_array($payload) && !empty($payload['ok']);
+    }
+
+    public function editMessageCaption(int|string $chatId, int $messageId, string $caption, array $options = []): bool
+    {
+        if (AppEnv::telegramDryRun()) {
+            error_log('[telegram][dry-run] editMessageCaption chat_id=' . $chatId . ' message_id=' . $messageId . ' caption_len=' . strlen($caption));
+            return true;
+        }
+
+        $caption = $this->normalizeMojibake($caption);
+        $options = $this->normalizeArrayStrings($options);
+
+        $data = [
+            'chat_id' => $chatId,
+            'message_id' => $messageId,
+            'caption' => $caption,
+            'parse_mode' => (string) ($options['parse_mode'] ?? 'HTML'),
+        ];
+
+        if (isset($options['reply_markup']) && is_array($options['reply_markup'])) {
+            $data['reply_markup'] = json_encode($options['reply_markup']);
+        } elseif (isset($options['inline_keyboard']) || isset($options['keyboard'])) {
+            $data['reply_markup'] = json_encode($options);
+        } else {
+            $data['reply_markup'] = json_encode(['inline_keyboard' => []]);
+        }
+
+        $requestOptions = [
+            'http' => [
+                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method'  => 'POST',
+                'content' => http_build_query($data),
+                'ignore_errors' => true
+            ]
+        ];
+
+        $context = stream_context_create($requestOptions);
+        $result = @file_get_contents($this->apiUrl . 'editMessageCaption', false, $context);
+
+        if ($result === false) {
+            $error = error_get_last();
+            error_log("ERRO API TELEGRAM editMessageCaption: " . ($error['message'] ?? 'Desconhecido'));
+            return false;
+        }
+
+        $payload = json_decode((string) $result, true);
+        return is_array($payload) && !empty($payload['ok']);
     }
 }
