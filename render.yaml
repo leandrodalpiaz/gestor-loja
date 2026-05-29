@@ -51,6 +51,14 @@ services:
         sync: false
       - key: APP_LOJA_NUMERO
         sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID_CHANCELER
+        sync: false
+      - key: SYSTEM_ADMIN_TELEGRAM_IDS
+        sync: false
+      - key: APP_URL
+        sync: false
 
   - type: cron
     name: gestor-loja-keepalive

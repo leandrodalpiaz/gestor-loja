@@ -990,6 +990,99 @@ if (!function_exists('requireMiniappAuth')) {
 }
 
 // ==========================================
+// Endpoint para preparar previa de efemerides (Chanceler e Admin)
+if ($requestUri === '/api/cron/preparar-previa' && $method === 'GET') {
+    $token = $_GET['token'] ?? '';
+    $tokenEsperado = trim((string) ($_ENV['CRON_EFEMERIDES_TOKEN'] ?? $_ENV['CRON_SECRET_TOKEN'] ?? ''));
+    if ($tokenEsperado === '') {
+        $tokenEsperado = 'SUA_SENHA_SECRETA';
+    }
+    if ($token !== $tokenEsperado) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['status' => 'erro', 'mensagem' => 'Token invalido'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    require_once __DIR__ . '/../src/Models/EfemerideRegistro.php';
+    require_once __DIR__ . '/../src/Models/EfemeridePreviaDiaria.php';
+    require_once __DIR__ . '/../src/Services/EfemeridesComposer.php';
+    require_once __DIR__ . '/../src/Services/TelegramService.php';
+    require_once __DIR__ . '/../src/Models/Obreiro.php';
+
+    $registroModel = new \App\Models\EfemerideRegistro();
+    $composer = new \App\Services\EfemeridesComposer();
+    $previaModel = new \App\Models\EfemeridePreviaDiaria();
+
+    $registrosHoje = $registroModel->getRegistrosDoDia();
+    $mensagemBase = $composer->composeDailyPreview($registrosHoje);
+
+    $ok = $previaModel->prepararAutomaticaDoDia($mensagemBase);
+    if (!$ok) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['status' => 'erro', 'mensagem' => 'Falha ao preparar previa diaria no banco'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $telegramService = new \App\Services\TelegramService();
+    $targetChatIds = [];
+
+    // 1. Chanceler do .env
+    $envChanceler = trim((string) ($_ENV['TELEGRAM_CHAT_ID_CHANCELER'] ?? ''));
+    if ($envChanceler !== '') {
+        $targetChatIds[] = $envChanceler;
+    }
+
+    // 2. Chanceleres ativos do banco de dados
+    try {
+        $obreiroModel = new \App\Models\Obreiro();
+        $obreiros = $obreiroModel->getAllAtivos();
+        foreach ($obreiros as $ob) {
+            $cargos = is_array($ob['cargos'] ?? null) ? $ob['cargos'] : [];
+            if (in_array('chanceler', $cargos, true) || ($ob['cargo_principal'] ?? '') === 'chanceler') {
+                $telId = trim((string) ($ob['telegram_id'] ?? ''));
+                if ($telId !== '') {
+                    $targetChatIds[] = $telId;
+                }
+            }
+        }
+    } catch (\Throwable $e) {
+        error_log("api/cron/preparar-previa: erro ao buscar chanceleres: " . $e->getMessage());
+    }
+
+    // 3. Admins do .env
+    $envAdmins = trim((string) ($_ENV['SYSTEM_ADMIN_TELEGRAM_IDS'] ?? ''));
+    if ($envAdmins !== '') {
+        $adminIds = preg_split('/\s*,\s*/', $envAdmins, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        foreach ($adminIds as $adminId) {
+            $adminId = trim((string) $adminId);
+            if ($adminId !== '') {
+                $targetChatIds[] = $adminId;
+            }
+        }
+    }
+
+    $targetChatIds = array_values(array_unique(array_filter($targetChatIds)));
+    $disparos = [];
+
+    if (!empty($targetChatIds)) {
+        foreach ($targetChatIds as $chatId) {
+            $sent = $telegramService->sendMessageToChat($chatId, $mensagemBase);
+            $disparos[$chatId] = $sent ? 'sucesso' : 'falha: ' . $telegramService->getLastError();
+        }
+    }
+
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'status' => 'ok',
+        'mensagem' => 'Previa de efemerides preparada com sucesso',
+        'disparos' => $disparos
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// ==========================================
 // Endpoint para envio automatico de efemerides (Cron Job)
 if ($requestUri === '/api/cron/efemerides-diarias' && $method === 'GET') {
     $token = $_GET['token'] ?? '';
