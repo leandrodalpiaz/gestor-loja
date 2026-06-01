@@ -300,10 +300,10 @@ class EfemeridesCardService
         $porCodigo = [
             1 => 'Irmão',
             2 => 'Cunhada',
-            3 => 'Filho',
-            4 => 'Filha',
-            5 => 'Sobrinho',
-            6 => 'Sobrinha',
+            3 => 'Sobrinha',
+            4 => 'Sobrinho',
+            5 => 'Sobrinha',
+            6 => 'Sobrinho',
         ];
 
         if (isset($porCodigo[$codVinculo])) {
@@ -312,10 +312,8 @@ class EfemeridesCardService
 
         $texto = $this->toLower($vinculo . ' ' . $parentesco);
         if (str_contains($texto, 'cunhada') || str_contains($texto, 'esposa')) return 'Cunhada';
-        if (str_contains($texto, 'filha')) return 'Filha';
-        if (str_contains($texto, 'filho')) return 'Filho';
-        if (str_contains($texto, 'sobrinha')) return 'Sobrinha';
-        if (str_contains($texto, 'sobrinho')) return 'Sobrinho';
+        if (str_contains($texto, 'filha') || str_contains($texto, 'enteada') || str_contains($texto, 'sobrinha')) return 'Sobrinha';
+        if (str_contains($texto, 'filho') || str_contains($texto, 'enteado') || str_contains($texto, 'sobrinho')) return 'Sobrinho';
         return 'Irmão';
     }
 
