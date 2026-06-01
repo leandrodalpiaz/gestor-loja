@@ -59,6 +59,10 @@ services:
         sync: false
       - key: APP_URL
         sync: false
+      - key: TELEGRAM_DRY_RUN
+        sync: false
+      - key: APP_ENV
+        sync: false
 
   - type: cron
     name: gestor-loja-keepalive
