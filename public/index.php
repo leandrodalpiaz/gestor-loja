@@ -991,9 +991,16 @@ if (!function_exists('requireMiniappAuth')) {
 
 // ==========================================
 // Endpoint para preparar previa de efemerides (Chanceler e Admin)
-if ($requestUri === '/api/cron/preparar-previa' && $method === 'GET') {
+if ($requestUri === '/api/cron/preparar-previa') {
+    if ($_SERVER['REQUEST_METHOD'] === 'HEAD') {
+        exit;
+    }
+    if ($method !== 'GET') {
+        http_response_code(405);
+        exit;
+    }
     $token = $_GET['token'] ?? '';
-    $tokenEsperado = trim((string) ($_ENV['CRON_EFEMERIDES_TOKEN'] ?? $_ENV['CRON_SECRET_TOKEN'] ?? ''));
+    $tokenEsperado = trim((string) (Env::get('CRON_EFEMERIDES_TOKEN') ?: Env::get('CRON_SECRET_TOKEN') ?: ''));
     if ($tokenEsperado === '') {
         $tokenEsperado = 'SUA_SENHA_SECRETA';
     }
@@ -1054,7 +1061,7 @@ if ($requestUri === '/api/cron/preparar-previa' && $method === 'GET') {
     $targetChatIds = [];
 
     // 1. Chanceler do .env
-    $envChanceler = trim((string) ($_ENV['TELEGRAM_CHAT_ID_CHANCELER'] ?? ''));
+    $envChanceler = trim((string) Env::get('TELEGRAM_CHAT_ID_CHANCELER'));
     if ($envChanceler !== '') {
         $targetChatIds[] = $envChanceler;
     }
@@ -1077,7 +1084,7 @@ if ($requestUri === '/api/cron/preparar-previa' && $method === 'GET') {
     }
 
     // 3. Admins do .env
-    $envAdmins = trim((string) ($_ENV['SYSTEM_ADMIN_TELEGRAM_IDS'] ?? ''));
+    $envAdmins = trim((string) Env::get('SYSTEM_ADMIN_TELEGRAM_IDS'));
     if ($envAdmins !== '') {
         $adminIds = preg_split('/\s*,\s*/', $envAdmins, -1, PREG_SPLIT_NO_EMPTY) ?: [];
         foreach ($adminIds as $adminId) {
@@ -1159,9 +1166,16 @@ if ($requestUri === '/api/cron/preparar-previa' && $method === 'GET') {
 
 // ==========================================
 // Endpoint para envio automatico de efemerides (Cron Job)
-if ($requestUri === '/api/cron/efemerides-diarias' && $method === 'GET') {
+if ($requestUri === '/api/cron/efemerides-diarias') {
+    if ($_SERVER['REQUEST_METHOD'] === 'HEAD') {
+        exit;
+    }
+    if ($method !== 'GET') {
+        http_response_code(405);
+        exit;
+    }
     $token = $_GET['token'] ?? '';
-    $tokenEsperado = trim((string) ($_ENV['CRON_EFEMERIDES_TOKEN'] ?? $_ENV['CRON_SECRET_TOKEN'] ?? ''));
+    $tokenEsperado = trim((string) (Env::get('CRON_EFEMERIDES_TOKEN') ?: Env::get('CRON_SECRET_TOKEN') ?: ''));
     if ($tokenEsperado === '') {
         $tokenEsperado = 'SUA_SENHA_SECRETA';
     }
