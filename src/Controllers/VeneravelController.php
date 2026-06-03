@@ -251,6 +251,21 @@ class VeneravelController
             ],
         ];
 
+        // Vida da Loja: Sinais e Acompanhamentos fraternos
+        $vidaLojaService = new \App\Services\VidaLojaService();
+        $vidaLojaService->sincronizarSinaisAutomáticos();
+
+        $sinalModel = new \App\Models\VidaLojaSinal();
+        $acompanhamentoModel = new \App\Models\VidaLojaAcompanhamento();
+
+        $authorizer = new \App\Core\Authorization\Authorizer(new \App\Core\Auth\CurrentUser($_SESSION), new \App\Core\Authorization\PermissionMap());
+        $podeVerSigilosos = $authorizer->hasPermission('vida_loja.sigilo.view');
+        $usuarioUuid = $this->currentUserUuidOrNull();
+
+        $sinais = $sinalModel->buscarAbertosPorLoja();
+        $acompanhamentos = $acompanhamentoModel->listarPorLoja($podeVerSigilosos, $usuarioUuid, 100);
+        $obreiros = $obreiroModel->getAllAtivos();
+
         // View-model explícito: mantém o controller como fonte e evita dependências
         // em variáveis soltas com nomes históricos de outras telas.
         $view = [
@@ -277,6 +292,11 @@ class VeneravelController
                     !empty($item['necessita_apoio_financeiro']) 
                     && (string) ($item['status'] ?? '') === 'aberta'
             )),
+            'sinais' => $sinais,
+            'acompanhamentos' => $acompanhamentos,
+            'obreiros' => $obreiros,
+            'podeVerSigilosos' => $podeVerSigilosos,
+            'usuarioUuid' => $usuarioUuid,
         ];
 
         require_once __DIR__ . '/../Views/veneravel/index.php';

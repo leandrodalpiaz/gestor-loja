@@ -121,6 +121,94 @@ class PresencaSessao
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function listarPresencasAgapePorSessao(int $sessaoId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT
+                ps.id,
+                ps.sessao_id,
+                ps.obreiro_id,
+                ps.presente,
+                ps.presente_agape,
+                ps.observacao,
+                COALESCE(o.nome_historico, o.nome) AS nome,
+                o.cim,
+                o.grau
+            FROM presencas_sessao ps
+            JOIN sessoes s ON s.id = ps.sessao_id
+            JOIN obreiros o ON o.id = ps.obreiro_id
+            WHERE ps.sessao_id = :sessao_id
+              AND s.loja_id = :loja_id
+              AND ps.presente = TRUE
+            ORDER BY nome ASC
+        ");
+        $stmt->execute([
+            'sessao_id' => $sessaoId,
+            'loja_id' => $this->obterLojaAtualId(),
+        ]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function salvarAgape(int $sessaoId, array $presentesAgapeObreiroIds): bool
+    {
+        // 1. Obter todos os obreiros que estiveram presentes na sessão (presente = true)
+        $stmt = $this->db->prepare("
+            SELECT obreiro_id 
+            FROM presencas_sessao 
+            WHERE sessao_id = :sessao_id AND presente = TRUE
+        ");
+        $stmt->execute(['sessao_id' => $sessaoId]);
+        $obreirosSessao = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (empty($obreirosSessao)) {
+            // Nenhuma presença registrada na sessão ritualística ainda
+            return false;
+        }
+
+        // Começa a transação se não estiver em uma existente
+        $inTransaction = $this->db->inTransaction();
+        if (!$inTransaction) {
+            $this->db->beginTransaction();
+        }
+        try {
+            // Primeiro, zera presente_agape para NULL para qualquer obreiro ausente na sessão ritualística
+            $stmtReset = $this->db->prepare("
+                UPDATE presencas_sessao
+                SET presente_agape = NULL
+                WHERE sessao_id = :sessao_id AND presente = FALSE
+            ");
+            $stmtReset->execute(['sessao_id' => $sessaoId]);
+
+            // Agora, para cada obreiro que esteve presente na sessão ritualística, define true ou false
+            $stmtUpdate = $this->db->prepare("
+                UPDATE presencas_sessao
+                SET presente_agape = :presente_agape,
+                    updated_at = NOW()
+                WHERE sessao_id = :sessao_id AND obreiro_id = :obreiro_id AND presente = TRUE
+            ");
+
+            foreach ($obreirosSessao as $obreiroId) {
+                $ficouAgape = in_array($obreiroId, $presentesAgapeObreiroIds, true);
+                $stmtUpdate->execute([
+                    'presente_agape' => $ficouAgape ? 'true' : 'false',
+                    'sessao_id' => $sessaoId,
+                    'obreiro_id' => $obreiroId
+                ]);
+            }
+
+            if (!$inTransaction) {
+                $this->db->commit();
+            }
+            return true;
+        } catch (\Throwable $e) {
+            if (!$inTransaction) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
     private function obterLojaAtualId(): int
     {
         return $this->resolveCurrentStoreId($this->db);

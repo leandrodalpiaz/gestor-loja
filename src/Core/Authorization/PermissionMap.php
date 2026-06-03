@@ -33,6 +33,10 @@ class PermissionMap
             'biblioteca.manage',
             'biblioteca.self',
             'biblioteca.classificar',
+            'vida_loja.view',
+            'vida_loja.manage',
+            'vida_loja.acompanhamento.create',
+            'vida_loja.sigilo.view',
         ],
         'secretario' => [
             'dashboard.view',
@@ -82,6 +86,10 @@ class PermissionMap
         'hospitaleiro' => [
             'dashboard.view',
             'hospitaleiro.manage',
+            'vida_loja.view',
+            'vida_loja.manage',
+            'vida_loja.acompanhamento.create',
+            'vida_loja.sigilo.view',
         ],
         'orador' => [
             'dashboard.view',
@@ -192,6 +200,11 @@ class PermissionMap
         '/biblioteca/interloja/decidir' => 'biblioteca.manage',
         '/biblioteca/devolver' => 'biblioteca.manage',
         '/biblioteca/classificar' => 'biblioteca.classificar',
+        '/vida-loja' => 'vida_loja.view',
+        '/vida-loja/sinais' => 'vida_loja.view',
+        '/vida-loja/sinais/acao' => 'vida_loja.manage',
+        '/vida-loja/contato/salvar' => 'vida_loja.acompanhamento.create',
+        '/vida-loja/contato/excluir' => 'vida_loja.manage',
     ];
 
     public function permissionsForRoles(array $roles): array

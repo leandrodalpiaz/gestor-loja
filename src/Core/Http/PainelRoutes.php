@@ -628,6 +628,16 @@ class PainelRoutes
                 (new MestreBanquetesController())->salvarOperacao();
                 return true;
 
+            case '/mestre-banquetes/presencas/salvar':
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'mestre_banquetes.manage', 'Acesso restrito ao Mestre de Banquetes, Venerável Mestre ou Administrador.');
+                (new MestreBanquetesController())->salvarPresencasAgape();
+                return true;
+
+            case '/mestre-banquetes/anfitrioes/salvar':
+                self::requirePermissionPanel($openTestAccess, $session, $sessionHasPermission, 'mestre_banquetes.manage', 'Acesso restrito ao Mestre de Banquetes, Venerável Mestre ou Administrador.');
+                (new MestreBanquetesController())->salvarAnfitrioes();
+                return true;
+
             case '/chanceler/sessao':
             case '/chanceler/sessao/dashboard':
                 WebGuards::requireLogin($openTestAccess, $session);

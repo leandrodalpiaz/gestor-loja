@@ -108,6 +108,18 @@ require __DIR__ . '/../partials/erp_shell_open.php';
     </div>
 </div>
 
+<!-- Navegação por Abas -->
+<?php $activeTab = $_GET['tab'] ?? 'assistencial'; ?>
+<div class="flex border-b border-white/10 mb-6 gap-4">
+    <button onclick="switchTab('assistencial')" id="tab-btn-assistencial" class="py-2.5 px-4 text-sm font-bold <?= $activeTab === 'assistencial' ? 'text-erp-gold border-erp-gold' : 'text-slate-400 border-transparent hover:text-white' ?> border-b-2 transition">
+        Gestão Assistencial & Tronco
+    </button>
+    <button onclick="switchTab('preventivo')" id="tab-btn-preventivo" class="py-2.5 px-4 text-sm font-bold <?= $activeTab === 'preventivo' ? 'text-erp-gold border-erp-gold' : 'text-slate-400 border-transparent hover:text-white' ?> border-b-2 transition">
+        Atenção Preventiva por Ausência
+    </button>
+</div>
+
+<div id="secao-assistencial" class="<?= $activeTab === 'assistencial' ? '' : 'hidden' ?>">
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Coluna Principal (2/3) -->
     <div class="lg:col-span-2 space-y-8">
@@ -464,6 +476,35 @@ require __DIR__ . '/../partials/erp_shell_open.php';
 
     </div>
 </div>
+</div>
+
+<div id="secao-preventivo" class="<?= $activeTab === 'preventivo' ? '' : 'hidden' ?>">
+    <?php include __DIR__ . '/../vida_loja/partial_sinais_e_contatos.php'; ?>
+</div>
+
+<script>
+function switchTab(tabId) {
+    if (tabId === 'assistencial') {
+        document.getElementById('secao-assistencial').classList.remove('hidden');
+        document.getElementById('secao-preventivo').classList.add('hidden');
+        
+        document.getElementById('tab-btn-assistencial').classList.add('text-erp-gold', 'border-erp-gold');
+        document.getElementById('tab-btn-assistencial').classList.remove('text-slate-400', 'border-transparent');
+        
+        document.getElementById('tab-btn-preventivo').classList.remove('text-erp-gold', 'border-erp-gold');
+        document.getElementById('tab-btn-preventivo').classList.add('text-slate-400', 'border-transparent');
+    } else {
+        document.getElementById('secao-assistencial').classList.add('hidden');
+        document.getElementById('secao-preventivo').classList.remove('hidden');
+        
+        document.getElementById('tab-btn-preventivo').classList.add('text-erp-gold', 'border-erp-gold');
+        document.getElementById('tab-btn-preventivo').classList.remove('text-slate-400', 'border-transparent');
+        
+        document.getElementById('tab-btn-assistencial').classList.remove('text-erp-gold', 'border-erp-gold');
+        document.getElementById('tab-btn-assistencial').classList.add('text-slate-400', 'border-transparent');
+    }
+}
+</script>
 
 <?php
 require_once __DIR__ . '/../partials/erp_shell_close.php';

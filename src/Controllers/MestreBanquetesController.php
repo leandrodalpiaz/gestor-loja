@@ -5,9 +5,25 @@ namespace App\Controllers;
 use App\Models\BanqueteOperacao;
 use App\Models\Presenca;
 use App\Models\Sessao;
+use App\Models\PresencaSessao;
+use App\Models\VidaLojaAgapeAnfitriao;
+use App\Models\Obreiro;
 
 class MestreBanquetesController
 {
+    private function obterUsuarioUuid(): ?string
+    {
+        $userId = $_SESSION['usuario_id'] ?? null;
+        if ($userId === null || trim((string)$userId) === '') {
+            return null;
+        }
+        $userId = trim((string)$userId);
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $userId) === 1) {
+            return $userId;
+        }
+        return null;
+    }
+
     public function index(): void
     {
         $sessaoModel = new Sessao();
@@ -29,6 +45,10 @@ class MestreBanquetesController
             'resultado_real' => 0.0,
         ];
 
+        $presencasSessao = [];
+        $anfitrioesDesignados = [];
+        $obreirosAtivos = [];
+
         if ($sessaoSelecionadaId > 0) {
             $sessaoEmFoco = $sessaoModel->findById($sessaoSelecionadaId);
         }
@@ -44,6 +64,16 @@ class MestreBanquetesController
             $descricaoModeloFinanceiroAgape = $sessaoModel->obterDescricaoModeloFinanceiroAgape($sessaoEmFoco);
             $operacaoBanquete = $operacaoModel->obterPorSessao($sessaoId);
             $financeiroBanquete = $this->montarResumoFinanceiro($sessaoEmFoco, count($participantesAgape), $operacaoBanquete);
+
+            // Fase 2: Buscar presenças físicas na sessão ritual e designações de anfitriões
+            $presencasSessaoModel = new PresencaSessao();
+            $presencasSessao = $presencasSessaoModel->listarPresencasAgapePorSessao($sessaoId);
+
+            $anfitriaoModel = new VidaLojaAgapeAnfitriao();
+            $anfitrioesDesignados = $anfitriaoModel->listarPorSessao($sessaoId);
+
+            $obreiroModel = new Obreiro();
+            $obreirosAtivos = $obreiroModel->getAllAtivos();
         }
 
         require_once __DIR__ . '/../Views/mestre_banquetes/index.php';
@@ -62,8 +92,67 @@ class MestreBanquetesController
         $ok = $sessaoId > 0 && (new BanqueteOperacao())->salvar($sessaoId, $_POST, $autorId);
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Operação do banquete atualizada com sucesso.'
+            ? 'Operação do banquete updated com sucesso.'
             : 'Não foi possível atualizar a operação do banquete.';
+
+        header('Location: /mestre-banquetes?sessao_id=' . urlencode((string) $sessaoId));
+        exit;
+    }
+
+    public function salvarPresencasAgape(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /mestre-banquetes');
+            exit;
+        }
+
+        $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
+        $presentesAgape = $_POST['presente_agape'] ?? []; // Array de UUIDs dos obreiros que ficaram no ágape
+
+        if ($sessaoId > 0) {
+            $presencasSessaoModel = new PresencaSessao();
+            $ok = $presencasSessaoModel->salvarAgape($sessaoId, $presentesAgape);
+            
+            $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+                ? 'Presenças no ágape registradas com sucesso.'
+                : 'Não foi possível salvar as presenças no ágape (certifique-se de que a presença da sessão ritualística já foi registrada).';
+        }
+
+        header('Location: /mestre-banquetes?sessao_id=' . urlencode((string) $sessaoId));
+        exit;
+    }
+
+    public function salvarAnfitrioes(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /mestre-banquetes');
+            exit;
+        }
+
+        $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
+        $action = trim((string) ($_POST['action'] ?? ''));
+        $usuarioUuid = $this->obterUsuarioUuid();
+
+        if ($sessaoId <= 0 || $usuarioUuid === null) {
+            $_SESSION['mensagem_erro'] = 'Sessão ou autor da operação inválido.';
+            header('Location: /mestre-banquetes?sessao_id=' . urlencode((string) $sessaoId));
+            exit;
+        }
+
+        $anfitriaoModel = new VidaLojaAgapeAnfitriao();
+
+        if ($action === 'adicionar') {
+            $ok = $anfitriaoModel->adicionar($sessaoId, $_POST, $usuarioUuid);
+            $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+                ? 'Anfitrião designado com sucesso.'
+                : 'Erro ao adicionar anfitrião. Certifique-se de que informou um acolhido, visitante ou que o foco seja "geral".';
+        } elseif ($action === 'remover') {
+            $anfitriaoId = (int) ($_POST['anfitriao_id'] ?? 0);
+            $ok = $anfitriaoId > 0 && $anfitriaoModel->remover($anfitriaoId, $usuarioUuid);
+            $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
+                ? 'Designação de anfitrião removida com sucesso.'
+                : 'Erro ao remover designação de anfitrião.';
+        }
 
         header('Location: /mestre-banquetes?sessao_id=' . urlencode((string) $sessaoId));
         exit;

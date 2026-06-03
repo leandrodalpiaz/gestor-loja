@@ -22,6 +22,20 @@ class HospitaleiroController
         $saldoTronco = $troncoModel->obterSaldo();
         $movimentosTronco = $troncoModel->listarRecentes(50);
 
+        // Vida da Loja: Sinais e Acompanhamentos fraternos
+        $vidaLojaService = new \App\Services\VidaLojaService();
+        $vidaLojaService->sincronizarSinaisAutomáticos();
+
+        $sinalModel = new \App\Models\VidaLojaSinal();
+        $acompanhamentoModel = new \App\Models\VidaLojaAcompanhamento();
+
+        $authorizer = new \App\Core\Authorization\Authorizer(new \App\Core\Auth\CurrentUser($_SESSION), new \App\Core\Authorization\PermissionMap());
+        $podeVerSigilosos = $authorizer->hasPermission('vida_loja.sigilo.view');
+        $usuarioUuid = $this->obterUsuarioUuid();
+
+        $sinais = $sinalModel->buscarAbertosPorLoja();
+        $acompanhamentos = $acompanhamentoModel->listarPorLoja($podeVerSigilosos, $usuarioUuid, 100);
+
         $roles = array_values(array_unique(array_map(
             static fn ($role) => strtolower((string) $role),
             $_SESSION['usuario_cargos'] ?? [$_SESSION['usuario_cargo'] ?? '']
@@ -331,5 +345,18 @@ class HospitaleiroController
 
         $ok = (new OcorrenciaAssistencial())->registrarVisita($id, $autorId, $observacao, $dataProximaAcao);
         return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar a visita/retorno.'];
+    }
+
+    private function obterUsuarioUuid(): ?string
+    {
+        $userId = $_SESSION['usuario_id'] ?? null;
+        if ($userId === null || trim((string)$userId) === '') {
+            return null;
+        }
+        $userId = trim((string)$userId);
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $userId) === 1) {
+            return $userId;
+        }
+        return null;
     }
 }

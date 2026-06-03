@@ -20,6 +20,7 @@ use App\Core\Auth\CurrentUser;
 use App\Core\Auth\AccountGate;
 use App\Core\Http\AdminRoutes;
 use App\Core\Http\AssistenciaRoutes;
+use App\Core\Http\VidaLojaRoutes;
 use App\Core\Http\BibliotecaRoutes;
 use App\Core\Http\ChancelariaRoutes;
 use App\Core\Http\JsonResponse;
@@ -1316,6 +1317,10 @@ if (ObreirosRoutes::dispatch($requestUri, $method, $openTestAccess, $_SESSION, $
 }
 
 if (AssistenciaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $authorizer)) {
+    return;
+}
+
+if (VidaLojaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $authorizer)) {
     return;
 }
 

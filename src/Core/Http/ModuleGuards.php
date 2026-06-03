@@ -131,4 +131,34 @@ class ModuleGuards
             'Acesso restrito ao Mestre Hospitaleiro, Secretaria, Tesouraria ou Veneravel Mestre.'
         );
     }
+
+    public static function requireVidaLojaView(bool $openTestAccess, array $session, Authorizer $authorizer): void
+    {
+        WebGuards::requireAuthenticatedPermission(
+            $openTestAccess,
+            $session,
+            $authorizer->hasPermission('vida_loja.view'),
+            'Acesso restrito ao Mestre Hospitaleiro ou ao Veneravel Mestre.'
+        );
+    }
+
+    public static function requireVidaLojaManage(bool $openTestAccess, array $session, Authorizer $authorizer): void
+    {
+        WebGuards::requireAuthenticatedPermission(
+            $openTestAccess,
+            $session,
+            $authorizer->hasPermission('vida_loja.manage'),
+            'Acesso restrito ao Mestre Hospitaleiro ou ao Veneravel Mestre.'
+        );
+    }
+
+    public static function requireVidaLojaAcompanhamentoCreate(bool $openTestAccess, array $session, Authorizer $authorizer): void
+    {
+        WebGuards::requireAuthenticatedPermission(
+            $openTestAccess,
+            $session,
+            $authorizer->hasPermission('vida_loja.acompanhamento.create'),
+            'Acesso restrito ao Mestre Hospitaleiro ou ao Veneravel Mestre.'
+        );
+    }
 }

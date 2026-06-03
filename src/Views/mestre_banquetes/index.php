@@ -292,6 +292,178 @@ require __DIR__ . '/../partials/erp_shell_open.php';
             </div>
         </div>
 
+        <?php if ($sessaoEmFoco && ($sessaoEmFoco['status'] ?? '') === 'realizada' && !empty($sessaoEmFoco['agape_ativo'])): ?>
+            <!-- REGISTRO DE PRESENÇA REAL NO ÁGAPE -->
+            <div class="card depth-1">
+                <div class="card-header border-b border-white/5 p-6">
+                    <h2 class="card-title text-white">Registro de Presença Real no Ágape</h2>
+                    <p class="card-subtitle mt-1">Marque os irmãos que de fato permaneceram para o banquete fraterno após a sessão ritualística.</p>
+                </div>
+                <div class="card-body p-6">
+                    <form method="POST" action="/mestre-banquetes/presencas/salvar" class="space-y-6">
+                        <input type="hidden" name="sessao_id" value="<?= (int) $sessaoEmFoco['id'] ?>">
+                        
+                        <?php if (empty($presencasSessao)): ?>
+                            <p class="text-center text-slate-400 py-6 text-sm">
+                                Nenhuma presença ritualística registrada para esta sessão ainda. O Chanceler precisa registrar as presenças da sessão antes.
+                            </p>
+                        <?php else: ?>
+                            <!-- Grid de Presenças -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                <?php foreach ($presencasSessao as $pres): ?>
+                                    <?php $checked = ($pres['presente_agape'] === true); ?>
+                                    <label class="relative flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.01] p-3 hover:bg-white/5 transition cursor-pointer text-xs">
+                                        <input type="checkbox" name="presente_agape[]" value="<?= htmlspecialchars((string) $pres['obreiro_id']) ?>" <?= $checked ? 'checked' : '' ?> class="form-checkbox rounded text-primary">
+                                        <div class="truncate">
+                                            <span class="font-bold text-white block truncate"><?= htmlspecialchars((string) $pres['nome']) ?></span>
+                                            <span class="text-[10px] text-slate-400">CIM: <?= htmlspecialchars((string) $pres['cim'] ?? '-') ?></span>
+                                        </div>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                            
+                            <div class="text-right pt-4 border-t border-white/5">
+                                <button type="submit" class="btn btn-success px-8">Salvar Presenças do Ágape</button>
+                            </div>
+                        <?php endif; ?>
+                    </form>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($sessaoEmFoco): ?>
+            <!-- ACOLHIMENTO E ANFITRIÕES DA NOITE -->
+            <div class="card depth-1">
+                <div class="card-header border-b border-white/5 p-6">
+                    <h2 class="card-title text-white">Acolhimento e Integração Fraterna (Anfitriões)</h2>
+                    <p class="card-subtitle mt-1">Designe "Irmãos Anfitriões" encarregados de acompanhar iniciantes, visitantes ou irmãos necessitando de reaproximação.</p>
+                </div>
+                <div class="card-body p-6 space-y-6">
+                    
+                    <!-- Lista de Designações Atuais -->
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-bold text-erp-gold uppercase tracking-wider">Designações Ativas nesta Noite</h3>
+                        
+                        <?php if (empty($anfitrioesDesignados)): ?>
+                            <p class="text-slate-400 text-xs bg-white/[0.01] border border-white/5 rounded-xl p-4 text-center">Nenhum anfitrião designado para esta noite.</p>
+                        <?php else: ?>
+                            <div class="space-y-3">
+                                <?php foreach ($anfitrioesDesignados as $anf): ?>
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02] gap-4 text-xs">
+                                        <div class="space-y-1">
+                                            <p class="text-white">
+                                                Anfitrião: <strong class="text-erp-gold"><?= htmlspecialchars((string)$anf['anfitriao_nome']) ?></strong>
+                                            </p>
+                                            <p class="text-slate-300">
+                                                Foco: <span class="badge-status bg-white/5 text-slate-300 border border-white/10 uppercase text-[9px] px-1.5 py-0.5 rounded"><?= htmlspecialchars((string)$anf['foco']) ?></span>
+                                                <?php if (!empty($anf['acolhido_nome'])): ?>
+                                                    &middot; Acolhido: <strong class="text-white"><?= htmlspecialchars((string)$anf['acolhido_nome']) ?></strong>
+                                                <?php elseif (!empty($anf['visitante_nome'])): ?>
+                                                    &middot; Visitante: <strong class="text-white"><?= htmlspecialchars((string)$anf['visitante_nome']) ?></strong>
+                                                <?php endif; ?>
+                                            </p>
+                                            <?php if (!empty($anf['observacao'])): ?>
+                                                <p class="text-slate-400 italic text-[11px]">Nota: "<?= htmlspecialchars((string)$anf['observacao']) ?>"</p>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="text-right">
+                                            <form method="POST" action="/mestre-banquetes/anfitrioes/salvar" onsubmit="return confirm('Deseja remover esta designação de anfitrião?');">
+                                                <input type="hidden" name="sessao_id" value="<?= (int) $sessaoEmFoco['id'] ?>">
+                                                <input type="hidden" name="anfitriao_id" value="<?= (int) $anf['id'] ?>">
+                                                <input type="hidden" name="action" value="remover">
+                                                <button type="submit" class="btn border border-red-500/30 text-red-400 hover:bg-red-500/5 !py-1 !px-2.5 text-[10px] font-bold">
+                                                    Remover
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <!-- Formulário para Adicionar Designação -->
+                    <div class="border-t border-white/5 pt-6">
+                        <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-4">Designar Novo Anfitrião</h3>
+                        <form method="POST" action="/mestre-banquetes/anfitrioes/salvar" class="space-y-4">
+                            <input type="hidden" name="sessao_id" value="<?= (int) $sessaoEmFoco['id'] ?>">
+                            <input type="hidden" name="action" value="adicionar">
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="anfitriao_obreiro_id" class="form-label">Irmão Anfitrião</label>
+                                    <select name="anfitriao_obreiro_id" id="anfitriao_obreiro_id" required class="form-select w-full">
+                                        <option value="">Selecione o Anfitrião...</option>
+                                        <?php foreach ($obreirosAtivos as $ob): ?>
+                                            <option value="<?= htmlspecialchars((string)$ob['id']) ?>"><?= htmlspecialchars((string)$ob['nome']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label for="foco" class="form-label">Foco de Acolhimento</label>
+                                    <select name="foco" id="foco" class="form-select w-full" onchange="toggleAcolhidosDisplay(this.value)">
+                                        <option value="integracao">Integração Geral</option>
+                                        <option value="aprendizes">Novos Aprendizes</option>
+                                        <option value="companheiros">Companheiros</option>
+                                        <option value="visitantes">Visitantes Externos</option>
+                                        <option value="retorno">Irmão em Retorno (Afastados)</option>
+                                        <option value="geral">Geral (Acolhimento da Noite)</option>
+                                    </select>
+                                </div>
+                                
+                                <div id="acolhido_obreiro_block">
+                                    <label for="acolhido_obreiro_id" class="form-label">Irmão Acolhido (Do Quadro)</label>
+                                    <select name="acolhido_obreiro_id" id="acolhido_obreiro_id" class="form-select w-full">
+                                        <option value="">Selecione o Acolhido...</option>
+                                        <?php foreach ($obreirosAtivos as $ob): ?>
+                                            <option value="<?= htmlspecialchars((string)$ob['id']) ?>"><?= htmlspecialchars((string)$ob['nome']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                
+                                <div id="visitante_nome_block" style="display: none;">
+                                    <label for="visitante_nome" class="form-label">Nome do Visitante</label>
+                                    <input type="text" name="visitante_nome" id="visitante_nome" class="form-input w-full" placeholder="Ex: João da Silva">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="anfitriao_observacao" class="form-label">Instruções / Observações de Acolhimento</label>
+                                <textarea name="observacao" id="anfitriao_observacao" rows="2" class="form-textarea w-full" placeholder="Ex: Sentar ao lado do irmão e apresentá-lo aos oficiais da Oficina..."></textarea>
+                            </div>
+                            
+                            <div class="text-right">
+                                <button type="submit" class="btn btn-primary px-8">Confirmar Designação</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+            function toggleAcolhidosDisplay(focoVal) {
+                const obreiroBlock = document.getElementById('acolhido_obreiro_block');
+                const visitanteBlock = document.getElementById('visitante_nome_block');
+                
+                if (focoVal === 'visitantes') {
+                    obreiroBlock.style.display = 'none';
+                    document.getElementById('acolhido_obreiro_id').value = '';
+                    visitanteBlock.style.display = 'block';
+                } else if (focoVal === 'geral') {
+                    obreiroBlock.style.display = 'none';
+                    document.getElementById('acolhido_obreiro_id').value = '';
+                    visitanteBlock.style.display = 'none';
+                    document.getElementById('visitante_nome').value = '';
+                } else {
+                    obreiroBlock.style.display = 'block';
+                    visitanteBlock.style.display = 'none';
+                    document.getElementById('visitante_nome').value = '';
+                }
+            }
+            </script>
+        <?php endif; ?>
+
         <!-- PARTICIPANTES E CONFIRMADOS -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="card depth-1">
