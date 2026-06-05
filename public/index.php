@@ -1137,8 +1137,9 @@ if ($requestUri === '/api/cron/preparar-previa') {
                     ]
                 ];
 
-                if ($cardPath !== '' && file_exists($cardPath)) {
-                    $res = $telegramClient->sendPhoto($chatId, $cardPath, $textoReg, ['reply_markup' => $keyboard]);
+                $resolvedPath = \App\Services\EfemeridesCardService::resolveLocalPath($cardPath);
+                if ($resolvedPath !== '' && file_exists($resolvedPath)) {
+                    $res = $telegramClient->sendPhoto($chatId, $resolvedPath, $textoReg, ['reply_markup' => $keyboard]);
                     if (!$res) {
                         $disparos[$chatId] = 'falha ao enviar foto';
                     }
@@ -1206,10 +1207,21 @@ if ($requestUri === '/api/cron/efemerides-diarias') {
     $hojeRef = date('Y-m-d');
     $listaCards = !empty($registros) ? $service->buildCardsForDate($hojeRef, $registros) : [];
 
+    // Compor a mensagem consolidada em texto
+    $composer = new \App\Services\EfemeridesComposer();
+    $mensagem = trim($composer->composeDailyPreview($registros));
+
+    // 1. Enviar mensagem de texto consolidada se não estiver vazia
+    $okMsg = true;
+    if ($mensagem !== '' && $mensagem !== 'Nenhuma efeméride para hoje.') {
+        $okMsg = $telegram->sendMessage($grupoId, $mensagem, ['parse_mode' => 'HTML']);
+    }
+
+    // 2. Enviar cartões
     $contagemFotos = 0;
-    if (!empty($listaCards)) {
+    if ($okMsg && !empty($listaCards)) {
         foreach ($listaCards as $c) {
-            $absPath = $c['card_path'] ?? '';
+            $absPath = \App\Services\EfemeridesCardService::resolveLocalPath($c['card_path'] ?? '');
             if ($absPath !== '' && file_exists($absPath)) {
                 $desc = $c['titulo'] ?? $c['descricao'] ?? 'Efeméride';
                 $telegram->sendPhoto($grupoId, $absPath, "🖼 *Card:* " . $desc);
@@ -1218,7 +1230,7 @@ if ($requestUri === '/api/cron/efemerides-diarias') {
         }
     }
 
-    echo json_encode(['status' => 'ok', 'cards_enviados' => $contagemFotos]);
+    echo json_encode(['status' => 'ok', 'mensagem_enviada' => $okMsg, 'cards_enviados' => $contagemFotos]);
     exit;
 }
 // ROTEAMENTO PRINCIPAL

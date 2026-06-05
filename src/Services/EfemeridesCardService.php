@@ -405,4 +405,15 @@ class EfemeridesCardService
         }
         return false;
     }
+
+    public static function resolveLocalPath(?string $savedPath): string
+    {
+        if (empty($savedPath)) {
+            return '';
+        }
+        $filename = basename($savedPath);
+        // O diretório correto em tempo de execução para os cards gerados é sempre:
+        $runtimeDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'efemerides_geradas';
+        return $runtimeDir . DIRECTORY_SEPARATOR . $filename;
+    }
 }

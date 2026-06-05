@@ -19,12 +19,40 @@ class MestreHarmoniaController
     public function index(): void
     {
         $defaultPath = $this->resolveDefaultBasePath();
-        $basePathInput = trim((string) ($_GET['base_path'] ?? $defaultPath));
+        $basePathInput = trim((string) ($_GET['base_path'] ?? ''));
+        if ($basePathInput === '') {
+            $basePathInput = $defaultPath;
+        }
+
+        $translatedPathInput = $this->translatePathForContainer($basePathInput);
         $sessionPathInput = trim((string) ($_GET['sessao_path'] ?? ''));
+        $translatedSessionPath = $sessionPathInput !== '' ? $this->translatePathForContainer($sessionPathInput) : null;
+        
         $operadorEmExercicio = trim((string) ($_SESSION['harmonia_operador_nome'] ?? ''));
 
-        $payload = $this->playlistService->scanBase($basePathInput, $sessionPathInput !== '' ? $sessionPathInput : null);
+        $payload = $this->playlistService->scanBase($translatedPathInput, $translatedSessionPath);
+        
+        // Fallback automático se falhar
+        if ($payload['ok'] === false && $translatedPathInput !== $this->translatePathForContainer($defaultPath)) {
+            $translatedPathInput = $this->translatePathForContainer($defaultPath);
+            $payload = $this->playlistService->scanBase($translatedPathInput, $translatedSessionPath);
+        }
+
         $_SESSION['harmonia_track_map'] = $payload['track_map'] ?? [];
+
+        // Traduz os caminhos de volta para exibição amigável do usuário Windows
+        $basePathValue = $this->translatePathForUser($payload['base_path'] ?? $translatedPathInput);
+        $selectedSessionPath = $payload['selected_session']['path'] ?? '';
+        if ($selectedSessionPath !== '') {
+            $selectedSessionPath = $this->translatePathForUser($selectedSessionPath);
+        }
+
+        if (isset($payload['sessions']) && is_array($payload['sessions'])) {
+            foreach ($payload['sessions'] as &$session) {
+                $session['path'] = $this->translatePathForUser($session['path']);
+            }
+            unset($session);
+        }
 
         require_once __DIR__ . '/../Views/mestre_harmonia/index.php';
     }
@@ -44,7 +72,31 @@ class MestreHarmoniaController
             return;
         }
 
-        $payload = $this->playlistService->scanBase($basePathInput, $sessionPathInput !== '' ? $sessionPathInput : null);
+        $translatedPathInput = $this->translatePathForContainer($basePathInput);
+        $translatedSessionPath = $sessionPathInput !== '' ? $this->translatePathForContainer($sessionPathInput) : null;
+
+        $payload = $this->playlistService->scanBase($translatedPathInput, $translatedSessionPath);
+        
+        $defaultPath = $this->resolveDefaultBasePath();
+        $translatedDefault = $this->translatePathForContainer($defaultPath);
+        if ($payload['ok'] === false && $translatedPathInput !== $translatedDefault) {
+            $payload = $this->playlistService->scanBase($translatedDefault, $translatedSessionPath);
+        }
+
+        // Traduz de volta para o JSON de resposta
+        if (isset($payload['base_path'])) {
+            $payload['base_path'] = $this->translatePathForUser($payload['base_path']);
+        }
+        if (isset($payload['sessions']) && is_array($payload['sessions'])) {
+            foreach ($payload['sessions'] as &$session) {
+                $session['path'] = $this->translatePathForUser($session['path']);
+            }
+            unset($session);
+        }
+        if (isset($payload['selected_session']['path'])) {
+            $payload['selected_session']['path'] = $this->translatePathForUser($payload['selected_session']['path']);
+        }
+
         $_SESSION['harmonia_track_map'] = $payload['track_map'] ?? [];
 
         echo json_encode($payload, JSON_UNESCAPED_UNICODE);
@@ -228,6 +280,8 @@ class MestreHarmoniaController
     {
         $candidates = [
             trim((string) ($_ENV['MESTRE_HARMONIA_BASE_PATH'] ?? '')),
+            '/media/mestre_harmonia',
+            'D:\leando_loja\Mestre Harmonia LD',
             'D:\leandro_pessoal\Renascença\Mestre Harmonia LD',
             'D:\leandro_pessoal\Renascenca\Mestre Harmonia LD',
         ];
@@ -244,7 +298,7 @@ class MestreHarmoniaController
 
         // Valor padrão exibido no formulário quando nenhum diretório válido é detectado.
         // O operador ainda pode ajustar manualmente antes de iniciar a sessão.
-        return 'D:\leandro_pessoal\Renascença\Mestre Harmonia LD';
+        return DIRECTORY_SEPARATOR === '/' ? '/media/mestre_harmonia' : 'D:\leando_loja\Mestre Harmonia LD';
     }
 
     public function audio(): void
@@ -370,5 +424,51 @@ class MestreHarmoniaController
             'phase' => (string) ($faixa['phase'] ?? ''),
             'stage_key' => (string) ($faixa['stage_key'] ?? ''),
         ];
+    }
+
+    private function translatePathForContainer(string $path): string
+    {
+        $path = trim($path);
+        if ($path === '') {
+            return '';
+        }
+
+        if (DIRECTORY_SEPARATOR === '/') {
+            $normalizedPath = str_replace('\\', '/', $path);
+            $mappings = [
+                'D:/leando_loja/Mestre Harmonia LD' => '/media/mestre_harmonia',
+                'd:/leando_loja/Mestre Harmonia LD' => '/media/mestre_harmonia',
+                'D:/leandro_pessoal/Renascença/Mestre Harmonia LD' => '/media/mestre_harmonia',
+                'D:/leandro_pessoal/Renascenca/Mestre Harmonia LD' => '/media/mestre_harmonia',
+            ];
+
+            foreach ($mappings as $winPrefix => $linuxPrefix) {
+                if (str_starts_with($normalizedPath, $winPrefix)) {
+                    $relative = substr($normalizedPath, strlen($winPrefix));
+                    return $linuxPrefix . $relative;
+                }
+            }
+        }
+
+        return $path;
+    }
+
+    private function translatePathForUser(string $path): string
+    {
+        $path = trim($path);
+        if ($path === '') {
+            return '';
+        }
+
+        if (DIRECTORY_SEPARATOR === '/') {
+            $normalizedPath = str_replace('\\', '/', $path);
+            
+            if (str_starts_with($normalizedPath, '/media/mestre_harmonia')) {
+                $relative = substr($normalizedPath, strlen('/media/mestre_harmonia'));
+                return 'D:\\leando_loja\\Mestre Harmonia LD' . str_replace('/', '\\', $relative);
+            }
+        }
+
+        return $path;
     }
 }

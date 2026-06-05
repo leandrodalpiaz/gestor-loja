@@ -150,7 +150,8 @@ class TelegramClient
         return is_array($payload) && !empty($payload['ok']);
     }
 
-    public function sendPhoto($chatId, $photoPath, $caption = '', array $options = []) {
+    public function sendPhoto(int|string $chatId, string $photoPath, string $caption = '', array $options = []): bool
+    {
         if (AppEnv::telegramDryRun()) {
             error_log('[telegram][dry-run] sendPhoto chat_id=' . $chatId . ' photo=' . (string) $photoPath);
             return true;
@@ -185,11 +186,27 @@ class TelegramClient
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 45);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
 
         $response = curl_exec($ch);
         curl_close($ch);
 
-        return $response;
+        if ($response === false) {
+            $error = error_get_last();
+            error_log("ERRO API TELEGRAM sendPhoto (CURL): " . ($error['message'] ?? 'Desconhecido'));
+            return false;
+        }
+
+        $payload = json_decode((string) $response, true);
+        $ok = is_array($payload) && !empty($payload['ok']);
+        if (!$ok) {
+            error_log("ERRO API TELEGRAM sendPhoto: " . (string) $response);
+            return false;
+        }
+
+        error_log("RESPOSTA API TELEGRAM sendPhoto: " . $response);
+        return true;
     }
 
     public function editMessageText(int|string $chatId, int $messageId, string $text, array $options = []): bool

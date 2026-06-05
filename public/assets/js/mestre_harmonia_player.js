@@ -388,6 +388,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        if (el.sessionPicker) {
+            el.sessionPicker.addEventListener('change', (e) => {
+                stopPlayback();
+                const path = e.target.value;
+                const found = sessions.find(s => s.path === path);
+                if (found) {
+                    currentSession = found;
+                    tracks = Array.isArray(found.tracks) ? found.tracks : [];
+                    currentIndex = tracks.length > 0 ? 0 : -1;
+                    applyCurrentTrack(true);
+                    updateHeader();
+                    updateSummary();
+                }
+            });
+        }
+
         el.btnChangeOperator.addEventListener('click', openOperatorModal);
         el.btnSaveOperator.addEventListener('click', async () => {
             const name = (el.operatorInput.value || '').trim();

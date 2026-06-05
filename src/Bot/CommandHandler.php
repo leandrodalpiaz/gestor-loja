@@ -1084,7 +1084,7 @@ class CommandHandler
 
         $erros = 0;
         foreach ($cards as $c) {
-            $absPath = $c['card_path'] ?? '';
+            $absPath = \App\Services\EfemeridesCardService::resolveLocalPath($c['card_path'] ?? '');
             if ($absPath !== '' && file_exists($absPath)) {
                 if (!$this->telegram->sendPhoto($grupoId, $absPath, '')) {
                     $erros++;
@@ -1144,8 +1144,9 @@ class CommandHandler
                 ]
             ];
 
-            if ($cardPath !== '' && file_exists($cardPath)) {
-                $this->telegram->sendPhoto($chatId, $cardPath, $textoReg, ['reply_markup' => $keyboard]);
+            $resolvedPath = \App\Services\EfemeridesCardService::resolveLocalPath($cardPath);
+            if ($resolvedPath !== '' && file_exists($resolvedPath)) {
+                $this->telegram->sendPhoto($chatId, $resolvedPath, $textoReg, ['reply_markup' => $keyboard]);
             } else {
                 $this->telegram->sendMessage($chatId, $textoReg, ['reply_markup' => $keyboard]);
             }
@@ -1257,7 +1258,7 @@ class CommandHandler
 
         $erros = 0;
         foreach ($cards as $c) {
-            $absPath = $c['card_path'] ?? '';
+            $absPath = \App\Services\EfemeridesCardService::resolveLocalPath($c['card_path'] ?? '');
             if ($absPath !== '' && file_exists($absPath)) {
                 if (!$this->telegram->sendPhoto($chatId, $absPath, '')) {
                     $erros++;
@@ -1433,7 +1434,7 @@ class CommandHandler
         if ($modo === 'cards' || $modo === 'both') {
             $erros = 0;
             foreach ($cards as $c) {
-                $absPath = $c['card_path'] ?? '';
+                $absPath = \App\Services\EfemeridesCardService::resolveLocalPath($c['card_path'] ?? '');
                 if ($absPath !== '' && file_exists($absPath)) {
                     if (!$this->telegram->sendPhoto($grupoId, $absPath, '')) {
                         $erros++;
@@ -1519,8 +1520,9 @@ class CommandHandler
             $sucesso = $this->telegram->sendMessage($grupoId, $textoGrupo, ['parse_mode' => 'HTML']);
             $confText = "✅ Enviado apenas o texto para o grupo.";
         } elseif ($action === 'cd') {
-            if ($cardPath !== '' && file_exists($cardPath)) {
-                $sucesso = (bool) $this->telegram->sendPhoto($grupoId, $cardPath, '');
+            $resolvedPath = \App\Services\EfemeridesCardService::resolveLocalPath($cardPath);
+            if ($resolvedPath !== '' && file_exists($resolvedPath)) {
+                $sucesso = (bool) $this->telegram->sendPhoto($grupoId, $resolvedPath, '');
             } else {
                 $sucesso = false;
                 $this->telegram->sendMessage($chatId, "Erro ao gerar ou localizar a imagem do cartão.");
@@ -1529,8 +1531,9 @@ class CommandHandler
         } elseif ($action === 'bo') {
             $sucesso = $this->telegram->sendMessage($grupoId, $textoGrupo, ['parse_mode' => 'HTML']);
             if ($sucesso) {
-                if ($cardPath !== '' && file_exists($cardPath)) {
-                    $sucessoCard = $this->telegram->sendPhoto($grupoId, $cardPath, '');
+                $resolvedPath = \App\Services\EfemeridesCardService::resolveLocalPath($cardPath);
+                if ($resolvedPath !== '' && file_exists($resolvedPath)) {
+                    $sucessoCard = $this->telegram->sendPhoto($grupoId, $resolvedPath, '');
                     if (!$sucessoCard) {
                         $this->telegram->sendMessage($chatId, "Texto enviado, mas houve falha ao enviar o cartão.");
                     }

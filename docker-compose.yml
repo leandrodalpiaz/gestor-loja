@@ -11,6 +11,7 @@ services:
       - .env
     volumes:
       - ./:/var/www/html
+      - "d:/leando_loja/Mestre Harmonia LD:/media/mestre_harmonia"
 
   tunnel:
     image: cloudflare/cloudflared:latest

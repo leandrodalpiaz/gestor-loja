@@ -270,7 +270,7 @@ class MiniappApiRoutes
 
             $cardsEnviados = 0;
             foreach ($cards as $card) {
-                $absPath = trim((string) ($card['card_path'] ?? ''));
+                $absPath = \App\Services\EfemeridesCardService::resolveLocalPath($card['card_path'] ?? '');
                 if ($absPath === '' || !file_exists($absPath)) {
                     continue;
                 }

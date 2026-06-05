@@ -146,7 +146,7 @@ class ChancelariaRoutes
                 $totalFotos = count($listaCards);
                 if ($okMsg && $totalFotos > 0) {
                     foreach ($listaCards as $c) {
-                        $absPath = $c['card_path'] ?? '';
+                        $absPath = \App\Services\EfemeridesCardService::resolveLocalPath($c['card_path'] ?? '');
                         if ($absPath !== '' && file_exists($absPath)) {
                             $desc = $c['titulo'] ?? $c['descricao'] ?? 'Efeméride';
                             if (!$telegram->sendPhotoToGroup($absPath, "🖼 *Card:* " . $desc)) {

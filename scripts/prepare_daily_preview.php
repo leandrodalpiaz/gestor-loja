@@ -153,8 +153,9 @@ if (!empty($targetChatIds)) {
                 ]
             ];
 
-            if ($cardPath !== '' && file_exists($cardPath)) {
-                $res = $telegramClient->sendPhoto($chatId, $cardPath, $textoReg, ['reply_markup' => $keyboard]);
+            $resolvedPath = \App\Services\EfemeridesCardService::resolveLocalPath($cardPath);
+            if ($resolvedPath !== '' && file_exists($resolvedPath)) {
+                $res = $telegramClient->sendPhoto($chatId, $resolvedPath, $textoReg, ['reply_markup' => $keyboard]);
                 if ($res) {
                     echo "Foto de efeméride enviada para ID: $chatId\n";
                 } else {
