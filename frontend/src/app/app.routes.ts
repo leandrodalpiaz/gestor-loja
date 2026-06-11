@@ -7,6 +7,7 @@ import { TesourariaRegularidade } from './components/tesouraria-regularidade/tes
 import { SecretariaObreiros } from './components/secretaria-obreiros/secretaria-obreiros';
 import { SecretariaSessoes } from './components/secretaria-sessoes/secretaria-sessoes';
 import { ChancelariaEfemerides } from './components/chancelaria-efemerides/chancelaria-efemerides';
+import { ChancelariaCertificado } from './components/chancelaria-certificado/chancelaria-certificado';
 import { HarmoniaPlayer } from './components/harmonia-player/harmonia-player';
 
 export const routes: Routes = [
@@ -21,6 +22,7 @@ export const routes: Routes = [
       { path: 'secretaria/obreiros', component: SecretariaObreiros },
       { path: 'secretaria/sessoes', component: SecretariaSessoes },
       { path: 'chancelaria/efemerides', component: ChancelariaEfemerides },
+      { path: 'chancelaria/certificado', component: ChancelariaCertificado },
       { path: 'harmonia/player', component: HarmoniaPlayer }
     ]
   },

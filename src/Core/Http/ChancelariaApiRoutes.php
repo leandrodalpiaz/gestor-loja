@@ -172,6 +172,49 @@ class ChancelariaApiRoutes
             return true;
         }
 
+        // --- POST /api/chancelaria/certificado/gerar ---
+        if ($requestUri === '/api/chancelaria/certificado/gerar' && $method === 'POST') {
+            $body = RequestBody::json();
+
+            $nome = trim((string) ($body['nome_visitante'] ?? ''));
+            $loja = trim((string) ($body['loja_visitante'] ?? ''));
+            $oriente = trim((string) ($body['oriente'] ?? ''));
+            $tipoSessao = trim((string) ($body['tipo_sessao'] ?? ''));
+            $grauSessao = trim((string) ($body['grau_sessao'] ?? ''));
+            $dataSessao = trim((string) ($body['data_sessao'] ?? ''));
+            $chatId = trim((string) ($body['chat_id'] ?? ''));
+
+            if ($nome === '' || $loja === '' || $oriente === '' || $tipoSessao === '' || $grauSessao === '' || $dataSessao === '') {
+                JsonResponse::send(['ok' => false, 'erro' => 'Todos os campos obrigatórios (*) devem ser preenchidos.']);
+                return true;
+            }
+
+            try {
+                require_once __DIR__ . '/../../Services/CertificadoGenerator.php';
+                $generator = new \App\Services\CertificadoGenerator();
+                $caminhoImagem = $generator->gerar($nome, $loja, $oriente, $tipoSessao, $grauSessao, $dataSessao);
+
+                if (!empty($chatId)) {
+                    require_once __DIR__ . '/../../Bot/TelegramClient.php';
+                    $telegram = new \App\Bot\TelegramClient();
+                    $telegram->sendPhoto($chatId, $caminhoImagem, "Certificado gerado com sucesso!\n\nAgora é só encaminhar para o Irmão {$nome}.");
+                }
+
+                $relativeUrl = '/temp/' . basename($caminhoImagem);
+                JsonResponse::send([
+                    'ok' => true,
+                    'caminho_imagem' => $relativeUrl,
+                    'mensagem' => 'Certificado gerado com sucesso!' . (!empty($chatId) ? ' Enviado também via Telegram.' : '')
+                ]);
+            } catch (\Exception $e) {
+                JsonResponse::send([
+                    'ok' => false,
+                    'erro' => 'Erro ao gerar o certificado: ' . $e->getMessage()
+                ]);
+            }
+            return true;
+        }
+
         return false;
     }
 }

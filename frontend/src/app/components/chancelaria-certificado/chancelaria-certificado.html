@@ -1,0 +1,165 @@
+<div class="space-y-6">
+  
+  <!-- HEADER & BREADCRUMB -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white">Emitir Certificado</h1>
+      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Módulo de Chancelaria & Registro de Visitantes</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Coluna de Informações e Preview -->
+    <div class="lg:col-span-1 space-y-6">
+      
+      <!-- Preview do Certificado -->
+      <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl p-5 space-y-4">
+        <div class="border-b border-white/5 pb-2">
+          <h2 class="text-xs font-bold text-white uppercase tracking-widest">Pré-visualização</h2>
+        </div>
+        
+        @if (generatedImageUrl()) {
+          <div class="space-y-4">
+            <div class="border border-white/10 rounded-xl overflow-hidden shadow-inner bg-black/40 p-2">
+              <img [src]="generatedImageUrl()" alt="Certificado Gerado" class="w-full h-auto rounded-lg shadow-md">
+            </div>
+            <div class="flex flex-col gap-2">
+              <button (click)="baixarImagem()" 
+                      class="w-full py-3 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg transition-all hover:scale-[1.01]">
+                Baixar Certificado
+              </button>
+              <button (click)="abrirImagem()" 
+                      class="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/5 text-slate-300 font-bold uppercase tracking-wider text-xs rounded-xl transition-all">
+                Abrir em Nova Aba
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-xl py-16 text-center text-slate-500">
+            <svg class="w-12 h-12 text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <p class="text-xs max-w-[200px]">Preencha o formulário ao lado e gere o certificado para visualizar a prévia aqui.</p>
+          </div>
+        }
+      </div>
+
+      <!-- Fluxo de Trabalho -->
+      <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl p-5 space-y-4">
+        <div class="border-b border-white/5 pb-2">
+          <h2 class="text-xs font-bold text-white uppercase tracking-widest">Fluxo de Trabalho</h2>
+        </div>
+        <ul class="space-y-3 text-xs text-slate-300">
+          <li class="flex items-start gap-3">
+            <span class="font-bold text-liturgical-gold">1.</span> 
+            <span>Insira o nome completo do visitante, a loja maçônica de origem e o oriente correspondente.</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="font-bold text-liturgical-gold">2.</span> 
+            <span>Selecione a data da sessão, o tipo de sessão (Ordinária ou Magna) e o grau da sessão.</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="font-bold text-liturgical-gold">3.</span> 
+            <span>Caso esteja acessando de dentro do bot do Telegram, o certificado também será enviado diretamente ao seu chat.</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Coluna do Formulário -->
+    <div class="lg:col-span-2">
+      <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 space-y-6">
+        <div class="border-b border-white/5 pb-2">
+          <h2 class="text-xs font-bold text-white uppercase tracking-widest">Formulário de Emissão</h2>
+        </div>
+        
+        <form (submit)="gerarCertificado(); $event.preventDefault()" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <div class="md:col-span-2 flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Nome do Visitante *</label>
+              <input type="text" [(ngModel)]="nomeVisitante" name="nomeVisitante" required placeholder="Ex: João da Silva"
+                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <div class="md:col-span-2 flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Loja Maçônica do Visitante *</label>
+              <input type="text" [(ngModel)]="lojaVisitante" name="lojaVisitante" required placeholder="Ex: ARLS Estrela do Oriente nº 99"
+                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Oriente (Cidade / Estado) *</label>
+              <input type="text" [(ngModel)]="oriente" name="oriente" required placeholder="Ex: São Paulo - SP"
+                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Data da Sessão *</label>
+              <input type="date" [(ngModel)]="dataSessao" name="dataSessao" required
+                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tipo de Sessão *</label>
+              <select [(ngModel)]="tipoSessao" name="tipoSessao" required
+                      class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none transition-colors">
+                <option value="Ordinaria">Ordinária</option>
+                <option value="Magna">Magna</option>
+                <option value="Magna de Iniciacao">Magna de Iniciação</option>
+                <option value="Magna de Elevacao">Magna de Elevação</option>
+                <option value="Magna de Exaltacao">Magna de Exaltação</option>
+              </select>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Grau da Sessão *</label>
+              <select [(ngModel)]="grauSessao" name="grauSessao" required
+                      class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none transition-colors">
+                <option value="Aprendiz Macom">Aprendiz Maçom (Grau 1)</option>
+                <option value="Companheiro Macom">Companheiro Maçom (Grau 2)</option>
+                <option value="Mestre Macom">Mestre Maçom (Grau 3)</option>
+              </select>
+            </div>
+            
+            @if (chatId()) {
+              <div class="md:col-span-2 bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 flex items-center gap-3">
+                <svg class="w-5 h-5 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+                <span class="text-[10px] text-blue-300 font-bold uppercase tracking-wider leading-relaxed">
+                  Integrado com Telegram Miniapp (Chat ID: {{ chatId() }}). O bot enviará o certificado no seu Telegram.
+                </span>
+              </div>
+            }
+
+          </div>
+
+          <div class="pt-4 border-t border-white/5">
+            <button type="submit" [disabled]="loading()"
+                    class="w-full py-3 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg transition-all disabled:opacity-50 hover:shadow-liturgical-gold/10">
+              {{ loading() ? 'Gerando Certificado...' : 'Gerar e Emitir Certificado' }}
+            </button>
+          </div>
+        </form>
+
+        @if (successMsg()) {
+          <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs px-4 py-3 rounded-xl">
+            {{ successMsg() }}
+          </div>
+        }
+
+        @if (errorMsg()) {
+          <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs px-4 py-3 rounded-xl">
+            {{ errorMsg() }}
+          </div>
+        }
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
