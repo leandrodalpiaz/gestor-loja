@@ -1,0 +1,341 @@
+<div class="space-y-6">
+
+  <!-- HEADER & BREADCRUMB -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white">Mestre de Harmonia</h1>
+      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Sonorização Litúrgica dos Graus e Sessões</p>
+    </div>
+
+    <!-- OPERADOR EM EXERCÍCIO -->
+    <div class="flex items-center gap-3 bg-liturgical-surface/40 backdrop-blur-md border border-white/5 px-4 py-2.5 rounded-xl">
+      <div class="text-right">
+        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Operador de Som</span>
+        @if (editandoOperador()) {
+          <div class="flex items-center gap-2 mt-1">
+            <input type="text" [(ngModel)]="novoOperador" 
+                   class="bg-black/40 border border-white/10 rounded px-2 py-0.5 text-xs text-white focus:outline-none focus:border-liturgical-gold/50" />
+            <button (click)="salvarOperador()" class="text-emerald-400 hover:text-emerald-300 text-xs font-bold">Salvar</button>
+            <button (click)="editandoOperador.set(false)" class="text-rose-400 hover:text-rose-300 text-xs font-bold">Cancelar</button>
+          </div>
+        } @else {
+          <span class="text-xs font-semibold text-slate-200 block">{{ operadorNome() || 'Nenhum' }}</span>
+        }
+      </div>
+      @if (!editandoOperador()) {
+        <button (click)="iniciarEdicaoOperador()" class="p-1.5 hover:bg-white/5 rounded-lg text-slate-400 hover:text-liturgical-gold transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+          </svg>
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="flex items-center justify-center py-20 bg-liturgical-surface/20 border border-white/5 rounded-3xl">
+      <div class="text-center space-y-3">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-liturgical-gold mx-auto"></div>
+        <p class="text-xs text-slate-400 uppercase tracking-widest">Carregando painel musical...</p>
+      </div>
+    </div>
+  } @else if (errorMsg()) {
+    <div class="p-6 bg-rose-500/10 border border-rose-500/20 rounded-2xl">
+      <h3 class="text-rose-400 font-cinzel font-bold text-lg mb-2">Erro de Carregamento</h3>
+      <p class="text-xs text-slate-300">{{ errorMsg() }}</p>
+      <button (click)="carregarDados()" class="mt-4 px-4 py-2 bg-white/5 border border-white/10 text-xs text-white rounded-xl hover:bg-white/10 transition-colors">
+        Tentar Novamente
+      </button>
+    </div>
+  } @else {
+    <!-- MAIN GRID LAYOUT -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+      <!-- COLUNA 1: SESSÕES (W: 1/4) -->
+      <div class="lg:col-span-1 space-y-4 flex flex-col">
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Sessões Musicais</h2>
+        
+        <div class="flex-1 space-y-2 overflow-y-auto max-h-[600px] pr-1">
+          @for (sessao of sessoes(); track sessao.path) {
+            <button (click)="selecionarSessao(sessao.path)"
+                    [class]="sessaoAtual()?.path === sessao.path 
+                      ? 'w-full text-left bg-liturgical-gold/10 border border-liturgical-gold/30 hover:border-liturgical-gold/50 p-4 rounded-2xl transition-all'
+                      : 'w-full text-left bg-liturgical-surface/40 hover:bg-liturgical-surface/60 border border-white/5 p-4 rounded-2xl transition-all'">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <h3 class="font-cinzel text-xs font-bold text-white tracking-wider line-clamp-1">
+                    {{ sessao.nome }}
+                  </h3>
+                  <span class="text-[10px] text-slate-400 font-semibold block mt-1">
+                    {{ sessao.total_tracks }} faixas catalogadas
+                  </span>
+                </div>
+                @if (sessaoAtual()?.path === sessao.path) {
+                  <span class="flex h-2 w-2 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-liturgical-gold opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-liturgical-gold"></span>
+                  </span>
+                }
+              </div>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- COLUNA 2 & 3: PLAYER CENTRAL (W: 2/4) -->
+      <div class="lg:col-span-2 space-y-6">
+        
+        <!-- PLAYER CARD -->
+        <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col justify-between relative overflow-hidden">
+          
+          <!-- BACKGROUND GLOW EFFECTS -->
+          <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-liturgical-gold/5 blur-3xl"></div>
+          <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-emerald-500/5 blur-3xl"></div>
+
+          <!-- TOP BAR: SESSION INFO -->
+          <div class="flex justify-between items-start border-b border-white/5 pb-4 mb-6">
+            <div>
+              <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Sessão Ativa</span>
+              <h2 class="font-cinzel text-lg font-bold text-white tracking-widest mt-1">
+                {{ sessaoAtual()?.nome || 'Nenhuma' }}
+              </h2>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Status:</span>
+              <span [class]="'px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ' + 
+                (statusPlayer() === 'tocando' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
+                 statusPlayer() === 'pausado' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                 statusPlayer() === 'silencio' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 
+                 'bg-white/5 text-slate-400 border border-white/10')">
+                {{ statusPlayer() }}
+              </span>
+            </div>
+          </div>
+
+          <!-- MIDDLE SECTION: TRACK DISPLAY -->
+          <div class="py-6 flex flex-col items-center justify-center text-center space-y-4 flex-1">
+            
+            <!-- VINYL/DISC GRAPHIC WITH ROTATE ANIMATION -->
+            <div [class.animate-vinyl-spin]="statusPlayer() === 'tocando'"
+                 class="relative w-40 h-40 rounded-full bg-gradient-to-br from-slate-900 to-black border-2 border-white/10 shadow-2xl flex items-center justify-center">
+              <div class="absolute inset-2 rounded-full border border-white/5 border-dashed"></div>
+              <div class="absolute inset-6 rounded-full border border-white/5"></div>
+              <div class="w-16 h-16 rounded-full bg-liturgical-surface/90 border border-white/10 flex items-center justify-center relative">
+                <!-- Center Hole -->
+                <div class="w-4 h-4 rounded-full bg-black"></div>
+                <!-- Equalizer Animation inside circle -->
+                @if (statusPlayer() === 'tocando') {
+                  <div class="absolute flex items-end gap-0.5 justify-center bottom-2 left-0 right-0 h-4">
+                    <div class="eq-bar w-0.5 bg-liturgical-gold h-1 animate-eq1"></div>
+                    <div class="eq-bar w-0.5 bg-liturgical-gold h-2 animate-eq2"></div>
+                    <div class="eq-bar w-0.5 bg-liturgical-gold h-3 animate-eq3"></div>
+                    <div class="eq-bar w-0.5 bg-liturgical-gold h-2 animate-eq2"></div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- TRACK META -->
+            <div class="space-y-1 max-w-sm">
+              <span class="text-[9px] font-bold text-liturgical-gold uppercase tracking-widest">Tocando Agora</span>
+              @if (faixaAtual()) {
+                <h3 class="font-cinzel text-xl font-bold text-white tracking-wide leading-tight line-clamp-2">
+                  {{ faixaAtual()?.code ? (faixaAtual()?.code + ' - ') : '' }}{{ faixaAtual()?.title }}
+                </h3>
+                <span [class]="'inline-block px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest rounded ' + getFaixaBadgeClass(faixaAtual()?.type)">
+                  {{ getFaixaBadgeLabel(faixaAtual()?.type) }}
+                </span>
+                @if (faixaAtual()?.phase) {
+                  <p class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">
+                    Etapa: {{ faixaAtual()?.phase }}
+                  </p>
+                }
+              } @else {
+                <h3 class="font-cinzel text-base font-bold text-slate-500 uppercase tracking-widest">
+                  Nenhuma faixa selecionada
+                </h3>
+              }
+            </div>
+          </div>
+
+          <!-- CONTROLS & VOLUME BAR -->
+          <div class="mt-8 space-y-6">
+
+            <!-- NEXT UP MINI INFO -->
+            @if (proximaFaixa()) {
+              <div class="bg-black/20 border border-white/5 rounded-2xl p-3 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                  <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Próxima:</span>
+                  <span class="text-xs font-semibold text-slate-300 line-clamp-1">
+                    {{ proximaFaixa()?.code ? (proximaFaixa()?.code + ' - ') : '' }}{{ proximaFaixa()?.title }}
+                  </span>
+                </div>
+                <span class="px-1.5 py-0.5 bg-white/5 rounded text-[8px] font-bold uppercase text-slate-400">
+                  {{ getFaixaBadgeLabel(proximaFaixa()?.type) }}
+                </span>
+              </div>
+            }
+
+            <!-- CONTROL BUTTONS -->
+            <div class="flex items-center justify-center gap-4">
+              
+              <!-- PREVIOUS -->
+              <button (click)="anterior()" 
+                      class="p-3 bg-white/5 hover:bg-white/10 text-white rounded-2xl border border-white/5 transition-all"
+                      title="Anterior">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.334 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z"></path>
+                </svg>
+              </button>
+
+              <!-- PLAY / PAUSE -->
+              @if (statusPlayer() === 'tocando') {
+                <button (click)="pausar()" 
+                        class="p-5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg rounded-2xl shadow-xl hover:scale-105 transition-all"
+                        title="Pausar">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </button>
+              } @else {
+                <button (click)="iniciar()" 
+                        [disabled]="!faixaAtual()"
+                        class="p-5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg rounded-2xl shadow-xl hover:scale-105 transition-all disabled:opacity-30 disabled:scale-100"
+                        title="Reproduzir">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </button>
+              }
+
+              <!-- STOP -->
+              <button (click)="parar()" 
+                      class="p-3 bg-white/5 hover:bg-white/10 text-white rounded-2xl border border-white/5 transition-all"
+                      title="Parar">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v4H9z"></path>
+                </svg>
+              </button>
+
+              <!-- NEXT -->
+              <button (click)="proxima()" 
+                      class="p-3 bg-white/5 hover:bg-white/10 text-white rounded-2xl border border-white/5 transition-all"
+                      title="Próxima">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z"></path>
+                </svg>
+              </button>
+            </div>
+
+            <!-- LOWER BAR: VOLUME & AUTO-ADVANCE -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/5 pt-4">
+              
+              <!-- VOLUME CONTROLS -->
+              <div class="flex items-center gap-3 w-full sm:w-auto">
+                <button (click)="silencio()" 
+                        [class]="'p-2 rounded-xl transition-all ' + (statusPlayer() === 'silencio' ? 'text-rose-400 bg-rose-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5')">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                  </svg>
+                </button>
+                <div class="flex items-center gap-1.5">
+                  <button (click)="volumeDown()" class="p-1 text-slate-500 hover:text-white transition-colors">-</button>
+                  <div class="w-20 bg-white/10 h-1.5 rounded-full overflow-hidden">
+                    <div class="bg-liturgical-gold h-full transition-all" [style.width.%]="volumePercent()"></div>
+                  </div>
+                  <button (click)="volumeUp()" class="p-1 text-slate-500 hover:text-white transition-colors">+</button>
+                </div>
+                <span class="text-[10px] font-bold text-slate-400">{{ volumePercent() }}%</span>
+              </div>
+
+              <!-- AUTO ADVANCE SWITCH -->
+              <button (click)="toggleAutoProxima()" 
+                      [class]="'flex items-center gap-2 px-4 py-2 border rounded-xl text-xs font-bold transition-all ' + 
+                        (autoProxima() 
+                          ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 shadow-md shadow-emerald-500/5' 
+                          : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12"></path>
+                </svg>
+                Auto-Avançar
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- AUDIO HTML5 ELEMENT FOR REAL AUDIO OUTPUT -->
+        <audio #audioElement 
+               (ended)="onAudioEnded()"
+               crossorigin="anonymous">
+        </audio>
+      </div>
+
+      <!-- COLUNA 4: LISTA DE FAIXAS DA PLAYLIST (W: 1/4) -->
+      <div class="lg:col-span-1 space-y-4 flex flex-col">
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Faixas da Playlist</h2>
+
+        <div class="flex-1 space-y-2 overflow-y-auto max-h-[600px] pr-1">
+          @for (faixa of faixas(); track faixa.id) {
+            <div [class]="faixaAtual()?.id === faixa.id 
+                    ? 'bg-liturgical-gold/10 border-2 border-liturgical-gold/50 rounded-2xl p-3 flex flex-col justify-between transition-all'
+                    : 'bg-liturgical-surface/40 hover:bg-liturgical-surface/60 border border-white/5 rounded-2xl p-3 flex flex-col justify-between transition-all'">
+              
+              <div class="flex items-start justify-between gap-2">
+                <div class="space-y-0.5">
+                  <span class="text-[9px] font-mono text-slate-500 font-bold">
+                    {{ faixa.code ? ('#' + faixa.code) : 'Sem código' }}
+                  </span>
+                  <h4 class="text-xs font-bold text-white leading-tight line-clamp-2">
+                    {{ faixa.title }}
+                  </h4>
+                </div>
+                
+                <button (click)="selecionarFaixa(faixa.id)" 
+                        [class]="'p-1.5 rounded-lg border transition-all ' + 
+                          (faixaAtual()?.id === faixa.id 
+                            ? 'bg-liturgical-gold text-liturgical-bg border-liturgical-gold' 
+                            : 'bg-white/5 border-white/5 text-slate-400 hover:text-white hover:bg-white/10')">
+                  @if (faixaAtual()?.id === faixa.id && statusPlayer() === 'tocando') {
+                    <!-- Pause mini icon -->
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"></path>
+                    </svg>
+                  } @else {
+                    <!-- Play mini icon -->
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                    </svg>
+                  }
+                </button>
+              </div>
+
+              <!-- BOTTOM BADGE & PHASE -->
+              <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-white/5">
+                <span [class]="'px-1.5 py-0.5 text-[8px] font-bold uppercase rounded ' + getFaixaBadgeClass(faixa.type)">
+                  {{ getFaixaBadgeLabel(faixa.type) }}
+                </span>
+                
+                @if (faixa.phase) {
+                  <span class="text-[9px] text-slate-500 uppercase tracking-wider font-semibold truncate max-w-[100px]">
+                    {{ faixa.phase }}
+                  </span>
+                }
+              </div>
+
+            </div>
+          } @empty {
+            <div class="py-10 text-center text-slate-500 text-xs border border-white/5 rounded-2xl border-dashed">
+              Nenhuma faixa na sessão selecionada.
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+  }
+
+</div>

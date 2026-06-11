@@ -1,0 +1,88 @@
+/* Glassmorphic elements */
+.glass-card {
+  background: rgba(11, 19, 43, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.glass-card-gold {
+  background: rgba(11, 19, 43, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(201, 162, 39, 0.15);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(201, 162, 39, 0.03);
+}
+
+/* Colors and fonts */
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-inter {
+  font-family: 'Inter', sans-serif;
+}
+
+.text-liturgical-gold {
+  color: #C9A227;
+}
+
+.bg-liturgical-gold {
+  background-color: #C9A227;
+}
+
+.bg-liturgical-goldHover {
+  background-color: #E5B82B;
+}
+
+.bg-liturgical-gold\/10 {
+  background-color: rgba(201, 162, 39, 0.10);
+}
+
+.bg-liturgical-gold\/15 {
+  background-color: rgba(201, 162, 39, 0.15);
+}
+
+.border-liturgical-gold\/20 {
+  border-color: rgba(201, 162, 39, 0.2);
+}
+
+.border-liturgical-gold\/25 {
+  border-color: rgba(201, 162, 39, 0.25);
+}
+
+/* Table styling customization */
+.bg-white\/2 {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.divide-white\/2 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.02);
+}
+
+.hover\:bg-white\/2:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Focus effects */
+.focus-glow:focus {
+  box-shadow: 0 0 12px rgba(201, 162, 39, 0.2);
+  border-color: rgba(201, 162, 39, 0.35);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}

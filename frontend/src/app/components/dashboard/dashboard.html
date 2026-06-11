@@ -1,0 +1,166 @@
+<div class="min-h-screen bg-liturgical-bg text-slate-300 font-inter flex flex-col md:flex-row relative overflow-hidden">
+  
+  <!-- BACKGROUND GRADIENTS -->
+  <div class="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
+  <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-liturgical-gold/5 blur-3xl pointer-events-none"></div>
+  <div class="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-blue-500/5 blur-3xl pointer-events-none"></div>
+
+  <!-- MOBILE HEADER (Visible only on mobile) -->
+  <header class="md:hidden w-full h-16 bg-liturgical-surface/90 backdrop-blur-md border-b border-white/5 px-6 flex justify-between items-center z-40 shrink-0">
+    <div class="flex items-center gap-2">
+      <img src="/assets/logo-renascenca.png" alt="Logo" class="w-8 h-8 object-contain">
+      <span class="font-cinzel text-base font-bold tracking-widest text-white">ÁTRIO</span>
+    </div>
+    <button (click)="toggleMobileSidebar()" class="p-2 text-slate-400 hover:text-white focus:outline-none transition-colors">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+      </svg>
+    </button>
+  </header>
+
+  <!-- SIDEBAR NAVIGATION (Desktop: Fixed | Mobile: Drawer overlay) -->
+  <aside [class.translate-x-0]="mobileSidebarOpen" 
+         [class.-translate-x-full]="!mobileSidebarOpen"
+         class="fixed md:static inset-y-0 left-0 w-64 bg-liturgical-surface/95 md:bg-liturgical-surface/50 backdrop-blur-lg md:backdrop-blur-none border-r border-white/5 flex flex-col justify-between z-50 transition-transform duration-300 md:translate-x-0 shrink-0">
+    
+    <div>
+      <!-- Brand Logo Header -->
+      <div class="h-20 px-6 border-b border-white/5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="/assets/logo-renascenca.png" alt="Logo" class="w-9 h-9 object-contain">
+          <div>
+            <span class="font-cinzel text-base font-bold tracking-widest text-white block">ÁTRIO</span>
+            <span class="text-[9px] font-bold text-liturgical-gold tracking-widest uppercase">Gestão Interna</span>
+          </div>
+        </div>
+        <!-- Close button for mobile -->
+        <button (click)="toggleMobileSidebar()" class="md:hidden p-1 text-slate-400 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="p-4 space-y-1">
+        <a routerLink="/dashboard" 
+           routerLinkActive="bg-white/5 text-liturgical-gold border-liturgical-gold/50" 
+           [routerLinkActiveOptions]="{exact: true}"
+           class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 hover:text-white transition-all text-xs font-bold uppercase tracking-wider text-slate-400 group">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+          Início
+        </a>
+
+        <!-- SECRETARIA MODULE -->
+        @if (hasRole(['secretario', 'admin', 'veneravel'])) {
+          <div class="pt-4 pb-2 px-4 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Secretaria</div>
+          <a routerLink="/dashboard/secretaria/obreiros" 
+             routerLinkActive="bg-white/5 text-liturgical-gold border-liturgical-gold/50"
+             class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 hover:text-white transition-all text-xs font-bold uppercase tracking-wider text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+            Obreiros
+          </a>
+          <a routerLink="/dashboard/secretaria/sessoes" 
+             routerLinkActive="bg-white/5 text-liturgical-gold border-liturgical-gold/50"
+             class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 hover:text-white transition-all text-xs font-bold uppercase tracking-wider text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Livro de Atas
+          </a>
+        }
+
+        <!-- TESOURARIA MODULE -->
+        @if (hasRole(['tesoureiro', 'admin', 'veneravel'])) {
+          <div class="pt-4 pb-2 px-4 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tesouraria</div>
+          <a routerLink="/dashboard/tesouraria/caixa" 
+             routerLinkActive="bg-white/5 text-liturgical-gold border-liturgical-gold/50"
+             class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 hover:text-white transition-all text-xs font-bold uppercase tracking-wider text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            Fluxo de Caixa
+          </a>
+          <a routerLink="/dashboard/tesouraria/regularidade" 
+             routerLinkActive="bg-white/5 text-liturgical-gold border-liturgical-gold/50"
+             class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 hover:text-white transition-all text-xs font-bold uppercase tracking-wider text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+            Regularidade
+          </a>
+        }
+
+        <!-- CHANCELARIA MODULE -->
+        @if (hasRole(['chanceler', 'admin', 'veneravel'])) {
+          <div class="pt-4 pb-2 px-4 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Chancelaria</div>
+          <a routerLink="/dashboard/chancelaria/efemerides" 
+             routerLinkActive="bg-white/5 text-liturgical-gold border-liturgical-gold/50"
+             class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 hover:text-white transition-all text-xs font-bold uppercase tracking-wider text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Efemérides
+          </a>
+        }
+
+        <!-- HARMONIA MODULE -->
+        @if (hasRole(['mestre_harmonia', 'admin', 'veneravel'])) {
+          <div class="pt-4 pb-2 px-4 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Harmonia</div>
+          <a routerLink="/dashboard/harmonia/player" 
+             routerLinkActive="bg-white/5 text-liturgical-gold border-liturgical-gold/50"
+             class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 hover:text-white transition-all text-xs font-bold uppercase tracking-wider text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+            </svg>
+            Player
+          </a>
+        }
+      </nav>
+    </div>
+
+    <!-- User Profile Footer & Logout -->
+    <div class="p-4 border-t border-white/5 space-y-3">
+      @if (supabaseService.profile(); as prof) {
+        <div class="flex items-center gap-3 px-2">
+          <div class="w-9 h-9 rounded-xl bg-liturgical-gold/10 border border-liturgical-gold/20 flex items-center justify-center font-cinzel text-sm font-bold text-liturgical-gold shrink-0">
+            {{ prof.nome_historico?.substring(0,2)?.toUpperCase() || prof.nome?.substring(0,2)?.toUpperCase() }}
+          </div>
+          <div class="overflow-hidden">
+            <div class="text-xs font-bold text-white truncate leading-tight">{{ prof.nome_historico || prof.nome }}</div>
+            <div class="text-[9px] text-liturgical-gold font-bold uppercase tracking-widest truncate mt-0.5">{{ prof.cargo_principal }}</div>
+          </div>
+        </div>
+      } @else {
+        <div class="text-[10px] text-slate-500 px-2">
+          Carregando perfil ou não autenticado no banco local
+        </div>
+      }
+      
+      <button (click)="logout()" 
+              class="w-full flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 border border-white/5 hover:border-rose-500/20 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+        </svg>
+        Desconectar
+      </button>
+    </div>
+  </aside>
+
+  <!-- OVERLAY (Visible on mobile when drawer is open) -->
+  @if (mobileSidebarOpen) {
+    <div (click)="toggleMobileSidebar()" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"></div>
+  }
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-grow flex flex-col min-w-0">
+    <div class="flex-grow p-6 md:p-10 max-w-7xl mx-auto w-full">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+
+</div>

@@ -32,7 +32,10 @@ use App\Core\Http\ObreirosRoutes;
 use App\Core\Http\PainelRoutes;
 use App\Core\Http\RequestBody;
 use App\Core\Http\SecretariaRoutes;
+use App\Core\Http\SecretariaApiRoutes;
 use App\Core\Http\TesourariaApiRoutes;
+use App\Core\Http\ChancelariaApiRoutes;
+use App\Core\Http\HarmoniaApiRoutes;
 use App\Core\Http\TesourariaRoutes;
 use App\Core\Http\VigilanciaRoutes;
 use App\Core\Http\WebGuards;
@@ -47,6 +50,16 @@ use App\Services\AssistenteFluxoService;
 
 require_once __DIR__ . "/../src/autoload.php";
 
+if (!function_exists('getAuthorizationHeader')) {
+    function getAuthorizationHeader(): string {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+        if ($authHeader === '' && function_exists('apache_request_headers')) {
+            $headers = apache_request_headers();
+            $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        }
+        return trim($authHeader);
+    }
+}
 Env::load(__DIR__ . "/../.env");
 
 // Garante o preenchimento de $_ENV em ambientes de produção (como o Render) onde as variáveis nativas estão disponíveis via getenv() mas $_ENV está vazio devido a diretiva variables_order do php.ini.
@@ -63,6 +76,57 @@ foreach ([
             $_ENV[$envKey] = $val;
         }
     }
+}
+
+// Tratamento de CORS (Cross-Origin Resource Sharing) para permitir chamadas da SPA Angular
+$allowedOrigins = [
+    'http://localhost:4200',
+    'http://127.0.0.1:4200'
+];
+
+$appUrl = trim((string) ($_ENV['APP_URL'] ?? ''));
+if ($appUrl !== '') {
+    $allowedOrigins[] = rtrim($appUrl, '/');
+}
+
+$httpOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+$isAllowedOrigin = false;
+
+if ($httpOrigin !== '') {
+    foreach ($allowedOrigins as $allowed) {
+        if (strcasecmp($httpOrigin, $allowed) === 0) {
+            $isAllowedOrigin = true;
+            break;
+        }
+    }
+
+    // Em ambiente de desenvolvimento local, aceita qualquer porta de localhost ou subdomínios do pages.dev
+    $appEnvConfig = strtolower(trim((string) ($_ENV['APP_ENV'] ?? '')));
+    if (!$isAllowedOrigin && ($appEnvConfig === 'local' || $appEnvConfig === 'development' || $appEnvConfig === 'dev' || empty($appEnvConfig))) {
+        if (preg_match('/^https?:\/\/localhost(:\d+)?$/', $httpOrigin) || preg_match('/\.pages\.dev$/', $httpOrigin)) {
+            $isAllowedOrigin = true;
+        }
+    }
+
+    if ($isAllowedOrigin) {
+        header("Access-Control-Allow-Origin: $httpOrigin");
+        header("Access-Control-Allow-Credentials: true");
+        header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+        header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Tenant-Slug, X-Requested-With");
+    }
+}
+
+// Tratamento de Preflight Requests (OPTIONS)
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    if ($isAllowedOrigin) {
+        http_response_code(200);
+        header("Content-Length: 0");
+        header("Content-Type: text/plain");
+    } else {
+        http_response_code(403);
+        echo "CORS Origin não permitida.";
+    }
+    exit;
 }
 
 $requestUri = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
@@ -807,9 +871,52 @@ $requireTesourariaApiAccess = static function () use (
     $resolveAuthorizedTelegramObreiro,
     $loginTelegramObreiroInSession,
     $sessionHasPermission,
-    &$jsonError
+    &$jsonError,
+    &$authorizer,
+    $syncSessionRoles,
+    $syncTenantSessionFromObreiro
 ): void {
-    if (!$openTestAccess && !isset($_SESSION['usuario_logado'])) {
+    // 1. Tenta autenticar via token JWT enviado pelo Angular
+    $authHeader = getAuthorizationHeader();
+    $token = null;
+    if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
+        $token = $matches[1];
+    }
+
+    if ($token) {
+        $payload = \App\Core\Auth\SupabaseJwtValidator::validate($token);
+        if (!$payload) {
+            $jsonError('Token inválido ou expirado.', 401);
+        }
+
+        $email = trim((string) ($payload['email'] ?? ''));
+        if ($email === '') {
+            $jsonError('E-mail não encontrado no token.', 400);
+        }
+
+        $obreiroModel = new \App\Models\Obreiro();
+        $obreiro = $obreiroModel->findByEmail($email);
+        if (!$obreiro) {
+            $jsonError('Obreiro correspondente ao e-mail do token não localizado no banco local.', 404);
+        }
+
+        // Configura sessão temporária na memória do processo para a requisição
+        $_SESSION['usuario_logado'] = $obreiro;
+        $_SESSION['usuario_id'] = $obreiro['id'];
+        $_SESSION['usuario_nome'] = $obreiro['nome_historico'] ?? $obreiro['nome'];
+
+        $syncTenantSessionFromObreiro($obreiro);
+        $syncSessionRoles($obreiro);
+
+        // Re-inicializa o Authorizer para carregar as permissões do usuário autenticado via JWT
+        $permissionMap = new \App\Core\Authorization\PermissionMap();
+        $normalizeRole = $GLOBALS['gestor_loja_normalize_role'] ?? static fn ($role) => strtolower(trim((string) $role));
+        $currentUser = new \App\Core\Auth\CurrentUser($_SESSION, $normalizeRole);
+        $authorizer = new \App\Core\Authorization\Authorizer($currentUser, $permissionMap, false);
+    }
+
+    // 2. Se não é requisição com JWT, faz fallback para o login do bot/sessão legado
+    if (!$token && !$openTestAccess && !isset($_SESSION['usuario_logado'])) {
         $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
         if (!$telegramObreiro) {
             $jsonError('Nao autenticado.', 401);
@@ -818,8 +925,74 @@ $requireTesourariaApiAccess = static function () use (
         $loginTelegramObreiroInSession($telegramObreiro);
     }
 
+    // 3. Validação de segurança da Tesouraria
     if (!$sessionHasPermission('tesouraria.manage')) {
         $jsonError('Esta ação é realizada pela Tesouraria.', 403);
+    }
+};
+
+$requireSecretariaApiAccess = static function (string $permission = 'secretaria.manage') use (
+    $openTestAccess,
+    $resolveAuthorizedTelegramObreiro,
+    $loginTelegramObreiroInSession,
+    $sessionHasPermission,
+    &$jsonError,
+    &$authorizer,
+    $syncSessionRoles,
+    $syncTenantSessionFromObreiro
+): void {
+    // 1. Tenta autenticar via token JWT enviado pelo Angular
+    $authHeader = getAuthorizationHeader();
+    $token = null;
+    if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
+        $token = $matches[1];
+    }
+
+    if ($token) {
+        $payload = \App\Core\Auth\SupabaseJwtValidator::validate($token);
+        if (!$payload) {
+            $jsonError('Token inválido ou expirado.', 401);
+        }
+
+        $email = trim((string) ($payload['email'] ?? ''));
+        if ($email === '') {
+            $jsonError('E-mail não encontrado no token.', 400);
+        }
+
+        $obreiroModel = new \App\Models\Obreiro();
+        $obreiro = $obreiroModel->findByEmail($email);
+        if (!$obreiro) {
+            $jsonError('Obreiro correspondente ao e-mail do token não localizado no banco local.', 404);
+        }
+
+        // Configura sessão temporária na memória do processo para a requisição
+        $_SESSION['usuario_logado'] = $obreiro;
+        $_SESSION['usuario_id'] = $obreiro['id'];
+        $_SESSION['usuario_nome'] = $obreiro['nome_historico'] ?? $obreiro['nome'];
+
+        $syncTenantSessionFromObreiro($obreiro);
+        $syncSessionRoles($obreiro);
+
+        // Re-inicializa o Authorizer para carregar as permissões do usuário autenticado via JWT
+        $permissionMap = new \App\Core\Authorization\PermissionMap();
+        $normalizeRole = $GLOBALS['gestor_loja_normalize_role'] ?? static fn ($role) => strtolower(trim((string) $role));
+        $currentUser = new \App\Core\Auth\CurrentUser($_SESSION, $normalizeRole);
+        $authorizer = new \App\Core\Authorization\Authorizer($currentUser, $permissionMap, false);
+    }
+
+    // 2. Se não é requisição com JWT, faz fallback para o login do bot/sessão legado
+    if (!$token && !$openTestAccess && !isset($_SESSION['usuario_logado'])) {
+        $telegramObreiro = $resolveAuthorizedTelegramObreiro('secretario', 'veneravel', 'admin');
+        if (!$telegramObreiro) {
+            $jsonError('Nao autenticado.', 401);
+        }
+
+        $loginTelegramObreiroInSession($telegramObreiro);
+    }
+
+    // 3. Validação de segurança da Secretaria
+    if ($permission && !$sessionHasPermission($permission)) {
+        $jsonError('Esta ação requer a permissão: ' . $permission, 403);
     }
 };
 
@@ -1359,6 +1532,159 @@ if (TesourariaApiRoutes::dispatch(
     return;
 }
 
+if (SecretariaApiRoutes::dispatch(
+    $requestUri,
+    $method,
+    $_SESSION,
+    $requireSecretariaApiAccess
+)) {
+    return;
+}
+
+$requireChancelariaApiAccess = static function (string $permission = 'chancelaria.manage') use (
+    $openTestAccess,
+    $resolveAuthorizedTelegramObreiro,
+    $loginTelegramObreiroInSession,
+    $sessionHasPermission,
+    &$jsonError,
+    &$authorizer,
+    $syncSessionRoles,
+    $syncTenantSessionFromObreiro
+): void {
+    // 1. Tenta autenticar via token JWT enviado pelo Angular
+    $authHeader = getAuthorizationHeader();
+    $token = null;
+    if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
+        $token = $matches[1];
+    }
+
+    if ($token) {
+        $payload = \App\Core\Auth\SupabaseJwtValidator::validate($token);
+        if (!$payload) {
+            $jsonError('Token inválido ou expirado.', 401);
+        }
+
+        $email = trim((string) ($payload['email'] ?? ''));
+        if ($email === '') {
+            $jsonError('E-mail não encontrado no token.', 400);
+        }
+
+        $obreiroModel = new \App\Models\Obreiro();
+        $obreiro = $obreiroModel->findByEmail($email);
+        if (!$obreiro) {
+            $jsonError('Obreiro correspondente ao e-mail do token não localizado no banco local.', 404);
+        }
+
+        $_SESSION['usuario_logado'] = $obreiro;
+        $_SESSION['usuario_id'] = $obreiro['id'];
+        $_SESSION['usuario_nome'] = $obreiro['nome_historico'] ?? $obreiro['nome'];
+
+        $syncTenantSessionFromObreiro($obreiro);
+        $syncSessionRoles($obreiro);
+
+        $permissionMap = new \App\Core\Authorization\PermissionMap();
+        $normalizeRole = $GLOBALS['gestor_loja_normalize_role'] ?? static fn ($role) => strtolower(trim((string) $role));
+        $currentUser = new \App\Core\Auth\CurrentUser($_SESSION, $normalizeRole);
+        $authorizer = new \App\Core\Authorization\Authorizer($currentUser, $permissionMap, false);
+    }
+
+    // 2. Fallback para sessão legada / Telegram
+    if (!$token && !$openTestAccess && !isset($_SESSION['usuario_logado'])) {
+        $telegramObreiro = $resolveAuthorizedTelegramObreiro('chanceler', 'secretario', 'veneravel', 'admin');
+        if (!$telegramObreiro) {
+            $jsonError('Nao autenticado.', 401);
+        }
+
+        $loginTelegramObreiroInSession($telegramObreiro);
+    }
+
+    // 3. Verificação de permissão (leniência: admin e venerável têm acesso geral)
+    if ($permission && !$sessionHasPermission($permission) && !$sessionHasPermission('secretaria.manage')) {
+        $jsonError('Esta ação requer a permissão: ' . $permission, 403);
+    }
+};
+
+if (ChancelariaApiRoutes::dispatch(
+    $requestUri,
+    $method,
+    $_SESSION,
+    $requireChancelariaApiAccess
+)) {
+    return;
+}
+
+$requireHarmoniaApiAccess = static function (string $permission = 'mestre_harmonia.manage') use (
+    $openTestAccess,
+    $resolveAuthorizedTelegramObreiro,
+    $loginTelegramObreiroInSession,
+    $sessionHasPermission,
+    &$jsonError,
+    &$authorizer,
+    $syncSessionRoles,
+    $syncTenantSessionFromObreiro
+): void {
+    // 1. Tenta autenticar via token JWT enviado pelo Angular
+    $authHeader = getAuthorizationHeader();
+    $token = null;
+    if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
+        $token = $matches[1];
+    }
+
+    if ($token) {
+        $payload = \App\Core\Auth\SupabaseJwtValidator::validate($token);
+        if (!$payload) {
+            $jsonError('Token inválido ou expirado.', 401);
+        }
+
+        $email = trim((string) ($payload['email'] ?? ''));
+        if ($email === '') {
+            $jsonError('E-mail não encontrado no token.', 400);
+        }
+
+        $obreiroModel = new \App\Models\Obreiro();
+        $obreiro = $obreiroModel->findByEmail($email);
+        if (!$obreiro) {
+            $jsonError('Obreiro correspondente ao e-mail do token não localizado no banco local.', 404);
+        }
+
+        $_SESSION['usuario_logado'] = $obreiro;
+        $_SESSION['usuario_id'] = $obreiro['id'];
+        $_SESSION['usuario_nome'] = $obreiro['nome_historico'] ?? $obreiro['nome'];
+
+        $syncTenantSessionFromObreiro($obreiro);
+        $syncSessionRoles($obreiro);
+
+        $permissionMap = new \App\Core\Authorization\PermissionMap();
+        $normalizeRole = $GLOBALS['gestor_loja_normalize_role'] ?? static fn ($role) => strtolower(trim((string) $role));
+        $currentUser = new \App\Core\Auth\CurrentUser($_SESSION, $normalizeRole);
+        $authorizer = new \App\Core\Authorization\Authorizer($currentUser, $permissionMap, false);
+    }
+
+    // 2. Fallback para sessão legada / Telegram
+    if (!$token && !$openTestAccess && !isset($_SESSION['usuario_logado'])) {
+        $telegramObreiro = $resolveAuthorizedTelegramObreiro('mestre_harmonia', 'veneravel', 'admin');
+        if (!$telegramObreiro) {
+            $jsonError('Nao autenticado.', 401);
+        }
+
+        $loginTelegramObreiroInSession($telegramObreiro);
+    }
+
+    // 3. Verificação de permissão (leniência: admin e venerável têm acesso geral)
+    if ($permission && !$sessionHasPermission($permission) && !$sessionHasPermission('secretaria.manage')) {
+        $jsonError('Esta ação requer a permissão: ' . $permission, 403);
+    }
+};
+
+if (HarmoniaApiRoutes::dispatch(
+    $requestUri,
+    $method,
+    $_SESSION,
+    $requireHarmoniaApiAccess
+)) {
+    return;
+}
+
 if (VigilanciaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $sessionHasPermission)) {
     return;
 }
@@ -1469,6 +1795,236 @@ switch ($requestUri) {
             . ' allowed=' . ((bool) ($resultado['allowed'] ?? false) ? '1' : '0'));
 
         JsonResponse::send(['ok' => true, 'resultado' => $resultado]);
+
+    case "/api/public/landing":
+        header('Content-Type: application/json; charset=utf-8');
+        $tenantSlug = trim((string) ($_SESSION['tenant_slug'] ?? ''));
+        $tenantName = trim((string) ($_SESSION['tenant_name'] ?? ''));
+        
+        $configuracaoLoja = [];
+        try {
+            $configuracaoLoja = (new \App\Models\ConfiguracaoLoja())->obter();
+        } catch (\Throwable $e) {
+            // Fallback
+        }
+
+        $publicConteudos = [];
+        $publicAds = [];
+        $publicAdsEnabled = filter_var($_ENV['PUBLIC_ADS_ENABLED'] ?? 'false', FILTER_VALIDATE_BOOL);
+
+        try {
+            $conteudoModel = new \App\Models\ConteudoPublico();
+            $publicConteudos = $conteudoModel->listarPublicos(null, 10);
+            $publicAds = $publicAdsEnabled ? $conteudoModel->listarAdsPublicos(3) : [];
+        } catch (\Throwable $e) {
+            // Fallback
+        }
+
+        // Fallbacks padrão se vazio (iguais ao login.php)
+        if ($publicConteudos === []) {
+            $publicConteudos = [
+                [
+                    'tipo' => 'agenda',
+                    'titulo' => 'Sessão Magna Branca - Programação Pública',
+                    'resumo' => 'Encontro de caráter cultural e fraterno com participação da comunidade convidada.',
+                    'inicio_em' => '15/05/2026',
+                    'link_url' => 'https://www.glojars.org.br/',
+                ],
+                [
+                    'tipo' => 'noticia',
+                    'titulo' => 'Ações de solidariedade em destaque no trimestre',
+                    'resumo' => 'Painel de impacto social com foco em arrecadações e apoio institucional.',
+                    'inicio_em' => '10/05/2026',
+                    'link_url' => 'https://www.gob.org.br/',
+                ],
+                [
+                    'tipo' => 'comunicado',
+                    'titulo' => 'Calendário de atividades públicas da Loja',
+                    'resumo' => 'Programação oficial em atualização contínua para visitantes e convidados.',
+                    'inicio_em' => '06/05/2026',
+                    'link_url' => 'https://www.gorgs.org.br/',
+                ],
+                [
+                    'tipo' => 'agenda',
+                    'titulo' => 'Palestra aberta: ética, cidadania e fraternidade',
+                    'resumo' => 'Espaço de diálogo com convidados para aproximação da Loja com a comunidade.',
+                    'inicio_em' => '30/05/2026',
+                    'link_url' => 'https://www.glojars.org.br/',
+                ],
+            ];
+        }
+
+        if ($publicAds === []) {
+            $publicAds = [
+                [
+                    'titulo' => 'Espaço reservado para publicidade institucional',
+                    'resumo' => 'Sua marca pode apoiar projetos da Loja com presença discreta e qualificada.',
+                    'link_url' => '#',
+                    'imagem_url' => '/assets/portal/publicidade/banners/banner-reservado-01.svg',
+                ],
+                [
+                    'titulo' => 'Apoio local de alto valor comunitário',
+                    'resumo' => 'Cota de parceiro com exibição em card e banner, sem rastreadores.',
+                    'link_url' => '#',
+                    'imagem_url' => '/assets/portal/publicidade/cards/card-reservado-01.svg',
+                ],
+                [
+                    'titulo' => 'Espaço premium para patrocinador',
+                    'resumo' => 'Visibilidade institucional para negócios alinhados a valores de ética e serviço.',
+                    'link_url' => '#',
+                    'imagem_url' => '/assets/portal/publicidade/cards/card-reservado-01.svg',
+                ],
+            ];
+        }
+
+        echo json_encode([
+            'ok' => true,
+            'tenant' => [
+                'slug' => $tenantSlug,
+                'name' => $tenantName ?: 'Gestor de Loja',
+                'numero_loja' => $configuracaoLoja['numero_loja'] ?? '270',
+                'rito' => $configuracaoLoja['rito'] ?? 'Escocês Antigo e Aceito (REAA)',
+                'oriente' => $configuracaoLoja['oriente'] ?? 'Arroio do Sal / RS',
+                'data_fundacao' => !empty($configuracaoLoja['data_fundacao']) ? date('d/m/Y', strtotime($configuracaoLoja['data_fundacao'])) : '20/12/2017',
+                'potencia_sigla' => $configuracaoLoja['potencia_sigla'] ?? 'GLOJARS',
+                'historia_loja' => $configuracaoLoja['historia_loja'] ?? '',
+                'nome_templo' => $configuracaoLoja['nome_templo'] ?? '',
+                'templo_endereco' => $configuracaoLoja['templo_endereco'] ?? '',
+            ],
+            'conteudos' => $publicConteudos,
+            'ads' => $publicAds,
+            'ads_enabled' => $publicAdsEnabled
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+
+    case "/api/ping":
+        header('Content-Type: application/json; charset=utf-8');
+
+        // Extrai o token Bearer do cabeçalho Authorization
+        $authHeader = getAuthorizationHeader();
+        $token = null;
+        if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
+            $token = $matches[1];
+        }
+
+        if (!$token) {
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'erro' => 'Token de autorização não fornecido no cabeçalho Authorization.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $payload = \App\Core\Auth\SupabaseJwtValidator::validate($token);
+        if (!$payload) {
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'erro' => 'Token inválido, expirado ou assinatura incorreta.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        echo json_encode([
+            'ok' => true,
+            'mensagem' => 'Pong! Token validado com sucesso no backend.',
+            'token_payload' => [
+                'sub' => $payload['sub'] ?? null,
+                'email' => $payload['email'] ?? null,
+                'role' => $payload['role'] ?? null,
+                'exp' => $payload['exp'] ?? null,
+                'cargos' => $payload['user_metadata']['cargos'] ?? $payload['app_metadata']['cargos'] ?? []
+            ]
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+
+    case "/api/auth/me":
+        header('Content-Type: application/json; charset=utf-8');
+
+        $logPath = __DIR__ . '/../storage/auth_debug.log';
+        // Extrai o token Bearer do cabeçalho Authorization
+        $authHeader = getAuthorizationHeader();
+        $logData = [
+            'timestamp' => date('Y-m-d H:i:s'),
+            'method' => $_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN',
+            'origin' => $_SERVER['HTTP_ORIGIN'] ?? 'NO_ORIGIN',
+            'auth_header' => $authHeader !== '' ? 'PRESENT (len: ' . strlen($authHeader) . ')' : 'NOT_SET',
+        ];
+        $token = null;
+        if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
+            $token = $matches[1];
+        }
+
+        $logData['has_token'] = ($token !== null);
+
+        if (!$token) {
+            $logData['error'] = 'Não autenticado. Token ausente.';
+            file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND);
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'erro' => 'Não autenticado. Token ausente.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $payload = \App\Core\Auth\SupabaseJwtValidator::validate($token);
+        $logData['validation_success'] = ($payload !== null);
+        if ($payload) {
+            $logData['email'] = $payload['email'] ?? 'NO_EMAIL_IN_PAYLOAD';
+        }
+
+        if (!$payload) {
+            $logData['error'] = 'Token inválido ou expirado.';
+            file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND);
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'erro' => 'Token inválido ou expirado.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $email = trim((string) ($payload['email'] ?? ''));
+        if ($email === '') {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'erro' => 'Email não encontrado no token.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        try {
+            $obreiroModel = new \App\Models\Obreiro();
+            $obreiro = $obreiroModel->findByEmail($email);
+
+            if (!$obreiro) {
+                $logData['error'] = "Obreiro correspondente ao email $email nao localizado.";
+                file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND);
+                http_response_code(404);
+                echo json_encode(['ok' => false, 'erro' => 'Obreiro correspondente a este email não localizado no banco de dados.'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
+            // Sanitiza dados confidenciais
+            unset($obreiro['senha'], $obreiro['password'], $obreiro['cpf']);
+
+            $logData['db_success'] = true;
+            $logData['user_id'] = $obreiro['id'] ?? null;
+            $logData['cargo'] = $obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? null;
+            file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND);
+
+            echo json_encode([
+                'ok' => true,
+                'user' => [
+                    'id' => $obreiro['id'] ?? null,
+                    'nome' => $obreiro['nome'] ?? null,
+                    'nome_historico' => $obreiro['nome_historico'] ?? null,
+                    'cim' => $obreiro['cim'] ?? null,
+                    'email' => $obreiro['email'] ?? null,
+                    'grau' => $obreiro['grau'] ?? null,
+                    'cargo_principal' => $obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? null,
+                    'cargos' => $obreiro['cargos'] ?? [],
+                    'ativo' => (bool) ($obreiro['ativo'] ?? false),
+                    'situacao_quadro' => $obreiro['situacao_quadro'] ?? 'inativo'
+                ]
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        } catch (\Throwable $e) {
+            $logData['error'] = 'Exception: ' . $e->getMessage();
+            file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND);
+            error_log('[API auth/me] Erro ao buscar obreiro: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'erro' => 'Erro interno ao recuperar dados do usuário.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
 
     case "/health":
         header("Content-Type: application/json; charset=utf-8");

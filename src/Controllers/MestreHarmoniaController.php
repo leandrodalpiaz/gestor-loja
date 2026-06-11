@@ -276,7 +276,7 @@ class MestreHarmoniaController
         ];
     }
 
-    private function resolveDefaultBasePath(): string
+    public function resolveDefaultBasePath(): string
     {
         $candidates = [
             trim((string) ($_ENV['MESTRE_HARMONIA_BASE_PATH'] ?? '')),
@@ -416,6 +416,11 @@ class MestreHarmoniaController
 
     private function mapearFaixa(array $faixa): array
     {
+        $base = $this->resolveDefaultBasePath();
+        $relative = '';
+        if (!empty($faixa['path'])) {
+            $relative = ltrim(str_replace('\\', '/', substr($faixa['path'], strlen($base))), '/');
+        }
         return [
             'id' => (string) ($faixa['id'] ?? ''),
             'code' => (string) ($faixa['code'] ?? ''),
@@ -423,6 +428,7 @@ class MestreHarmoniaController
             'type' => (string) ($faixa['type'] ?? 'principal'),
             'phase' => (string) ($faixa['phase'] ?? ''),
             'stage_key' => (string) ($faixa['stage_key'] ?? ''),
+            'file' => $relative,
         ];
     }
 

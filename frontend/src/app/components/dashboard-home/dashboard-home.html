@@ -1,0 +1,120 @@
+<div class="space-y-8 animate-fade-in">
+
+  <!-- WELCOME HEADER -->
+  @if (supabaseService.profile(); as prof) {
+    <div class="space-y-2">
+      <span class="text-liturgical-gold text-[10px] font-bold uppercase tracking-widest block">{{ currentDate }}</span>
+      <h1 class="font-cinzel text-3xl md:text-4xl font-extrabold tracking-wider text-white">
+        Saudações, Ir. {{ prof.nome_historico || prof.nome }}
+      </h1>
+      <p class="text-slate-400 text-sm font-light">
+        Bem-vindo ao Átrio de gestão de sua Loja. Selecione um módulo abaixo para iniciar seus trabalhos.
+      </p>
+    </div>
+
+    <!-- QUICK STATUS KPIs -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- Card 1: Próxima Sessão -->
+      <div class="glass-card rounded-2xl p-6 border border-white/5 hover:border-liturgical-gold/20 transition-all flex flex-col justify-between">
+        <div>
+          <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Próxima Sessão</span>
+          <h3 class="text-white text-lg font-bold">Quarta-feira, 20:00</h3>
+          <p class="text-slate-400 text-xs mt-1 font-light">Trabalhos em Grau de Aprendiz</p>
+        </div>
+        <div class="mt-4 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Confirmada</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Grau e Status -->
+      <div class="glass-card rounded-2xl p-6 border border-white/5 hover:border-liturgical-gold/20 transition-all flex flex-col justify-between">
+        <div>
+          <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Grau Atual</span>
+          <h3 class="text-white text-lg font-bold">{{ prof.grau || 'Obreiro' }}</h3>
+          <p class="text-slate-400 text-xs mt-1 font-light">Cadastro ativo na nominata</p>
+        </div>
+        <div class="mt-4">
+          <span class="px-2.5 py-1 text-[9px] font-bold bg-liturgical-gold/15 text-liturgical-gold border border-liturgical-gold/20 rounded-md uppercase tracking-wider">
+            {{ prof.situacao_quadro }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Card 3: Regularidade -->
+      <div class="glass-card rounded-2xl p-6 border border-white/5 hover:border-liturgical-gold/20 transition-all flex flex-col justify-between">
+        <div>
+          <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Regularidade</span>
+          <h3 class="text-white text-lg font-bold">Ad Nocendum</h3>
+          <p class="text-slate-400 text-xs mt-1 font-light">Tesouraria e Chancelaria regulares</p>
+        </div>
+        <div class="mt-4 flex items-center gap-2">
+          <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+          </svg>
+          <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Pleno Direito</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- QUICK SHORTCUTS GRID -->
+    <div class="space-y-4 pt-4">
+      <h2 class="font-cinzel text-xl font-bold tracking-wider text-white">Atalhos Administrativos</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Shortcut: Cadastro de Obreiros (Secretaria) -->
+        @if (hasRole(['secretario', 'admin', 'veneravel'])) {
+          <a routerLink="/dashboard/secretaria/obreiros" 
+             class="glass-card rounded-2xl p-6 border border-white/5 hover:border-liturgical-gold/30 hover:-translate-y-1 transition-all duration-300 flex items-center gap-4 group">
+            <div class="w-12 h-12 rounded-xl bg-white/5 group-hover:bg-liturgical-gold/10 flex items-center justify-center border border-white/10 group-hover:border-liturgical-gold/20 text-slate-400 group-hover:text-liturgical-gold transition-colors shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+              </svg>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-white uppercase tracking-wider leading-snug">Secretaria</h4>
+              <p class="text-slate-500 text-xs mt-0.5 font-light">Cadastro e nominata de obreiros</p>
+            </div>
+          </a>
+        }
+
+        <!-- Shortcut: Caixa (Tesouraria) -->
+        @if (hasRole(['tesoureiro', 'admin', 'veneravel'])) {
+          <a routerLink="/dashboard/tesouraria/caixa" 
+             class="glass-card rounded-2xl p-6 border border-white/5 hover:border-liturgical-gold/30 hover:-translate-y-1 transition-all duration-300 flex items-center gap-4 group">
+            <div class="w-12 h-12 rounded-xl bg-white/5 group-hover:bg-liturgical-gold/10 flex items-center justify-center border border-white/10 group-hover:border-liturgical-gold/20 text-slate-400 group-hover:text-liturgical-gold transition-colors shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-white uppercase tracking-wider leading-snug">Tesouraria</h4>
+              <p class="text-slate-500 text-xs mt-0.5 font-light">Fluxo de caixa e finanças</p>
+            </div>
+          </a>
+        }
+
+        <!-- Shortcut: Efemérides (Chancelaria) -->
+        @if (hasRole(['chanceler', 'admin', 'veneravel'])) {
+          <a routerLink="/dashboard/chancelaria/efemerides" 
+             class="glass-card rounded-2xl p-6 border border-white/5 hover:border-liturgical-gold/30 hover:-translate-y-1 transition-all duration-300 flex items-center gap-4 group">
+            <div class="w-12 h-12 rounded-xl bg-white/5 group-hover:bg-liturgical-gold/10 flex items-center justify-center border border-white/10 group-hover:border-liturgical-gold/20 text-slate-400 group-hover:text-liturgical-gold transition-colors shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-white uppercase tracking-wider leading-snug">Chancelaria</h4>
+              <p class="text-slate-500 text-xs mt-0.5 font-light">Efemérides e regularidades</p>
+            </div>
+          </a>
+        }
+
+      </div>
+    </div>
+  }
+
+</div>

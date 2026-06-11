@@ -1,0 +1,330 @@
+<div class="space-y-8 animate-fade-in">
+
+  <!-- HEADER & FILTERS -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+      <span class="text-liturgical-gold text-[10px] font-bold uppercase tracking-widest block">Tesouraria</span>
+      <h1 class="font-cinzel text-3xl font-extrabold tracking-wider text-white">Fluxo de Caixa</h1>
+    </div>
+
+    <!-- Actions & Filters -->
+    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+      <!-- Mês -->
+      <select [ngModel]="mesSelecionado()" 
+              (ngModelChange)="mesSelecionado.set($event); carregarDados()"
+              class="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+        @for (m of meses; track m.value) {
+          <option [value]="m.value" class="bg-liturgical-bg text-white">{{ m.label }}</option>
+        }
+      </select>
+
+      <!-- Ano -->
+      <select [ngModel]="anoSelecionado()" 
+              (ngModelChange)="anoSelecionado.set($event); carregarDados()"
+              class="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+        @for (a of anosDisponiveis; track a) {
+          <option [value]="a" class="bg-liturgical-bg text-white">{{ a }}</option>
+        }
+      </select>
+
+      <!-- Botão Novo Lançamento -->
+      <button (click)="showNovoForm.set(true)"
+              class="px-4 py-2.5 bg-liturgical-gold hover:bg-liturgical-goldHover text-[#050B14] rounded-xl text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 shadow-lg shadow-liturgical-gold/10">
+        <svg class="w-4 h-4 text-[#050B14]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Novo Lançamento
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+    <div class="glass-card rounded-2xl p-6 border border-white/5">
+      <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Entradas (Receitas)</span>
+      <h3 class="text-emerald-400 text-2xl font-black">{{ totaisMes().entrada | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</h3>
+    </div>
+    
+    <div class="glass-card rounded-2xl p-6 border border-white/5">
+      <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Saídas (Despesas)</span>
+      <h3 class="text-rose-400 text-2xl font-black">{{ totaisMes().saida | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</h3>
+    </div>
+
+    <div class="glass-card rounded-2xl p-6 border border-white/5">
+      <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Saldo do Mês</span>
+      <h3 [class.text-emerald-400]="totaisMes().entrada - totaisMes().saida >= 0"
+          [class.text-rose-400]="totaisMes().entrada - totaisMes().saida < 0"
+          class="text-2xl font-black">
+        {{ totaisMes().entrada - totaisMes().saida | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+      </h3>
+    </div>
+  </div>
+
+  <!-- GRAPHS GRID (Chart.js) -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- Gráfico Mensal (Receitas vs Despesas) -->
+    <div class="glass-card rounded-3xl p-6 border border-white/5 lg:col-span-8 flex flex-col justify-between">
+      <div>
+        <h3 class="font-cinzel text-base font-bold text-white tracking-wider">Evolução Mensal</h3>
+        <p class="text-[10px] text-slate-500 font-medium tracking-widest uppercase mt-0.5">Ano de {{ anoSelecionado() }}</p>
+      </div>
+      <div class="relative h-64 w-full mt-6">
+        @if (loadingGraficos()) {
+          <div class="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl">
+            <span class="text-xs text-slate-400">Processando gráficos...</span>
+          </div>
+        }
+        <canvas #chartMensalCanvas></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico Categoria (Distribuição de Despesas) -->
+    <div class="glass-card rounded-3xl p-6 border border-white/5 lg:col-span-4 flex flex-col justify-between">
+      <div>
+        <h3 class="font-cinzel text-base font-bold text-white tracking-wider">Distribuição por Categoria</h3>
+        <p class="text-[10px] text-slate-500 font-medium tracking-widest uppercase mt-0.5">Despesas acumuladas no ano</p>
+      </div>
+      <div class="relative h-64 w-full mt-6">
+        @if (loadingGraficos()) {
+          <div class="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl">
+            <span class="text-xs text-slate-400">Processando gráficos...</span>
+          </div>
+        }
+        <canvas #chartCategoriasCanvas></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ERROR ALERT -->
+  @if (errorMsg()) {
+    <div class="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 text-xs font-semibold text-rose-400 flex items-start gap-3">
+      <svg class="w-5 h-5 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <span>{{ errorMsg() }}</span>
+    </div>
+  }
+
+  <!-- CASH FLOW LOGS LIST -->
+  <div class="space-y-4">
+    <h2 class="font-cinzel text-xl font-bold tracking-wider text-white">Lançamentos do Período</h2>
+    
+    @if (loading()) {
+      <div class="text-center py-10 glass-card rounded-3xl">
+        <span class="text-xs text-slate-400">Carregando dados de caixa...</span>
+      </div>
+    } @else if (lancamentos().length === 0) {
+      <div class="text-center py-12 glass-card rounded-3xl text-slate-500 text-xs font-medium tracking-widest uppercase">
+        Nenhum lançamento financeiro registrado neste mês.
+      </div>
+    } @else {
+      <!-- DESKTOP VIEW (Table) -->
+      <div class="hidden md:block glass-card rounded-3xl overflow-hidden border border-white/5">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="border-b border-white/5 text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-white/2">
+              <th class="p-5">Data</th>
+              <th class="p-5">Tipo</th>
+              <th class="p-5">Categoria</th>
+              <th class="p-5">Descrição</th>
+              <th class="p-5">Obreiro</th>
+              <th class="p-5 text-right">Valor</th>
+              <th class="p-5 text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/2">
+            @for (l of lancamentos(); track l.id) {
+              <tr class="hover:bg-white/2 transition-colors text-slate-300">
+                <td class="p-5 font-semibold">{{ l.data_lancamento | date:'dd/MM/yyyy' }}</td>
+                <td class="p-5">
+                  <span [class.bg-emerald-500\/10]="l.tipo === 'entrada'"
+                        [class.text-emerald-400]="l.tipo === 'entrada'"
+                        [class.border-emerald-500\/20]="l.tipo === 'entrada'"
+                        [class.bg-rose-500\/10]="l.tipo === 'saida'"
+                        [class.text-rose-400]="l.tipo === 'saida'"
+                        [class.border-rose-500\/20]="l.tipo === 'saida'"
+                        class="px-2 py-1 text-[9px] font-bold border rounded uppercase tracking-wider">
+                    {{ l.tipo }}
+                  </span>
+                </td>
+                <td class="p-5 font-semibold text-white">{{ l.categoria_nome || 'Lançamento Geral' }}</td>
+                <td class="p-5 text-slate-400 italic max-w-xs truncate" [title]="l.descricao || ''">{{ l.descricao || '-' }}</td>
+                <td class="p-5 text-slate-400">{{ l.obreiro_nome || '-' }}</td>
+                <td [class.text-emerald-400]="l.tipo === 'entrada'"
+                    [class.text-rose-400]="l.tipo === 'saida'"
+                    class="p-5 text-right font-black text-sm">
+                  {{ l.valor | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                </td>
+                <td class="p-5 text-center">
+                  <button (click)="excluirLancamento(l.id)" 
+                          class="p-2 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 border border-rose-500/10 hover:border-rose-500/20 rounded-xl transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- MOBILE VIEW (Intelligent Cards) -->
+      <div class="md:hidden space-y-4">
+        @for (l of lancamentos(); track l.id) {
+          <div class="glass-card rounded-2xl p-5 border border-white/5 flex flex-col justify-between gap-4">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
+                  {{ l.data_lancamento | date:'dd/MM/yyyy' }}
+                </span>
+                <h4 class="text-white font-bold text-sm">{{ l.categoria_nome || 'Lançamento Geral' }}</h4>
+                @if (l.descricao) {
+                  <p class="text-slate-400 text-xs italic mt-1 font-light">{{ l.descricao }}</p>
+                }
+              </div>
+              <span [class.bg-emerald-500\/10]="l.tipo === 'entrada'"
+                    [class.text-emerald-400]="l.tipo === 'entrada'"
+                    [class.bg-rose-500\/10]="l.tipo === 'saida'"
+                    [class.text-rose-400]="l.tipo === 'saida'"
+                    class="px-2 py-0.5 text-[9px] font-bold border border-transparent rounded uppercase tracking-wider">
+                {{ l.tipo }}
+              </span>
+            </div>
+
+            <div class="flex justify-between items-center pt-3 border-t border-white/5">
+              <div>
+                <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Obreiro</span>
+                <span class="text-slate-400 text-xs font-semibold">{{ l.obreiro_nome || '-' }}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span [class.text-emerald-400]="l.tipo === 'entrada'"
+                      [class.text-rose-400]="l.tipo === 'saida'"
+                      class="font-black text-base">
+                  {{ l.valor | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+                </span>
+                <button (click)="excluirLancamento(l.id)" 
+                        class="p-2 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 border border-rose-500/10 hover:border-rose-500/20 rounded-xl transition-all">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- MODAL: NOVO LANÇAMENTO -->
+  @if (showNovoForm()) {
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+      <div class="w-full max-w-md glass-card-gold rounded-3xl p-6 md:p-8 relative overflow-hidden animate-fade-in border border-liturgical-gold/25">
+        <h3 class="font-cinzel text-xl font-bold tracking-wider text-white mb-6">Novo Lançamento</h3>
+        
+        <form (submit)="salvarNovoLancamento(); $event.preventDefault()" class="space-y-4">
+          
+          <!-- Tipo -->
+          <div class="grid grid-cols-2 gap-3">
+            <button type="button" 
+                    (click)="novoTipo.set('entrada')"
+                    [class.bg-emerald-500\/10]="novoTipo() === 'entrada'"
+                    [class.text-emerald-400]="novoTipo() === 'entrada'"
+                    [class.border-emerald-500\/30]="novoTipo() === 'entrada'"
+                    class="py-2.5 rounded-xl border border-white/5 text-slate-400 text-xs font-bold uppercase tracking-wider transition-all">
+              Receita
+            </button>
+            <button type="button" 
+                    (click)="novoTipo.set('saida')"
+                    [class.bg-rose-500\/10]="novoTipo() === 'saida'"
+                    [class.text-rose-400]="novoTipo() === 'saida'"
+                    [class.border-rose-500\/30]="novoTipo() === 'saida'"
+                    class="py-2.5 rounded-xl border border-white/5 text-slate-400 text-xs font-bold uppercase tracking-wider transition-all">
+              Despesa
+            </button>
+          </div>
+
+          <!-- Valor -->
+          <div class="space-y-2">
+            <label for="valor" class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Valor (R$)</label>
+            <input id="valor" 
+                   type="number" 
+                   step="0.01" 
+                   required
+                   [ngModel]="novoValor()"
+                   (ngModelChange)="novoValor.set($event)"
+                   name="valor"
+                   class="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white text-xs focus:outline-none focus:ring-1 focus:ring-liturgical-gold focus-glow"
+                   placeholder="0,00">
+          </div>
+
+          <!-- Categoria -->
+          <div class="space-y-2">
+            <label for="categoria" class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Categoria</label>
+            <select id="categoria"
+                    [ngModel]="novaCategoriaId()"
+                    (ngModelChange)="novaCategoriaId.set($event)"
+                    name="categoria"
+                    class="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white text-xs focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+              <option [value]="null" class="bg-liturgical-bg text-slate-500">Sem Categoria</option>
+              @for (c of categorias(); track c.id) {
+                <!-- Filtra categorias correspondentes ao tipo selecionado -->
+                @if (c.tipo === novoTipo()) {
+                  <option [value]="c.id" class="bg-liturgical-bg text-white">{{ c.nome }}</option>
+                }
+              }
+            </select>
+          </div>
+
+          <!-- Data -->
+          <div class="space-y-2">
+            <label for="data" class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Data Lançamento</label>
+            <input id="data" 
+                   type="date" 
+                   required
+                   [ngModel]="novaData()"
+                   (ngModelChange)="novaData.set($event)"
+                   name="data"
+                   class="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white text-xs focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+          </div>
+
+          <!-- Descrição -->
+          <div class="space-y-2">
+            <label for="descricao" class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Descrição</label>
+            <input id="descricao" 
+                   type="text"
+                   [ngModel]="novaDescricao()"
+                   (ngModelChange)="novaDescricao.set($event)"
+                   name="descricao"
+                   class="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white text-xs focus:outline-none focus:ring-1 focus:ring-liturgical-gold focus-glow"
+                   placeholder="Opcional">
+          </div>
+
+          <!-- Ações do Modal -->
+          <div class="pt-4 grid grid-cols-2 gap-3">
+            <button type="button" 
+                    (click)="showNovoForm.set(false)"
+                    [disabled]="salvandoLancamento()"
+                    class="py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold uppercase tracking-wider border border-white/10 transition-all">
+              Cancelar
+            </button>
+            <button type="submit" 
+                    [disabled]="salvandoLancamento()"
+                    class="py-3 bg-liturgical-gold hover:bg-liturgical-goldHover text-[#050B14] disabled:opacity-50 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-liturgical-gold/10">
+              @if (salvandoLancamento()) {
+                <span>Salvando...</span>
+              } @else {
+                <span>Salvar</span>
+              }
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  }
+
+</div>

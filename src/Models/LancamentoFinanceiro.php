@@ -218,4 +218,68 @@ class LancamentoFinanceiro
         $this->tabelaTemLojaId = (bool) $stmt->fetchColumn();
         return $this->tabelaTemLojaId;
     }
+
+    /**
+     * Obtém os consolidados de receitas, despesas e distribuição por categoria do ano inteiro para gráficos.
+     */
+    public function obterDadosGraficosAnual(int $ano): array
+    {
+        // 1. Receitas e Despesas mensalizadas
+        $sqlMensal = "
+            SELECT 
+                mes_ref as mes,
+                tipo,
+                SUM(valor) as total
+            FROM lancamentos_financeiros
+            WHERE ano_ref = :ano
+        ";
+        
+        $params = ['ano' => $ano];
+        if ($this->tabelaPossuiColunaLojaId()) {
+            $sqlMensal .= " AND loja_id = :loja_id";
+            $params['loja_id'] = $this->obterLojaAtualId();
+        }
+        
+        $sqlMensal .= " GROUP BY mes_ref, tipo ORDER BY mes_ref ASC";
+        $stmtMensal = $this->db->prepare($sqlMensal);
+        $stmtMensal->execute($params);
+        
+        $mensalizado = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $mensalizado[$m] = ['mes' => $m, 'entrada' => 0.0, 'saida' => 0.0];
+        }
+        
+        foreach ($stmtMensal->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $mes = (int) $row['mes'];
+            $tipo = $row['tipo'];
+            if (isset($mensalizado[$mes])) {
+                $mensalizado[$mes][$tipo] = (float) $row['total'];
+            }
+        }
+        
+        // 2. Distribuição por categoria acumulada no ano
+        $sqlCategorias = "
+            SELECT 
+                c.nome as categoria,
+                c.tipo,
+                SUM(l.valor) as total
+            FROM lancamentos_financeiros l
+            JOIN categorias_financeiras c ON l.categoria_id = c.id
+            WHERE l.ano_ref = :ano
+        ";
+        
+        if ($this->tabelaPossuiColunaLojaId()) {
+            $sqlCategorias .= " AND l.loja_id = :loja_id";
+        }
+        
+        $sqlCategorias .= " GROUP BY c.id, c.nome, c.tipo ORDER BY total DESC";
+        $stmtCats = $this->db->prepare($sqlCategorias);
+        $stmtCats->execute($params);
+        $distribuicaoCategorias = $stmtCats->fetchAll(PDO::FETCH_ASSOC);
+        
+        return [
+            'mensal' => array_values($mensalizado),
+            'categorias' => $distribuicaoCategorias
+        ];
+    }
 }

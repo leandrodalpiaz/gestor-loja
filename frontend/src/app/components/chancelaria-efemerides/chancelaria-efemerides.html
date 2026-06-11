@@ -1,0 +1,421 @@
+<div class="space-y-6">
+
+  <!-- HEADER & BREADCRUMB -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white">Chancelaria · Efemérides</h1>
+      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Registro de Aniversários, Marcos Maçônicos e Datas Históricas</p>
+    </div>
+
+    <button (click)="abrirModalNovo()"
+            id="btn-novo-efemeride"
+            class="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg hover:shadow-lg hover:shadow-liturgical-gold/10 font-bold uppercase tracking-wider text-xs rounded-xl transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+      </svg>
+      Novo Registro
+    </button>
+  </div>
+
+  <!-- CARDS DE HOJE -->
+  <div class="space-y-3">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-liturgical-gold animate-pulse"></span>
+      <span class="text-[10px] font-bold text-liturgical-gold uppercase tracking-widest">Efemérides de Hoje</span>
+    </div>
+
+    @if (loadingHoje()) {
+      <div class="flex justify-center py-6">
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-liturgical-gold"></div>
+      </div>
+    }
+
+    @if (!loadingHoje() && efemeridesHoje().length === 0) {
+      <div class="bg-liturgical-surface/20 backdrop-blur-md border border-white/5 rounded-2xl px-5 py-4 text-xs text-slate-500 italic">
+        Nenhuma efeméride registrada para hoje.
+      </div>
+    }
+
+    @if (!loadingHoje() && efemeridesHoje().length > 0) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (e of efemeridesHoje(); track e.id) {
+          <div class="bg-gradient-to-br from-liturgical-gold/10 to-amber-900/10 backdrop-blur-md border border-liturgical-gold/20 rounded-2xl p-5 relative overflow-hidden">
+            <!-- Decorative glow -->
+            <div class="absolute top-0 right-0 w-32 h-32 bg-liturgical-gold/5 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <div class="font-bold text-white text-sm leading-snug font-cinzel">{{ e.nome }}</div>
+                @if (e.vinculo) {
+                  <div class="text-[10px] text-liturgical-gold/80 mt-0.5">{{ e.vinculo }}</div>
+                }
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shrink-0"
+                    [ngClass]="getTipoBadgeClass(e.tipo)">
+                {{ getTipoLabel(e.tipo) }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between text-[10px] text-slate-400">
+              <span>{{ formatarData(e.data_evento) }}</span>
+              @if (getAnosDesde(e.data_evento)) {
+                <span class="text-liturgical-gold font-bold">{{ getAnosDesde(e.data_evento) }}</span>
+              }
+            </div>
+
+            @if (e.mensagem_custom) {
+              <p class="mt-2 text-[10px] text-slate-300 italic leading-relaxed border-t border-white/5 pt-2">
+                "{{ e.mensagem_custom }}"
+              </p>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- FILTERS PANEL -->
+  <div class="bg-liturgical-surface/30 backdrop-blur-md border border-white/5 rounded-2xl p-5 space-y-4">
+    <div class="flex items-center gap-2 pb-2 border-b border-white/5">
+      <svg class="w-4 h-4 text-liturgical-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+      </svg>
+      <span class="text-[10px] font-bold text-white uppercase tracking-widest">Filtros de Pesquisa</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <!-- Busca -->
+      <div class="flex flex-col gap-1.5 md:col-span-2">
+        <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Pesquisar por Nome / Vínculo</label>
+        <input type="text"
+               [(ngModel)]="filtroTermo"
+               (ngModelChange)="carregarEfemerides()"
+               placeholder="Ex: João da Silva..."
+               id="input-filtro-termo"
+               class="w-full bg-black/20 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+      </div>
+
+      <!-- Tipo -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tipo de Efeméride</label>
+        <select [(ngModel)]="filtroTipo"
+                (ngModelChange)="carregarEfemerides()"
+                id="select-filtro-tipo"
+                class="w-full bg-black/20 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none transition-colors">
+          <option value="">Todos os tipos</option>
+          @for (t of tiposEfemeride; track t) {
+            <option [value]="t">{{ getTipoLabel(t) }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Ativo + Limpar -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Situação</label>
+        <div class="flex gap-2">
+          <select [(ngModel)]="filtroAtivo"
+                  (ngModelChange)="carregarEfemerides()"
+                  id="select-filtro-ativo"
+                  class="flex-1 bg-black/20 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none transition-colors">
+            <option value="1">Ativas</option>
+            <option value="0">Inativas</option>
+            <option value="">Todas</option>
+          </select>
+          <button (click)="limparFiltros()"
+                  class="px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 hover:border-white/10 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap">
+            Limpar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING / ERROR -->
+  @if (loading()) {
+    <div class="flex justify-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-liturgical-gold"></div>
+    </div>
+  }
+
+  @if (errorMsg()) {
+    <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs px-4 py-3 rounded-xl">
+      {{ errorMsg() }}
+    </div>
+  }
+
+  <!-- RESULTS LISTING -->
+  @if (!loading() && !errorMsg()) {
+
+    <!-- DESKTOP TABLE -->
+    <div class="hidden md:block bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl overflow-hidden">
+      <table class="w-full border-collapse text-left">
+        <thead>
+          <tr class="border-b border-white/5 bg-black/10 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+            <th class="px-6 py-4">Nome / Vínculo</th>
+            <th class="px-6 py-4">Tipo</th>
+            <th class="px-6 py-4">Data do Evento</th>
+            <th class="px-6 py-4">Local</th>
+            <th class="px-6 py-4">Mensagem</th>
+            <th class="px-6 py-4 text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5 text-xs text-slate-300">
+          @for (e of efemerides(); track e.id) {
+            <tr class="hover:bg-white/[0.02] transition-colors">
+              <td class="px-6 py-4">
+                <div class="font-bold text-white leading-snug">{{ e.nome }}</div>
+                @if (e.vinculo) {
+                  <div class="text-[10px] text-liturgical-gold/70 mt-0.5">{{ e.vinculo }}</div>
+                }
+                @if (e.parentesco) {
+                  <div class="text-[10px] text-slate-500 mt-0.5 italic">{{ e.parentesco }}</div>
+                }
+              </td>
+              <td class="px-6 py-4">
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                      [ngClass]="getTipoBadgeClass(e.tipo)">
+                  {{ getTipoLabel(e.tipo) }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <div>{{ formatarData(e.data_evento) }}</div>
+                @if (getAnosDesde(e.data_evento)) {
+                  <div class="text-[10px] text-liturgical-gold mt-0.5">{{ getAnosDesde(e.data_evento) }}</div>
+                }
+              </td>
+              <td class="px-6 py-4 text-slate-400">{{ e.local || '—' }}</td>
+              <td class="px-6 py-4 max-w-xs">
+                @if (e.mensagem_custom) {
+                  <span class="text-[10px] text-slate-400 italic line-clamp-2">{{ e.mensagem_custom }}</span>
+                } @else {
+                  <span class="text-slate-600">—</span>
+                }
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button (click)="abrirModalEditar(e)"
+                          class="p-2 bg-white/5 hover:bg-liturgical-gold/10 text-slate-400 hover:text-liturgical-gold rounded-xl transition-all"
+                          title="Editar">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                    </svg>
+                  </button>
+                  <button (click)="desativar(e.id)"
+                          class="p-2 bg-white/5 hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 rounded-xl transition-all"
+                          title="Desativar">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                    </svg>
+                  </button>
+                  <button (click)="excluir(e.id)"
+                          class="p-2 bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-500 rounded-xl transition-all"
+                          title="Excluir">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+          @if (efemerides().length === 0) {
+            <tr>
+              <td colspan="6" class="px-6 py-8 text-center text-slate-500">
+                Nenhuma efeméride encontrada com os filtros selecionados.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MOBILE CARDS -->
+    <div class="md:hidden space-y-4">
+      @for (e of efemerides(); track e.id) {
+        <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl p-4 space-y-3">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="font-bold text-white text-sm leading-snug">{{ e.nome }}</div>
+              @if (e.vinculo) {
+                <div class="text-[10px] text-liturgical-gold/70 mt-0.5">{{ e.vinculo }}</div>
+              }
+              @if (e.parentesco) {
+                <div class="text-[10px] text-slate-500 mt-0.5 italic">{{ e.parentesco }}</div>
+              }
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shrink-0"
+                  [ngClass]="getTipoBadgeClass(e.tipo)">
+              {{ getTipoLabel(e.tipo) }}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-white/5 text-[10px] text-slate-400">
+            <div>
+              <span class="block text-[8px] font-bold uppercase text-slate-500 tracking-wider">Data</span>
+              <span class="text-slate-300 font-semibold">{{ formatarData(e.data_evento) }}</span>
+              @if (getAnosDesde(e.data_evento)) {
+                <span class="ml-1 text-liturgical-gold font-bold">· {{ getAnosDesde(e.data_evento) }}</span>
+              }
+            </div>
+            <div>
+              <span class="block text-[8px] font-bold uppercase text-slate-500 tracking-wider">Local</span>
+              <span class="text-slate-300">{{ e.local || '—' }}</span>
+            </div>
+          </div>
+
+          @if (e.mensagem_custom) {
+            <p class="text-[10px] text-slate-400 italic border-t border-white/5 pt-2 leading-relaxed">
+              "{{ e.mensagem_custom }}"
+            </p>
+          }
+
+          <!-- Actions -->
+          <div class="flex items-center gap-2 pt-2 border-t border-white/5">
+            <button (click)="abrirModalEditar(e)"
+                    class="flex-1 py-2 bg-white/5 hover:bg-liturgical-gold/10 text-slate-400 hover:text-liturgical-gold border border-white/5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-center">
+              Editar
+            </button>
+            <button (click)="desativar(e.id)"
+                    class="px-3 py-2 bg-white/5 hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 border border-white/5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
+              Desativar
+            </button>
+            <button (click)="excluir(e.id)"
+                    class="px-3 py-2 bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-500 border border-white/5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
+              Excluir
+            </button>
+          </div>
+        </div>
+      }
+      @if (efemerides().length === 0) {
+        <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl py-8 text-center text-slate-500 text-xs">
+          Nenhuma efeméride encontrada.
+        </div>
+      }
+    </div>
+
+  }
+
+  <!-- MODAL DE FORMULÁRIO -->
+  @if (showModal()) {
+    <div class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div class="bg-liturgical-surface border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+
+        <!-- Modal Header -->
+        <div class="p-6 border-b border-white/5 flex items-center justify-between shrink-0 bg-black/10">
+          <div>
+            <h2 class="font-cinzel text-lg md:text-xl font-bold tracking-widest text-white">
+              {{ isNovo() ? 'Novo Registro de Efeméride' : 'Editar Efeméride' }}
+            </h2>
+            <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">
+              Preencha os dados do evento ou data comemorativa
+            </p>
+          </div>
+          <button (click)="showModal.set(false)" class="p-2 text-slate-400 hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="p-6 overflow-y-auto space-y-4 text-slate-300">
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- Nome -->
+            <div class="flex flex-col gap-1 md:col-span-2">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Nome <span class="text-rose-400">*</span></label>
+              <input type="text"
+                     [(ngModel)]="formEfemeride().nome"
+                     placeholder="Ex: João da Silva / Fundação da Loja..."
+                     id="input-efemeride-nome"
+                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <!-- Tipo -->
+            <div class="flex flex-col gap-1">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tipo <span class="text-rose-400">*</span></label>
+              <select [(ngModel)]="formEfemeride().tipo"
+                      id="select-efemeride-tipo"
+                      class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none transition-colors">
+                @for (t of tiposEfemeride; track t) {
+                  <option [value]="t">{{ getTipoLabel(t) }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Data do Evento -->
+            <div class="flex flex-col gap-1">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Data do Evento <span class="text-rose-400">*</span></label>
+              <input type="date"
+                     [(ngModel)]="formEfemeride().data_evento"
+                     id="input-efemeride-data"
+                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <!-- Vínculo -->
+            <div class="flex flex-col gap-1">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Vínculo (opcional)</label>
+              <input type="text"
+                     [(ngModel)]="formEfemeride().vinculo"
+                     placeholder="Ex: Irmão, cônjuge, nome histórico..."
+                     id="input-efemeride-vinculo"
+                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <!-- Parentesco -->
+            <div class="flex flex-col gap-1">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Parentesco (opcional)</label>
+              <input type="text"
+                     [(ngModel)]="formEfemeride().parentesco"
+                     placeholder="Ex: pai, esposa, filho..."
+                     id="input-efemeride-parentesco"
+                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <!-- Local -->
+            <div class="flex flex-col gap-1 md:col-span-2">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Local (opcional)</label>
+              <input type="text"
+                     [(ngModel)]="formEfemeride().local"
+                     placeholder="Ex: Templo, cidade, loja..."
+                     id="input-efemeride-local"
+                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <!-- Mensagem personalizada -->
+            <div class="flex flex-col gap-1 md:col-span-2">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Mensagem Personalizada (opcional)</label>
+              <textarea rows="3"
+                        [(ngModel)]="formEfemeride().mensagem_custom"
+                        placeholder="Mensagem que será exibida no lembrete diário..."
+                        id="textarea-efemeride-mensagem"
+                        class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors resize-none"></textarea>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-6 border-t border-white/5 shrink-0 bg-black/10 flex items-center justify-between">
+          <span class="text-[10px] text-slate-500 font-cinzel">Gestor Loja · Chancelaria</span>
+
+          <div class="flex items-center gap-3">
+            <button (click)="showModal.set(false)"
+                    class="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
+              Cancelar
+            </button>
+            <button (click)="salvar()"
+                    [disabled]="salvando()"
+                    id="btn-salvar-efemeride"
+                    class="px-5 py-2.5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg transition-all disabled:opacity-50">
+              {{ salvando() ? 'Salvando...' : 'Confirmar e Salvar' }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  }
+
+</div>

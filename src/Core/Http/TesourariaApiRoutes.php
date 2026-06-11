@@ -468,6 +468,23 @@ class TesourariaApiRoutes
             return true;
         }
 
+        if ($requestUri === '/api/tesouraria/graficos' && $method === 'GET') {
+            $ano = (int) ($_GET['ano'] ?? date('Y'));
+            if ($ano < 2000 || $ano > (int) date('Y') + 1) {
+                $ano = (int) date('Y');
+            }
+
+            $lancModel = new LancamentoFinanceiro();
+            $dados = $lancModel->obterDadosGraficosAnual($ano);
+
+            JsonResponse::send([
+                'ok' => true,
+                'ano' => $ano,
+                'dados' => $dados
+            ]);
+            return true;
+        }
+
         return false;
     }
 }
