@@ -103,7 +103,7 @@ if ($httpOrigin !== '') {
     // Em ambiente de desenvolvimento local, aceita qualquer porta de localhost ou subdomínios do pages.dev
     $appEnvConfig = strtolower(trim((string) ($_ENV['APP_ENV'] ?? '')));
     if (!$isAllowedOrigin && ($appEnvConfig === 'local' || $appEnvConfig === 'development' || $appEnvConfig === 'dev' || empty($appEnvConfig))) {
-        if (preg_match('/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/', $httpOrigin) || preg_match('/\.pages\.dev$/', $httpOrigin)) {
+        if (preg_match('/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/', $httpOrigin) || preg_match('/\.pages\.dev$/', $httpOrigin)) {
             $isAllowedOrigin = true;
         }
     }
