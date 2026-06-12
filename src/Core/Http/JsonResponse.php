@@ -6,8 +6,23 @@ class JsonResponse
 {
     public static function send(array $payload, int $status = 200): void
     {
+        header('Content-Type: application/json; charset=utf-8');
         http_response_code($status);
-        echo json_encode($payload);
+
+        $json = json_encode(
+            $payload,
+            JSON_UNESCAPED_UNICODE
+            | JSON_UNESCAPED_SLASHES
+            | JSON_INVALID_UTF8_SUBSTITUTE
+        );
+
+        if ($json === false) {
+            error_log('[JsonResponse] Falha ao serializar resposta: ' . json_last_error_msg());
+            http_response_code(500);
+            $json = '{"ok":false,"erro":"Falha ao gerar resposta JSON."}';
+        }
+
+        echo $json;
         exit;
     }
 

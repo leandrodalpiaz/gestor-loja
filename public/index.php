@@ -1900,8 +1900,6 @@ switch ($requestUri) {
         exit;
 
     case "/api/auth/me":
-        header('Content-Type: application/json; charset=utf-8');
-
         $authHeader = getAuthorizationHeader();
         $token = null;
         if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
@@ -1909,19 +1907,12 @@ switch ($requestUri) {
         }
 
         if (!$token) {
-            http_response_code(401);
-            echo json_encode(['ok' => false, 'erro' => 'Não autenticado. Token ausente.'], JSON_UNESCAPED_UNICODE);
-            exit;
+            JsonResponse::error('Não autenticado. Token ausente.', 401);
         }
 
         $identity = \App\Core\Auth\SupabaseIdentityResolver::resolve($token);
         if (!$identity) {
-            http_response_code(401);
-            echo json_encode([
-                'ok' => false,
-                'erro' => 'Token inválido, conta sem vínculo ou perfil inativo.'
-            ], JSON_UNESCAPED_UNICODE);
-            exit;
+            JsonResponse::error('Token inválido, conta sem vínculo ou perfil inativo.', 401);
         }
 
         try {
@@ -1930,7 +1921,7 @@ switch ($requestUri) {
             // Sanitiza dados confidenciais
             unset($obreiro['senha'], $obreiro['password'], $obreiro['cpf']);
 
-            echo json_encode([
+            JsonResponse::send([
                 'ok' => true,
                 'user' => [
                     'id' => $obreiro['id'] ?? null,
@@ -1947,13 +1938,10 @@ switch ($requestUri) {
                     'ativo' => (bool) ($obreiro['ativo'] ?? false),
                     'situacao_quadro' => $obreiro['situacao_quadro'] ?? 'inativo'
                 ]
-            ], JSON_UNESCAPED_UNICODE);
-            exit;
+            ]);
         } catch (\Throwable $e) {
             error_log('[API auth/me] Erro ao buscar obreiro: ' . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['ok' => false, 'erro' => 'Erro interno ao recuperar dados do usuário.'], JSON_UNESCAPED_UNICODE);
-            exit;
+            JsonResponse::error('Erro interno ao recuperar dados do usuário.', 500);
         }
 
     case "/health":
