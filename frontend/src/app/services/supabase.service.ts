@@ -1,15 +1,16 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { createClient, SupabaseClient, Session, User } from '@supabase/supabase-js';
+import { Session, User } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
-import { Observable, from, map, catchError, of } from 'rxjs';
+import { Observable, from, map, catchError, of, switchMap, tap } from 'rxjs';
+import { supabaseClient } from '../supabase-client';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SupabaseService {
   private http = inject(HttpClient);
-  private supabase: SupabaseClient;
+  private supabase = supabaseClient;
   
   // Angular Signals para gerenciamento de estado reativo moderno
   public session = signal<Session | null>(null);
@@ -18,13 +19,6 @@ export class SupabaseService {
   public loading = signal<boolean>(true);
 
   constructor() {
-    this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true
-      }
-    });
-
     // Escuta mudanças de estado da autenticação (login, logout, refresh de token)
     this.supabase.auth.onAuthStateChange((event, session) => {
       this.session.set(session);
@@ -62,11 +56,22 @@ export class SupabaseService {
    */
   login(email: string, password: string): Observable<any> {
     return from(this.supabase.auth.signInWithPassword({ email, password })).pipe(
-      map(response => {
+      switchMap(response => {
         if (response.error) {
           throw response.error;
         }
-        return response.data;
+        const token = response.data.session?.access_token;
+        if (!token) {
+          throw new Error('A autenticação não retornou uma sessão válida.');
+        }
+        return this.fetchProfile(token).pipe(
+          map(profile => {
+            if (!profile) {
+              throw new Error('Esta conta não está vinculada a um perfil ativo do Gestor-Loja.');
+            }
+            return response.data;
+          })
+        );
       })
     );
   }
@@ -84,6 +89,41 @@ export class SupabaseService {
    */
   getToken(): string | null {
     return this.session()?.access_token ?? null;
+  }
+
+  async getValidToken(): Promise<string | null> {
+    const { data, error } = await this.supabase.auth.getSession();
+    if (error || !data.session) {
+      return null;
+    }
+    this.session.set(data.session);
+    this.user.set(data.session.user);
+    return data.session.access_token;
+  }
+
+  ensureAuthenticated(): Observable<boolean> {
+    this.loading.set(true);
+    return from(this.supabase.auth.getSession()).pipe(
+      switchMap(({ data, error }) => {
+        const session = error ? null : data.session;
+        this.session.set(session);
+        this.user.set(session?.user ?? null);
+        if (!session) {
+          this.profile.set(null);
+          return of(false);
+        }
+        return this.fetchProfile(session.access_token).pipe(map(profile => !!profile));
+      }),
+      catchError(() => of(false)),
+      tap(() => this.loading.set(false))
+    );
+  }
+
+  clearLocalAuth(): void {
+    this.session.set(null);
+    this.user.set(null);
+    this.profile.set(null);
+    void this.supabase.auth.signOut({ scope: 'local' });
   }
 
   /**
@@ -116,7 +156,7 @@ export class SupabaseService {
       catchError(error => {
         console.error('[SupabaseService] Erro ao carregar perfil no backend:', error);
         this.profile.set(null);
-        return of(null);
+        throw error;
       })
     );
   }

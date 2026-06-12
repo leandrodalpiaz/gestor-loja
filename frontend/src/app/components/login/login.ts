@@ -88,9 +88,12 @@ export class Login implements OnInit {
       },
       error: (err: any) => {
         console.error('Falha ao autenticar:', err);
+        this.supabaseService.clearLocalAuth();
         
         if (err.status === 400 || err.message?.includes('Invalid login credentials')) {
           this.errorMsg.set('E-mail ou senha incorretos.');
+        } else if (err.status === 403 || err.status === 404 || err.message?.includes('vinculada')) {
+          this.errorMsg.set('Esta conta não possui um perfil ativo vinculado ao Gestor-Loja.');
         } else {
           this.errorMsg.set(err.message || 'Ocorreu um erro ao tentar entrar. Tente novamente.');
         }

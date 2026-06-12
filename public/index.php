@@ -1,6 +1,6 @@
 <?php
 if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
+    @session_start();
 }
 
 ini_set('default_charset', 'UTF-8');
@@ -68,7 +68,8 @@ foreach ([
     'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID_GROUP', 'TELEGRAM_CHAT_ID_CHANCELER',
     'APP_URL', 'APP_TIMEZONE', 'APP_ENV', 'APP_LOJA_NUMERO', 'APP_DEFAULT_TENANT_SLUG',
     'APP_DEFAULT_TENANT_ID', 'APP_DEFAULT_TENANT_NAME', 'APP_ALLOW_ENV_TENANT_FALLBACK',
-    'APP_TEST_OPEN_ACCESS', 'APP_TEST_ALLOW_ALL_PANELS', 'SYSTEM_ADMIN_TELEGRAM_IDS'
+    'APP_TEST_OPEN_ACCESS', 'APP_TEST_ALLOW_ALL_PANELS', 'SYSTEM_ADMIN_TELEGRAM_IDS',
+    'SUPABASE_JWT_SECRET', 'SUPABASE_PROJECT_REF', 'FRONTEND_ALLOWED_ORIGINS'
 ] as $envKey) {
     if (!isset($_ENV[$envKey]) || $_ENV[$envKey] === '') {
         $val = getenv($envKey);
@@ -79,15 +80,10 @@ foreach ([
 }
 
 // Tratamento de CORS (Cross-Origin Resource Sharing) para permitir chamadas da SPA Angular
-$allowedOrigins = [
-    'http://localhost:4200',
-    'http://127.0.0.1:4200'
-];
-
-$appUrl = trim((string) ($_ENV['APP_URL'] ?? ''));
-if ($appUrl !== '') {
-    $allowedOrigins[] = rtrim($appUrl, '/');
-}
+$allowedOrigins = array_values(array_filter(array_map(
+    static fn (string $origin): string => rtrim(trim($origin), '/'),
+    explode(',', (string) ($_ENV['FRONTEND_ALLOWED_ORIGINS'] ?? ''))
+)));
 
 $httpOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
 $isAllowedOrigin = false;
@@ -100,10 +96,10 @@ if ($httpOrigin !== '') {
         }
     }
 
-    // Em ambiente de desenvolvimento local, aceita qualquer porta de localhost ou subdomínios do pages.dev
+    // Em desenvolvimento local, aceita loopback em qualquer porta.
     $appEnvConfig = strtolower(trim((string) ($_ENV['APP_ENV'] ?? '')));
     if (!$isAllowedOrigin && ($appEnvConfig === 'local' || $appEnvConfig === 'development' || $appEnvConfig === 'dev' || empty($appEnvConfig))) {
-        if (preg_match('/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/', $httpOrigin) || preg_match('/\.pages\.dev$/', $httpOrigin)) {
+        if (preg_match('/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/', $httpOrigin)) {
             $isAllowedOrigin = true;
         }
     }
@@ -884,21 +880,12 @@ $requireTesourariaApiAccess = static function () use (
     }
 
     if ($token) {
-        $payload = \App\Core\Auth\SupabaseJwtValidator::validate($token);
-        if (!$payload) {
+        $identity = \App\Core\Auth\SupabaseIdentityResolver::resolve($token);
+        if (!$identity) {
             $jsonError('Token inválido ou expirado.', 401);
         }
 
-        $email = trim((string) ($payload['email'] ?? ''));
-        if ($email === '') {
-            $jsonError('E-mail não encontrado no token.', 400);
-        }
-
-        $obreiroModel = new \App\Models\Obreiro();
-        $obreiro = $obreiroModel->findByEmail($email);
-        if (!$obreiro) {
-            $jsonError('Obreiro correspondente ao e-mail do token não localizado no banco local.', 404);
-        }
+        $obreiro = $identity['obreiro'];
 
         // Configura sessão temporária na memória do processo para a requisição
         $_SESSION['usuario_logado'] = $obreiro;
@@ -949,21 +936,12 @@ $requireSecretariaApiAccess = static function (string $permission = 'secretaria.
     }
 
     if ($token) {
-        $payload = \App\Core\Auth\SupabaseJwtValidator::validate($token);
-        if (!$payload) {
+        $identity = \App\Core\Auth\SupabaseIdentityResolver::resolve($token);
+        if (!$identity) {
             $jsonError('Token inválido ou expirado.', 401);
         }
 
-        $email = trim((string) ($payload['email'] ?? ''));
-        if ($email === '') {
-            $jsonError('E-mail não encontrado no token.', 400);
-        }
-
-        $obreiroModel = new \App\Models\Obreiro();
-        $obreiro = $obreiroModel->findByEmail($email);
-        if (!$obreiro) {
-            $jsonError('Obreiro correspondente ao e-mail do token não localizado no banco local.', 404);
-        }
+        $obreiro = $identity['obreiro'];
 
         // Configura sessão temporária na memória do processo para a requisição
         $_SESSION['usuario_logado'] = $obreiro;
@@ -1559,21 +1537,12 @@ $requireChancelariaApiAccess = static function (string $permission = 'chancelari
     }
 
     if ($token) {
-        $payload = \App\Core\Auth\SupabaseJwtValidator::validate($token);
-        if (!$payload) {
+        $identity = \App\Core\Auth\SupabaseIdentityResolver::resolve($token);
+        if (!$identity) {
             $jsonError('Token inválido ou expirado.', 401);
         }
 
-        $email = trim((string) ($payload['email'] ?? ''));
-        if ($email === '') {
-            $jsonError('E-mail não encontrado no token.', 400);
-        }
-
-        $obreiroModel = new \App\Models\Obreiro();
-        $obreiro = $obreiroModel->findByEmail($email);
-        if (!$obreiro) {
-            $jsonError('Obreiro correspondente ao e-mail do token não localizado no banco local.', 404);
-        }
+        $obreiro = $identity['obreiro'];
 
         $_SESSION['usuario_logado'] = $obreiro;
         $_SESSION['usuario_id'] = $obreiro['id'];
@@ -1631,21 +1600,12 @@ $requireHarmoniaApiAccess = static function (string $permission = 'mestre_harmon
     }
 
     if ($token) {
-        $payload = \App\Core\Auth\SupabaseJwtValidator::validate($token);
-        if (!$payload) {
+        $identity = \App\Core\Auth\SupabaseIdentityResolver::resolve($token);
+        if (!$identity) {
             $jsonError('Token inválido ou expirado.', 401);
         }
 
-        $email = trim((string) ($payload['email'] ?? ''));
-        if ($email === '') {
-            $jsonError('E-mail não encontrado no token.', 400);
-        }
-
-        $obreiroModel = new \App\Models\Obreiro();
-        $obreiro = $obreiroModel->findByEmail($email);
-        if (!$obreiro) {
-            $jsonError('Obreiro correspondente ao e-mail do token não localizado no banco local.', 404);
-        }
+        $obreiro = $identity['obreiro'];
 
         $_SESSION['usuario_logado'] = $obreiro;
         $_SESSION['usuario_id'] = $obreiro['id'];
@@ -1928,7 +1888,7 @@ switch ($requestUri) {
                 'email' => $payload['email'] ?? null,
                 'role' => $payload['role'] ?? null,
                 'exp' => $payload['exp'] ?? null,
-                'cargos' => $payload['user_metadata']['cargos'] ?? $payload['app_metadata']['cargos'] ?? []
+                'cargos' => (isset($payload['user_metadata']) && is_array($payload['user_metadata'])) ? ($payload['user_metadata']['cargos'] ?? []) : ((isset($payload['app_metadata']) && is_array($payload['app_metadata'])) ? ($payload['app_metadata']['cargos'] ?? []) : [])
             ]
         ], JSON_UNESCAPED_UNICODE);
         exit;
@@ -1936,70 +1896,33 @@ switch ($requestUri) {
     case "/api/auth/me":
         header('Content-Type: application/json; charset=utf-8');
 
-        $logPath = __DIR__ . '/../storage/auth_debug.log';
-        // Extrai o token Bearer do cabeçalho Authorization
         $authHeader = getAuthorizationHeader();
-        $logData = [
-            'timestamp' => date('Y-m-d H:i:s'),
-            'method' => $_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN',
-            'origin' => $_SERVER['HTTP_ORIGIN'] ?? 'NO_ORIGIN',
-            'auth_header' => $authHeader !== '' ? 'PRESENT (len: ' . strlen($authHeader) . ')' : 'NOT_SET',
-        ];
         $token = null;
         if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
             $token = $matches[1];
         }
 
-        $logData['has_token'] = ($token !== null);
-
         if (!$token) {
-            $logData['error'] = 'Não autenticado. Token ausente.';
-            file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND);
             http_response_code(401);
             echo json_encode(['ok' => false, 'erro' => 'Não autenticado. Token ausente.'], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
-        $payload = \App\Core\Auth\SupabaseJwtValidator::validate($token);
-        $logData['validation_success'] = ($payload !== null);
-        if ($payload) {
-            $logData['email'] = $payload['email'] ?? 'NO_EMAIL_IN_PAYLOAD';
-        }
-
-        if (!$payload) {
-            $logData['error'] = 'Token inválido ou expirado.';
-            file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND);
+        $identity = \App\Core\Auth\SupabaseIdentityResolver::resolve($token);
+        if (!$identity) {
             http_response_code(401);
-            echo json_encode(['ok' => false, 'erro' => 'Token inválido ou expirado.'], JSON_UNESCAPED_UNICODE);
-            exit;
-        }
-
-        $email = trim((string) ($payload['email'] ?? ''));
-        if ($email === '') {
-            http_response_code(400);
-            echo json_encode(['ok' => false, 'erro' => 'Email não encontrado no token.'], JSON_UNESCAPED_UNICODE);
+            echo json_encode([
+                'ok' => false,
+                'erro' => 'Token inválido, conta sem vínculo ou perfil inativo.'
+            ], JSON_UNESCAPED_UNICODE);
             exit;
         }
 
         try {
-            $obreiroModel = new \App\Models\Obreiro();
-            $obreiro = $obreiroModel->findByEmail($email);
-
-            if (!$obreiro) {
-                $logData['error'] = "Obreiro correspondente ao email $email nao localizado.";
-                file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND);
-                http_response_code(404);
-                echo json_encode(['ok' => false, 'erro' => 'Obreiro correspondente a este email não localizado no banco de dados.'], JSON_UNESCAPED_UNICODE);
-                exit;
-            }
+            $obreiro = $identity['obreiro'];
 
             // Sanitiza dados confidenciais
             unset($obreiro['senha'], $obreiro['password'], $obreiro['cpf']);
-
-            $logData['db_success'] = true;
-            $logData['user_id'] = $obreiro['id'] ?? null;
-            $logData['cargo'] = $obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? null;
-            file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND);
 
             echo json_encode([
                 'ok' => true,
@@ -2011,15 +1934,16 @@ switch ($requestUri) {
                     'email' => $obreiro['email'] ?? null,
                     'grau' => $obreiro['grau'] ?? null,
                     'cargo_principal' => $obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? null,
-                    'cargos' => $obreiro['cargos'] ?? [],
+                    'cargos' => !empty($obreiro['is_system_admin'])
+                        ? array_values(array_unique(array_merge($obreiro['cargos'] ?? [], ['admin'])))
+                        : ($obreiro['cargos'] ?? []),
+                    'is_system_admin' => (bool) ($obreiro['is_system_admin'] ?? false),
                     'ativo' => (bool) ($obreiro['ativo'] ?? false),
                     'situacao_quadro' => $obreiro['situacao_quadro'] ?? 'inativo'
                 ]
             ], JSON_UNESCAPED_UNICODE);
             exit;
         } catch (\Throwable $e) {
-            $logData['error'] = 'Exception: ' . $e->getMessage();
-            file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND);
             error_log('[API auth/me] Erro ao buscar obreiro: ' . $e->getMessage());
             http_response_code(500);
             echo json_encode(['ok' => false, 'erro' => 'Erro interno ao recuperar dados do usuário.'], JSON_UNESCAPED_UNICODE);

@@ -321,24 +321,6 @@ class Obreiro
             return null;
         }
 
-        if ($email === 'lsdalpiaz@gmail.com') {
-            return [
-                'id' => 'admin',
-                'nome' => 'Administrador do Sistema',
-                'nome_historico' => 'Administrador',
-                'cim' => '9999',
-                'email' => 'lsdalpiaz@gmail.com',
-                'grau' => 3,
-                'cargo' => 'admin',
-                'cargos' => ['admin'],
-                'cargo_principal' => 'admin',
-                'cargos_codigos' => ['ADMINISTRADOR'],
-                'ativo' => 1,
-                'situacao_quadro' => 'ativo',
-                'is_system_admin' => true
-            ];
-        }
-
         if ($this->suportaLojaId() && $this->deveAplicarEscopoTenantNaIdentidade()) {
             $stmt = $this->db->prepare(
                 "SELECT *
@@ -361,6 +343,25 @@ class Obreiro
             );
             $stmt->execute(['email' => $email]);
         }
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $this->hidratarCargosAtivos($result) : null;
+    }
+
+    public function findByAuthUserId(string $authUserId): ?array
+    {
+        $authUserId = strtolower(trim($authUserId));
+        if (!preg_match('/^[0-9a-f-]{36}$/', $authUserId)) {
+            return null;
+        }
+
+        $stmt = $this->db->prepare(
+            "SELECT *
+             FROM public.obreiros
+             WHERE auth_user_id = :auth_user_id
+             LIMIT 1"
+        );
+        $stmt->execute(['auth_user_id' => $authUserId]);
 
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ? $this->hidratarCargosAtivos($result) : null;
@@ -1229,7 +1230,8 @@ class Obreiro
 
         // System admin (fora do RBAC da loja): flag tecnica, nao e cargo oficial.
         $telegramId = isset($obreiro['telegram_id']) ? (int) $obreiro['telegram_id'] : null;
-        $obreiro['is_system_admin'] = (bool) ($telegramId && $this->isSystemAdminTelegramId($telegramId));
+        $obreiro['is_system_admin'] = (bool) ($obreiro['is_system_admin'] ?? false)
+            || (bool) ($telegramId && $this->isSystemAdminTelegramId($telegramId));
 
         return $obreiro;
     }
@@ -1260,11 +1262,8 @@ class Obreiro
             );
 
             $telegramId = isset($obreiro['telegram_id']) ? (int) $obreiro['telegram_id'] : null;
-            if ($telegramId && $this->isSystemAdminTelegramId($telegramId)) {
-                $obreiro['is_system_admin'] = true;
-            } else {
-                $obreiro['is_system_admin'] = false;
-            }
+            $obreiro['is_system_admin'] = (bool) ($obreiro['is_system_admin'] ?? false)
+                || (bool) ($telegramId && $this->isSystemAdminTelegramId($telegramId));
         }
         unset($obreiro);
 

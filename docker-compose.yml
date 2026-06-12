@@ -9,6 +9,9 @@ services:
       - "8000:80"
     env_file:
       - .env
+    environment:
+      APP_ENV: local
+      FRONTEND_ALLOWED_ORIGINS: http://localhost:4300,http://127.0.0.1:4300
     volumes:
       - ./:/var/www/html
       - "d:/leando_loja/Mestre Harmonia LD:/media/mestre_harmonia"

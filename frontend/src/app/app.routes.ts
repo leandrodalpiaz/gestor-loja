@@ -9,12 +9,14 @@ import { SecretariaSessoes } from './components/secretaria-sessoes/secretaria-se
 import { ChancelariaEfemerides } from './components/chancelaria-efemerides/chancelaria-efemerides';
 import { ChancelariaCertificado } from './components/chancelaria-certificado/chancelaria-certificado';
 import { HarmoniaPlayer } from './components/harmonia-player/harmonia-player';
+import { authGuard, guestGuard } from './auth.guard';
 
 export const routes: Routes = [
-  { path: 'login', component: Login },
+  { path: 'login', component: Login, canActivate: [guestGuard] },
   {
     path: 'dashboard',
     component: Dashboard,
+    canActivate: [authGuard],
     children: [
       { path: '', component: DashboardHome },
       { path: 'tesouraria/caixa', component: TesourariaCaixa },
