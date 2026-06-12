@@ -81,7 +81,13 @@ foreach ([
 
 // Tratamento de CORS (Cross-Origin Resource Sharing) para permitir chamadas da SPA Angular
 $allowedOrigins = array_values(array_filter(array_map(
-    static fn (string $origin): string => rtrim(trim($origin), '/'),
+    static function (string $origin): string {
+        $origin = rtrim(trim($origin), '/');
+        if ($origin !== '' && !preg_match('#^https?://#i', $origin)) {
+            $origin = 'https://' . $origin;
+        }
+        return $origin;
+    },
     explode(',', (string) ($_ENV['FRONTEND_ALLOWED_ORIGINS'] ?? ''))
 )));
 
