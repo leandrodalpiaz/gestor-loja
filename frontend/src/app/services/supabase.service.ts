@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Session, User } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
-import { Observable, from, map, catchError, of, switchMap, tap } from 'rxjs';
+import { Observable, from, map, catchError, of, switchMap, tap, finalize, shareReplay } from 'rxjs';
 import { supabaseClient } from '../supabase-client';
 
 @Injectable({
@@ -17,6 +17,7 @@ export class SupabaseService {
   public user = signal<User | null>(null);
   public profile = signal<any | null>(null);
   public loading = signal<boolean>(true);
+  private profileRequest$: Observable<any> | null = null;
 
   constructor() {
     // Escuta mudanças de estado da autenticação (login, logout, refresh de token)
@@ -141,12 +142,34 @@ export class SupabaseService {
    * Busca as informações do obreiro local correspondente ao e-mail do JWT no PHP.
    */
   private fetchProfile(token: string): Observable<any> {
+    if (this.profileRequest$) {
+      return this.profileRequest$;
+    }
+
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
 
-    return this.http.get<any>(`${environment.apiUrl}/api/auth/me`, { headers }).pipe(
-      map(res => {
+    this.profileRequest$ = this.http.get(`${environment.apiUrl}/api/auth/me`, {
+      headers,
+      responseType: 'text'
+    }).pipe(
+      map(body => {
+        const normalizedBody = body.replace(/^\uFEFF/, '').trim();
+        const jsonStart = normalizedBody.indexOf('{');
+        const jsonEnd = normalizedBody.lastIndexOf('}');
+
+        if (jsonStart < 0 || jsonEnd < jsonStart) {
+          throw new Error(`Resposta não JSON do backend: ${normalizedBody.slice(0, 200)}`);
+        }
+
+        let res: any;
+        try {
+          res = JSON.parse(normalizedBody.slice(jsonStart, jsonEnd + 1));
+        } catch {
+          throw new Error(`JSON inválido retornado pelo backend: ${normalizedBody.slice(0, 200)}`);
+        }
+
         if (res && res.ok && res.user) {
           this.profile.set(res.user);
           return res.user;
@@ -157,7 +180,11 @@ export class SupabaseService {
         console.error('[SupabaseService] Erro ao carregar perfil no backend:', error);
         this.profile.set(null);
         throw error;
-      })
+      }),
+      finalize(() => this.profileRequest$ = null),
+      shareReplay({ bufferSize: 1, refCount: false })
     );
+
+    return this.profileRequest$;
   }
 }
