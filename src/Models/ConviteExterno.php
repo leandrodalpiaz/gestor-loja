@@ -86,7 +86,17 @@ class ConviteExterno
         $anexoBytes = null;
         $anexoMime = null;
         $anexoNome = null;
-        if (($arquivo['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK && is_uploaded_file((string) ($arquivo['tmp_name'] ?? ''))) {
+        if (!empty($arquivo['conteudo_base64'])) {
+            $detectedMime = trim((string) ($arquivo['mime'] ?? ''));
+            $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+            $conteudo = base64_decode((string) $arquivo['conteudo_base64'], true);
+            if (!in_array($detectedMime, $allowedMimes, true) || $conteudo === false || strlen($conteudo) > 5 * 1024 * 1024) {
+                return false;
+            }
+            $anexoBytes = base64_encode($conteudo);
+            $anexoMime = $detectedMime;
+            $anexoNome = trim((string) ($arquivo['nome'] ?? '')) ?: null;
+        } elseif (($arquivo['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK && is_uploaded_file((string) ($arquivo['tmp_name'] ?? ''))) {
             $tmpName = (string) ($arquivo['tmp_name'] ?? '');
             $fileSize = (int) ($arquivo['size'] ?? 0);
             $maxBytes = 5 * 1024 * 1024;

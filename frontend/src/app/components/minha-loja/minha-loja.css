@@ -1,0 +1,4 @@
+/* Custom transitions for Minha Loja component */
+tr:hover td {
+  color: #fff;
+}

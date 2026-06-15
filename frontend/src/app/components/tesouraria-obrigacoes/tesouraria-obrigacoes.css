@@ -1,0 +1,4 @@
+/* Custom styling for obligations list and receipt upload modal */
+textarea {
+  resize: none;
+}

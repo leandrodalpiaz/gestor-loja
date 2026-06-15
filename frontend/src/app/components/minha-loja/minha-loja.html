@@ -1,0 +1,82 @@
+<div class="space-y-6">
+  <div>
+    @if (loja(); as l) {
+      <h1 class="font-cinzel text-2xl font-bold tracking-widest text-white md:text-3xl">{{l.sigla}} {{l.nome}}</h1>
+      <p class="mt-1 text-xs uppercase tracking-wider text-slate-400">Loja nº {{l.numero}} · quadro de obreiros</p>
+    } @else {
+      <h1 class="font-cinzel text-2xl font-bold tracking-widest text-white md:text-3xl">Minha Loja</h1>
+    }
+  </div>
+
+  <div class="flex flex-wrap gap-2">
+    <button (click)="abrir('visao')" [class.bg-liturgical-gold]="modo() === 'visao'" [class.text-liturgical-bg]="modo() === 'visao'" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-300">Visão da Loja</button>
+    <button (click)="abrir('irmaos')" [class.bg-liturgical-gold]="modo() === 'irmaos'" [class.text-liturgical-bg]="modo() === 'irmaos'" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-300">Irmãos da Loja</button>
+  </div>
+
+  @if (errorMsg(); as msg) {
+    <div class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-400">{{msg}}</div>
+  }
+  @if (loading()) {
+    <div class="py-20 text-center text-sm font-bold uppercase tracking-wider text-slate-400">Carregando quadro de obreiros...</div>
+  } @else {
+    @if (modo() === 'visao') {
+      <section class="space-y-3 rounded-2xl border border-white/5 bg-liturgical-surface/40 p-6">
+        <h2 class="font-cinzel text-sm font-bold uppercase tracking-widest text-white">Sobre nossa Oficina</h2>
+        <p class="text-xs leading-relaxed text-slate-300">Nossa respeitável Oficina promove os princípios da Liberdade, Igualdade e Fraternidade, reunindo obreiros comprometidos com o aperfeiçoamento moral, intelectual e social.</p>
+      </section>
+    }
+
+    <section class="space-y-5 rounded-2xl border border-white/5 bg-liturgical-surface/40 p-6">
+      <div>
+        <h2 class="font-cinzel text-sm font-bold uppercase tracking-widest text-white">Quadro de Obreiros Ativos</h2>
+        <p class="mt-1 text-[10px] text-slate-400">Membros regulares e filiados da Oficina</p>
+      </div>
+
+      @if (modo() === 'irmaos') {
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div class="rounded-xl border border-white/5 bg-black/20 p-4"><small class="text-slate-500">Obreiros ativos</small><p class="text-3xl font-bold text-white">{{estatisticas().total_ativos}}</p></div>
+          @for (item of (estatisticas().graus || []).slice(0, 2); track item.grau) {
+            <div class="rounded-xl border border-white/5 bg-black/20 p-4"><small class="text-slate-500">{{item.grau}}</small><p class="text-3xl font-bold text-liturgical-gold">{{item.qtd}}</p></div>
+          }
+        </div>
+        <input [(ngModel)]="busca" placeholder="Buscar irmão por nome, grau ou cargo..." class="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white">
+        @if (aniversariantes().length > 0) {
+          <div class="rounded-xl border border-liturgical-gold/10 bg-liturgical-gold/5 p-4">
+            <h3 class="text-[10px] font-bold uppercase tracking-widest text-liturgical-gold">Aniversariantes do mês</h3>
+            <div class="mt-3 flex flex-wrap gap-2">
+              @for (o of aniversariantes(); track o.id) {
+                <span class="rounded-lg bg-black/20 px-3 py-2 text-xs text-slate-200">{{o.nome_historico || o.nome}} · {{o.data_nascimento_civil | date:'dd/MM'}}</span>
+              }
+            </div>
+          </div>
+        }
+      }
+
+      <div class="hidden md:block">
+        <table class="w-full text-left text-xs">
+          <thead><tr class="border-b border-white/5 text-[10px] uppercase tracking-widest text-slate-500"><th class="px-4 py-3">Nome</th><th class="px-4 py-3">Grau</th><th class="px-4 py-3">Cargo</th><th class="px-4 py-3">Contato</th></tr></thead>
+          <tbody>
+            @for (o of obreirosFiltrados; track o.id) {
+              <tr class="border-b border-white/5">
+                <td class="px-4 py-3"><b class="block text-white">{{o.nome_historico || o.nome}}</b><span class="text-slate-500">{{o.nome}}</span></td>
+                <td class="px-4 py-3 text-slate-300">{{o.grau}}</td>
+                <td class="px-4 py-3 font-bold text-liturgical-gold">{{o.cargo}}</td>
+                <td class="px-4 py-3 text-slate-400">{{o.email}} @if (modo() === 'irmaos' && o.telefone) {<span class="block">{{o.telefone}}</span>}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 md:hidden">
+        @for (o of obreirosFiltrados; track o.id) {
+          <article class="space-y-3 rounded-xl border border-white/5 bg-black/20 p-4">
+            <div class="flex justify-between gap-3"><div><b class="text-sm text-white">{{o.nome_historico || o.nome}}</b><p class="text-[10px] text-slate-400">{{o.nome}}</p></div><span class="text-[9px] font-bold uppercase text-liturgical-gold">{{o.grau}}</span></div>
+            <p class="text-xs text-slate-300">{{o.cargo}}</p>
+            @if (modo() === 'irmaos' && o.telefone) { <a [href]="'tel:' + o.telefone" class="block rounded-lg border border-white/10 px-3 py-2 text-center text-[10px] font-bold uppercase text-slate-300">Ligar para o irmão</a> }
+          </article>
+        } @empty { <p class="text-sm text-slate-400">Nenhum irmão encontrado.</p> }
+      </div>
+    </section>
+  }
+</div>

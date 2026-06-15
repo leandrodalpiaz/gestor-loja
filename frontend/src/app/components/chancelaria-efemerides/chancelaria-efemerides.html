@@ -1,315 +1,447 @@
-<div class="space-y-6">
-
-  <!-- HEADER & BREADCRUMB -->
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+<div class="space-y-6 animate-fade-in">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-white/5 pb-4">
     <div>
-      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white">Chancelaria · Efemérides</h1>
-      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Registro de Aniversários, Marcos Maçônicos e Datas Históricas</p>
+      <span class="text-liturgical-gold text-[10px] font-bold uppercase tracking-widest block">Chancelaria da Oficina</span>
+      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white mt-1">Efemerides e Mensagem do Dia</h1>
+      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Revisao diaria, homologacao de cards e publicacao oficial no Telegram</p>
     </div>
 
-    <button (click)="abrirModalNovo()"
-            id="btn-novo-efemeride"
-            class="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg hover:shadow-lg hover:shadow-liturgical-gold/10 font-bold uppercase tracking-wider text-xs rounded-xl transition-all">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-      </svg>
-      Novo Registro
+    <div class="flex flex-wrap items-center gap-3">
+      <button (click)="aprovarEEnviarTudo()"
+              [disabled]="publicandoTudo()"
+              class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-extrabold uppercase tracking-wider text-xs rounded-xl transition hover:bg-white disabled:opacity-60">
+        {{ publicandoTudo() ? 'Publicando...' : 'Aprovar e Enviar Tudo' }}
+      </button>
+      <button (click)="abrirModalNovo()"
+              id="btn-novo-efemeride"
+              class="flex items-center justify-center gap-2 px-5 py-2.5 bg-liturgical-gold text-slate-950 font-extrabold uppercase tracking-wider text-xs rounded-xl transition hover:bg-white">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Novo Registro
+      </button>
+    </div>
+  </div>
+
+  <div class="flex border-b border-white/5 gap-6 overflow-x-auto">
+    <button (click)="activeTab.set('diaria')"
+            [class.active]="activeTab() === 'diaria'"
+            class="tab-btn whitespace-nowrap px-4 py-2 text-xs font-bold uppercase tracking-wider transition border-b-2">
+      Dia a Dia (Efemerides)
+    </button>
+    <button (click)="activeTab.set('historia')"
+            [class.active]="activeTab() === 'historia'"
+            class="tab-btn whitespace-nowrap px-4 py-2 text-xs font-bold uppercase tracking-wider transition border-b-2">
+      Nossa Historia (Acervo)
     </button>
   </div>
 
-  <!-- CARDS DE HOJE -->
-  <div class="space-y-3">
-    <div class="flex items-center gap-2">
-      <span class="w-2 h-2 rounded-full bg-liturgical-gold animate-pulse"></span>
-      <span class="text-[10px] font-bold text-liturgical-gold uppercase tracking-widest">Efemérides de Hoje</span>
+  @if (feedbackMsg(); as msg) {
+    <div class="rounded-xl border px-4 py-3 text-sm" [ngClass]="feedbackClass()">
+      {{ msg }}
     </div>
+  }
 
-    @if (loadingHoje()) {
-      <div class="flex justify-center py-6">
-        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-liturgical-gold"></div>
-      </div>
-    }
-
-    @if (!loadingHoje() && efemeridesHoje().length === 0) {
-      <div class="bg-liturgical-surface/20 backdrop-blur-md border border-white/5 rounded-2xl px-5 py-4 text-xs text-slate-500 italic">
-        Nenhuma efeméride registrada para hoje.
-      </div>
-    }
-
-    @if (!loadingHoje() && efemeridesHoje().length > 0) {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        @for (e of efemeridesHoje(); track e.id) {
-          <div class="bg-gradient-to-br from-liturgical-gold/10 to-amber-900/10 backdrop-blur-md border border-liturgical-gold/20 rounded-2xl p-5 relative overflow-hidden">
-            <!-- Decorative glow -->
-            <div class="absolute top-0 right-0 w-32 h-32 bg-liturgical-gold/5 rounded-full blur-2xl pointer-events-none"></div>
-
-            <div class="flex items-start justify-between gap-3 mb-3">
-              <div>
-                <div class="font-bold text-white text-sm leading-snug font-cinzel">{{ e.nome }}</div>
-                @if (e.vinculo) {
-                  <div class="text-[10px] text-liturgical-gold/80 mt-0.5">{{ e.vinculo }}</div>
-                }
-              </div>
-              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shrink-0"
-                    [ngClass]="getTipoBadgeClass(e.tipo)">
-                {{ getTipoLabel(e.tipo) }}
-              </span>
-            </div>
-
-            <div class="flex items-center justify-between text-[10px] text-slate-400">
-              <span>{{ formatarData(e.data_evento) }}</span>
-              @if (getAnosDesde(e.data_evento)) {
-                <span class="text-liturgical-gold font-bold">{{ getAnosDesde(e.data_evento) }}</span>
-              }
-            </div>
-
-            @if (e.mensagem_custom) {
-              <p class="mt-2 text-[10px] text-slate-300 italic leading-relaxed border-t border-white/5 pt-2">
-                "{{ e.mensagem_custom }}"
-              </p>
-            }
-          </div>
-        }
-      </div>
-    }
-  </div>
-
-  <!-- FILTERS PANEL -->
-  <div class="bg-liturgical-surface/30 backdrop-blur-md border border-white/5 rounded-2xl p-5 space-y-4">
-    <div class="flex items-center gap-2 pb-2 border-b border-white/5">
-      <svg class="w-4 h-4 text-liturgical-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-      </svg>
-      <span class="text-[10px] font-bold text-white uppercase tracking-widest">Filtros de Pesquisa</span>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <!-- Busca -->
-      <div class="flex flex-col gap-1.5 md:col-span-2">
-        <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Pesquisar por Nome / Vínculo</label>
-        <input type="text"
-               [(ngModel)]="filtroTermo"
-               (ngModelChange)="carregarEfemerides()"
-               placeholder="Ex: João da Silva..."
-               id="input-filtro-termo"
-               class="w-full bg-black/20 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
-      </div>
-
-      <!-- Tipo -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tipo de Efeméride</label>
-        <select [(ngModel)]="filtroTipo"
-                (ngModelChange)="carregarEfemerides()"
-                id="select-filtro-tipo"
-                class="w-full bg-black/20 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none transition-colors">
-          <option value="">Todos os tipos</option>
-          @for (t of tiposEfemeride; track t) {
-            <option [value]="t">{{ getTipoLabel(t) }}</option>
-          }
-        </select>
-      </div>
-
-      <!-- Ativo + Limpar -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Situação</label>
-        <div class="flex gap-2">
-          <select [(ngModel)]="filtroAtivo"
-                  (ngModelChange)="carregarEfemerides()"
-                  id="select-filtro-ativo"
-                  class="flex-1 bg-black/20 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none transition-colors">
-            <option value="1">Ativas</option>
-            <option value="0">Inativas</option>
-            <option value="">Todas</option>
-          </select>
-          <button (click)="limparFiltros()"
-                  class="px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 hover:border-white/10 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap">
-            Limpar
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- LOADING / ERROR -->
-  @if (loading()) {
+  @if (loadingHoje()) {
     <div class="flex justify-center py-12">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-liturgical-gold"></div>
     </div>
   }
 
-  @if (errorMsg()) {
-    <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs px-4 py-3 rounded-xl">
-      {{ errorMsg() }}
-    </div>
-  }
+  @if (activeTab() === 'diaria') {
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+      <div class="xl:col-span-7 space-y-6">
+        <section class="erp-panel">
+          <div class="erp-panel-header">
+            <div>
+              <h2 class="erp-panel-title">Revisar Mensagem do Dia</h2>
+              <p class="erp-panel-subtitle">A edicao altera apenas a previa de hoje. Os registros oficiais permanecem preservados.</p>
+            </div>
+            <span class="erp-pill bg-blue-500/15 text-blue-200 border-blue-500/25">Hoje as 08:00</span>
+          </div>
 
-  <!-- RESULTS LISTING -->
-  @if (!loading() && !errorMsg()) {
+          <div class="telegram-preview" [innerHTML]="previewHtml()"></div>
 
-    <!-- DESKTOP TABLE -->
-    <div class="hidden md:block bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl overflow-hidden">
-      <table class="w-full border-collapse text-left">
-        <thead>
-          <tr class="border-b border-white/5 bg-black/10 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-            <th class="px-6 py-4">Nome / Vínculo</th>
-            <th class="px-6 py-4">Tipo</th>
-            <th class="px-6 py-4">Data do Evento</th>
-            <th class="px-6 py-4">Local</th>
-            <th class="px-6 py-4">Mensagem</th>
-            <th class="px-6 py-4 text-right">Ações</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-white/5 text-xs text-slate-300">
-          @for (e of efemerides(); track e.id) {
-            <tr class="hover:bg-white/[0.02] transition-colors">
-              <td class="px-6 py-4">
-                <div class="font-bold text-white leading-snug">{{ e.nome }}</div>
-                @if (e.vinculo) {
-                  <div class="text-[10px] text-liturgical-gold/70 mt-0.5">{{ e.vinculo }}</div>
-                }
-                @if (e.parentesco) {
-                  <div class="text-[10px] text-slate-500 mt-0.5 italic">{{ e.parentesco }}</div>
-                }
-              </td>
-              <td class="px-6 py-4">
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
-                      [ngClass]="getTipoBadgeClass(e.tipo)">
-                  {{ getTipoLabel(e.tipo) }}
-                </span>
-              </td>
-              <td class="px-6 py-4">
-                <div>{{ formatarData(e.data_evento) }}</div>
-                @if (getAnosDesde(e.data_evento)) {
-                  <div class="text-[10px] text-liturgical-gold mt-0.5">{{ getAnosDesde(e.data_evento) }}</div>
-                }
-              </td>
-              <td class="px-6 py-4 text-slate-400">{{ e.local || '—' }}</td>
-              <td class="px-6 py-4 max-w-xs">
-                @if (e.mensagem_custom) {
-                  <span class="text-[10px] text-slate-400 italic line-clamp-2">{{ e.mensagem_custom }}</span>
-                } @else {
-                  <span class="text-slate-600">—</span>
-                }
-              </td>
-              <td class="px-6 py-4 text-right">
-                <div class="flex items-center justify-end gap-2">
-                  <button (click)="abrirModalEditar(e)"
-                          class="p-2 bg-white/5 hover:bg-liturgical-gold/10 text-slate-400 hover:text-liturgical-gold rounded-xl transition-all"
-                          title="Editar">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-                    </svg>
+          <div class="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-amber-100">
+            Edite o texto limpo em cada card quando quiser ajustar a imagem. A edicao avancada abaixo mexe diretamente na mensagem compilada do Telegram.
+          </div>
+
+          <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h3 class="text-sm font-bold text-emerald-200 uppercase tracking-wider">Publicacao consolidada</h3>
+              <p class="text-xs text-slate-300 mt-1">Aprova o texto final e dispara texto + imagens para o grupo oficial.</p>
+            </div>
+            <button (click)="aprovarEEnviarTudo()"
+                    [disabled]="publicandoTudo()"
+                    class="px-5 py-3 rounded-xl bg-emerald-400 text-slate-950 text-xs font-extrabold uppercase tracking-wider hover:bg-white disabled:opacity-60">
+              {{ publicandoTudo() ? 'Enviando...' : 'Aprovar e Enviar Tudo' }}
+            </button>
+          </div>
+
+          <div class="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
+            <button type="button"
+                    (click)="edicaoAvancadaAberta.set(!edicaoAvancadaAberta())"
+                    class="w-full flex items-center justify-between p-4 text-left text-xs font-bold uppercase tracking-wider text-slate-300 hover:text-white">
+              <span>Edicao avancada do Telegram</span>
+              <span [class.rotate-180]="edicaoAvancadaAberta()" class="transition">v</span>
+            </button>
+            @if (edicaoAvancadaAberta()) {
+              <div class="border-t border-white/10 p-4 space-y-3">
+                <textarea [(ngModel)]="mensagemPreview"
+                          rows="12"
+                          class="w-full bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl p-3 text-xs text-slate-200 focus:outline-none resize-y font-mono leading-relaxed"
+                          placeholder="A mensagem gerada aparecera aqui para revisao..."></textarea>
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="salvarPrevia()"
+                          [disabled]="salvandoCompilada()"
+                          class="erp-btn-primary">
+                    {{ salvandoCompilada() ? 'Salvando...' : 'Salvar Modificacao Manual' }}
                   </button>
-                  <button (click)="desativar(e.id)"
-                          class="p-2 bg-white/5 hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 rounded-xl transition-all"
-                          title="Desativar">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
-                    </svg>
+                  <button (click)="enviarPrevia()"
+                          [disabled]="enviandoPrevia()"
+                          class="erp-btn-secondary">
+                    {{ enviandoPrevia() ? 'Enviando...' : 'Enviar Previa Privada' }}
                   </button>
-                  <button (click)="excluir(e.id)"
-                          class="p-2 bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-500 rounded-xl transition-all"
-                          title="Excluir">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
+                  <button (click)="enviarGrupo()"
+                          [disabled]="enviandoGrupo()"
+                          class="erp-btn-secondary">
+                    {{ enviandoGrupo() ? 'Enviando...' : 'Enviar Apenas Texto no Grupo' }}
                   </button>
                 </div>
-              </td>
-            </tr>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="erp-panel">
+          <div class="erp-panel-header">
+            <div>
+              <h2 class="erp-panel-title">Registros de Efemerides</h2>
+              <p class="erp-panel-subtitle">Consulta e manutencao dos registros que alimentam a mensagem diaria.</p>
+            </div>
+            <span class="erp-pill bg-white/5 text-slate-300 border-white/10">{{ efemerides().length }} registros</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div class="md:col-span-2">
+              <label class="erp-label">Pesquisar</label>
+              <input type="text"
+                     [(ngModel)]="filtroTermo"
+                     (ngModelChange)="carregarEfemerides()"
+                     placeholder="Nome, vinculo, local..."
+                     class="erp-input">
+            </div>
+            <div>
+              <label class="erp-label">Tipo</label>
+              <select [(ngModel)]="filtroTipo" (change)="carregarEfemerides()" class="erp-input">
+                <option value="">Todos</option>
+                @for (t of tiposEfemeride; track t) {
+                  <option [value]="t">{{ getTipoLabel(t) }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="erp-label">Status</label>
+              <select [(ngModel)]="filtroAtivo" (change)="carregarEfemerides()" class="erp-input">
+                <option value="1">Ativos</option>
+                <option value="0">Inativos</option>
+                <option value="">Todos</option>
+              </select>
+            </div>
+          </div>
+
+          @if (errorMsg(); as erro) {
+            <div class="rounded-xl border border-rose-500/25 bg-rose-500/10 p-3 text-sm text-rose-200">{{ erro }}</div>
           }
-          @if (efemerides().length === 0) {
-            <tr>
-              <td colspan="6" class="px-6 py-8 text-center text-slate-500">
-                Nenhuma efeméride encontrada com os filtros selecionados.
-              </td>
-            </tr>
+
+          <div class="hidden md:block rounded-2xl border border-white/5 overflow-hidden">
+            <table class="w-full text-left">
+              <thead class="bg-white/[0.02]">
+                <tr class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <th class="px-4 py-3">Nome / Vinculo</th>
+                  <th class="px-4 py-3">Data</th>
+                  <th class="px-4 py-3">Tipo</th>
+                  <th class="px-4 py-3">Status</th>
+                  <th class="px-4 py-3 text-right">Acoes</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-white/5 text-xs text-slate-300">
+                @for (e of efemerides(); track e.id) {
+                  <tr class="hover:bg-white/[0.02]">
+                    <td class="px-4 py-3">
+                      <div class="font-bold text-white">{{ e.nome }}</div>
+                      @if (e.vinculo) {
+                        <div class="text-[10px] text-liturgical-gold/70 mt-0.5">{{ e.vinculo }}</div>
+                      }
+                    </td>
+                    <td class="px-4 py-3">{{ formatarData(e.data_evento) }}</td>
+                    <td class="px-4 py-3">
+                      <span class="px-2 py-1 rounded-full text-[10px] font-bold" [ngClass]="getTipoBadgeClass(e.tipo)">{{ getTipoLabel(e.tipo) }}</span>
+                    </td>
+                    <td class="px-4 py-3">{{ e.ativo === false ? 'Inativo' : 'Ativo' }}</td>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center justify-end gap-2">
+                        <button (click)="abrirModalEditar(e)" class="erp-icon-btn" title="Editar">Editar</button>
+                        <button (click)="desativar(e.id)" class="erp-icon-btn" title="Desativar">Desativar</button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="md:hidden space-y-3">
+            @for (e of efemerides(); track e.id) {
+              <article class="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 class="text-sm font-bold text-white">{{ e.nome }}</h3>
+                    <p class="text-xs text-slate-400">{{ formatarData(e.data_evento) }} - {{ getTipoLabel(e.tipo) }}</p>
+                  </div>
+                  <span class="px-2 py-1 rounded-full text-[10px] font-bold" [ngClass]="getTipoBadgeClass(e.tipo)">{{ e.ativo === false ? 'Inativo' : 'Ativo' }}</span>
+                </div>
+                <div class="flex gap-2">
+                  <button (click)="abrirModalEditar(e)" class="erp-btn-secondary flex-1">Editar</button>
+                  <button (click)="desativar(e.id)" class="erp-btn-secondary flex-1">Desativar</button>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      </div>
+
+      <div class="xl:col-span-5 space-y-6">
+        <section class="erp-panel">
+          <div class="erp-panel-header">
+            <div>
+              <h2 class="erp-panel-title">Esteira de Homologacao de Cards</h2>
+              <p class="erp-panel-subtitle">Um evento do dia gera um card revisavel antes da publicacao.</p>
+            </div>
+            <button (click)="cardsAprovarTodos()"
+                    [disabled]="gerandoCards()"
+                    class="erp-btn-secondary">
+              {{ gerandoCards() ? 'Gerando...' : 'Gerar Novamente' }}
+            </button>
+          </div>
+
+          <div class="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-4">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wider text-white mb-2">Template padrao por categoria</p>
+              @if (categoriasCards().length === 0) {
+                <p class="text-xs text-slate-500">Nenhuma categoria encontrada para hoje.</p>
+              } @else {
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  @for (categoria of categoriasCards(); track categoria) {
+                    <label class="inline-flex items-center gap-2 rounded-lg border border-white/5 bg-black/15 px-3 py-2 text-xs text-slate-300">
+                      <input type="checkbox"
+                             [checked]="isCategoriaSelecionada(categoria)"
+                             (change)="toggleCategoria(categoria, $any($event.target).checked)"
+                             class="accent-liturgical-gold">
+                      <span>{{ categoria }}</span>
+                    </label>
+                  }
+                </div>
+              }
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+              <select [(ngModel)]="templateConfig" class="erp-input">
+                <option value="">Escolher template...</option>
+                @for (tpl of templateOpcoes; track tpl.value) {
+                  <option [value]="tpl.value">{{ tpl.label }}</option>
+                }
+              </select>
+              <button (click)="aplicarTemplateConfig()"
+                      [disabled]="salvandoTemplateCategoria()"
+                      class="erp-btn-primary">
+                {{ salvandoTemplateCategoria() ? 'Aplicando...' : 'Aplicar' }}
+              </button>
+            </div>
+          </div>
+
+          @if (cards().length === 0) {
+            <div class="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-xl py-12 text-center text-slate-500">
+              <svg class="w-10 h-10 text-slate-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              <p class="text-xs">Nenhum card gerado para hoje.</p>
+            </div>
+          } @else {
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2 gap-4">
+              @for (card of cards(); track card.registro_id) {
+                <article class="card-workflow-item">
+                  <div class="aspect-[9/16] rounded-xl bg-black/30 flex items-center justify-center overflow-hidden">
+                    @if (card.image_url) {
+                      <img [src]="cardImageUrl(card)" alt="Card de efemeride" class="w-full h-full object-cover">
+                    } @else {
+                      <span class="text-xs text-slate-500">Previa indisponivel</span>
+                    }
+                  </div>
+
+                  <div class="space-y-3">
+                    <div>
+                      <div class="flex items-start justify-between gap-3">
+                        <h3 class="text-sm font-bold text-white leading-snug">{{ card.titulo || '-' }}</h3>
+                        <span class="erp-pill bg-emerald-500/10 text-emerald-200 border-emerald-500/20">{{ cardStatus(card) }}</span>
+                      </div>
+                      <p class="text-[11px] text-slate-400 mt-1">{{ card.template || card.template_slug || '-' }}</p>
+                    </div>
+
+                    <label class="inline-flex items-center gap-2 text-xs text-slate-300">
+                      <input type="checkbox" [(ngModel)]="card.ocultar_idade" class="accent-liturgical-gold">
+                      <span>Ocultar idade</span>
+                    </label>
+
+                    <div>
+                      <label class="erp-label">Texto para este card</label>
+                      <textarea [(ngModel)]="card.texto_custom_card"
+                                rows="5"
+                                class="erp-input min-h-28 leading-snug"
+                                placeholder="Texto customizado para este card..."></textarea>
+                    </div>
+
+                    <div>
+                      <label class="erp-label">Template visual</label>
+                      <select [(ngModel)]="card.template_slug" class="erp-input">
+                        @for (tpl of templateOpcoes; track tpl.value) {
+                          <option [value]="tpl.value">{{ tpl.label }}</option>
+                        }
+                      </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                      <button (click)="configurarCard(card)"
+                              [disabled]="salvandoCardId() === card.registro_id"
+                              class="erp-btn-primary col-span-2">
+                        {{ salvandoCardId() === card.registro_id ? 'Salvando...' : 'Salvar e Atualizar' }}
+                      </button>
+                      <button (click)="zoomCard(cardImageUrl(card))" class="erp-btn-secondary">Ampliar</button>
+                      <button (click)="baixarCard(card)" class="erp-btn-secondary">Baixar</button>
+                    </div>
+                  </div>
+                </article>
+              }
+            </div>
           }
-        </tbody>
-      </table>
+
+          <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h3 class="text-sm font-bold text-emerald-200 uppercase tracking-wider">Conferencia concluida?</h3>
+              <p class="text-xs text-slate-300 mt-1">Dispare a aprovacao definitiva de texto + imagens.</p>
+            </div>
+            <button (click)="aprovarEEnviarTudo()"
+                    [disabled]="publicandoTudo()"
+                    class="px-5 py-3 rounded-xl bg-emerald-400 text-slate-950 text-xs font-extrabold uppercase tracking-wider hover:bg-white disabled:opacity-60">
+              {{ publicandoTudo() ? 'Enviando...' : 'Publicar Tudo no Grupo' }}
+            </button>
+          </div>
+        </section>
+      </div>
     </div>
-
-    <!-- MOBILE CARDS -->
-    <div class="md:hidden space-y-4">
-      @for (e of efemerides(); track e.id) {
-        <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl p-4 space-y-3">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="font-bold text-white text-sm leading-snug">{{ e.nome }}</div>
-              @if (e.vinculo) {
-                <div class="text-[10px] text-liturgical-gold/70 mt-0.5">{{ e.vinculo }}</div>
-              }
-              @if (e.parentesco) {
-                <div class="text-[10px] text-slate-500 mt-0.5 italic">{{ e.parentesco }}</div>
-              }
-            </div>
-            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shrink-0"
-                  [ngClass]="getTipoBadgeClass(e.tipo)">
-              {{ getTipoLabel(e.tipo) }}
-            </span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-white/5 text-[10px] text-slate-400">
-            <div>
-              <span class="block text-[8px] font-bold uppercase text-slate-500 tracking-wider">Data</span>
-              <span class="text-slate-300 font-semibold">{{ formatarData(e.data_evento) }}</span>
-              @if (getAnosDesde(e.data_evento)) {
-                <span class="ml-1 text-liturgical-gold font-bold">· {{ getAnosDesde(e.data_evento) }}</span>
-              }
-            </div>
-            <div>
-              <span class="block text-[8px] font-bold uppercase text-slate-500 tracking-wider">Local</span>
-              <span class="text-slate-300">{{ e.local || '—' }}</span>
-            </div>
-          </div>
-
-          @if (e.mensagem_custom) {
-            <p class="text-[10px] text-slate-400 italic border-t border-white/5 pt-2 leading-relaxed">
-              "{{ e.mensagem_custom }}"
-            </p>
-          }
-
-          <!-- Actions -->
-          <div class="flex items-center gap-2 pt-2 border-t border-white/5">
-            <button (click)="abrirModalEditar(e)"
-                    class="flex-1 py-2 bg-white/5 hover:bg-liturgical-gold/10 text-slate-400 hover:text-liturgical-gold border border-white/5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-center">
-              Editar
-            </button>
-            <button (click)="desativar(e.id)"
-                    class="px-3 py-2 bg-white/5 hover:bg-amber-500/10 text-slate-400 hover:text-amber-400 border border-white/5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
-              Desativar
-            </button>
-            <button (click)="excluir(e.id)"
-                    class="px-3 py-2 bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-500 border border-white/5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
-              Excluir
-            </button>
-          </div>
-        </div>
-      }
-      @if (efemerides().length === 0) {
-        <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl py-8 text-center text-slate-500 text-xs">
-          Nenhuma efeméride encontrada.
-        </div>
-      }
-    </div>
-
   }
 
-  <!-- MODAL DE FORMULÁRIO -->
-  @if (showModal()) {
-    <div class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div class="bg-liturgical-surface border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-
-        <!-- Modal Header -->
-        <div class="p-6 border-b border-white/5 flex items-center justify-between shrink-0 bg-black/10">
+  @if (activeTab() === 'historia') {
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div class="lg:col-span-4 erp-panel">
+        <div class="erp-panel-header">
           <div>
-            <h2 class="font-cinzel text-lg md:text-xl font-bold tracking-widest text-white">
-              {{ isNovo() ? 'Novo Registro de Efeméride' : 'Editar Efeméride' }}
-            </h2>
-            <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">
-              Preencha os dados do evento ou data comemorativa
-            </p>
+            <h2 class="erp-panel-title">{{ isNovaHistoria() ? 'Nova Memoria da Loja' : 'Editar Fato Historico' }}</h2>
+            <p class="erp-panel-subtitle">Registros historicos tambem alimentam cards do dia.</p>
           </div>
+        </div>
+
+        <div class="space-y-4 text-xs text-slate-300">
+          <div>
+            <label class="erp-label">Titulo *</label>
+            <input type="text" [(ngModel)]="formHistoria().titulo" placeholder="Ex: Fundacao da Oficina" class="erp-input">
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="erp-label">Dia *</label>
+              <input type="number" min="1" max="31" [(ngModel)]="formHistoria().dia" class="erp-input text-center">
+            </div>
+            <div>
+              <label class="erp-label">Mes *</label>
+              <input type="number" min="1" max="12" [(ngModel)]="formHistoria().mes" class="erp-input text-center">
+            </div>
+            <div>
+              <label class="erp-label">Ano</label>
+              <input type="number" [(ngModel)]="formHistoria().ano_ref" class="erp-input text-center" placeholder="AAAA">
+            </div>
+          </div>
+          <div>
+            <label class="erp-label">Texto do fato *</label>
+            <textarea rows="7" [(ngModel)]="formHistoria().texto" placeholder="Descreva o fato historico..." class="erp-input leading-relaxed"></textarea>
+          </div>
+          <div>
+            <label class="erp-label">Fonte</label>
+            <input type="text" [(ngModel)]="formHistoria().fonte" placeholder="Livro, ata, tradicao oral..." class="erp-input">
+          </div>
+          <div class="flex flex-col gap-2 pt-2">
+            <button (click)="salvarHistoria()" class="erp-btn-primary w-full">{{ isNovaHistoria() ? 'Publicar Memoria' : 'Salvar Alteracoes' }}</button>
+            @if (!isNovaHistoria()) {
+              <button (click)="abrirFormHistoria()" class="erp-btn-secondary w-full">Cancelar Edicao</button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-8 erp-panel">
+        <div class="erp-panel-header">
+          <div>
+            <h2 class="erp-panel-title">Acervo da Memoria da Oficina</h2>
+            <p class="erp-panel-subtitle">Linha do tempo cadastrada para consulta e publicacoes historicas.</p>
+          </div>
+        </div>
+
+        @if (stories().length === 0) {
+          <div class="text-xs text-slate-500 italic text-center py-6">Nenhum fato historico catalogado no acervo.</div>
+        } @else {
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @for (s of stories(); track s.id) {
+              <article class="rounded-xl border border-white/5 bg-black/20 hover:border-liturgical-gold/30 transition overflow-hidden">
+                <div class="grid grid-cols-[96px_1fr] min-h-40">
+                  <div class="bg-[#fdf8f0] p-2 flex items-center justify-center">
+                    <img src="/assets/images/templates/efemerides/card_historia_sepia.png" alt="Template historia" class="max-h-36 object-contain">
+                  </div>
+                  <div class="p-4 space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="erp-pill bg-liturgical-gold/10 text-liturgical-gold border-liturgical-gold/20">{{ s.dia }}/{{ s.mes }} @if (s.ano_ref) { / {{ s.ano_ref }} }</span>
+                    </div>
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider">{{ s.titulo }}</h3>
+                    <p class="text-[11px] text-slate-300 leading-relaxed line-clamp-4">{{ s.texto }}</p>
+                    <div class="flex justify-between items-center border-t border-white/5 pt-2">
+                      <span class="text-[10px] text-amber-500/80">Fonte: {{ s.fonte || 'Tradicao oral' }}</span>
+                      <button (click)="abrirFormHistoria(s)" class="text-[10px] font-bold text-liturgical-gold uppercase tracking-wider">Editar</button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (zoomCardUrl(); as url) {
+    <div class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+      <div class="relative max-w-lg w-full flex flex-col items-center">
+        <button (click)="fecharZoom()" class="absolute -top-12 right-0 p-2 text-white hover:text-liturgical-gold transition-colors text-xs font-bold uppercase tracking-wider">
+          Fechar
+        </button>
+        <img [src]="url" class="w-full aspect-[9/16] object-contain rounded-2xl shadow-2xl">
+      </div>
+    </div>
+  }
+
+  @if (showModal()) {
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-liturgical-surface border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
+        <div class="p-6 border-b border-white/5 flex justify-between items-center">
+          <h2 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest">
+            {{ isNovo() ? 'Novo Registro de Efemeride' : 'Editar Efemeride' }}
+          </h2>
           <button (click)="showModal.set(false)" class="p-2 text-slate-400 hover:text-white transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -317,105 +449,50 @@
           </button>
         </div>
 
-        <!-- Modal Content -->
         <div class="p-6 overflow-y-auto space-y-4 text-slate-300">
-
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-            <!-- Nome -->
-            <div class="flex flex-col gap-1 md:col-span-2">
-              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Nome <span class="text-rose-400">*</span></label>
-              <input type="text"
-                     [(ngModel)]="formEfemeride().nome"
-                     placeholder="Ex: João da Silva / Fundação da Loja..."
-                     id="input-efemeride-nome"
-                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            <div>
+              <label class="erp-label">Nome do Registro *</label>
+              <input type="text" [(ngModel)]="formEfemeride().nome" placeholder="Ex: Joao da Silva" class="erp-input">
             </div>
-
-            <!-- Tipo -->
-            <div class="flex flex-col gap-1">
-              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tipo <span class="text-rose-400">*</span></label>
-              <select [(ngModel)]="formEfemeride().tipo"
-                      id="select-efemeride-tipo"
-                      class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none transition-colors">
+            <div>
+              <label class="erp-label">Tipo *</label>
+              <select [(ngModel)]="formEfemeride().tipo" class="erp-input">
                 @for (t of tiposEfemeride; track t) {
                   <option [value]="t">{{ getTipoLabel(t) }}</option>
                 }
               </select>
             </div>
-
-            <!-- Data do Evento -->
-            <div class="flex flex-col gap-1">
-              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Data do Evento <span class="text-rose-400">*</span></label>
-              <input type="date"
-                     [(ngModel)]="formEfemeride().data_evento"
-                     id="input-efemeride-data"
-                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            <div>
+              <label class="erp-label">Data do Evento *</label>
+              <input type="date" [(ngModel)]="formEfemeride().data_evento" class="erp-input">
             </div>
-
-            <!-- Vínculo -->
-            <div class="flex flex-col gap-1">
-              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Vínculo (opcional)</label>
-              <input type="text"
-                     [(ngModel)]="formEfemeride().vinculo"
-                     placeholder="Ex: Irmão, cônjuge, nome histórico..."
-                     id="input-efemeride-vinculo"
-                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            <div>
+              <label class="erp-label">Vinculo</label>
+              <input type="text" [(ngModel)]="formEfemeride().vinculo" placeholder="Irmao, esposa, filho..." class="erp-input">
             </div>
-
-            <!-- Parentesco -->
-            <div class="flex flex-col gap-1">
-              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Parentesco (opcional)</label>
-              <input type="text"
-                     [(ngModel)]="formEfemeride().parentesco"
-                     placeholder="Ex: pai, esposa, filho..."
-                     id="input-efemeride-parentesco"
-                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            <div>
+              <label class="erp-label">Irmao relacionado</label>
+              <input type="text" [(ngModel)]="formEfemeride().parentesco" placeholder="Nome do irmao relacionado" class="erp-input">
             </div>
-
-            <!-- Local -->
-            <div class="flex flex-col gap-1 md:col-span-2">
-              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Local (opcional)</label>
-              <input type="text"
-                     [(ngModel)]="formEfemeride().local"
-                     placeholder="Ex: Templo, cidade, loja..."
-                     id="input-efemeride-local"
-                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            <div>
+              <label class="erp-label">Local</label>
+              <input type="text" [(ngModel)]="formEfemeride().local" placeholder="Loja, oriente, referencia..." class="erp-input">
             </div>
-
-            <!-- Mensagem personalizada -->
-            <div class="flex flex-col gap-1 md:col-span-2">
-              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Mensagem Personalizada (opcional)</label>
-              <textarea rows="3"
-                        [(ngModel)]="formEfemeride().mensagem_custom"
-                        placeholder="Mensagem que será exibida no lembrete diário..."
-                        id="textarea-efemeride-mensagem"
-                        class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors resize-none"></textarea>
+            <div class="md:col-span-2">
+              <label class="erp-label">Mensagem personalizada</label>
+              <textarea rows="3" [(ngModel)]="formEfemeride().mensagem_custom" placeholder="Mensagem que sera exibida no lembrete diario..." class="erp-input resize-none"></textarea>
             </div>
-
           </div>
         </div>
 
-        <!-- Modal Footer -->
-        <div class="p-6 border-t border-white/5 shrink-0 bg-black/10 flex items-center justify-between">
-          <span class="text-[10px] text-slate-500 font-cinzel">Gestor Loja · Chancelaria</span>
-
-          <div class="flex items-center gap-3">
-            <button (click)="showModal.set(false)"
-                    class="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
-              Cancelar
-            </button>
-            <button (click)="salvar()"
-                    [disabled]="salvando()"
-                    id="btn-salvar-efemeride"
-                    class="px-5 py-2.5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg transition-all disabled:opacity-50">
-              {{ salvando() ? 'Salvando...' : 'Confirmar e Salvar' }}
-            </button>
-          </div>
+        <div class="p-6 border-t border-white/5 bg-black/10 flex items-center justify-between">
+          <button (click)="showModal.set(false)" class="erp-btn-secondary">Cancelar</button>
+          <button (click)="salvar()" [disabled]="salvando()" class="erp-btn-primary">
+            {{ salvando() ? 'Salvando...' : 'Salvar Registro' }}
+          </button>
         </div>
-
       </div>
     </div>
   }
-
 </div>

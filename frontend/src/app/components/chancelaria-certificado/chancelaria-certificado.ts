@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
 import { SupabaseService } from '../../services/supabase.service';
 import { environment } from '../../../environments/environment';
 
@@ -15,6 +16,7 @@ import { environment } from '../../../environments/environment';
 export class ChancelariaCertificado implements OnInit {
   private http = inject(HttpClient);
   private supabaseService = inject(SupabaseService);
+  private route = inject(ActivatedRoute);
 
   // Estados do formulário
   protected nomeVisitante = signal('');
@@ -38,6 +40,28 @@ export class ChancelariaCertificado implements OnInit {
     const offset = hoje.getTimezoneOffset();
     const dataLocal = new Date(hoje.getTime() - (offset * 60 * 1000));
     this.dataSessao.set(dataLocal.toISOString().split('T')[0]);
+
+    // Lê os query parameters para preenchimento automático
+    this.route.queryParams.subscribe(params => {
+      if (params['data_sessao']) {
+        this.dataSessao.set(params['data_sessao']);
+      }
+      if (params['tipo_sessao']) {
+        this.tipoSessao.set(params['tipo_sessao']);
+      }
+      if (params['grau_sessao']) {
+        this.grauSessao.set(params['grau_sessao']);
+      }
+      if (params['nome_visitante']) {
+        this.nomeVisitante.set(params['nome_visitante']);
+      }
+      if (params['loja_visitante']) {
+        this.lojaVisitante.set(params['loja_visitante']);
+      }
+      if (params['oriente']) {
+        this.oriente.set(params['oriente']);
+      }
+    });
 
     // Detecta contexto do Telegram WebApp
     const win = window as any;

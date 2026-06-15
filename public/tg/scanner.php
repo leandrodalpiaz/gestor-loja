@@ -54,7 +54,7 @@ declare(strict_types=1);
     </style>
 </head>
 <body>
-    <h1>Escaneie o codigo de barras do livro</h1>
+    <h1>Escaneie o código de barras do livro</h1>
     <div id="reader"></div>
     <div id="info"></div>
     <div id="erro"></div>
@@ -108,7 +108,7 @@ declare(strict_types=1);
             onScanSuccess,
             () => {}
         ).catch(() => {
-            erro.textContent = "Nao foi possivel abrir a camera. Verifique as permissoes e tente novamente.";
+            erro.textContent = "Não foi possível abrir a câmera. Verifique as permissões e tente novamente.";
         });
 
         async function onScanSuccess(text) {
@@ -130,7 +130,7 @@ declare(strict_types=1);
                 });
                 const data = await res.json();
                 if (!data.ok) {
-                    throw new Error(data.erro || data.error || "Nao foi possivel cadastrar o livro por ISBN agora.");
+                    throw new Error(data.erro || data.error || "Não foi possível cadastrar o livro por ISBN agora.");
                 }
 
                 info.innerHTML =
@@ -138,13 +138,13 @@ declare(strict_types=1);
                     `<b>Autor(es):</b> ${data.autor}<br>` +
                     `<b>ISBN:</b> ${isbnLimpo}<br>` +
                     `<b>Codigo:</b> ${data.codigo_acervo || '-'}<br>` +
-                    `<b>Resumo:</b> ${(data.resumo || 'Resumo nao informado').slice(0, 280)}`;
+                    `<b>Resumo:</b> ${(data.resumo || 'Resumo não informado').slice(0, 280)}`;
 
                 salvar.style.display = "block";
                 salvar.onclick = () => successAlert("Livro cadastrado com sucesso.");
                 notifySuccess();
             } catch (e) {
-                erro.textContent = e.message ? e.message : "Nao foi possivel consultar o ISBN agora. Tente novamente.";
+                erro.textContent = e.message ? e.message : "Não foi possível consultar o ISBN agora. Tente novamente.";
                 salvar.style.display = "none";
                 notifyError();
             }

@@ -1,0 +1,50 @@
+<div class="space-y-6">
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-liturgical-gold">Área do Irmão</p>
+      <h1 class="mt-2 font-cinzel text-3xl font-bold text-white">Meu Cadastro</h1>
+      <p class="mt-2 text-sm text-slate-400">Atualize somente seus dados pessoais e de contato.</p>
+    </div>
+    @if (!editing() && perfil()) {
+      <button type="button" (click)="editing.set(true)" class="rounded-xl bg-liturgical-gold px-5 py-3 text-xs font-bold uppercase tracking-wider text-liturgical-bg">Editar cadastro</button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="rounded-2xl border border-white/5 bg-white/[0.02] p-10 text-center text-sm text-slate-400">Carregando cadastro...</div>
+  }
+  @if (error()) {
+    <div class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">{{ error() }}</div>
+  }
+  @if (message()) {
+    <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">{{ message() }}</div>
+  }
+
+  @if (perfil(); as p) {
+    <section class="rounded-2xl border border-white/5 bg-liturgical-surface/40 p-6">
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <label class="space-y-2 md:col-span-2"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Nome completo</span><input [(ngModel)]="p.nome" [disabled]="!editing()" class="w-full rounded-xl border border-white/5 bg-black/20 px-4 py-3 text-sm text-white disabled:opacity-70"></label>
+        <label class="space-y-2 md:col-span-2"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Nome histórico</span><input [(ngModel)]="p.nome_historico" [disabled]="!editing()" class="w-full rounded-xl border border-white/5 bg-black/20 px-4 py-3 text-sm text-white disabled:opacity-70"></label>
+        <label class="space-y-2"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">E-mail de contato</span><input type="email" [(ngModel)]="p.email" [disabled]="!editing()" class="w-full rounded-xl border border-white/5 bg-black/20 px-4 py-3 text-sm text-white disabled:opacity-70"></label>
+        <label class="space-y-2"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Telefone</span><input [(ngModel)]="p.telefone" [disabled]="!editing()" class="w-full rounded-xl border border-white/5 bg-black/20 px-4 py-3 text-sm text-white disabled:opacity-70"></label>
+        <label class="space-y-2"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Nascimento</span><input type="date" [(ngModel)]="p.data_nascimento_civil" [disabled]="!editing()" class="w-full rounded-xl border border-white/5 bg-black/20 px-4 py-3 text-sm text-white disabled:opacity-70"></label>
+        <label class="space-y-2"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Estado civil</span><select [(ngModel)]="p.estado_civil" [disabled]="!editing()" class="w-full rounded-xl border border-white/5 bg-black/20 px-4 py-3 text-sm text-white disabled:opacity-70"><option value="nao_informado">Não informado</option><option value="solteiro">Solteiro</option><option value="casado">Casado</option><option value="divorciado">Divorciado</option><option value="separado">Separado</option><option value="viuvo">Viúvo</option><option value="uniao_estavel">União estável</option></select></label>
+        <label class="space-y-2 md:col-span-2"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Profissão</span><input [(ngModel)]="p.profissao" [disabled]="!editing()" class="w-full rounded-xl border border-white/5 bg-black/20 px-4 py-3 text-sm text-white disabled:opacity-70"></label>
+      </div>
+
+      <div class="mt-6 grid grid-cols-2 gap-4 border-t border-white/5 pt-6 text-sm md:grid-cols-4">
+        <div><span class="block text-[9px] uppercase text-slate-500">CIM</span><strong class="text-white">{{ p.cim || '-' }}</strong></div>
+        <div><span class="block text-[9px] uppercase text-slate-500">Grau</span><strong class="text-white">{{ p.grau || '-' }}</strong></div>
+        <div><span class="block text-[9px] uppercase text-slate-500">Situação</span><strong class="text-white">{{ p.situacao_quadro || '-' }}</strong></div>
+        <div><span class="block text-[9px] uppercase text-slate-500">Cargo</span><strong class="text-white">{{ p.cargo_principal || '-' }}</strong></div>
+      </div>
+
+      @if (editing()) {
+        <div class="mt-6 flex justify-end gap-3">
+          <button type="button" (click)="cancel()" class="rounded-xl border border-white/10 px-5 py-3 text-xs font-bold uppercase text-slate-300">Cancelar</button>
+          <button type="button" (click)="save()" [disabled]="saving()" class="rounded-xl bg-liturgical-gold px-5 py-3 text-xs font-bold uppercase text-liturgical-bg disabled:opacity-50">{{ saving() ? 'Salvando...' : 'Salvar' }}</button>
+        </div>
+      }
+    </section>
+  }
+</div>

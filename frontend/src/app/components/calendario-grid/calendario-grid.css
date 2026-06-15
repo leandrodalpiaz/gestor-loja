@@ -1,0 +1,17 @@
+/* Oculta barra de rolagem horizontal e estiliza a barra vertical no grid do calendário */
+.space-y-1\.5::-webkit-scrollbar {
+  width: 4px;
+}
+
+.space-y-1\.5::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.space-y-1\.5::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.space-y-1\.5::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

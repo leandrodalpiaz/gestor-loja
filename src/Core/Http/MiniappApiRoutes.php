@@ -33,14 +33,58 @@ class MiniappApiRoutes
 
         header('Content-Type: application/json; charset=utf-8');
 
-        $tenantIdFromSession = trim((string) ($session['tenant_id'] ?? ''));
-        if ($tenantIdFromSession === '') {
-            JsonResponse::error('Loja não identificada. Verifique a configuração do ambiente.', 503);
-        }
-
         $body = RequestBody::json();
         $initData = trim((string) ($body['initData'] ?? $body['init_data'] ?? $_GET['initData'] ?? $_GET['init_data'] ?? ''));
         $miniappObreiro = null;
+
+        $authHeader = function_exists('getAuthorizationHeader') ? \getAuthorizationHeader() : '';
+        $token = null;
+        if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
+            $token = $matches[1];
+        }
+
+        if ($token) {
+            $identity = \App\Core\Auth\SupabaseIdentityResolver::resolve($token);
+            if (!$identity) {
+                JsonResponse::error('Token inválido ou expirado.', 401);
+            }
+
+            $jwtObreiro = $identity['obreiro'];
+            $_SESSION['usuario_logado'] = $jwtObreiro;
+            $_SESSION['usuario_id'] = $jwtObreiro['id'] ?? null;
+            $_SESSION['usuario_nome'] = $jwtObreiro['nome_historico'] ?? $jwtObreiro['nome'] ?? null;
+            $_SESSION['is_system_admin'] = !empty($jwtObreiro['is_system_admin']);
+
+            $rolesSource = $jwtObreiro['cargos'] ?? null;
+            if (!is_array($rolesSource) || $rolesSource === []) {
+                $rolesSource = [$jwtObreiro['cargo_principal'] ?? $jwtObreiro['cargo'] ?? ''];
+            }
+
+            $roles = array_values(array_unique(array_filter(array_map($normalizeRole, $rolesSource))));
+            if ($_SESSION['is_system_admin']) {
+                if (!in_array('admin', $roles, true)) {
+                    $roles[] = 'admin';
+                }
+            } elseif (!in_array('obreiro', $roles, true)) {
+                $roles[] = 'obreiro';
+            }
+
+            $_SESSION['usuario_cargo'] = (string) ($jwtObreiro['cargo_principal'] ?? $jwtObreiro['cargo'] ?? ($roles[0] ?? 'obreiro'));
+            $_SESSION['usuario_cargos'] = $roles;
+
+            $lojaId = trim((string) ($jwtObreiro['loja_id'] ?? ''));
+            if ($lojaId !== '') {
+                $_SESSION['tenant_id'] = $lojaId;
+            }
+
+            $session = $_SESSION;
+            $miniappObreiro = $jwtObreiro;
+        }
+
+        $tenantIdFromSession = trim((string) ($session['tenant_id'] ?? $_SESSION['tenant_id'] ?? ''));
+        if ($tenantIdFromSession === '') {
+            JsonResponse::error('Loja não identificada. Verifique a configuração do ambiente.', 503);
+        }
         $miniappAllowedRoles = match (true) {
             str_starts_with($requestUri, '/api/miniapp/historico') => $contentPermissionService()->getAllowedRoles('historia'),
             str_starts_with($requestUri, '/api/miniapp/palavra-dia') => $contentPermissionService()->getAllowedRoles('palavra_dia'),
@@ -78,13 +122,43 @@ class MiniappApiRoutes
             default => null,
         };
 
+        $hasMiniappPermission = static function (array $obreiro) use ($miniappAllowedRoles, $miniappRequiredPermission, $permissionMap, $normalizeRole): bool {
+            if (!empty($obreiro['is_system_admin'])) {
+                return true;
+            }
+
+            $rolesSource = $obreiro['cargos'] ?? null;
+            if (!is_array($rolesSource) || $rolesSource === []) {
+                $rolesSource = [$obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? ''];
+            }
+
+            $roles = array_values(array_unique(array_filter(array_map($normalizeRole, $rolesSource))));
+            if (!in_array('obreiro', $roles, true)) {
+                $roles[] = 'obreiro';
+            }
+
+            foreach ($miniappAllowedRoles as $allowedRole) {
+                if (in_array($allowedRole, $roles, true)) {
+                    return true;
+                }
+            }
+
+            if ($miniappRequiredPermission === null) {
+                return false;
+            }
+
+            $miniappPermissions = $permissionMap->permissionsForRoles($roles);
+            return in_array('*', $miniappPermissions, true) || in_array($miniappRequiredPermission, $miniappPermissions, true);
+        };
+
         $authorizedBySession = isset($session['usuario_logado']) && (
             !empty($session['is_system_admin'])
             || $sessionHasRole(...$miniappAllowedRoles)
             || ($miniappRequiredPermission !== null && $sessionHasPermission($miniappRequiredPermission))
         );
+        $authorizedByJwt = $token !== null && $miniappObreiro !== null && $hasMiniappPermission($miniappObreiro);
 
-        if ($authorizedBySession) {
+        if ($authorizedBySession || $authorizedByJwt) {
             $miniappObreiro = $session['usuario_logado'];
         } else {
             $miniappObreiro = $resolveObreiroByInitData($initData);
@@ -92,33 +166,7 @@ class MiniappApiRoutes
                 JsonResponse::error('Nao autenticado no miniapp.', 401);
             }
 
-            if (!empty($miniappObreiro['is_system_admin'])) {
-                $temPermissaoMiniapp = true;
-            } else {
-                $rolesSource = $miniappObreiro['cargos'] ?? null;
-                if (!is_array($rolesSource) || $rolesSource === []) {
-                    $rolesSource = [$miniappObreiro['cargo_principal'] ?? $miniappObreiro['cargo'] ?? ''];
-                }
-
-                $roles = array_values(array_unique(array_filter(array_map(
-                    $normalizeRole,
-                    $rolesSource
-                ))));
-                if (!in_array('obreiro', $roles, true)) {
-                    $roles[] = 'obreiro';
-                }
-                $temPermissaoMiniapp = false;
-                foreach ($miniappAllowedRoles as $allowedRole) {
-                    if (in_array($allowedRole, $roles, true)) {
-                        $temPermissaoMiniapp = true;
-                        break;
-                    }
-                }
-                if (!$temPermissaoMiniapp && $miniappRequiredPermission !== null) {
-                    $miniappPermissions = $permissionMap->permissionsForRoles($roles);
-                    $temPermissaoMiniapp = in_array('*', $miniappPermissions, true) || in_array($miniappRequiredPermission, $miniappPermissions, true);
-                }
-            }
+            $temPermissaoMiniapp = $hasMiniappPermission($miniappObreiro);
 
             if (!$temPermissaoMiniapp) {
                 JsonResponse::error('Acesso restrito para este miniapp.', 403);
@@ -603,8 +651,8 @@ class MiniappApiRoutes
 
         if ($requestUri === '/api/miniapp/mestre-banquetes/operacao/salvar' && $method === 'POST') {
             $controller = new \App\Controllers\MestreBanquetesController();
-            $autorId = isset($miniappObreiro['id']) ? (int) $miniappObreiro['id'] : (isset($session['usuario_id']) ? (int) $session['usuario_id'] : null);
-            JsonResponse::send($controller->salvarOperacaoMiniapp($body, $autorId));
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
+            JsonResponse::send($controller->salvarOperacaoMiniapp($body, $autorId !== '' ? $autorId : null));
         }
 
         if ($requestUri === '/api/miniapp/mestre-harmonia/dashboard' && $method === 'GET') {
@@ -693,6 +741,41 @@ class MiniappApiRoutes
             $controller = new \App\Controllers\BibliotecaController();
             $obreiroId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
             JsonResponse::send($controller->reagirMiniapp((int) ($body['acervo_id'] ?? 0), $obreiroId, !empty($body['gostei'])));
+        }
+
+        if ($requestUri === '/api/miniapp/biblioteca/devolver' && $method === 'POST') {
+            if (!$sessionHasPermission('biblioteca.manage')) {
+                JsonResponse::error('Acesso restrito à gestão da Biblioteca.', 403);
+            }
+            $controller = new \App\Controllers\BibliotecaController();
+            JsonResponse::send($controller->devolverMiniapp((int) ($body['emprestimo_id'] ?? 0)));
+        }
+
+        if ($requestUri === '/api/miniapp/biblioteca/interloja/decidir' && $method === 'POST') {
+            if (!$sessionHasPermission('biblioteca.manage')) {
+                JsonResponse::error('Acesso restrito à gestão da Biblioteca.', 403);
+            }
+            $controller = new \App\Controllers\BibliotecaController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
+            JsonResponse::send($controller->decidirInterlojaMiniapp(
+                (int) ($body['pedido_id'] ?? 0),
+                (string) ($body['decisao'] ?? ''),
+                $autorId !== '' ? $autorId : null
+            ));
+        }
+
+        if ($requestUri === '/api/miniapp/biblioteca/classificar' && $method === 'POST') {
+            if (!$sessionHasPermission('biblioteca.classificar')) {
+                JsonResponse::error('Acesso restrito aos responsáveis pela classificação.', 403);
+            }
+            $controller = new \App\Controllers\BibliotecaController();
+            $curadorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
+            JsonResponse::send($controller->classificarMiniapp(
+                (int) ($body['livro_id'] ?? 0),
+                (string) ($body['grau_recomendado'] ?? 'Livre'),
+                (string) ($body['nota_instrucao'] ?? ''),
+                $curadorId !== '' ? $curadorId : null
+            ));
         }
 
         if ($requestUri === '/api/miniapp/admin/dashboard' && $method === 'GET') {

@@ -1,0 +1,573 @@
+<div class="space-y-6 animate-fade-in">
+
+  <!-- TOP BAR -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-white/5 pb-4">
+    <div>
+      <span class="text-liturgical-gold text-[10px] font-bold uppercase tracking-widest block">Painel de Oficiais</span>
+      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white mt-1">Venerável Mestre</h1>
+      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Acompanhamento Executivo, Aprovações da Hospitalaria, Agenda Litúrgica e Sinais Fraternos</p>
+    </div>
+
+    <!-- Month Navigation Filters -->
+    <div class="flex items-center gap-2 bg-[#111a31] border border-white/10 rounded-xl px-3 py-1.5 shrink-0 shadow-lg">
+      <button (click)="anteriorMes()" class="p-1 text-slate-400 hover:text-liturgical-gold transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+      <span class="text-xs font-bold text-white uppercase tracking-wider min-w-[120px] text-center">
+        {{ getMesNome(mesSelecionado) }} {{ anoSelecionado }}
+      </span>
+      <button (click)="proximoMes()" class="p-1 text-slate-400 hover:text-liturgical-gold transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- NAVIGATION TABS -->
+  <div class="flex border-b border-white/5 space-x-6">
+    <button (click)="activeTab = 'resumo-executivo'"
+            [class.border-liturgical-gold]="activeTab === 'resumo-executivo'"
+            [class.text-liturgical-gold]="activeTab === 'resumo-executivo'"
+            [class.text-slate-400]="activeTab !== 'resumo-executivo'"
+            class="pb-3 text-xs font-bold uppercase tracking-widest border-b-2 border-transparent transition-all">
+      Resumo Executivo
+    </button>
+    <button (click)="activeTab = 'atencao-preventiva'"
+            [class.border-liturgical-gold]="activeTab === 'atencao-preventiva'"
+            [class.text-liturgical-gold]="activeTab === 'atencao-preventiva'"
+            [class.text-slate-400]="activeTab !== 'atencao-preventiva'"
+            class="pb-3 text-xs font-bold uppercase tracking-widest border-b-2 border-transparent transition-all">
+      Atenção Preventiva por Ausência
+    </button>
+  </div>
+
+  <!-- MESSAGES -->
+  @if (successMsg(); as msg) {
+    <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-400">
+      {{ msg }}
+    </div>
+  }
+  @if (errorMsg(); as msg) {
+    <div class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-400">
+      {{ msg }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="flex flex-col items-center justify-center space-y-4 py-20 text-slate-400">
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-liturgical-gold border-t-transparent"></div>
+      <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Consultando Banco de Dados da Loja...</p>
+    </div>
+  }
+
+  <!-- TAB 1: RESUMO EXECUTIVO -->
+  @if (activeTab === 'resumo-executivo' && !loading() && dados(); as d) {
+    
+    <!-- UPPER INDICATORS GRID -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="space-y-1 rounded-xl border border-white/5 bg-white/[0.01] p-5">
+        <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Sessões Programadas</p>
+        <p class="text-3xl font-bold text-white">{{ (d.sessoes_mes || []).length }}</p>
+      </div>
+      <div class="space-y-1 rounded-xl border border-white/5 bg-white/[0.01] p-5">
+        <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Auxílios Assistenciais</p>
+        <p class="text-3xl font-bold text-white">{{ (d.auxilios_pendentes || []).length }}</p>
+      </div>
+      <div class="space-y-1 rounded-xl border border-white/5 bg-white/[0.01] p-5">
+        <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Balaústres em Votação</p>
+        <p class="text-3xl font-bold text-white">{{ (d.balaustres_em_votacao || []).length }}</p>
+      </div>
+      <div class="space-y-1 rounded-xl border border-white/5 bg-white/[0.01] p-5">
+        <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Cargos Desocupados</p>
+        <p class="text-3xl font-bold text-rose-400">{{ (d.cargos_criticos_pendentes || []).length }}</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+      
+      <!-- LEFT COLUMN: ASSISTANCES & CALENDAR -->
+      <div class="xl:col-span-8 space-y-8">
+        
+        <!-- PENDING HOSPITALARIA ASSISTANCES -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-liturgical-gold"></span>
+            <h2 class="text-xs font-bold text-white uppercase tracking-widest">Auxílios Assistenciais Pendentes (Hospitalaria)</h2>
+          </div>
+
+          @if ((d.auxilios_pendentes || []).length === 0) {
+            <div class="bg-white/[0.01] border border-white/5 rounded-2xl p-6 text-center text-xs text-slate-500 italic">
+              Nenhuma solicitação de auxílio emergencial pendente de decisão.
+            </div>
+          }
+
+          @if ((d.auxilios_pendentes || []).length > 0) {
+            <div class="space-y-4">
+              @for (a of d.auxilios_pendentes; track a.id) {
+                <div class="glass-card rounded-2xl border border-white/5 p-5 bg-white/[0.01] space-y-4">
+                  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 border-b border-white/5 pb-3">
+                    <div>
+                      <h3 class="font-bold text-white text-sm font-cinzel">{{ a.obreiro_nome || 'Obreiro Necessitado' }}</h3>
+                      <p class="text-[10px] text-slate-400 mt-0.5">Motivo: {{ a.descricao || 'Auxílio financeiro' }} &middot; Estimado: {{ a.valor_estimado | currency:'BRL' }}</p>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0 self-start md:self-auto">
+                      Aguardando Decisão
+                    </span>
+                  </div>
+
+                  <!-- Decision Form Controls -->
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end text-xs">
+                    <div>
+                      <label class="block text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-2">Valor Aprovado</label>
+                      <input type="text" [(ngModel)]="auxiliosDecisoes[a.id].valor_aprovado" placeholder="Ex: 500.00"
+                             class="w-full bg-[#111a31] border border-white/10 rounded-xl px-4 py-2 text-xs text-white">
+                    </div>
+                    <div class="md:col-span-2">
+                      <label class="block text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-2">Justificativa / Observações</label>
+                      <input type="text" [(ngModel)]="auxiliosDecisoes[a.id].justificativa" placeholder="Justificativa da concessão ou indeferimento..."
+                             class="w-full bg-[#111a31] border border-white/10 rounded-xl px-4 py-2 text-xs text-white">
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-end gap-2 pt-2">
+                    <button (click)="decidirAssistencia(a.id, 'recusar')"
+                            class="px-4 py-2 bg-rose-950/30 hover:bg-rose-900/30 text-rose-400 border border-rose-500/20 text-xs font-bold uppercase rounded-lg transition-all">
+                      Recusar Auxílio
+                    </button>
+                    <button (click)="decidirAssistencia(a.id, 'aprovar')"
+                            class="px-5 py-2 bg-liturgical-gold text-slate-950 text-xs font-extrabold uppercase rounded-lg transition-all hover:bg-white shadow-md">
+                      Aprovar Auxílio
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- AGENDA DO MÊS: SESSION & ACTION COMMANDS -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            <h2 class="text-xs font-bold text-white uppercase tracking-widest">Agenda Litúrgica do Mês</h2>
+          </div>
+
+          @if ((d.sessoes_mes || []).length === 0 && (d.convites_mes || []).length === 0) {
+            <div class="bg-white/[0.01] border border-white/5 rounded-2xl p-6 text-center text-xs text-slate-500 italic">
+              Nenhuma sessão ou convite externo programado para este mês.
+            </div>
+          }
+
+          @if ((d.sessoes_mes || []).length > 0 || (d.convites_mes || []).length > 0) {
+            <div class="bg-white/[0.01] border border-white/5 rounded-2xl overflow-hidden">
+              <table class="w-full border-collapse text-left">
+                <thead>
+                  <tr class="border-b border-white/5 bg-black/10 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                    <th class="px-6 py-4">Sessão / Título</th>
+                    <th class="px-6 py-4">Data e Hora</th>
+                    <th class="px-6 py-4">Situação</th>
+                    <th class="px-6 py-4 text-right">Comandos do Venerável</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5 text-xs text-slate-300">
+                  @for (s of d.sessoes_mes; track s.id) {
+                    <tr class="hover:bg-white/[0.01] transition-colors">
+                      <td class="px-6 py-4">
+                        <div class="font-bold text-white leading-snug">{{ s.titulo || s.tipo_sessao }}</div>
+                        <div class="text-[10px] text-liturgical-gold/70 mt-0.5 capitalize">Grau {{ s.grau_sessao || s.grau || '1' }}</div>
+                      </td>
+                      <td class="px-6 py-4 text-slate-400">{{ s.data_hora_inicio | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td class="px-6 py-4">
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                              [ngClass]="getSessaoStatusClass(s.status)">
+                          {{ getSessaoStatusLabel(s.status) }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-1.5">
+                          @if (s.status === 'planejada') {
+                            <button (click)="executarAcaoSessao(s.id, 'publicar')"
+                                    class="px-2.5 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-[10px] font-bold uppercase rounded-lg transition-all">
+                              Publicar
+                            </button>
+                          }
+                          @if (s.status === 'publicada') {
+                            <button (click)="executarAcaoSessao(s.id, 'realizar')"
+                                    class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold uppercase rounded-lg transition-all">
+                              Realizar
+                            </button>
+                          }
+                          @if (s.status === 'realizada') {
+                            <button (click)="executarAcaoSessao(s.id, 'reabrir')"
+                                    class="px-2.5 py-1 bg-slate-500/10 hover:bg-slate-500/20 text-slate-300 border border-slate-500/20 text-[10px] font-bold uppercase rounded-lg transition-all">
+                              Reabrir
+                            </button>
+                          }
+                          @if (s.status !== 'cancelada') {
+                            <button (click)="executarAcaoSessao(s.id, 'cancelar')"
+                                    class="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[10px] font-bold uppercase rounded-lg transition-all">
+                              Cancelar
+                            </button>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                  
+                  <!-- External Visits/Invitations -->
+                  @for (c of d.convites_mes; track c.id) {
+                    <tr class="hover:bg-white/[0.01] transition-colors border-t border-dashed border-white/5">
+                      <td class="px-6 py-4">
+                        <div class="font-bold text-slate-300 leading-snug">[Visita Externa] {{ c.loja_visitada }}</div>
+                        <div class="text-[10px] text-slate-500 mt-0.5">Oriente: {{ c.oriente_visitado }} &middot; Delegados: {{ c.delegados_indicados || '-' }}</div>
+                      </td>
+                      <td class="px-6 py-4 text-slate-500">{{ c.data_hora_reuniao | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td class="px-6 py-4">
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                          Convite
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 text-right text-slate-600 italic">Delegável no Legado</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: FINANCIAL MACRO, HOMOLOGATION & RECENT ALERTS -->
+      <div class="xl:col-span-4 space-y-6">
+        
+        <!-- FINANCIAL MACRO METRICS -->
+        <div class="glass-card rounded-2xl border border-white/5 p-5 bg-white/[0.01] space-y-4">
+          <div class="flex items-center justify-between border-b border-white/5 pb-2">
+            <h2 class="text-xs font-bold text-white uppercase tracking-widest">Tesouraria Macro</h2>
+            <span class="text-[9px] bg-emerald-500/25 text-emerald-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Consolidado</span>
+          </div>
+
+          <div class="space-y-3 pt-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400">Caixa Global Disponível:</span>
+              <span class="font-bold text-emerald-400 font-mono">{{ d.tesouraria_resumo?.saldo_caixa | currency:'BRL' }}</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400">Fluxo do Mês (Entradas):</span>
+              <span class="font-bold text-white font-mono">{{ d.tesouraria_resumo?.entradas_mes | currency:'BRL' }}</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400">Fluxo do Mês (Saídas):</span>
+              <span class="font-bold text-rose-400 font-mono">{{ d.tesouraria_resumo?.saidas_mes | currency:'BRL' }}</span>
+            </div>
+          </div>
+
+          <!-- COMPARATIVE BAR CHART -->
+          <div class="space-y-3 pt-4 border-t border-white/5">
+            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Faturamento vs Despesas (Série)</h3>
+            <div class="space-y-2 pt-2">
+              @for (item of d.tesouraria_serie; track item.mes) {
+                <div class="space-y-1">
+                  <div class="flex justify-between text-[9px] text-slate-400 uppercase tracking-wider">
+                    <span>{{ getMesNome(item.mes) }} {{ item.ano }}</span>
+                    <span class="font-mono text-slate-300">E: {{ item.entradas | currency:'BRL':'symbol':'1.0-0' }} | S: {{ item.saidas | currency:'BRL':'symbol':'1.0-0' }}</span>
+                  </div>
+                  <div class="w-full bg-black/40 h-3 rounded-lg overflow-hidden flex border border-white/5">
+                    <div class="bg-emerald-500 h-full" [style.width.%]="(item.entradas / (item.entradas + item.saidas || 1)) * 100" title="Receitas"></div>
+                    <div class="bg-rose-500 h-full" [style.width.%]="(item.saidas / (item.entradas + item.saidas || 1)) * 100" title="Despesas"></div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- HOMOLOGAÇÃO DE BALAÚSTRES -->
+        <div class="glass-card rounded-2xl border border-white/5 p-5 bg-white/[0.01] space-y-4">
+          <div class="flex items-center justify-between border-b border-white/5 pb-2">
+            <h2 class="text-xs font-bold text-white uppercase tracking-widest">Votação de Balaústres</h2>
+          </div>
+
+          @if ((d.balaustres_pendentes_decisao || []).length === 0) {
+            <div class="text-xs text-slate-500 italic text-center py-2">Sem atas pendentes de abertura ou fechamento de votação.</div>
+          }
+
+          <div class="space-y-3 pt-2">
+            @for (b of d.balaustres_pendentes_decisao; track b.id) {
+              <div class="flex items-center justify-between gap-3 text-xs border-b border-white/5 pb-2">
+                <div>
+                  <div class="font-bold text-white leading-snug">Ata nº {{ b.numero_balaustre || 'Rascunho' }}</div>
+                  <div class="text-[9px] text-slate-400 mt-0.5 capitalize">{{ b.status === 'apto_votacao' ? 'Apto' : 'Em votação' }}</div>
+                </div>
+
+                <div class="shrink-0">
+                  @if (b.status === 'apto_votacao') {
+                    <button (click)="executarAcaoBalaustre(b.id, 'abrir-votacao')"
+                            class="px-2.5 py-1 bg-liturgical-gold text-slate-950 font-bold uppercase text-[9px] rounded-lg hover:bg-white transition-all">
+                      Abrir Votação
+                    </button>
+                  }
+                  @if (b.status === 'em_votacao') {
+                    <button (click)="executarAcaoBalaustre(b.id, 'encerrar-votacao')"
+                            class="px-2.5 py-1 bg-white/10 text-white font-bold uppercase text-[9px] rounded-lg hover:bg-white/20 transition-all border border-white/5">
+                      Encerrar
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- ACOMPANHAMENTO FRATERNO (OBREIROS EM ATRASO) -->
+        <div class="glass-card rounded-2xl border border-white/5 p-5 bg-white/[0.01] space-y-4">
+          <div class="flex items-center justify-between border-b border-white/5 pb-2">
+            <h2 class="text-xs font-bold text-white uppercase tracking-widest">Atrasos de Tesouraria</h2>
+          </div>
+          <p class="text-[10px] text-slate-400">Contate estes irmãos fraternalmente para sanar débitos acumulados:</p>
+
+          <div class="space-y-2 pt-2">
+            @for (ob of d.obreiros_atraso_fraterno; track ob.id) {
+              <div class="flex items-center justify-between text-xs border-b border-white/5 pb-1">
+                <span class="font-semibold text-slate-200">{{ ob.nome_historico || ob.nome }}</span>
+                <span class="text-[10px] text-slate-500 font-mono">CIM {{ ob.cim || '-' }}</span>
+              </div>
+            }
+            @if ((d.obreiros_atraso_fraterno || []).length === 0) {
+              <div class="text-[10px] text-emerald-400 italic">Nenhum obreiro ativo em atraso fraterno!</div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 2: ATENÇÃO PREVENTIVA POR AUSÊNCIA -->
+  @if (activeTab === 'atencao-preventiva' && !loading() && dados(); as d) {
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+      
+      <!-- LEFT COLUMN: SIGNALS LIST -->
+      <div class="xl:col-span-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+            <h2 class="text-xs font-bold text-white uppercase tracking-widest">Sinais e Alertas de Afastamento</h2>
+          </div>
+          <button (click)="abrirFormContato()"
+                  class="px-3 py-1.5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-slate-950 font-bold uppercase text-[10px] rounded-lg tracking-wider transition-all hover:bg-white shadow">
+            Registrar Contato Manual
+          </button>
+        </div>
+
+        @if ((d.sinais || []).length === 0) {
+          <div class="bg-white/[0.01] border border-white/5 rounded-2xl p-6 text-center text-xs text-slate-500 italic">
+            Nenhum sinal preventivo disparado por ausências recorrentes.
+          </div>
+        }
+
+        @if ((d.sinais || []).length > 0) {
+          <div class="space-y-4">
+            @for (s of d.sinais; track s.id) {
+              <div class="glass-card rounded-2xl border border-white/5 p-4 bg-white/[0.01] space-y-3">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 class="font-bold text-white text-xs font-cinzel">{{ s.obreiro_nome }}</h3>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Sinal: {{ s.tipo_sinal }} &middot; Disparo: {{ s.data_disparo | date:'dd/MM/yyyy' }}</p>
+                  </div>
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shrink-0"
+                        [ngClass]="getSinalStatusClass(s.status)">
+                    {{ getSinalStatusLabel(s.status) }}
+                  </span>
+                </div>
+
+                <div class="text-[10px] text-slate-300 bg-black/20 p-2.5 rounded-lg border border-white/5">
+                  {{ s.descricao || 'Obreiro faltou nas últimas reuniões consecutivas.' }}
+                </div>
+
+                <!-- Signal controls & Contact hook -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/5 text-[10px]">
+                  <div class="flex items-center gap-2">
+                    <span class="text-slate-500 font-bold uppercase text-[8px] tracking-wider">Status:</span>
+                    <select #sinalStatusSelect (change)="executarAcaoSinal(s.id, sinalStatusSelect.value)"
+                            class="bg-[#111a31] border border-white/10 rounded-lg px-2 py-0.5 text-[10px] text-slate-300">
+                      <option value="aberto" [selected]="s.status === 'aberto'">Aberto</option>
+                      <option value="em_observacao" [selected]="s.status === 'em_observacao'">Observação</option>
+                      <option value="arquivado" [selected]="s.status === 'arquivado'">Arquivar</option>
+                      <option value="resolvido" [selected]="s.status === 'resolvido'">Resolvido</option>
+                    </select>
+                  </div>
+
+                  <button (click)="abrirFormContato(s)"
+                          class="px-2.5 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/20 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all">
+                    ?? Relatar Contato Fraterno
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- RIGHT COLUMN: ACCOMPANIMENT HISTORY -->
+      <div class="xl:col-span-6 space-y-4">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+          <h2 class="text-xs font-bold text-white uppercase tracking-widest">Histórico de Contatos Fraternos</h2>
+        </div>
+
+        @if ((d.acompanhamentos || []).length === 0) {
+          <div class="bg-white/[0.01] border border-white/5 rounded-2xl p-6 text-center text-xs text-slate-500 italic">
+            Nenhum contato fraterno relatado recentemente.
+          </div>
+        }
+
+        @if ((d.acompanhamentos || []).length > 0) {
+          <div class="space-y-4">
+            @for (ac of d.acompanhamentos; track ac.id) {
+              <div class="bg-[#111a31]/20 border border-white/5 rounded-2xl p-4 space-y-2 relative overflow-hidden">
+                <div class="flex items-start justify-between gap-3 text-xs border-b border-white/5 pb-2">
+                  <div>
+                    <span class="font-bold text-white">{{ ac.obreiro_nome }}</span>
+                    <span class="block text-[8px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
+                      Contatado em {{ ac.data_contato | date:'dd/MM/yyyy' }} via {{ ac.meio_contato | uppercase }}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider bg-slate-500/10 text-slate-400 border border-slate-500/20 capitalize">
+                      {{ ac.nivel_sigilo }}
+                    </span>
+                    <button (click)="excluirContato(ac.id)"
+                            class="text-rose-500 hover:text-white transition-colors" title="Excluir log">
+                      ?
+                    </button>
+                  </div>
+                </div>
+
+                <p class="text-xs text-slate-300 leading-relaxed italic">
+                  "{{ ac.resultado }}"
+                </p>
+
+                @if (ac.observacoes_sigilosas) {
+                  <div class="text-[10px] text-amber-300/80 bg-amber-950/10 border border-amber-900/15 p-2 rounded-lg mt-2">
+                    <span class="block text-[8px] font-extrabold uppercase tracking-wider text-amber-500 mb-1">Observações Confidenciais:</span>
+                    "{{ ac.observacoes_sigilosas }}"
+                  </div>
+                }
+
+                <div class="flex justify-between items-center text-[9px] text-slate-500 pt-2 border-t border-white/5">
+                  <span>Autor: {{ ac.responsavel_nome }}</span>
+                  @if (ac.proximo_acompanhamento) {
+                    <span class="text-amber-500 font-semibold uppercase tracking-wider">Próximo Contato: {{ ac.proximo_acompanhamento | date:'dd/MM/yyyy' }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- CONTACT FORM MODAL (PREVENTIVE CARE) -->
+  @if (showContatoForm() && dados(); as d) {
+    <div class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div class="bg-liturgical-surface border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+
+        <!-- Modal Header -->
+        <div class="p-6 border-b border-white/5 flex items-center justify-between shrink-0 bg-black/10">
+          <div>
+            <h2 class="font-cinzel text-lg md:text-xl font-bold tracking-widest text-white">Relatar Contato Fraterno</h2>
+            <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">Registre os detalhes do contato preventivo ou assistencial</p>
+          </div>
+          <button (click)="showContatoForm.set(false)" class="p-2 text-slate-400 hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="p-6 overflow-y-auto space-y-4 text-slate-300">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- Obreiro -->
+            <div class="flex flex-col gap-1.5 md:col-span-2">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Obreiro Contatado <span class="text-rose-400">*</span></label>
+              <select [(ngModel)]="formContato().obreiro_id"
+                      class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none">
+                <option value="">Escolher Irmão...</option>
+                @for (ob of d.obreiros; track ob.id) {
+                  <option [value]="ob.id">{{ ob.nome_historico || ob.nome }} (CIM {{ ob.cim || '-' }})</option>
+                }
+              </select>
+            </div>
+
+            <!-- Meio & Data -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Meio de Contato</label>
+              <select [(ngModel)]="formContato().meio_contato"
+                      class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none">
+                <option value="whatsapp">WhatsApp</option>
+                <option value="telefone">Telefone / Ligação</option>
+                <option value="presencial">Presencial / Templo</option>
+                <option value="visita">Visita Domiciliar</option>
+                <option value="email">E-mail</option>
+              </select>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Data do Contato</label>
+              <input type="date" [(ngModel)]="formContato().data_contato"
+                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+            </div>
+
+            <!-- Nível Sigilo & Próximo Acompanhamento -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Nível de Sigilo</label>
+              <select [(ngModel)]="formContato().nivel_sigilo"
+                      class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none">
+                <option value="publico">Público (Visível a todos)</option>
+                <option value="reservado">Reservado (Oficiais da Loja)</option>
+                <option value="sigiloso">Sigiloso (Apenas Venerável/Hospitalaria)</option>
+              </select>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Próximo Contato (opcional)</label>
+              <input type="date" [(ngModel)]="formContato().proximo_acompanhamento"
+                     class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+            </div>
+
+            <!-- Resultado / Sumário -->
+            <div class="flex flex-col gap-1.5 md:col-span-2">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Sumário do Contato <span class="text-rose-400">*</span></label>
+              <textarea rows="4" [(ngModel)]="formContato().resultado" placeholder="Relate o que foi conversado e a situação do irmão..."
+                        class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none resize-none"></textarea>
+            </div>
+
+            <!-- Observações Sigilosas -->
+            <div class="flex flex-col gap-1.5 md:col-span-2">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Observações Confidenciais (opcional)</label>
+              <textarea rows="3" [(ngModel)]="formContato().observacoes_sigilosas" placeholder="Observações sigilosas que apenas o Venerável/Hospitalaria verão..."
+                        class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none resize-none"></textarea>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-6 border-t border-white/5 shrink-0 bg-black/10 flex items-center justify-between">
+          <button (click)="showContatoForm.set(false)" class="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-xl uppercase tracking-wider">
+            Cancelar
+          </button>
+          <button (click)="cadastrarContato()" class="px-6 py-2.5 bg-liturgical-gold text-slate-950 text-xs font-extrabold rounded-xl uppercase tracking-wider hover:bg-white">
+            Gravar Contato
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

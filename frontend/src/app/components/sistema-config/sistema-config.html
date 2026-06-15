@@ -1,0 +1,134 @@
+<div class="space-y-6">
+  
+  <!-- CABEÇALHO DA TELA -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white">Configurações do Sistema</h1>
+      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Sistema - Parametros de Configuração da Loja e Tenant</p>
+    </div>
+  </div>
+
+  <!-- AVISOS E MENSAGENS -->
+  @if (successMsg(); as msg) {
+    <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs px-4 py-3 rounded-xl">
+      {{ msg }}
+    </div>
+  }
+  @if (errorMsg(); as msg) {
+    <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs px-4 py-3 rounded-xl">
+      {{ msg }}
+    </div>
+  }
+
+  <!-- CARREGANDO -->
+  @if (loading()) {
+    <div class="flex flex-col items-center justify-center py-20 text-slate-400 space-y-4">
+      <div class="w-10 h-10 border-4 border-liturgical-gold border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-sm font-bold uppercase tracking-wider">Carregando parâmetros do sistema...</p>
+    </div>
+  } @else {
+
+    <!-- FORMULÁRIO DE CONFIGURAÇÕES -->
+    <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 space-y-6">
+      <div class="border-b border-white/5 pb-3">
+        <h2 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest">Informações Institucionais da Loja</h2>
+        <p class="text-[10px] text-slate-400 mt-0.5">Parâmetros transversais para relatórios e documentos</p>
+      </div>
+
+      <form (submit)="salvarConfig(); $event.preventDefault()" class="space-y-4 text-xs">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Nome da Loja *</label>
+            <input type="text" [(ngModel)]="config().nome_loja" name="nome_loja" required
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Número da Loja *</label>
+            <input type="text" [(ngModel)]="config().numero_loja" name="numero_loja" required
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Cidade *</label>
+            <input type="text" [(ngModel)]="config().cidade" name="cidade" required
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">UF (Estado) *</label>
+            <input type="text" [(ngModel)]="config().uf" name="uf" required maxlength="2"
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Oriente *</label>
+            <input type="text" [(ngModel)]="config().oriente" name="oriente" required
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Nome da Potência *</label>
+            <input type="text" [(ngModel)]="config().potencia_nome" name="potencia_nome" required
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Sigla da Potência *</label>
+            <input type="text" [(ngModel)]="config().potencia_sigla" name="potencia_sigla" required
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Rito *</label>
+            <input type="text" [(ngModel)]="config().rito" name="rito" required
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">E-mail Oficial</label>
+            <input type="email" [(ngModel)]="config().email_oficial" name="email_oficial"
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Telefone Oficial</label>
+            <input type="text" [(ngModel)]="config().telefone_oficial" name="telefone_oficial"
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="md:col-span-2 flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Endereço da Loja</label>
+            <input type="text" [(ngModel)]="config().endereco" name="endereco"
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">CEP</label>
+            <input type="text" [(ngModel)]="config().cep" name="cep"
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-white/5 flex justify-end">
+          <button type="submit" [disabled]="salvando()"
+                  class="px-5 py-2.5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg transition-all hover:scale-[1.01]">
+            {{ salvando() ? 'Salvando...' : 'Gravar Alterações' }}
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+
+  }
+</div>

@@ -1,0 +1,284 @@
+<div class="space-y-6 animate-fade-in">
+  
+  <!-- CABEÇALHO DA TELA -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <span class="text-liturgical-gold text-[10px] font-bold uppercase tracking-widest block">Painel do Chanceler</span>
+      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white mt-1">Controle de Sessão</h1>
+      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Check-in, nominata efetiva, visitantes e apoio ao ágape</p>
+    </div>
+  </div>
+
+  @if (erro()) {
+    <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm p-4 rounded-xl">
+      {{ erro() }}
+    </div>
+  }
+
+  <!-- MÉTRICAS PRINCIPAIS -->
+  @if (sessoesAtiva(); as s) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="glass-card rounded-xl p-5 border border-white/5 bg-white/[0.01]">
+        <span class="text-[10px] text-slate-500 font-semibold block">Sessão Ativa</span>
+        <strong class="text-white text-base font-bold font-cinzel block mt-1 truncate">{{ s.titulo || 'Sessão' }}</strong>
+        <span class="text-[10px] text-slate-400 mt-0.5 block">{{ s.data_hora_inicio | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+      <div class="glass-card rounded-xl p-5 border border-white/5 bg-white/[0.01]">
+        <span class="text-[10px] text-slate-500 font-semibold block">Frequência Efetiva</span>
+        <strong class="text-white text-2xl font-bold block mt-1">{{ presentes() }}</strong>
+        <span class="text-[10px] text-slate-400 mt-0.5 block">Obreiros presentes</span>
+      </div>
+      <div class="glass-card rounded-xl p-5 border border-white/5 bg-white/[0.01]">
+        <span class="text-[10px] text-slate-500 font-semibold block">Visitantes</span>
+        <strong class="text-white text-2xl font-bold block mt-1">{{ visitantes().length }}</strong>
+        <span class="text-[10px] text-slate-400 mt-0.5 block">Leitura rápida para apoio</span>
+      </div>
+      <div class="glass-card rounded-xl p-5 border border-white/5 bg-white/[0.01]">
+        <span class="text-[10px] text-slate-500 font-semibold block">Confirmados (Ágape)</span>
+        <strong class="text-white text-2xl font-bold block mt-1">{{ confirmados().length }}</strong>
+        <span class="text-[10px] text-slate-400 mt-0.5 block">Presença no ágape</span>
+      </div>
+    </div>
+  }
+
+  <!-- CONTEXTO DA SESSÃO -->
+  <div class="glass-card rounded-2xl border border-white/5 p-6 space-y-4 bg-white/[0.01]">
+    <h3 class="font-cinzel text-xs font-bold text-white uppercase tracking-widest border-b border-white/5 pb-2">Contexto da Sessão</h3>
+    
+    <div class="flex flex-col md:flex-row md:items-end gap-4">
+      <div class="md:w-64">
+        <label class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Abrir trabalhos por data</label>
+        <input type="date" [(ngModel)]="dataSessao" class="w-full bg-[#111a31] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white">
+      </div>
+      <button (click)="abrirData()" class="px-5 py-2.5 bg-white/5 border border-white/10 text-white text-xs font-semibold rounded-xl uppercase tracking-wider hover:bg-white/10 transition-all">
+        Abrir check-in
+      </button>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-end gap-4 pt-2">
+      <div class="flex-grow">
+        <label class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Selecionar Sessão</label>
+        <select [(ngModel)]="sessaoId" (change)="carregar(sessaoId)" class="w-full bg-[#111a31] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white">
+          @for (s of sessoes(); track s.id) {
+            <option [value]="s.id">{{ s.titulo || s.tipo_sessao }} &middot; {{ s.data_hora_inicio | date:'dd/MM/yyyy HH:mm' }}</option>
+          }
+        </select>
+      </div>
+      <a [routerLink]="['/dashboard/chancelaria/certificado']" [queryParams]="paramsCertificado()" class="px-5 py-2.5 bg-liturgical-gold text-slate-950 text-xs font-extrabold rounded-xl uppercase tracking-wider hover:bg-white transition-all text-center">
+        Emitir Certificado de Visitante
+      </a>
+    </div>
+
+    @if (sessoesAtiva(); as s) {
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-xs pt-4 border-t border-white/5">
+        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-3 flex flex-col justify-between">
+          <span class="text-slate-500 font-semibold uppercase text-[9px] tracking-wider">Nominata Prevista</span>
+          <strong class="text-lg font-bold text-white mt-1">{{ presencas().length }}</strong>
+        </div>
+        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-3 flex flex-col justify-between">
+          <span class="text-slate-500 font-semibold uppercase text-[9px] tracking-wider">Presentes Efetivos</span>
+          <strong class="text-lg font-bold text-white mt-1">{{ presentes() }}</strong>
+        </div>
+        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-3 flex flex-col justify-between">
+          <span class="text-slate-500 font-semibold uppercase text-[9px] tracking-wider">Visitantes</span>
+          <strong class="text-lg font-bold text-white mt-1">{{ visitantes().length }}</strong>
+        </div>
+        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-3 flex flex-col justify-between">
+          <span class="text-slate-500 font-semibold uppercase text-[9px] tracking-wider">Ágape</span>
+          <strong class="text-lg font-bold text-white mt-1">{{ s.agape_modalidade || 'N/D' }}</strong>
+        </div>
+        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-3 flex flex-col justify-between col-span-2 md:col-span-1">
+          <span class="text-slate-500 font-semibold uppercase text-[9px] tracking-wider">Modelo Financeiro</span>
+          <strong class="text-lg font-bold text-white mt-1">{{ s.agape_modelo_financeiro || 'N/D' }}</strong>
+        </div>
+      </div>
+
+      <div class="flex gap-3 justify-end pt-4">
+        <button (click)="cancelar(s.id)" class="px-4 py-2 border border-rose-500/20 bg-rose-500/10 text-rose-300 text-xs font-semibold rounded-xl hover:bg-rose-500/20 transition-all">
+          Cancelar sessão
+        </button>
+        <button (click)="excluir(s.id)" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl transition-all">
+          Excluir sessão
+        </button>
+      </div>
+    }
+  </div>
+
+  @if (sessoesAtiva(); as s) {
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- CHECK-IN SECTION -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="glass-card rounded-2xl border border-white/5 p-6 space-y-4 bg-white/[0.01]">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-white/5 pb-3">
+            <div>
+              <h2 class="font-cinzel text-base font-bold text-white uppercase tracking-widest">Recepção e check-in do quadro</h2>
+              <p class="text-[10px] text-slate-400 mt-0.5">Marque a presença efetiva dos obreiros na entrada do Templo</p>
+            </div>
+            
+            <div class="flex gap-1 bg-white/5 p-1 rounded-xl">
+              @for (f of filtros; track f) {
+                <button (click)="filtro.set(f)"
+                        [class.bg-liturgical-gold]="filtro() === f"
+                        [class.text-slate-950]="filtro() === f"
+                        [class.text-slate-400]="filtro() !== f"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
+                  {{ f === 'todos' ? 'Todos' : f === 'presentes' ? 'Presentes' : 'Pendentes' }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            @for (p of presencasFiltradas(); track p.id) {
+              <div class="glass-card p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] flex flex-col justify-between gap-3 transition-all">
+                <div>
+                  <div class="font-bold text-white leading-tight">{{ p.nome }}</div>
+                  <div class="text-xs text-slate-500 mt-1">CIM: {{ p.cim || '-' }} &middot; Grau: {{ p.grau || '-' }}</div>
+                </div>
+                <div class="flex gap-2 border-t border-white/5 pt-3">
+                  <button (click)="marcar(p, true)" 
+                          [class.bg-emerald-500]="p.presente" 
+                          [class.text-slate-950]="p.presente"
+                          [class.bg-white/5]="!p.presente"
+                          [class.text-slate-400]="!p.presente"
+                          class="flex-1 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
+                    Presente
+                  </button>
+                  <button (click)="marcar(p, false)" 
+                          [class.bg-rose-500]="!p.presente" 
+                          [class.text-slate-950]="!p.presente"
+                          [class.bg-white/5]="p.presente"
+                          [class.text-slate-400]="p.presente"
+                          class="flex-1 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
+                    Ausente
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="sm:col-span-2 text-center text-slate-500 text-sm py-6">
+                Nenhum obreiro encontrado com este filtro.
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- LIST FINAL PRESENTES -->
+        <div class="glass-card rounded-2xl border border-white/5 p-6 space-y-4 bg-white/[0.01]">
+          <h3 class="font-cinzel text-xs font-bold text-white uppercase tracking-widest border-b border-white/5 pb-2">Lista de Presentes ({{ presentes() }})</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @for (p of presencas(); track p.id) {
+              @if (p.presente) {
+                <div class="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-xl text-xs">
+                  <div>
+                    <span class="font-bold text-white">{{ p.nome }}</span>
+                    <span class="block text-slate-500 text-[10px] mt-0.5">CIM {{ p.cim || '-' }} &middot; Grau {{ p.grau || '-' }}</span>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDEBAR: VISITANTES & CONFIRMADOS ÁGAPE -->
+      <div class="space-y-6">
+        
+        <!-- REGISTRAR VISITANTE -->
+        <div class="glass-card rounded-2xl border border-white/5 p-6 space-y-4 bg-white/[0.01]">
+          <h3 class="font-cinzel text-xs font-bold text-white uppercase tracking-widest border-b border-white/5 pb-2">Registrar Visitante</h3>
+          
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-400 font-semibold uppercase text-[9px] tracking-wider mb-1">Entrada rápida (CSV)</label>
+              <textarea [(ngModel)]="visitanteTextoLivre" rows="2" class="w-full bg-[#111a31] border border-white/10 rounded-xl p-3 text-white placeholder-slate-600 focus:outline-none" placeholder="Ex: João Henrique, mestre, estrela do litoral, 155, arroio do sal, GL-RS"></textarea>
+              <button (click)="preencherVisitante()" class="w-full mt-2 py-2 border border-white/10 hover:bg-white/5 text-slate-300 font-bold rounded-lg transition-colors">
+                Preencher prévia
+              </button>
+            </div>
+            
+            <div class="space-y-2 pt-2 border-t border-white/5">
+              <div>
+                <label class="block text-slate-400 font-semibold uppercase text-[9px] tracking-wider mb-1">Nome Completo</label>
+                <input [(ngModel)]="visitante.nome" class="w-full bg-[#111a31] border border-white/10 rounded-xl px-3 py-2 text-white">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-slate-400 font-semibold uppercase text-[9px] tracking-wider mb-1">Grau</label>
+                  <input [(ngModel)]="visitante.grau" class="w-full bg-[#111a31] border border-white/10 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                  <label class="block text-slate-400 font-semibold uppercase text-[9px] tracking-wider mb-1">Loja (A∴R∴L∴S∴)</label>
+                  <input [(ngModel)]="visitante.loja" class="w-full bg-[#111a31] border border-white/10 rounded-xl px-3 py-2 text-white">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-slate-400 font-semibold uppercase text-[9px] tracking-wider mb-1">Número</label>
+                  <input [(ngModel)]="visitante.numero_loja" class="w-full bg-[#111a31] border border-white/10 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                  <label class="block text-slate-400 font-semibold uppercase text-[9px] tracking-wider mb-1">Oriente</label>
+                  <input [(ngModel)]="visitante.oriente" class="w-full bg-[#111a31] border border-white/10 rounded-xl px-3 py-2 text-white">
+                </div>
+              </div>
+              <div>
+                <label class="block text-slate-400 font-semibold uppercase text-[9px] tracking-wider mb-1">Potência</label>
+                <input [(ngModel)]="visitante.potencia" class="w-full bg-[#111a31] border border-white/10 rounded-xl px-3 py-2 text-white">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-slate-400 font-semibold uppercase text-[9px] tracking-wider mb-1">Nº do Certificado de Visitação</label>
+                  <input [(ngModel)]="visitante.numero_certificado" class="w-full bg-[#111a31] border border-white/10 rounded-xl px-3 py-2 text-white">
+                </div>
+                <div>
+                  <label class="block text-slate-400 font-semibold uppercase text-[9px] tracking-wider mb-1">Data do Certificado</label>
+                  <input type="date" [(ngModel)]="visitante.certificado_emitido_em" class="w-full bg-[#111a31] border border-white/10 rounded-xl px-3 py-2 text-white">
+                </div>
+              </div>
+              <div>
+                <label class="block text-slate-400 font-semibold uppercase text-[9px] tracking-wider mb-1">Observações da Fala (Balaústre/Orador)</label>
+                <textarea [(ngModel)]="visitante.fala_resumida" rows="2" class="w-full bg-[#111a31] border border-white/10 rounded-xl p-3 text-white focus:outline-none"></textarea>
+              </div>
+            </div>
+
+            <button (click)="salvarVisitante()" class="w-full py-2.5 bg-liturgical-gold text-slate-950 font-bold rounded-xl uppercase tracking-wider hover:bg-white transition-all mt-4">
+              Confirmar Visitante
+            </button>
+          </div>
+
+          <!-- LIST VISITORS -->
+          <div class="space-y-2 pt-4 border-t border-white/5">
+            <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Visitantes Registrados ({{ visitantes().length }})</span>
+            @for (v of visitantes(); track v.nome) {
+              <div class="p-3 bg-white/[0.02] border border-white/5 rounded-xl text-xs space-y-1">
+                <div class="font-bold text-white">{{ v.nome }}</div>
+                <div class="text-[10px] text-slate-400 leading-snug">{{ v.linha_resumida }}</div>
+              </div>
+            } @empty {
+              <p class="text-slate-500 text-xs text-center py-2">Nenhum visitante.</p>
+            }
+          </div>
+        </div>
+
+        <!-- CONFIRMADOS ÁGAPE -->
+        <div class="glass-card rounded-2xl border border-white/5 p-6 space-y-4 bg-white/[0.01]">
+          <h3 class="font-cinzel text-xs font-bold text-white uppercase tracking-widest border-b border-white/5 pb-2">Confirmados no ágape ({{ confirmados().length }})</h3>
+          
+          <div class="space-y-2">
+            @for (c of confirmados(); track c.nome) {
+              <div class="p-3 bg-white/[0.02] border border-white/5 rounded-xl text-xs flex justify-between items-center">
+                <span class="font-bold text-white">{{ c.nome }}</span>
+                <span class="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                  {{ c.participara_agape ? 'Com ágape' : 'Sem ágape' }}
+                </span>
+              </div>
+            } @empty {
+              <p class="text-slate-500 italic text-[11px] text-center py-2">Nenhum confirmado.</p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

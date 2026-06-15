@@ -913,6 +913,47 @@ class Obreiro
         return $stmt->execute($params);
     }
 
+    public function updateSelf(string $id, array $data): bool
+    {
+        if (!$this->isUuid($id)) {
+            return false;
+        }
+
+        $sql = "UPDATE public.obreiros SET
+            nome = :nome,
+            nome_historico = :nome_historico,
+            data_nascimento_civil = :data_nascimento_civil,
+            estado_civil = :estado_civil,
+            telefone = :telefone,
+            email = :email,
+            profissao = :profissao,
+            updated_at = NOW()
+            WHERE id = :id";
+
+        $params = [
+            'id' => $id,
+            'nome' => trim((string) ($data['nome'] ?? $data['nome_completo'] ?? '')),
+            'nome_historico' => trim((string) ($data['nome_historico'] ?? '')),
+            'data_nascimento_civil' => $this->normalizarData($data['data_nascimento_civil'] ?? null),
+            'estado_civil' => $this->normalizarValorEnum($data['estado_civil'] ?? null, self::ESTADOS_CIVIS),
+            'telefone' => trim((string) ($data['telefone'] ?? '')),
+            'email' => trim((string) ($data['email'] ?? '')),
+            'profissao' => trim((string) ($data['profissao'] ?? '')),
+        ];
+
+        if ($params['nome'] === '') {
+            return false;
+        }
+
+        if ($this->suportaLojaId()) {
+            $sql .= " AND loja_id = :loja_id";
+            $params['loja_id'] = $this->obterLojaAtualId();
+        }
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
+    }
+
     private function cimEstaDisponivelParaId(string $cim, string $id): bool
     {
         $cim = trim($cim);

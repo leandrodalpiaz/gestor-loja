@@ -959,7 +959,7 @@ class Balaustre
         $stmt = $this->db->prepare("
             SELECT
                 b.*,
-                s.titulo AS sessao_titulo,
+                COALESCE(s.titulo, 'Balaústre independente') AS sessao_titulo,
                 s.data_hora_inicio,
                 (
                     SELECT COUNT(*)
@@ -969,8 +969,8 @@ class Balaustre
                       AND v.status = 'aberta'
                 ) AS total_votantes_abertos
             FROM balaustres b
-            INNER JOIN sessoes s ON s.id = b.sessao_id
-            WHERE s.loja_id = :loja_id
+            LEFT JOIN sessoes s ON s.id = b.sessao_id
+            WHERE (s.loja_id = :loja_id OR s.id IS NULL)
             ORDER BY b.updated_at DESC, b.id DESC
             LIMIT :limite
         ");
@@ -994,10 +994,10 @@ class Balaustre
                 bv.elegivel
             FROM balaustre_votacoes v
             JOIN balaustres b ON b.id = v.balaustre_id
-            JOIN sessoes s ON s.id = b.sessao_id
+            LEFT JOIN sessoes s ON s.id = b.sessao_id
             JOIN balaustre_votantes bv ON bv.votacao_id = v.id
             WHERE v.status = 'aberta'
-              AND s.loja_id = ?
+              AND (s.loja_id = ? OR s.id IS NULL)
               AND v.balaustre_id IN ({$placeholders})
               AND bv.obreiro_id = ?
         ";
@@ -1035,12 +1035,12 @@ class Balaustre
                     ELSE COALESCE(bv.elegivel, FALSE)
                 END AS elegivel
             FROM balaustres b
-            JOIN sessoes s ON s.id = b.sessao_id
+            LEFT JOIN sessoes s ON s.id = b.sessao_id
             JOIN balaustre_votacoes v ON v.balaustre_id = b.id AND v.status = 'aberta'
             LEFT JOIN balaustre_votantes bv ON bv.votacao_id = v.id
             " . ($uuidValido ? "AND bv.obreiro_id = :obreiro_id" : "AND 1 = 0") . "
             WHERE b.status = 'em_votacao'
-              AND s.loja_id = :loja_id
+              AND (s.loja_id = :loja_id OR s.id IS NULL)
         ";
 
         if (!$incluirSemElegibilidade) {
@@ -1170,9 +1170,9 @@ class Balaustre
                    AND EXISTS (
                        SELECT 1
                        FROM balaustres b
-                       JOIN sessoes s ON s.id = b.sessao_id
+                       LEFT JOIN sessoes s ON s.id = b.sessao_id
                        WHERE b.id = :id
-                         AND s.loja_id = :loja_id
+                         AND (s.loja_id = :loja_id OR s.id IS NULL)
                    )
             ")->execute([
                 'status' => $statusBalaustre,
@@ -1192,6 +1192,18 @@ class Balaustre
 
     public function buscarPorSessao(int $sessaoId): ?array
     {
+        if ($sessaoId <= 0) {
+            $stmt = $this->db->prepare("
+                SELECT b.*
+                FROM balaustres b
+                WHERE b.sessao_id IS NULL
+                LIMIT 1
+            ");
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row ?: null;
+        }
+
         $stmt = $this->db->prepare("
             SELECT b.*
             FROM balaustres b

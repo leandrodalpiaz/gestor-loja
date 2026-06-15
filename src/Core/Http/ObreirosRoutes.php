@@ -34,7 +34,7 @@ class ObreirosRoutes
                     exit;
                 }
                 $obreiroModel = new Obreiro();
-                $ok = $obreiroModel->update($_POST);
+                $ok = $obreiroModel->updateSelf($selfId, $_POST);
                 header('Location: /minha-loja?aba=cadastro&' . ($ok ? 'sucesso=1' : 'erro=1'));
                 exit;
 

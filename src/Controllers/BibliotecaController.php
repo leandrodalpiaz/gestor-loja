@@ -179,8 +179,8 @@ class BibliotecaController
         $ok = (new BibliotecaLojaConfig())->salvarDaLojaAtual($compartilharAcervo, $permitirEmprestimoCruzado);
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Configuracao da rede de bibliotecas atualizada.'
-            : 'Nao foi possivel salvar a configuracao da rede de bibliotecas.';
+            ? 'Configuração da rede de bibliotecas atualizada.'
+            : 'Não foi possível salvar a configuração da rede de bibliotecas.';
 
         header('Location: /biblioteca');
         exit;
@@ -223,7 +223,7 @@ class BibliotecaController
         $metadata = (new LivroMetadataService())->buscarPorIsbn($isbn);
         if (!$metadata) {
             http_response_code(404);
-            echo json_encode(['ok' => false, 'erro' => 'ISBN nao encontrado.']);
+            echo json_encode(['ok' => false, 'erro' => 'ISBN não encontrado.']);
             return;
         }
 
@@ -247,7 +247,7 @@ class BibliotecaController
 
         $handle = fopen((string) ($arquivo['tmp_name'] ?? ''), 'rb');
         if (!$handle) {
-            $_SESSION['mensagem_erro'] = 'Nao foi possivel ler o arquivo enviado.';
+            $_SESSION['mensagem_erro'] = 'Não foi possível ler o arquivo enviado.';
             header('Location: /biblioteca/adicionar');
             exit;
         }
@@ -257,7 +257,7 @@ class BibliotecaController
         $header = str_getcsv((string) $primeiraLinha, $delimitador);
         if (!is_array($header)) {
             fclose($handle);
-            $_SESSION['mensagem_erro'] = 'CSV sem cabecalho valido.';
+            $_SESSION['mensagem_erro'] = 'CSV sem cabeçalho válido.';
             header('Location: /biblioteca/adicionar');
             exit;
         }
@@ -475,7 +475,7 @@ class BibliotecaController
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Pedido interloja atualizado.'
-            : 'Nao foi possivel atualizar o pedido interloja.';
+            : 'Não foi possível atualizar o pedido interloja.';
 
         header('Location: /biblioteca/emprestimos');
         exit;
@@ -529,9 +529,13 @@ class BibliotecaController
 
         $comentarios = $itemFoco ? $this->comentarioModel->listarPorLivro((int) ($itemFoco['id'] ?? 0)) : [];
         $meusEmprestimos = $obreiroId ? $this->emprestimoModel->listarPorObreiro($obreiroId) : [];
+        $meusPedidosInterloja = $obreiroId ? (new EmprestimoInterloja())->listarPorObreiroDaLojaAtual($obreiroId) : [];
         $emprestimosPendentes = $this->emprestimoModel->listarPendentes();
+        $pedidosInterlojaRecebidos = (new EmprestimoInterloja())->listarRecebidasDaLojaAtual();
+        $permissoes = $this->resolverPermissoes();
 
         return [
+            'permissoes' => $permissoes,
             'rede' => [
                 'habilitada' => $redeHabilitada,
                 'emprestimo_cruzado' => $emprestimoCruzado,
@@ -559,6 +563,7 @@ class BibliotecaController
                     'quantidade_disponivel' => (int) ($item['quantidade_disponivel'] ?? 0),
                     'disponivel' => !empty($item['disponivel']),
                     'grau_recomendado' => (string) ($item['grau_recomendado'] ?? 'Livre'),
+                    'nota_instrucao' => (string) ($item['nota_instrucao'] ?? ''),
                     'total_comentarios' => (int) ($item['total_comentarios'] ?? 0),
                     'total_gostei_sim' => (int) ($item['total_gostei_sim'] ?? 0),
                     'total_gostei_nao' => (int) ($item['total_gostei_nao'] ?? 0),
@@ -601,6 +606,7 @@ class BibliotecaController
                     'status' => (string) ($emp['status'] ?? ''),
                 ];
             }, $meusEmprestimos),
+            'meus_pedidos_interloja' => $meusPedidosInterloja,
             'emprestimos_pendentes' => array_map(static function (array $emp): array {
                 return [
                     'id' => (int) ($emp['id'] ?? 0),
@@ -611,6 +617,7 @@ class BibliotecaController
                     'status' => (string) ($emp['status'] ?? ''),
                 ];
             }, $emprestimosPendentes),
+            'pedidos_interloja_recebidos' => $pedidosInterlojaRecebidos,
         ];
     }
 
@@ -665,6 +672,29 @@ class BibliotecaController
 
         $ok = $this->reacaoModel->definir($acervoId, $obreiroId, $gostei);
         return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar a reação.'];
+    }
+
+    public function devolverMiniapp(int $emprestimoId): array
+    {
+        $ok = $emprestimoId > 0 && $this->emprestimoModel->registrarDevolucao($emprestimoId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar a devolução.'];
+    }
+
+    public function decidirInterlojaMiniapp(int $pedidoId, string $decisao, ?string $autorId): array
+    {
+        $ok = $pedidoId > 0 && (new EmprestimoInterloja())->decidir($pedidoId, $decisao, $autorId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível atualizar o pedido interloja.'];
+    }
+
+    public function classificarMiniapp(int $livroId, string $grau, string $nota, ?string $curadorId): array
+    {
+        $ok = $livroId > 0 && $this->acervoModel->atualizarClassificacao(
+            $livroId,
+            trim($grau) !== '' ? trim($grau) : 'Livre',
+            trim($nota),
+            $curadorId
+        );
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível atualizar a classificação.'];
     }
 
     private function resolverPermissoes(): array

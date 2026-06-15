@@ -1,0 +1,220 @@
+<div class="space-y-8">
+  
+  <!-- HEADER DA TELA -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white">Progresso de Trilha e Trabalhos</h1>
+      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Acompanhamento de Graus e Peças de Arquitetura</p>
+    </div>
+    @if (!showForm()) {
+      <button (click)="abrirNovoForm()" 
+              class="px-4 py-2.5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg transition-all hover:scale-[1.01] shrink-0">
+        Novo Rascunho de Trabalho
+      </button>
+    }
+  </div>
+
+  <!-- SEÇÃO 1: TRILHA DE PROGRESSÃO DO GRAU -->
+  <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 space-y-4">
+    <div class="border-b border-white/5 pb-3">
+      <h2 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest">Sua Trilha de Evolução</h2>
+      <p class="text-[10px] text-slate-400 mt-0.5">Requisitos cadastrais e pedagógicos para a sua progressão ritualística</p>
+    </div>
+
+    <!-- Lista de Passos / Checklist -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (etapa of trilhaEtapas(); track etapa.label; let idx = $index) {
+        <div class="bg-black/10 border rounded-xl p-4 flex items-start gap-3 transition-colors"
+             [class.border-emerald-500/20]="etapa.concluido"
+             [class.border-white/5]="!etapa.concluido">
+          <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
+               [class.bg-emerald-500/10]="etapa.concluido"
+               [class.text-emerald-400]="etapa.concluido"
+               [class.bg-white/5]="!etapa.concluido"
+               [class.text-slate-400]="!etapa.concluido">
+            @if (etapa.concluido) {
+              ?
+            } @else {
+              {{ idx + 1 }}
+            }
+          </div>
+          <div class="space-y-0.5">
+            <p [class.text-slate-300]="etapa.concluido"
+               [class.text-slate-400]="!etapa.concluido"
+               class="text-xs font-bold leading-normal">
+              {{ etapa.label }}
+            </p>
+            <p class="text-[9px]"
+               [class.text-emerald-500]="etapa.concluido"
+               [class.text-slate-500]="!etapa.concluido">
+              {{ etapa.concluido ? 'Concluído' : 'Pendente ou Em revisão' }}
+            </p>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- AVISOS E MENSAGENS -->
+  @if (successMsg(); as msg) {
+    <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs px-4 py-3 rounded-xl">
+      {{ msg }}
+    </div>
+  }
+  @if (errorMsg(); as msg) {
+    <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs px-4 py-3 rounded-xl">
+      {{ msg }}
+    </div>
+  }
+
+  <!-- SEÇÃO 2: RASCUNHOS E SUBMISSÕES -->
+  <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 space-y-4">
+    <div class="border-b border-white/5 pb-3">
+      <h2 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest font-bold">Peças de Arquitetura Submetidas</h2>
+      <p class="text-[10px] text-slate-400 mt-0.5">Lista de rascunhos e peças enviadas para avaliação dos Vigilantes ou Secretaria</p>
+    </div>
+
+    @if (loading()) {
+      <div class="flex items-center justify-center py-12 text-slate-500">
+        <div class="w-6 h-6 border-2 border-liturgical-gold border-t-transparent rounded-full animate-spin mr-3"></div>
+        <span class="text-xs font-bold uppercase tracking-wider">Carregando trabalhos...</span>
+      </div>
+    } @else if (trabalhos().length === 0) {
+      <div class="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-xl py-16 text-center text-slate-500">
+        <svg class="w-12 h-12 text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <p class="text-xs max-w-[280px]">Nenhuma peça de arquitetura encontrada. Inicie criando um rascunho clicando no botão acima.</p>
+      </div>
+    } @else {
+      
+      <!-- Lista de Trabalhos em Cards (Mobile inteligente) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        @for (trab of trabalhos(); track trab.id) {
+          <div class="bg-black/10 border border-white/5 rounded-xl p-4 flex flex-col justify-between gap-4">
+            
+            <div class="space-y-2">
+              <div class="flex justify-between items-start gap-2">
+                <span class="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
+                      [ngClass]="{
+                        'bg-slate-500/10 border border-slate-500/20 text-slate-400': trab.status === 'rascunho',
+                        'bg-blue-500/10 border border-blue-500/20 text-blue-400': trab.status === 'pendente_mentor',
+                        'bg-purple-500/10 border border-purple-500/20 text-purple-400': trab.status === 'pendente_secretaria',
+                        'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400': trab.status === 'arquivado',
+                        'bg-rose-500/10 border border-rose-500/20 text-rose-400': trab.status === 'rejeitado'
+                      }">
+                  {{ trab.status === 'rascunho' ? 'Rascunho' : 
+                     trab.status === 'pendente_mentor' ? 'Em Avaliação pelo Vigilante' :
+                     trab.status === 'pendente_secretaria' ? 'Aguardando Secretaria' :
+                     trab.status === 'arquivado' ? 'Publicado na Biblioteca' : 'Revisar / Rejeitado' }}
+                </span>
+                <span class="text-[9px] text-slate-500 font-mono">{{ trab.created_at | date:'dd/MM/yyyy' }}</span>
+              </div>
+              
+              <h3 class="text-xs font-bold text-white uppercase tracking-wider leading-relaxed">{{ trab.titulo }}</h3>
+              <p class="text-[9px] text-slate-400">Tipo: {{ trab.tipo_trabalho }}</p>
+              
+              <!-- Feedback do Mentor -->
+              @if (trab.status === 'rejeitado' && trab.mentor_observacao) {
+                <div class="bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[9px] p-2.5 rounded-lg leading-relaxed">
+                  <strong>Feedback do Mentor:</strong> {{ trab.mentor_observacao }}
+                </div>
+              }
+            </div>
+
+            <!-- Ações do Trabalho -->
+            <div class="flex justify-end gap-2 border-t border-white/5 pt-3">
+              @if (trab.status === 'rascunho' || trab.status === 'rejeitado') {
+                <button (click)="editarRascunho(trab)"
+                        class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 text-[9px] font-bold uppercase tracking-wider rounded-lg transition-colors">
+                  Editar
+                </button>
+                <button (click)="submeterTrabalho(trab.id)"
+                        class="px-3 py-1.5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg text-[9px] font-bold uppercase tracking-wider rounded-lg shadow-md transition-all">
+                  Submeter
+                </button>
+              } @else {
+                <span class="text-[9px] text-slate-500 italic py-1.5">Bloqueado para edição (Em fluxo)</span>
+              }
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- FORMULÁRIO DO MODAL DE RASCUNHO -->
+  @if (showForm()) {
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-liturgical-surface border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+        
+        <div class="p-6 border-b border-white/5 flex justify-between items-center">
+          <h2 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest">
+            {{ formTrabalho().id ? 'Editar Rascunho' : 'Criar Novo Rascunho' }}
+          </h2>
+          <button (click)="fecharForm()" class="text-slate-400 hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <form (submit)="salvarRascunho(); $event.preventDefault()" class="p-6 space-y-4 text-xs">
+          
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Título da Peça de Arquitetura *</label>
+            <input type="text" [(ngModel)]="formTrabalho().titulo" name="titulo" required placeholder="Ex: O Esquadro e o Compasso"
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tipo de Trabalho</label>
+              <select [(ngModel)]="formTrabalho().tipo_trabalho" name="tipo_trabalho"
+                      class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none transition-colors">
+                <option value="peca_arquitetura">Peça de Arquitetura</option>
+                <option value="trabalho_grau">Trabalho de Grau</option>
+                <option value="pesquisa_historica">Pesquisa Histórica</option>
+              </select>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Vincular a uma Sessão Futura (Opcional)</label>
+              <select [(ngModel)]="formTrabalho().sessao_id" name="sessao_id"
+                      class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none transition-colors">
+                <option value="">Nenhuma sessão vinculada</option>
+                @for (s of sessoes(); track s.id) {
+                  <option [value]="s.id">{{ s.data_hora_inicio | date:'dd/MM' }} - {{ s.titulo }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Caminho / Link do Arquivo PDF (Opcional)</label>
+            <input type="text" [(ngModel)]="formTrabalho().arquivo_pdf_path" name="arquivo_pdf_path" placeholder="Ex: /uploads/trabalhos/peca_joao.pdf"
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+            <span class="text-[8px] text-slate-500 leading-normal">
+              Insira o link para o PDF hospedado ou envie o documento ao seu respectivo Vigilante para upload final.
+            </span>
+          </div>
+
+          <div class="pt-4 border-t border-white/5 flex justify-end gap-2">
+            <button type="button" (click)="fecharForm()"
+                    class="px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/5 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all text-slate-300">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="salvando()"
+                    class="px-4 py-2.5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg transition-all">
+              {{ salvando() ? 'Gravando...' : 'Gravar Rascunho' }}
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+  }
+
+</div>

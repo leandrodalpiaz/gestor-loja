@@ -45,7 +45,9 @@ class BanqueteOperacao
                 ADD COLUMN IF NOT EXISTS receita_lancamento_id INT NULL,
                 ADD COLUMN IF NOT EXISTS despesa_lancamento_id INT NULL,
                 ADD COLUMN IF NOT EXISTS fluxo_financeiro VARCHAR(40) NOT NULL DEFAULT 'rateio_particular',
-                ADD COLUMN IF NOT EXISTS responsavel_pagamento VARCHAR(180) NULL
+                ADD COLUMN IF NOT EXISTS responsavel_pagamento VARCHAR(180) NULL,
+                ADD COLUMN IF NOT EXISTS created_by_uuid UUID NULL,
+                ADD COLUMN IF NOT EXISTS updated_by_uuid UUID NULL
         ");
     }
 
@@ -63,8 +65,12 @@ class BanqueteOperacao
         return $row ?: null;
     }
 
-    public function salvar(int $sessaoId, array $dados, ?int $autorId = null): bool
+    public function salvar(int $sessaoId, array $dados, ?string $autorId = null): bool
     {
+        $autorLegadoId = $autorId !== null && ctype_digit($autorId) ? (int) $autorId : null;
+        $autorUuid = $autorId !== null && preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $autorId)
+            ? strtolower($autorId)
+            : null;
         $status = strtolower(trim((string) ($dados['status_operacional'] ?? 'planejamento')));
         if (!in_array($status, ['planejamento', 'preparacao', 'abastecimento', 'fechado'], true)) {
             $status = 'planejamento';
@@ -109,7 +115,7 @@ class BanqueteOperacao
                     $dataLancamento,
                     'Ágape - ' . $tituloSessao,
                     'AGAPE_RECEITA',
-                    $autorId
+                    $autorLegadoId
                 );
             }
 
@@ -120,7 +126,7 @@ class BanqueteOperacao
                     $dataLancamento,
                     'Despesa do ágape - ' . $tituloSessao . ($fornecedor !== '' ? ' - ' . $fornecedor : ''),
                     'DESPESAS_AGAPE',
-                    $autorId
+                    $autorLegadoId
                 );
             }
 
@@ -156,6 +162,8 @@ class BanqueteOperacao
                 fechado_em,
                 created_by,
                 updated_by,
+                created_by_uuid,
+                updated_by_uuid,
                 updated_at
             ) VALUES (
                 :sessao_id,
@@ -177,6 +185,8 @@ class BanqueteOperacao
                 :fechado_em,
                 :created_by,
                 :updated_by,
+                :created_by_uuid,
+                :updated_by_uuid,
                 CURRENT_TIMESTAMP
             )
             ON CONFLICT (sessao_id)
@@ -198,6 +208,7 @@ class BanqueteOperacao
                 responsavel_pagamento = EXCLUDED.responsavel_pagamento,
                 fechado_em = EXCLUDED.fechado_em,
                 updated_by = EXCLUDED.updated_by,
+                updated_by_uuid = EXCLUDED.updated_by_uuid,
                 updated_at = CURRENT_TIMESTAMP
         ");
 
@@ -219,8 +230,10 @@ class BanqueteOperacao
             'fluxo_financeiro' => $fluxoFinanceiro,
             'responsavel_pagamento' => $responsavelPagamento !== '' ? $responsavelPagamento : null,
             'fechado_em' => $status === 'fechado' ? date('Y-m-d H:i:s') : null,
-            'created_by' => $autorId,
-            'updated_by' => $autorId,
+            'created_by' => $autorLegadoId,
+            'updated_by' => $autorLegadoId,
+            'created_by_uuid' => $autorUuid,
+            'updated_by_uuid' => $autorUuid,
         ]);
     }
 

@@ -5,12 +5,17 @@ namespace App\Core\Http;
 use App\Config\Database;
 use App\Models\CategoriaFinanceira;
 use App\Models\ComprovantePix;
+use App\Models\ConfiguracaoLoja;
 use App\Models\FechamentoMensal;
+use App\Models\Gestao;
 use App\Models\LancamentoFinanceiro;
 use App\Models\MensalidadeStatus;
 use App\Models\ObrigacaoFinanceira;
 use App\Models\Obreiro;
+use App\Models\Presenca;
+use App\Models\RelatorioTesourariaGestao;
 use App\Models\RegularidadeObreiro;
+use App\Models\Sessao;
 use PDO;
 
 class TesourariaApiRoutes
@@ -102,6 +107,60 @@ class TesourariaApiRoutes
             return true;
         }
 
+        if ($requestUri === '/api/tesouraria/comprovantes/enviar' && $method === 'POST') {
+            $body = RequestBody::json();
+            $obreiroId = trim((string) ($body['obreiro_id'] ?? ''));
+            $valor = (float) ($body['valor'] ?? 0);
+            $mes = (int) ($body['mes_ref'] ?? date('n'));
+            $ano = (int) ($body['ano_ref'] ?? date('Y'));
+            $descricao = trim((string) ($body['descricao'] ?? ''));
+            $comprovanteUrl = trim((string) ($body['comprovante_url'] ?? ''));
+
+            if ($obreiroId === '' || !preg_match('/^[0-9a-fA-F-]{36}$/', $obreiroId)) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Obreiro vinculado inválido.']);
+                return true;
+            }
+
+            if ($valor <= 0) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Informe um valor válido maior que zero.']);
+                return true;
+            }
+
+            if ($comprovanteUrl === '') {
+                JsonResponse::send(['ok' => false, 'erro' => 'Informe o caminho do comprovante.']);
+                return true;
+            }
+
+            $nomeArquivo = basename(str_replace('\\', '/', $comprovanteUrl));
+            $ext = strtolower(pathinfo($nomeArquivo, PATHINFO_EXTENSION));
+            $mimeMap = [
+                'pdf' => 'application/pdf',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'webp' => 'image/webp',
+            ];
+            $tipoArquivo = $mimeMap[$ext] ?? 'desconhecido';
+
+            $comprovanteModel = new ComprovantePix();
+            $ok = $comprovanteModel->registrar([
+                'obreiro_id' => $obreiroId,
+                'valor_informado' => $valor,
+                'mes_ref_informado' => $mes,
+                'ano_ref_informado' => $ano,
+                'descricao_usuario' => $descricao,
+                'nome_arquivo' => $nomeArquivo,
+                'tipo_arquivo' => $tipoArquivo,
+                'status' => 'pendente',
+            ]);
+
+            JsonResponse::send([
+                'ok' => $ok,
+                'erro' => $ok ? null : 'Erro ao registrar comprovante no banco.',
+            ]);
+            return true;
+        }
+
         if (preg_match('~^/api/tesouraria/lancamento/(\d+)$~', $requestUri, $m) && $method === 'DELETE') {
             $lancModel = new LancamentoFinanceiro();
             $ok = $lancModel->deletar((int) $m[1]);
@@ -115,6 +174,71 @@ class TesourariaApiRoutes
             $comproModel = new ComprovantePix();
             $comprovantes = $comproModel->obterTodos($status);
             JsonResponse::send(['ok' => true, 'comprovantes' => $comprovantes]);
+            return true;
+        }
+
+        if ($requestUri === '/api/tesouraria/sessoes' && $method === 'GET') {
+            $sessaoModel = new Sessao();
+            $presencaModel = new Presenca();
+            $configuracao = (new ConfiguracaoLoja())->obter();
+            $itens = [];
+
+            foreach ($sessaoModel->listarFuturas(8) as $sessao) {
+                $participantes = !empty($sessao['id'])
+                    ? $presencaModel->listarParticipantesAgapePorSessao((int) $sessao['id'])
+                    : [];
+                $modalidade = strtolower(trim((string) ($sessao['agape_modalidade'] ?? 'nao_havera')));
+                $modelo = strtolower(trim((string) ($sessao['agape_modelo_financeiro'] ?? 'oficial_loja')));
+                $reflete = $modalidade !== 'nao_havera' && in_array($modelo, ['oficial_loja', 'misto'], true);
+                $valor = (float) ($sessao['agape_valor'] ?? 0);
+
+                $itens[] = [
+                    'id' => (int) ($sessao['id'] ?? 0),
+                    'titulo' => (string) ($sessao['titulo'] ?? ''),
+                    'data_hora_inicio' => (string) ($sessao['data_hora_inicio'] ?? ''),
+                    'descricao_tipo' => $sessaoModel->obterDescricaoTipoSessao($sessao),
+                    'descricao_agape' => $sessaoModel->obterDescricaoAgape($sessao),
+                    'descricao_modelo' => $sessaoModel->obterDescricaoModeloFinanceiroAgape($sessao),
+                    'reflete_financeiro_oficial' => $reflete,
+                    'confirmados_agape' => count($participantes),
+                    'estimativa_arrecadacao' => $reflete && $modalidade === 'pago'
+                        ? round($valor * count($participantes), 2)
+                        : 0,
+                    'participantes' => array_map(static fn(array $item): array => [
+                        'nome' => (string) ($item['nome'] ?? 'Obreiro'),
+                        'cim' => (string) ($item['cim'] ?? ''),
+                    ], $participantes),
+                ];
+            }
+
+            JsonResponse::send([
+                'ok' => true,
+                'loja' => [
+                    'nome' => (string) ($configuracao['nome_loja'] ?? ''),
+                    'numero' => (string) ($configuracao['numero_loja'] ?? ''),
+                ],
+                'sessoes' => $itens,
+            ]);
+            return true;
+        }
+
+        if ($requestUri === '/api/tesouraria/relatorio-gestao' && $method === 'GET') {
+            $gestoes = (new Gestao())->listar();
+            if ($gestoes === []) {
+                JsonResponse::send(['ok' => true, 'gestoes' => [], 'relatorio' => null]);
+                return true;
+            }
+
+            $gestaoId = (int) ($_GET['gestao_id'] ?? ($gestoes[0]['id'] ?? 0));
+            $encerramento = trim((string) ($_GET['encerramento_em'] ?? '')) ?: null;
+
+            try {
+                $relatorio = (new RelatorioTesourariaGestao())->montar($gestaoId, $encerramento);
+                JsonResponse::send(['ok' => true, 'gestoes' => $gestoes, 'relatorio' => $relatorio]);
+            } catch (\Throwable $e) {
+                error_log('[tesouraria] Erro ao montar relatorio de gestao: ' . $e->getMessage());
+                JsonResponse::send(['ok' => false, 'erro' => 'Não foi possível montar o relatório financeiro.']);
+            }
             return true;
         }
 

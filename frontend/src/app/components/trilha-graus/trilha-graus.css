@@ -1,0 +1,7 @@
+/* Ajustes visuais específicos da Trilha de Progresso */
+.bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.08);
+}
+.border-emerald-500\/20 {
+  border-color: rgba(16, 185, 129, 0.15);
+}

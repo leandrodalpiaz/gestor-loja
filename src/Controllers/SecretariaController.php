@@ -572,8 +572,8 @@ class SecretariaController
         }
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Presenca atualizada no convite externo.'
-            : 'Nao foi possivel atualizar a presenca.';
+            ? 'Presença atualizada no convite externo.'
+            : 'Não foi possível atualizar a presença.';
 
         header('Location: /secretaria/convites-externos');
         exit;
@@ -1431,7 +1431,7 @@ class SecretariaController
         $ok = (new ConviteExterno())->criar($_POST, $arquivo, (string) ($_SESSION['usuario_id'] ?? '') ?: null);
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Convite externo registrado com sucesso.'
-            : 'Nao foi possivel registrar o convite externo.';
+            : 'Não foi possível registrar o convite externo.';
 
         header('Location: /secretaria/convites-externos');
         exit;
@@ -1449,7 +1449,7 @@ class SecretariaController
         $ok = $id > 0 && (new ConviteExterno())->removerAnexo($id);
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Anexo removido do convite externo.'
-            : 'Nao foi possivel remover o anexo.';
+            : 'Não foi possível remover o anexo.';
 
         header('Location: /secretaria/convites-externos');
         exit;

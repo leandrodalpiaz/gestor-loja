@@ -11,51 +11,64 @@ import { supabaseClient } from '../supabase-client';
 export class SupabaseService {
   private http = inject(HttpClient);
   private supabase = supabaseClient;
-  
-  // Angular Signals para gerenciamento de estado reativo moderno
-  public session = signal<Session | null>(null);
+
+  public session = signal<Session | Record<string, unknown> | null>(null);
   public user = signal<User | null>(null);
   public profile = signal<any | null>(null);
   public loading = signal<boolean>(true);
   private profileRequest$: Observable<any> | null = null;
 
   constructor() {
-    // Escuta mudanças de estado da autenticação (login, logout, refresh de token)
     this.supabase.auth.onAuthStateChange((event, session) => {
+      if (this.isLegacySessionActive() && !session) {
+        return;
+      }
+
       this.session.set(session);
       this.user.set(session?.user ?? null);
-      
+
       if (session) {
         this.fetchProfile(session.access_token).subscribe({
           next: () => this.loading.set(false),
           error: () => this.loading.set(false)
         });
-      } else {
+      } else if (!this.isLegacySessionActive()) {
         this.profile.set(null);
         this.loading.set(false);
       }
     });
 
-    // Recupera a sessão inicial persistida
     this.supabase.auth.getSession().then(({ data: { session } }) => {
-      this.session.set(session);
-      this.user.set(session?.user ?? null);
-      
       if (session) {
+        this.session.set(session);
+        this.user.set(session.user);
         this.fetchProfile(session.access_token).subscribe({
           next: () => this.loading.set(false),
           error: () => this.loading.set(false)
         });
-      } else {
-        this.loading.set(false);
+        return;
       }
+
+      this.ensureLegacySession().subscribe({
+        next: (authenticated) => {
+          if (!authenticated) {
+            this.loading.set(false);
+          }
+        },
+        error: () => this.loading.set(false)
+      });
     });
   }
 
-  /**
-   * Realiza o login utilizando E-mail e Senha no Supabase.
-   */
-  login(email: string, password: string): Observable<any> {
+  login(identifier: string, password: string): Observable<any> {
+    const normalized = identifier.trim();
+    if (normalized.includes('@')) {
+      return this.loginWithEmail(normalized, password);
+    }
+    return this.loginWithCim(normalized, password);
+  }
+
+  private loginWithEmail(email: string, password: string): Observable<any> {
     return from(this.supabase.auth.signInWithPassword({ email, password })).pipe(
       switchMap(response => {
         if (response.error) {
@@ -77,19 +90,49 @@ export class SupabaseService {
     );
   }
 
-  /**
-   * Efetua o logout no Supabase.
-   */
-  logout(): Observable<any> {
-    this.profile.set(null);
-    return from(this.supabase.auth.signOut());
+  private loginWithCim(cim: string, password: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/api/auth/login-cim`, {
+      cim,
+      password
+    }, {
+      withCredentials: true
+    }).pipe(
+      switchMap(res => {
+        if (!res?.ok) {
+          throw new Error(res?.erro || 'Falha ao autenticar o obreiro.');
+        }
+        this.markLegacySessionActive();
+        this.session.set({ mode: 'legacy' });
+        this.user.set(null);
+        return this.fetchProfile(null);
+      })
+    );
   }
 
-  /**
-   * Retorna o token JWT ativo.
-   */
+  logout(): Observable<any> {
+    this.profile.set(null);
+    return this.http.post<any>(`${environment.apiUrl}/api/auth/logout`, {}, {
+      withCredentials: true
+    }).pipe(
+      switchMap(() => from(this.supabase.auth.signOut({ scope: 'local' }))),
+      tap(() => {
+        this.session.set(null);
+        this.user.set(null);
+        this.clearLegacySessionMarker();
+      }),
+      catchError(() => {
+        this.session.set(null);
+        this.user.set(null);
+        this.profile.set(null);
+        this.clearLegacySessionMarker();
+        return of({ ok: true });
+      })
+    );
+  }
+
   getToken(): string | null {
-    return this.session()?.access_token ?? null;
+    const current = this.session();
+    return current && 'access_token' in current ? String((current as any).access_token ?? '') || null : null;
   }
 
   async getValidToken(): Promise<string | null> {
@@ -107,13 +150,12 @@ export class SupabaseService {
     return from(this.supabase.auth.getSession()).pipe(
       switchMap(({ data, error }) => {
         const session = error ? null : data.session;
-        this.session.set(session);
-        this.user.set(session?.user ?? null);
-        if (!session) {
-          this.profile.set(null);
-          return of(false);
+        if (session) {
+          this.session.set(session);
+          this.user.set(session.user);
+          return this.fetchProfile(session.access_token).pipe(map(profile => !!profile));
         }
-        return this.fetchProfile(session.access_token).pipe(map(profile => !!profile));
+        return this.ensureLegacySession();
       }),
       catchError(() => of(false)),
       tap(() => this.loading.set(false))
@@ -124,12 +166,10 @@ export class SupabaseService {
     this.session.set(null);
     this.user.set(null);
     this.profile.set(null);
+    this.clearLegacySessionMarker();
     void this.supabase.auth.signOut({ scope: 'local' });
   }
 
-  /**
-   * Cria cabeçalhos HTTP com o Bearer token do Supabase.
-   */
   getAuthHeaders(): HttpHeaders {
     const token = this.getToken();
     return new HttpHeaders({
@@ -138,21 +178,27 @@ export class SupabaseService {
     });
   }
 
-  /**
-   * Busca as informações do obreiro local correspondente ao e-mail do JWT no PHP.
-   */
-  private fetchProfile(token: string): Observable<any> {
+  private ensureLegacySession(): Observable<boolean> {
+    if (!this.isLegacySessionActive()) {
+      return of(false);
+    }
+
+    this.session.set({ mode: 'legacy' });
+    this.user.set(null);
+    return this.fetchProfile(null).pipe(map(profile => !!profile));
+  }
+
+  private fetchProfile(token: string | null): Observable<any> {
     if (this.profileRequest$) {
       return this.profileRequest$;
     }
 
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
+    const headers = token ? new HttpHeaders({ 'Authorization': `Bearer ${token}` }) : undefined;
 
     this.profileRequest$ = this.http.get(`${environment.apiUrl}/api/auth/me`, {
       headers,
-      responseType: 'text'
+      responseType: 'text',
+      withCredentials: true
     }).pipe(
       map(body => {
         const normalizedBody = body.replace(/^\uFEFF/, '').trim();
@@ -167,18 +213,26 @@ export class SupabaseService {
         try {
           res = JSON.parse(normalizedBody.slice(jsonStart, jsonEnd + 1));
         } catch {
-          throw new Error(`JSON inválido retornado pelo backend: ${normalizedBody.slice(0, 200)}`);
+          throw new Error(`JSON invalido retornado pelo backend: ${normalizedBody.slice(0, 200)}`);
         }
 
         if (res && res.ok && res.user) {
           this.profile.set(res.user);
+          if (!token) {
+            this.markLegacySessionActive();
+            this.session.set({ mode: 'legacy' });
+          }
           return res.user;
         }
-        throw new Error(res.erro || 'Resposta inválida do servidor.');
+        throw new Error(res.erro || 'Resposta invalida do servidor.');
       }),
       catchError(error => {
         console.error('[SupabaseService] Erro ao carregar perfil no backend:', error);
         this.profile.set(null);
+        if (!token) {
+          this.session.set(null);
+          this.clearLegacySessionMarker();
+        }
         throw error;
       }),
       finalize(() => this.profileRequest$ = null),
@@ -186,5 +240,17 @@ export class SupabaseService {
     );
 
     return this.profileRequest$;
+  }
+
+  private isLegacySessionActive(): boolean {
+    return localStorage.getItem('gestor_auth_mode') === 'legacy';
+  }
+
+  private markLegacySessionActive(): void {
+    localStorage.setItem('gestor_auth_mode', 'legacy');
+  }
+
+  private clearLegacySessionMarker(): void {
+    localStorage.removeItem('gestor_auth_mode');
   }
 }

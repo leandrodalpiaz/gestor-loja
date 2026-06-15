@@ -82,6 +82,97 @@ class TrabalhoSubmissao
         ]);
     }
 
+    public function salvarRascunho(array $dados, string $obreiroId, string $grauObreiro): ?string
+    {
+        $id = trim((string) ($dados['id'] ?? ''));
+        $titulo = trim((string) ($dados['titulo'] ?? ''));
+        $tipo = trim((string) ($dados['tipo_trabalho'] ?? 'peca_arquitetura')) ?: 'peca_arquitetura';
+        $sessaoId = (int) ($dados['sessao_id'] ?? 0);
+        $pdfPath = trim((string) ($dados['arquivo_pdf_path'] ?? '')) ?: null;
+
+        if ($titulo === '') {
+            return null;
+        }
+
+        if ($id !== '' && preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $id)) {
+            $stmt = $this->db->prepare("
+                UPDATE public.trabalhos_submissoes
+                SET titulo = :titulo,
+                    tipo_trabalho = :tipo_trabalho,
+                    sessao_id = :sessao_id,
+                    arquivo_pdf_path = :arquivo_pdf_path,
+                    updated_at = NOW()
+                WHERE id = :id AND obreiro_id = :obreiro_id AND loja_id = :loja_id AND status IN ('rascunho', 'rejeitado')
+            ");
+            $ok = $stmt->execute([
+                'titulo' => $titulo,
+                'tipo_trabalho' => $tipo,
+                'sessao_id' => $sessaoId > 0 ? $sessaoId : null,
+                'arquivo_pdf_path' => $pdfPath,
+                'id' => $id,
+                'obreiro_id' => $obreiroId,
+                'loja_id' => $this->lojaId()
+            ]);
+            return $ok ? $id : null;
+        } else {
+            $newId = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                mt_rand(0, 0xffff),
+                mt_rand(0, 0x0fff) | 0x4000,
+                mt_rand(0, 0x3fff) | 0x8000,
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            );
+            $stmt = $this->db->prepare("
+                INSERT INTO public.trabalhos_submissoes (
+                    id, loja_id, obreiro_id, grau_obreiro, tipo_trabalho, titulo, sessao_id, arquivo_pdf_path, status
+                ) VALUES (
+                    :id, :loja_id, :obreiro_id, :grau_obreiro, :tipo_trabalho, :titulo, :sessao_id, :arquivo_pdf_path, 'rascunho'
+                )
+            ");
+            $ok = $stmt->execute([
+                'id' => $newId,
+                'loja_id' => $this->lojaId(),
+                'obreiro_id' => $obreiroId,
+                'grau_obreiro' => $grauObreiro !== '' ? $grauObreiro : null,
+                'tipo_trabalho' => $tipo,
+                'titulo' => $titulo,
+                'sessao_id' => $sessaoId > 0 ? $sessaoId : null,
+                'arquivo_pdf_path' => $pdfPath
+            ]);
+            return $ok ? $newId : null;
+        }
+    }
+
+    public function submeterRascunho(string $submissaoId, string $obreiroId, string $grauObreiro): bool
+    {
+        $grauNorm = strtolower(trim($grauObreiro));
+        if (str_contains($grauNorm, 'aprendiz')) {
+            $mentorTipo = 'primeiro_vigilante';
+            $status = 'pendente_mentor';
+        } elseif (str_contains($grauNorm, 'companheiro')) {
+            $mentorTipo = 'segundo_vigilante';
+            $status = 'pendente_mentor';
+        } else {
+            $mentorTipo = null;
+            $status = 'pendente_secretaria';
+        }
+
+        $stmt = $this->db->prepare("
+            UPDATE public.trabalhos_submissoes
+            SET status = :status,
+                mentor_tipo = :mentor_tipo,
+                updated_at = NOW()
+            WHERE id = :id AND obreiro_id = :obreiro_id AND loja_id = :loja_id AND status IN ('rascunho', 'rejeitado')
+        ");
+        return (bool) $stmt->execute([
+            'status' => $status,
+            'mentor_tipo' => $mentorTipo,
+            'id' => $submissaoId,
+            'obreiro_id' => $obreiroId,
+            'loja_id' => $this->lojaId()
+        ]);
+    }
+
     public function listarPendentesMentor(string $mentorTipo, int $limite = 120): array
     {
         $limite = max(1, min($limite, 200));

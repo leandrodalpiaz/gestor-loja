@@ -1057,7 +1057,7 @@ if (!function_exists('requireMiniappAuth')) {
         /** @var PermissionMap|null $permissionMap */
         $permissionMap = $GLOBALS['gestor_loja_permission_map'] ?? null;
 
-        // Admin do sistema nao e cargo oficial, mas deve ter acesso total aos miniapps.
+        // Admin do sistema não é cargo oficial, mas deve ter acesso total aos miniapps.
         // Mantemos isso via flag tecnica is_system_admin (sem "admin" aparecer como cargo).
         if (!empty($_SESSION['is_system_admin']) && isset($_SESSION['usuario_logado'])) {
             return is_array($_SESSION['usuario_logado']) ? $_SESSION['usuario_logado'] : [];
@@ -1093,7 +1093,7 @@ if (!function_exists('requireMiniappAuth')) {
         $initData = trim((string) ($_GET['init_data'] ?? $_GET['initData'] ?? $_POST['init_data'] ?? $_POST['initData'] ?? ''));
         if ($initData === '') {
             // Telegram WebApp nao envia init_data na URL automaticamente; fica disponivel em JS (tg.initData).
-            // Para nao bloquear a abertura do miniapp, permitimos renderizar a pagina e deixamos a API exigir initData.
+            // Para não bloquear a abertura do miniapp, permitimos renderizar a pagina e deixamos a API exigir initData.
             return [];
         }
 
@@ -1101,14 +1101,14 @@ if (!function_exists('requireMiniappAuth')) {
         $telegramUser = \App\Services\TelegramInitDataValidator::validate($initData, $botToken);
         if ($telegramUser === null || empty($telegramUser['id'])) {
             http_response_code(401);
-            echo 'Nao autenticado no miniapp.';
+            echo 'Não autenticado no miniapp.';
             exit;
         }
 
         $miniappObreiro = (new \App\Models\Obreiro())->findByTelegramId((int) $telegramUser['id']);
         if (!$miniappObreiro) {
             http_response_code(401);
-            echo 'Nao autenticado no miniapp.';
+            echo 'Não autenticado no miniapp.';
             exit;
         }
 
@@ -1899,6 +1899,112 @@ switch ($requestUri) {
         ], JSON_UNESCAPED_UNICODE);
         exit;
 
+    case "/api/auth/login-cim":
+        if ($method !== 'POST') {
+            JsonResponse::error('Método não permitido.', 405);
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true) ?: [];
+        $matricula = trim((string) ($input['cim'] ?? ''));
+        $password = (string) ($input['password'] ?? '');
+
+        if ($matricula === '' || $password === '') {
+            JsonResponse::error('Informe CIM e senha.', 422);
+        }
+
+        $systemAdminLogin = trim((string) (
+            $_ENV['SYSTEM_ADMIN_WEB_LOGIN']
+            ?? $_ENV['SYSTEM_ADMIN_LOGIN']
+            ?? 'adm'
+        ));
+        $systemAdminPassword = trim((string) (
+            $_ENV['SYSTEM_ADMIN_WEB_PASSWORD']
+            ?? $_ENV['SYSTEM_ADMIN_PASSWORD']
+            ?? ''
+        ));
+
+        if ($systemAdminPassword !== '' && $matricula === $systemAdminLogin && hash_equals($systemAdminPassword, $password)) {
+            $_SESSION['force_system_admin'] = true;
+            $_SESSION['usuario_logado'] = [
+                'id' => 0,
+                'nome_historico' => 'adm',
+                'nome_completo' => 'Admin do sistema',
+                'cargo' => 'admin',
+                'cargo_principal' => 'admin',
+                'cargos' => ['admin'],
+                'ativo' => true,
+                'is_system_admin' => true,
+            ];
+            $_SESSION['usuario_id'] = 0;
+            $_SESSION['usuario_nome'] = 'adm';
+            $syncSessionRoles($_SESSION['usuario_logado']);
+
+            JsonResponse::send([
+                'ok' => true,
+                'mode' => 'legacy',
+                'redirect' => '/dashboard',
+            ]);
+        }
+
+        $obreiroModel = new \App\Models\Obreiro();
+        $gate = new AccountGate($obreiroModel);
+        $estadoConta = $gate->byCim($matricula);
+        $estado = (string) ($estadoConta['state'] ?? 'inexistente');
+
+        if ($estado === 'inexistente') {
+            JsonResponse::error('Procure a Secretaria para regularizar seu registro.', 409);
+        }
+        if ($estado === 'pendente') {
+            JsonResponse::error('Seu acesso está em análise. Aguarde a aprovação do Secretário.', 409);
+        }
+        if ($estado === 'inativo') {
+            JsonResponse::error('Seu registro está afastado. Procure a Secretaria.', 409);
+        }
+
+        $usuario = $obreiroModel->autenticar($matricula, $password);
+        if (!$usuario) {
+            JsonResponse::error('C.I.M. ou senha inválidos.', 401);
+        }
+
+        $cargo = $normalizeRole((string) ($usuario['cargo_principal'] ?? $usuario['cargo'] ?? ''));
+        $cargosAtivos = array_values(array_unique(array_filter(array_map(
+            $normalizeRole,
+            $usuario['cargos'] ?? [$cargo]
+        ))));
+        $temAcessoPainel =
+            count(array_intersect($cargosAtivos, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "tesoureiro", "chanceler", "admin", "bibliotecario", "mestre_banquetes", "hospitaleiro", "mestre_de_harmonia"])) > 0
+            || in_array($cargo, ["veneravel", "primeiro_vigilante", "segundo_vigilante", "secretario", "tesoureiro", "chanceler", "admin", "hospitaleiro", "mestre_de_harmonia"], true);
+
+        $_SESSION["usuario_logado"] = $usuario;
+        $_SESSION["usuario_id"] = $usuario["id"];
+        $_SESSION["usuario_nome"] = $resolvePublicUserName($usuario);
+        $syncTenantSessionFromObreiro($usuario);
+        $syncSessionRoles($usuario);
+
+        JsonResponse::send([
+            'ok' => true,
+            'mode' => 'legacy',
+            'redirect' => !empty($usuario['primeiro_acesso_provisorio'])
+                ? '/definir-senha'
+                : ($temAcessoPainel ? '/dashboard' : '/biblioteca'),
+            'primeiro_acesso_provisorio' => !empty($usuario['primeiro_acesso_provisorio']),
+        ]);
+
+    case "/api/auth/logout":
+        if ($method !== 'POST') {
+            JsonResponse::error('Método não permitido.', 405);
+        }
+
+        $_SESSION = [];
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_destroy();
+        }
+
+        JsonResponse::send([
+            'ok' => true,
+            'mensagem' => 'Sessão encerrada com sucesso.',
+        ]);
+
     case "/api/auth/me":
         $authHeader = getAuthorizationHeader();
         $token = null;
@@ -1907,7 +2013,41 @@ switch ($requestUri) {
         }
 
         if (!$token) {
-            JsonResponse::error('Não autenticado. Token ausente.', 401);
+            $usuarioSessao = $_SESSION['usuario_logado'] ?? null;
+            if (!$usuarioSessao || !is_array($usuarioSessao)) {
+                JsonResponse::error('Não autenticado.', 401);
+            }
+
+            $obreiro = $usuarioSessao;
+            $sessionRoles = !empty($obreiro['is_system_admin']) || !empty($_SESSION['force_system_admin'])
+                ? ['admin']
+                : array_values(array_unique(array_filter(array_map(
+                    $normalizeRole,
+                    $obreiro['cargos'] ?? [$obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? 'obreiro']
+                ))));
+            $sessionPermissionMap = new \App\Core\Authorization\PermissionMap();
+            $sessionPermissions = $sessionPermissionMap->permissionsForRoles($sessionRoles);
+            unset($obreiro['senha'], $obreiro['password'], $obreiro['cpf']);
+
+            JsonResponse::send([
+                'ok' => true,
+                'user' => [
+                    'id' => $obreiro['id'] ?? null,
+                    'nome' => $obreiro['nome'] ?? $obreiro['nome_completo'] ?? null,
+                    'nome_historico' => $obreiro['nome_historico'] ?? $obreiro['nome'] ?? null,
+                    'cim' => $obreiro['cim'] ?? $obreiro['matricula'] ?? null,
+                    'email' => $obreiro['email'] ?? null,
+                    'grau' => $obreiro['grau'] ?? null,
+                    'cargo_principal' => $obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? null,
+                    'cargos' => !empty($obreiro['is_system_admin'])
+                        ? array_values(array_unique(array_merge($obreiro['cargos'] ?? [], ['admin'])))
+                        : ($obreiro['cargos'] ?? []),
+                    'permissions' => $sessionPermissions,
+                    'is_system_admin' => (bool) ($obreiro['is_system_admin'] ?? !empty($_SESSION['force_system_admin'])),
+                    'ativo' => (bool) ($obreiro['ativo'] ?? true),
+                    'situacao_quadro' => $obreiro['situacao_quadro'] ?? 'ativo',
+                ]
+            ]);
         }
 
         $identity = \App\Core\Auth\SupabaseIdentityResolver::resolve($token);
@@ -1917,6 +2057,14 @@ switch ($requestUri) {
 
         try {
             $obreiro = $identity['obreiro'];
+            $identityRoles = !empty($obreiro['is_system_admin'])
+                ? ['admin']
+                : array_values(array_unique(array_filter(array_map(
+                    $normalizeRole,
+                    $obreiro['cargos'] ?? [$obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? 'obreiro']
+                ))));
+            $identityPermissionMap = new \App\Core\Authorization\PermissionMap();
+            $identityPermissions = $identityPermissionMap->permissionsForRoles($identityRoles);
 
             // Sanitiza dados confidenciais
             unset($obreiro['senha'], $obreiro['password'], $obreiro['cpf']);
@@ -1934,6 +2082,7 @@ switch ($requestUri) {
                     'cargos' => !empty($obreiro['is_system_admin'])
                         ? array_values(array_unique(array_merge($obreiro['cargos'] ?? [], ['admin'])))
                         : ($obreiro['cargos'] ?? []),
+                    'permissions' => $identityPermissions,
                     'is_system_admin' => (bool) ($obreiro['is_system_admin'] ?? false),
                     'ativo' => (bool) ($obreiro['ativo'] ?? false),
                     'situacao_quadro' => $obreiro['situacao_quadro'] ?? 'inativo'

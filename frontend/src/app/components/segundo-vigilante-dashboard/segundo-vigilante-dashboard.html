@@ -1,0 +1,75 @@
+<div class="space-y-6 animate-fade-in">
+  
+  <!-- CABEÇALHO DA TELA -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <span class="text-liturgical-gold text-[10px] font-bold uppercase tracking-widest block">Painel de Oficiais</span>
+      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white mt-1">2º Vigilante</h1>
+      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Acompanhamento e instrução da coluna de Companheiros</p>
+    </div>
+  </div>
+
+  @if (successMsg(); as msg) {
+    <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-400">
+      {{ msg }}
+    </div>
+  }
+
+  @if (errorMsg(); as msg) {
+    <div class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-400">
+      {{ msg }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="flex flex-col items-center justify-center space-y-4 py-20 text-slate-400">
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-liturgical-gold border-t-transparent"></div>
+      <p class="text-[10px] font-bold uppercase tracking-wider">Carregando painel...</p>
+    </div>
+  } @else {
+    @if (dataVigilante(); as vig) {
+      <div class="space-y-4 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
+        <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white mb-2">Companheiros da Loja</h3>
+        <select [value]="selectedCompanheiroId() || ''" (change)="selecionarFormando($event)" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
+          @for(c of (vig.companheiros || []); track c.id) {
+            <option [value]="c.id">{{c.nome}} · CIM {{c.cim||'-'}}</option>
+          }
+        </select>
+        
+        @if (vig.companheiro_foco; as foco) {
+          <div class="grid grid-cols-2 gap-3 mt-4">
+            <div class="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+              <small class="text-slate-500 text-[10px] font-bold uppercase block tracking-wider mb-1">Conclusão da Trilha</small>
+              <p class="text-2xl font-bold text-white">{{foco.resumo?.percentual_conclusao||0}}%</p>
+            </div>
+            <div class="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+              <small class="text-slate-500 text-[10px] font-bold uppercase block tracking-wider mb-1">Recomendação de Exaltação</small>
+              <p class="font-bold text-white mt-1">{{foco.exaltacao?.status||'não recomendada'}}</p>
+            </div>
+          </div>
+          
+          <div class="space-y-2 mt-4">
+            <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Etapas de Instrução Maçônica</span>
+            @for(e of (foco.etapas||[]); track e.ordem) {
+              <button (click)="atualizarEtapa(e.ordem, e.status)" class="flex w-full justify-between items-center rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] p-4 text-left transition-all">
+                <span>
+                  <b class="block text-sm text-white font-cinzel">{{e.ordem}}. {{e.titulo}}</b>
+                  <small class="text-slate-400 block mt-1">{{e.observacao_vigilante||'Sem observação'}}</small>
+                </span>
+                <span class="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded bg-liturgical-gold/10 text-liturgical-gold">{{e.status}}</span>
+              </button>
+            }
+          </div>
+          
+          <div class="flex flex-wrap gap-3 pt-4 border-t border-white/5">
+            <button (click)="salvarLeitura()" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase text-slate-300 hover:bg-white/10">Sugerir leitura</button>
+            <button (click)="solicitarCertificado()" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase text-slate-300 hover:bg-white/10">Solicitar certificado</button>
+            <button (click)="recomendarExaltacao()" class="rounded-xl bg-liturgical-gold px-4 py-2 text-xs font-bold uppercase text-slate-950">Recomendar exaltação</button>
+          </div>
+        } @else {
+          <p class="text-xs text-slate-400 mt-4">Nenhum Companheiro selecionado ou ativo.</p>
+        }
+      </div>
+    }
+  }
+</div>

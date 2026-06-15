@@ -1,0 +1,217 @@
+<div class="space-y-6">
+  
+  <!-- HEADER DO CALENDÁRIO -->
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white">Calendário de Sessões</h1>
+      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Cronograma e Atividades da Oficina</p>
+    </div>
+    
+    <!-- Navegação de Meses -->
+    <div class="flex items-center bg-liturgical-surface/40 border border-white/5 rounded-xl p-1 shrink-0">
+      <button (click)="anterior()" 
+              class="p-2 hover:bg-white/5 hover:text-white rounded-lg text-slate-400 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+      <span class="px-4 text-xs font-bold uppercase tracking-widest text-white min-w-[120px] text-center select-none">
+        {{ nomesMeses[mesAtual()] }} {{ anoAtual() }}
+      </span>
+      <button (click)="proximo()" 
+              class="p-2 hover:bg-white/5 hover:text-white rounded-lg text-slate-400 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ERRO / AVISO -->
+  @if (errorMsg(); as msg) {
+    <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs px-4 py-3 rounded-xl">
+      {{ msg }}
+    </div>
+  }
+
+  <!-- CARREGANDO -->
+  @if (loading()) {
+    <div class="flex flex-col items-center justify-center py-20 text-slate-400 space-y-4">
+      <div class="w-8 h-8 border-4 border-liturgical-gold border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-[10px] font-bold uppercase tracking-wider">Carregando cronograma...</p>
+    </div>
+  } @else {
+    
+    <!-- DESKTOP GRID VIEW (md+) -->
+    <div class="hidden md:block bg-liturgical-surface/20 border border-white/5 rounded-2xl p-4 overflow-hidden">
+      
+      <!-- Cabeçalho dos dias da semana -->
+      <div class="grid grid-cols-7 gap-2 border-b border-white/5 pb-3 mb-2 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        @for (dia of diasSemana; track $index) {
+          <div>{{ dia }}</div>
+        }
+      </div>
+
+      <!-- Grid de Dias -->
+      <div class="grid grid-cols-7 gap-2 aspect-[1.7/1] min-h-[400px]">
+        @for (celula of gridDias(); track celula.dataStr) {
+          <div [class.opacity-35]="!celula.isMesAtual"
+               [class.border-white/10]="celula.isMesAtual"
+               class="bg-black/10 border border-white/5 rounded-xl p-2.5 flex flex-col justify-between hover:bg-white/5 transition-colors group">
+            
+            <!-- Número do Dia -->
+            <div class="flex justify-between items-start">
+              <span [class.text-liturgical-gold]="celula.eventos.length > 0"
+                    class="text-xs font-bold">
+                {{ celula.diaNum }}
+              </span>
+              @if (celula.eventos.length > 0) {
+                <span class="w-1.5 h-1.5 rounded-full bg-liturgical-gold"></span>
+              }
+            </div>
+
+            <!-- Eventos do Dia -->
+            <div class="space-y-1.5 mt-2 flex-grow overflow-y-auto">
+              @for (ev of celula.eventos; track ev.id) {
+                <div (click)="selecionarEvento(ev)"
+                     class="text-[9px] px-2 py-1 rounded-lg cursor-pointer transition-all border border-transparent font-bold truncate max-w-full leading-tight"
+                     [ngClass]="{
+                       'bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20 text-blue-400': ev.grau_sessao === 'Aprendiz Macom',
+                       'bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20 text-purple-400': ev.grau_sessao === 'Companheiro Macom',
+                       'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20 text-amber-400': ev.grau_sessao === 'Mestre Macom',
+                       'bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/20 text-rose-400': ev.status === 'cancelada'
+                     }">
+                  {{ ev.titulo }}
+                </div>
+              }
+            </div>
+
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- MOBILE LIST VIEW (md-) -->
+    <div class="block md:hidden space-y-4">
+      @if (eventos().length === 0) {
+        <div class="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-xl py-12 text-center text-slate-500">
+          <svg class="w-10 h-10 text-slate-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <p class="text-xs">Nenhuma sessão agendada para este mês.</p>
+        </div>
+      } @else {
+        <div class="space-y-3">
+          @for (ev of eventos(); track ev.id) {
+            <div (click)="selecionarEvento(ev)" 
+                 class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-xl p-4 flex justify-between items-center cursor-pointer hover:bg-white/5 transition-all">
+              <div class="space-y-1 overflow-hidden pr-2">
+                <span class="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
+                      [ngClass]="{
+                        'bg-blue-500/10 border border-blue-500/20 text-blue-400': ev.grau_sessao === 'Aprendiz Macom',
+                        'bg-purple-500/10 border border-purple-500/20 text-purple-400': ev.grau_sessao === 'Companheiro Macom',
+                        'bg-amber-500/10 border border-amber-500/20 text-amber-400': ev.grau_sessao === 'Mestre Macom',
+                        'bg-rose-500/10 border border-rose-500/20 text-rose-400': ev.status === 'cancelada'
+                      }">
+                  {{ ev.grau_sessao }}
+                </span>
+                <h3 class="text-xs font-bold text-white uppercase tracking-wider truncate mt-1.5">{{ ev.titulo }}</h3>
+                <p class="text-[9px] text-slate-400">{{ ev.data_hora_inicio | date:'dd/MM/yyyy HH:mm' }}</p>
+              </div>
+              <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+  }
+
+  <!-- MODAL DE DETALHES DO EVENTO (PROGRESSIVE DISCLOSURE) -->
+  @if (eventoSelecionado(); as ev) {
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-liturgical-surface border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden relative">
+        
+        <!-- Top header do Modal -->
+        <div class="p-6 border-b border-white/5">
+          <div class="flex justify-between items-start gap-4">
+            <div>
+              <span class="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest"
+                    [ngClass]="{
+                      'bg-blue-500/10 border border-blue-500/20 text-blue-400': ev.grau_sessao === 'Aprendiz Macom',
+                      'bg-purple-500/10 border border-purple-500/20 text-purple-400': ev.grau_sessao === 'Companheiro Macom',
+                      'bg-amber-500/10 border border-amber-500/20 text-amber-400': ev.grau_sessao === 'Mestre Macom'
+                    }">
+                {{ ev.grau_sessao }}
+              </span>
+              <h2 class="font-cinzel text-base font-bold text-white tracking-wider uppercase mt-2 leading-snug">
+                {{ ev.titulo }}
+              </h2>
+            </div>
+            <button (click)="fecharModal()" class="text-slate-400 hover:text-white transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Conteúdo do Modal -->
+        <div class="p-6 space-y-4 text-xs">
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Data e Hora</p>
+              <p class="text-slate-200 mt-0.5">{{ ev.data_hora_inicio | date:'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Status</p>
+              <p class="mt-0.5 font-bold uppercase tracking-wider text-[10px]"
+                 [class.text-emerald-400]="ev.status === 'realizada'"
+                 [class.text-blue-400]="ev.status === 'agendada'"
+                 [class.text-rose-400]="ev.status === 'cancelada'">
+                {{ ev.status }}
+              </p>
+            </div>
+          </div>
+
+          <div class="border-t border-white/5 pt-3">
+            <p class="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Tipo de Reunião</p>
+            <p class="text-slate-200 mt-0.5">{{ ev.tipo_sessao }}</p>
+          </div>
+
+          <!-- Informações de Ágape -->
+          <div class="border-t border-white/5 pt-3 space-y-2">
+            <p class="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Logística do Ágape</p>
+            
+            <div class="grid grid-cols-2 gap-3 bg-black/20 rounded-xl p-3 border border-white/5">
+              <div>
+                <p class="text-[8px] text-slate-500 uppercase tracking-widest">Modalidade</p>
+                <p class="text-slate-300 font-bold mt-0.5">{{ ev.agape_modalidade || 'Não informada' }}</p>
+              </div>
+              <div>
+                <p class="text-[8px] text-slate-500 uppercase tracking-widest">Custo de Adesão</p>
+                <p class="text-slate-300 font-bold mt-0.5">
+                  {{ ev.agape_valor ? 'R$ ' + ev.agape_valor : 'Gratuito/Isento' }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Rodapé do Modal -->
+        <div class="p-4 border-t border-white/5 bg-black/10 flex justify-end">
+          <button (click)="fecharModal()" 
+                  class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/5 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all text-slate-300">
+            Fechar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+</div>

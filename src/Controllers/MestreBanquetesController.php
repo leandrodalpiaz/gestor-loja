@@ -88,7 +88,7 @@ class MestreBanquetesController
 
         $sessaoId = (int) ($_POST['sessao_id'] ?? 0);
         $usuarioSessaoId = trim((string) ($_SESSION['usuario_id'] ?? ''));
-        $autorId = ctype_digit($usuarioSessaoId) ? (int) $usuarioSessaoId : null;
+        $autorId = $usuarioSessaoId !== '' ? $usuarioSessaoId : null;
         $ok = $sessaoId > 0 && (new BanqueteOperacao())->salvar($sessaoId, $_POST, $autorId);
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
@@ -204,7 +204,7 @@ class MestreBanquetesController
         ];
     }
 
-    public function salvarOperacaoMiniapp(array $dados, ?int $autorId = null): array
+    public function salvarOperacaoMiniapp(array $dados, ?string $autorId = null): array
     {
         $sessaoId = (int) ($dados['sessao_id'] ?? 0);
         if ($sessaoId <= 0) {

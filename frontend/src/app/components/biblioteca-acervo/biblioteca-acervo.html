@@ -1,0 +1,118 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="font-cinzel text-2xl font-bold tracking-widest text-white md:text-3xl">Biblioteca</h1>
+    <p class="mt-1 text-xs uppercase tracking-wider text-slate-400">Acervo, empréstimos e curadoria em um único ambiente</p>
+  </div>
+
+  <div class="flex flex-wrap gap-2">
+    <button (click)="abrirTab('acervo')" [class.bg-liturgical-gold]="tab() === 'acervo'" [class.text-liturgical-bg]="tab() === 'acervo'" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-300">Acervo</button>
+    <button (click)="abrirTab('meus')" [class.bg-liturgical-gold]="tab() === 'meus'" [class.text-liturgical-bg]="tab() === 'meus'" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-300">Meus empréstimos</button>
+    @if (pode('biblioteca.manage')) {
+      <button (click)="abrirTab('gestao')" [class.bg-liturgical-gold]="tab() === 'gestao'" [class.text-liturgical-bg]="tab() === 'gestao'" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-300">Gestão</button>
+    }
+    @if (pode('biblioteca.classificar')) {
+      <button (click)="abrirTab('classificacao')" [class.bg-liturgical-gold]="tab() === 'classificacao'" [class.text-liturgical-bg]="tab() === 'classificacao'" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-300">Classificação</button>
+    }
+  </div>
+
+  @if (successMsg(); as msg) { <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-400">{{msg}}</div> }
+  @if (errorMsg(); as msg) { <div class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-400">{{msg}}</div> }
+  @if (loading()) { <div class="py-16 text-center text-sm text-slate-400">Carregando dados da Biblioteca...</div> }
+
+  @if (!loading() && tab() === 'acervo') {
+    <input [(ngModel)]="filtroBusca" placeholder="Buscar por título, autor ou código..." class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      @for (livro of livrosFiltrados; track livro.id) {
+        <article class="flex gap-4 rounded-2xl border border-white/5 bg-liturgical-surface/40 p-5">
+          <div class="h-28 w-20 shrink-0 overflow-hidden rounded-lg bg-black/30">
+            @if (livro.capa_url) { <img [src]="livro.capa_url" [alt]="livro.titulo" class="h-full w-full object-cover"> }
+          </div>
+          <div class="min-w-0 flex-1">
+            <span class="text-[9px] font-bold uppercase text-liturgical-gold">{{livro.grau_recomendado || 'Livre'}}</span>
+            <h2 class="mt-1 font-bold text-white">{{livro.titulo}}</h2>
+            <p class="text-xs text-slate-400">{{livro.autor}}</p>
+            <p class="mt-2 text-[10px] text-slate-500">{{livro.codigo_acervo}} · {{livro.quantidade_disponivel}} disponível(is)</p>
+            <button (click)="solicitar(livro)" [disabled]="!livro.disponivel" class="mt-3 rounded-lg bg-liturgical-gold px-3 py-2 text-[10px] font-bold uppercase text-liturgical-bg disabled:opacity-40">Solicitar</button>
+          </div>
+        </article>
+      } @empty { <p class="text-sm text-slate-400">Nenhuma obra encontrada.</p> }
+    </div>
+  }
+
+  @if (!loading() && tab() === 'meus') {
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      @for (item of (dados().meus_emprestimos || []); track item.id) {
+        <article class="rounded-2xl border border-white/5 bg-liturgical-surface/40 p-5">
+          <span class="rounded bg-white/5 px-2 py-1 text-[9px] font-bold uppercase text-liturgical-gold">{{item.status}}</span>
+          <h2 class="mt-3 font-bold text-white">{{item.titulo}}</h2>
+          <p class="mt-1 text-xs text-slate-400">Empréstimo: {{item.data_emprestimo || '-'}}</p>
+          <p class="text-xs text-slate-400">Previsão de devolução: {{item.data_devolucao_prevista || '-'}}</p>
+        </article>
+      } @empty { <p class="text-sm text-slate-400">Você não possui empréstimos locais.</p> }
+      @for (item of (dados().meus_pedidos_interloja || []); track item.id) {
+        <article class="rounded-2xl border border-sky-500/10 bg-sky-500/5 p-5">
+          <span class="text-[9px] font-bold uppercase text-sky-400">Pedido interloja · {{item.status}}</span>
+          <h2 class="mt-2 font-bold text-white">{{item.titulo}}</h2>
+          <p class="text-xs text-slate-400">{{item.loja_origem_nome}}</p>
+        </article>
+      }
+    </div>
+  }
+
+  @if (!loading() && tab() === 'gestao' && pode('biblioteca.manage')) {
+    <div class="space-y-8">
+      <section>
+        <h2 class="mb-3 font-cinzel text-sm font-bold uppercase tracking-widest text-white">Empréstimos locais pendentes</h2>
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          @for (item of (dados().emprestimos_pendentes || []); track item.id) {
+            <article class="rounded-2xl border border-white/5 bg-liturgical-surface/40 p-5">
+              <span class="text-[9px] font-bold uppercase text-amber-400">{{item.status}}</span>
+              <h3 class="mt-2 font-bold text-white">{{item.titulo}}</h3>
+              <p class="text-xs text-slate-400">{{item.obreiro_nome}} · devolução {{item.data_devolucao_prevista || '-'}}</p>
+              <button (click)="devolver(item)" class="mt-4 rounded-lg border border-emerald-500/30 px-3 py-2 text-[10px] font-bold uppercase text-emerald-400">Registrar devolução</button>
+            </article>
+          } @empty { <p class="text-sm text-slate-400">Não há empréstimos locais pendentes.</p> }
+        </div>
+      </section>
+      <section>
+        <h2 class="mb-3 font-cinzel text-sm font-bold uppercase tracking-widest text-white">Pedidos recebidos de outras Lojas</h2>
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          @for (item of (dados().pedidos_interloja_recebidos || []); track item.id) {
+            <article class="rounded-2xl border border-white/5 bg-liturgical-surface/40 p-5">
+              <span class="text-[9px] font-bold uppercase text-sky-400">{{item.status}}</span>
+              <h3 class="mt-2 font-bold text-white">{{item.titulo}}</h3>
+              <p class="text-xs text-slate-400">{{item.obreiro_nome}} · {{item.loja_destino_nome}}</p>
+              @if (item.status === 'solicitado') {
+                <div class="mt-4 flex gap-2">
+                  <button (click)="decidir(item, 'aprovado')" class="rounded-lg bg-emerald-500/20 px-3 py-2 text-[10px] font-bold uppercase text-emerald-400">Aprovar</button>
+                  <button (click)="decidir(item, 'negado')" class="rounded-lg bg-rose-500/20 px-3 py-2 text-[10px] font-bold uppercase text-rose-400">Negar</button>
+                </div>
+              }
+            </article>
+          } @empty { <p class="text-sm text-slate-400">Não há pedidos interloja recebidos.</p> }
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (!loading() && tab() === 'classificacao' && pode('biblioteca.classificar')) {
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <div class="space-y-3">
+        @for (livro of (dados().acervo || []); track livro.id) {
+          <button (click)="prepararClassificacao(livro)" class="w-full rounded-xl border border-white/5 bg-liturgical-surface/40 p-4 text-left">
+            <b class="block text-sm text-white">{{livro.titulo}}</b>
+            <span class="text-[10px] text-slate-400">{{livro.autor}} · {{livro.grau_recomendado || 'Livre'}}</span>
+          </button>
+        }
+      </div>
+      <form (submit)="salvarClassificacao();$event.preventDefault()" class="space-y-4 rounded-2xl border border-white/5 bg-liturgical-surface/40 p-6">
+        <h2 class="font-cinzel text-sm font-bold uppercase tracking-widest text-white">Curadoria da obra</h2>
+        <select [(ngModel)]="classificacao.grau_recomendado" name="grau" class="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white">
+          <option value="Livre">Livre</option><option value="Aprendiz">Aprendiz</option><option value="Companheiro">Companheiro</option><option value="Mestre">Mestre</option>
+        </select>
+        <textarea [(ngModel)]="classificacao.nota_instrucao" name="nota" placeholder="Nota de instrução e orientação de leitura" class="min-h-36 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white"></textarea>
+        <button type="submit" class="rounded-xl bg-liturgical-gold px-4 py-3 text-xs font-bold uppercase text-liturgical-bg">Salvar classificação</button>
+      </form>
+    </div>
+  }
+</div>

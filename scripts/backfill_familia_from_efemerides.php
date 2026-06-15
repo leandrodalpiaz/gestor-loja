@@ -33,7 +33,7 @@ $resolveLojaId = static function () use ($db): int {
 
 $lojaId = $resolveLojaId();
 if ($lojaId <= 0) {
-    fwrite(STDERR, "Nao foi possivel resolver loja_id.\n");
+    fwrite(STDERR, "Não foi possível resolver loja_id.\n");
     exit(1);
 }
 
@@ -262,8 +262,8 @@ if ($reportPath !== '' && count($unmatched) > 0) {
             fputcsv($fh, [$u['efemeride_id'], $u['irmao_ref'], $u['familiar']]);
         }
         fclose($fh);
-        echo "Relatorio: {$reportPath}\n";
+        echo "Relatório: {$reportPath}\n";
     } else {
-        fwrite(STDERR, "Aviso: nao foi possivel escrever relatorio em {$reportPath}\n");
+        fwrite(STDERR, "Aviso: não foi possível escrever relatório em {$reportPath}\n");
     }
 }

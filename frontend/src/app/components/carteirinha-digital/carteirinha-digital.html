@@ -1,0 +1,173 @@
+<div class="space-y-6">
+  <!-- CABEÇALHO DA TELA -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white">Carteirinha de Membro</h1>
+      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Identificação Digital e Credencial Maçônica</p>
+    </div>
+    <div class="flex gap-2">
+      <button (click)="toggleVerso()" 
+              class="px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all">
+        Girar Carteirinha
+      </button>
+      <button (click)="imprimir()" 
+              class="px-4 py-2.5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg transition-all hover:scale-[1.01]">
+        Imprimir / Salvar PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- ESTADO DE CARREGAMENTO -->
+  @if (loading()) {
+    <div class="flex flex-col items-center justify-center py-20 text-slate-400 space-y-4">
+      <div class="w-10 h-10 border-4 border-liturgical-gold border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-sm font-bold uppercase tracking-wider">Carregando dados da credencial...</p>
+    </div>
+  }
+
+  <!-- ERRO -->
+  @if (errorMsg(); as msg) {
+    <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs px-4 py-3 rounded-xl max-w-md mx-auto text-center">
+      {{ msg }}
+    </div>
+  }
+
+  <!-- CARTEIRINHA DIGITAL PREMIUM -->
+  @if (!loading() && carteirinha(); as info) {
+    <div class="flex flex-col items-center justify-center py-8">
+      
+      <!-- CONTÊINER DA CARTEIRINHA COM FLIP 3D -->
+      <div class="scene w-full max-w-[420px] aspect-[1.586/1]">
+        <div class="card w-full h-full relative duration-700" [class.is-flipped]="virada()">
+          
+          <!-- FRENTE DA CARTEIRINHA -->
+          <div class="card__face card__face--front p-6 rounded-2xl flex flex-col justify-between shadow-2xl border border-white/10 relative overflow-hidden select-none">
+            <!-- Efeito holográfico/textura de fundo -->
+            <div class="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
+            <div class="absolute -top-20 -left-20 w-48 h-48 rounded-full bg-liturgical-gold/10 blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-20 -right-20 w-48 h-48 rounded-full bg-blue-500/10 blur-3xl pointer-events-none"></div>
+
+            <!-- Cabeçalho Interno da Carteirinha -->
+            <div class="flex justify-between items-start">
+              <div class="flex items-center gap-3">
+                <img src="/assets/logo-renascenca.png" alt="Logo Loja" class="w-10 h-10 object-contain">
+                <div>
+                  <h2 class="font-cinzel text-[11px] font-bold tracking-widest text-white leading-tight">
+                    {{ info.loja_sigla }} {{ info.loja_nome }}
+                  </h2>
+                  <p class="text-[9px] text-liturgical-gold font-bold tracking-wider uppercase">
+                    Nº {{ info.loja_numero }}
+                  </p>
+                </div>
+              </div>
+              <span class="text-[9px] px-2 py-0.5 rounded-full border bg-emerald-500/10 border-emerald-500/20 text-emerald-400 font-bold uppercase tracking-wider">
+                {{ info.situacao === 'ativo' ? 'Regular' : 'Inativo' }}
+              </span>
+            </div>
+
+            <!-- Meio da Carteirinha (Foto e Nome do Membro) -->
+            <div class="flex items-center gap-4 my-2">
+              <div class="w-16 h-20 rounded-lg bg-white/5 border border-white/10 flex flex-col items-center justify-center shrink-0 overflow-hidden relative group">
+                <!-- Ícone maçônico de esquadro e compasso estilizado de placeholder -->
+                <svg class="w-10 h-10 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M12 3v18M5 12h14"></path>
+                </svg>
+                <div class="absolute inset-x-0 bottom-0 bg-black/60 text-[7px] text-center font-bold py-0.5 text-slate-400 uppercase tracking-widest">
+                  Membro
+                </div>
+              </div>
+              
+              <div class="space-y-1">
+                <div class="text-xs font-bold text-white uppercase tracking-wider leading-snug">
+                  {{ info.nome_historico || info.nome }}
+                </div>
+                <div class="text-[9px] text-slate-400 truncate max-w-[240px]">
+                  {{ info.nome }}
+                </div>
+                <div class="text-[9px] font-bold text-liturgical-gold uppercase tracking-widest">
+                  {{ info.grau }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Rodapé Interno da Carteirinha -->
+            <div class="flex justify-between items-end border-t border-white/5 pt-2">
+              <div>
+                <p class="text-[8px] text-slate-500 uppercase tracking-wider">CIM (Matrícula)</p>
+                <p class="text-xs font-bold text-white font-mono tracking-wider">{{ info.cim }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-[8px] text-slate-500 uppercase tracking-wider">Cargo</p>
+                <p class="text-[9px] font-bold text-slate-300 uppercase tracking-wider">{{ info.cargo }}</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- VERSO DA CARTEIRINHA -->
+          <div class="card__face card__face--back p-6 rounded-2xl flex flex-col justify-between shadow-2xl border border-white/10 relative overflow-hidden select-none">
+            <div class="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
+            
+            <!-- Detalhes do Obreiro e Datas -->
+            <div class="grid grid-cols-2 gap-3 text-left">
+              <div>
+                <p class="text-[8px] text-slate-500 uppercase tracking-wider">Iniciação</p>
+                <p class="text-[10px] font-bold text-slate-300">
+                  {{ info.data_iniciacao ? (info.data_iniciacao | date:'dd/MM/yyyy') : 'Não cadastrada' }}
+                </p>
+              </div>
+              <div>
+                <p class="text-[8px] text-slate-500 uppercase tracking-wider">Elevação</p>
+                <p class="text-[10px] font-bold text-slate-300">
+                  {{ info.data_elevacao ? (info.data_elevacao | date:'dd/MM/yyyy') : '--' }}
+                </p>
+              </div>
+              <div>
+                <p class="text-[8px] text-slate-500 uppercase tracking-wider">Exaltação</p>
+                <p class="text-[10px] font-bold text-slate-300">
+                  {{ info.data_exaltacao ? (info.data_exaltacao | date:'dd/MM/yyyy') : '--' }}
+                </p>
+              </div>
+              <div>
+                <p class="text-[8px] text-slate-500 uppercase tracking-wider">Emissão Digital</p>
+                <p class="text-[10px] font-bold text-slate-300">12/06/2026</p>
+              </div>
+            </div>
+
+            <!-- Bloco central com QR Code e Instruções -->
+            <div class="flex justify-between items-center bg-black/20 border border-white/5 rounded-xl p-3 my-2 gap-3">
+              <div class="text-[8px] text-slate-400 uppercase tracking-wider leading-relaxed">
+                Esta credencial atesta a filiação ativa do obreiro na oficina. Válida apenas se o status permanecer regular.
+              </div>
+              
+              <!-- QR Code demonstrativo -->
+              <div class="w-16 h-16 bg-white rounded-lg p-1 shrink-0 overflow-hidden">
+                <img [src]="getQrCodeUrl()" alt="QR Code" class="w-full h-full object-contain">
+              </div>
+            </div>
+
+            <!-- Assinatura da Chancelaria / Venerável -->
+            <div class="flex justify-between items-end border-t border-white/5 pt-2 text-[8px] text-slate-500 uppercase tracking-wider text-center">
+              <div class="w-[45%]">
+                <div class="h-4 border-b border-white/10 mb-1"></div>
+                Venerável Mestre
+              </div>
+              <div class="w-[45%]">
+                <div class="h-4 border-b border-white/10 mb-1"></div>
+                Chanceler
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- INSTRUÇÃO EXTRA -->
+      <p class="text-xs text-slate-500 mt-6 max-w-sm text-center">
+        Dica: Clique no botão <strong>Girar Carteirinha</strong> para ver o verso com os marcos maçônicos do seu cadastro.
+      </p>
+
+    </div>
+  }
+</div>

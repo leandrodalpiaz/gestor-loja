@@ -1,0 +1,8 @@
+/* Custom CSS for officers management module */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.border-liturgical-gold {
+  border-color: #d4af37 !important;
+}

@@ -78,8 +78,8 @@ class PwaChancelariaController
             : false;
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Presenca efetiva atualizada.'
-            : 'Nao foi possivel atualizar a presenca.';
+            ? 'Presença efetiva atualizada.'
+            : 'Não foi possível atualizar a presença.';
 
         header('Location: /pwa/chancelaria?sessao_id=' . urlencode((string) $sessaoId));
         exit;
@@ -100,7 +100,7 @@ class PwaChancelariaController
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
             ? 'Visitante registrado.'
-            : 'Nao foi possivel registrar o visitante.';
+            : 'Não foi possível registrar o visitante.';
 
         header('Location: /pwa/chancelaria?sessao_id=' . urlencode((string) $sessaoId));
         exit;

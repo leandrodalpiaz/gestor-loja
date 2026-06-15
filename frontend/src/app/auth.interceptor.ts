@@ -7,17 +7,26 @@ import { supabaseClient } from './supabase-client';
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const router = inject(Router);
+  const isBackendRequest = request.url.startsWith(environment.apiUrl);
+  const isPublicApi = request.url.includes('/api/public/');
+  const isAuthHandshake = request.url.includes('/api/auth/me') || request.url.includes('/api/ping');
 
-  if (!request.url.startsWith(environment.apiUrl) || request.url.includes('/api/public/')) {
+  if (!isBackendRequest || isPublicApi) {
     return next(request);
   }
 
   return from(supabaseClient.auth.getSession()).pipe(
-    switchMap(({ data }) => next(data.session?.access_token ? request.clone({
-      setHeaders: { Authorization: `Bearer ${data.session.access_token}` }
-    }) : request)),
+    switchMap(({ data }) => {
+      const cloned = request.clone(data.session?.access_token ? {
+        withCredentials: true,
+        setHeaders: { Authorization: `Bearer ${data.session.access_token}` }
+      } : {
+        withCredentials: true
+      });
+      return next(cloned);
+    }),
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
+      if (error.status === 401 && isAuthHandshake) {
         void supabaseClient.auth.signOut({ scope: 'local' });
         void router.navigate(['/login']);
       }

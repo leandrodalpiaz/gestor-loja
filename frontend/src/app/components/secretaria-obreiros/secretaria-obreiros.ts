@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { SupabaseService } from '../../services/supabase.service';
 import { environment } from '../../../environments/environment';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-secretaria-obreiros',
@@ -15,6 +16,7 @@ import { environment } from '../../../environments/environment';
 export class SecretariaObreiros implements OnInit {
   private http = inject(HttpClient);
   private supabaseService = inject(SupabaseService);
+  private router = inject(Router);
 
   // Filtros e listagem
   protected obreiros = signal<any[]>([]);
@@ -48,10 +50,12 @@ export class SecretariaObreiros implements OnInit {
     profissao: '',
     escolaridade: '',
     faixa_renda: '',
-    grau: '1',
+    grau: 'Aprendiz',
     cargo: '',
     loja_origem: '',
     situacao_quadro: 'ativo',
+    acesso_status: 'ativo',
+    ativo: true,
     data_iniciacao: '',
     data_elevacao: '',
     data_exaltacao: '',
@@ -70,6 +74,16 @@ export class SecretariaObreiros implements OnInit {
 
   ngOnInit(): void {
     this.carregarObreiros();
+  }
+
+  protected pode(permissao: string): boolean {
+    const profile = this.supabaseService.profile() || {};
+    const permissions = new Set<string>(profile.permissions || []);
+    return profile.is_system_admin === true || permissions.has('*') || permissions.has(permissao);
+  }
+
+  protected abrirConvites(): void {
+    void this.router.navigate(['/dashboard/secretaria/convites']);
   }
 
   protected carregarObreiros(): void {
@@ -132,10 +146,12 @@ export class SecretariaObreiros implements OnInit {
       profissao: '',
       escolaridade: '',
       faixa_renda: '',
-      grau: '1',
+      grau: 'Aprendiz',
       cargo: '',
       loja_origem: '',
       situacao_quadro: 'ativo',
+      acesso_status: 'ativo',
+      ativo: true,
       data_iniciacao: '',
       data_elevacao: '',
       data_exaltacao: '',
@@ -166,7 +182,10 @@ export class SecretariaObreiros implements OnInit {
         if (res && res.ok && res.obreiro) {
           this.isNovo.set(false);
           this.editTabActive.set('pessoais');
-          this.formObreiro.set(res.obreiro);
+          this.formObreiro.set({
+            ...res.obreiro,
+            ativo: res.obreiro.ativo !== false
+          });
           this.showModalEditar.set(true);
         } else {
           alert(res.erro || 'Falha ao buscar dados do obreiro.');
@@ -193,7 +212,11 @@ export class SecretariaObreiros implements OnInit {
 
     this.http.post<any>(
       `${environment.apiUrl}/api/secretaria/obreiros/salvar`,
-      obreiro,
+      {
+        ...obreiro,
+        nome_completo: obreiro.nome,
+        ativo: obreiro.ativo ? '1' : '0'
+      },
       { headers }
     ).subscribe({
       next: (res) => {
@@ -264,10 +287,14 @@ export class SecretariaObreiros implements OnInit {
 
   protected getGrauLabel(grau: any): string {
     switch (String(grau)) {
-      case '1': return 'Aprendiz';
-      case '2': return 'Companheiro';
-      case '3': return 'Mestre';
-      default: return 'Grau ' + grau;
+      case '1':
+      case 'Aprendiz': return 'Aprendiz';
+      case '2':
+      case 'Companheiro': return 'Companheiro';
+      case '3':
+      case 'Mestre': return 'Mestre';
+      case 'Mestre Instalado': return 'Mestre Instalado';
+      default: return String(grau || '-');
     }
   }
 

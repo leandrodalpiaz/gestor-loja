@@ -235,12 +235,12 @@ declare(strict_types=1);
 
             const data = await res.json();
             if (!data.sucesso) {
-                throw new Error(data.mensagem || "Nao foi possivel concluir o cadastro agora. Tente novamente em instantes.");
+                throw new Error(data.mensagem || "Não foi possível concluir o cadastro agora. Tente novamente em instantes.");
             }
 
             notificarSucesso("Livro cadastrado com sucesso.");
         } catch (err) {
-            mostrarErro(err.message || "Nao foi possivel concluir o cadastro agora. Verifique a conexao e tente novamente.");
+            mostrarErro(err.message || "Não foi possível concluir o cadastro agora. Verifique a conexão e tente novamente.");
             btn.disabled = false;
             btn.textContent = "Salvar Livro";
         }

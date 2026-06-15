@@ -125,16 +125,16 @@
 
           <form (submit)="onSubmit(); $event.preventDefault()" class="space-y-6 relative z-10">
             <div class="space-y-2">
-              <label for="email" class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">E-mail corporativo</label>
-              <input id="email" 
-                     type="email" 
+              <label for="identifier" class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">C.I.M. do obreiro ou e-mail técnico</label>
+              <input id="identifier" 
+                     type="text" 
                      required 
                      [disabled]="loading()"
-                     [ngModel]="email()"
-                     (ngModelChange)="email.set($event)"
-                     name="email"
+                     [ngModel]="identifier()"
+                     (ngModelChange)="identifier.set($event)"
+                     name="identifier"
                      class="w-full px-4 py-3.5 rounded-xl border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-liturgical-gold focus:border-liturgical-gold transition-all duration-300 focus-glow" 
-                     placeholder="exemplo@email.com">
+                     placeholder="Seu C.I.M. numérico">
             </div>
             
             <div class="space-y-2">

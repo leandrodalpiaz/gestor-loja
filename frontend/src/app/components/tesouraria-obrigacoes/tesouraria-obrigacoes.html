@@ -1,0 +1,166 @@
+<div class="space-y-6">
+  
+  <!-- CABEÇALHO DA TELA -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white">Minhas Obrigações</h1>
+      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Tesouraria - Mensalidades, Contribuições e Regularidade Financeira</p>
+    </div>
+  </div>
+
+  <!-- AVISOS E MENSAGENS -->
+  @if (successMsg(); as msg) {
+    <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs px-4 py-3 rounded-xl">
+      {{ msg }}
+    </div>
+  }
+  @if (errorMsg(); as msg) {
+    <div class="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs px-4 py-3 rounded-xl">
+      {{ msg }}
+    </div>
+  }
+
+  <!-- CARREGANDO -->
+  @if (loading()) {
+    <div class="flex flex-col items-center justify-center py-20 text-slate-400 space-y-4">
+      <div class="w-10 h-10 border-4 border-liturgical-gold border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-sm font-bold uppercase tracking-wider">Carregando obrigações em aberto...</p>
+    </div>
+  } @else {
+
+    <!-- LISTAGEM DE TAXAS / OBRIGAÇÕES -->
+    <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 space-y-4">
+      <div class="border-b border-white/5 pb-3">
+        <h2 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest">Mensalidades & Taxas Pendentes</h2>
+        <p class="text-[10px] text-slate-400 mt-0.5">Valores lançados aguardando liquidação ou envio de comprovante</p>
+      </div>
+
+      @if (obrigacoes().length === 0) {
+        <div class="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-xl py-16 text-center text-slate-500">
+          <svg class="w-12 h-12 text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <p class="text-xs">Sua conta está regular. Nenhuma obrigação financeira em aberto encontrada!</p>
+        </div>
+      } @else {
+        
+        <!-- DESKTOP VIEW: TABELA (md+) -->
+        <div class="hidden md:block overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-white/5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                <th class="py-3 px-4">Descrição da Taxa</th>
+                <th class="py-3 px-4">Vencimento (Dia)</th>
+                <th class="py-3 px-4">Valor Base</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (ob of obrigacoes(); track ob.id) {
+                <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <td class="py-3 px-4 font-bold text-white uppercase tracking-wider">{{ ob.titulo }}</td>
+                  <td class="py-3 px-4 text-slate-300">Dia {{ ob.dia_vencimento }}</td>
+                  <td class="py-3 px-4 text-slate-300 font-mono">R$ {{ ob.valor_base }}</td>
+                  <td class="py-3 px-4">
+                    <span class="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                      {{ ob.status }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-right">
+                    <button (click)="abrirSubmissao(ob)"
+                            class="px-2.5 py-1.5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg text-[9px] font-bold uppercase tracking-wider rounded-lg shadow-md transition-all">
+                      Enviar Comprovante
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- MOBILE VIEW: CARDS (md-) -->
+        <div class="grid grid-cols-1 gap-4 md:hidden">
+          @for (ob of obrigacoes(); track ob.id) {
+            <div class="bg-black/25 border border-white/5 rounded-xl p-4 space-y-3">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="text-xs font-bold text-white uppercase tracking-wider">{{ ob.titulo }}</h3>
+                  <p class="text-[10px] text-slate-400 mt-0.5">Vencimento: Dia {{ ob.dia_vencimento }}</p>
+                </div>
+                <span class="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                  {{ ob.status }}
+                </span>
+              </div>
+              
+              <div class="flex justify-between items-center border-t border-white/5 pt-2">
+                <span class="text-xs font-bold text-white font-mono">R$ {{ ob.valor_base }}</span>
+                <button (click)="abrirSubmissao(ob)"
+                        class="px-3 py-1.5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg text-[9px] font-bold uppercase tracking-wider rounded-lg shadow-md transition-all">
+                  Comprovante
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+      }
+
+    </div>
+
+  }
+
+  <!-- MODAL DE SUBMISSÃO DE COMPROVANTE -->
+  @if (showModal()) {
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-liturgical-surface border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+        
+        <div class="p-6 border-b border-white/5 flex justify-between items-center">
+          <h2 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest">
+            Enviar Comprovante de Pagamento
+          </h2>
+          <button (click)="fecharModal()" class="text-slate-400 hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <form (submit)="enviarComprovante(); $event.preventDefault()" class="p-6 space-y-4 text-xs">
+          
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Valor Pago (R$) *</label>
+            <input type="number" step="0.01" [(ngModel)]="formComprovante().valor_pago" name="valor_pago" required
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Caminho do Comprovante (PDF/Imagem) *</label>
+            <input type="text" [(ngModel)]="formComprovante().arquivo_comprovante" name="arquivo_comprovante" required placeholder="Ex: /uploads/comprovantes/mensalidade_junho.pdf"
+                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Observação (Opcional)</label>
+            <textarea [(ngModel)]="formComprovante().observacao" name="observacao" rows="3" placeholder="Insira detalhes adicionais se necessário..."
+                      class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors"></textarea>
+          </div>
+
+          <div class="pt-4 border-t border-white/5 flex justify-end gap-2">
+            <button type="button" (click)="fecharModal()"
+                    class="px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/5 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all text-slate-300">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="salvando()"
+                    class="px-4 py-2.5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg transition-all">
+              {{ salvando() ? 'Enviando...' : 'Enviar Comprovante' }}
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+  }
+
+</div>

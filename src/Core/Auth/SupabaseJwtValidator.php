@@ -148,6 +148,7 @@ class SupabaseJwtValidator
     {
         $cachePath = __DIR__ . '/../../../../storage/jwks_cache.json';
         $cacheTime = 24 * 3600; // 24 horas
+        $appEnv = strtolower(trim((string) (Env::get('APP_ENV') ?: 'local')));
 
         if (file_exists($cachePath) && (time() - filemtime($cachePath) < $cacheTime)) {
             $data = json_decode(file_get_contents($cachePath), true);
@@ -166,10 +167,30 @@ class SupabaseJwtValidator
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
+        if (($httpCode !== 200 || !$response) && in_array($appEnv, ['local', 'development', 'dev'], true)) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlErrorFallback = curl_error($ch);
+            curl_close($ch);
+
+            if ($httpCode === 200 && $response) {
+                error_log('[JWT Validator] AVISO: JWKS carregado sem verificacao SSL apenas em ambiente local.');
+            } else {
+                $curlError = $curlError !== '' ? $curlError : $curlErrorFallback;
+            }
+        }
+
         if ($httpCode !== 200 || !$response) {
-            error_log("[JWT Validator] Erro ao buscar JWKS de $url (HTTP $httpCode)");
+            error_log("[JWT Validator] Erro ao buscar JWKS de $url (HTTP $httpCode)" . ($curlError !== '' ? " - $curlError" : ''));
             if (file_exists($cachePath)) {
                 return json_decode(file_get_contents($cachePath), true);
             }

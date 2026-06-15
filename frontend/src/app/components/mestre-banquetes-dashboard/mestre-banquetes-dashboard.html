@@ -1,0 +1,89 @@
+<div class="space-y-6 animate-fade-in">
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <span class="block text-[10px] font-bold uppercase tracking-widest text-liturgical-gold">Painel de Oficiais</span>
+      <h1 class="mt-1 font-cinzel text-2xl font-bold tracking-widest text-white md:text-3xl">Mestre de Banquetes</h1>
+      <p class="mt-1 text-xs uppercase tracking-wider text-slate-400">Planejamento, custos, receitas e logística do ágape fraternal</p>
+    </div>
+  </div>
+
+  @if (successMsg(); as msg) {
+    <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-400">{{ msg }}</div>
+  }
+
+  @if (errorMsg(); as msg) {
+    <div class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-400">{{ msg }}</div>
+  }
+
+  @if (loading()) {
+    <div class="flex flex-col items-center justify-center space-y-4 py-20 text-slate-400">
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-liturgical-gold border-t-transparent"></div>
+      <p class="text-[10px] font-bold uppercase tracking-wider">Carregando painel...</p>
+    </div>
+  } @else {
+    @if (dataBanquetes(); as ban) {
+      <div class="space-y-6">
+        <div class="rounded-2xl border border-white/5 bg-white/[0.01] p-6">
+          <label class="mb-2 block text-[9px] font-bold uppercase tracking-widest text-slate-500">Sessão e ágape em foco</label>
+          <select [value]="selectedBanqueteSessaoId() || ''" (change)="selecionarBanqueteSessao($event)" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
+            @for (s of (ban.sessoes || []); track s.id) {
+              <option [value]="s.id">{{ s.titulo || s.tipo_sessao }} · {{ s.data_hora_inicio }} · {{ s.descricao_agape }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div class="rounded-xl border border-white/5 bg-white/[0.01] p-5"><small class="text-slate-500">Confirmados</small><p class="text-3xl font-bold text-white">{{ (ban.confirmados || []).length }}</p></div>
+          <div class="rounded-xl border border-white/5 bg-white/[0.01] p-5"><small class="text-slate-500">Com ágape</small><p class="text-3xl font-bold text-white">{{ (ban.participantes_agape || []).length }}</p></div>
+          <div class="rounded-xl border border-white/5 bg-white/[0.01] p-5"><small class="text-slate-500">Estimativa</small><p class="text-xl font-bold text-emerald-400">{{ ban.sessao_foco?.financeiro_banquete?.valor_estimado | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</p></div>
+          <div class="rounded-xl border border-white/5 bg-white/[0.01] p-5"><small class="text-slate-500">Resultado real</small><p class="text-xl font-bold text-white">{{ ban.sessao_foco?.financeiro_banquete?.resultado_real | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</p></div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <form (submit)="salvarOperacaoBanquete(); $event.preventDefault()" class="space-y-3 rounded-2xl border border-white/5 bg-white/[0.01] p-6 xl:col-span-2">
+            <h3 class="mb-2 font-cinzel text-xs font-bold uppercase tracking-widest text-white">Operação do banquete</h3>
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <select [(ngModel)]="banqueteForm.status_operacional" name="status" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white"><option value="planejamento">Planejamento</option><option value="preparacao">Preparação</option><option value="abastecimento">Abastecimento</option><option value="fechado">Fechado</option></select>
+              <input [(ngModel)]="banqueteForm.fornecedor" name="fornecedor" placeholder="Fornecedor" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
+              <input type="number" [(ngModel)]="banqueteForm.previsao_participantes" name="quantidade" placeholder="Previsão de participantes" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
+              <input type="number" step=".01" [(ngModel)]="banqueteForm.valor_unitario_previsto" name="unitario" placeholder="Valor unitário" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
+              <input type="number" step=".01" [(ngModel)]="banqueteForm.custo_previsto" name="custoPrevisto" placeholder="Custo previsto" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
+              <input type="number" step=".01" [(ngModel)]="banqueteForm.valor_arrecadado" name="arrecadado" placeholder="Valor arrecadado" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
+              <input type="number" step=".01" [(ngModel)]="banqueteForm.custo_real" name="custoReal" placeholder="Custo real" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
+              <input [(ngModel)]="banqueteForm.forma_pagamento" name="formaPagamento" placeholder="Forma de pagamento" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
+              <select [(ngModel)]="banqueteForm.fluxo_financeiro" name="fluxoFinanceiro" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white"><option value="rateio_particular">Rateio particular</option><option value="caixa_loja">Caixa da Loja</option><option value="dispensa_ressarcimento">Dispensa de ressarcimento</option></select>
+              <select [(ngModel)]="banqueteForm.financeiro_status" name="financeiroStatus" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white"><option value="planejado">Planejado</option><option value="a_receber">A receber</option><option value="a_pagar">A pagar</option><option value="conciliado">Conciliado</option></select>
+              <input [(ngModel)]="banqueteForm.responsavel_pagamento" name="responsavelPagamento" placeholder="Responsável pelo pagamento" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
+            </div>
+            <textarea [(ngModel)]="banqueteForm.financeiro_observacoes" name="financeiroObservacoes" placeholder="Observações financeiras" class="min-h-20 w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white focus:outline-none"></textarea>
+            <textarea [(ngModel)]="banqueteForm.observacoes" name="observacoes" placeholder="Observações operacionais" class="min-h-24 w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white focus:outline-none"></textarea>
+            <button type="submit" class="mt-2 rounded-xl bg-liturgical-gold px-4 py-3 text-xs font-bold uppercase text-slate-950">Salvar operação</button>
+          </form>
+
+          <div class="space-y-6">
+            <div class="space-y-3 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
+              <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Participantes do ágape</h3>
+              @for (p of (ban.participantes_agape || []); track p.id || p.nome) {
+                <div class="rounded-xl bg-white/[0.03] p-3">
+                  <b class="text-sm text-white">{{ p.nome }}</b>
+                  <small class="block text-slate-400">CIM {{ p.cim || '-' }}</small>
+                </div>
+              } @empty {
+                <p class="text-xs text-slate-400">Nenhum participante.</p>
+              }
+            </div>
+
+            <div class="space-y-3 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
+              <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Confirmados sem ágape</h3>
+              @for (p of (ban.confirmados_sem_agape || []); track p.id || p.nome) {
+                <div class="rounded-xl bg-white/[0.03] p-3 text-sm text-white">{{ p.nome }}</div>
+              } @empty {
+                <p class="text-xs text-emerald-400">Nenhuma divergência.</p>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

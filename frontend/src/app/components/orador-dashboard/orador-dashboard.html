@@ -1,0 +1,198 @@
+<div class="space-y-6 animate-fade-in">
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <span class="block text-[10px] font-bold uppercase tracking-widest text-liturgical-gold">Painel de Oficiais</span>
+      <h1 class="mt-1 font-cinzel text-2xl font-bold tracking-widest text-white md:text-3xl">Orador</h1>
+      <p class="mt-1 text-xs uppercase tracking-wider text-slate-400">Guardião da lei, conclusões das sessões, saudações a visitantes e pauta ritual</p>
+    </div>
+  </div>
+
+  @if (successMsg(); as msg) {
+    <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-400">{{ msg }}</div>
+  }
+
+  @if (errorMsg(); as msg) {
+    <div class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-400">{{ msg }}</div>
+  }
+
+  @if (loading()) {
+    <div class="flex flex-col items-center justify-center space-y-4 py-20 text-slate-400">
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-liturgical-gold border-t-transparent"></div>
+      <p class="text-[10px] font-bold uppercase tracking-wider">Carregando painel...</p>
+    </div>
+  } @else {
+    @if (dataOrador(); as ora) {
+      <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div class="space-y-6 xl:col-span-2">
+          <div class="space-y-4 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Sessão em foco</h3>
+                <p class="mt-1 text-[10px] text-slate-400">Selecione a sessão para revisar pauta, visitantes e composição ritualística.</p>
+              </div>
+              <div class="w-full lg:w-80">
+                <label class="mb-2 block text-[9px] font-bold uppercase tracking-widest text-slate-500">Selecionar sessão</label>
+                <select
+                  class="w-full rounded-xl border border-white/10 bg-[#111a31] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-liturgical-gold/50"
+                  [value]="selectedSessaoId() || ''"
+                  (change)="onSessaoChange($event)">
+                  <option value="">Próxima sessão disponível</option>
+                  @for (sessao of (ora.sessoes || []); track sessao.id) {
+                    <option [value]="sessao.id">
+                      {{ sessao.titulo || (sessao.tipo_sessao + ' - ' + sessao.grau_sessao) }} · {{ sessao.data_hora_inicio || 'Sem data' }}
+                    </option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="mt-4 space-y-4 rounded-2xl border border-white/5 bg-white/[0.02] p-5">
+              <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p class="text-lg font-bold text-white">
+                    {{ ora.sessao_foco?.titulo || ((ora.sessao_foco?.tipo_sessao || 'Sessão') + ' - ' + (ora.sessao_foco?.grau_sessao || '')) }}
+                  </p>
+                  <p class="mt-1 text-xs text-slate-400">{{ ora.sessao_foco?.data_hora_inicio || 'Data ainda não registrada.' }}</p>
+                </div>
+                <div class="flex flex-wrap gap-2 text-[11px] uppercase tracking-wider">
+                  <span class="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-slate-300">{{ ora.sessao_foco?.grau_sessao || '-' }}</span>
+                  <span class="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-slate-300">{{ ora.sessao_foco?.tipo_sessao || '-' }}</span>
+                  <span class="rounded-full border border-liturgical-gold/20 bg-liturgical-gold/10 px-3 py-1 text-liturgical-gold">{{ ora.sessao_foco?.status || '-' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-4 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
+            <div class="border-b border-white/5 pb-3">
+              <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Resumo ritual</h3>
+              <p class="mt-1 text-[10px] text-slate-400">Ordem do dia, pauta resumida e orientação para a palavra a bem da ordem.</p>
+            </div>
+            <div class="rounded-2xl border border-white/5 bg-white/[0.02] p-5 text-sm leading-relaxed text-slate-300">
+              {{ ora.sessao_foco?.ordem_dia || ora.sessao_foco?.resumo_publico || 'Sem resumo ritual registrado para a sessão em foco.' }}
+            </div>
+          </div>
+
+          <div class="space-y-4 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
+            <div class="flex items-center justify-between gap-3 border-b border-white/5 pb-3">
+              <div>
+                <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Visitantes registrados</h3>
+                <p class="mt-1 text-[10px] text-slate-400">Nominata resumida vinda da Chancelaria para saudação e agradecimento.</p>
+              </div>
+              <div class="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-slate-300">
+                {{ (ora.visitantes || []).length }} visitante(s)
+              </div>
+            </div>
+
+            @if ((ora.visitantes || []).length === 0) {
+              <div class="rounded-2xl border border-dashed border-white/10 bg-white/[0.01] px-4 py-5 text-sm text-slate-500">
+                Nenhum visitante resumido para esta sessão.
+              </div>
+            } @else {
+              <div class="grid grid-cols-1 gap-3">
+                @for (visitante of (ora.visitantes || []); track visitante.nome + visitante.linha_resumida) {
+                  <div class="space-y-2 rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                    <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <p class="text-sm font-bold text-white">{{ visitante.nome || 'Visitante' }}</p>
+                        <p class="mt-1 text-xs text-slate-400">{{ visitante.linha_resumida || 'Sem detalhes adicionais.' }}</p>
+                      </div>
+                      <div class="h-max rounded-xl border border-liturgical-gold/20 bg-liturgical-gold/10 px-3 py-2 text-[11px] text-liturgical-gold">
+                        Sugestão de saudação: agradecer nominalmente e registrar Loja/Potência.
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div class="space-y-4 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
+              <div class="border-b border-white/5 pb-3">
+                <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Composição de cargos</h3>
+                <p class="mt-1 text-[10px] text-slate-400">Cargos em Loja na sessão e destaque para ocupação ad hoc.</p>
+              </div>
+              @if ((ora.cargos_sessao || []).length === 0) {
+                <div class="rounded-2xl border border-dashed border-white/10 bg-white/[0.01] px-4 py-5 text-sm text-slate-500">
+                  Sem composição de cargos registrada.
+                </div>
+              } @else {
+                <div class="space-y-3">
+                  @for (cargo of (ora.cargos_sessao || []); track cargo.cargo_nome + cargo.ocupante_nome) {
+                    <div class="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                      <div class="flex items-center justify-between gap-3">
+                        <p class="text-sm font-bold text-white">{{ cargo.cargo_nome || 'Cargo' }}</p>
+                        <span
+                          class="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest"
+                          [class.bg-amber-500/10]="cargo.tipo_ocupacao === 'ad_hoc'"
+                          [class.text-amber-300]="cargo.tipo_ocupacao === 'ad_hoc'"
+                          [class.bg-white/5]="cargo.tipo_ocupacao !== 'ad_hoc'"
+                          [class.text-slate-400]="cargo.tipo_ocupacao !== 'ad_hoc'">
+                          {{ cargo.tipo_ocupacao || 'regular' }}
+                        </span>
+                      </div>
+                      <p class="mt-2 text-xs text-slate-400">{{ cargo.ocupante_nome || 'Sem ocupante definido' }}</p>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="space-y-4 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
+              <div class="border-b border-white/5 pb-3">
+                <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Atividades e eventos</h3>
+                <p class="mt-1 text-[10px] text-slate-400">Congressos, palestras e registros extraídos do balaustre.</p>
+              </div>
+              @if ((ora.eventos_sessao || []).length === 0) {
+                <div class="rounded-2xl border border-dashed border-white/10 bg-white/[0.01] px-4 py-5 text-sm text-slate-500">
+                  Nenhuma atividade registrada nesta sessão.
+                </div>
+              } @else {
+                <div class="space-y-3">
+                  @for (evento of (ora.eventos_sessao || []); track evento.titulo + evento.linha) {
+                    <div class="space-y-2 rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                      <div class="flex items-center justify-between gap-3">
+                        <p class="text-sm font-bold text-white">{{ evento.titulo || 'Atividade' }}</p>
+                        <span class="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ evento.tipo || 'evento' }}</span>
+                      </div>
+                      <p class="text-xs text-slate-400">{{ evento.linha || 'Sem resumo adicional.' }}</p>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="space-y-4 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
+            <div class="border-b border-white/5 pb-3">
+              <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Lembretes do cargo</h3>
+              <p class="mt-1 text-[10px] text-slate-400">Orientações dinâmicas para condução da palavra e fechamento ritual.</p>
+            </div>
+            <div class="space-y-3">
+              @for (lembrete of (ora.lembretes || []); track lembrete) {
+                <div class="rounded-2xl border border-white/5 bg-white/[0.02] p-4 text-sm leading-relaxed text-slate-300">
+                  {{ lembrete }}
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="space-y-4 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
+            <div class="border-b border-white/5 pb-3">
+              <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Instruções de uso</h3>
+            </div>
+            <ul class="space-y-3 text-sm leading-relaxed text-slate-300">
+              <li class="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">Selecione a sessão em foco para alinhar pauta, visitantes e composição ritual.</li>
+              <li class="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">Use o resumo ritual como roteiro base para a palavra a bem da ordem.</li>
+              <li class="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">Confira visitantes e cargos ad hoc antes da menção em Loja.</li>
+              <li class="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">Revise os lembretes antes da abertura dos trabalhos e do encerramento ritualístico.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

@@ -13,6 +13,7 @@ use App\Models\TrabalhoSubmissao;
 use App\Models\PublicacaoSecretaria;
 use App\Models\ConfiguracaoLoja;
 use App\Models\Cargo;
+use App\Models\ConviteExterno;
 use PDO;
 
 class SecretariaApiRoutes
@@ -34,6 +35,11 @@ class SecretariaApiRoutes
         if (str_contains($requestUri, '/api/secretaria/obreiros')) {
             // Operações de listagem/visualização podem exigir apenas obreiros.view
             $permissaoRequerida = ($method === 'GET') ? 'obreiros.view' : 'obreiros.manage';
+        } elseif (
+            $requestUri === '/api/secretaria/votacao'
+            || preg_match('~^/api/secretaria/sessoes/\d+/balaustre/votar$~', $requestUri)
+        ) {
+            $permissaoRequerida = 'dashboard.view';
         }
 
         // Executa validação de JWT/Sessão e Permissão
@@ -81,6 +87,125 @@ class SecretariaApiRoutes
             return true;
         }
 
+        if ($requestUri === '/api/secretaria/convites-externos' && $method === 'GET') {
+            $model = new ConviteExterno();
+            $convites = $model->listarRecentes(80);
+            foreach ($convites as &$convite) {
+                $convite['confirmados'] = $model->listarConfirmados((int) $convite['id']);
+            }
+            unset($convite);
+            JsonResponse::send(['ok' => true, 'convites' => $convites]);
+            return true;
+        }
+
+        if ($requestUri === '/api/secretaria/convites-externos' && $method === 'POST') {
+            $body = RequestBody::json();
+            $arquivo = is_array($body['anexo'] ?? null) ? $body['anexo'] : [];
+            unset($body['anexo']);
+            $ok = (new ConviteExterno())->criar($body, $arquivo, (string) $usuarioId);
+            JsonResponse::send([
+                'ok' => $ok,
+                'erro' => $ok ? null : 'Não foi possível registrar o convite externo.',
+            ], $ok ? 200 : 400);
+            return true;
+        }
+
+        if (preg_match('~^/api/secretaria/convites-externos/(\d+)/presenca$~', $requestUri, $m) && $method === 'POST') {
+            $body = RequestBody::json();
+            $ok = (new ConviteExterno())->definirPresenca(
+                (int) $m[1],
+                (string) $usuarioId,
+                trim((string) ($body['status'] ?? 'pendente'))
+            );
+            JsonResponse::send(['ok' => $ok], $ok ? 200 : 400);
+            return true;
+        }
+
+        if (preg_match('~^/api/secretaria/convites-externos/(\d+)/anexo$~', $requestUri, $m) && $method === 'DELETE') {
+            $ok = (new ConviteExterno())->removerAnexo((int) $m[1]);
+            JsonResponse::send(['ok' => $ok], $ok ? 200 : 400);
+            return true;
+        }
+
+        // 1.1 Trabalhos e publicacoes - listar pendencias, recentes e sessoes
+        if ($requestUri === '/api/secretaria/trabalhos-publicacoes' && $method === 'GET') {
+            $pendentes = (new TrabalhoSubmissao())->listarPendentesSecretaria(250);
+            $trabalhosRecentes = (new TrabalhoSessao())->listarRecentes(60);
+            $sessoes = (new Sessao())->listarRecentes(60);
+
+            JsonResponse::send([
+                'ok' => true,
+                'pendentes' => $pendentes,
+                'trabalhos_recentes' => $trabalhosRecentes,
+                'sessoes' => $sessoes,
+            ]);
+            return true;
+        }
+
+        // 1.2 Trabalhos e publicacoes - arquivar submissao
+        if ($requestUri === '/api/secretaria/trabalhos-publicacoes/arquivar' && $method === 'POST') {
+            $body = RequestBody::json();
+            $id = trim((string) ($body['id'] ?? ''));
+            $payload = [
+                'sessao_id' => (int) ($body['sessao_id'] ?? 0),
+                'tipo_trabalho' => trim((string) ($body['tipo_trabalho'] ?? 'peca_arquitetura')) ?: 'peca_arquitetura',
+                'titulo' => trim((string) ($body['titulo'] ?? '')),
+                'autor_id' => trim((string) ($body['autor_id'] ?? '')) ?: null,
+                'arquivo_pdf_path' => trim((string) ($body['arquivo_pdf_path'] ?? '')) ?: null,
+                'status_envio_potencia' => trim((string) ($body['status_envio_potencia'] ?? 'pendente')) ?: 'pendente',
+                'observacao' => trim((string) ($body['observacao'] ?? '')) ?: null,
+            ];
+
+            if ($id === '' || $payload['sessao_id'] <= 0 || $payload['titulo'] === '' || ($payload['arquivo_pdf_path'] ?? '') === null) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Preencha sessão, título e arquivo PDF antes de arquivar.']);
+                return true;
+            }
+
+            $ok = (new TrabalhoSubmissao())->arquivarSecretaria($id, (string) ($usuarioId ?? ''), $payload);
+
+            JsonResponse::send([
+                'ok' => $ok,
+                'erro' => $ok ? null : 'Não foi possível arquivar agora.'
+            ]);
+            return true;
+        }
+
+        // 1.3 Balaustres em votacao - listar votacoes abertas para o obreiro atual
+        if ($requestUri === '/api/secretaria/votacao' && $method === 'GET') {
+            $balaustreModel = new Balaustre();
+            $usuarioUuidValido = is_string($usuarioId) && (bool) preg_match(
+                '/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/',
+                trim($usuarioId)
+            );
+            $roles = array_values(array_unique(array_map(
+                static fn ($role) => strtolower((string) $role),
+                $session['usuario_cargos'] ?? [$session['usuario_cargo'] ?? '']
+            )));
+
+            $podeAcompanharTodas = in_array('secretario', $roles, true)
+                || in_array('veneravel', $roles, true);
+
+            $votacoesAbertas = $balaustreModel->listarAbertosParaObreiro((string) $usuarioId, $podeAcompanharTodas);
+            $votacoesAbertas = array_map(static function (array $row) use ($balaustreModel): array {
+                $balaustreCompleto = $balaustreModel->buscarPorId((int) ($row['id'] ?? 0));
+                $row['sessao_id'] = (int) ($balaustreCompleto['sessao_id'] ?? 0);
+                return $row;
+            }, $votacoesAbertas);
+            $elegibilidadeVoto = $usuarioUuidValido
+                ? $balaustreModel->listarElegibilidadeDoObreiroNosBalaustres(
+                    (string) $usuarioId,
+                    array_map(static fn ($row) => (int) ($row['id'] ?? 0), $votacoesAbertas)
+                )
+                : [];
+
+            JsonResponse::send([
+                'ok' => true,
+                'votacoes_abertas' => $votacoesAbertas,
+                'elegibilidade_voto' => $elegibilidadeVoto,
+            ]);
+            return true;
+        }
+
         // 2. Obreiros - Listar
         if ($requestUri === '/api/secretaria/obreiros' && $method === 'GET') {
             $obreiroModel = new Obreiro();
@@ -111,6 +236,15 @@ class SecretariaApiRoutes
         if (preg_match('~^/api/secretaria/obreiros/([0-9a-fA-F-]{36})$~', $requestUri, $m) && $method === 'GET') {
             $obreiroModel = new Obreiro();
             $obreiro = $obreiroModel->findById($m[1]);
+            if ($obreiro !== null) {
+                unset(
+                    $obreiro['senha'],
+                    $obreiro['senha_hash'],
+                    $obreiro['password'],
+                    $obreiro['password_hash'],
+                    $obreiro['auth_user_id']
+                );
+            }
             JsonResponse::send([
                 'ok' => $obreiro !== null,
                 'obreiro' => $obreiro

@@ -18,15 +18,12 @@ export class Login implements OnInit {
   private router = inject(Router);
   private http = inject(HttpClient);
 
-  // Estados dos inputs de formulário
-  protected email = signal('');
+  protected identifier = signal('');
   protected password = signal('');
-  
-  // Estados de controle visual
+
   protected errorMsg = signal<string | null>(null);
   protected loading = signal(false);
 
-  // Estados do Portal Público
   protected tenant = signal<any | null>(null);
   protected conteudos = signal<any[]>([]);
   protected ads = signal<any[]>([]);
@@ -48,7 +45,7 @@ export class Login implements OnInit {
         }
       },
       error: (err) => {
-        console.error('[Landing] Erro ao carregar dados públicos:', err);
+        console.error('[Landing] Erro ao carregar dados publicos:', err);
       }
     });
   }
@@ -71,32 +68,33 @@ export class Login implements OnInit {
   }
 
   protected onSubmit(): void {
-    const emailVal = this.email().trim();
+    const identifierVal = this.identifier().trim();
     const passwordVal = this.password().trim();
 
-    if (!emailVal || !passwordVal) {
-      this.errorMsg.set('Informe o e-mail e a senha para acessar.');
+    if (!identifierVal || !passwordVal) {
+      this.errorMsg.set('Informe o C.I.M. ou e-mail tecnico e a senha para acessar.');
       return;
     }
 
     this.loading.set(true);
     this.errorMsg.set(null);
 
-    this.supabaseService.login(emailVal, passwordVal).subscribe({
+    this.supabaseService.login(identifierVal, passwordVal).subscribe({
       next: () => {
         this.router.navigate(['/dashboard']);
       },
       error: (err: any) => {
         console.error('Falha ao autenticar:', err);
         this.supabaseService.clearLocalAuth();
-        
+
         if (err.status === 400 || err.message?.includes('Invalid login credentials')) {
-          this.errorMsg.set('E-mail ou senha incorretos.');
-        } else if (err.status === 403 || err.status === 404 || err.message?.includes('vinculada')) {
-          this.errorMsg.set('Esta conta não possui um perfil ativo vinculado ao Gestor-Loja.');
+          this.errorMsg.set('C.I.M./e-mail ou senha incorretos.');
+        } else if (err.status === 403 || err.status === 404 || err.status === 409 || err.message?.includes('vinculada')) {
+          this.errorMsg.set(err.error?.erro || err.message || 'Esta conta nao possui um perfil ativo vinculado ao Gestor-Loja.');
         } else {
           this.errorMsg.set(err.message || 'Ocorreu um erro ao tentar entrar. Tente novamente.');
         }
+
         this.loading.set(false);
       }
     });

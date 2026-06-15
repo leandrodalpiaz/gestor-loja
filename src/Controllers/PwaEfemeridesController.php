@@ -21,10 +21,10 @@ class PwaEfemeridesController
         }
 
         $tipos = [
-            'aniversario' => 'Aniversario',
-            'data_maconica' => 'Data maconica',
-            'historico' => 'Fato historico',
-            'familia' => 'Familia',
+            'aniversario' => 'Aniversário',
+            'data_maconica' => 'Data maçônica',
+            'historico' => 'Fato histórico',
+            'familia' => 'Família',
             'outro' => 'Outro',
         ];
         $vinculos = $model->getVinculosPadrao();
@@ -49,8 +49,8 @@ class PwaEfemeridesController
             : $model->create($_POST, $this->currentUserIntOrNull());
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Efemeride salva com sucesso.'
-            : 'Nao foi possivel salvar a efemeride.';
+            ? 'Efeméride salva com sucesso.'
+            : 'Não foi possível salvar a efeméride.';
 
         header('Location: /pwa/chancelaria/efemerides');
         exit;
@@ -66,8 +66,8 @@ class PwaEfemeridesController
         $id = (int) ($_POST['id'] ?? 0);
         $ok = $id > 0 && (new EfemerideRegistro())->desativar($id);
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Efemeride desativada.'
-            : 'Nao foi possivel desativar a efemeride.';
+            ? 'Efeméride desativada.'
+            : 'Não foi possível desativar a efeméride.';
 
         header('Location: /pwa/chancelaria/efemerides');
         exit;
@@ -83,8 +83,8 @@ class PwaEfemeridesController
         $id = (int) ($_POST['id'] ?? 0);
         $ok = $id > 0 && (new EfemerideRegistro())->excluir($id);
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
-            ? 'Efemeride excluida.'
-            : 'Nao foi possivel excluir a efemeride.';
+            ? 'Efeméride excluída.'
+            : 'Não foi possível excluir a efeméride.';
 
         header('Location: /pwa/chancelaria/efemerides');
         exit;
