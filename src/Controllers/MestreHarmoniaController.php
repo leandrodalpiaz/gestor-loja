@@ -261,6 +261,10 @@ class MestreHarmoniaController
             case 'volume_down':
                 $estado['volume_percent'] = max(0, ((int) ($estado['volume_percent'] ?? 100)) - 10);
                 break;
+            case 'definir_volume':
+                $vol = isset($dados['volume']) ? (int) $dados['volume'] : 100;
+                $estado['volume_percent'] = max(0, min(100, $vol));
+                break;
             default:
                 return ['ok' => false, 'erro' => 'Ação do player não reconhecida.'];
         }

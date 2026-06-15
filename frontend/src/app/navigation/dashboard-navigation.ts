@@ -66,7 +66,6 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationSection[] = [
     items: [
       { label: 'Sessão da Chancelaria', target: 'angular', path: '/dashboard/chancelaria/sessao', permission: 'chancelaria.manage' },
       { label: 'Efemérides', target: 'angular', path: '/dashboard/chancelaria/efemerides', permission: 'chancelaria.manage' },
-      { label: 'Visitantes', target: 'angular', path: '/dashboard/chancelaria/visitantes', permission: 'chancelaria.manage' },
       { label: 'Emitir Certificado', target: 'angular', path: '/dashboard/chancelaria/certificado', permission: 'chancelaria.manage' },
     ],
   },

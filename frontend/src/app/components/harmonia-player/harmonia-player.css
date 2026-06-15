@@ -26,12 +26,97 @@
   animation: eq-height-3 0.7s ease-in-out infinite;
 }
 
-/* Vinyl Rotate Animation */
+/* Vinyl Rotate Animation with Smooth Pause/Resume */
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-.animate-vinyl-spin {
-  animation: spin-slow 12s linear infinite;
+.harmonia-vinyl-disc {
+  animation: spin-slow 16s linear infinite;
+  animation-play-state: paused;
+}
+
+.harmonia-vinyl-disc.playing {
+  animation-play-state: running;
+}
+
+/* Glow Effect for Playing Card */
+.active-shadow-glow {
+  box-shadow: 0 15px 35px -5px rgba(201, 162, 39, 0.15);
+  border-color: rgba(201, 162, 39, 0.25) !important;
+  transition: all 0.5s ease-in-out;
+}
+
+/* Custom Scrollbar for Session and Track Lists */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.01);
+  border-radius: 99px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  transition: background 0.2s;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 162, 39, 0.35);
+}
+
+/* Styled Volume Range Slider */
+input[type="range"].harmonia-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.08);
+  height: 5px;
+  border-radius: 9999px;
+  outline: none;
+  transition: background 0.3s;
+}
+
+input[type="range"].harmonia-volume-slider:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Webkit Thumb (Chrome, Safari, Edge, Opera) */
+input[type="range"].harmonia-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 99px;
+  background: #C9A227; /* Liturgical Gold */
+  cursor: pointer;
+  border: 2px solid #050B14; /* Liturgical Bg */
+  box-shadow: 0 0 8px rgba(201, 162, 39, 0.4);
+  transition: transform 0.1s ease-in-out, background-color 0.2s;
+}
+
+input[type="range"].harmonia-volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.3);
+  background: #dfb32b;
+  box-shadow: 0 0 10px rgba(201, 162, 39, 0.6);
+}
+
+/* Firefox Thumb */
+input[type="range"].harmonia-volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 99px;
+  background: #C9A227;
+  cursor: pointer;
+  border: 2px solid #050B14;
+  box-shadow: 0 0 8px rgba(201, 162, 39, 0.4);
+  transition: transform 0.1s ease-in-out, background-color 0.2s;
+}
+
+input[type="range"].harmonia-volume-slider::-moz-range-thumb:hover {
+  transform: scale(1.3);
+  background: #dfb32b;
+  box-shadow: 0 0 10px rgba(201, 162, 39, 0.6);
 }

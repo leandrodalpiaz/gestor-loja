@@ -96,7 +96,7 @@ class HarmoniaOperacao
             'faixa_atual_titulo' => $dados['faixa_atual_titulo'] ?? null,
             'status_player' => $dados['status_player'] ?? 'parado',
             'volume_percent' => $dados['volume_percent'] ?? 100,
-            'auto_proxima' => !empty($dados['auto_proxima']),
+            'auto_proxima' => !empty($dados['auto_proxima']) ? 1 : 0,
         ]);
     }
 }

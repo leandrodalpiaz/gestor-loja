@@ -15,7 +15,6 @@ import { TrilhaGraus } from './components/trilha-graus/trilha-graus';
 import { MinhaLoja } from './components/minha-loja/minha-loja';
 import { SecretariaBalaustres } from './components/secretaria-balaustres/secretaria-balaustres';
 import { TesourariaObrigacoes } from './components/tesouraria-obrigacoes/tesouraria-obrigacoes';
-import { ChancelariaVisitantes } from './components/chancelaria-visitantes/chancelaria-visitantes';
 import { CargosGestao } from './components/cargos-gestao/cargos-gestao';
 import { BibliotecaAcervo } from './components/biblioteca-acervo/biblioteca-acervo';
 import { SistemaConfig } from './components/sistema-config/sistema-config';
@@ -86,7 +85,6 @@ export const routes: Routes = [
       { path: 'loja/irmaos', component: MinhaLoja, data: { lojaTab: 'irmaos' } },
       { path: 'secretaria/balaustres', component: SecretariaBalaustres },
       { path: 'tesouraria/obrigacoes', component: TesourariaObrigacoes },
-      { path: 'chancelaria/visitantes', component: ChancelariaVisitantes },
       { path: 'cargos', component: CargosGestao },
       { path: 'biblioteca/acervo', component: BibliotecaAcervo },
       { path: 'biblioteca/emprestimos', component: BibliotecaAcervo, data: { bibliotecaTab: 'meus' } },
