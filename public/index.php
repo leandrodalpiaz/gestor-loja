@@ -36,6 +36,9 @@ use App\Core\Http\SecretariaApiRoutes;
 use App\Core\Http\TesourariaApiRoutes;
 use App\Core\Http\ChancelariaApiRoutes;
 use App\Core\Http\HarmoniaApiRoutes;
+use App\Core\Http\AdminApiRoutes;
+use App\Core\Http\ObreiroApiRoutes;
+use App\Core\Http\VeneravelApiRoutes;
 use App\Core\Http\TesourariaRoutes;
 use App\Core\Http\VigilanciaRoutes;
 use App\Core\Http\WebGuards;
@@ -980,6 +983,156 @@ $requireSecretariaApiAccess = static function (string $permission = 'secretaria.
     }
 };
 
+$requireObreiroApiAccess = static function (string $permission = 'dashboard.view') use (
+    $openTestAccess,
+    $resolveAuthorizedTelegramObreiro,
+    $loginTelegramObreiroInSession,
+    $sessionHasPermission,
+    &$jsonError,
+    &$authorizer,
+    $syncSessionRoles,
+    $syncTenantSessionFromObreiro
+): void {
+    $authHeader = getAuthorizationHeader();
+    $token = null;
+    if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
+        $token = $matches[1];
+    }
+
+    if ($token) {
+        $identity = \App\Core\Auth\SupabaseIdentityResolver::resolve($token);
+        if (!$identity) {
+            $jsonError('Token inválido ou expirado.', 401);
+        }
+
+        $obreiro = $identity['obreiro'];
+        $_SESSION['usuario_logado'] = $obreiro;
+        $_SESSION['usuario_id'] = $obreiro['id'];
+        $_SESSION['usuario_nome'] = $obreiro['nome_historico'] ?? $obreiro['nome'];
+
+        $syncTenantSessionFromObreiro($obreiro);
+        $syncSessionRoles($obreiro);
+
+        $permissionMap = new \App\Core\Authorization\PermissionMap();
+        $normalizeRole = $GLOBALS['gestor_loja_normalize_role'] ?? static fn ($role) => strtolower(trim((string) $role));
+        $currentUser = new \App\Core\Auth\CurrentUser($_SESSION, $normalizeRole);
+        $authorizer = new \App\Core\Authorization\Authorizer($currentUser, $permissionMap, false);
+    }
+
+    if (!$token && !$openTestAccess && !isset($_SESSION['usuario_logado'])) {
+        $telegramObreiro = $resolveAuthorizedTelegramObreiro('obreiro', 'secretario', 'tesoureiro', 'chanceler', 'veneravel', 'admin', 'bibliotecario', 'primeiro_vigilante', 'segundo_vigilante', 'hospitaleiro', 'orador', 'mestre_banquetes', 'mestre_harmonia', 'mestre_de_harmonia');
+        if (!$telegramObreiro) {
+            $jsonError('Nao autenticado.', 401);
+        }
+
+        $loginTelegramObreiroInSession($telegramObreiro);
+    }
+
+    if ($permission && !$sessionHasPermission($permission)) {
+        $jsonError('Esta ação requer a permissão: ' . $permission, 403);
+    }
+};
+
+$requireVeneravelApiAccess = static function (string $permission = 'veneravel.manage') use (
+    $openTestAccess,
+    $resolveAuthorizedTelegramObreiro,
+    $loginTelegramObreiroInSession,
+    $sessionHasPermission,
+    &$jsonError,
+    &$authorizer,
+    $syncSessionRoles,
+    $syncTenantSessionFromObreiro
+): void {
+    $authHeader = getAuthorizationHeader();
+    $token = null;
+    if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
+        $token = $matches[1];
+    }
+
+    if ($token) {
+        $identity = \App\Core\Auth\SupabaseIdentityResolver::resolve($token);
+        if (!$identity) {
+            $jsonError('Token inválido ou expirado.', 401);
+        }
+
+        $obreiro = $identity['obreiro'];
+        $_SESSION['usuario_logado'] = $obreiro;
+        $_SESSION['usuario_id'] = $obreiro['id'];
+        $_SESSION['usuario_nome'] = $obreiro['nome_historico'] ?? $obreiro['nome'];
+
+        $syncTenantSessionFromObreiro($obreiro);
+        $syncSessionRoles($obreiro);
+
+        $permissionMap = new \App\Core\Authorization\PermissionMap();
+        $normalizeRole = $GLOBALS['gestor_loja_normalize_role'] ?? static fn ($role) => strtolower(trim((string) $role));
+        $currentUser = new \App\Core\Auth\CurrentUser($_SESSION, $normalizeRole);
+        $authorizer = new \App\Core\Authorization\Authorizer($currentUser, $permissionMap, false);
+    }
+
+    if (!$token && !$openTestAccess && !isset($_SESSION['usuario_logado'])) {
+        $telegramObreiro = $resolveAuthorizedTelegramObreiro('veneravel', 'admin');
+        if (!$telegramObreiro) {
+            $jsonError('Nao autenticado.', 401);
+        }
+
+        $loginTelegramObreiroInSession($telegramObreiro);
+    }
+
+    if ($permission && !$sessionHasPermission($permission)) {
+        $jsonError('Esta ação requer a permissão: ' . $permission, 403);
+    }
+};
+
+$requireAdminApiAccess = static function (string $permission = 'admin') use (
+    $openTestAccess,
+    $resolveAuthorizedTelegramObreiro,
+    $loginTelegramObreiroInSession,
+    $sessionHasPermission,
+    &$jsonError,
+    &$authorizer,
+    $syncSessionRoles,
+    $syncTenantSessionFromObreiro
+): void {
+    $authHeader = getAuthorizationHeader();
+    $token = null;
+    if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
+        $token = $matches[1];
+    }
+
+    if ($token) {
+        $identity = \App\Core\Auth\SupabaseIdentityResolver::resolve($token);
+        if (!$identity) {
+            $jsonError('Token inválido ou expirado.', 401);
+        }
+
+        $obreiro = $identity['obreiro'];
+        $_SESSION['usuario_logado'] = $obreiro;
+        $_SESSION['usuario_id'] = $obreiro['id'];
+        $_SESSION['usuario_nome'] = $obreiro['nome_historico'] ?? $obreiro['nome'];
+
+        $syncTenantSessionFromObreiro($obreiro);
+        $syncSessionRoles($obreiro);
+
+        $permissionMap = new \App\Core\Authorization\PermissionMap();
+        $normalizeRole = $GLOBALS['gestor_loja_normalize_role'] ?? static fn ($role) => strtolower(trim((string) $role));
+        $currentUser = new \App\Core\Auth\CurrentUser($_SESSION, $normalizeRole);
+        $authorizer = new \App\Core\Authorization\Authorizer($currentUser, $permissionMap, false);
+    }
+
+    if (!$token && !$openTestAccess && !isset($_SESSION['usuario_logado'])) {
+        $telegramObreiro = $resolveAuthorizedTelegramObreiro('admin');
+        if (!$telegramObreiro) {
+            $jsonError('Nao autenticado.', 401);
+        }
+
+        $loginTelegramObreiroInSession($telegramObreiro);
+    }
+
+    if ($permission && !$sessionHasPermission($permission)) {
+        $jsonError('Esta ação requer a permissão: ' . $permission, 403);
+    }
+};
+
 $getJsonBody = static function (): array {
     return RequestBody::json();
 };
@@ -1521,6 +1674,32 @@ if (SecretariaApiRoutes::dispatch(
     $method,
     $_SESSION,
     $requireSecretariaApiAccess
+)) {
+    return;
+}
+
+if (ObreiroApiRoutes::dispatch(
+    $requestUri,
+    $method,
+    $_SESSION,
+    $requireObreiroApiAccess
+)) {
+    return;
+}
+
+if (VeneravelApiRoutes::dispatch(
+    $requestUri,
+    $method,
+    $_SESSION,
+    $requireVeneravelApiAccess
+)) {
+    return;
+}
+
+if (AdminApiRoutes::dispatch(
+    $requestUri,
+    $method,
+    $requireAdminApiAccess
 )) {
     return;
 }

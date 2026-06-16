@@ -1,19 +1,28 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { SupabaseService } from '../../services/supabase.service';
 import { environment } from '../../../environments/environment';
 import { DASHBOARD_NAVIGATION } from '../../navigation/dashboard-navigation';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-dashboard-home',
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './dashboard-home.html',
-  styleUrl: './dashboard-home.css'
+  styleUrl: './dashboard-home.css',
+  animations: [
+    trigger('cardTransition', [
+      transition('* => *', [
+        style({ opacity: 0, transform: 'scale(0.97) translateY(4px)' }),
+        animate('350ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'scale(1) translateY(0)' }))
+      ])
+    ])
+  ]
 })
-export class DashboardHome implements OnInit {
+export class DashboardHome implements OnInit, OnDestroy {
   protected supabaseService = inject(SupabaseService);
   private http = inject(HttpClient);
   protected apiUrl = environment.apiUrl;
@@ -22,6 +31,16 @@ export class DashboardHome implements OnInit {
   protected dashboardData = signal<any>(null);
   protected loading = signal(true);
   protected errorMsg = signal<string | null>(null);
+
+  // Calendar State
+  protected calendarDays = signal<any[]>([]);
+  protected currentMonthYearLabel = '';
+  protected selectedDayEvents = signal<any | null>(null);
+
+  // Highlights & Ephemerides unified carousel
+  protected displayCards = signal<any[]>([]);
+  protected activeCardIndex = signal(0);
+  private cycleTimer: any;
 
   ngOnInit(): void {
     const today = new Date();
@@ -34,17 +53,17 @@ export class DashboardHome implements OnInit {
     this.loadDashboard();
   }
 
+  ngOnDestroy(): void {
+    if (this.cycleTimer) {
+      clearInterval(this.cycleTimer);
+    }
+  }
+
   protected loadDashboard(): void {
     this.loading.set(true);
     this.errorMsg.set(null);
 
-    const profile = this.supabaseService.profile();
-    const isSystemAdmin = profile?.is_system_admin === true
-      || profile?.cargo_principal === 'admin'
-      || profile?.cargos?.includes?.('admin');
-    const url = isSystemAdmin
-      ? `${environment.apiUrl}/api/miniapp/admin/dashboard`
-      : `${environment.apiUrl}/api/obreiro/dashboard`;
+    const url = `${environment.apiUrl}/api/obreiro/dashboard`;
 
     this.http.get<any>(url, {
       headers: this.supabaseService.getAuthHeaders()
@@ -52,7 +71,9 @@ export class DashboardHome implements OnInit {
       next: (res) => {
         this.loading.set(false);
         if (res?.ok) {
-          this.dashboardData.set(this.normalizeDashboardResponse(res, isSystemAdmin));
+          this.dashboardData.set(res);
+          this.buildCalendar();
+          this.setupDisplayCards(res);
           return;
         }
 
@@ -60,13 +81,122 @@ export class DashboardHome implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        if (isSystemAdmin) {
-          this.dashboardData.set(this.buildEmptyDashboardState());
-          return;
-        }
         this.errorMsg.set(err.error?.erro || 'Falha de conexão.');
       }
     });
+  }
+
+  protected buildCalendar(): void {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+
+    const monthLabel = today.toLocaleDateString('pt-BR', { month: 'long' });
+    this.currentMonthYearLabel = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1) + ' de ' + year;
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+
+    const startDayOfWeek = firstDay.getDay(); // 0: Sunday, 1: Monday, ...
+    const totalDays = lastDay.getDate();
+    const days: any[] = [];
+
+    // Previous month padding
+    for (let i = 0; i < startDayOfWeek; i++) {
+      days.push({ day: null, isCurrentMonth: false });
+    }
+
+    const data = this.dashboardData();
+    const sessoes = data?.sessoes || [];
+    const efemerides = data?.efemerides_cards || [];
+
+    for (let d = 1; d <= totalDays; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      
+      const daySessions = sessoes.filter((s: any) => {
+        if (!s.data_hora_inicio) return false;
+        return s.data_hora_inicio.startsWith(dateStr);
+      });
+
+      const isToday = d === today.getDate();
+      const hasSession = daySessions.length > 0;
+      const hasEfemeride = isToday && efemerides.length > 0;
+
+      days.push({
+        day: d,
+        dateStr,
+        isCurrentMonth: true,
+        isToday,
+        hasSession,
+        hasEfemeride,
+        sessions: daySessions,
+        efemerides: isToday ? efemerides : []
+      });
+    }
+
+    this.calendarDays.set(days);
+
+    // Default selection
+    const todayObj = days.find(day => day.isToday);
+    if (todayObj && (todayObj.hasSession || todayObj.hasEfemeride)) {
+      this.selectedDayEvents.set(todayObj);
+    } else {
+      const firstEventDay = days.find(day => day.isCurrentMonth && day.hasSession);
+      if (firstEventDay) {
+        this.selectedDayEvents.set(firstEventDay);
+      } else if (todayObj) {
+        this.selectedDayEvents.set(todayObj);
+      }
+    }
+  }
+
+  protected selectDay(dayObj: any): void {
+    if (!dayObj || !dayObj.day) return;
+    this.selectedDayEvents.set(dayObj);
+  }
+
+  protected setupDisplayCards(data: any): void {
+    const cards: any[] = [];
+
+    // Add Efemérides cards
+    if (data?.efemerides_cards && data.efemerides_cards.length > 0) {
+      cards.push(...data.efemerides_cards);
+    }
+
+    this.displayCards.set(cards);
+    this.activeCardIndex.set(0);
+    this.startCardCycle(cards.length);
+  }
+
+  private startCardCycle(totalCards: number): void {
+    if (this.cycleTimer) {
+      clearInterval(this.cycleTimer);
+    }
+    if (totalCards <= 1) return;
+
+    this.cycleTimer = setInterval(() => {
+      this.activeCardIndex.update(idx => (idx + 1) % totalCards);
+    }, 7000); // Auto rotate every 7 seconds
+  }
+
+  protected nextCard(): void {
+    const total = this.displayCards().length;
+    if (total <= 1) return;
+    this.activeCardIndex.update(idx => (idx + 1) % total);
+    this.startCardCycle(total);
+  }
+
+  protected prevCard(): void {
+    const total = this.displayCards().length;
+    if (total <= 1) return;
+    this.activeCardIndex.update(idx => (idx === 0 ? total - 1 : idx - 1));
+    this.startCardCycle(total);
+  }
+
+  protected selectCard(index: number): void {
+    const total = this.displayCards().length;
+    this.activeCardIndex.set(index);
+    this.startCardCycle(total);
   }
 
   protected confirmarPresenca(sessaoId: number, acao: 'confirmar' | 'cancelar'): void {
@@ -105,42 +235,6 @@ export class DashboardHome implements OnInit {
     return roles.some(role =>
       userProfile.cargo_principal === role || userProfile.cargos.includes(role)
     );
-  }
-
-  protected getCardsPorCategoria(): { label: string; cards: any[] }[] {
-    const data = this.dashboardData();
-    if (!data?.efemerides_cards) return [];
-
-    const groups: Record<string, any[]> = {};
-
-    for (const card of data.efemerides_cards) {
-      const cat = (card.categoria || 'Geral').trim();
-      const catNorm = cat.toLowerCase();
-      let label = cat;
-
-      if (catNorm.includes('história') || catNorm.includes('historia')) {
-        label = 'Nossa História';
-      } else if (
-        catNorm.includes('aniversário')
-        || catNorm.includes('aniversario')
-        || ['esposa', 'cunhada', 'filho', 'filha', 'sobrinho', 'sobrinha', 'membro', 'irmao', 'irmão', 'familiar'].includes(catNorm)
-      ) {
-        label = 'Aniversariantes do Dia';
-      } else {
-        label = cat.charAt(0).toUpperCase() + cat.slice(1);
-      }
-
-      if (!groups[label]) {
-        groups[label] = [];
-      }
-
-      groups[label].push(card);
-    }
-
-    return Object.keys(groups).map(key => ({
-      label: key,
-      cards: groups[key]
-    }));
   }
 
   protected getAtalhosOperacionais(): any[] {
@@ -208,44 +302,5 @@ export class DashboardHome implements OnInit {
     }
 
     return 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1';
-  }
-
-  private normalizeDashboardResponse(res: any, isSystemAdmin: boolean): any {
-    if (!isSystemAdmin) {
-      return res;
-    }
-
-    const dados = res?.dados ?? {};
-    return {
-      ok: true,
-      configuracao_loja: {
-        nome_loja: dados?.configuracao?.nome_loja || '',
-        numero_loja: dados?.configuracao?.numero_loja || '',
-        cidade: dados?.configuracao?.cidade || '',
-        uf: dados?.configuracao?.uf || '',
-        rito: dados?.configuracao?.rito || '',
-        oriente: dados?.configuracao?.oriente || '',
-        dia_semana_reuniao: 'A definir'
-      },
-      sessoes: [],
-      recados: [],
-      palavra_irmao: '',
-      efemerides_cards: []
-    };
-  }
-
-  private buildEmptyDashboardState(): any {
-    return {
-      ok: true,
-      configuracao_loja: {
-        nome_loja: '',
-        numero_loja: '',
-        dia_semana_reuniao: 'A definir'
-      },
-      sessoes: [],
-      recados: [],
-      palavra_irmao: '',
-      efemerides_cards: []
-    };
   }
 }

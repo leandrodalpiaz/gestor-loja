@@ -1,6 +1,7 @@
 import { Component, computed, inject, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterOutlet, RouterLinkActive } from '@angular/router';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 import { SupabaseService } from '../../services/supabase.service';
 import { environment } from '../../../environments/environment';
 import { DASHBOARD_NAVIGATION, DashboardNavigationItem } from '../../navigation/dashboard-navigation';
@@ -10,7 +11,16 @@ import { DASHBOARD_NAVIGATION, DashboardNavigationItem } from '../../navigation/
   standalone: true,
   imports: [CommonModule, RouterLink, RouterOutlet, RouterLinkActive],
   templateUrl: './dashboard.html',
-  styleUrl: './dashboard.css'
+  styleUrl: './dashboard.css',
+  animations: [
+    trigger('expandCollapse', [
+      state('collapsed', style({ height: '0px', opacity: 0, overflow: 'hidden', padding: '0px', visibility: 'hidden' })),
+      state('expanded', style({ height: '*', opacity: 1, overflow: 'visible', visibility: 'visible' })),
+      transition('collapsed <=> expanded', [
+        animate('250ms cubic-bezier(0.4, 0, 0.2, 1)')
+      ])
+    ])
+  ]
 })
 export class Dashboard implements OnInit {
   protected supabaseService = inject(SupabaseService);

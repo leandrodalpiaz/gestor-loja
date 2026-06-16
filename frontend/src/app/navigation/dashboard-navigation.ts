@@ -24,12 +24,6 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationSection[] = [
       { label: 'Irmãos da Loja', target: 'angular', path: '/dashboard/loja/irmaos', permission: 'dashboard.view' },
       { label: 'Carteirinha', target: 'angular', path: '/dashboard/me/carteirinha', permission: 'dashboard.view' },
       { label: 'Calendário', target: 'angular', path: '/dashboard/calendario', permission: 'dashboard.view' },
-    ],
-  },
-  {
-    id: 'obreiro',
-    label: 'Obreiro',
-    items: [
       { label: 'Minhas Obrigações', target: 'angular', path: '/dashboard/tesouraria/obrigacoes', permission: 'financeiro.self' },
     ],
   },

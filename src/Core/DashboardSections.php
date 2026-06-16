@@ -24,12 +24,6 @@ final class DashboardSections
                 ],
             ],
             [
-                'titulo' => 'Obreiro',
-                'itens' => [
-                    ['label' => 'Minhas Obrigações', 'href' => '/financeiro/minhas-obrigacoes', 'permission' => 'financeiro.self'],
-                ],
-            ],
-            [
                 'titulo' => 'Venerável Mestre',
                 'itens' => [
                     ['label' => 'Painel do Venerável', 'href' => '/veneravel', 'permission' => 'veneravel.manage'],

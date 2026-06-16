@@ -49,3 +49,13 @@
 .border-liturgical-gold\/50 {
   border-color: rgba(201, 162, 39, 0.5);
 }
+
+/* Active navigation item styling for premium UI/UX */
+.active-nav-item {
+  color: #C9A227 !important;
+  background-color: rgba(201, 162, 39, 0.08) !important;
+  border-color: rgba(201, 162, 39, 0.3) !important;
+  border-left: 3px solid #C9A227 !important;
+  box-shadow: inset 4px 0 12px rgba(201, 162, 39, 0.05);
+  padding-left: calc(0.75rem - 3px) !important; /* Prevent layout shift by compensating for border */
+}
