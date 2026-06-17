@@ -109,6 +109,9 @@ class ConfiguracaoLoja
             'cor_primaria_light' => '#1E3A8A',
             'cor_primaria_dark' => '#0F172A',
             'logo_path' => null,
+            'joia_iniciacao_valor_padrao' => 1502.00,
+            'joia_elevacao_valor_padrao' => 1502.00,
+            'joia_exaltacao_valor_padrao' => 1502.00,
         ];
     }
 
@@ -130,6 +133,7 @@ class ConfiguracaoLoja
                     pix_chave_tipo, pix_chave_valor, pix_beneficiario,
                     observacao_relatorios, historia_loja,
                     cor_primaria_light, cor_primaria_dark, logo_path,
+                    joia_iniciacao_valor_padrao, joia_elevacao_valor_padrao, joia_exaltacao_valor_padrao,
                     created_at, updated_at
                 ) VALUES (
                     1, :loja_id, :nome_loja, :numero_loja, :titulo_tratamento, :cidade, :uf, :oriente,
@@ -145,6 +149,7 @@ class ConfiguracaoLoja
                     :pix_chave_tipo, :pix_chave_valor, :pix_beneficiario,
                     :observacao_relatorios, :historia_loja,
                     :cor_primaria_light, :cor_primaria_dark, :logo_path,
+                    :joia_iniciacao_valor_padrao, :joia_elevacao_valor_padrao, :joia_exaltacao_valor_padrao,
                     NOW(), NOW()
                 )
                 ON CONFLICT (loja_id) DO UPDATE SET
@@ -193,6 +198,9 @@ class ConfiguracaoLoja
                     cor_primaria_light = EXCLUDED.cor_primaria_light,
                     cor_primaria_dark = EXCLUDED.cor_primaria_dark,
                     logo_path = EXCLUDED.logo_path,
+                    joia_iniciacao_valor_padrao = EXCLUDED.joia_iniciacao_valor_padrao,
+                    joia_elevacao_valor_padrao = EXCLUDED.joia_elevacao_valor_padrao,
+                    joia_exaltacao_valor_padrao = EXCLUDED.joia_exaltacao_valor_padrao,
                     updated_at = NOW()";
         } else {
             $sql = "INSERT INTO configuracoes_loja (
@@ -209,6 +217,7 @@ class ConfiguracaoLoja
                     pix_chave_tipo, pix_chave_valor, pix_beneficiario,
                     observacao_relatorios, historia_loja,
                     cor_primaria_light, cor_primaria_dark, logo_path,
+                    joia_iniciacao_valor_padrao, joia_elevacao_valor_padrao, joia_exaltacao_valor_padrao,
                     created_at, updated_at
                 ) VALUES (
                     1, :nome_loja, :numero_loja, :titulo_tratamento, :cidade, :uf, :oriente,
@@ -224,6 +233,7 @@ class ConfiguracaoLoja
                     :pix_chave_tipo, :pix_chave_valor, :pix_beneficiario,
                     :observacao_relatorios, :historia_loja,
                     :cor_primaria_light, :cor_primaria_dark, :logo_path,
+                    :joia_iniciacao_valor_padrao, :joia_elevacao_valor_padrao, :joia_exaltacao_valor_padrao,
                     NOW(), NOW()
                 )
                 ON CONFLICT (id) DO UPDATE SET
@@ -271,6 +281,9 @@ class ConfiguracaoLoja
                     cor_primaria_light = EXCLUDED.cor_primaria_light,
                     cor_primaria_dark = EXCLUDED.cor_primaria_dark,
                     logo_path = EXCLUDED.logo_path,
+                    joia_iniciacao_valor_padrao = EXCLUDED.joia_iniciacao_valor_padrao,
+                    joia_elevacao_valor_padrao = EXCLUDED.joia_elevacao_valor_padrao,
+                    joia_exaltacao_valor_padrao = EXCLUDED.joia_exaltacao_valor_padrao,
                     updated_at = NOW()";
         }
 
@@ -321,6 +334,9 @@ class ConfiguracaoLoja
             'cor_primaria_light' => $this->texto($dados['cor_primaria_light'] ?? '#1E3A8A'),
             'cor_primaria_dark' => $this->texto($dados['cor_primaria_dark'] ?? '#0F172A'),
             'logo_path' => $this->texto($dados['logo_path'] ?? null),
+            'joia_iniciacao_valor_padrao' => $this->decimal($dados['joia_iniciacao_valor_padrao'] ?? 1502.00),
+            'joia_elevacao_valor_padrao' => $this->decimal($dados['joia_elevacao_valor_padrao'] ?? 1502.00),
+            'joia_exaltacao_valor_padrao' => $this->decimal($dados['joia_exaltacao_valor_padrao'] ?? 1502.00),
         ];
 
         if ($this->suportaLojaId()) {

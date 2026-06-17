@@ -746,6 +746,42 @@ class TesourariaApiRoutes
             return true;
         }
 
+        if ($requestUri === '/api/tesouraria/configuracao-valores' && $method === 'GET') {
+            $configModel = new ConfiguracaoLoja();
+            $config = $configModel->obter();
+            JsonResponse::send([
+                'ok' => true,
+                'mensalidade_valor_padrao' => (float) ($config['mensalidade_valor_padrao'] ?? 150.00),
+                'contribuicao_biblioteca_valor_padrao' => (float) ($config['contribuicao_biblioteca_valor_padrao'] ?? 44.00),
+                'joia_iniciacao_valor_padrao' => (float) ($config['joia_iniciacao_valor_padrao'] ?? 1502.00),
+                'joia_elevacao_valor_padrao' => (float) ($config['joia_elevacao_valor_padrao'] ?? 1502.00),
+                'joia_exaltacao_valor_padrao' => (float) ($config['joia_exaltacao_valor_padrao'] ?? 1502.00),
+            ]);
+            return true;
+        }
+
+        if ($requestUri === '/api/tesouraria/configuracao-valores/salvar' && $method === 'POST') {
+            $body = RequestBody::json();
+            $mensalidade = isset($body['mensalidade_valor_padrao']) ? (float) $body['mensalidade_valor_padrao'] : 150.00;
+            $biblioteca = isset($body['contribuicao_biblioteca_valor_padrao']) ? (float) $body['contribuicao_biblioteca_valor_padrao'] : 44.00;
+            $iniciacao = isset($body['joia_iniciacao_valor_padrao']) ? (float) $body['joia_iniciacao_valor_padrao'] : 1502.00;
+            $elevacao = isset($body['joia_elevacao_valor_padrao']) ? (float) $body['joia_elevacao_valor_padrao'] : 1502.00;
+            $exaltacao = isset($body['joia_exaltacao_valor_padrao']) ? (float) $body['joia_exaltacao_valor_padrao'] : 1502.00;
+
+            $configModel = new ConfiguracaoLoja();
+            $config = $configModel->obter();
+
+            $config['mensalidade_valor_padrao'] = $mensalidade;
+            $config['contribuicao_biblioteca_valor_padrao'] = $biblioteca;
+            $config['joia_iniciacao_valor_padrao'] = $iniciacao;
+            $config['joia_elevacao_valor_padrao'] = $elevacao;
+            $config['joia_exaltacao_valor_padrao'] = $exaltacao;
+
+            $ok = $configModel->salvar($config);
+            JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Falha ao salvar parâmetros gerais']);
+            return true;
+        }
+
         return false;
     }
 }

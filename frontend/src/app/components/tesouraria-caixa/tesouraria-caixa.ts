@@ -65,7 +65,7 @@ export class TesourariaCaixa implements OnInit {
   protected errorMsg = signal<string | null>(null);
 
   // Tab ativa
-  protected activeTab = signal<'caixa' | 'agendamentos'>('caixa');
+  protected activeTab = signal<'caixa' | 'agendamentos' | 'valores'>('caixa');
   protected obreiros = signal<any[]>([]);
 
   // Formulário de Agendamento
@@ -96,6 +96,7 @@ export class TesourariaCaixa implements OnInit {
     this.carregarDados();
     this.carregarCategorias();
     this.carregarObreiros();
+    this.carregarConfiguracaoValores();
   }
 
   protected navegar(url: string): void {
@@ -395,15 +396,15 @@ export class TesourariaCaixa implements OnInit {
     if (!obreiroId) {
       this.schedJoiaAtiva.set(false);
       this.schedJoiaTipo.set('nenhuma');
-      this.schedJoiaValor.set(1502.00);
+      this.schedJoiaValor.set(this.genJoiaIniciacao());
       this.schedJoiaFormato.set('a_vista');
       this.schedJoiaData.set(null);
       this.schedBibliotecaAtiva.set(false);
-      this.schedBibliotecaValor.set(44.00);
+      this.schedBibliotecaValor.set(this.genBiblioteca());
       this.schedBibliotecaMes.set(null);
       this.schedBibliotecaFormato.set('mensal');
       this.schedMensalidadeAtiva.set(true);
-      this.schedMensalidadeValor.set(150.00);
+      this.schedMensalidadeValor.set(this.genMensalidade());
       return;
     }
 
@@ -411,7 +412,14 @@ export class TesourariaCaixa implements OnInit {
     if (ob) {
       this.schedJoiaAtiva.set(!!ob.financeiro_joia_ativa);
       this.schedJoiaTipo.set(ob.financeiro_joia_tipo || 'nenhuma');
-      this.schedJoiaValor.set(ob.financeiro_joia_valor !== null ? Number(ob.financeiro_joia_valor) : 1502.00);
+      
+      let defaultJoia = this.genJoiaIniciacao();
+      if (ob.financeiro_joia_tipo === 'elevacao') {
+        defaultJoia = this.genJoiaElevacao();
+      } else if (ob.financeiro_joia_tipo === 'exaltacao') {
+        defaultJoia = this.genJoiaExaltacao();
+      }
+      this.schedJoiaValor.set(ob.financeiro_joia_valor !== null ? Number(ob.financeiro_joia_valor) : defaultJoia);
       this.schedJoiaFormato.set(ob.financeiro_joia_formato || 'a_vista');
       
       let joiaDate = null;
@@ -424,13 +432,13 @@ export class TesourariaCaixa implements OnInit {
       }
       this.schedJoiaData.set(joiaDate ? joiaDate.split('T')[0] : null);
 
-      this.schedBibliotecaValor.set(ob.financeiro_biblioteca_valor !== null ? Number(ob.financeiro_biblioteca_valor) : 44.00);
+      this.schedBibliotecaValor.set(ob.financeiro_biblioteca_valor !== null ? Number(ob.financeiro_biblioteca_valor) : this.genBiblioteca());
       this.schedBibliotecaFormato.set(ob.financeiro_biblioteca_formato || 'mensal');
       this.schedBibliotecaMes.set(ob.financeiro_biblioteca_mes !== null ? Number(ob.financeiro_biblioteca_mes) : null);
       this.schedBibliotecaAtiva.set(ob.financeiro_biblioteca_formato !== 'isento' && ob.financeiro_biblioteca_valor !== null);
 
       this.schedMensalidadeAtiva.set(ob.financeiro_mensalidade_formato !== 'isento');
-      this.schedMensalidadeValor.set(ob.financeiro_mensalidade_valor !== null ? Number(ob.financeiro_mensalidade_valor) : 150.00);
+      this.schedMensalidadeValor.set(ob.financeiro_mensalidade_valor !== null ? Number(ob.financeiro_mensalidade_valor) : this.genMensalidade());
     }
   }
 
@@ -438,7 +446,13 @@ export class TesourariaCaixa implements OnInit {
     this.schedJoiaTipo.set(tipo);
     this.schedJoiaAtiva.set(tipo !== 'nenhuma');
     if (tipo !== 'nenhuma' && !this.schedJoiaValor()) {
-      this.schedJoiaValor.set(1502.00);
+      let defaultJoia = this.genJoiaIniciacao();
+      if (tipo === 'elevacao') {
+        defaultJoia = this.genJoiaElevacao();
+      } else if (tipo === 'exaltacao') {
+        defaultJoia = this.genJoiaExaltacao();
+      }
+      this.schedJoiaValor.set(defaultJoia);
     }
   }
 
@@ -497,6 +511,81 @@ export class TesourariaCaixa implements OnInit {
         this.salvandoAgendamento.set(false);
         console.error('[Tesouraria] Erro ao salvar agendamento:', err);
         alert('Erro de conexão ao salvar.');
+      }
+    });
+  }
+
+  // Parâmetros Gerais (Configuração da Loja)
+  protected genMensalidade = signal<number>(150.00);
+  protected genBiblioteca = signal<number>(44.00);
+  protected genJoiaIniciacao = signal<number>(1502.00);
+  protected genJoiaElevacao = signal<number>(1502.00);
+  protected genJoiaExaltacao = signal<number>(1502.00);
+  protected salvandoConfig = signal<boolean>(false);
+  protected configSuccessMsg = signal<string | null>(null);
+  protected configErrorMsg = signal<string | null>(null);
+
+  protected mudarTab(tab: 'caixa' | 'agendamentos' | 'valores'): void {
+    this.activeTab.set(tab);
+    if (tab === 'valores') {
+      this.carregarConfiguracaoValores();
+    }
+  }
+
+  protected carregarConfiguracaoValores(): void {
+    this.configErrorMsg.set(null);
+    this.configSuccessMsg.set(null);
+    const headers = this.supabaseService.getAuthHeaders();
+    this.http.get<any>(`${environment.apiUrl}/api/tesouraria/configuracao-valores`, { headers }).subscribe({
+      next: (res) => {
+        if (res && res.ok) {
+          this.genMensalidade.set(Number(res.mensalidade_valor_padrao || 150.00));
+          this.genBiblioteca.set(Number(res.contribuicao_biblioteca_valor_padrao || 44.00));
+          this.genJoiaIniciacao.set(Number(res.joia_iniciacao_valor_padrao || 1502.00));
+          this.genJoiaElevacao.set(Number(res.joia_elevacao_valor_padrao || 1502.00));
+          this.genJoiaExaltacao.set(Number(res.joia_exaltacao_valor_padrao || 1502.00));
+        } else {
+          this.configErrorMsg.set(res.erro || 'Falha ao carregar configurações gerais.');
+        }
+      },
+      error: (err) => {
+        console.error('[Tesouraria] Erro ao carregar config:', err);
+        this.configErrorMsg.set('Erro de conexão ao carregar configurações.');
+      }
+    });
+  }
+
+  protected salvarConfiguracaoValores(): void {
+    this.salvandoConfig.set(true);
+    this.configErrorMsg.set(null);
+    this.configSuccessMsg.set(null);
+    const headers = this.supabaseService.getAuthHeaders();
+    const payload = {
+      mensalidade_valor_padrao: this.genMensalidade(),
+      contribuicao_biblioteca_valor_padrao: this.genBiblioteca(),
+      joia_iniciacao_valor_padrao: this.genJoiaIniciacao(),
+      joia_elevacao_valor_padrao: this.genJoiaElevacao(),
+      joia_exaltacao_valor_padrao: this.genJoiaExaltacao()
+    };
+
+    this.http.post<any>(
+      `${environment.apiUrl}/api/tesouraria/configuracao-valores/salvar`,
+      payload,
+      { headers }
+    ).subscribe({
+      next: (res) => {
+        this.salvandoConfig.set(false);
+        if (res && res.ok) {
+          this.configSuccessMsg.set('Parâmetros gerais salvos com sucesso!');
+          this.carregarObreiros();
+        } else {
+          this.configErrorMsg.set(res.erro || 'Falha ao salvar parâmetros gerais.');
+        }
+      },
+      error: (err) => {
+        this.salvandoConfig.set(false);
+        console.error('[Tesouraria] Erro ao salvar config:', err);
+        this.configErrorMsg.set('Erro de conexão ao salvar.');
       }
     });
   }

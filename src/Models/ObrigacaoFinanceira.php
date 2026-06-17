@@ -1209,6 +1209,7 @@ class ObrigacaoFinanceira
             return null;
         }
 
+        $configuracaoLoja = (new ConfiguracaoLoja())->obter();
         $grau = (string) ($obreiro['grau'] ?? 'Aprendiz');
         $joiaValorConfig = $obreiro['financeiro_joia_valor'] !== null ? (float) $obreiro['financeiro_joia_valor'] : null;
         $joiaFormatoConfig = (string) ($obreiro['financeiro_joia_formato'] ?? 'a_vista');
@@ -1235,7 +1236,7 @@ class ObrigacaoFinanceira
         }
 
         // Determinar dados de Biblioteca
-        $valorBiblioteca = $bibValorConfig ?? 44.0;
+        $valorBiblioteca = $bibValorConfig ?? (float) ($configuracaoLoja['contribuicao_biblioteca_valor_padrao'] ?? 44.0);
         $mesesNomes = [
             1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril',
             5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto',
@@ -1436,7 +1437,18 @@ class ObrigacaoFinanceira
                     $joiaEsperada = 'Exaltação';
                 }
 
-                $valorEstimado = $joiaValorConfig !== null ? $joiaValorConfig : 1502.0; // Salário mínimo 2026
+                $valorEstimado = 1502.0;
+                if ($joiaValorConfig !== null) {
+                    $valorEstimado = $joiaValorConfig;
+                } else {
+                    if ($joiaTipo === 'elevacao') {
+                        $valorEstimado = (float) ($configuracaoLoja['joia_elevacao_valor_padrao'] ?? 1502.0);
+                    } elseif ($joiaTipo === 'exaltacao') {
+                        $valorEstimado = (float) ($configuracaoLoja['joia_exaltacao_valor_padrao'] ?? 1502.0);
+                    } else {
+                        $valorEstimado = (float) ($configuracaoLoja['joia_iniciacao_valor_padrao'] ?? 1502.0);
+                    }
+                }
                 $saldoEstimado = $joiaFormatoConfig === 'isento' ? 0.0 : max(0.0, $valorEstimado - $totalPagoJoia);
 
                 $joiaInfo = [
