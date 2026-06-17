@@ -83,8 +83,13 @@
           <p class="text-[10px] text-slate-400">Mensalidade ordinária da Loja referente ao ano de 2026</p>
         </div>
         <div class="mt-6 flex justify-between items-baseline">
-          <span class="text-2xl font-extrabold text-white font-mono">R$ {{ detalheFinanceiro()?.mensalidade?.valor_regular?.toFixed(2) || '150.00' }}</span>
-          <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Vencimento: Dia {{ detalheFinanceiro()?.mensalidade?.dia_vencimento || 10 }}</span>
+          @if (detalheFinanceiro()?.mensalidade?.formato === 'isento') {
+            <span class="text-2xl font-extrabold text-slate-400 uppercase tracking-wider font-mono">ISENTO</span>
+            <span class="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Livre de Débito</span>
+          } @else {
+            <span class="text-2xl font-extrabold text-white font-mono">R$ {{ detalheFinanceiro()?.mensalidade?.valor_regular?.toFixed(2) || '150.00' }}</span>
+            <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Vencimento: Dia {{ detalheFinanceiro()?.mensalidade?.dia_vencimento || 10 }}</span>
+          }
         </div>
       </div>
 

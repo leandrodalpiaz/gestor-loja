@@ -748,9 +748,23 @@ class ObrigacaoFinanceira
             $parcela = $this->aplicarEstadoExibicaoParcela($parcela);
         }
         unset($parcela);
-        return array_values(array_filter($parcelas, static function (array $parcela): bool {
-            return empty($parcela['quitado_na_exibicao']);
-        }));
+
+        $stmtEx = $this->db->prepare("SELECT financeiro_mensalidade_formato FROM public.obreiros WHERE id = :id LIMIT 1");
+        $stmtEx->execute(['id' => $obreiroId]);
+        $mensFormato = $stmtEx->fetchColumn();
+        $isentoMensalidade = ($mensFormato === 'isento');
+
+        $filtered = [];
+        foreach ($parcelas as $p) {
+            if (empty($p['quitado_na_exibicao'])) {
+                $codigo = strtoupper((string) ($p['categoria_codigo'] ?? ''));
+                if ($codigo === 'MENSALIDADE' && $isentoMensalidade) {
+                    continue;
+                }
+                $filtered[] = $p;
+            }
+        }
+        return $filtered;
     }
 
     private function gerarParcelas(int $obrigacaoId, array $dados): array
@@ -1048,6 +1062,19 @@ class ObrigacaoFinanceira
             return false;
         }
 
+        // Check format settings on the obreiro record
+        $stmtOb = $this->db->prepare("SELECT financeiro_mensalidade_formato, financeiro_biblioteca_formato FROM public.obreiros WHERE id = :id LIMIT 1");
+        $stmtOb->execute(['id' => $obreiroId]);
+        $obreiro = $stmtOb->fetch(PDO::FETCH_ASSOC);
+        if ($obreiro) {
+            if ($tipoObrigacao === 'mensalidade' && ($obreiro['financeiro_mensalidade_formato'] ?? '') === 'isento') {
+                return true;
+            }
+            if ($tipoObrigacao === 'biblioteca' && ($obreiro['financeiro_biblioteca_formato'] ?? '') === 'isento') {
+                return true;
+            }
+        }
+
         $stmt = $this->db->prepare("
             SELECT 1
             FROM isencoes_financeiras
@@ -1167,6 +1194,7 @@ class ObrigacaoFinanceira
             SELECT id, nome, nome_historico, grau, 
                    financeiro_joia_valor, financeiro_joia_formato, financeiro_joia_ativa, financeiro_joia_tipo,
                    financeiro_biblioteca_valor, financeiro_biblioteca_formato, financeiro_biblioteca_mes,
+                   financeiro_mensalidade_valor, financeiro_mensalidade_formato,
                    data_iniciacao, data_elevacao, data_exaltacao
             FROM public.obreiros
             WHERE id = :id AND loja_id = :loja_id
@@ -1426,6 +1454,12 @@ class ObrigacaoFinanceira
             }
         }
 
+        $mensalidadeValorConfig = $obreiro['financeiro_mensalidade_valor'] !== null ? (float) $obreiro['financeiro_mensalidade_valor'] : null;
+        $mensalidadeFormatoConfig = (string) ($obreiro['financeiro_mensalidade_formato'] ?? 'mensal');
+        
+        $parametros = $this->obterParametrosFinanceiros();
+        $valorMensalidade = $mensalidadeValorConfig ?? (float) ($parametros['mensalidade_valor_padrao'] ?? 150.00);
+
         return [
             'obreiro' => [
                 'id' => $obreiro['id'],
@@ -1434,8 +1468,9 @@ class ObrigacaoFinanceira
                 'grau' => $grau
             ],
             'mensalidade' => [
-                'valor_regular' => 150.00,
-                'dia_vencimento' => 10
+                'valor_regular' => $valorMensalidade,
+                'formato' => $mensalidadeFormatoConfig,
+                'dia_vencimento' => (int) ($parametros['mensalidade_dia_sugerido'] ?? 10)
             ],
             'biblioteca' => $bibliotecaInfo,
             'joia' => $joiaInfo

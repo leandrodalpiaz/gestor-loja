@@ -79,6 +79,8 @@ export class TesourariaCaixa implements OnInit {
   protected schedBibliotecaValor = signal<number | null>(44.00);
   protected schedBibliotecaMes = signal<number | null>(null);
   protected schedBibliotecaFormato = signal<string>('mensal');
+  protected schedMensalidadeAtiva = signal<boolean>(true);
+  protected schedMensalidadeValor = signal<number | null>(150.00);
   protected salvandoAgendamento = signal<boolean>(false);
 
   // Formulário de novo lançamento
@@ -400,6 +402,8 @@ export class TesourariaCaixa implements OnInit {
       this.schedBibliotecaValor.set(44.00);
       this.schedBibliotecaMes.set(null);
       this.schedBibliotecaFormato.set('mensal');
+      this.schedMensalidadeAtiva.set(true);
+      this.schedMensalidadeValor.set(150.00);
       return;
     }
 
@@ -424,6 +428,9 @@ export class TesourariaCaixa implements OnInit {
       this.schedBibliotecaFormato.set(ob.financeiro_biblioteca_formato || 'mensal');
       this.schedBibliotecaMes.set(ob.financeiro_biblioteca_mes !== null ? Number(ob.financeiro_biblioteca_mes) : null);
       this.schedBibliotecaAtiva.set(ob.financeiro_biblioteca_formato !== 'isento' && ob.financeiro_biblioteca_valor !== null);
+
+      this.schedMensalidadeAtiva.set(ob.financeiro_mensalidade_formato !== 'isento');
+      this.schedMensalidadeValor.set(ob.financeiro_mensalidade_valor !== null ? Number(ob.financeiro_mensalidade_valor) : 150.00);
     }
   }
 
@@ -467,7 +474,9 @@ export class TesourariaCaixa implements OnInit {
       biblioteca_mes: this.schedBibliotecaAtiva() ? this.schedBibliotecaMes() : null,
       data_iniciacao: dataIniciacao,
       data_elevacao: dataElevacao,
-      data_exaltacao: dataExaltacao
+      data_exaltacao: dataExaltacao,
+      mensalidade_valor: this.schedMensalidadeAtiva() ? this.schedMensalidadeValor() : null,
+      mensalidade_formato: this.schedMensalidadeAtiva() ? 'mensal' : 'isento'
     };
 
     this.http.post<any>(

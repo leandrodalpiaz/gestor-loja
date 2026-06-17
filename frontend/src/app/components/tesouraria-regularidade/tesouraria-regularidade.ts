@@ -60,6 +60,9 @@ export class TesourariaRegularidade implements OnInit {
   protected editBibliotecaValor = signal<number | null>(null);
   protected editBibliotecaFormato = signal<string>('mensal');
   protected editBibliotecaMes = signal<number | null>(null);
+  protected editMensalidadeValor = signal<number | null>(null);
+  protected editMensalidadeFormato = signal<string>('mensal');
+  protected editMensalidadeAtiva = signal<boolean>(true);
   protected editDataIniciacao = signal<string | null>(null);
   protected editDataElevacao = signal<string | null>(null);
   protected editDataExaltacao = signal<string | null>(null);
@@ -253,6 +256,11 @@ export class TesourariaRegularidade implements OnInit {
     this.editBibliotecaValor.set(ob.financeiro_biblioteca_valor !== null ? Number(ob.financeiro_biblioteca_valor) : null);
     this.editBibliotecaFormato.set(ob.financeiro_biblioteca_formato || 'mensal');
     this.editBibliotecaMes.set(ob.financeiro_biblioteca_mes !== null ? Number(ob.financeiro_biblioteca_mes) : null);
+    
+    this.editMensalidadeValor.set(ob.financeiro_mensalidade_valor !== null ? Number(ob.financeiro_mensalidade_valor) : null);
+    this.editMensalidadeFormato.set(ob.financeiro_mensalidade_formato || 'mensal');
+    this.editMensalidadeAtiva.set((ob.financeiro_mensalidade_formato || 'mensal') !== 'isento');
+
     this.editDataIniciacao.set(ob.data_iniciacao ? ob.data_iniciacao.split('T')[0] : null);
     this.editDataElevacao.set(ob.data_elevacao ? ob.data_elevacao.split('T')[0] : null);
     this.editDataExaltacao.set(ob.data_exaltacao ? ob.data_exaltacao.split('T')[0] : null);
@@ -275,6 +283,8 @@ export class TesourariaRegularidade implements OnInit {
       biblioteca_valor: this.editBibliotecaValor(),
       biblioteca_formato: this.editBibliotecaFormato(),
       biblioteca_mes: this.editBibliotecaMes(),
+      mensalidade_valor: this.editMensalidadeAtiva() ? this.editMensalidadeValor() : null,
+      mensalidade_formato: this.editMensalidadeAtiva() ? 'mensal' : 'isento',
       data_iniciacao: this.editDataIniciacao(),
       data_elevacao: this.editDataElevacao(),
       data_exaltacao: this.editDataExaltacao()

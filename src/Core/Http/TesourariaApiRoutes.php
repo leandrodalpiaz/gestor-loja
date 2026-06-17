@@ -696,6 +696,7 @@ class TesourariaApiRoutes
             foreach ($obreiros as &$ob) {
                 $ob['financeiro_joia_valor'] = isset($ob['financeiro_joia_valor']) ? (float) $ob['financeiro_joia_valor'] : null;
                 $ob['financeiro_biblioteca_valor'] = isset($ob['financeiro_biblioteca_valor']) ? (float) $ob['financeiro_biblioteca_valor'] : null;
+                $ob['financeiro_mensalidade_valor'] = isset($ob['financeiro_mensalidade_valor']) ? (float) $ob['financeiro_mensalidade_valor'] : null;
             }
             unset($ob);
 
@@ -716,6 +717,8 @@ class TesourariaApiRoutes
             $joiaTipo = isset($body['joia_tipo']) && $body['joia_tipo'] !== '' ? trim((string) $body['joia_tipo']) : null;
             $dataIniciacao = isset($body['data_iniciacao']) && $body['data_iniciacao'] !== '' ? trim((string) $body['data_iniciacao']) : null;
             $bibliotecaMes = isset($body['biblioteca_mes']) && $body['biblioteca_mes'] !== '' && $body['biblioteca_mes'] !== 'null' ? (int) $body['biblioteca_mes'] : null;
+            $mensalidadeValor = isset($body['mensalidade_valor']) && $body['mensalidade_valor'] !== '' ? (float) $body['mensalidade_valor'] : null;
+            $mensalidadeFormato = trim((string) ($body['mensalidade_formato'] ?? 'mensal'));
 
             if ($obreiroId === '') {
                 JsonResponse::send(['ok' => false, 'erro' => 'ID do obreiro inválido']);
@@ -734,7 +737,9 @@ class TesourariaApiRoutes
                 $joiaAtiva,
                 $joiaTipo,
                 $dataIniciacao,
-                $bibliotecaMes
+                $bibliotecaMes,
+                $mensalidadeValor,
+                $mensalidadeFormato
             );
 
             JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Falha ao salvar configurações financeiras']);

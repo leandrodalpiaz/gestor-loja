@@ -924,7 +924,9 @@ class Obreiro
         bool $joiaAtiva = false,
         ?string $joiaTipo = null,
         ?string $dataIniciacao = null,
-        ?int $bibliotecaMes = null
+        ?int $bibliotecaMes = null,
+        ?float $mensalidadeValor = null,
+        string $mensalidadeFormato = 'mensal'
     ): bool {
         if (!preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $id)) {
             return false;
@@ -938,6 +940,8 @@ class Obreiro
             financeiro_biblioteca_valor = :biblioteca_valor,
             financeiro_biblioteca_formato = :biblioteca_formato,
             financeiro_biblioteca_mes = :biblioteca_mes,
+            financeiro_mensalidade_valor = :mensalidade_valor,
+            financeiro_mensalidade_formato = :mensalidade_formato,
             data_iniciacao = :data_iniciacao,
             data_elevacao = :data_elevacao,
             data_exaltacao = :data_exaltacao,
@@ -957,6 +961,8 @@ class Obreiro
             'biblioteca_valor' => $bibliotecaValor,
             'biblioteca_formato' => $bibliotecaFormato,
             'biblioteca_mes' => $bibliotecaMes,
+            'mensalidade_valor' => $mensalidadeValor,
+            'mensalidade_formato' => $mensalidadeFormato,
             'data_iniciacao' => !empty($dataIniciacao) ? $dataIniciacao : null,
             'data_elevacao' => !empty($dataElevacao) ? $dataElevacao : null,
             'data_exaltacao' => !empty($dataExaltacao) ? $dataExaltacao : null,
