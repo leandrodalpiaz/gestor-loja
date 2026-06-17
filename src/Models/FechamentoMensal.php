@@ -274,17 +274,20 @@ class FechamentoMensal
             return $this->tabelaTemLojaId;
         }
 
-        $stmt = $this->db->prepare("
-            SELECT 1
-            FROM information_schema.columns
-            WHERE table_schema = 'public'
-              AND table_name = 'fechamento_mensal'
-              AND column_name = 'loja_id'
-            LIMIT 1
-        ");
-        $stmt->execute();
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 1 
+                FROM pg_attribute 
+                WHERE attrelid = 'fechamento_mensal'::regclass 
+                  AND attname = 'loja_id' 
+                  AND NOT attisdropped
+            ");
+            $stmt->execute();
+            $this->tabelaTemLojaId = (bool) $stmt->fetchColumn();
+        } catch (\PDOException $e) {
+            $this->tabelaTemLojaId = false;
+        }
 
-        $this->tabelaTemLojaId = (bool) $stmt->fetchColumn();
         return $this->tabelaTemLojaId;
     }
 

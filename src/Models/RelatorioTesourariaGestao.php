@@ -243,7 +243,7 @@ class RelatorioTesourariaGestao
         }
 
         $stmt = $this->db->prepare('SELECT to_regclass(:tabela) IS NOT NULL');
-        $stmt->execute(['tabela' => 'public.' . $tabela]);
+        $stmt->execute(['tabela' => $tabela]);
         return $this->schemaCache[$cacheKey] = (bool) $stmt->fetchColumn();
     }
 
@@ -254,16 +254,19 @@ class RelatorioTesourariaGestao
             return $this->schemaCache[$cacheKey];
         }
 
-        $stmt = $this->db->prepare("
-            SELECT 1
-            FROM information_schema.columns
-            WHERE table_schema = 'public'
-              AND table_name = :tabela
-              AND column_name = :coluna
-            LIMIT 1
-        ");
-        $stmt->execute(['tabela' => $tabela, 'coluna' => $coluna]);
-        return $this->schemaCache[$cacheKey] = (bool) $stmt->fetchColumn();
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 1 
+                FROM pg_attribute 
+                WHERE attrelid = :tabela::regclass 
+                  AND attname = :coluna 
+                  AND NOT attisdropped
+            ");
+            $stmt->execute(['tabela' => $tabela, 'coluna' => $coluna]);
+            return $this->schemaCache[$cacheKey] = (bool) $stmt->fetchColumn();
+        } catch (\PDOException $e) {
+            return $this->schemaCache[$cacheKey] = false;
+        }
     }
 
     private function obterLojaAtualId(): int

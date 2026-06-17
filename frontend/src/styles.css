@@ -1,3 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+
+/* Style native select options to ensure readability in dark mode */
+select option {
+  background-color: #0c1220 !important;
+  color: #ffffff !important;
+}

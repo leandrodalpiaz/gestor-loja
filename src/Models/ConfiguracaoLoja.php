@@ -28,17 +28,19 @@ class ConfiguracaoLoja
             return $this->suportaLojaId;
         }
 
-        $stmt = $this->db->prepare(
-            "SELECT 1
-             FROM information_schema.columns
-             WHERE table_schema = 'public'
-               AND table_name = 'configuracoes_loja'
-               AND column_name = 'loja_id'
-             LIMIT 1"
-        );
-        $stmt->execute();
-
-        $this->suportaLojaId = (bool) $stmt->fetchColumn();
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 1 
+                FROM pg_attribute 
+                WHERE attrelid = 'configuracoes_loja'::regclass 
+                  AND attname = 'loja_id' 
+                  AND NOT attisdropped
+            ");
+            $stmt->execute();
+            $this->suportaLojaId = (bool) $stmt->fetchColumn();
+        } catch (\PDOException $e) {
+            $this->suportaLojaId = false;
+        }
 
         return $this->suportaLojaId;
     }
