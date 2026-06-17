@@ -32,10 +32,23 @@ export class TesourariaObrigacoes implements OnInit {
   protected successMsg = signal<string | null>(null);
 
   protected obrigacoes = signal<ObrigacaoAberta[]>([]);
+  protected detalheFinanceiro = signal<any | null>(null);
   protected showModal = signal(false);
+  protected showModalAvulso = signal(false);
+
+  protected isAdmin = signal(false);
+  protected obreirosLista = signal<any[]>([]);
+  protected obreiroSelecionadoId = signal<string>('');
 
   protected formComprovante = signal({
     obrigacao_id: '',
+    valor_pago: '',
+    observacao: '',
+    arquivo_comprovante: ''
+  });
+
+  protected formComprovanteAvulso = signal({
+    tipo_destinatario: 'joia', // 'joia' ou 'biblioteca'
     valor_pago: '',
     observacao: '',
     arquivo_comprovante: ''
@@ -45,19 +58,42 @@ export class TesourariaObrigacoes implements OnInit {
     this.carregarObrigacoes();
   }
 
-  protected carregarObrigacoes(): void {
+  protected obterNomeObreiroSelecionado(): string {
+    const ob = this.obreirosLista().find(o => o.id === this.obreiroSelecionadoId());
+    return ob ? (ob.nome_historico || ob.nome) : '';
+  }
+
+  protected onObreiroSelecionadoChange(id: string): void {
+    this.obreiroSelecionadoId.set(id);
+    if (id) {
+      this.carregarDadosObreiro(id);
+    } else {
+      this.detalheFinanceiro.set(null);
+      this.obrigacoes.set([]);
+    }
+  }
+
+  private carregarDadosObreiro(obreiroId: string): void {
     this.loading.set(true);
     this.errorMsg.set(null);
     const headers = this.supabaseService.getAuthHeaders();
-    const obreiroId = this.supabaseService.profile()?.id;
 
-    if (!obreiroId) {
-      this.loading.set(false);
-      this.errorMsg.set('O perfil local do obreiro ainda não foi resolvido.');
-      this.obrigacoes.set([]);
-      return;
-    }
+    // Carregar detalhe consolidado (escala de biblioteca, joias, mensalidades)
+    this.http.get<any>(
+      `${environment.apiUrl}/api/tesouraria/obreiro/detalhe-financeiro?obreiro_id=${encodeURIComponent(obreiroId)}`,
+      { headers }
+    ).subscribe({
+      next: (res) => {
+        if (res && res.ok) {
+          this.detalheFinanceiro.set(res.detalhe);
+        }
+      },
+      error: (err) => {
+        console.error('[Obrigacoes] Erro detalhe consolidado:', err);
+      }
+    });
 
+    // Carregar obrigações abertas (mensalidades/taxas específicas em aberto)
     this.http.get<any>(
       `${environment.apiUrl}/api/tesouraria/obrigacoes-abertas?obreiro_id=${encodeURIComponent(obreiroId)}`,
       { headers }
@@ -79,6 +115,57 @@ export class TesourariaObrigacoes implements OnInit {
     });
   }
 
+  protected carregarObrigacoes(): void {
+    const profile = this.supabaseService.profile();
+    if (!profile) {
+      this.loading.set(false);
+      this.errorMsg.set('O perfil local do obreiro ainda não foi resolvido.');
+      this.obrigacoes.set([]);
+      return;
+    }
+
+    if (profile.is_system_admin === true) {
+      this.isAdmin.set(true);
+      this.loading.set(true);
+      const headers = this.supabaseService.getAuthHeaders();
+
+      // Carregar lista de todos os obreiros para o ADM poder simular
+      this.http.get<any>(
+        `${environment.apiUrl}/api/tesouraria/obreiros-financeiro`,
+        { headers }
+      ).subscribe({
+        next: (res) => {
+          this.loading.set(false);
+          if (res && res.ok) {
+            this.obreirosLista.set(res.obreiros || []);
+          }
+        },
+        error: (err) => {
+          this.loading.set(false);
+          console.error('[Obrigacoes] Erro ao carregar obreiros:', err);
+        }
+      });
+
+      const selId = this.obreiroSelecionadoId();
+      if (selId) {
+        this.carregarDadosObreiro(selId);
+      } else {
+        this.obrigacoes.set([]);
+        this.detalheFinanceiro.set(null);
+      }
+    } else {
+      this.isAdmin.set(false);
+      const obreiroId = profile.id;
+      if (!obreiroId) {
+        this.loading.set(false);
+        this.errorMsg.set('O perfil local do obreiro ainda não foi resolvido.');
+        this.obrigacoes.set([]);
+        return;
+      }
+      this.carregarDadosObreiro(obreiroId);
+    }
+  }
+
   protected abrirSubmissao(ob: ObrigacaoAberta): void {
     this.formComprovante.set({
       obrigacao_id: String(ob.id),
@@ -97,10 +184,10 @@ export class TesourariaObrigacoes implements OnInit {
 
   protected enviarComprovante(): void {
     const parcela = this.obrigacoes().find(item => item.id === Number(this.formComprovante().obrigacao_id));
-    const obreiroId = this.supabaseService.profile()?.id;
+    const obreiroId = this.isAdmin() ? this.obreiroSelecionadoId() : this.supabaseService.profile()?.id;
 
     if (!parcela || !obreiroId) {
-      this.errorMsg.set('Não foi possível identificar a parcela ou o perfil do obreiro.');
+      this.errorMsg.set('Não foi possível identificar a parcela ou o obreiro correspondente.');
       return;
     }
 
@@ -138,6 +225,67 @@ export class TesourariaObrigacoes implements OnInit {
         this.salvando.set(false);
         console.error('[Obrigacoes] Erro envio comprovante:', err);
         this.errorMsg.set(err.error?.erro || 'Erro de comunicacao com o servidor.');
+      }
+    });
+  }
+
+  protected abrirSubmissaoAvulsa(tipo: string, valorSugerido: number): void {
+    this.formComprovanteAvulso.set({
+      tipo_destinatario: tipo,
+      valor_pago: String(valorSugerido),
+      observacao: tipo === 'joia' ? 'Abate da Joia' : 'Contribuição à Biblioteca',
+      arquivo_comprovante: ''
+    });
+    this.showModalAvulso.set(true);
+    this.successMsg.set(null);
+    this.errorMsg.set(null);
+  }
+
+  protected fecharModalAvulso(): void {
+    this.showModalAvulso.set(false);
+  }
+
+  protected enviarComprovanteAvulso(): void {
+    const obreiroId = this.isAdmin() ? this.obreiroSelecionadoId() : this.supabaseService.profile()?.id;
+    if (!obreiroId) {
+      this.errorMsg.set('Não foi possível identificar o obreiro correspondente.');
+      return;
+    }
+
+    this.salvando.set(true);
+    this.successMsg.set(null);
+    this.errorMsg.set(null);
+    const headers = this.supabaseService.getAuthHeaders();
+
+    const hoje = new Date();
+    const body = {
+      valor: Number(this.formComprovanteAvulso().valor_pago),
+      descricao: `[Avulso - ${this.formComprovanteAvulso().tipo_destinatario.toUpperCase()}] ${this.formComprovanteAvulso().observacao}`,
+      comprovante_url: this.formComprovanteAvulso().arquivo_comprovante,
+      obreiro_id: obreiroId,
+      mes_ref: hoje.getMonth() + 1,
+      ano_ref: hoje.getFullYear()
+    };
+
+    this.http.post<any>(
+      `${environment.apiUrl}/api/tesouraria/comprovantes/enviar`,
+      body,
+      { headers }
+    ).subscribe({
+      next: (res) => {
+        this.salvando.set(false);
+        if (res && res.ok) {
+          this.successMsg.set('Comprovante avulso enviado com sucesso para validação do Tesoureiro.');
+          this.showModalAvulso.set(false);
+          this.carregarObrigacoes();
+        } else {
+          this.errorMsg.set(res.erro || 'Falha ao enviar comprovante avulso.');
+        }
+      },
+      error: (err) => {
+        this.salvando.set(false);
+        console.error('[Obrigacoes] Erro envio comprovante avulso:', err);
+        this.errorMsg.set(err.error?.erro || 'Erro de comunicacao.');
       }
     });
   }

@@ -1,118 +1,547 @@
-<div class="space-y-6">
-  <div>
-    <h1 class="font-cinzel text-2xl font-bold tracking-widest text-white md:text-3xl">Biblioteca</h1>
-    <p class="mt-1 text-xs uppercase tracking-wider text-slate-400">Acervo, empréstimos e curadoria em um único ambiente</p>
+<div class="space-y-8">
+  <!-- Header & Stats Banner -->
+  <div class="relative flex flex-col justify-between gap-6 border-b border-white/5 pb-6 md:flex-row md:items-center">
+    <div>
+      <h1 class="font-cinzel text-3xl font-bold tracking-widest text-white">Biblioteca</h1>
+      <p class="mt-1.5 text-xs uppercase tracking-widest text-slate-400">Acervo, Curadoria e Integração de Obras Litúrgicas</p>
+    </div>
+
+    <!-- Quick Stats Summary -->
+    <div class="grid grid-cols-2 gap-4 sm:flex shrink-0">
+      <div class="glass-surface border border-white/5 bg-white/[0.01] px-4 py-2.5 rounded-2xl flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-liturgical-gold/10 text-liturgical-gold flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+        </div>
+        <div>
+          <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Obras no Acervo</div>
+          <div class="text-xs font-bold text-white font-cinzel">{{ dados()?.acervo?.length || 0 }}</div>
+        </div>
+      </div>
+
+      <div class="glass-surface border border-white/5 bg-white/[0.01] px-4 py-2.5 rounded-2xl flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <div>
+          <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Meus Empréstimos</div>
+          <div class="text-xs font-bold text-white font-cinzel">{{ dados()?.meus_emprestimos?.length || 0 }}</div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="flex flex-wrap gap-2">
-    <button (click)="abrirTab('acervo')" [class.bg-liturgical-gold]="tab() === 'acervo'" [class.text-liturgical-bg]="tab() === 'acervo'" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-300">Acervo</button>
-    <button (click)="abrirTab('meus')" [class.bg-liturgical-gold]="tab() === 'meus'" [class.text-liturgical-bg]="tab() === 'meus'" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-300">Meus empréstimos</button>
+  <!-- Modern Pill Tabs -->
+  <div class="flex flex-wrap gap-2 border-b border-white/5 pb-2">
+    <button (click)="abrirTab('acervo')" 
+            [class.active-pill-tab]="tab() === 'acervo'" 
+            [class.inactive-pill-tab]="tab() !== 'acervo'"
+            class="rounded-xl border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-300">
+      Acervo
+    </button>
+    <button (click)="abrirTab('meus')" 
+            [class.active-pill-tab]="tab() === 'meus'" 
+            [class.inactive-pill-tab]="tab() !== 'meus'"
+            class="rounded-xl border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-300">
+      Meus Empréstimos
+    </button>
     @if (pode('biblioteca.manage')) {
-      <button (click)="abrirTab('gestao')" [class.bg-liturgical-gold]="tab() === 'gestao'" [class.text-liturgical-bg]="tab() === 'gestao'" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-300">Gestão</button>
+      <button (click)="abrirTab('gestao')" 
+              [class.active-pill-tab]="tab() === 'gestao'" 
+              [class.inactive-pill-tab]="tab() !== 'gestao'"
+              class="rounded-xl border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-300">
+        Gestão Geral
+      </button>
     }
     @if (pode('biblioteca.classificar')) {
-      <button (click)="abrirTab('classificacao')" [class.bg-liturgical-gold]="tab() === 'classificacao'" [class.text-liturgical-bg]="tab() === 'classificacao'" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-300">Classificação</button>
+      <button (click)="abrirTab('classificacao')" 
+              [class.active-pill-tab]="tab() === 'classificacao'" 
+              [class.inactive-pill-tab]="tab() !== 'classificacao'"
+              class="rounded-xl border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-300">
+        Curadoria
+      </button>
     }
   </div>
 
-  @if (successMsg(); as msg) { <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-400">{{msg}}</div> }
-  @if (errorMsg(); as msg) { <div class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-400">{{msg}}</div> }
-  @if (loading()) { <div class="py-16 text-center text-sm text-slate-400">Carregando dados da Biblioteca...</div> }
-
-  @if (!loading() && tab() === 'acervo') {
-    <input [(ngModel)]="filtroBusca" placeholder="Buscar por título, autor ou código..." class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white">
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-      @for (livro of livrosFiltrados; track livro.id) {
-        <article class="flex gap-4 rounded-2xl border border-white/5 bg-liturgical-surface/40 p-5">
-          <div class="h-28 w-20 shrink-0 overflow-hidden rounded-lg bg-black/30">
-            @if (livro.capa_url) { <img [src]="livro.capa_url" [alt]="livro.titulo" class="h-full w-full object-cover"> }
-          </div>
-          <div class="min-w-0 flex-1">
-            <span class="text-[9px] font-bold uppercase text-liturgical-gold">{{livro.grau_recomendado || 'Livre'}}</span>
-            <h2 class="mt-1 font-bold text-white">{{livro.titulo}}</h2>
-            <p class="text-xs text-slate-400">{{livro.autor}}</p>
-            <p class="mt-2 text-[10px] text-slate-500">{{livro.codigo_acervo}} · {{livro.quantidade_disponivel}} disponível(is)</p>
-            <button (click)="solicitar(livro)" [disabled]="!livro.disponivel" class="mt-3 rounded-lg bg-liturgical-gold px-3 py-2 text-[10px] font-bold uppercase text-liturgical-bg disabled:opacity-40">Solicitar</button>
-          </div>
-        </article>
-      } @empty { <p class="text-sm text-slate-400">Nenhuma obra encontrada.</p> }
-    </div>
+  <!-- Error/Success Feedbacks with animations -->
+  @if (successMsg(); as msg) { 
+    <div [@fadeInOut] class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3.5 text-xs font-semibold text-emerald-400 flex items-center gap-2">
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      {{msg}}
+    </div> 
+  }
+  @if (errorMsg(); as msg) { 
+    <div [@fadeInOut] class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3.5 text-xs font-semibold text-rose-400 flex items-center gap-2">
+      <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
+      {{msg}}
+    </div> 
+  }
+  @if (loading() && !selectedBook()) { 
+    <div [@fadeInOut] class="py-24 text-center">
+      <div class="inline-block w-8 h-8 rounded-full border-2 border-white/5 border-t-liturgical-gold animate-spin mb-4"></div>
+      <p class="text-xs uppercase tracking-widest text-slate-500">Sincronizando acervo litúrgico...</p>
+    </div> 
   }
 
-  @if (!loading() && tab() === 'meus') {
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      @for (item of (dados().meus_emprestimos || []); track item.id) {
-        <article class="rounded-2xl border border-white/5 bg-liturgical-surface/40 p-5">
-          <span class="rounded bg-white/5 px-2 py-1 text-[9px] font-bold uppercase text-liturgical-gold">{{item.status}}</span>
-          <h2 class="mt-3 font-bold text-white">{{item.titulo}}</h2>
-          <p class="mt-1 text-xs text-slate-400">Empréstimo: {{item.data_emprestimo || '-'}}</p>
-          <p class="text-xs text-slate-400">Previsão de devolução: {{item.data_devolucao_prevista || '-'}}</p>
-        </article>
-      } @empty { <p class="text-sm text-slate-400">Você não possui empréstimos locais.</p> }
-      @for (item of (dados().meus_pedidos_interloja || []); track item.id) {
-        <article class="rounded-2xl border border-sky-500/10 bg-sky-500/5 p-5">
-          <span class="text-[9px] font-bold uppercase text-sky-400">Pedido interloja · {{item.status}}</span>
-          <h2 class="mt-2 font-bold text-white">{{item.titulo}}</h2>
-          <p class="text-xs text-slate-400">{{item.loja_origem_nome}}</p>
-        </article>
-      }
-    </div>
-  }
-
-  @if (!loading() && tab() === 'gestao' && pode('biblioteca.manage')) {
-    <div class="space-y-8">
-      <section>
-        <h2 class="mb-3 font-cinzel text-sm font-bold uppercase tracking-widest text-white">Empréstimos locais pendentes</h2>
-        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          @for (item of (dados().emprestimos_pendentes || []); track item.id) {
-            <article class="rounded-2xl border border-white/5 bg-liturgical-surface/40 p-5">
-              <span class="text-[9px] font-bold uppercase text-amber-400">{{item.status}}</span>
-              <h3 class="mt-2 font-bold text-white">{{item.titulo}}</h3>
-              <p class="text-xs text-slate-400">{{item.obreiro_nome}} · devolução {{item.data_devolucao_prevista || '-'}}</p>
-              <button (click)="devolver(item)" class="mt-4 rounded-lg border border-emerald-500/30 px-3 py-2 text-[10px] font-bold uppercase text-emerald-400">Registrar devolução</button>
-            </article>
-          } @empty { <p class="text-sm text-slate-400">Não há empréstimos locais pendentes.</p> }
+  <!-- Tab Content Area -->
+  <div [@tabTransition]="tab()" class="min-h-[300px]">
+    
+    <!-- Tab 1: Acervo -->
+    @if (!loading() && tab() === 'acervo') {
+      <div class="space-y-6">
+        <!-- Search Bar with SVG Icon -->
+        <div class="relative w-full">
+          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input [(ngModel)]="filtroBusca" 
+                 placeholder="Pesquisar por título, autor, código ou grau..." 
+                 class="w-full rounded-xl border border-white/10 bg-white/5 pl-11 pr-4 py-3.5 text-sm text-white placeholder-slate-500 transition-all duration-200 focus:border-liturgical-gold/60 focus:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-liturgical-gold/10">
         </div>
-      </section>
-      <section>
-        <h2 class="mb-3 font-cinzel text-sm font-bold uppercase tracking-widest text-white">Pedidos recebidos de outras Lojas</h2>
-        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          @for (item of (dados().pedidos_interloja_recebidos || []); track item.id) {
-            <article class="rounded-2xl border border-white/5 bg-liturgical-surface/40 p-5">
-              <span class="text-[9px] font-bold uppercase text-sky-400">{{item.status}}</span>
-              <h3 class="mt-2 font-bold text-white">{{item.titulo}}</h3>
-              <p class="text-xs text-slate-400">{{item.obreiro_nome}} · {{item.loja_destino_nome}}</p>
-              @if (item.status === 'solicitado') {
-                <div class="mt-4 flex gap-2">
-                  <button (click)="decidir(item, 'aprovado')" class="rounded-lg bg-emerald-500/20 px-3 py-2 text-[10px] font-bold uppercase text-emerald-400">Aprovar</button>
-                  <button (click)="decidir(item, 'negado')" class="rounded-lg bg-rose-500/20 px-3 py-2 text-[10px] font-bold uppercase text-rose-400">Negar</button>
+
+        <!-- Staggered Book Cards Grid -->
+        <div [@staggeredList]="livrosFiltrados.length" class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          @for (livro of livrosFiltrados; track livro.id) {
+            <article (click)="selecionarLivro(livro)" class="group cursor-pointer flex gap-5 rounded-2xl border border-white/5 bg-liturgical-surface/40 p-5 transition-all duration-300 hover:border-liturgical-gold/25 hover:bg-liturgical-surface/70 hover:shadow-lg hover:shadow-black/20">
+              <!-- Book Jacket Block -->
+              <div class="h-32 w-24 shrink-0 overflow-hidden rounded-xl bg-black/40 shadow-md transition-transform duration-300 group-hover:scale-105 group-hover:shadow-liturgical-gold/5">
+                @if (livro.capa_url) {
+                  <img [src]="livro.capa_url" [alt]="livro.titulo" class="h-full w-full object-cover">
+                } @else {
+                  <!-- Dynamic CSS book jacket placeholder -->
+                  <div class="h-full w-full cover-placeholder" [attr.data-degree]="livro.grau_recomendado || 'Livre'">
+                    <div class="absolute inset-2 border border-white/10 rounded-lg flex flex-col justify-between p-2">
+                      <div class="text-[7px] font-bold tracking-widest text-white/50 uppercase truncate">{{ livro.codigo_acervo }}</div>
+                      <div class="w-full text-center">
+                        <svg class="w-4 h-4 mx-auto text-white/40 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        <span class="block text-[8px] font-bold text-white/90 font-cinzel line-clamp-2 px-0.5 leading-tight">{{ livro.titulo }}</span>
+                      </div>
+                      <span class="block text-center text-[7px] font-bold tracking-wider text-liturgical-gold uppercase">{{ livro.grau_recomendado || 'Livre' }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- Book Information Panel -->
+              <div class="min-w-0 flex-1 flex flex-col justify-between">
+                <div>
+                  <!-- Degree Badge -->
+                  <span class="inline-block px-2.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider badge-degree" 
+                        [attr.data-degree]="livro.grau_recomendado || 'Livre'">
+                    {{ livro.grau_recomendado || 'Livre' }}
+                  </span>
+                  
+                  <h2 class="mt-2 font-cinzel text-sm font-bold text-white leading-tight truncate-2-lines group-hover:text-liturgical-gold transition-colors">{{ livro.titulo }}</h2>
+                  <p class="mt-1 text-[11px] text-slate-400 font-medium truncate">{{ livro.autor }}</p>
+                  
+                  @if (livro.nota_instrucao) {
+                    <p class="mt-2 text-[10px] text-slate-500 italic line-clamp-2 leading-relaxed">"{{ livro.nota_instrucao }}"</p>
+                  }
                 </div>
-              }
-            </article>
-          } @empty { <p class="text-sm text-slate-400">Não há pedidos interloja recebidos.</p> }
-        </div>
-      </section>
-    </div>
-  }
 
-  @if (!loading() && tab() === 'classificacao' && pode('biblioteca.classificar')) {
-    <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-      <div class="space-y-3">
-        @for (livro of (dados().acervo || []); track livro.id) {
-          <button (click)="prepararClassificacao(livro)" class="w-full rounded-xl border border-white/5 bg-liturgical-surface/40 p-4 text-left">
-            <b class="block text-sm text-white">{{livro.titulo}}</b>
-            <span class="text-[10px] text-slate-400">{{livro.autor}} · {{livro.grau_recomendado || 'Livre'}}</span>
+                <div class="mt-4 flex items-center justify-between gap-2 border-t border-white/5 pt-3">
+                  <div class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                    {{ livro.quantidade_disponivel }} disp.
+                  </div>
+                  <button (click)="solicitar(livro); $event.stopPropagation()" 
+                          [disabled]="!livro.disponivel" 
+                          class="rounded-lg bg-liturgical-gold px-3.5 py-2 text-[9px] font-bold uppercase tracking-widest text-liturgical-bg transition-all duration-300 hover:bg-yellow-500 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-liturgical-gold">
+                    {{ livro.disponivel ? 'Solicitar' : 'Indisponível' }}
+                  </button>
+                </div>
+              </div>
+            </article>
+          } @empty { 
+            <div class="col-span-full py-16 text-center text-slate-500">
+              <svg class="w-12 h-12 mx-auto opacity-20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p class="text-sm font-medium">Nenhuma obra litúrgica foi encontrada no acervo.</p> 
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Tab 2: Meus Empréstimos -->
+    @if (!loading() && tab() === 'meus') {
+      <div class="space-y-8">
+        <!-- Local Loans Sub-section -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="w-1 h-4 bg-liturgical-gold rounded"></span>
+            <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Empréstimos Locais</h3>
+          </div>
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            @for (item of (dados().meus_emprestimos || []); track item.id) {
+              <article class="glass-surface rounded-2xl border border-white/5 bg-liturgical-surface/30 p-5 flex justify-between items-start gap-4 transition-all hover:border-white/10 hover:bg-liturgical-surface/40">
+                <div class="space-y-2 min-w-0">
+                  <span class="inline-block px-2.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider text-liturgical-gold bg-liturgical-gold/10 border border-liturgical-gold/20">
+                    {{ item.status }}
+                  </span>
+                  <h4 class="font-cinzel text-sm font-bold text-white truncate">{{ item.titulo }}</h4>
+                  <div class="space-y-0.5">
+                    <p class="text-[11px] text-slate-400">Empréstimo: <b class="text-slate-300">{{ item.data_emprestimo || '-' }}</b></p>
+                    <p class="text-[11px] text-slate-400">Previsão devolução: <b class="text-slate-300">{{ item.data_devolucao_prevista || '-' }}</b></p>
+                  </div>
+                </div>
+                
+                <div class="shrink-0 w-8 h-8 rounded-full bg-liturgical-gold/5 text-liturgical-gold flex items-center justify-center">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </article>
+            } @empty { 
+              <p class="text-xs text-slate-500 py-4 italic">Você não possui empréstimos locais em andamento.</p> 
+            }
+          </div>
+        </div>
+
+        <!-- Inter-lodge Requests Sub-section -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="w-1 h-4 bg-sky-400 rounded"></span>
+            <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Pedidos Interlojas (Rede)</h3>
+          </div>
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            @for (item of (dados().meus_pedidos_interloja || []); track item.id) {
+              <article class="glass-surface rounded-2xl border border-sky-500/10 bg-sky-500/5 p-5 flex justify-between items-start gap-4 transition-all hover:border-sky-500/20 hover:bg-sky-500/10">
+                <div class="space-y-2 min-w-0">
+                  <span class="inline-block px-2.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider text-sky-300 bg-sky-500/10 border border-sky-500/20">
+                    Interlojas · {{ item.status }}
+                  </span>
+                  <h4 class="font-cinzel text-sm font-bold text-white truncate">{{ item.titulo }}</h4>
+                  <p class="text-[11px] text-slate-400">Origem: <b class="text-sky-300">{{ item.loja_origem_nome }}</b></p>
+                </div>
+                
+                <div class="shrink-0 w-8 h-8 rounded-full bg-sky-500/10 text-sky-400 flex items-center justify-center">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                </div>
+              </article>
+            } @empty { 
+              <p class="text-xs text-slate-500 py-4 italic">Sem solicitações de outras lojas no momento.</p> 
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Tab 3: Gestão -->
+    @if (!loading() && tab() === 'gestao' && pode('biblioteca.manage')) {
+      <div class="space-y-8">
+        <!-- Local loans to return -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="w-1 h-4 bg-amber-400 rounded"></span>
+            <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Devoluções Pendentes (Local)</h3>
+          </div>
+          
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            @for (item of (dados().emprestimos_pendentes || []); track item.id) {
+              <article class="glass-surface rounded-2xl border border-white/5 bg-liturgical-surface/30 p-5 flex flex-col justify-between gap-4 transition-all hover:border-white/10 hover:bg-liturgical-surface/40">
+                <div class="flex justify-between items-start gap-2">
+                  <div class="min-w-0">
+                    <span class="inline-block px-2 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-400/10 border border-amber-400/20">
+                      {{ item.status }}
+                    </span>
+                    <h4 class="font-cinzel text-sm font-bold text-white mt-2 truncate">{{ item.titulo }}</h4>
+                    <p class="text-[11px] text-slate-400 mt-1">Obreiro: <b class="text-slate-200">{{ item.obreiro_nome }}</b></p>
+                    <p class="text-[10px] text-slate-500">Previsão: {{ item.data_devolucao_prevista || '-' }}</p>
+                  </div>
+                  
+                  <div class="w-7 h-7 rounded-full bg-amber-400/10 text-amber-400 flex items-center justify-center text-xs font-bold">
+                    {{ item.obreiro_nome?.substring(0, 1)?.toUpperCase() }}
+                  </div>
+                </div>
+
+                <button (click)="devolver(item)" 
+                        class="w-full text-center rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-emerald-400 transition-all hover:bg-emerald-500/10 hover:scale-101 active:scale-99">
+                  Registrar Devolução
+                </button>
+              </article>
+            } @empty { 
+              <div class="col-span-full py-8 text-center border border-dashed border-white/5 rounded-2xl text-slate-500 text-xs">
+                Não há empréstimos locais com devolução pendente.
+              </div> 
+            }
+          </div>
+        </div>
+
+        <!-- Received inter-lodge requests -->
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="w-1 h-4 bg-sky-400 rounded"></span>
+            <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Requisições de Rede (Interlojas)</h3>
+          </div>
+          
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            @for (item of (dados().pedidos_interloja_recebidos || []); track item.id) {
+              <article class="glass-surface rounded-2xl border border-white/5 bg-liturgical-surface/30 p-5 flex flex-col justify-between gap-4 transition-all hover:border-white/10 hover:bg-liturgical-surface/40">
+                <div>
+                  <span class="inline-block px-2 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider text-sky-400 bg-sky-400/10 border border-sky-400/20">
+                    {{ item.status }}
+                  </span>
+                  <h4 class="font-cinzel text-sm font-bold text-white mt-2 truncate">{{ item.titulo }}</h4>
+                  <div class="space-y-0.5 mt-1">
+                    <p class="text-[11px] text-slate-400">Obreiro: <b class="text-slate-200">{{ item.obreiro_nome }}</b></p>
+                    <p class="text-[11px] text-slate-400">Destino: <b class="text-sky-300">{{ item.loja_destino_nome }}</b></p>
+                  </div>
+                </div>
+
+                @if (item.status === 'solicitado') {
+                  <div class="flex gap-2">
+                    <button (click)="decidir(item, 'aprovado')" 
+                            class="flex-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 py-2 text-[9px] font-bold uppercase tracking-widest text-emerald-400 transition-all hover:bg-emerald-500/20 hover:scale-102">
+                      Aprovar
+                    </button>
+                    <button (click)="decidir(item, 'negado')" 
+                            class="flex-1 rounded-lg bg-rose-500/10 border border-rose-500/30 py-2 text-[9px] font-bold uppercase tracking-widest text-rose-400 transition-all hover:bg-rose-500/20 hover:scale-102">
+                      Negar
+                    </button>
+                  </div>
+                }
+              </article>
+            } @empty { 
+              <div class="col-span-full py-8 text-center border border-dashed border-white/5 rounded-2xl text-slate-500 text-xs">
+                Nenhuma solicitação de rede recebida.
+              </div> 
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Tab 4: Classificação -->
+    @if (!loading() && tab() === 'classificacao' && pode('biblioteca.classificar')) {
+      <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <!-- Master list of works for curatorship -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-1 h-4 bg-liturgical-gold rounded"></span>
+            <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Selecione uma obra</h3>
+          </div>
+
+          <div class="max-h-[500px] overflow-y-auto space-y-2 pr-2 scrollbar-hide border border-white/5 rounded-2xl p-2 bg-white/[0.005]">
+            @for (livro of (dados().acervo || []); track livro.id) {
+              <button (click)="prepararClassificacao(livro)" 
+                      [class.active-curator-card]="classificacao.livro_id === livro.id"
+                      class="w-full text-left rounded-xl border border-white/5 bg-liturgical-surface/30 p-4 transition-all duration-300 hover:border-white/15 hover:bg-liturgical-surface/50">
+                <span class="inline-block px-2 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider badge-degree" [attr.data-degree]="livro.grau_recomendado || 'Livre'">
+                  {{ livro.grau_recomendado || 'Livre' }}
+                </span>
+                <b class="block text-xs font-bold text-white mt-1.5 font-cinzel line-clamp-1">{{ livro.titulo }}</b>
+                <span class="block text-[10px] text-slate-400 truncate mt-0.5">{{ livro.autor }} · {{ livro.codigo_acervo }}</span>
+              </button>
+            } @empty {
+              <p class="text-xs text-slate-500 italic p-4 text-center">Nenhuma obra no acervo.</p>
+            }
+          </div>
+        </div>
+
+        <!-- Curatorship Curation Workspace Form -->
+        <div class="lg:col-span-7">
+          <form (submit)="salvarClassificacao(); $event.preventDefault()" 
+                class="glass-surface border border-white/5 bg-liturgical-surface/40 p-6 rounded-2xl space-y-6 shadow-xl relative overflow-hidden">
+            
+            <div class="absolute -right-12 -top-12 w-28 h-28 bg-liturgical-gold/[0.03] rounded-full blur-2xl"></div>
+
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-liturgical-gold/10 text-liturgical-gold flex items-center justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-cinzel text-sm font-bold uppercase tracking-widest text-white">Ficha de Curadoria</h3>
+                <p class="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">Defina graus de acesso e notas de instrução de leitura</p>
+              </div>
+            </div>
+
+            <!-- Degree Selector -->
+            <div class="space-y-2">
+              <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400">Recomendação de Grau</label>
+              <select [(ngModel)]="classificacao.grau_recomendado" 
+                      name="grau" 
+                      [disabled]="!classificacao.livro_id"
+                      class="w-full rounded-xl border border-white/10 bg-white/5 p-3.5 text-xs text-white placeholder-slate-500 transition-all duration-200 focus:border-liturgical-gold/60 focus:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-liturgical-gold/10 disabled:opacity-40">
+                <option value="Livre">Livre (Acesso Geral)</option>
+                <option value="Aprendiz">Aprendiz (1º Grau)</option>
+                <option value="Companheiro">Companheiro (2º Grau)</option>
+                <option value="Mestre">Mestre (3º Grau)</option>
+              </select>
+            </div>
+
+            <!-- Notes Textarea -->
+            <div class="space-y-2">
+              <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400">Nota de Instrução Litúrgica</label>
+              <textarea [(ngModel)]="classificacao.nota_instrucao" 
+                        name="nota" 
+                        [disabled]="!classificacao.livro_id"
+                        placeholder="Recomendações de estudo, relevância litúrgica ou regras especiais..." 
+                        class="min-h-[160px] w-full rounded-xl border border-white/10 bg-white/5 p-3.5 text-xs text-white placeholder-slate-500 transition-all duration-200 focus:border-liturgical-gold/60 focus:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-liturgical-gold/10 disabled:opacity-40"></textarea>
+            </div>
+
+            <button type="submit" 
+                    [disabled]="!classificacao.livro_id"
+                    class="w-full rounded-xl bg-liturgical-gold py-3.5 text-xs font-bold uppercase tracking-widest text-liturgical-bg transition-all duration-300 hover:bg-yellow-500 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-liturgical-gold">
+              Salvar Classificação
+            </button>
+          </form>
+        </div>
+      </div>
+    }
+
+  </div>
+
+  <!-- Sliding Side Drawer for Book Details & Reviews -->
+  @if (selectedBook(); as livro) {
+    <!-- Backdrop Overlay -->
+    <div [@fadeInOut] class="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs transition-all" (click)="fecharDetalhes()"></div>
+
+    <!-- Drawer Panel (Slides in from the right) -->
+    <aside [@fadeInOut] class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-slate-950 border-l border-white/10 shadow-2xl p-6 overflow-y-auto flex flex-col justify-between scrollbar-hide">
+      
+      <!-- Top Header & Close Button -->
+      <div>
+        <div class="flex items-start justify-between gap-4 border-b border-white/5 pb-4 mb-5">
+          <div class="min-w-0">
+            <span class="inline-block px-2.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider badge-degree mb-2" [attr.data-degree]="livro.grau_recomendado || 'Livre'">
+              {{ livro.grau_recomendado || 'Livre' }}
+            </span>
+            <h2 class="font-cinzel text-lg font-bold text-white leading-snug">{{ livro.titulo }}</h2>
+            <p class="text-xs text-slate-400 font-medium mt-1">{{ livro.autor }}</p>
+          </div>
+          
+          <button (click)="fecharDetalhes()" class="text-slate-400 hover:text-white rounded-lg p-1.5 hover:bg-white/5 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        @if (loadingDetails()) {
+          <div class="py-12 text-center">
+            <div class="inline-block w-6 h-6 rounded-full border-2 border-white/5 border-t-liturgical-gold animate-spin mb-2"></div>
+            <p class="text-[10px] uppercase tracking-widest text-slate-500">Sincronizando resenhas e orientações...</p>
+          </div>
+        } @else {
+          <!-- Details Body -->
+          <div class="space-y-5">
+            <!-- Book metadata -->
+            <div class="grid grid-cols-2 gap-3 bg-white/[0.02] border border-white/5 rounded-xl p-4 text-[10px] text-slate-300">
+              <div>
+                <span class="block text-slate-500 uppercase font-bold tracking-wider">Código</span>
+                <span class="font-mono text-white text-xs mt-0.5 block">{{ livro.codigo_acervo || '-' }}</span>
+              </div>
+              <div>
+                <span class="block text-slate-500 uppercase font-bold tracking-wider">ISBN</span>
+                <span class="text-white text-xs mt-0.5 block">{{ livro.isbn || 'N/A' }}</span>
+              </div>
+            </div>
+
+            <!-- Reading Recommendation Alert (Color Theory / Affordance) -->
+            <div class="rounded-xl border border-sky-500/10 bg-sky-500/5 p-4 text-[10px] leading-relaxed text-sky-300">
+              <span class="block font-bold mb-0.5 uppercase tracking-wider">Grau Recomendado</span>
+              A classificação é uma recomendação de leitura para formação litúrgica do irmão em seu respectivo grau. <b>Não constitui limitação ou impedimento de empréstimo.</b>
+            </div>
+
+            <!-- Note of formation/curator note -->
+            @if (livro.nota_instrucao) {
+              <div class="bg-purple-950/10 border border-purple-500/20 rounded-xl p-4 text-[11px] text-purple-200">
+                <span class="block font-bold text-liturgical-gold uppercase tracking-wider text-[8px] mb-1.5">Nota de Orientação Rituária</span>
+                <p class="leading-relaxed text-slate-300">"{{ livro.nota_instrucao }}"</p>
+              </div>
+            }
+
+            <!-- Synopsis / Resumo -->
+            <div class="space-y-1.5">
+              <h4 class="text-[10px] font-bold text-white uppercase tracking-widest">Resumo Editorial</h4>
+              <p class="text-slate-300 text-xs leading-relaxed whitespace-pre-wrap bg-white/[0.01] border border-white/5 rounded-xl p-4">
+                {{ livro.resumo || 'Nenhum resumo ou sinopse cadastrados para esta obra.' }}
+              </p>
+            </div>
+
+            <!-- Likes & Reactions -->
+            <div class="border-t border-white/5 pt-4 space-y-2">
+              <h4 class="text-[10px] font-bold text-white uppercase tracking-widest">Feedback dos Leitores</h4>
+              <div class="grid grid-cols-2 gap-3">
+                <button (click)="reagir(livro.id, true)" class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 py-2.5 text-xs font-bold transition flex items-center justify-center gap-2">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                  </svg>
+                  Recomendo ({{ livro.total_gostei_sim || 0 }})
+                </button>
+                <button (click)="reagir(livro.id, false)" class="rounded-xl border border-rose-500/20 bg-rose-500/5 text-rose-400 hover:bg-rose-500/10 py-2.5 text-xs font-bold transition flex items-center justify-center gap-2">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v5a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m7-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                  </svg>
+                  Evitar ({{ livro.total_gostei_nao || 0 }})
+                </button>
+              </div>
+            </div>
+
+            <!-- Reviews / Comments list -->
+            <div class="border-t border-white/5 pt-4 space-y-4">
+              <h4 class="text-[10px] font-bold text-white uppercase tracking-widest">Resenhas dos Irmãos ({{ dados().comentarios?.length || 0 }})</h4>
+              
+              <!-- Review input -->
+              <div class="space-y-2">
+                <textarea [(ngModel)]="novoComentario" rows="2" placeholder="Escreva sua recomendação ou percepção da obra..." class="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-white placeholder-slate-500 transition-all focus:border-liturgical-gold/60 focus:bg-white/[0.07] focus:outline-none"></textarea>
+                <div class="flex justify-end">
+                  <button (click)="comentar(livro.id)" class="rounded-lg bg-liturgical-gold/15 border border-liturgical-gold/30 px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-liturgical-gold hover:bg-liturgical-gold/25">Enviar Comentário</button>
+                </div>
+              </div>
+
+              <!-- Reviews items loop -->
+              <div class="space-y-3 max-h-[220px] overflow-y-auto pr-1 scrollbar-hide">
+                @for (com of (dados().comentarios || []); track com.criado_em) {
+                  <div class="bg-white/[0.01] border border-white/5 rounded-xl p-3 space-y-2 text-[11px]">
+                    <div class="flex items-center gap-2">
+                      <div class="w-6 h-6 rounded-full bg-liturgical-gold/10 text-liturgical-gold border border-liturgical-gold/25 flex items-center justify-center font-bold text-[9px]">
+                        {{ com.obreiro_nome?.substring(0, 1)?.toUpperCase() }}
+                      </div>
+                      <div>
+                        <b class="text-white block">{{ com.obreiro_nome }}</b>
+                        <span class="text-[9px] text-slate-500 block">{{ com.criado_em }}</span>
+                      </div>
+                    </div>
+                    <p class="text-slate-300 leading-relaxed pl-0.5 whitespace-pre-wrap">{{ com.comentario }}</p>
+                  </div>
+                } @empty {
+                  <p class="text-center text-slate-500 italic text-[11px] py-4">Seja o primeiro a publicar uma resenha sobre esta obra.</p>
+                }
+              </div>
+            </div>
+
+          </div>
+        }
+      </div>
+
+      <!-- Bottom Actions (Fixed at bottom) -->
+      <div class="border-t border-white/5 pt-4 mt-6 flex flex-col gap-2">
+        <button (click)="solicitar(livro); $event.stopPropagation()" 
+                [disabled]="!livro.pode_solicitar && !livro.disponivel" 
+                class="w-full rounded-xl bg-liturgical-gold py-3 text-xs font-bold uppercase tracking-widest text-liturgical-bg transition-all duration-300 hover:bg-yellow-500 disabled:opacity-40">
+          {{ (livro.pode_solicitar || livro.disponivel) ? 'Solicitar Empréstimo' : 'Indisponível para Empréstimo' }}
+        </button>
+        
+        @if (pode('biblioteca.classificar')) {
+          <button (click)="prepararClassificacao(livro); abrirTab('classificacao'); $event.stopPropagation()" 
+                  class="w-full rounded-xl border border-purple-500/30 py-2.5 text-[10px] font-bold uppercase tracking-widest text-purple-400 hover:bg-purple-500/10">
+            Ajustar Classificação (Curadoria)
           </button>
         }
       </div>
-      <form (submit)="salvarClassificacao();$event.preventDefault()" class="space-y-4 rounded-2xl border border-white/5 bg-liturgical-surface/40 p-6">
-        <h2 class="font-cinzel text-sm font-bold uppercase tracking-widest text-white">Curadoria da obra</h2>
-        <select [(ngModel)]="classificacao.grau_recomendado" name="grau" class="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white">
-          <option value="Livre">Livre</option><option value="Aprendiz">Aprendiz</option><option value="Companheiro">Companheiro</option><option value="Mestre">Mestre</option>
-        </select>
-        <textarea [(ngModel)]="classificacao.nota_instrucao" name="nota" placeholder="Nota de instrução e orientação de leitura" class="min-h-36 w-full rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white"></textarea>
-        <button type="submit" class="rounded-xl bg-liturgical-gold px-4 py-3 text-xs font-bold uppercase text-liturgical-bg">Salvar classificação</button>
-      </form>
-    </div>
+    </aside>
   }
 </div>

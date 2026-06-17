@@ -1,25 +1,156 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../environments/environment';
 import { SupabaseService } from '../../services/supabase.service';
+import { Chart, registerables } from 'chart.js/auto';
+
+Chart.register(...registerables);
 
 @Component({
-  selector: 'app-tesouraria-fechamento', standalone: true, imports: [CommonModule, FormsModule],
-  template: `<section class="page"><header><div><span>Tesouraria</span><h1>Fechamento Mensal</h1><p>Conferência e encerramento da competência financeira.</p></div><button (click)="imprimir()">Imprimir A4</button></header>
-  <div class="filters"><select [(ngModel)]="mes" (change)="carregar()">@for(m of meses;track m.v){<option [value]="m.v">{{m.l}}</option>}</select><input type="number" [(ngModel)]="ano" (change)="carregar()"><strong>{{ fechamento()?.status || 'aberto' }}</strong></div>
-  @if(erro()){<div class="error">{{erro()}}</div>} @if(fechamento();as f){<div class="metrics"><article><small>Saldo inicial</small><b>{{f.saldo_inicial|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b><button (click)="editarSaldo()">Editar</button></article><article><small>Entradas</small><b class="in">{{f.total_entradas|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b></article><article><small>Saídas</small><b class="out">{{f.total_saidas|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b></article><article><small>Saldo final</small><b>{{f.saldo_final|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b></article></div>
-  <div class="action"><div><h2>Ação de fechamento</h2><p>Confira todos os lançamentos antes de encerrar a competência.</p></div><button [disabled]="f.status==='fechado'||salvando()" (click)="fechar()">{{f.status==='fechado'?'Competência fechada':'Fechar mês'}}</button></div>}</section>`,
-  styles:[`:host{display:block;color:#e5e7eb}.page>*+*{margin-top:1.5rem}header{display:flex;justify-content:space-between;gap:1rem}header span{color:#c9a227;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.15em}h1{font:800 1.9rem Cinzel,serif;margin:.25rem 0}p{color:#94a3b8}button,select,input{border:1px solid rgba(255,255,255,.1);background:#111a31;color:white;border-radius:.75rem;padding:.7rem 1rem}.filters{display:flex;gap:.75rem;align-items:center;padding:1rem;background:rgba(11,19,43,.6);border-radius:1rem}.filters strong{margin-left:auto;text-transform:uppercase;color:#c9a227}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}.metrics article,.action{background:rgba(11,19,43,.62);border:1px solid rgba(255,255,255,.08);padding:1.25rem;border-radius:1.2rem}.metrics small{display:block;color:#64748b;text-transform:uppercase;font-weight:800}.metrics b{display:block;font-size:1.3rem;margin-top:.6rem}.metrics button{padding:.3rem .5rem;margin-top:.5rem}.in{color:#6ee7b7}.out{color:#fda4af}.action{display:flex;justify-content:space-between;align-items:center}.action>button{background:#c9a227;color:#050b14;font-weight:900}.error{padding:1rem;background:#450a0a;color:#fda4af;border-radius:1rem}@media(max-width:800px){.metrics{grid-template-columns:1fr 1fr}.action,header{flex-direction:column}}@media print{header button,.filters,.action{display:none}}`]
+  selector: 'app-tesouraria-fechamento',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './tesouraria-fechamento.html',
+  styleUrl: './tesouraria-fechamento.css'
 })
 export class TesourariaFechamento implements OnInit {
-  private http=inject(HttpClient); private auth=inject(SupabaseService);
-  protected mes=new Date().getMonth()+1; protected ano=new Date().getFullYear(); protected fechamento=signal<any>(null); protected erro=signal(''); protected salvando=signal(false);
-  protected meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((l,i)=>({v:i+1,l}));
-  ngOnInit(){this.carregar()}
-  protected carregar(){this.http.get<any>(`${environment.apiUrl}/api/tesouraria/fechamento?mes=${this.mes}&ano=${this.ano}`,{headers:this.auth.getAuthHeaders()}).subscribe({next:r=>{this.fechamento.set(r.fechamento);this.erro.set(r.ok?'':r.erro)},error:()=>this.erro.set('Falha ao carregar o fechamento.')})}
-  protected editarSaldo(){const f=this.fechamento();const valor=prompt('Novo saldo inicial:',String(f.saldo_inicial));if(valor===null)return;const justificativa=prompt('Justificativa obrigatória:','Ajuste conferido pela Tesouraria.');if(!justificativa)return;this.http.post<any>(`${environment.apiUrl}/api/tesouraria/fechamento/saldo-inicial`,{fechamento_id:f.id,novo_saldo:Number(valor),justificativa},{headers:this.auth.getAuthHeaders()}).subscribe(r=>r.ok?this.carregar():this.erro.set(r.erro||'Falha ao atualizar saldo.'))}
-  protected fechar(){if(!confirm(`Confirma o fechamento de ${this.mes}/${this.ano}?`))return;this.salvando.set(true);this.http.post<any>(`${environment.apiUrl}/api/tesouraria/fechamento/fechar`,{mes:this.mes,ano:this.ano,fechamento_id:this.fechamento()?.id},{headers:this.auth.getAuthHeaders()}).subscribe({next:r=>{this.salvando.set(false);r.ok?this.carregar():this.erro.set(r.erro||'Falha ao fechar competência.')},error:()=>{this.salvando.set(false);this.erro.set('Falha ao fechar competência.')}})}
-  protected imprimir(){window.print()}
+  private http = inject(HttpClient);
+  private auth = inject(SupabaseService);
+
+  @ViewChild('chartPizzaCanvas') private chartPizzaCanvas!: ElementRef<HTMLCanvasElement>;
+  private chartPizzaInstance: Chart | null = null;
+
+  protected mes = new Date().getMonth() + 1;
+  protected ano = new Date().getFullYear();
+  protected fechamento = signal<any>(null);
+  protected fechamentoAnterior = signal<any>(null);
+  protected tronco = signal<any>(null);
+  protected inadimplencia = signal<any[]>([]);
+  protected creditosAReceber = signal<any>(null);
+  protected erro = signal('');
+  protected salvando = signal(false);
+  protected meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].map((l, i) => ({ v: i + 1, l }));
+
+  ngOnInit() {
+    this.carregar();
+  }
+
+  protected carregar() {
+    this.erro.set('');
+    this.http.get<any>(
+      `${environment.apiUrl}/api/tesouraria/fechamento?mes=${this.mes}&ano=${this.ano}`,
+      { headers: this.auth.getAuthHeaders() }
+    ).subscribe({
+      next: r => {
+        if (r && r.ok) {
+          this.fechamento.set(r.fechamento);
+          this.fechamentoAnterior.set(r.anterior);
+          this.tronco.set(r.tronco);
+          this.inadimplencia.set(r.inadimplencia || []);
+          this.creditosAReceber.set(r.creditos_a_receber);
+
+          // Renderizar o gráfico de pizza após atualização dos dados
+          setTimeout(() => {
+            const entradas = Number(r.fechamento?.total_entradas || 0);
+            const saidas = Number(r.fechamento?.total_saidas || 0);
+            this.renderizarPizza(entradas, saidas);
+          }, 100);
+        } else {
+          this.erro.set(r.erro || 'Falha ao carregar o fechamento.');
+        }
+      },
+      error: () => this.erro.set('Falha ao carregar o fechamento.')
+    });
+  }
+
+  private renderizarPizza(entradas: number, saidas: number) {
+    if (!this.chartPizzaCanvas) return;
+    
+    if (this.chartPizzaInstance) {
+      this.chartPizzaInstance.destroy();
+    }
+
+    if (entradas === 0 && saidas === 0) {
+      return; // Sem dados para renderizar pizza
+    }
+
+    this.chartPizzaInstance = new Chart(this.chartPizzaCanvas.nativeElement, {
+      type: 'pie',
+      data: {
+        labels: ['Receitas (Entradas)', 'Despesas (Saídas)'],
+        datasets: [{
+          data: [entradas, saidas],
+          backgroundColor: ['rgba(16, 185, 129, 0.75)', 'rgba(239, 68, 68, 0.75)'],
+          borderWidth: 1,
+          borderColor: 'rgba(11, 19, 43, 0.65)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#94a3b8', font: { family: 'Inter', size: 10 } }
+          }
+        }
+      }
+    });
+  }
+
+  protected editarSaldo() {
+    const f = this.fechamento();
+    if (!f) return;
+
+    const valor = prompt('Novo saldo inicial:', String(f.saldo_inicial));
+    if (valor === null) return;
+
+    const justificativa = prompt('Justificativa obrigatória:', 'Ajuste conferido pela Tesouraria.');
+    if (!justificativa) return;
+
+    this.http.post<any>(
+      `${environment.apiUrl}/api/tesouraria/fechamento/saldo-inicial`,
+      { fechamento_id: f.id, novo_saldo: Number(valor), justificativa },
+      { headers: this.auth.getAuthHeaders() }
+    ).subscribe(r => {
+      if (r && r.ok) {
+        this.carregar();
+      } else {
+        this.erro.set(r.erro || 'Falha ao atualizar saldo.');
+      }
+    });
+  }
+
+  protected fechar() {
+    const f = this.fechamento();
+    if (!f) return;
+
+    if (!confirm(`Confirma o fechamento de ${this.mes}/${this.ano}?`)) return;
+    this.salvando.set(true);
+
+    this.http.post<any>(
+      `${environment.apiUrl}/api/tesouraria/fechamento/fechar`,
+      { mes: this.mes, ano: this.ano, fechamento_id: f.id },
+      { headers: this.auth.getAuthHeaders() }
+    ).subscribe({
+      next: r => {
+        this.salvando.set(false);
+        if (r && r.ok) {
+          this.carregar();
+        } else {
+          this.erro.set(r.erro || 'Falha ao fechar competência.');
+        }
+      },
+      error: () => {
+        this.salvando.set(false);
+        this.erro.set('Falha ao fechar competência.');
+      }
+    });
+  }
+
+  protected imprimir() {
+    window.print();
+  }
 }

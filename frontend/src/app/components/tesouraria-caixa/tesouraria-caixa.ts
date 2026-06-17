@@ -1,7 +1,8 @@
-import { Component, inject, OnInit, ViewChild, ElementRef, signal, effect } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ElementRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { SupabaseService } from '../../services/supabase.service';
 import { environment } from '../../../environments/environment';
 import { Chart, registerables } from 'chart.js/auto';
@@ -19,6 +20,7 @@ Chart.register(...registerables);
 export class TesourariaCaixa implements OnInit {
   private http = inject(HttpClient);
   private supabaseService = inject(SupabaseService);
+  private router = inject(Router);
 
   // Referências aos canvas dos gráficos no template
   @ViewChild('chartMensalCanvas') private chartMensalCanvas!: ElementRef<HTMLCanvasElement>;
@@ -51,11 +53,33 @@ export class TesourariaCaixa implements OnInit {
   protected lancamentos = signal<any[]>([]);
   protected categorias = signal<any[]>([]);
   protected totaisMes = signal<{ entrada: number; saida: number }>({ entrada: 0, saida: 0 });
+  protected previsaoEntradas = signal<number>(0);
+  protected previsaoSaidas = signal<number>(0);
+  protected saldoPrevisto = signal<number>(0);
+  protected saldoAtual = signal<number>(0);
+  protected saldoInicial = signal<number>(0);
   
   // Loading e Erros
   protected loading = signal(false);
   protected loadingGraficos = signal(false);
   protected errorMsg = signal<string | null>(null);
+
+  // Tab ativa
+  protected activeTab = signal<'caixa' | 'agendamentos'>('caixa');
+  protected obreiros = signal<any[]>([]);
+
+  // Formulário de Agendamento
+  protected schedObreiroId = signal<string>('');
+  protected schedJoiaAtiva = signal<boolean>(false);
+  protected schedJoiaTipo = signal<string>('nenhuma');
+  protected schedJoiaValor = signal<number | null>(1502.00);
+  protected schedJoiaFormato = signal<string>('a_vista');
+  protected schedJoiaData = signal<string | null>(null);
+  protected schedBibliotecaAtiva = signal<boolean>(false);
+  protected schedBibliotecaValor = signal<number | null>(44.00);
+  protected schedBibliotecaMes = signal<number | null>(null);
+  protected schedBibliotecaFormato = signal<string>('mensal');
+  protected salvandoAgendamento = signal<boolean>(false);
 
   // Formulário de novo lançamento
   protected showNovoForm = signal(false);
@@ -69,6 +93,11 @@ export class TesourariaCaixa implements OnInit {
   ngOnInit(): void {
     this.carregarDados();
     this.carregarCategorias();
+    this.carregarObreiros();
+  }
+
+  protected navegar(url: string): void {
+    this.router.navigate([url]);
   }
 
   protected carregarDados(): void {
@@ -87,6 +116,11 @@ export class TesourariaCaixa implements OnInit {
             entrada: Number(res.totais?.entrada || 0),
             saida: Number(res.totais?.saida || 0)
           });
+          this.previsaoEntradas.set(Number(res.previsao_entradas || 0));
+          this.previsaoSaidas.set(Number(res.previsao_saidas || 0));
+          this.saldoPrevisto.set(Number(res.saldo_previsto || 0));
+          this.saldoAtual.set(Number(res.saldo_atual || 0));
+          this.saldoInicial.set(Number(res.saldo_inicial || 0));
         } else {
           this.errorMsg.set(res.erro || 'Falha ao carregar lançamentos de caixa.');
         }
@@ -293,6 +327,168 @@ export class TesourariaCaixa implements OnInit {
         }
       },
       error: (err) => console.error('[Tesouraria] Erro ao excluir:', err)
+    });
+  }
+
+  protected preencherAtalhoLancamento(tipo: 'entrada' | 'saida', codigoCategoria: string, valorSugerido: number, descricao: string): void {
+    const cat = this.categorias().find(c => String(c.codigo).toUpperCase() === codigoCategoria.toUpperCase() || String(c.nome).toLowerCase() === codigoCategoria.toLowerCase());
+    
+    this.novoTipo.set(tipo);
+    this.novoValor.set(valorSugerido);
+    this.novaCategoriaId.set(cat ? Number(cat.id) : null);
+    this.novaDescricao.set(descricao);
+    this.novaData.set(new Date().toISOString().split('T')[0]);
+    this.showNovoForm.set(true);
+  }
+
+  protected gerarLoteMensalidadesBiblioteca(): void {
+    if (!confirm('Deseja realmente gerar as mensalidades (R$ 150) e contribuições à biblioteca (R$ 44) para os membros no ano atual?')) {
+      return;
+    }
+
+    this.loading.set(true);
+    const headers = this.supabaseService.getAuthHeaders();
+    const payload = {
+      mes: this.mesSelecionado(),
+      ano: this.anoSelecionado()
+    };
+
+    this.http.post<any>(
+      `${environment.apiUrl}/api/tesouraria/auto-gerar`,
+      payload,
+      { headers }
+    ).subscribe({
+      next: (res) => {
+        this.loading.set(false);
+        if (res && res.ok) {
+          alert(`Lote processado! Mensalidades: ${res.mensalidades?.geradas || 0} criadas. Biblioteca: ${res.biblioteca?.geradas || 0} criadas.`);
+          this.carregarDados();
+        } else {
+          alert(res.erro || 'Falha ao gerar lote automático.');
+          this.carregarDados();
+        }
+      },
+      error: (err) => {
+        this.loading.set(false);
+        console.error('[Tesouraria] Erro ao gerar lote:', err);
+        alert('Erro de conexão ao gerar lote.');
+        this.carregarDados();
+      }
+    });
+  }
+
+  private carregarObreiros(): void {
+    const headers = this.supabaseService.getAuthHeaders();
+    this.http.get<any>(`${environment.apiUrl}/api/tesouraria/obreiros-financeiro`, { headers }).subscribe({
+      next: (res) => {
+        if (res && res.ok) {
+          this.obreiros.set(res.obreiros || []);
+        }
+      }
+    });
+  }
+
+  protected onObreiroChange(obreiroId: string): void {
+    this.schedObreiroId.set(obreiroId);
+    if (!obreiroId) {
+      this.schedJoiaAtiva.set(false);
+      this.schedJoiaTipo.set('nenhuma');
+      this.schedJoiaValor.set(1502.00);
+      this.schedJoiaFormato.set('a_vista');
+      this.schedJoiaData.set(null);
+      this.schedBibliotecaAtiva.set(false);
+      this.schedBibliotecaValor.set(44.00);
+      this.schedBibliotecaMes.set(null);
+      this.schedBibliotecaFormato.set('mensal');
+      return;
+    }
+
+    const ob = this.obreiros().find(o => o.id === obreiroId);
+    if (ob) {
+      this.schedJoiaAtiva.set(!!ob.financeiro_joia_ativa);
+      this.schedJoiaTipo.set(ob.financeiro_joia_tipo || 'nenhuma');
+      this.schedJoiaValor.set(ob.financeiro_joia_valor !== null ? Number(ob.financeiro_joia_valor) : 1502.00);
+      this.schedJoiaFormato.set(ob.financeiro_joia_formato || 'a_vista');
+      
+      let joiaDate = null;
+      if (ob.financeiro_joia_tipo === 'elevacao') {
+        joiaDate = ob.data_elevacao;
+      } else if (ob.financeiro_joia_tipo === 'exaltacao') {
+        joiaDate = ob.data_exaltacao;
+      } else {
+        joiaDate = ob.data_iniciacao;
+      }
+      this.schedJoiaData.set(joiaDate ? joiaDate.split('T')[0] : null);
+
+      this.schedBibliotecaValor.set(ob.financeiro_biblioteca_valor !== null ? Number(ob.financeiro_biblioteca_valor) : 44.00);
+      this.schedBibliotecaFormato.set(ob.financeiro_biblioteca_formato || 'mensal');
+      this.schedBibliotecaMes.set(ob.financeiro_biblioteca_mes !== null ? Number(ob.financeiro_biblioteca_mes) : null);
+      this.schedBibliotecaAtiva.set(ob.financeiro_biblioteca_formato !== 'isento' && ob.financeiro_biblioteca_valor !== null);
+    }
+  }
+
+  protected onJoiaTipoChange(tipo: string): void {
+    this.schedJoiaTipo.set(tipo);
+    this.schedJoiaAtiva.set(tipo !== 'nenhuma');
+    if (tipo !== 'nenhuma' && !this.schedJoiaValor()) {
+      this.schedJoiaValor.set(1502.00);
+    }
+  }
+
+  protected salvarAgendamento(): void {
+    if (!this.schedObreiroId()) {
+      alert('Selecione um obreiro.');
+      return;
+    }
+
+    this.salvandoAgendamento.set(true);
+    const headers = this.supabaseService.getAuthHeaders();
+
+    let dataIniciacao = null;
+    let dataElevacao = null;
+    let dataExaltacao = null;
+
+    if (this.schedJoiaTipo() === 'iniciacao') {
+      dataIniciacao = this.schedJoiaData();
+    } else if (this.schedJoiaTipo() === 'elevacao') {
+      dataElevacao = this.schedJoiaData();
+    } else if (this.schedJoiaTipo() === 'exaltacao') {
+      dataExaltacao = this.schedJoiaData();
+    }
+
+    const payload = {
+      obreiro_id: this.schedObreiroId(),
+      joia_valor: this.schedJoiaAtiva() ? this.schedJoiaValor() : null,
+      joia_formato: this.schedJoiaAtiva() ? this.schedJoiaFormato() : 'a_vista',
+      joia_ativa: this.schedJoiaAtiva(),
+      joia_tipo: this.schedJoiaTipo(),
+      biblioteca_valor: this.schedBibliotecaAtiva() ? this.schedBibliotecaValor() : null,
+      biblioteca_formato: this.schedBibliotecaAtiva() ? this.schedBibliotecaFormato() : 'isento',
+      biblioteca_mes: this.schedBibliotecaAtiva() ? this.schedBibliotecaMes() : null,
+      data_iniciacao: dataIniciacao,
+      data_elevacao: dataElevacao,
+      data_exaltacao: dataExaltacao
+    };
+
+    this.http.post<any>(
+      `${environment.apiUrl}/api/tesouraria/obreiros-financeiro/salvar`,
+      payload,
+      { headers }
+    ).subscribe({
+      next: (res) => {
+        this.salvandoAgendamento.set(false);
+        if (res && res.ok) {
+          alert('Agendamento salvo com sucesso!');
+          this.carregarObreiros();
+        } else {
+          alert(res.erro || 'Falha ao salvar agendamento.');
+        }
+      },
+      error: (err) => {
+        this.salvandoAgendamento.set(false);
+        console.error('[Tesouraria] Erro ao salvar agendamento:', err);
+        alert('Erro de conexão ao salvar.');
+      }
     });
   }
 }

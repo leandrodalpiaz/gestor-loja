@@ -16,11 +16,10 @@ final class DashboardSections
             [
                 'titulo' => 'Minha Loja',
                 'itens' => [
-                    ['label' => 'Área do Irmão', 'href' => '/minha-loja', 'permission' => 'dashboard.view'],
+                    ['label' => 'Irmãos da Loja', 'href' => '/minha-loja', 'permission' => 'dashboard.view'],
                     ['label' => 'Início (Resumo pessoal)', 'href' => '/financeiro/minhas-obrigacoes', 'permission' => 'financeiro.self'],
                     ['label' => 'Meu Cadastro', 'href' => '/meu-cadastro', 'permission' => 'dashboard.view'],
                     ['label' => 'Meus Trabalhos', 'href' => '/minha-loja/trabalhos', 'permission' => 'dashboard.view'],
-                    ['label' => 'Irmãos da Loja', 'href' => '/minha-loja/irmaos', 'permission' => 'dashboard.view'],
                 ],
             ],
             [

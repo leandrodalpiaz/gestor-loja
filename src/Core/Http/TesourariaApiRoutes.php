@@ -16,6 +16,7 @@ use App\Models\Presenca;
 use App\Models\RelatorioTesourariaGestao;
 use App\Models\RegularidadeObreiro;
 use App\Models\Sessao;
+use App\Models\TesourariaExecutive;
 use PDO;
 
 class TesourariaApiRoutes
@@ -53,11 +54,29 @@ class TesourariaApiRoutes
             $totais = $lancModel->obterTotaisMes($mes, $ano);
             $porCategoria = $lancModel->obterPorCategoriaMes($mes, $ano);
 
+            // Calcula previsões do período
+            $obrigModel = new ObrigacaoFinanceira();
+            $previsoes = $obrigModel->obterPrevisoesMes($mes, $ano);
+            $previsaoEntradas = $previsoes['entrada'] ?? 0.0;
+            $previsaoSaidas = $previsoes['saida'] ?? 0.0;
+
+            // Calcula saldo inicial e atual do caixa
+            $execModel = new TesourariaExecutive();
+            $resumo = $execModel->resumoMes($mes, $ano);
+            $saldoInicial = $resumo['saldo_inicial'] ?? 0.0;
+            $saldoAtual = $resumo['saldo_atual'] ?? 0.0;
+            $saldoPrevisto = $saldoAtual + $previsaoEntradas - $previsaoSaidas;
+
             JsonResponse::send([
                 'ok' => true,
                 'lancamentos' => $lancamentos,
                 'totais' => $totais,
                 'categorias' => $porCategoria,
+                'previsao_entradas' => $previsaoEntradas,
+                'previsao_saidas' => $previsaoSaidas,
+                'saldo_previsto' => $saldoPrevisto,
+                'saldo_atual' => $saldoAtual,
+                'saldo_inicial' => $saldoInicial,
             ]);
             return true;
         }
@@ -525,7 +544,25 @@ class TesourariaApiRoutes
             $fechModel->recalcularTotais($mes, $ano);
             $fechamento = $fechModel->obter($mes, $ano);
 
-            JsonResponse::send(['ok' => true, 'fechamento' => $fechamento]);
+            // Obter fechamento do mês anterior para comparação
+            $mesPrev = $mes - 1;
+            $anoPrev = $ano;
+            if ($mesPrev < 1) {
+                $mesPrev = 12;
+                $anoPrev--;
+            }
+            $fechamentoAnterior = $fechModel->obter($mesPrev, $anoPrev);
+
+            $dadosAux = $fechModel->obterDadosAuxiliaresRelatorio($mes, $ano);
+
+            JsonResponse::send([
+                'ok' => true,
+                'fechamento' => $fechamento,
+                'anterior' => $fechamentoAnterior,
+                'tronco' => $dadosAux['tronco'],
+                'inadimplencia' => $dadosAux['inadimplencia'],
+                'creditos_a_receber' => $dadosAux['creditos_a_receber']
+            ]);
             return true;
         }
 
@@ -606,6 +643,101 @@ class TesourariaApiRoutes
                 'ano' => $ano,
                 'dados' => $dados
             ]);
+            return true;
+        }
+
+        if (str_starts_with($requestUri, '/api/tesouraria/obreiro/detalhe-financeiro') && $method === 'GET') {
+            $obreiroId = trim((string) ($_GET['obreiro_id'] ?? ''));
+            if ($obreiroId === '') {
+                JsonResponse::send(['ok' => false, 'erro' => 'ID do obreiro inválido']);
+                return true;
+            }
+            $obrigModel = new ObrigacaoFinanceira();
+            $detalhe = $obrigModel->obterDetalheFinanceiroObreiro($obreiroId);
+            if (!$detalhe) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Obreiro não encontrado']);
+                return true;
+            }
+            JsonResponse::send(['ok' => true, 'detalhe' => $detalhe]);
+            return true;
+        }
+
+        if ($requestUri === '/api/tesouraria/auto-gerar' && $method === 'POST') {
+            $body = RequestBody::json();
+            $mes = (int) ($body['mes'] ?? date('n'));
+            $ano = (int) ($body['ano'] ?? date('Y'));
+
+            if ($mes < 1 || $mes > 12 || $ano < 2000) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Mês ou ano inválido']);
+                return true;
+            }
+
+            $obrigModel = new ObrigacaoFinanceira();
+            
+            // Gerar mensalidades para o ano se ainda não criadas
+            $resultadoMensalidades = $obrigModel->gerarMensalidadesAno($ano, $usuarioId);
+            
+            // Programar biblioteca do ano
+            $resultadoBiblioteca = $obrigModel->programarBibliotecaRenascencaAno($ano, $usuarioId);
+
+            JsonResponse::send([
+                'ok' => true,
+                'mensalidades' => $resultadoMensalidades,
+                'biblioteca' => $resultadoBiblioteca
+            ]);
+            return true;
+        }
+
+        if ($requestUri === '/api/tesouraria/obreiros-financeiro' && $method === 'GET') {
+            $obreiroModel = new Obreiro();
+            $obreiros = $obreiroModel->getAllAtivos();
+            
+            // Format numbers to clean float representation for JSON
+            foreach ($obreiros as &$ob) {
+                $ob['financeiro_joia_valor'] = isset($ob['financeiro_joia_valor']) ? (float) $ob['financeiro_joia_valor'] : null;
+                $ob['financeiro_biblioteca_valor'] = isset($ob['financeiro_biblioteca_valor']) ? (float) $ob['financeiro_biblioteca_valor'] : null;
+            }
+            unset($ob);
+
+            JsonResponse::send(['ok' => true, 'obreiros' => $obreiros]);
+            return true;
+        }
+
+        if ($requestUri === '/api/tesouraria/obreiros-financeiro/salvar' && $method === 'POST') {
+            $body = RequestBody::json();
+            $obreiroId = trim((string) ($body['obreiro_id'] ?? ''));
+            $joiaValor = isset($body['joia_valor']) && $body['joia_valor'] !== '' ? (float) $body['joia_valor'] : null;
+            $joiaFormato = trim((string) ($body['joia_formato'] ?? 'a_vista'));
+            $bibliotecaValor = isset($body['biblioteca_valor']) && $body['biblioteca_valor'] !== '' ? (float) $body['biblioteca_valor'] : null;
+            $bibliotecaFormato = trim((string) ($body['biblioteca_formato'] ?? 'mensal'));
+            $dataElevacao = isset($body['data_elevacao']) && $body['data_elevacao'] !== '' ? trim((string) $body['data_elevacao']) : null;
+            $dataExaltacao = isset($body['data_exaltacao']) && $body['data_exaltacao'] !== '' ? trim((string) $body['data_exaltacao']) : null;
+            $joiaAtiva = !empty($body['joia_ativa']);
+            $joiaTipo = isset($body['joia_tipo']) && $body['joia_tipo'] !== '' ? trim((string) $body['joia_tipo']) : null;
+            $dataIniciacao = isset($body['data_iniciacao']) && $body['data_iniciacao'] !== '' ? trim((string) $body['data_iniciacao']) : null;
+            $bibliotecaMes = isset($body['biblioteca_mes']) && $body['biblioteca_mes'] !== '' && $body['biblioteca_mes'] !== 'null' ? (int) $body['biblioteca_mes'] : null;
+
+            if ($obreiroId === '') {
+                JsonResponse::send(['ok' => false, 'erro' => 'ID do obreiro inválido']);
+                return true;
+            }
+
+            $obreiroModel = new Obreiro();
+            $ok = $obreiroModel->atualizarConfiguracaoFinanceira(
+                $obreiroId,
+                $joiaValor,
+                $joiaFormato,
+                $bibliotecaValor,
+                $bibliotecaFormato,
+                $dataElevacao,
+                $dataExaltacao,
+                $joiaAtiva,
+                $joiaTipo,
+                $dataIniciacao,
+                $bibliotecaMes
+            );
+
+            JsonResponse::send(['ok' => $ok, 'erro' => $ok ? null : 'Falha ao salvar configurações financeiras']);
             return true;
         }
 

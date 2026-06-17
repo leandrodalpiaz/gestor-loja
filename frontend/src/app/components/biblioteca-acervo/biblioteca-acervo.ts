@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { trigger, transition, style, animate, query, stagger, state } from '@angular/animations';
 import { environment } from '../../../environments/environment';
 import { SupabaseService } from '../../services/supabase.service';
 
@@ -13,7 +14,34 @@ type BibliotecaTab = 'acervo' | 'meus' | 'gestao' | 'classificacao';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './biblioteca-acervo.html',
-  styleUrl: './biblioteca-acervo.css'
+  styleUrl: './biblioteca-acervo.css',
+  animations: [
+    trigger('tabTransition', [
+      transition('* => *', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('250ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+      ])
+    ]),
+    trigger('staggeredList', [
+      transition('* => *', [
+        query('article, .list-item', [
+          style({ opacity: 0, transform: 'translateY(15px)' }),
+          stagger(35, [
+            animate('250ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+          ])
+        ], { optional: true })
+      ])
+    ]),
+    trigger('fadeInOut', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'scale(0.97)' }),
+        animate('150ms ease-out', style({ opacity: 1, transform: 'scale(1)' }))
+      ]),
+      transition(':leave', [
+        animate('120ms ease-in', style({ opacity: 0, transform: 'scale(0.97)' }))
+      ])
+    ])
+  ]
 })
 export class BibliotecaAcervo implements OnInit {
   private http = inject(HttpClient);
@@ -27,6 +55,9 @@ export class BibliotecaAcervo implements OnInit {
   protected dados = signal<any>({});
   protected tab = signal<BibliotecaTab>('acervo');
   protected filtroBusca = '';
+  protected selectedBook = signal<any | null>(null);
+  protected loadingDetails = signal(false);
+  protected novoComentario = '';
   protected classificacao = { livro_id: 0, grau_recomendado: 'Livre', nota_instrucao: '' };
 
   ngOnInit(): void {
@@ -49,26 +80,77 @@ export class BibliotecaAcervo implements OnInit {
   }
 
   protected abrirTab(tab: BibliotecaTab): void {
+    this.fecharDetalhes();
     const path = tab === 'acervo' ? 'acervo' : tab === 'meus' ? 'emprestimos' : tab;
     void this.router.navigate(['/dashboard/biblioteca', path]);
   }
 
-  protected carregar(): void {
+  protected carregar(acervoId?: number): void {
     this.loading.set(true);
     this.errorMsg.set(null);
-    this.http.get<any>(`${environment.apiUrl}/api/miniapp/biblioteca/dashboard`, {
+
+    const idFoco = acervoId || this.selectedBook()?.id;
+    let url = `${environment.apiUrl}/api/miniapp/biblioteca/dashboard`;
+    if (idFoco) {
+      url += `?acervo_id=${idFoco}`;
+    }
+
+    this.http.get<any>(url, {
       headers: this.supabaseService.getAuthHeaders()
     }).subscribe({
       next: res => {
         this.loading.set(false);
-        if (res?.ok) this.dados.set(res.dados || {});
-        else this.errorMsg.set(res?.erro || 'Não foi possível carregar a Biblioteca.');
+        if (res?.ok) {
+          this.dados.set(res.dados || {});
+          if (res.dados?.item_foco) {
+            this.selectedBook.set(res.dados.item_foco);
+          }
+        } else {
+          this.errorMsg.set(res?.erro || 'Não foi possível carregar a Biblioteca.');
+        }
       },
       error: err => {
         this.loading.set(false);
         this.errorMsg.set(err.error?.erro || 'Erro ao carregar a Biblioteca.');
       }
     });
+  }
+
+  protected selecionarLivro(livro: any): void {
+    this.selectedBook.set(livro);
+    this.loadingDetails.set(true);
+    this.http.get<any>(`${environment.apiUrl}/api/miniapp/biblioteca/dashboard?acervo_id=${livro.id}`, {
+      headers: this.supabaseService.getAuthHeaders()
+    }).subscribe({
+      next: res => {
+        this.loadingDetails.set(false);
+        if (res?.ok) {
+          this.dados.set(res.dados || {});
+          if (res.dados?.item_foco) {
+            this.selectedBook.set(res.dados.item_foco);
+          }
+        }
+      },
+      error: () => {
+        this.loadingDetails.set(false);
+      }
+    });
+  }
+
+  protected fecharDetalhes(): void {
+    this.selectedBook.set(null);
+    this.novoComentario = '';
+  }
+
+  protected reagir(acervoId: number, gostei: boolean): void {
+    this.post('/api/miniapp/biblioteca/reagir', { acervo_id: acervoId, gostei: gostei ? 1 : 0 }, 'Obrigado por registrar seu voto.');
+  }
+
+  protected comentar(acervoId: number): void {
+    const com = this.novoComentario.trim();
+    if (com === '') return;
+    this.post('/api/miniapp/biblioteca/comentar', { acervo_id: acervoId, comentario: com }, 'Comentário publicado.');
+    this.novoComentario = '';
   }
 
   protected solicitar(livro: any): void {
@@ -118,7 +200,8 @@ export class BibliotecaAcervo implements OnInit {
         this.loading.set(false);
         if (res?.ok) {
           this.successMsg.set(sucesso);
-          this.carregar();
+          const activeId = this.selectedBook()?.id;
+          this.carregar(activeId);
         } else {
           this.errorMsg.set(res?.erro || 'Não foi possível concluir a operação.');
         }

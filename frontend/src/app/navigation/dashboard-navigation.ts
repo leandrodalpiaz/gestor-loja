@@ -18,10 +18,9 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationSection[] = [
     id: 'minha-loja',
     label: 'Minha Loja',
     items: [
-      { label: 'Área do Irmão', target: 'angular', path: '/dashboard/loja', permission: 'dashboard.view' },
+      { label: 'Irmãos da Loja', target: 'angular', path: '/dashboard/loja', permission: 'dashboard.view' },
       { label: 'Meu Cadastro', target: 'angular', path: '/dashboard/me/cadastro', permission: 'dashboard.view' },
       { label: 'Meus Trabalhos', target: 'angular', path: '/dashboard/trilha', permission: 'dashboard.view' },
-      { label: 'Irmãos da Loja', target: 'angular', path: '/dashboard/loja/irmaos', permission: 'dashboard.view' },
       { label: 'Carteirinha', target: 'angular', path: '/dashboard/me/carteirinha', permission: 'dashboard.view' },
       { label: 'Calendário', target: 'angular', path: '/dashboard/calendario', permission: 'dashboard.view' },
       { label: 'Minhas Obrigações', target: 'angular', path: '/dashboard/tesouraria/obrigacoes', permission: 'financeiro.self' },

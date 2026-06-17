@@ -6,18 +6,122 @@ import { environment } from '../../../environments/environment';
 import { SupabaseService } from '../../services/supabase.service';
 
 @Component({
- selector:'app-tesouraria-comprovantes',standalone:true,imports:[CommonModule,FormsModule],
- template:`<section class="page"><header><span>Tesouraria</span><h1>Caixa de Entrada - Comprovantes</h1><p>Validação dos comprovantes PIX e baixa financeira.</p></header>
- <nav>@for(s of statusList;track s){<button [class.active]="status()===s" (click)="status.set(s);carregar()">{{s}}</button>}</nav>
- @if(erro()){<div class="error">{{erro()}}</div>}<div class="list">@for(c of itens();track c.id){<article><div><small>{{c.criado_em|date:'dd/MM/yyyy HH:mm'}}</small><h2>{{c.obreiro_nome||c.nome_telegram||'Não identificado'}}</h2><p>{{c.descricao_usuario||c.rotulo_pagamento||'Sem descrição'}}</p></div><div class="amount"><b>{{c.valor_informado|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b><small>{{c.mes_ref_informado}}/{{c.ano_ref_informado}}</small></div><button (click)="abrir(c)">{{c.status==='pendente'?'Validar':'Detalhes'}}</button></article>}@empty{<div class="empty">Nenhum comprovante neste status.</div>}</div>
- @if(selecionado();as c){<div class="backdrop"><form (submit)="aprovar();$event.preventDefault()"><h2>Validar comprovante #{{c.id}}</h2><p>{{c.obreiro_nome}} · {{c.valor_informado|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</p><label>Valor validado<input type="number" step=".01" [(ngModel)]="valor" name="valor" required></label><div class="row"><label>Mês<input type="number" min="1" max="12" [(ngModel)]="mes" name="mes"></label><label>Ano<input type="number" [(ngModel)]="ano" name="ano"></label></div><label>Rótulo<input [(ngModel)]="rotulo" name="rotulo"></label><label>Categoria<select [(ngModel)]="categoriaId" name="categoria"><option [ngValue]="null">Selecionar</option>@for(cat of categorias();track cat.id){<option [ngValue]="cat.id">{{cat.nome}}</option>}</select></label><label>Obrigação aberta<select [(ngModel)]="parcelaId" name="parcela"><option [ngValue]="null">Sem vínculo</option>@for(p of parcelas();track p.id){<option [ngValue]="p.id">{{p.descricao||p.titulo}} - {{p.valor|currency:'BRL'}}</option>}</select></label><div class="actions"><button type="button" (click)="selecionado.set(null)">Cancelar</button>@if(c.status==='pendente'){<button type="button" class="danger" (click)="rejeitar()">Rejeitar</button><button type="submit" class="approve">Aprovar</button>}</div></form></div>}</section>`,
- styles:[`:host{display:block;color:#e5e7eb}.page>*+*{margin-top:1.5rem}header span{color:#c9a227;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.15em}h1{font:800 1.8rem Cinzel,serif;margin:.25rem 0}p,small{color:#94a3b8}nav{display:flex;gap:.5rem}button,input,select{border:1px solid rgba(255,255,255,.1);background:#111a31;color:white;border-radius:.7rem;padding:.65rem .9rem}nav button{text-transform:capitalize}.active{border-color:#c9a227;color:#c9a227}.list{display:grid;gap:.75rem}.list article{display:grid;grid-template-columns:1fr auto auto;gap:1rem;align-items:center;background:rgba(11,19,43,.62);border:1px solid rgba(255,255,255,.08);padding:1rem;border-radius:1rem}.list h2{font-size:1rem;margin:.2rem 0}.amount{text-align:right}.amount b,.amount small{display:block}.amount b{color:#6ee7b7}.empty,.error{padding:1rem;border-radius:1rem;background:rgba(11,19,43,.62)}.error{background:#450a0a;color:#fda4af}.backdrop{position:fixed;inset:0;background:#000b;display:grid;place-items:center;padding:1rem;z-index:60}.backdrop form{width:min(520px,100%);max-height:90vh;overflow:auto;background:#0b132b;border:1px solid rgba(201,162,39,.3);border-radius:1.2rem;padding:1.5rem}.backdrop label{display:grid;gap:.35rem;margin-top:1rem;font-size:.75rem;color:#94a3b8}.row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}.actions{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1.5rem}.danger{color:#fda4af}.approve{background:#c9a227;color:#050b14;font-weight:900}@media(max-width:650px){.list article{grid-template-columns:1fr auto}.list article>button{grid-column:1/-1}}`]
+  selector: 'app-tesouraria-comprovantes',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './tesouraria-comprovantes.html',
+  styleUrl: './tesouraria-comprovantes.css'
 })
-export class TesourariaComprovantes implements OnInit{
- private http=inject(HttpClient);private auth=inject(SupabaseService);protected status=signal('pendente');protected itens=signal<any[]>([]);protected categorias=signal<any[]>([]);protected parcelas=signal<any[]>([]);protected selecionado=signal<any>(null);protected erro=signal('');protected statusList=['pendente','aprovado','rejeitado'];protected valor=0;protected mes=1;protected ano=new Date().getFullYear();protected rotulo='';protected categoriaId:number|null=null;protected parcelaId:number|null=null;
- ngOnInit(){this.carregar();this.http.get<any>(`${environment.apiUrl}/api/tesouraria/categorias?tipo=entrada`,{headers:this.auth.getAuthHeaders()}).subscribe(r=>this.categorias.set(r.categorias||[]))}
- protected carregar(){this.http.get<any>(`${environment.apiUrl}/api/tesouraria/comprovantes?status=${this.status()}`,{headers:this.auth.getAuthHeaders()}).subscribe({next:r=>{this.itens.set(r.comprovantes||[]);this.erro.set(r.ok?'':r.erro)},error:()=>this.erro.set('Falha ao carregar comprovantes.')})}
- protected abrir(c:any){this.selecionado.set(c);this.valor=Number(c.valor_validado||c.valor_informado||0);this.mes=Number(c.mes_ref_validado||c.mes_ref_informado||1);this.ano=Number(c.ano_ref_validado||c.ano_ref_informado||new Date().getFullYear());this.rotulo=c.rotulo_pagamento||c.descricao_usuario||'';this.categoriaId=c.categoria_id?Number(c.categoria_id):null;this.parcelaId=c.obrigacao_parcela_id?Number(c.obrigacao_parcela_id):null;this.parcelas.set([]);if(c.obreiro_id)this.http.get<any>(`${environment.apiUrl}/api/tesouraria/obrigacoes-abertas?obreiro_id=${encodeURIComponent(c.obreiro_id)}`,{headers:this.auth.getAuthHeaders()}).subscribe(r=>this.parcelas.set(r.parcelas||[]))}
- protected aprovar(){const c=this.selecionado();this.http.post<any>(`${environment.apiUrl}/api/tesouraria/comprovantes/aprovar`,{id:c.id,valor:this.valor,mes:this.mes,ano:this.ano,rotulo_pagamento:this.rotulo,categoria_id:this.categoriaId,obrigacao_parcela_id:this.parcelaId},{headers:this.auth.getAuthHeaders()}).subscribe(r=>{if(r.ok){this.selecionado.set(null);this.carregar()}else this.erro.set(r.erro||'Falha ao aprovar comprovante.')})}
- protected rejeitar(){const motivo=prompt('Motivo da rejeição:');if(!motivo)return;this.http.post<any>(`${environment.apiUrl}/api/tesouraria/comprovantes/rejeitar`,{id:this.selecionado().id,motivo},{headers:this.auth.getAuthHeaders()}).subscribe(r=>{if(r.ok){this.selecionado.set(null);this.carregar()}else this.erro.set(r.erro||'Falha ao rejeitar comprovante.')})}
+export class TesourariaComprovantes implements OnInit {
+  private http = inject(HttpClient);
+  private auth = inject(SupabaseService);
+
+  protected status = signal('pendente');
+  protected itens = signal<any[]>([]);
+  protected categorias = signal<any[]>([]);
+  protected parcelas = signal<any[]>([]);
+  protected selecionado = signal<any>(null);
+  protected erro = signal('');
+  protected statusList = ['pendente', 'aprovado', 'rejeitado'];
+
+  protected valor = 0;
+  protected mes = 1;
+  protected ano = new Date().getFullYear();
+  protected rotulo = '';
+  protected categoriaId: number | null = null;
+  protected parcelaId: number | null = null;
+
+  ngOnInit() {
+    this.carregar();
+    this.http.get<any>(
+      `${environment.apiUrl}/api/tesouraria/categorias?tipo=entrada`,
+      { headers: this.auth.getAuthHeaders() }
+    ).subscribe(r => this.categorias.set(r.categorias || []));
+  }
+
+  protected carregar() {
+    this.http.get<any>(
+      `${environment.apiUrl}/api/tesouraria/comprovantes?status=${this.status()}`,
+      { headers: this.auth.getAuthHeaders() }
+    ).subscribe({
+      next: r => {
+        this.itens.set(r.comprovantes || []);
+        this.erro.set(r.ok ? '' : r.erro);
+      },
+      error: () => this.erro.set('Falha ao carregar comprovantes.')
+    });
+  }
+
+  protected abrir(c: any) {
+    this.selecionado.set(c);
+    this.valor = Number(c.valor_validado || c.valor_informado || 0);
+    this.mes = Number(c.mes_ref_validado || c.mes_ref_informado || 1);
+    this.ano = Number(c.ano_ref_validado || c.ano_ref_informado || new Date().getFullYear());
+    this.rotulo = c.rotulo_pagamento || c.descricao_usuario || '';
+    this.categoriaId = c.categoria_id ? Number(c.categoria_id) : null;
+    this.parcelaId = c.obrigacao_parcela_id ? Number(c.obrigacao_parcela_id) : null;
+    this.parcelas.set([]);
+
+    if (c.obreiro_id) {
+      this.http.get<any>(
+        `${environment.apiUrl}/api/tesouraria/obrigacoes-abertas?obreiro_id=${encodeURIComponent(c.obreiro_id)}`,
+        { headers: this.auth.getAuthHeaders() }
+      ).subscribe(r => {
+        const rawParcelas = Array.isArray(r.parcelas) ? r.parcelas : [];
+        this.parcelas.set(rawParcelas.map((p: any) => ({
+          id: p.id,
+          titulo: p.titulo || p.competencia_label || 'Parcela',
+          valor_base: Number(p.valor_previsto || 0),
+          status: p.status || 'pendente'
+        })));
+      });
+    }
+  }
+
+  protected aprovar() {
+    const c = this.selecionado();
+    if (!c) return;
+
+    this.http.post<any>(
+      `${environment.apiUrl}/api/tesouraria/comprovantes/aprovar`,
+      {
+        id: c.id,
+        valor: this.valor,
+        mes: this.mes,
+        ano: this.ano,
+        rotulo_pagamento: this.rotulo,
+        categoria_id: this.categoriaId,
+        obrigacao_parcela_id: this.parcelaId
+      },
+      { headers: this.auth.getAuthHeaders() }
+    ).subscribe(r => {
+      if (r.ok) {
+        this.selecionado.set(null);
+        this.carregar();
+      } else {
+        this.erro.set(r.erro || 'Falha ao aprovar comprovante.');
+      }
+    });
+  }
+
+  protected rejeitar() {
+    const c = this.selecionado();
+    if (!c) return;
+
+    const motivo = prompt('Motivo da rejeição:');
+    if (!motivo) return;
+
+    this.http.post<any>(
+      `${environment.apiUrl}/api/tesouraria/comprovantes/rejeitar`,
+      { id: c.id, motivo },
+      { headers: this.auth.getAuthHeaders() }
+    ).subscribe(r => {
+      if (r.ok) {
+        this.selecionado.set(null);
+        this.carregar();
+      } else {
+        this.erro.set(r.erro || 'Falha ao rejeitar comprovante.');
+      }
+    });
+  }
 }

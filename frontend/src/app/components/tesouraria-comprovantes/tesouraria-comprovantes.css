@@ -31,8 +31,12 @@
   background-color: #E5B82B;
 }
 
-textarea {
-  resize: none;
+.bg-white\/2 {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.divide-white\/2 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.02);
 }
 
 .focus-glow:focus {

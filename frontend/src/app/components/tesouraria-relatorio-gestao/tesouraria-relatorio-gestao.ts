@@ -6,16 +6,121 @@ import { environment } from '../../../environments/environment';
 import { SupabaseService } from '../../services/supabase.service';
 
 @Component({
- selector:'app-tesouraria-relatorio-gestao',standalone:true,imports:[CommonModule,FormsModule],
- template:`<section class="page"><header><div><span>Tesouraria</span><h1>Relatório Financeiro da Gestão</h1><p>Consolidação para prestação de contas.</p></div><button (click)="imprimir()">Imprimir A4</button></header>
- <div class="filters"><select [(ngModel)]="gestaoId">@for(g of gestoes();track g.id){<option [value]="g.id">{{g.titulo}}</option>}</select><input type="date" [(ngModel)]="fim"><button (click)="carregar()">Atualizar relatório</button></div>
- @if(erro()){<div class="error">{{erro()}}</div>} @if(relatorio();as r){<div class="metrics"><article><small>Saldo inicial</small><b>{{r.saldo_inicial|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b></article><article><small>Entradas</small><b class="in">{{r.totais.entradas|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b></article><article><small>Saídas</small><b class="out">{{r.totais.saidas|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b></article><article><small>Saldo final</small><b>{{r.saldo_final|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b></article></div>
- <div class="columns"><article class="card"><h2>Síntese por blocos</h2>@for(item of blocos(r.blocos);track item.nome){<div class="line"><span>{{rotulo(item.nome)}}</span><small class="in">+ {{item.valor.entrada||0|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</small><small class="out">- {{item.valor.saida||0|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</small></div>}<h2>Categorias consolidadas</h2>@for(c of r.categorias;track c.nome+c.tipo){<div class="line"><span>{{c.nome}} <small>{{c.quantidade}} lançamentos</small></span><b [class.in]="c.tipo==='entrada'" [class.out]="c.tipo==='saida'">{{c.total|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b></div>}</article>
- <aside><article class="card"><h2>Tronco e entidades</h2><div class="line"><span>Entradas do tronco</span><b class="in">{{r.tronco.entradas|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b></div><div class="line"><span>Saídas do tronco</span><b class="out">{{r.tronco.saidas|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b></div>@for(e of r.entidades_auxiliadas;track e.entidade){<div class="line"><span>{{e.entidade}}</span><b>{{e.total|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b></div>}</article><article class="card"><h2>Lançamentos recentes</h2>@for(l of r.lancamentos;track l.id){<div class="line"><span>{{l.categoria_nome}}<small>{{l.data_lancamento|date:'dd/MM/yyyy'}} · {{l.descricao||'Sem descrição'}}</small></span><b [class.in]="l.tipo==='entrada'" [class.out]="l.tipo==='saida'">{{l.valor|currency:'BRL':'symbol':'1.2-2':'pt-BR'}}</b></div>}</article></aside></div>}</section>`,
- styles:[`:host{display:block;color:#e5e7eb}.page>*+*{margin-top:1.5rem}header{display:flex;justify-content:space-between}header span{color:#c9a227;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.15em}h1{font:800 1.8rem Cinzel,serif;margin:.25rem 0}p,small{color:#94a3b8}button,select,input{border:1px solid rgba(255,255,255,.1);background:#111a31;color:white;border-radius:.75rem;padding:.7rem 1rem}.filters{display:flex;gap:.75rem}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}.metrics article,.card{background:rgba(11,19,43,.62);border:1px solid rgba(255,255,255,.08);padding:1.2rem;border-radius:1.2rem}.metrics small{display:block;text-transform:uppercase;font-weight:800}.metrics b{display:block;font-size:1.25rem;margin-top:.5rem}.columns{display:grid;grid-template-columns:2fr 1fr;gap:1rem}.columns aside{display:grid;gap:1rem;height:max-content}.card h2{font-size:1rem;margin:0 0 1rem}.card h2:not(:first-child){margin-top:1.5rem}.line{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.75rem 0;border-bottom:1px solid rgba(255,255,255,.06)}.line span small{display:block;margin-top:.25rem}.in{color:#6ee7b7}.out{color:#fda4af}.error{padding:1rem;background:#450a0a;color:#fda4af;border-radius:1rem}@media(max-width:850px){.metrics{grid-template-columns:1fr 1fr}.columns{grid-template-columns:1fr}.filters,header{flex-direction:column}}@media print{header button,.filters{display:none}}`]
+  selector: 'app-tesouraria-relatorio-gestao',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './tesouraria-relatorio-gestao.html',
+  styleUrl: './tesouraria-relatorio-gestao.css'
 })
-export class TesourariaRelatorioGestao implements OnInit{
- private http=inject(HttpClient);private auth=inject(SupabaseService);protected gestoes=signal<any[]>([]);protected relatorio=signal<any>(null);protected gestaoId=0;protected fim='';protected erro=signal('');
- ngOnInit(){this.carregar()} protected carregar(){const q=new URLSearchParams();if(this.gestaoId)q.set('gestao_id',String(this.gestaoId));if(this.fim)q.set('encerramento_em',this.fim);this.http.get<any>(`${environment.apiUrl}/api/tesouraria/relatorio-gestao?${q}`,{headers:this.auth.getAuthHeaders()}).subscribe({next:r=>{this.gestoes.set(r.gestoes||[]);this.relatorio.set(r.relatorio);if(!this.gestaoId&&r.relatorio)this.gestaoId=Number(r.relatorio.gestao.id);if(!this.fim&&r.relatorio)this.fim=r.relatorio.periodo.fim_data;this.erro.set(r.ok?'':r.erro)},error:()=>this.erro.set('Falha ao carregar o relatório financeiro.')})}
- protected blocos(v:any):Array<{nome:string,valor:any}>{return Object.entries(v||{}).map(([nome,valor])=>({nome,valor}))} protected rotulo(v:string){return v.replaceAll('_',' ').replace(/^\w/,c=>c.toUpperCase())} protected imprimir(){window.print()}
+export class TesourariaRelatorioGestao implements OnInit {
+  private http = inject(HttpClient);
+  private auth = inject(SupabaseService);
+
+  protected readonly referenciasRelatorio = [
+    {
+      titulo: 'Receitas ordinarias',
+      bloco: 'receitas_ordinarias',
+      exemplos: ['Mensalidade']
+    },
+    {
+      titulo: 'Receitas eventuais',
+      bloco: 'receitas_eventuais',
+      exemplos: ['Contribuicao a Biblioteca', 'Doacoes']
+    },
+    {
+      titulo: 'Capitacoes',
+      bloco: 'capitacoes',
+      exemplos: ['Joias', 'Iniciacao', 'Elevacao', 'Exaltacao', 'Regularizacao', 'Filiacao']
+    },
+    {
+      titulo: 'Agapes e eventos',
+      bloco: 'agapes_eventos',
+      exemplos: ['Agape', 'Despesas Agape', 'Aluguel Salao de Agapes']
+    },
+    {
+      titulo: 'Despesas administrativas',
+      bloco: 'despesas_administrativas',
+      exemplos: ['Aluguel Templo', 'Aluguel', 'Grafica', 'Despesas Cartorio', 'Despesas Diversas da Loja']
+    },
+    {
+      titulo: 'Despesas de potencia e ritualistica',
+      bloco: 'despesas_potencia',
+      exemplos: ['Despesas Grande Loja', 'A Trolha']
+    },
+    {
+      titulo: 'Financeiro e banco',
+      bloco: 'receitas_financeiras',
+      exemplos: ['Juros Aplicacao Bancaria', 'Despesas Bancarias']
+    },
+    {
+      titulo: 'Tronco e entidades',
+      bloco: 'tronco',
+      exemplos: ['Tronco de Solidariedade', 'Despesas Tronco de Solidariedade']
+    }
+  ];
+
+  private readonly rotulosBloco: Record<string, string> = {
+    receitas_ordinarias: 'Entradas ordinarias',
+    receitas_eventuais: 'Entradas eventuais',
+    receitas_financeiras: 'Entradas financeiras',
+    capitacoes: 'Capitacoes',
+    agapes_eventos: 'Agapes e eventos',
+    despesas_potencia: 'Saidas com a Potencia',
+    despesas_administrativas: 'Saidas administrativas',
+    despesas_bancarias: 'Saidas bancarias',
+    despesas_ritualisticas: 'Saidas ritualisticas',
+    tronco: 'Tronco de solidariedade',
+    entidades_auxiliadas: 'Entidades auxiliadas',
+    outros: 'Outros'
+  };
+
+  protected gestoes = signal<any[]>([]);
+  protected relatorio = signal<any>(null);
+  protected gestaoId = 0;
+  protected fim = '';
+  protected erro = signal('');
+
+  ngOnInit() {
+    this.carregar();
+  }
+
+  protected carregar() {
+    const q = new URLSearchParams();
+    if (this.gestaoId) {
+      q.set('gestao_id', String(this.gestaoId));
+    }
+    if (this.fim) {
+      q.set('encerramento_em', this.fim);
+    }
+
+    this.http.get<any>(
+      `${environment.apiUrl}/api/tesouraria/relatorio-gestao?${q}`,
+      { headers: this.auth.getAuthHeaders() }
+    ).subscribe({
+      next: r => {
+        this.gestoes.set(r.gestoes || []);
+        this.relatorio.set(r.relatorio);
+        if (!this.gestaoId && r.relatorio) {
+          this.gestaoId = Number(r.relatorio.gestao.id);
+        }
+        if (!this.fim && r.relatorio) {
+          this.fim = r.relatorio.periodo.fim_data;
+        }
+        this.erro.set(r.ok ? '' : r.erro);
+      },
+      error: () => this.erro.set('Falha ao carregar o relatório financeiro.')
+    });
+  }
+
+  protected blocos(v: any): Array<{ nome: string; valor: any }> {
+    return Object.entries(v || {}).map(([nome, valor]) => ({ nome, valor }));
+  }
+
+  protected rotulo(v: string) {
+    return this.rotulosBloco[v] || v.replaceAll('_', ' ').replace(/^\w/, c => c.toUpperCase());
+  }
+
+  protected imprimir() {
+    window.print();
+  }
 }

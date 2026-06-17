@@ -31,26 +31,32 @@
   background-color: #E5B82B;
 }
 
-textarea {
-  resize: none;
+.bg-white\/2 {
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
-.focus-glow:focus {
-  box-shadow: 0 0 12px rgba(201, 162, 39, 0.2);
-  border-color: rgba(201, 162, 39, 0.35);
+.divide-white\/2 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.02);
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
+/* Print optimizations */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .glass-card, .glass-card-gold {
+    background: transparent !important;
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+    color: black !important;
+    border-radius: 0 !important;
+    backdrop-filter: none !important;
+  }
+  .text-white, .text-emerald-400, .text-rose-400, .text-liturgical-gold {
+    color: black !important;
+  }
+  .bg-white\/2 {
+    background-color: #f1f5f9 !important;
   }
 }

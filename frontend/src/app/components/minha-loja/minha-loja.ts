@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { SupabaseService } from '../../services/supabase.service';
 import { environment } from '../../../environments/environment';
 
@@ -28,7 +29,28 @@ export interface ObreiroMembro {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './minha-loja.html',
-  styleUrl: './minha-loja.css'
+  styleUrl: './minha-loja.css',
+  animations: [
+    trigger('staggeredList', [
+      transition('* => *', [
+        query('article, .list-item', [
+          style({ opacity: 0, transform: 'translateY(12px)' }),
+          stagger(30, [
+            animate('250ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+          ])
+        ], { optional: true })
+      ])
+    ]),
+    trigger('fadeInOut', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'scale(0.98)' }),
+        animate('180ms ease-out', style({ opacity: 1, transform: 'scale(1)' }))
+      ]),
+      transition(':leave', [
+        animate('120ms ease-in', style({ opacity: 0, transform: 'scale(0.98)' }))
+      ])
+    ])
+  ]
 })
 export class MinhaLoja implements OnInit {
   private http = inject(HttpClient);
@@ -42,11 +64,9 @@ export class MinhaLoja implements OnInit {
   protected obreiros = signal<ObreiroMembro[]>([]);
   protected estatisticas = signal<any>({ total_ativos: 0, graus: [] });
   protected aniversariantes = signal<ObreiroMembro[]>([]);
-  protected modo = signal<'visao' | 'irmaos'>('visao');
   protected busca = '';
 
   ngOnInit(): void {
-    this.modo.set(this.route.snapshot.data['lojaTab'] === 'irmaos' ? 'irmaos' : 'visao');
     this.carregarLoja();
   }
 
@@ -57,8 +77,32 @@ export class MinhaLoja implements OnInit {
     );
   }
 
-  protected abrir(modo: 'visao' | 'irmaos'): void {
-    void this.router.navigate([modo === 'irmaos' ? '/dashboard/loja/irmaos' : '/dashboard/loja']);
+  protected get obreirosPorGrau(): { grau: string; membros: ObreiroMembro[] }[] {
+    const filtrados = this.obreirosFiltrados;
+    const grupos: { [key: string]: ObreiroMembro[] } = {};
+
+    filtrados.forEach(o => {
+      const g = o.grau ? o.grau.trim() : 'Outros';
+      if (!grupos[g]) {
+        grupos[g] = [];
+      }
+      grupos[g].push(o);
+    });
+
+    const ordemGraus = ['mestre', 'companheiro', 'aprendiz'];
+    const chavesOrdenadas = Object.keys(grupos).sort((a, b) => {
+      const idxA = ordemGraus.indexOf(a.toLowerCase());
+      const idxB = ordemGraus.indexOf(b.toLowerCase());
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
+    return chavesOrdenadas.map(g => ({
+      grau: g,
+      membros: grupos[g]
+    }));
   }
 
   protected carregarLoja(): void {

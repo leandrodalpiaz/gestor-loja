@@ -1121,5 +1121,320 @@ class ObrigacaoFinanceira
             return false;
         }
     }
+
+    public function obterPrevisoesMes(int $mes, int $ano): array
+    {
+        $sql = "
+            SELECT 
+                COALESCE(c.tipo, 'entrada') as tipo,
+                SUM(p.valor_previsto) as total
+            FROM public.obrigacao_financeira_parcelas p
+            JOIN public.obrigacoes_financeiras o ON p.obrigacao_id = o.id
+            JOIN public.obreiros ob ON o.obreiro_id = ob.id
+            LEFT JOIN public.categorias_financeiras c ON o.categoria_id = c.id
+            WHERE p.competencia_mes = :mes
+              AND p.competencia_ano = :ano
+              AND p.status = 'pendente'
+              AND o.status = 'ativa'
+              AND ob.loja_id = :loja_id
+            GROUP BY COALESCE(c.tipo, 'entrada')
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'mes' => $mes,
+            'ano' => $ano,
+            'loja_id' => $this->resolveCurrentStoreId($this->db),
+        ]);
+
+        $resumo = ['entrada' => 0.0, 'saida' => 0.0];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $tipo = $row['tipo'] === 'saida' ? 'saida' : 'entrada';
+            $resumo[$tipo] = (float) $row['total'];
+        }
+
+        return $resumo;
+    }
+
+    public function obterDetalheFinanceiroObreiro(string $obreiroId): ?array
+    {
+        if (!preg_match('/^[0-9a-fA-F-]{36}$/', $obreiroId)) {
+            return null;
+        }
+
+        // 1. Obter dados cadastrais do Obreiro
+        $stmtOb = $this->db->prepare("
+            SELECT id, nome, nome_historico, grau, 
+                   financeiro_joia_valor, financeiro_joia_formato, financeiro_joia_ativa, financeiro_joia_tipo,
+                   financeiro_biblioteca_valor, financeiro_biblioteca_formato, financeiro_biblioteca_mes,
+                   data_iniciacao, data_elevacao, data_exaltacao
+            FROM public.obreiros
+            WHERE id = :id AND loja_id = :loja_id
+            LIMIT 1
+        ");
+        $stmtOb->execute([
+            'id' => $obreiroId,
+            'loja_id' => $this->obterLojaAtualId()
+        ]);
+        $obreiro = $stmtOb->fetch(PDO::FETCH_ASSOC);
+        if (!$obreiro) {
+            return null;
+        }
+
+        $grau = (string) ($obreiro['grau'] ?? 'Aprendiz');
+        $joiaValorConfig = $obreiro['financeiro_joia_valor'] !== null ? (float) $obreiro['financeiro_joia_valor'] : null;
+        $joiaFormatoConfig = (string) ($obreiro['financeiro_joia_formato'] ?? 'a_vista');
+        $bibValorConfig = $obreiro['financeiro_biblioteca_valor'] !== null ? (float) $obreiro['financeiro_biblioteca_valor'] : null;
+        $bibFormatoConfig = (string) ($obreiro['financeiro_biblioteca_formato'] ?? 'mensal');
+
+        // 2. Identificar escala de Biblioteca
+        $mesBiblioteca = $obreiro['financeiro_biblioteca_mes'] !== null 
+            ? (int) $obreiro['financeiro_biblioteca_mes'] 
+            : null;
+        
+        if ($mesBiblioteca === null) {
+            $escala = $this->escalaBibliotecaRenascenca();
+            $nomeNormalizado = $this->normalizarNome((string) ($obreiro['nome_historico'] ?: $obreiro['nome']));
+            
+            foreach ($escala as $mes => $nomes) {
+                foreach ($nomes as $nome) {
+                    if ($this->normalizarNome($nome) === $nomeNormalizado) {
+                        $mesBiblioteca = $mes;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        // Determinar dados de Biblioteca
+        $valorBiblioteca = $bibValorConfig ?? 44.0;
+        $mesesNomes = [
+            1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril',
+            5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto',
+            9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'
+        ];
+        
+        $bibliotecaInfo = [
+            'mes_programado' => $mesBiblioteca,
+            'mes_nome' => $mesBiblioteca ? $mesesNomes[$mesBiblioteca] : 'Não programado',
+            'valor' => $valorBiblioteca,
+            'formato' => $bibFormatoConfig,
+            'status' => 'pendente',
+            'alerta_mensagem' => null
+        ];
+
+        if ($bibFormatoConfig === 'isento') {
+            $bibliotecaInfo['status'] = 'isento';
+        } else {
+            // Verificar no banco se existe parcela de biblioteca paga para 2026
+            $stmtBib = $this->db->prepare("
+                SELECT p.status, p.valor_previsto, p.competencia_mes, p.competencia_ano
+                FROM public.obrigacao_financeira_parcelas p
+                JOIN public.obrigacoes_financeiras o ON p.obrigacao_id = o.id
+                LEFT JOIN public.categorias_financeiras c ON o.categoria_id = c.id
+                WHERE o.obreiro_id = :obreiro_id
+                  AND (o.tipo_obrigacao = 'biblioteca' OR c.codigo = 'CONTRIBUICAO_BIBLIOTECA')
+                  AND p.competencia_ano = 2026
+                ORDER BY p.id DESC
+                LIMIT 1
+            ");
+            $stmtBib->execute(['obreiro_id' => $obreiroId]);
+            $parcelaBib = $stmtBib->fetch(PDO::FETCH_ASSOC);
+
+            if ($parcelaBib) {
+                $bibliotecaInfo['status'] = $parcelaBib['status'] === 'pago' ? 'pago' : 'pendente';
+                $bibliotecaInfo['valor'] = (float) $parcelaBib['valor_previsto'];
+            }
+
+            // Alerta 30 dias antes (mês anterior)
+            if ($mesBiblioteca && $bibliotecaInfo['status'] === 'pendente') {
+                $hoje = new \DateTimeImmutable('today');
+                $mesAtual = (int) $hoje->format('n');
+                $anoAtual = (int) $hoje->format('Y');
+
+                $anoProgramado = $anoAtual;
+                if ($mesBiblioteca === 1 && $mesAtual === 12) {
+                    $anoProgramado = $anoAtual + 1;
+                }
+                
+                $dataProgramada = new \DateTimeImmutable(sprintf('%04d-%02d-01', $anoProgramado, $mesBiblioteca));
+                $dataAlertaInicio = $dataProgramada->modify('-1 month'); // Mês anterior
+                $mesAlerta = (int) $dataAlertaInicio->format('n');
+                $anoAlerta = (int) $dataAlertaInicio->format('Y');
+
+                if ($mesAtual === $mesAlerta && $anoAtual === $anoAlerta) {
+                    $bibliotecaInfo['alerta_mensagem'] = "Sua contribuição a biblioteca está programada para " . sprintf('%02d/%04d', $mesBiblioteca, $anoProgramado) . " no valor R$ " . number_format($bibliotecaInfo['valor'], 2, ',', '.') . ".";
+                }
+            }
+        }
+
+        // 3. Obter dados de Joia
+        // Buscar lançamentos de entrada avulsos ou vinculados a parcelas do obreiro nas categorias de jóias
+        $stmtL = $this->db->prepare("
+            SELECT l.id, l.valor, l.data_lancamento, l.descricao
+            FROM public.lancamentos_financeiros l
+            JOIN public.categorias_financeiras c ON l.categoria_id = c.id
+            WHERE l.obreiro_id = :obreiro_id
+              AND c.codigo IN ('JOIAS', 'INICIACAO', 'ELEVACAO', 'EXALTACAO')
+              AND l.tipo = 'entrada'
+            ORDER BY l.data_lancamento ASC, l.id ASC
+        ");
+        $stmtL->execute(['obreiro_id' => $obreiroId]);
+        $lancamentosJoia = $stmtL->fetchAll(PDO::FETCH_ASSOC);
+
+        $totalPagoJoia = 0.0;
+        $logsPagamentos = [];
+        foreach ($lancamentosJoia as $l) {
+            $val = (float) $l['valor'];
+            $totalPagoJoia += $val;
+            $logsPagamentos[] = [
+                'parcela' => count($logsPagamentos) + 1,
+                'valor' => $val,
+                'pago_em' => $l['data_lancamento'],
+                'descricao' => $l['descricao'] ?: 'Abate de Joia'
+            ];
+        }
+
+        // Determinar a data individual cadastrada no registro do obreiro
+        $joiaTipo = $obreiro['financeiro_joia_tipo'] !== null ? $obreiro['financeiro_joia_tipo'] : null;
+        
+        $dataCerimoniaIndividual = null;
+        if ($joiaTipo === 'elevacao' || ($joiaTipo === null && $grau === 'Aprendiz')) {
+            $dataCerimoniaIndividual = !empty($obreiro['data_elevacao']) ? $obreiro['data_elevacao'] : null;
+        } elseif ($joiaTipo === 'exaltacao' || ($joiaTipo === null && $grau === 'Companheiro')) {
+            $dataCerimoniaIndividual = !empty($obreiro['data_exaltacao']) ? $obreiro['data_exaltacao'] : null;
+        } else {
+            $dataCerimoniaIndividual = !empty($obreiro['data_iniciacao']) ? $obreiro['data_iniciacao'] : null;
+        }
+
+        // Buscar se já existem parcelas de joia no banco
+        $stmtJoias = $this->db->prepare("
+            SELECT p.id, p.numero_parcela, p.vencimento, p.valor_previsto, p.status, p.pago_em, 
+                   o.titulo, o.tipo_obrigacao, c.codigo as categoria_codigo
+            FROM public.obrigacao_financeira_parcelas p
+            JOIN public.obrigacoes_financeiras o ON p.obrigacao_id = o.id
+            LEFT JOIN public.categorias_financeiras c ON o.categoria_id = c.id
+            WHERE o.obreiro_id = :obreiro_id
+              AND (o.tipo_obrigacao = 'joia' OR c.codigo IN ('JOIAS', 'INICIACAO', 'ELEVACAO', 'EXALTACAO'))
+            ORDER BY p.numero_parcela ASC, p.vencimento ASC
+        ");
+        $stmtJoias->execute(['obreiro_id' => $obreiroId]);
+        $parcelasJoia = $stmtJoias->fetchAll(PDO::FETCH_ASSOC);
+
+        // A joia só é considerada ativa se o tesoureiro ativou explicitamente ou se existem parcelas no banco
+        $joiaAtiva = ($parcelasJoia !== []) || (bool)($obreiro['financeiro_joia_ativa'] ?? false);
+
+        $joiaInfo = null;
+        if ($joiaAtiva) {
+            $dataCerimonia = $dataCerimoniaIndividual;
+
+            // Se a data individual estiver vazia, consultar de forma inteligente a agenda de sessões (sessoes)
+            if (!$dataCerimonia) {
+                $tipoSessao = null;
+                if ($joiaTipo === 'elevacao' || ($joiaTipo === null && $grau === 'Aprendiz')) {
+                    $tipoSessao = 'magna_elevacao';
+                } elseif ($joiaTipo === 'exaltacao' || ($joiaTipo === null && $grau === 'Companheiro')) {
+                    $tipoSessao = 'magna_exaltacao';
+                } else {
+                    $tipoSessao = 'magna_iniciacao';
+                }
+
+                $stmtSes = $this->db->prepare("
+                    SELECT data_hora_inicio
+                    FROM public.sessoes
+                    WHERE tipo = :tipo
+                      AND loja_id = :loja_id
+                      AND data_hora_inicio >= CURRENT_TIMESTAMP
+                    ORDER BY data_hora_inicio ASC
+                    LIMIT 1
+                ");
+                $stmtSes->execute([
+                    'tipo' => $tipoSessao,
+                    'loja_id' => $this->obterLojaAtualId()
+                ]);
+                $sessaoAgendada = $stmtSes->fetch(PDO::FETCH_ASSOC);
+                if ($sessaoAgendada) {
+                    $dataCerimonia = date('Y-m-d', strtotime($sessaoAgendada['data_hora_inicio']));
+                }
+            }
+
+            if ($parcelasJoia !== []) {
+                $totalJoia = 0.0;
+                $totalParcelas = count($parcelasJoia);
+                $pagas = 0;
+                $vencimentoLimite = null;
+                $tituloJoia = $parcelasJoia[0]['titulo'] ?: 'Joia Maçônica';
+
+                foreach ($parcelasJoia as $p) {
+                    $totalJoia += (float) $p['valor_previsto'];
+                    if ($p['status'] === 'pago') {
+                        $pagas++;
+                    } else {
+                        if ($vencimentoLimite === null || $p['vencimento'] > $vencimentoLimite) {
+                            $vencimentoLimite = $p['vencimento'];
+                        }
+                    }
+                }
+
+                $saldoDevedor = max(0.0, $totalJoia - $totalPagoJoia);
+                if ($dataCerimonia) {
+                    $vencimentoLimite = $dataCerimonia;
+                }
+
+                $joiaInfo = [
+                    'possui_registro' => true,
+                    'titulo' => $tituloJoia,
+                    'valor_total' => $totalJoia,
+                    'saldo_devedor' => $saldoDevedor,
+                    'total_parcelas' => $totalParcelas,
+                    'parcelas_pagas' => $pagas,
+                    'formato' => $totalParcelas > 1 ? 'parcelado' : 'a_vista',
+                    'prazo_limite' => $vencimentoLimite ?: 'Quitada',
+                    'logs' => $logsPagamentos,
+                    'status' => $saldoDevedor > 0.01 ? 'em_aberto' : 'pago'
+                ];
+            } else {
+                // Estimar joia esperada baseado no tipo ou grau
+                $joiaEsperada = 'Iniciação';
+                if ($joiaTipo === 'elevacao' || ($joiaTipo === null && $grau === 'Aprendiz')) {
+                    $joiaEsperada = 'Elevação';
+                } elseif ($joiaTipo === 'exaltacao' || ($joiaTipo === null && $grau === 'Companheiro')) {
+                    $joiaEsperada = 'Exaltação';
+                }
+
+                $valorEstimado = $joiaValorConfig !== null ? $joiaValorConfig : 1502.0; // Salário mínimo 2026
+                $saldoEstimado = $joiaFormatoConfig === 'isento' ? 0.0 : max(0.0, $valorEstimado - $totalPagoJoia);
+
+                $joiaInfo = [
+                    'possui_registro' => false,
+                    'titulo' => 'Joia de ' . $joiaEsperada . ' (Esperada)',
+                    'valor_total' => $valorEstimado,
+                    'saldo_devedor' => $saldoEstimado,
+                    'total_parcelas' => $joiaFormatoConfig === 'parcelado' ? 10 : ($joiaFormatoConfig === 'isento' ? 0 : 1),
+                    'parcelas_pagas' => count($logsPagamentos),
+                    'formato' => $joiaFormatoConfig,
+                    'prazo_limite' => $dataCerimonia ?: 'Antes da cerimônia',
+                    'logs' => $logsPagamentos,
+                    'status' => $joiaFormatoConfig === 'isento' ? 'isento' : ($saldoEstimado > 0.01 ? 'pendente' : 'pago')
+                ];
+            }
+        }
+
+        return [
+            'obreiro' => [
+                'id' => $obreiro['id'],
+                'nome' => $obreiro['nome'],
+                'nome_historico' => $obreiro['nome_historico'],
+                'grau' => $grau
+            ],
+            'mensalidade' => [
+                'valor_regular' => 150.00,
+                'dia_vencimento' => 10
+            ],
+            'biblioteca' => $bibliotecaInfo,
+            'joia' => $joiaInfo
+        ];
+    }
 }
+
 

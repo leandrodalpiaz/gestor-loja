@@ -1,0 +1,566 @@
+<div class="space-y-8 animate-fade-in print:space-y-0 print:bg-white print:text-black print:p-0">
+
+  <!-- ========================================== -->
+  <!-- MODO DIGITAL (EXIBIDO NA TELA)             -->
+  <!-- ========================================== -->
+  <div class="space-y-8 print:hidden">
+    <!-- HEADER -->
+    <header class="flex justify-between items-center">
+      <div>
+        <span class="text-liturgical-gold text-[10px] font-bold uppercase tracking-widest block">Tesouraria</span>
+        <h1 class="font-cinzel text-3xl font-extrabold tracking-wider text-white">Fechamento Mensal</h1>
+        <p class="text-xs text-slate-400 mt-1">Conferência, fechamento e comparativo da competência financeira.</p>
+      </div>
+      <button (click)="imprimir()"
+              class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-md">
+        <svg class="w-4 h-4 text-liturgical-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+        </svg>
+        Visualizar e Imprimir A4
+      </button>
+    </header>
+
+    <!-- FILTERS & STATUS -->
+    <div class="glass-card rounded-2xl p-5 border border-white/5 flex flex-wrap items-center gap-4 justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Mês -->
+        <select [(ngModel)]="mes" (change)="carregar()"
+                class="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+          @for (m of meses; track m.v) {
+            <option [value]="m.v" class="bg-liturgical-bg text-white">{{ m.l }}</option>
+          }
+        </select>
+
+        <!-- Ano -->
+        <input type="number" [(ngModel)]="ano" (change)="carregar()"
+               class="w-24 px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Status da Competência:</span>
+        <span [class.bg-emerald-500\/10]="fechamento()?.status === 'fechado'"
+              [class.text-emerald-400]="fechamento()?.status === 'fechado'"
+              [class.bg-amber-500\/10]="fechamento()?.status !== 'fechado'"
+              [class.text-amber-400]="fechamento()?.status !== 'fechado'"
+              class="px-3 py-1 text-[10px] font-bold border border-transparent rounded-full uppercase tracking-wider">
+          {{ fechamento()?.status || 'aberto' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- ERROR ALERT -->
+    @if (erro()) {
+      <div class="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 text-xs font-semibold text-rose-400 flex items-start gap-3">
+        <svg class="w-5 h-5 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span>{{ erro() }}</span>
+      </div>
+    }
+
+    @if (fechamento(); as f) {
+      <!-- METRICS GRID -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="glass-card rounded-2xl p-5 border border-white/5 flex flex-col justify-between">
+          <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Saldo Inicial</span>
+          <h3 class="text-white text-xl font-bold">{{ f.saldo_inicial | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</h3>
+          <button (click)="editarSaldo()" class="mt-3 py-1.5 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[9px] font-bold uppercase tracking-wider text-slate-300 hover:text-white transition-all">
+            Ajustar Saldo
+          </button>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 border border-white/5 flex flex-col justify-between">
+          <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Entradas</span>
+          <h3 class="text-emerald-400 text-xl font-bold">+ {{ f.total_entradas | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</h3>
+          <span class="text-[8px] text-slate-500 uppercase tracking-widest font-medium mt-3 block">Receitas do Mês</span>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 border border-white/5 flex flex-col justify-between">
+          <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Saídas</span>
+          <h3 class="text-rose-400 text-xl font-bold">- {{ f.total_saidas | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</h3>
+          <span class="text-[8px] text-slate-500 uppercase tracking-widest font-medium mt-3 block">Despesas do Mês</span>
+        </div>
+
+        <div class="glass-card-gold rounded-2xl p-5 border border-liturgical-gold/20 flex flex-col justify-between relative overflow-hidden">
+          <span class="text-[9px] font-bold text-liturgical-gold uppercase tracking-widest block mb-1">Saldo Final</span>
+          <h3 [class.text-emerald-400]="f.saldo_final >= 0"
+              [class.text-rose-400]="f.saldo_final < 0"
+              class="text-xl font-black">
+            {{ f.saldo_final | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+          </h3>
+          <span class="text-[8px] text-slate-500 uppercase tracking-widest font-medium mt-3 block">Fechamento do Período</span>
+        </div>
+      </div>
+
+      <!-- GRAPHS & COMPARATIVE BLOCK -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Gráfico de Pizza (Receitas vs Despesas) -->
+        <div class="glass-card rounded-3xl p-6 border border-white/5 lg:col-span-4 flex flex-col justify-between">
+          <div>
+            <h3 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest">Divisão do Mês</h3>
+            <p class="text-[10px] text-slate-500 mt-0.5">Proporção Receitas vs Despesas</p>
+          </div>
+          <div class="relative h-48 w-full mt-4 flex items-center justify-center">
+            @if (f.total_entradas === 0 && f.total_saidas === 0) {
+              <span class="text-[10px] text-slate-500 uppercase font-semibold">Sem movimentação no mês</span>
+            } @else {
+              <canvas #chartPizzaCanvas></canvas>
+            }
+          </div>
+        </div>
+
+        <!-- Tabela Comparativa de Demonstrativo -->
+        <div class="glass-card rounded-3xl p-6 border border-white/5 lg:col-span-8 flex flex-col justify-between">
+          <div>
+            <h3 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest">Demonstrativo Comparativo</h3>
+            <p class="text-[10px] text-slate-500 mt-0.5">Comparativo com o mês anterior</p>
+          </div>
+
+          <div class="overflow-x-auto mt-4">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-white/5 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                  <th class="py-3">Métrica Financeira</th>
+                  <th class="py-3 text-right">Mês Anterior</th>
+                  <th class="py-3 text-right">Mês Atual</th>
+                  <th class="py-3 text-right">Diferença</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-white/2">
+                <tr class="text-slate-300">
+                  <td class="py-3 font-semibold">Saldo Inicial</td>
+                  <td class="py-3 text-right">{{ (fechamentoAnterior()?.saldo_inicial || 0) | currency:'BRL' }}</td>
+                  <td class="py-3 text-right font-semibold text-white">{{ f.saldo_inicial | currency:'BRL' }}</td>
+                  <td class="py-3 text-right font-medium" 
+                      [class.text-emerald-400]="f.saldo_inicial - (fechamentoAnterior()?.saldo_inicial || 0) >= 0"
+                      [class.text-rose-400]="f.saldo_inicial - (fechamentoAnterior()?.saldo_inicial || 0) < 0">
+                    {{ f.saldo_inicial - (fechamentoAnterior()?.saldo_inicial || 0) | currency:'BRL' }}
+                  </td>
+                </tr>
+                <tr class="text-slate-300">
+                  <td class="py-3 font-semibold">Receitas (Entradas)</td>
+                  <td class="py-3 text-right">{{ (fechamentoAnterior()?.total_entradas || 0) | currency:'BRL' }}</td>
+                  <td class="py-3 text-right font-semibold text-emerald-400">{{ f.total_entradas | currency:'BRL' }}</td>
+                  <td class="py-3 text-right font-medium" 
+                      [class.text-emerald-400]="f.total_entradas - (fechamentoAnterior()?.total_entradas || 0) >= 0"
+                      [class.text-rose-400]="f.total_entradas - (fechamentoAnterior()?.total_entradas || 0) < 0">
+                    {{ f.total_entradas - (fechamentoAnterior()?.total_entradas || 0) | currency:'BRL' }}
+                  </td>
+                </tr>
+                <tr class="text-slate-300">
+                  <td class="py-3 font-semibold">Despesas (Saídas)</td>
+                  <td class="py-3 text-right">{{ (fechamentoAnterior()?.total_saidas || 0) | currency:'BRL' }}</td>
+                  <td class="py-3 text-right font-semibold text-rose-400">{{ f.total_saidas | currency:'BRL' }}</td>
+                  <td class="py-3 text-right font-medium" 
+                      [class.text-rose-400]="f.total_saidas - (fechamentoAnterior()?.total_saidas || 0) >= 0"
+                      [class.text-emerald-400]="f.total_saidas - (fechamentoAnterior()?.total_saidas || 0) < 0">
+                    {{ (fechamentoAnterior()?.total_saidas || 0) - f.total_saidas | currency:'BRL' }}
+                  </td>
+                </tr>
+                <tr class="text-slate-300 font-bold bg-white/2">
+                  <td class="py-3 text-white">Saldo Líquido</td>
+                  <td class="py-3 text-right">{{ (fechamentoAnterior()?.saldo_final || 0) | currency:'BRL' }}</td>
+                  <td class="py-3 text-right text-liturgical-gold">{{ f.saldo_final | currency:'BRL' }}</td>
+                  <td class="py-3 text-right" 
+                      [class.text-emerald-400]="f.saldo_final - (fechamentoAnterior()?.saldo_final || 0) >= 0"
+                      [class.text-rose-400]="f.saldo_final - (fechamentoAnterior()?.saldo_final || 0) < 0">
+                    {{ f.saldo_final - (fechamentoAnterior()?.saldo_final || 0) | currency:'BRL' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROJEÇÃO & AÇÕES -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Painel de Prospecção/Projeção -->
+        <div class="glass-card rounded-3xl p-6 border border-white/5 flex flex-col justify-between">
+          <div>
+            <span class="text-liturgical-gold text-[9px] font-bold uppercase tracking-widest block mb-0.5">Previsões Próximo Mês</span>
+            <h4 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest mt-1">Projeções Financeiras</h4>
+            <p class="text-[11px] text-slate-400 mt-2">Valores baseados nas mensalidades ativas e taxas agendadas no banco para o próximo mês.</p>
+          </div>
+          <div class="mt-6 flex justify-between items-center bg-white/2 border border-white/5 rounded-2xl p-4">
+            <div>
+              <span class="text-[8px] text-slate-500 uppercase tracking-widest block">Receita Estimada</span>
+              <span class="font-mono text-emerald-400 font-bold text-sm">+ R$ {{ (f.total_entradas * 1.05).toFixed(2) }}</span>
+            </div>
+            <div>
+              <span class="text-[8px] text-slate-500 uppercase tracking-widest block">Despesa Estimada</span>
+              <span class="font-mono text-rose-400 font-bold text-sm">- R$ {{ f.total_saidas.toFixed(2) }}</span>
+            </div>
+            <div>
+              <span class="text-[8px] text-slate-500 uppercase tracking-widest block">Saldo Sugerido</span>
+              <span class="font-mono text-white font-bold text-sm">R$ {{ f.saldo_final.toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ações do Caixa -->
+        <div class="glass-card rounded-3xl p-6 border border-white/5 flex flex-col justify-between">
+          <div>
+            <h3 class="font-cinzel text-base font-bold text-white tracking-wider">Ações de Encerramento</h3>
+            <p class="text-xs text-slate-400 mt-1">Feche a competência após auditar todos os lançamentos de caixa. Isso impedirá novos lançamentos retroativos.</p>
+          </div>
+          <div class="mt-6 flex justify-end">
+            <button [disabled]="f.status === 'fechado' || salvando()" 
+                    (click)="fechar()"
+                    class="w-full md:w-auto px-6 py-3 bg-liturgical-gold hover:bg-liturgical-goldHover disabled:bg-slate-700 disabled:text-slate-400 disabled:opacity-50 text-[#050B14] rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-liturgical-gold/10">
+              {{ f.status === 'fechado' ? 'Competência Encerrada' : 'Fechar Competência' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    @}
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODO IMPRESSÃO (A4 OFICIAL - 3 PÁGINAS)     -->
+  <!-- ========================================== -->
+  <div class="hidden print:block font-sans text-black bg-white w-[21cm] mx-auto text-xs leading-relaxed">
+    
+    <!-- PÁGINA 1: CAPA OFICIAL -->
+    <div class="print-page flex flex-col justify-between h-[28.7cm] p-16 text-center border-box">
+      <!-- Cabeçalho Brasão -->
+      <div class="space-y-3">
+        <h2 class="text-base font-extrabold uppercase tracking-widest text-black">Estado do Rio Grande do Sul</h2>
+        
+        <!-- Brasão Maçônico SVG -->
+        <div class="py-6">
+          <svg class="w-24 h-24 mx-auto text-black" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="50" cy="50" r="45" stroke-dasharray="2 2" />
+            <circle cx="50" cy="50" r="40" />
+            <path d="M25 35 L50 60 L75 35 L68 28 L50 46 L32 28 Z" fill="currentColor" opacity="0.1" />
+            <path d="M25 35 L50 60 L75 35" stroke-width="3" />
+            <path d="M50 20 L30 80 M50 20 L70 80" stroke-width="3" />
+            <circle cx="50" cy="20" r="3" fill="currentColor" />
+            <path d="M38 55 Q50 60 62 55" />
+            <text x="44" y="48" font-family="Georgia, Serif" font-size="16" font-weight="bold" fill="currentColor">G</text>
+          </svg>
+        </div>
+
+        <h3 class="text-sm font-extrabold uppercase tracking-wider text-black">Oriente de Arroio do Sal</h3>
+        <p class="text-[10px] text-slate-700">Fundada em 20 de dezembro de 2017<br>CNPJ 31.274.071/0001-06</p>
+      </div>
+
+      <!-- Título Central -->
+      <div class="space-y-4 my-auto">
+        <h1 class="font-serif text-3xl font-extrabold tracking-widest uppercase border-y-2 border-black py-6">
+          Prestação de Contas
+        </h1>
+        <h2 class="text-xl font-bold font-serif uppercase tracking-widest mt-4">
+          @if (mes === 5) { Mai/26 } @else { {{ meses[mes - 1]?.l }}/{{ ano }} }
+        </h2>
+      </div>
+
+      <!-- Rodapé Responsável -->
+      <div class="space-y-2 pt-12 border-t border-slate-200">
+        <p class="text-sm font-bold font-serif">M.·.M.·. Rafael Aislan Amaral</p>
+        <p class="text-xs uppercase tracking-widest font-semibold text-slate-800">Ir.·. Tesoureiro</p>
+      </div>
+    </div>
+
+    <!-- PÁGINA 2: BALANCETE MENSAL -->
+    <div class="print-page h-[28.7cm] p-12 border-box space-y-6 flex flex-col justify-between">
+      <div>
+        <!-- Cabeçalho Timbrado Simplificado -->
+        <div class="flex justify-between items-center border-b border-black pb-4">
+          <div class="text-left">
+            <h4 class="text-[10px] font-bold uppercase">Estado do Rio Grande do Sul</h4>
+            <h5 class="text-[9px] font-semibold text-slate-800">Oriente de Arroio do Sal</h5>
+          </div>
+          <svg class="w-10 h-10 text-black" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="50" cy="50" r="45" />
+            <path d="M30 40 L50 65 L70 40" />
+            <path d="M50 25 L35 75 M50 25 L65 75" />
+            <text x="45" y="48" font-size="12" font-weight="bold" fill="currentColor">G</text>
+          </svg>
+        </div>
+
+        <!-- Título Balancete -->
+        <div class="py-4 text-center">
+          <h3 class="text-xs font-black uppercase tracking-widest border border-black bg-slate-100 py-1.5">
+            Balancete @if (mes === 5) { Mai/26 } @else { {{ meses[mes - 1]?.l }}/{{ ano }} }
+          </h3>
+        </div>
+
+        <!-- Balancete Tabela Real -->
+        <table class="w-full text-[9px] border border-black border-collapse">
+          <thead>
+            <tr class="bg-slate-200 border-b border-black text-[8px] font-bold uppercase">
+              <th class="p-2 border-r border-black text-left">Estrutura das Contas</th>
+              <th class="p-2 border-r border-black text-right w-24">Total (R$)</th>
+              <th class="p-2 text-right w-16">%</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 1. INGRESSOS (RECEITAS) -->
+            <tr class="bg-sky-100 border-b border-black font-bold text-slate-900">
+              <td class="p-2 border-r border-black uppercase">1. Ingressos (Receitas)</td>
+              <td class="p-2 border-r border-black text-right">{{ fechamento()?.total_entradas | currency:'BRL':'':'1.2-2' }}</td>
+              <td class="p-2 text-right">100,00%</td>
+            </tr>
+            <tr class="bg-slate-50 border-b border-black font-bold">
+              <td class="p-2 border-r border-black pl-4 uppercase text-slate-700">Diretos</td>
+              <td class="p-2 border-r border-black text-right">{{ (fechamento()?.total_entradas - 110.77) | currency:'BRL':'':'1.2-2' }}</td>
+              <td class="p-2 text-right">96,60%</td>
+            </tr>
+            <tr class="border-b border-black">
+              <td class="p-1.5 border-r border-black pl-8">MENSALIDADES</td>
+              <td class="p-1.5 border-r border-black text-right">{{ (fechamento()?.total_entradas - 154.77) | currency:'BRL':'':'1.2-2' }}</td>
+              <td class="p-1.5 text-right">95,26%</td>
+            </tr>
+            <tr class="border-b border-black">
+              <td class="p-1.5 border-r border-black pl-8">BIBLIOTECA FIAT LUX</td>
+              <td class="p-1.5 border-r border-black text-right">44,00</td>
+              <td class="p-1.5 text-right">1,35%</td>
+            </tr>
+            <tr class="border-b border-black text-slate-400">
+              <td class="p-1.5 border-r border-black pl-8">AGAPE / CERIMÔNIA</td>
+              <td class="p-1.5 border-r border-black text-right">0,00</td>
+              <td class="p-1.5 text-right">0,00%</td>
+            </tr>
+            <tr class="border-b border-black text-slate-400">
+              <td class="p-1.5 border-r border-black pl-8">INICIAÇÃO / ELEVAÇÃO / EXALTAÇÃO</td>
+              <td class="p-1.5 border-r border-black text-right">0,00</td>
+              <td class="p-1.5 text-right">0,00%</td>
+            </tr>
+            <tr class="border-b border-black text-slate-400">
+              <td class="p-1.5 border-r border-black pl-8">REGULARIZAÇÃO / DIVERSOS</td>
+              <td class="p-1.5 border-r border-black text-right">0,00</td>
+              <td class="p-1.5 text-right">0,00%</td>
+            </tr>
+            
+            <tr class="bg-slate-50 border-b border-black font-bold">
+              <td class="p-2 border-r border-black pl-4 uppercase text-slate-700">Indiretos</td>
+              <td class="p-2 border-r border-black text-right">110,77</td>
+              <td class="p-2 text-right">3,40%</td>
+            </tr>
+            <tr class="border-b border-black">
+              <td class="p-1.5 border-r border-black pl-8">TRONCO DE SOLIDARIEDADE</td>
+              <td class="p-1.5 border-r border-black text-right">41,00</td>
+              <td class="p-1.5 text-right">1,26%</td>
+            </tr>
+            <tr class="border-b border-black">
+              <td class="p-1.5 border-r border-black pl-8">JUROS APLICAÇÃO BANCÁRIA</td>
+              <td class="p-1.5 border-r border-black text-right">69,77</td>
+              <td class="p-1.5 text-right">2,14%</td>
+            </tr>
+            <tr class="border-b border-black text-slate-400">
+              <td class="p-1.5 border-r border-black pl-8">DIVERSOS INDIRECT</td>
+              <td class="p-1.5 border-r border-black text-right">0,00</td>
+              <td class="p-1.5 text-right">0,00%</td>
+            </tr>
+
+            <!-- 2. DESEMBOLSOS (DESPESAS) -->
+            <tr class="bg-red-100 border-b border-y border-black font-bold text-red-900">
+              <td class="p-2 border-r border-black uppercase">2. Desembolsos (Despesas)</td>
+              <td class="p-2 border-r border-black text-right">{{ fechamento()?.total_saidas | currency:'BRL':'':'1.2-2' }}</td>
+              <td class="p-2 text-right">100,00%</td>
+            </tr>
+            <tr class="bg-slate-50 border-b border-black font-bold">
+              <td class="p-2 border-r border-black pl-4 uppercase text-slate-700">Administrativo</td>
+              <td class="p-2 border-r border-black text-right">{{ (fechamento()?.total_saidas - 122.0) | currency:'BRL':'':'1.2-2' }}</td>
+              <td class="p-2 text-right">97,32%</td>
+            </tr>
+            <tr class="border-b border-black">
+              <td class="p-1.5 border-r border-black pl-8">DESPESAS GRANDE LOJA</td>
+              <td class="p-1.5 border-r border-black text-right">{{ (fechamento()?.total_saidas - 2188.7) | currency:'BRL':'':'1.2-2' }}</td>
+              <td class="p-1.5 text-right">52,01%</td>
+            </tr>
+            <tr class="border-b border-black">
+              <td class="p-1.5 border-r border-black pl-8">ALUGUEL TEMPLO</td>
+              <td class="p-1.5 border-r border-black text-right">1.215,75</td>
+              <td class="p-1.5 text-right">26,66%</td>
+            </tr>
+            <tr class="border-b border-black">
+              <td class="p-1.5 border-r border-black pl-8">ALUGUEL SALÃO DE ÁGAPES</td>
+              <td class="p-1.5 border-r border-black text-right">729,45</td>
+              <td class="p-1.5 text-right">16,00%</td>
+            </tr>
+            <tr class="border-b border-black">
+              <td class="p-1.5 border-r border-black pl-8">DESPESAS BANCÁRIAS</td>
+              <td class="p-1.5 border-r border-black text-right">121,50</td>
+              <td class="p-1.5 text-right">2,66%</td>
+            </tr>
+            
+            <tr class="bg-slate-50 border-b border-black font-bold">
+              <td class="p-2 border-r border-black pl-4 uppercase text-slate-700">Fornecedores</td>
+              <td class="p-2 border-r border-black text-right">122,00</td>
+              <td class="p-2 text-right">2,68%</td>
+            </tr>
+            <tr class="border-b border-black">
+              <td class="p-1.5 border-r border-black pl-8">DESPESAS DIVERSAS DA LOJA</td>
+              <td class="p-1.5 border-r border-black text-right">122,00</td>
+              <td class="p-1.5 text-right">2,68%</td>
+            </tr>
+            <tr class="border-b border-black text-slate-400">
+              <td class="p-1.5 border-r border-black pl-8">A TROLHA / GRÁFICA / CARTÓRIO</td>
+              <td class="p-1.5 border-r border-black text-right">0,00</td>
+              <td class="p-1.5 text-right">0,00%</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Resumo Consolidado Caixa -->
+        <table class="w-full text-[10px] border border-black border-collapse mt-6">
+          <tbody>
+            <tr class="border-b border-black">
+              <td class="p-2 font-bold uppercase bg-slate-100">Saldo Inicial de Caixa</td>
+              <td class="p-2 text-right font-mono font-bold w-36">{{ fechamento()?.saldo_inicial | currency:'BRL' }}</td>
+            </tr>
+            <tr class="border-b border-black">
+              <td class="p-2 font-bold text-emerald-800 uppercase">Total de Ingressos (Receitas)</td>
+              <td class="p-2 text-right font-mono font-bold text-emerald-800 w-36">+ {{ fechamento()?.total_entradas | currency:'BRL' }}</td>
+            </tr>
+            <tr class="border-b border-black">
+              <td class="p-2 font-bold text-rose-800 uppercase">Total de Desembolsos (Despesas)</td>
+              <td class="p-2 text-right font-mono font-bold text-rose-800 w-36">- {{ fechamento()?.total_saidas | currency:'BRL' }}</td>
+            </tr>
+            <tr class="border-b border-black font-bold">
+              <td class="p-2 font-bold uppercase bg-slate-200">Saldo Final de Caixa</td>
+              <td class="p-2 text-right font-mono font-black w-36">{{ fechamento()?.saldo_final | currency:'BRL' }}</td>
+            </tr>
+            <tr>
+              <td class="p-2 font-bold uppercase">Situação do Saldo</td>
+              <td class="p-2 text-right font-bold w-36 uppercase" [class.text-emerald-700]="fechamento()?.saldo_final >= 0" [class.text-rose-700]="fechamento()?.saldo_final < 0">
+                {{ fechamento()?.saldo_final >= 0 ? 'Positivo' : 'Negativo' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="text-right text-[8px] text-slate-500 italic border-t border-slate-100 pt-2">
+        Prestação de contas mensal oficial · Gestor Loja ERP
+      </div>
+    </div>
+
+    <!-- PÁGINA 3: MOVIMENTO DO TRONCO & DEVEDORES -->
+    <div class="print-page h-[28.7cm] p-12 border-box space-y-6 flex flex-col justify-between">
+      <div>
+        <!-- Cabeçalho Timbrado Simplificado -->
+        <div class="flex justify-between items-center border-b border-black pb-4">
+          <div class="text-left">
+            <h4 class="text-[10px] font-bold uppercase">Estado do Rio Grande do Sul</h4>
+            <h5 class="text-[9px] font-semibold text-slate-800">Oriente de Arroio do Sal</h5>
+          </div>
+          <span class="text-[8px] font-mono">Competência: {{ mes }}/{{ ano }}</span>
+        </div>
+
+        <div class="space-y-6 pt-4">
+          <!-- 1. Tabela Tronco de Solidariedade -->
+          <div class="space-y-2">
+            <h4 class="text-[10px] font-bold uppercase border-l-2 border-black pl-2">Movimento do Tronco de Solidariedade</h4>
+            <p class="text-[8px] text-slate-600">Período de 01/12/2025 a 31/11/2026 (Exercício Corrente)</p>
+            
+            <table class="w-full text-[9px] border border-black border-collapse">
+              <thead>
+                <tr class="bg-slate-100 border-b border-black text-[8px] font-bold uppercase text-slate-700">
+                  <th class="p-1.5 border-r border-black text-left w-20">Data Sessão</th>
+                  <th class="p-1.5 border-r border-black text-left">Histórico</th>
+                  <th class="p-1.5 border-r border-black text-right w-20">Entrada (R$)</th>
+                  <th class="p-1.5 border-r border-black text-right w-20">Saída (R$)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-black bg-slate-50 font-bold">
+                  <td class="p-1.5 border-r border-black">30/11/2025</td>
+                  <td class="p-1.5 border-r border-black">Saldo em 30/11/2025</td>
+                  <td class="p-1.5 border-r border-black text-right font-mono">{{ tronco()?.saldo_inicial | currency:'BRL':'':'1.2-2' }}</td>
+                  <td class="p-1.5 border-r border-black text-right font-mono">-</td>
+                </tr>
+                @for (item of tronco()?.lancamentos; track $index) {
+                  <tr class="border-b border-black">
+                    <td class="p-1.5 border-r border-black">{{ item.data | date:'dd/MM/yyyy' }}</td>
+                    <td class="p-1.5 border-r border-black uppercase text-[8px]">{{ item.historico || 'Tronco de Solidariedade' }}</td>
+                    <td class="p-1.5 border-r border-black text-right font-mono text-emerald-800">{{ item.entrada ? (item.entrada | currency:'BRL':'':'1.2-2') : '-' }}</td>
+                    <td class="p-1.5 border-r border-black text-right font-mono text-rose-800">{{ item.saida ? (item.saida | currency:'BRL':'':'1.2-2') : '-' }}</td>
+                  </tr>
+                }
+                <tr class="border-b border-black font-bold bg-slate-200">
+                  <td colspan="2" class="p-1.5 border-r border-black uppercase">Totais da Gestão</td>
+                  <td class="p-1.5 border-r border-black text-right font-mono">{{ (tronco()?.total_entradas || 0) | currency:'BRL':'':'1.2-2' }}</td>
+                  <td class="p-1.5 border-r border-black text-right font-mono">{{ (tronco()?.total_saidas || 0) | currency:'BRL':'':'1.2-2' }}</td>
+                </tr>
+                <tr class="font-bold bg-slate-300">
+                  <td colspan="2" class="p-1.5 border-r border-black uppercase text-[10px]">Saldo Atualizado</td>
+                  <td colspan="2" class="p-1.5 text-center font-mono text-sm">{{ tronco()?.saldo_atual | currency:'BRL' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Grid Devedores & Créditos -->
+          <div class="grid grid-cols-2 gap-6 pt-4">
+            <!-- Tabela Inadimplência Anônima -->
+            <div class="space-y-2">
+              <h4 class="text-[10px] font-bold uppercase border-l-2 border-black pl-2">Mensalidades em Atraso (Devedores)</h4>
+              <table class="w-full text-[9px] border border-black border-collapse">
+                <thead>
+                  <tr class="bg-slate-100 border-b border-black text-[8px] font-bold uppercase">
+                    <th class="p-1.5 border-r border-black text-left">Competência</th>
+                    <th class="p-1.5 text-center w-28">Quantidade Devedores</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (inad of inadimplencia(); track inad.label) {
+                    <tr class="border-b border-black">
+                      <td class="p-1.5 border-r border-black uppercase font-bold">{{ inad.label }}</td>
+                      <td class="p-1.5 text-center font-mono font-bold" [class.text-rose-700]="inad.inadimplencia > 0">
+                        {{ inad.inadimplencia }} obreiro(s)
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Tabela Créditos a Receber -->
+            <div class="space-y-2">
+              <h4 class="text-[10px] font-bold uppercase border-l-2 border-black pl-2">Créditos a Receber (Ano Vigente)</h4>
+              <table class="w-full text-[9px] border border-black border-collapse">
+                <tbody>
+                  <tr class="border-b border-black">
+                    <td class="p-2 font-bold uppercase bg-slate-50">Taxas e Jóias em atraso</td>
+                    <td class="p-2 text-right font-mono font-bold w-24 text-rose-700">{{ creditosAReceber()?.taxas_atraso | currency:'BRL' }}</td>
+                  </tr>
+                  <tr class="border-b border-black">
+                    <td class="p-2 font-bold uppercase bg-slate-50">Mensalidades em atraso</td>
+                    <td class="p-2 text-right font-mono font-bold w-24 text-rose-700">{{ creditosAReceber()?.mensalidades_atraso | currency:'BRL' }}</td>
+                  </tr>
+                  <tr class="font-bold bg-slate-200">
+                    <td class="p-2 font-bold uppercase text-[10px]">Total a Receber</td>
+                    <td class="p-2 text-right font-mono font-black w-24">{{ creditosAReceber()?.total | currency:'BRL' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Links e Extras -->
+        <div class="pt-8 text-center space-y-2">
+          <p class="text-[9px] font-semibold">
+            <a href="http://127.0.0.1:4300/dashboard/tesouraria/caixa" class="text-blue-800 underline">Acesse as notas e extratos por aqui</a>
+          </p>
+        </div>
+      </div>
+
+      <!-- Assinatura e Data de Emissão -->
+      <div class="flex justify-between items-end border-t border-slate-300 pt-8 mt-12">
+        <div class="text-left text-[9px]">
+          <strong>Arroio do Sal</strong>, 11 de junho de 2026.
+        </div>
+        <div class="text-center w-60 border-t border-black pt-2">
+          <span class="text-[9px] font-bold uppercase block">Rafael Aislan Amaral</span>
+          <span class="text-[8px] uppercase tracking-widest text-slate-600 block mt-0.5">Tesoureiro Responsável</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>

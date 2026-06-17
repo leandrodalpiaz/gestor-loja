@@ -1,82 +1,182 @@
-<div class="space-y-6">
-  <div>
+<div class="space-y-8">
+  <!-- Header Banner -->
+  <div class="relative flex flex-col justify-between gap-6 border-b border-white/5 pb-6 md:flex-row md:items-center">
     @if (loja(); as l) {
-      <h1 class="font-cinzel text-2xl font-bold tracking-widest text-white md:text-3xl">{{l.sigla}} {{l.nome}}</h1>
-      <p class="mt-1 text-xs uppercase tracking-wider text-slate-400">Loja nº {{l.numero}} · quadro de obreiros</p>
+      <div>
+        <h1 class="font-cinzel text-3xl font-bold tracking-widest text-white">{{l.sigla}} {{l.nome}}</h1>
+        <p class="mt-1.5 text-xs uppercase tracking-widest text-slate-400">Oficina nº {{l.numero}} · Quadro Geral de Obreiros</p>
+      </div>
     } @else {
-      <h1 class="font-cinzel text-2xl font-bold tracking-widest text-white md:text-3xl">Minha Loja</h1>
+      <div>
+        <h1 class="font-cinzel text-3xl font-bold tracking-widest text-white">Minha Loja</h1>
+        <p class="mt-1.5 text-xs uppercase tracking-widest text-slate-400">Informações gerais e quadro de membros da Oficina</p>
+      </div>
     }
-  </div>
 
-  <div class="flex flex-wrap gap-2">
-    <button (click)="abrir('visao')" [class.bg-liturgical-gold]="modo() === 'visao'" [class.text-liturgical-bg]="modo() === 'visao'" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-300">Visão da Loja</button>
-    <button (click)="abrir('irmaos')" [class.bg-liturgical-gold]="modo() === 'irmaos'" [class.text-liturgical-bg]="modo() === 'irmaos'" class="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-slate-300">Irmãos da Loja</button>
+    <!-- Quick Stats Summary -->
+    <div class="glass-surface border border-white/5 bg-white/[0.01] px-5 py-3 rounded-2xl flex items-center gap-3 shrink-0">
+      <div class="w-9 h-9 rounded-xl bg-liturgical-gold/10 text-liturgical-gold flex items-center justify-center shadow-inner">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      </div>
+      <div>
+        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Membros Ativos</div>
+        <div class="text-xs font-bold text-white font-cinzel">{{estatisticas().total_ativos || obreiros().length}}</div>
+      </div>
+    </div>
   </div>
 
   @if (errorMsg(); as msg) {
-    <div class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-400">{{msg}}</div>
+    <div [@fadeInOut] class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3.5 text-xs font-semibold text-rose-400 flex items-center gap-2">
+      <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
+      {{msg}}
+    </div>
   }
+
   @if (loading()) {
-    <div class="py-20 text-center text-sm font-bold uppercase tracking-wider text-slate-400">Carregando quadro de obreiros...</div>
+    <div [@fadeInOut] class="py-24 text-center">
+      <div class="inline-block w-8 h-8 rounded-full border-2 border-white/5 border-t-liturgical-gold animate-spin mb-4"></div>
+      <p class="text-xs uppercase tracking-widest text-slate-500">Sincronizando quadro de obreiros...</p>
+    </div>
   } @else {
-    @if (modo() === 'visao') {
-      <section class="space-y-3 rounded-2xl border border-white/5 bg-liturgical-surface/40 p-6">
-        <h2 class="font-cinzel text-sm font-bold uppercase tracking-widest text-white">Sobre nossa Oficina</h2>
-        <p class="text-xs leading-relaxed text-slate-300">Nossa respeitável Oficina promove os princípios da Liberdade, Igualdade e Fraternidade, reunindo obreiros comprometidos com o aperfeiçoamento moral, intelectual e social.</p>
-      </section>
-    }
+    <!-- Dashboard Columns (Roster vs Info) -->
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+      
+      <!-- Left: Members Roster & Search (8/12) -->
+      <div class="xl:col-span-8 space-y-6">
+        <!-- Search and filters -->
+        <div class="relative w-full">
+          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input [(ngModel)]="busca" 
+                 placeholder="Pesquisar por nome histórico, civil, grau ou cargo..." 
+                 class="w-full rounded-xl border border-white/10 bg-white/5 pl-11 pr-4 py-3.5 text-sm text-white placeholder-slate-500 transition-all duration-200 focus:border-liturgical-gold/60 focus:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-liturgical-gold/10">
+        </div>
 
-    <section class="space-y-5 rounded-2xl border border-white/5 bg-liturgical-surface/40 p-6">
-      <div>
-        <h2 class="font-cinzel text-sm font-bold uppercase tracking-widest text-white">Quadro de Obreiros Ativos</h2>
-        <p class="mt-1 text-[10px] text-slate-400">Membros regulares e filiados da Oficina</p>
-      </div>
+        <!-- Roster list divided by degree -->
+        <div class="space-y-8">
+          @for (grupo of obreirosPorGrau; track grupo.grau) {
+            <div class="space-y-4">
+              <!-- Degree Header Section -->
+              <div class="flex items-center gap-3 mb-4">
+                <span class="w-1.5 h-4 rounded bg-degree" [attr.data-degree]="grupo.grau"></span>
+                <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">
+                  {{ grupo.grau }}s <span class="text-[10px] text-slate-500 font-sans font-normal ml-1">({{ grupo.membros.length }} membro{{ grupo.membros.length > 1 ? 's' : '' }})</span>
+                </h3>
+              </div>
 
-      @if (modo() === 'irmaos') {
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <div class="rounded-xl border border-white/5 bg-black/20 p-4"><small class="text-slate-500">Obreiros ativos</small><p class="text-3xl font-bold text-white">{{estatisticas().total_ativos}}</p></div>
-          @for (item of (estatisticas().graus || []).slice(0, 2); track item.grau) {
-            <div class="rounded-xl border border-white/5 bg-black/20 p-4"><small class="text-slate-500">{{item.grau}}</small><p class="text-3xl font-bold text-liturgical-gold">{{item.qtd}}</p></div>
+              <!-- Staggered Card Grid -->
+              <div [@staggeredList]="grupo.membros.length" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                @for (o of grupo.membros; track o.id) {
+                  <article class="group flex gap-4 items-center rounded-2xl border border-white/5 bg-liturgical-surface/40 p-4 transition-all duration-300 hover:border-liturgical-gold/25 hover:bg-liturgical-surface/75 hover:shadow-lg hover:shadow-black/25">
+                    
+                    <!-- Avatar placeholder colored by degree -->
+                    <div class="avatar-initials flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold uppercase" [attr.data-degree]="o.grau">
+                      {{ (o.nome_historico || o.nome)?.substring(0, 2) }}
+                    </div>
+
+                    <!-- Member info body -->
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-start gap-1.5">
+                        <b class="text-xs font-bold text-white leading-tight truncate font-cinzel group-hover:text-liturgical-gold transition-colors">{{o.nome_historico || o.nome}}</b>
+                      </div>
+                      
+                      @if (o.nome_historico && o.nome) {
+                        <p class="text-[10px] text-slate-500 truncate mt-0.5">{{ o.nome }}</p>
+                      }
+
+                      @if (o.cargo) {
+                        <span class="inline-block mt-1.5 text-[8px] font-bold uppercase tracking-widest text-liturgical-gold bg-liturgical-gold/5 border border-liturgical-gold/15 px-2 py-0.5 rounded">
+                          {{ o.cargo }}
+                        </span>
+                      } @else {
+                        <span class="inline-block mt-1.5 text-[8px] font-bold uppercase tracking-widest text-slate-400 bg-white/5 border border-white/5 px-2 py-0.5 rounded">
+                          Obreiro
+                        </span>
+                      }
+                    </div>
+
+                    <!-- Contact shortcuts affordance (desktop/mobile hover action) -->
+                    <div class="flex gap-2.5">
+                      @if (o.email) {
+                        <a [href]="'mailto:' + o.email" 
+                           class="w-8 h-8 rounded-lg bg-white/5 text-slate-400 hover:text-liturgical-gold hover:bg-liturgical-gold/10 flex items-center justify-center transition-colors border border-white/5 hover:border-liturgical-gold/20"
+                           title="Enviar E-mail">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        </a>
+                      }
+                      @if (o.telefone) {
+                        <a [href]="'tel:' + o.telefone" 
+                           class="w-8 h-8 rounded-lg bg-white/5 text-slate-400 hover:text-liturgical-gold hover:bg-liturgical-gold/10 flex items-center justify-center transition-colors border border-white/5 hover:border-liturgical-gold/20"
+                           title="Ligar para o irmão">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                        </a>
+                      }
+                    </div>
+
+                  </article>
+                }
+              </div>
+            </div>
+          } @empty {
+            <div class="py-16 text-center border border-dashed border-white/5 rounded-2xl text-slate-500">
+              <svg class="w-12 h-12 mx-auto opacity-10 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <p class="text-xs font-semibold">Nenhum irmão corresponde aos termos pesquisados.</p>
+            </div>
           }
         </div>
-        <input [(ngModel)]="busca" placeholder="Buscar irmão por nome, grau ou cargo..." class="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white">
+      </div>
+
+      <!-- Right: Info Panel & Birthday list (4/12) -->
+      <div class="xl:col-span-4 space-y-6">
+        <!-- Birthday celebrations -->
         @if (aniversariantes().length > 0) {
-          <div class="rounded-xl border border-liturgical-gold/10 bg-liturgical-gold/5 p-4">
-            <h3 class="text-[10px] font-bold uppercase tracking-widest text-liturgical-gold">Aniversariantes do mês</h3>
-            <div class="mt-3 flex flex-wrap gap-2">
+          <section class="glass-surface border border-liturgical-gold/20 bg-liturgical-gold/5 p-6 rounded-2xl relative overflow-hidden group">
+            <div class="absolute -right-6 -top-6 w-16 h-16 bg-liturgical-gold/10 rounded-full blur-xl group-hover:bg-liturgical-gold/15 transition-colors"></div>
+            
+            <div class="flex items-center gap-2 mb-4">
+              <div class="w-7 h-7 rounded-lg bg-liturgical-gold/15 text-liturgical-gold flex items-center justify-center text-xs">
+                ★
+              </div>
+              <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-liturgical-gold">Aniversariantes do Mês</h3>
+            </div>
+
+            <div class="space-y-2.5">
               @for (o of aniversariantes(); track o.id) {
-                <span class="rounded-lg bg-black/20 px-3 py-2 text-xs text-slate-200">{{o.nome_historico || o.nome}} · {{o.data_nascimento_civil | date:'dd/MM'}}</span>
+                <div class="flex items-center justify-between rounded-xl bg-black/20 px-3.5 py-2.5 border border-white/5">
+                  <div class="min-w-0">
+                    <span class="block text-xs font-bold text-slate-200 truncate font-cinzel">{{o.nome_historico || o.nome}}</span>
+                    <span class="block text-[9px] text-slate-500 mt-0.5">{{o.cargo || 'Obreiro'}}</span>
+                  </div>
+                  <span class="text-[10px] font-bold text-liturgical-gold bg-liturgical-gold/10 px-2 py-0.5 rounded-md border border-liturgical-gold/15 font-mono">
+                    {{o.data_nascimento_civil | date:'dd/MM'}}
+                  </span>
+                </div>
               }
             </div>
-          </div>
+          </section>
         }
-      }
 
-      <div class="hidden md:block">
-        <table class="w-full text-left text-xs">
-          <thead><tr class="border-b border-white/5 text-[10px] uppercase tracking-widest text-slate-500"><th class="px-4 py-3">Nome</th><th class="px-4 py-3">Grau</th><th class="px-4 py-3">Cargo</th><th class="px-4 py-3">Contato</th></tr></thead>
-          <tbody>
-            @for (o of obreirosFiltrados; track o.id) {
-              <tr class="border-b border-white/5">
-                <td class="px-4 py-3"><b class="block text-white">{{o.nome_historico || o.nome}}</b><span class="text-slate-500">{{o.nome}}</span></td>
-                <td class="px-4 py-3 text-slate-300">{{o.grau}}</td>
-                <td class="px-4 py-3 font-bold text-liturgical-gold">{{o.cargo}}</td>
-                <td class="px-4 py-3 text-slate-400">{{o.email}} @if (modo() === 'irmaos' && o.telefone) {<span class="block">{{o.telefone}}</span>}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+        <!-- About Lodge -->
+        <section class="glass-surface border border-white/5 bg-liturgical-surface/30 p-6 rounded-2xl space-y-3">
+          <h2 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Sobre nossa Oficina</h2>
+          <div class="w-8 h-0.5 bg-liturgical-gold/40 rounded"></div>
+          <p class="text-[11px] leading-relaxed text-slate-300">
+            Nossa respeitável Oficina promove os princípios da Liberdade, Igualdade e Fraternidade, reunindo obreiros comprometidos com o aperfeiçoamento moral, intelectual e social.
+          </p>
+        </section>
       </div>
 
-      <div class="grid grid-cols-1 gap-4 md:hidden">
-        @for (o of obreirosFiltrados; track o.id) {
-          <article class="space-y-3 rounded-xl border border-white/5 bg-black/20 p-4">
-            <div class="flex justify-between gap-3"><div><b class="text-sm text-white">{{o.nome_historico || o.nome}}</b><p class="text-[10px] text-slate-400">{{o.nome}}</p></div><span class="text-[9px] font-bold uppercase text-liturgical-gold">{{o.grau}}</span></div>
-            <p class="text-xs text-slate-300">{{o.cargo}}</p>
-            @if (modo() === 'irmaos' && o.telefone) { <a [href]="'tel:' + o.telefone" class="block rounded-lg border border-white/10 px-3 py-2 text-center text-[10px] font-bold uppercase text-slate-300">Ligar para o irmão</a> }
-          </article>
-        } @empty { <p class="text-sm text-slate-400">Nenhum irmão encontrado.</p> }
-      </div>
-    </section>
+    </div>
   }
 </div>

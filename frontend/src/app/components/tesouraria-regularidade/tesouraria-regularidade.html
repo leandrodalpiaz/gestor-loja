@@ -1,148 +1,329 @@
 <div class="space-y-8 animate-fade-in">
 
-  <!-- HEADER & FILTERS -->
+  <!-- HEADER -->
   <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
     <div>
       <span class="text-liturgical-gold text-[10px] font-bold uppercase tracking-widest block">Tesouraria</span>
-      <h1 class="font-cinzel text-3xl font-extrabold tracking-wider text-white">Regularidade Financeira</h1>
+      <h1 class="font-cinzel text-3xl font-extrabold tracking-wider text-white">Regularidade & Membros</h1>
     </div>
 
-    <!-- Actions & Filters -->
-    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-      <!-- Mês -->
-      <select [ngModel]="mesSelecionado()" 
-              (ngModelChange)="mesSelecionado.set($event); carregarRegularidades()"
-              class="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
-        @for (m of meses; track m.value) {
-          <option [value]="m.value" class="bg-liturgical-bg text-white">{{ m.label }}</option>
-        }
-      </select>
-
-      <!-- Ano -->
-      <select [ngModel]="anoSelecionado()" 
-              (ngModelChange)="anoSelecionado.set($event); carregarRegularidades()"
-              class="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
-        @for (a of anosDisponiveis; track a) {
-          <option [value]="a" class="bg-liturgical-bg text-white">{{ a }}</option>
-        }
-      </select>
-
-      <!-- Botão Marcar Todos Regulares -->
-      <button (click)="definirTodosRegulares()"
-              class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold uppercase tracking-wider border border-white/10 hover:border-white/20 transition-all flex items-center gap-2">
-        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        Marcar todos como Regulares
+    <!-- Tab Selection Buttons -->
+    <div class="flex bg-white/5 p-1 rounded-xl border border-white/10">
+      <button (click)="setTab('regularidade')"
+              [class.bg-liturgical-gold]="activeTab() === 'regularidade'"
+              [class.text-[#050B14]]="activeTab() === 'regularidade'"
+              [class.text-slate-400]="activeTab() !== 'regularidade'"
+              class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
+        Regularidade Mensal
+      </button>
+      <button (click)="setTab('configuracoes')"
+              [class.bg-liturgical-gold]="activeTab() === 'configuracoes'"
+              [class.text-[#050B14]]="activeTab() === 'configuracoes'"
+              [class.text-slate-400]="activeTab() !== 'configuracoes'"
+              class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
+        Configurações de Membros
       </button>
     </div>
   </div>
 
-  <!-- ERROR ALERT -->
-  @if (errorMsg()) {
-    <div class="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 text-xs font-semibold text-rose-400 flex items-start gap-3">
-      <svg class="w-5 h-5 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-      </svg>
-      <span>{{ errorMsg() }}</span>
+  <!-- TAB 1: REGULARIDADE MENSAL -->
+  @if (activeTab() === 'regularidade') {
+    <div class="space-y-6">
+      
+      <!-- Regularity Filter bar -->
+      <div class="glass-card rounded-2xl p-5 border border-white/5 flex flex-wrap items-center gap-4 justify-between">
+        <div class="flex items-center gap-3">
+          <!-- Mês -->
+          <select [ngModel]="mesSelecionado()" 
+                  (ngModelChange)="mesSelecionado.set($event); carregarRegularidades()"
+                  class="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+            @for (m of meses; track m.value) {
+              <option [value]="m.value" class="bg-liturgical-bg text-white">{{ m.label }}</option>
+            }
+          </select>
+
+          <!-- Ano -->
+          <select [ngModel]="anoSelecionado()" 
+                  (ngModelChange)="anoSelecionado.set($event); carregarRegularidades()"
+                  class="px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+            @for (a of anosDisponiveis; track a) {
+              <option [value]="a" class="bg-liturgical-bg text-white">{{ a }}</option>
+            }
+          </select>
+        </div>
+
+        <button (click)="definirTodosRegulares()"
+                class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold uppercase tracking-wider border border-white/10 hover:border-white/20 transition-all flex items-center gap-2">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          Marcar Todos como Regulares
+        </button>
+      </div>
+
+      <!-- ERROR ALERT -->
+      @if (errorMsg()) {
+        <div class="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 text-xs font-semibold text-rose-400 flex items-start gap-3">
+          <svg class="w-5 h-5 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span>{{ errorMsg() }}</span>
+        </div>
+      }
+
+      <!-- REGULARITY DATA -->
+      @if (loading()) {
+        <div class="text-center py-12 glass-card rounded-3xl">
+          <span class="text-xs text-slate-400">Carregando auditoria de regularidade...</span>
+        </div>
+      } @else if (obreirosRegularidade().length === 0) {
+        <div class="text-center py-12 glass-card rounded-3xl text-slate-500 text-xs font-medium tracking-widest uppercase">
+          Nenhum obreiro localizado no cadastro.
+        </div>
+      } @else {
+        <!-- Desktop Grid Table -->
+        <div class="hidden md:block glass-card rounded-3xl overflow-hidden border border-white/5">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-white/5 text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-white/2">
+                <th class="p-5">Nome do Obreiro</th>
+                <th class="p-5">C.I.M.</th>
+                <th class="p-5">Grau</th>
+                <th class="p-5">Status Financeiro</th>
+                <th class="p-5">Observações / Motivo</th>
+                <th class="p-5 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/2">
+              @for (item of obreirosRegularidade(); track item.obreiro_id) {
+                <tr class="hover:bg-white/2 transition-colors text-slate-300">
+                  <td class="p-5 font-semibold text-white">
+                    {{ item.obreiro_nome_historico || item.obreiro_nome }}
+                  </td>
+                  <td class="p-5 font-mono text-slate-400">{{ item.obreiro_cim || '-' }}</td>
+                  <td class="p-5 text-slate-400">{{ item.obreiro_grau || 'Aprendiz' }}</td>
+                  <td class="p-5">
+                    <span [class.bg-emerald-500\/10]="item.status === 'regular'"
+                          [class.text-emerald-400]="item.status === 'regular'"
+                          [class.border-emerald-500\/20]="item.status === 'regular'"
+                          [class.bg-rose-500\/10]="item.status !== 'regular'"
+                          [class.text-rose-400]="item.status !== 'regular'"
+                          [class.border-rose-500\/20]="item.status !== 'regular'"
+                          class="px-2.5 py-1 text-[9px] font-bold border rounded uppercase tracking-wider">
+                      {{ item.status === 'regular' ? 'Regular' : 'Irregular' }}
+                    </span>
+                  </td>
+                  <td class="p-5 text-slate-400 italic max-w-xs truncate" [title]="item.observacao || ''">
+                    {{ item.observacao || '-' }}
+                  </td>
+                  <td class="p-5 text-center">
+                    <div class="flex items-center justify-center gap-1.5">
+                      <button (click)="abrirModalDetalhe(item)"
+                              class="px-3 py-1.5 bg-liturgical-gold/10 hover:bg-liturgical-gold/20 text-liturgical-gold border border-liturgical-gold/20 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
+                        Detalhes
+                      </button>
+                      <button (click)="abrirModalDefinir(item)" 
+                              class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
+                        Ajustar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div class="md:hidden space-y-4">
+          @for (item of obreirosRegularidade(); track item.obreiro_id) {
+            <div class="glass-card rounded-2xl p-5 border border-white/5 flex flex-col justify-between gap-4">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="text-white font-bold text-sm">{{ item.obreiro_nome_historico || item.obreiro_nome }}</h4>
+                  <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mt-0.5">
+                    CIM: {{ item.obreiro_cim || '-' }} • {{ item.obreiro_grau || 'Aprendiz' }}
+                  </span>
+                  @if (item.observacao) {
+                    <p class="text-slate-400 text-xs italic mt-2 font-light">Obs: {{ item.observacao }}</p>
+                  }
+                </div>
+                <span [class.bg-emerald-500\/10]="item.status === 'regular'"
+                      [class.text-emerald-400]="item.status === 'regular'"
+                      [class.bg-rose-500\/10]="item.status !== 'regular'"
+                      [class.text-rose-400]="item.status !== 'regular'"
+                      class="px-2.5 py-0.5 text-[9px] font-bold border border-transparent rounded uppercase tracking-wider shrink-0">
+                  {{ item.status === 'regular' ? 'Regular' : 'Irregular' }}
+                </span>
+              </div>
+
+              <div class="pt-3 border-t border-white/5 flex justify-end gap-1.5">
+                <button (click)="abrirModalDetalhe(item)"
+                        class="px-4 py-2 bg-liturgical-gold/10 hover:bg-liturgical-gold/20 text-liturgical-gold border border-liturgical-gold/20 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
+                  Detalhes
+                </button>
+                <button (click)="abrirModalDefinir(item)" 
+                        class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
+                  Ajustar Regularidade
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
     </div>
   }
 
-  <!-- REGULARITY LIST -->
-  <div class="space-y-4">
-    
-    @if (loading()) {
-      <div class="text-center py-10 glass-card rounded-3xl">
-        <span class="text-xs text-slate-400">Carregando auditoria de regularidade...</span>
+  <!-- TAB 2: CONFIGURAÇÕES DE MEMBROS -->
+  @if (activeTab() === 'configuracoes') {
+    <div class="space-y-6">
+      
+      <div class="glass-card rounded-2xl p-5 border border-white/5">
+        <h3 class="font-cinzel text-base font-bold text-white tracking-wider">Acompanhamento e Parâmetros de Cobrança</h3>
+        <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-semibold">Definição individual de Jóias e Biblioteca por Obreiro.</p>
       </div>
-    } @else if (obreirosRegularidade().length === 0) {
-      <div class="text-center py-12 glass-card rounded-3xl text-slate-500 text-xs font-medium tracking-widest uppercase">
-        Nenhum obreiro localizado no cadastro.
-      </div>
-    } @else {
-      <!-- DESKTOP VIEW (Table) -->
-      <div class="hidden md:block glass-card rounded-3xl overflow-hidden border border-white/5">
-        <table class="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr class="border-b border-white/5 text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-white/2">
-              <th class="p-5">Nome do Obreiro</th>
-              <th class="p-5">C.I.M.</th>
-              <th class="p-5">Grau</th>
-              <th class="p-5">Status Financeiro</th>
-              <th class="p-5">Observações / Motivo</th>
-              <th class="p-5 text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-white/2">
-            @for (item of obreirosRegularidade(); track item.obreiro_id) {
-              <tr class="hover:bg-white/2 transition-colors text-slate-300">
-                <td class="p-5 font-semibold text-white">
-                  {{ item.obreiro_nome_historico || item.obreiro_nome }}
-                </td>
-                <td class="p-5 font-mono text-slate-400">{{ item.obreiro_cim || '-' }}</td>
-                <td class="p-5 text-slate-400">{{ item.obreiro_grau || 'Aprendiz' }}</td>
-                <td class="p-5">
-                  <span [class.bg-emerald-500\/10]="item.status === 'regular'"
-                        [class.text-emerald-400]="item.status === 'regular'"
-                        [class.border-emerald-500\/20]="item.status === 'regular'"
-                        [class.bg-rose-500\/10]="item.status !== 'regular'"
-                        [class.text-rose-400]="item.status !== 'regular'"
-                        [class.border-rose-500\/20]="item.status !== 'regular'"
-                        class="px-2.5 py-1 text-[9px] font-bold border rounded uppercase tracking-wider">
-                    {{ item.status === 'regular' ? 'Regular' : 'Irregular' }}
-                  </span>
-                </td>
-                <td class="p-5 text-slate-400 italic max-w-xs truncate" [title]="item.observacao || ''">
-                  {{ item.observacao || '-' }}
-                </td>
-                <td class="p-5 text-center">
-                  <button (click)="abrirModalDefinir(item)" 
-                          class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
-                    Ajustar
-                  </button>
-                </td>
+
+      <!-- ERROR ALERT -->
+      @if (errorMsg()) {
+        <div class="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 text-xs font-semibold text-rose-400 flex items-start gap-3">
+          <svg class="w-5 h-5 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span>{{ errorMsg() }}</span>
+        </div>
+      }
+
+      @if (loading()) {
+        <div class="text-center py-12 glass-card rounded-3xl">
+          <span class="text-xs text-slate-400">Carregando dados financeiros dos membros...</span>
+        </div>
+      } @else if (obreirosFinanceiro().length === 0) {
+        <div class="text-center py-12 glass-card rounded-3xl text-slate-500 text-xs font-medium tracking-widest uppercase">
+          Nenhum membro ativo localizado.
+        </div>
+      } @else {
+        <!-- Desktop Grid Table -->
+        <div class="hidden md:block glass-card rounded-3xl overflow-hidden border border-white/5">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-white/5 text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-white/2">
+                <th class="p-5">Membro</th>
+                <th class="p-5">Jóia da Iniciacão</th>
+                <th class="p-5">Formato Jóia</th>
+                <th class="p-5">Mensalidade Biblioteca</th>
+                <th class="p-5">Formato Biblioteca</th>
+                <th class="p-5 text-center">Ações</th>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody class="divide-y divide-white/2">
+              @for (ob of obreirosFinanceiro(); track ob.id) {
+                <tr class="hover:bg-white/2 transition-colors text-slate-300">
+                  <td class="p-5 font-semibold text-white">
+                    <div>{{ ob.nome_historico || ob.nome }}</div>
+                    <div class="text-[9px] text-slate-400 font-mono mt-0.5">CIM: {{ ob.cim || '-' }} · {{ ob.grau || 'Aprendiz' }}</div>
+                  </td>
+                  <td class="p-5 font-semibold">
+                    @if (ob.financeiro_joia_ativa) {
+                      {{ ob.financeiro_joia_valor !== null ? (ob.financeiro_joia_valor | currency:'BRL') : 'Padrão' }}
+                    } @else {
+                      <span class="text-slate-500 font-normal text-[10px]">Não Ativa</span>
+                    }
+                  </td>
+                  <td class="p-5">
+                    @if (ob.financeiro_joia_ativa) {
+                      <span [class.bg-emerald-500\/10]="ob.financeiro_joia_formato === 'a_vista'"
+                            [class.text-emerald-400]="ob.financeiro_joia_formato === 'a_vista'"
+                            [class.bg-amber-500\/10]="ob.financeiro_joia_formato === 'parcelado'"
+                            [class.text-amber-400]="ob.financeiro_joia_formato === 'parcelado'"
+                            [class.bg-rose-500\/10]="ob.financeiro_joia_formato === 'isento'"
+                            [class.text-rose-400]="ob.financeiro_joia_formato === 'isento'"
+                            class="px-2 py-0.5 text-[9px] font-bold border border-transparent rounded uppercase tracking-wider">
+                        {{ ob.financeiro_joia_formato || 'a_vista' }}
+                      </span>
+                    } @else {
+                      <span class="text-slate-600">—</span>
+                    }
+                  </td>
+                  <td class="p-5 font-semibold">
+                    {{ ob.financeiro_biblioteca_valor !== null ? (ob.financeiro_biblioteca_valor | currency:'BRL') : 'Padrão' }}
+                  </td>
+                  <td class="p-5">
+                    <span [class.bg-emerald-500\/10]="ob.financeiro_biblioteca_formato === 'mensal'"
+                          [class.text-emerald-400]="ob.financeiro_biblioteca_formato === 'mensal'"
+                          [class.bg-amber-500\/10]="ob.financeiro_biblioteca_formato === 'anual'"
+                          [class.text-amber-400]="ob.financeiro_biblioteca_formato === 'anual'"
+                          [class.bg-rose-500\/10]="ob.financeiro_biblioteca_formato === 'isento'"
+                          [class.text-rose-400]="ob.financeiro_biblioteca_formato === 'isento'"
+                          class="px-2 py-0.5 text-[9px] font-bold border border-transparent rounded uppercase tracking-wider">
+                      {{ ob.financeiro_biblioteca_formato || 'mensal' }}
+                    </span>
+                  </td>
+                  <td class="p-5 text-center">
+                    <div class="flex items-center justify-center gap-1.5">
+                      <button (click)="abrirModalDetalhe(ob)"
+                              class="px-3 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
+                        Detalhes
+                      </button>
+                      <button (click)="abrirModalConfig(ob)" 
+                              class="px-3.5 py-2 bg-liturgical-gold hover:bg-liturgical-goldHover text-[#050B14] rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-md">
+                        Configurar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
 
-      <!-- MOBILE VIEW (Intelligent Cards) -->
-      <div class="md:hidden space-y-4">
-        @for (item of obreirosRegularidade(); track item.obreiro_id) {
-          <div class="glass-card rounded-2xl p-5 border border-white/5 flex flex-col justify-between gap-4">
-            <div class="flex justify-between items-start">
-              <div>
-                <h4 class="text-white font-bold text-sm">{{ item.obreiro_nome_historico || item.obreiro_nome }}</h4>
-                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mt-0.5">
-                  CIM: {{ item.obreiro_cim || '-' }} • {{ item.obreiro_grau || 'Aprendiz' }}
-                </span>
-                @if (item.observacao) {
-                  <p class="text-slate-400 text-xs italic mt-2 font-light">Obs: {{ item.observacao }}</p>
-                }
+        <!-- Mobile Cards -->
+        <div class="md:hidden space-y-4">
+          @for (ob of obreirosFinanceiro(); track ob.id) {
+            <div class="glass-card rounded-2xl p-5 border border-white/5 flex flex-col justify-between gap-4">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="text-white font-bold text-sm">{{ ob.nome_historico || ob.nome }}</h4>
+                  <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mt-0.5">
+                    CIM: {{ ob.cim || '-' }} • {{ ob.grau || 'Aprendiz' }}
+                  </span>
+                </div>
               </div>
-              <span [class.bg-emerald-500\/10]="item.status === 'regular'"
-                    [class.text-emerald-400]="item.status === 'regular'"
-                    [class.bg-rose-500\/10]="item.status !== 'regular'"
-                    [class.text-rose-400]="item.status !== 'regular'"
-                    class="px-2.5 py-0.5 text-[9px] font-bold border border-transparent rounded uppercase tracking-wider shrink-0">
-                {{ item.status === 'regular' ? 'Regular' : 'Irregular' }}
-              </span>
-            </div>
 
-            <div class="pt-3 border-t border-white/5 flex justify-end">
-              <button (click)="abrirModalDefinir(item)" 
-                      class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
-                Ajustar Regularidade
-              </button>
-            </div>
-          </div>
-        }
-      </div>
-    }
-  </div>
+              <div class="grid grid-cols-2 gap-4 pt-3 border-t border-white/5 text-xs text-slate-300">
+                <div>
+                  <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Jóia</span>
+                  @if (ob.financeiro_joia_ativa) {
+                    <span class="font-semibold">{{ ob.financeiro_joia_valor !== null ? (ob.financeiro_joia_valor | currency:'BRL') : 'Padrão' }}</span>
+                    <span class="text-[8px] block text-slate-400">Format: {{ ob.financeiro_joia_formato || 'a_vista' }}</span>
+                  } @else {
+                    <span class="text-slate-500">Não Ativa</span>
+                  }
+                </div>
+                <div>
+                  <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Biblioteca</span>
+                  <span class="font-semibold">{{ ob.financeiro_biblioteca_valor !== null ? (ob.financeiro_biblioteca_valor | currency:'BRL') : 'Padrão' }}</span>
+                  <span class="text-[8px] block text-slate-400">Format: {{ ob.financeiro_biblioteca_formato || 'mensal' }}</span>
+                </div>
+              </div>
 
-  <!-- MODAL: DEFINIR REGULARIDADE INDIVIDUAL -->
+              <div class="flex justify-end pt-2 gap-1.5">
+                <button (click)="abrirModalDetalhe(ob)"
+                        class="px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
+                  Detalhes
+                </button>
+                <button (click)="abrirModalConfig(ob)" 
+                        class="px-4 py-2 bg-liturgical-gold hover:bg-liturgical-goldHover text-[#050B14] rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">
+                  Configurar Cobrança
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- MODAL: AJUSTAR REGULARIDADE MENSAL -->
   @if (showModalDefinir()) {
     <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
       <div class="w-full max-w-md glass-card-gold rounded-3xl p-6 md:p-8 relative overflow-hidden animate-fade-in border border-liturgical-gold/25">
@@ -152,7 +333,6 @@
         </h3>
         
         <form (submit)="salvarDefinicao(); $event.preventDefault()" class="space-y-4">
-          
           <!-- Status -->
           <div class="grid grid-cols-2 gap-3">
             <button type="button" 
@@ -203,10 +383,313 @@
               }
             </button>
           </div>
-
         </form>
       </div>
     </div>
   }
 
+  <!-- MODAL: CONFIGURAÇÕES FINANCEIRAS DE MEMBRO -->
+  @if (showModalConfig()) {
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+      <div class="w-full max-w-md glass-card-gold rounded-3xl p-6 md:p-8 relative overflow-hidden animate-fade-in border border-liturgical-gold/25">
+        <span class="text-liturgical-gold text-[9px] font-bold uppercase tracking-widest block mb-1">Cobrança Individual</span>
+        <h3 class="font-cinzel text-xl font-bold tracking-wider text-white mb-6 truncate" [title]="obreiroSelecionado()?.nome">
+          {{ obreiroSelecionado()?.nome_historico || obreiroSelecionado()?.nome }}
+        </h3>
+        
+        <form (submit)="salvarConfiguracao(); $event.preventDefault()" class="space-y-4 text-xs">
+          
+          <!-- CONFIGURAÇÕES DE JÓIA -->
+          <div class="p-4 rounded-2xl bg-white/2 border border-white/5 space-y-3">
+            <h4 class="font-bold text-white tracking-wide border-b border-white/5 pb-1 uppercase text-[9px] text-liturgical-gold">Parâmetros de Jóias</h4>
+            
+            <!-- CHECKBOX PARA ATIVAR JOIA -->
+            <div class="flex items-center justify-between py-1">
+              <label for="joia_ativa" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer">Cobrar Jóia / Ativar Acompanhamento</label>
+              <input id="joia_ativa" 
+                     type="checkbox" 
+                     [ngModel]="editJoiaAtiva()"
+                     (ngModelChange)="editJoiaAtiva.set($event)"
+                     name="joia_ativa"
+                     class="w-4 h-4 rounded border-white/10 bg-white/5 text-liturgical-gold focus:ring-offset-0 focus:ring-1 focus:ring-liturgical-gold">
+            </div>
+
+            @if (editJoiaAtiva()) {
+              <div class="space-y-1">
+                <label for="joia_tipo" class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest">Tipo de Jóia</label>
+                <select id="joia_tipo"
+                        [ngModel]="editJoiaTipo()"
+                        (ngModelChange)="editJoiaTipo.set($event)"
+                        name="joia_tipo"
+                        class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+                  <option value="nenhuma" class="bg-liturgical-bg text-white">Selecionar...</option>
+                  <option value="iniciacao" class="bg-liturgical-bg text-white">Iniciação</option>
+                  <option value="elevacao" class="bg-liturgical-bg text-white">Elevação</option>
+                  <option value="exaltacao" class="bg-liturgical-bg text-white">Exaltação</option>
+                </select>
+              </div>
+
+              <div class="space-y-1">
+                <label for="joia_valor" class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest">Valor Customizado (R$)</label>
+                <input id="joia_valor" 
+                       type="number" 
+                       step="0.01" 
+                       [ngModel]="editJoiaValor()"
+                       (ngModelChange)="editJoiaValor.set($event)"
+                       name="joia_valor"
+                       class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-liturgical-gold"
+                       placeholder="Padrão da Loja">
+              </div>
+
+              <div class="space-y-1">
+                <label for="joia_formato" class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest">Formato de Pagamento</label>
+                <select id="joia_formato"
+                        [ngModel]="editJoiaFormato()"
+                        (ngModelChange)="editJoiaFormato.set($event)"
+                        name="joia_formato"
+                        class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+                  <option value="a_vista" class="bg-liturgical-bg text-white">À Vista</option>
+                  <option value="parcelado" class="bg-liturgical-bg text-white">Parcelado</option>
+                  <option value="isento" class="bg-liturgical-bg text-white">Isento</option>
+                </select>
+              </div>
+
+              @if (editJoiaTipo() === 'iniciacao') {
+                <div class="space-y-1">
+                  <label for="data_iniciacao" class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest">Data da Cerimônia (Iniciação) Agendada</label>
+                  <input id="data_iniciacao" 
+                         type="date" 
+                         [ngModel]="editDataIniciacao()"
+                         (ngModelChange)="editDataIniciacao.set($event)"
+                         name="data_iniciacao"
+                         class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+                </div>
+              } @else if (editJoiaTipo() === 'elevacao') {
+                <div class="space-y-1">
+                  <label for="data_elevacao" class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest">Data da Cerimônia (Elevação) Agendada</label>
+                  <input id="data_elevacao" 
+                         type="date" 
+                         [ngModel]="editDataElevacao()"
+                         (ngModelChange)="editDataElevacao.set($event)"
+                         name="data_elevacao"
+                         class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+                </div>
+              } @else if (editJoiaTipo() === 'exaltacao') {
+                <div class="space-y-1">
+                  <label for="data_exaltacao" class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest">Data da Cerimônia (Exaltação) Agendada</label>
+                  <input id="data_exaltacao" 
+                         type="date" 
+                         [ngModel]="editDataExaltacao()"
+                         (ngModelChange)="editDataExaltacao.set($event)"
+                         name="data_exaltacao"
+                         class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+                </div>
+              }
+            }
+          </div>
+
+          <!-- CONFIGURAÇÕES DE BIBLIOTECA -->
+          <div class="p-4 rounded-2xl bg-white/2 border border-white/5 space-y-3">
+            <h4 class="font-bold text-white tracking-wide border-b border-white/5 pb-1 uppercase text-[9px] text-liturgical-gold">Contribuição da Biblioteca</h4>
+            
+            <div class="space-y-1">
+              <label for="bib_valor" class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest">Valor Customizado Mensal (R$)</label>
+              <input id="bib_valor" 
+                     type="number" 
+                     step="0.01" 
+                     [ngModel]="editBibliotecaValor()"
+                     (ngModelChange)="editBibliotecaValor.set($event)"
+                     name="bib_valor"
+                     class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-liturgical-gold"
+                     placeholder="Padrão da Loja">
+            </div>
+
+            <div class="space-y-1">
+              <label for="bib_mes" class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest">Mês Programado (Escala)</label>
+              <select id="bib_mes"
+                      [ngModel]="editBibliotecaMes()"
+                      (ngModelChange)="editBibliotecaMes.set($event)"
+                      name="bib_mes"
+                      class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+                <option [value]="null" class="bg-liturgical-bg text-white">Escala Padrão da Loja</option>
+                <option [value]="1" class="bg-liturgical-bg text-white">Janeiro</option>
+                <option [value]="2" class="bg-liturgical-bg text-white">Fevereiro</option>
+                <option [value]="3" class="bg-liturgical-bg text-white">Março</option>
+                <option [value]="4" class="bg-liturgical-bg text-white">Abril</option>
+                <option [value]="5" class="bg-liturgical-bg text-white">Maio</option>
+                <option [value]="6" class="bg-liturgical-bg text-white">Junho</option>
+                <option [value]="7" class="bg-liturgical-bg text-white">Julho</option>
+                <option [value]="8" class="bg-liturgical-bg text-white">Agosto</option>
+                <option [value]="9" class="bg-liturgical-bg text-white">Setembro</option>
+                <option [value]="10" class="bg-liturgical-bg text-white">Outubro</option>
+                <option [value]="11" class="bg-liturgical-bg text-white">Novembro</option>
+                <option [value]="12" class="bg-liturgical-bg text-white">Dezembro</option>
+              </select>
+            </div>
+
+            <div class="space-y-1">
+              <label for="bib_formato" class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest">Formato de Contribuição</label>
+              <select id="bib_formato"
+                      [ngModel]="editBibliotecaFormato()"
+                      (ngModelChange)="editBibliotecaFormato.set($event)"
+                      name="bib_formato"
+                      class="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-1 focus:ring-liturgical-gold">
+                <option value="mensal" class="bg-liturgical-bg text-white">Mensal</option>
+                <option value="anual" class="bg-liturgical-bg text-white">Anual</option>
+                <option value="isento" class="bg-liturgical-bg text-white">Isento</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Ações do Modal -->
+          <div class="pt-4 grid grid-cols-2 gap-3">
+            <button type="button" 
+                    (click)="showModalConfig.set(false)"
+                    [disabled]="salvandoConfig()"
+                    class="py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold uppercase tracking-wider border border-white/10 transition-all">
+              Cancelar
+            </button>
+            <button type="submit" 
+                    [disabled]="salvandoConfig()"
+                    class="py-3 bg-liturgical-gold hover:bg-liturgical-goldHover text-[#050B14] disabled:opacity-50 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-liturgical-gold/10">
+              @if (salvandoConfig()) {
+                <span>Salvando...</span>
+              } @else {
+                <span>Salvar Configuração</span>
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+ 
+  <!-- MODAL: DETALHES FINANCEIROS INDIVIDUAIS DO OBREIRO (PAINEL DO TESOUREIRO) -->
+  @if (showModalDetalhe()) {
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+      <div class="w-full max-w-2xl glass-card rounded-3xl p-6 md:p-8 relative overflow-hidden animate-fade-in border border-white/10 max-h-[90vh] overflow-y-auto">
+        
+        <div class="pb-4 border-b border-white/5 flex justify-between items-center mb-6">
+          <div>
+            <span class="text-liturgical-gold text-[9px] font-bold uppercase tracking-widest block">Acompanhamento Individual</span>
+            <h3 class="font-cinzel text-xl font-bold tracking-wider text-white">
+              {{ obreiroSelecionado()?.nome_historico || obreiroSelecionado()?.nome || obreiroSelecionado()?.obreiro_nome }}
+            </h3>
+          </div>
+          <button (click)="fecharModalDetalhe()" class="text-slate-400 hover:text-white transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+ 
+        @if (loadingDetalhe()) {
+          <div class="flex flex-col items-center justify-center py-16 text-slate-400 space-y-3">
+            <div class="w-8 h-8 border-3 border-liturgical-gold border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Carregando detalhes do obreiro...</span>
+          </div>
+        } @else if (detalheFinanceiroObreiro(); as det) {
+          
+          <div class="space-y-6 text-xs text-slate-300">
+            <!-- Informações Gerais -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Mensalidade -->
+              <div class="bg-white/2 rounded-2xl p-4 border border-white/5">
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Mensalidade</span>
+                <span class="text-base font-extrabold text-white font-mono mt-1 block">R$ {{ det.mensalidade.valor_regular.toFixed(2) }}</span>
+                <span class="text-[8px] text-slate-400 block mt-1">Vencimento: Dia {{ det.mensalidade.dia_vencimento }}</span>
+              </div>
+              
+              <!-- Biblioteca -->
+              <div class="bg-white/2 rounded-2xl p-4 border border-white/5">
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Biblioteca (Fiat Lux)</span>
+                <span class="text-base font-extrabold text-white font-mono mt-1 block">R$ {{ det.biblioteca.valor.toFixed(2) }}</span>
+                <span class="text-[8px] text-slate-400 block mt-1 uppercase font-semibold">Mês: {{ det.biblioteca.mes_nome }} ({{ det.biblioteca.status }})</span>
+              </div>
+ 
+              <!-- Grau -->
+              <div class="bg-white/2 rounded-2xl p-4 border border-white/5">
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Grau Simbólico</span>
+                <span class="text-base font-extrabold text-white mt-1 block">{{ det.obreiro.grau }}</span>
+                <span class="text-[8px] text-slate-400 block mt-1 uppercase">Situação do Quadro: Ativo</span>
+              </div>
+            </div>
+ 
+            <!-- Quadro de Joias -->
+            @if (det.joia; as joia) {
+              <div class="p-5 rounded-2xl bg-white/2 border border-white/5 space-y-4">
+                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                  <h4 class="font-bold text-white uppercase text-[10px] tracking-widest text-liturgical-gold">{{ joia.titulo }}</h4>
+                  <span class="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" 
+                        [class.bg-emerald-500/10]="joia.status === 'pago'" [class.text-emerald-400]="joia.status === 'pago'"
+                        [class.bg-amber-500/10]="joia.status === 'em_aberto'" [class.text-amber-400]="joia.status === 'em_aberto'"
+                        [class.bg-rose-500/10]="joia.status === 'isento'" [class.text-rose-400]="joia.status === 'isento'">
+                    {{ joia.status }}
+                  </span>
+                </div>
+ 
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  <div>
+                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Valor da Joia</span>
+                    <span class="font-bold font-mono text-white text-sm">R$ {{ joia.valor_total.toFixed(2) }}</span>
+                  </div>
+                  <div>
+                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Saldo Devedor</span>
+                    <span class="font-bold font-mono text-sm" [class.text-emerald-400]="joia.saldo_devedor === 0" [class.text-rose-400]="joia.saldo_devedor > 0">
+                      R$ {{ joia.saldo_devedor.toFixed(2) }}
+                    </span>
+                  </div>
+                  <div>
+                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Formato</span>
+                    <span class="font-bold text-white uppercase text-[10px]">{{ joia.formato }}</span>
+                  </div>
+                  <div>
+                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Pagamento</span>
+                    <span class="font-bold text-white font-mono text-sm">{{ joia.parcelas_pagas }} / {{ joia.total_parcelas }} pg</span>
+                  </div>
+                </div>
+ 
+                @if (joia.valor_total > 0 && joia.status !== 'isento') {
+                  <div class="space-y-1.5 pt-2">
+                    <div class="flex justify-between text-[9px] text-slate-500">
+                      <span>Progresso do pagamento da Joia</span>
+                      <span>{{ ((joia.valor_total - joia.saldo_devedor) / joia.valor_total * 100).toFixed(0) }}%</span>
+                    </div>
+                    <div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                      <div class="bg-liturgical-gold h-full rounded-full transition-all duration-300" [style.width.%]="((joia.valor_total - joia.saldo_devedor) / joia.valor_total * 100)"></div>
+                    </div>
+                  </div>
+                }
+ 
+                @if (joia.logs && joia.logs.length > 0) {
+                  <div class="space-y-2 pt-2">
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Lançamentos Vinculados</span>
+                    <div class="divide-y divide-white/5 bg-white/2 rounded-xl border border-white/5 p-3 max-h-32 overflow-y-auto">
+                      @for (log of joia.logs; track log.parcela) {
+                        <div class="flex justify-between items-center py-1.5 text-[10px]">
+                          <span>Parcela {{ log.parcela }} / {{ joia.total_parcelas }}</span>
+                          <span class="text-slate-500 font-mono">{{ log.pago_em | date:'dd/MM/yyyy' }}</span>
+                          <span class="font-bold text-white font-mono">R$ {{ log.valor.toFixed(2) }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+ 
+          </div>
+        }
+ 
+        <div class="pt-6 border-t border-white/5 flex justify-end mt-6">
+          <button (click)="fecharModalDetalhe()"
+                  class="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold uppercase tracking-wider border border-white/10 transition-all">
+            Fechar Painel
+          </button>
+        </div>
+ 
+      </div>
+    </div>
+  }
+ 
 </div>

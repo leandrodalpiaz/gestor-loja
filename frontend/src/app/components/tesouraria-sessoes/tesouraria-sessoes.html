@@ -1,0 +1,94 @@
+<div class="space-y-8 animate-fade-in">
+
+  <!-- HEADER -->
+  <header>
+    <span class="text-liturgical-gold text-[10px] font-bold uppercase tracking-widest block">Tesouraria</span>
+    <h1 class="font-cinzel text-3xl font-extrabold tracking-wider text-white">Sessões Financeiras</h1>
+    <p class="text-xs text-slate-400 mt-1">Estimativa de arrecadação baseada na presença de ágapes e modelo de cobrança.</p>
+  </header>
+
+  <!-- ERROR ALERT -->
+  @if (erro()) {
+    <div class="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 text-xs font-semibold text-rose-400 flex items-start gap-3">
+      <svg class="w-5 h-5 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <span>{{ erro() }}</span>
+    </div>
+  }
+
+  <!-- GRID LIST -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    @for (sessao of sessoes(); track sessao.id; let primeira = $first) {
+      <article [class.featured]="primeira" 
+               class="glass-card rounded-3xl p-6 border border-white/5 flex flex-col justify-between gap-6 transition-all hover:border-white/10">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-start gap-4">
+          <div class="space-y-1">
+            <small class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">
+              {{ sessao.descricao_tipo }}
+            </small>
+            <h2 class="text-white font-bold text-lg leading-tight">
+              {{ sessao.titulo || sessao.descricao_tipo }}
+            </h2>
+            <p class="text-slate-400 text-xs font-mono font-medium">
+              {{ sessao.data_hora_inicio | date:'dd/MM/yyyy HH:mm' }}
+            </p>
+          </div>
+          
+          <span [class.bg-emerald-500\/10]="sessao.reflete_financeiro_oficial"
+                [class.text-emerald-400]="sessao.reflete_financeiro_oficial"
+                [class.bg-rose-500\/10]="!sessao.reflete_financeiro_oficial"
+                [class.text-rose-400]="!sessao.reflete_financeiro_oficial"
+                class="px-2.5 py-1 text-[9px] font-bold border border-transparent rounded-full uppercase tracking-wider shrink-0">
+            {{ sessao.reflete_financeiro_oficial ? 'Reflexo Oficial' : 'Sem Reflexo' }}
+          </span>
+        </div>
+
+        <!-- Details List -->
+        <dl class="grid grid-cols-2 gap-3">
+          <div class="bg-white/2 p-3.5 rounded-xl border border-white/5 space-y-1">
+            <dt class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Ágape</dt>
+            <dd class="text-white text-xs font-semibold truncate" [title]="sessao.descricao_agape">{{ sessao.descricao_agape }}</dd>
+          </div>
+          
+          <div class="bg-white/2 p-3.5 rounded-xl border border-white/5 space-y-1">
+            <dt class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Modelo Financeiro</dt>
+            <dd class="text-white text-xs font-semibold truncate" [title]="sessao.descricao_modelo">{{ sessao.descricao_modelo }}</dd>
+          </div>
+          
+          <div class="bg-white/2 p-3.5 rounded-xl border border-white/5 space-y-1">
+            <dt class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Confirmados</dt>
+            <dd class="text-white text-sm font-bold">{{ sessao.confirmados_agape }} irmãos</dd>
+          </div>
+          
+          <div class="bg-white/2 p-3.5 rounded-xl border border-white/5 space-y-1">
+            <dt class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Estimativa Receita</dt>
+            <dd class="text-emerald-400 text-sm font-black">{{ sessao.estimativa_arrecadacao | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</dd>
+          </div>
+        </dl>
+
+        <!-- Participants List (for the featured session) -->
+        @if (primeira && sessao.participantes?.length) {
+          <div class="border-t border-white/5 pt-4 space-y-3">
+            <h3 class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Presença Confirmada no Ágape</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
+              @for (p of sessao.participantes; track p.nome) {
+                <div class="bg-white/2 px-3 py-2 rounded-xl flex items-center justify-between gap-2 border border-white/2">
+                  <span class="text-white font-medium text-[11px] truncate" [title]="p.nome">{{ p.nome }}</span>
+                  <small class="text-[8px] font-mono text-slate-500 shrink-0">CIM: {{ p.cim || '-' }}</small>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </article>
+    } @empty {
+      <div class="text-center py-12 glass-card rounded-3xl text-slate-500 text-xs font-medium tracking-widest uppercase md:col-span-2">
+        Nenhuma sessão futura programada.
+      </div>
+    }
+  </div>
+
+</div>

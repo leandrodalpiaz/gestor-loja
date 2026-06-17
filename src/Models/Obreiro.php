@@ -913,6 +913,63 @@ class Obreiro
         return $stmt->execute($params);
     }
 
+    public function atualizarConfiguracaoFinanceira(
+        string $id,
+        ?float $joiaValor,
+        string $joiaFormato,
+        ?float $bibliotecaValor,
+        string $bibliotecaFormato,
+        ?string $dataElevacao = null,
+        ?string $dataExaltacao = null,
+        bool $joiaAtiva = false,
+        ?string $joiaTipo = null,
+        ?string $dataIniciacao = null,
+        ?int $bibliotecaMes = null
+    ): bool {
+        if (!preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $id)) {
+            return false;
+        }
+
+        $sql = "UPDATE public.obreiros SET
+            financeiro_joia_valor = :joia_valor,
+            financeiro_joia_formato = :joia_formato,
+            financeiro_joia_ativa = :joia_ativa,
+            financeiro_joia_tipo = :joia_tipo,
+            financeiro_biblioteca_valor = :biblioteca_valor,
+            financeiro_biblioteca_formato = :biblioteca_formato,
+            financeiro_biblioteca_mes = :biblioteca_mes,
+            data_iniciacao = :data_iniciacao,
+            data_elevacao = :data_elevacao,
+            data_exaltacao = :data_exaltacao,
+            updated_at = NOW()
+            WHERE id = :id";
+        
+        if ($this->suportaLojaId()) {
+            $sql .= " AND loja_id = :loja_id";
+        }
+
+        $params = [
+            'id' => $id,
+            'joia_valor' => $joiaValor,
+            'joia_formato' => $joiaFormato,
+            'joia_ativa' => $joiaAtiva ? 'true' : 'false',
+            'joia_tipo' => !empty($joiaTipo) && $joiaTipo !== 'nenhuma' ? $joiaTipo : null,
+            'biblioteca_valor' => $bibliotecaValor,
+            'biblioteca_formato' => $bibliotecaFormato,
+            'biblioteca_mes' => $bibliotecaMes,
+            'data_iniciacao' => !empty($dataIniciacao) ? $dataIniciacao : null,
+            'data_elevacao' => !empty($dataElevacao) ? $dataElevacao : null,
+            'data_exaltacao' => !empty($dataExaltacao) ? $dataExaltacao : null,
+        ];
+
+        if ($this->suportaLojaId()) {
+            $params['loja_id'] = $this->obterLojaAtualId();
+        }
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
+    }
+
     public function updateSelf(string $id, array $data): bool
     {
         if (!$this->isUuid($id)) {

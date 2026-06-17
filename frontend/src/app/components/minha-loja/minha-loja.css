@@ -1,4 +1,68 @@
-/* Custom transitions for Minha Loja component */
-tr:hover td {
-  color: #fff;
+/* Avatar initials container styled by degree */
+.avatar-initials {
+  transition: all 0.3s ease;
+}
+
+/* Color codes for Degrees in avatar background */
+.avatar-initials[data-degree="Mestre"],
+.avatar-initials[data-degree="mestre"] {
+  background-color: rgba(201, 162, 39, 0.1);
+  color: #C9A227;
+  border: 1px solid rgba(201, 162, 39, 0.2);
+}
+
+.avatar-initials[data-degree="Companheiro"],
+.avatar-initials[data-degree="companheiro"] {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.avatar-initials[data-degree="Aprendiz"],
+.avatar-initials[data-degree="aprendiz"] {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.avatar-initials[data-degree="Outros"],
+.avatar-initials[data-degree="Outro"],
+.avatar-initials[data-degree="Livre"] {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Degree heading accent line colors */
+.bg-degree[data-degree="Mestre"],
+.bg-degree[data-degree="mestre"] {
+  background-color: #C9A227;
+}
+
+.bg-degree[data-degree="Companheiro"],
+.bg-degree[data-degree="companheiro"] {
+  background-color: #8b5cf6;
+}
+
+.bg-degree[data-degree="Aprendiz"],
+.bg-degree[data-degree="aprendiz"] {
+  background-color: #3b82f6;
+}
+
+.bg-degree[data-degree="Outros"],
+.bg-degree[data-degree="Outro"],
+.bg-degree[data-degree="Livre"] {
+  background-color: #10b981;
+}
+
+/* Custom transitions and hover states for active cards */
+.group:hover .avatar-initials {
+  transform: scale(1.05);
+}
+
+/* Truncate long lines */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
