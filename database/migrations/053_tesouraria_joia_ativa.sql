@@ -14,10 +14,7 @@ SET financeiro_joia_ativa = TRUE,
         WHEN grau = 'Companheiro' THEN 'exaltacao'
         ELSE 'iniciacao'
     END
-WHERE financeiro_joia_valor IS NOT NULL 
-   OR data_elevacao IS NOT NULL 
-   OR data_exaltacao IS NOT NULL
-   OR EXISTS (
+WHERE EXISTS (
        SELECT 1 
        FROM public.obrigacoes_financeiras o 
        WHERE o.obreiro_id = obreiros.id 

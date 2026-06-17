@@ -1299,11 +1299,11 @@ class ObrigacaoFinanceira
         $joiaTipo = $obreiro['financeiro_joia_tipo'] !== null ? $obreiro['financeiro_joia_tipo'] : null;
         
         $dataCerimoniaIndividual = null;
-        if ($joiaTipo === 'elevacao' || ($joiaTipo === null && $grau === 'Aprendiz')) {
+        if ($joiaTipo === 'elevacao') {
             $dataCerimoniaIndividual = !empty($obreiro['data_elevacao']) ? $obreiro['data_elevacao'] : null;
-        } elseif ($joiaTipo === 'exaltacao' || ($joiaTipo === null && $grau === 'Companheiro')) {
+        } elseif ($joiaTipo === 'exaltacao') {
             $dataCerimoniaIndividual = !empty($obreiro['data_exaltacao']) ? $obreiro['data_exaltacao'] : null;
-        } else {
+        } elseif ($joiaTipo === 'iniciacao') {
             $dataCerimoniaIndividual = !empty($obreiro['data_iniciacao']) ? $obreiro['data_iniciacao'] : null;
         }
 
@@ -1322,39 +1322,45 @@ class ObrigacaoFinanceira
         $parcelasJoia = $stmtJoias->fetchAll(PDO::FETCH_ASSOC);
 
         // A joia só é considerada ativa se o tesoureiro ativou explicitamente ou se existem parcelas no banco
-        $joiaAtiva = ($parcelasJoia !== []) || (bool)($obreiro['financeiro_joia_ativa'] ?? false);
+        $joiaAtiva = ($parcelasJoia !== []) || (
+            (bool)($obreiro['financeiro_joia_ativa'] ?? false) && 
+            !empty($joiaTipo) && 
+            $joiaTipo !== 'nenhuma'
+        );
 
         $joiaInfo = null;
         if ($joiaAtiva) {
             $dataCerimonia = $dataCerimoniaIndividual;
 
             // Se a data individual estiver vazia, consultar de forma inteligente a agenda de sessões (sessoes)
-            if (!$dataCerimonia) {
+            if (!$dataCerimonia && !empty($joiaTipo)) {
                 $tipoSessao = null;
-                if ($joiaTipo === 'elevacao' || ($joiaTipo === null && $grau === 'Aprendiz')) {
+                if ($joiaTipo === 'elevacao') {
                     $tipoSessao = 'magna_elevacao';
-                } elseif ($joiaTipo === 'exaltacao' || ($joiaTipo === null && $grau === 'Companheiro')) {
+                } elseif ($joiaTipo === 'exaltacao') {
                     $tipoSessao = 'magna_exaltacao';
-                } else {
+                } elseif ($joiaTipo === 'iniciacao') {
                     $tipoSessao = 'magna_iniciacao';
                 }
 
-                $stmtSes = $this->db->prepare("
-                    SELECT data_hora_inicio
-                    FROM public.sessoes
-                    WHERE tipo = :tipo
-                      AND loja_id = :loja_id
-                      AND data_hora_inicio >= CURRENT_TIMESTAMP
-                    ORDER BY data_hora_inicio ASC
-                    LIMIT 1
-                ");
-                $stmtSes->execute([
-                    'tipo' => $tipoSessao,
-                    'loja_id' => $this->obterLojaAtualId()
-                ]);
-                $sessaoAgendada = $stmtSes->fetch(PDO::FETCH_ASSOC);
-                if ($sessaoAgendada) {
-                    $dataCerimonia = date('Y-m-d', strtotime($sessaoAgendada['data_hora_inicio']));
+                if ($tipoSessao !== null) {
+                    $stmtSes = $this->db->prepare("
+                        SELECT data_hora_inicio
+                        FROM public.sessoes
+                        WHERE tipo = :tipo
+                          AND loja_id = :loja_id
+                          AND data_hora_inicio >= CURRENT_TIMESTAMP
+                        ORDER BY data_hora_inicio ASC
+                        LIMIT 1
+                    ");
+                    $stmtSes->execute([
+                        'tipo' => $tipoSessao,
+                        'loja_id' => $this->obterLojaAtualId()
+                    ]);
+                    $sessaoAgendada = $stmtSes->fetch(PDO::FETCH_ASSOC);
+                    if ($sessaoAgendada) {
+                        $dataCerimonia = date('Y-m-d', strtotime($sessaoAgendada['data_hora_inicio']));
+                    }
                 }
             }
 
@@ -1393,12 +1399,12 @@ class ObrigacaoFinanceira
                     'logs' => $logsPagamentos,
                     'status' => $saldoDevedor > 0.01 ? 'em_aberto' : 'pago'
                 ];
-            } else {
+            } elseif (!empty($joiaTipo) && $joiaTipo !== 'nenhuma') {
                 // Estimar joia esperada baseado no tipo ou grau
                 $joiaEsperada = 'Iniciação';
-                if ($joiaTipo === 'elevacao' || ($joiaTipo === null && $grau === 'Aprendiz')) {
+                if ($joiaTipo === 'elevacao') {
                     $joiaEsperada = 'Elevação';
-                } elseif ($joiaTipo === 'exaltacao' || ($joiaTipo === null && $grau === 'Companheiro')) {
+                } elseif ($joiaTipo === 'exaltacao') {
                     $joiaEsperada = 'Exaltação';
                 }
 
