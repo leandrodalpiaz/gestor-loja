@@ -65,22 +65,7 @@ if (!function_exists('getAuthorizationHeader')) {
 }
 Env::load(__DIR__ . "/../.env");
 
-// Garante o preenchimento de $_ENV em ambientes de produção (como o Render) onde as variáveis nativas estão disponíveis via getenv() mas $_ENV está vazio devido a diretiva variables_order do php.ini.
-foreach ([
-    'DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASS', 'DB_SCHEMA',
-    'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID_GROUP', 'TELEGRAM_CHAT_ID_CHANCELER',
-    'APP_URL', 'APP_TIMEZONE', 'APP_ENV', 'APP_LOJA_NUMERO', 'APP_DEFAULT_TENANT_SLUG',
-    'APP_DEFAULT_TENANT_ID', 'APP_DEFAULT_TENANT_NAME', 'APP_ALLOW_ENV_TENANT_FALLBACK',
-    'APP_TEST_OPEN_ACCESS', 'APP_TEST_ALLOW_ALL_PANELS', 'SYSTEM_ADMIN_TELEGRAM_IDS',
-    'SUPABASE_JWT_SECRET', 'SUPABASE_PROJECT_REF', 'FRONTEND_ALLOWED_ORIGINS'
-] as $envKey) {
-    if (!isset($_ENV[$envKey]) || $_ENV[$envKey] === '') {
-        $val = getenv($envKey);
-        if ($val !== false) {
-            $_ENV[$envKey] = $val;
-        }
-    }
-}
+// Variáveis de ambiente são automaticamente repovoadas a partir do getenv() pelo Env::load() acima.
 
 // Tratamento de CORS (Cross-Origin Resource Sharing) para permitir chamadas da SPA Angular
 $allowedOrigins = array_values(array_filter(array_map(
@@ -1368,6 +1353,39 @@ if ($requestUri === '/api/cron/preparar-previa') {
         echo json_encode(['status' => 'erro', 'mensagem' => 'Falha ao preparar previa diaria no banco'], JSON_UNESCAPED_UNICODE);
         exit;
     }
+
+    // Fechar a conexão HTTP imediatamente para evitar timeouts em requisições frias (Cold Start do Render Free)
+    if (function_exists('fastcgi_finish_request')) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'status' => 'ok',
+            'mensagem' => 'Processamento de efemérides iniciado em segundo plano.'
+        ], JSON_UNESCAPED_UNICODE);
+        fastcgi_finish_request();
+    } else {
+        if (ini_get('zlib.output_compression')) {
+            ini_set('zlib.output_compression', 'Off');
+        }
+        header('Connection: close');
+        header('Content-Encoding: none');
+        header('Content-Type: application/json; charset=utf-8');
+        ob_start();
+        echo json_encode([
+            'status' => 'ok',
+            'mensagem' => 'Processamento de efemérides iniciado em segundo plano.'
+        ], JSON_UNESCAPED_UNICODE);
+        $size = ob_get_length();
+        header("Content-Length: $size");
+        ob_end_flush();
+        ob_flush();
+        flush();
+    }
+
+    if (session_id()) {
+        session_write_close();
+    }
+    ignore_user_abort(true);
+    set_time_limit(300);
 
     $targetChatIds = [];
 

@@ -79,18 +79,23 @@ Cada Aprendiz devera ter sua própria trilha, com etapas claras, progresso visí
 
 ## 7. Trilha fixa de estudo do Aprendiz
 
-Cada Aprendiz deve seguir as seguintes etapas:
+Cada Aprendiz deve seguir as seguintes 13 etapas na trilha formativa (dividida em ações orais em loja e entrega de trabalhos):
 
-1. `Entrega das impressoes de iniciacao`
-2. `Passar o complemento a iniciacao`
-3. `Passar e receber o trabalho da 1a instrucao`
-4. `Passar e receber o trabalho da 2a instrucao`
-5. `Passar e receber o trabalho da 3a instrucao`
-6. `Passar e receber o trabalho da 4a instrucao`
-7. `Passar e receber o trabalho da 5a instrucao`
-8. `Solicitar o certificado de conclusão da docência maconica`
+1. `Entrega das impressões de iniciação` (Entrega de trabalho)
+2. `Passar o complemento à iniciação` (Oral - Checkbox em lista)
+3. `Passar a 1ª instrução` (Oral - Checkbox em lista)
+4. `Receber o trabalho da 1ª instrução` (Entrega de trabalho)
+5. `Passar a 2ª instrução` (Oral - Checkbox em lista)
+6. `Receber o trabalho da 2ª instrução` (Entrega de trabalho)
+7. `Passar a 3ª instrução` (Oral - Checkbox em lista)
+8. `Receber o trabalho da 3ª instrução` (Entrega de trabalho)
+9. `Passar a 4ª instrução` (Oral - Checkbox em lista)
+10. `Receber o trabalho da 4ª instrução` (Entrega de trabalho)
+11. `Passar a 5ª instrução` (Oral - Checkbox em lista)
+12. `Receber o trabalho da 5ª instrução` (Entrega de trabalho)
+13. `Solicitar o certificado de conclusão da docência maçônica` (Oral - Checkbox em lista)
 
-Essa trilha sera o fluxo principal do painel do 1o Vigilante.
+Essa trilha e o fluxo principal do painel do 1o Vigilante.
 
 ## 8. Requisitos funcionais
 
@@ -143,7 +148,7 @@ O sistema deve listar obreiros ativos com `grau = 'Aprendiz'`, exibindo ao menos
 
 ### 8.4 Acompanhamento por trilha
 
-Para cada Aprendiz, o sistema deve manter a trilha completa com as 8 etapas fixas.
+Para cada Aprendiz, o sistema deve manter a trilha completa com as 13 etapas fixas (separando etapas orais e escritas).
 
 Cada etapa deve permitir registro de:
 
@@ -371,7 +376,7 @@ Mas, para a primeira entrega, tambem e aceitavel manter a observação e devolut
 ## 12. Regras de negócio
 
 - Apenas obreiros ativos com `grau = 'Aprendiz'` entram nesse módulo.
-- Cada Aprendiz deve possuir a trilha completa com as 8 etapas padronizadas.
+- Cada Aprendiz deve possuir a trilha completa com as 13 etapas padronizadas (passos orais e escritos).
 - A etapa seguinte so deve ser liberada quando a anterior estiver adequadamente concluída, se essa regra for adotada no fluxo.
 - O 1o Vigilante e o responsável principal por passar, receber e revisar as etapas.
 - Nenhum registro de trilha deve apagar o histórico anterior sem auditoria.
@@ -447,7 +452,7 @@ Primeira versao recomendada:
 ### Fase 3 - Trilha de estudo
 
 - criar tabela da trilha;
-- popular as 8 etapas por Aprendiz;
+- popular as 13 etapas por Aprendiz;
 - permitir passar conteudo;
 - permitir registrar recebimento;
 - permitir revisar trabalhos.

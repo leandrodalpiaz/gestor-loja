@@ -65,23 +65,23 @@ export class ChancelariaEfemerides implements OnInit {
   protected tiposEfemeride = TIPOS_EFEMERIDE;
 
   protected templateOpcoes = [
-    { value: 'card_irmao_bedrock.png', label: 'Irmao Bedrock' },
+    { value: 'card_irmao_bedrock.png', label: 'Irmão Bedrock' },
     { value: 'card_cunhada_solar.png', label: 'Cunhada Solar' },
-    { value: 'card_grau_iniciacao.png', label: 'Grau Iniciacao' },
-    { value: 'card_grau_elevacao.png', label: 'Grau Elevacao' },
-    { value: 'card_grau_exaltacao.png', label: 'Grau Exaltacao' },
-    { value: 'card_grau_instalacao.png', label: 'Grau Instalacao' },
-    { value: 'card_historia_sepia.png', label: 'Historia Sepia' },
+    { value: 'card_grau_iniciacao.png', label: 'Grau Iniciação' },
+    { value: 'card_grau_elevacao.png', label: 'Grau Elevação' },
+    { value: 'card_grau_exaltacao.png', label: 'Grau Exaltação' },
+    { value: 'card_grau_instalacao.png', label: 'Grau Instalação' },
+    { value: 'card_historia_sepia.png', label: 'História Sépia' },
     { value: 'card_memorial_eterno.png', label: 'Memorial Eterno' },
-    { value: 'card_familia_kids.png', label: 'Familia Kids' },
+    { value: 'card_familia_kids.png', label: 'Família Kids' },
     { value: 'card_sobrinho_jovem.png', label: 'Sobrinho Jovem' },
     { value: 'card_sobrinha_adulta.png', label: 'Sobrinha Adulta' },
     { value: 'card_sobrinho_adulto.png', label: 'Sobrinho Adulto' },
-    { value: 'card_oficial_sessao.png', label: 'Oficial Sessao' },
+    { value: 'card_oficial_sessao.png', label: 'Oficial Sessão' },
     { value: 'card_oficial_convite.png', label: 'Oficial Convite' },
-    { value: 'card_especial_filiacao.png', label: 'Especial Filiacao' },
-    { value: 'card_especial_honorario.png', label: 'Especial Honorario' },
-    { value: 'card_especial_grao_mestre.png', label: 'Especial Grao-Mestre' },
+    { value: 'card_especial_filiacao.png', label: 'Especial Filiação' },
+    { value: 'card_especial_honorario.png', label: 'Especial Honorário' },
+    { value: 'card_especial_grao_mestre.png', label: 'Especial Grão-Mestre' },
   ];
 
   protected showModal = signal(false);
@@ -405,14 +405,14 @@ export class ChancelariaEfemerides implements OnInit {
             if (Number(item.registro_id || 0) !== registroId) return item;
             return { ...item, ...res.card, _cacheBust: Date.now(), _statusMsg: 'Previa atualizada.' };
           }));
-          this.setFeedback('Configuracao do card salva e imagem atualizada.', 'success');
+          this.setFeedback('Configuração do card salva e imagem atualizada.', 'success');
         } else {
           this.setFeedback(res?.erro || 'Erro ao customizar card.', 'error');
         }
         this.salvandoCardId.set(null);
       },
       error: () => {
-        this.setFeedback('Erro de rede ao salvar customizacao.', 'error');
+        this.setFeedback('Erro de rede ao salvar customização.', 'error');
         this.salvandoCardId.set(null);
       }
     });
@@ -435,7 +435,7 @@ export class ChancelariaEfemerides implements OnInit {
     ).subscribe({
       next: (res) => {
         if (res && res.ok) {
-          this.setFeedback('Template padrao das categorias selecionadas atualizado.', 'success');
+          this.setFeedback('Template padrão das categorias selecionadas atualizado.', 'success');
           this.carregarDashboard();
         } else {
           this.setFeedback(res?.erro || 'Erro ao configurar categoria.', 'error');
@@ -510,7 +510,7 @@ export class ChancelariaEfemerides implements OnInit {
   protected salvarHistoria(): void {
     const form = this.formHistoria();
     if (!form.titulo || !form.texto || !form.dia || !form.mes) {
-      this.setFeedback('Campos obrigatorios de historia ausentes.', 'error');
+      this.setFeedback('Campos obrigatórios de história ausentes.', 'error');
       return;
     }
     const headers = this.supabaseService.getAuthHeaders();
@@ -523,28 +523,28 @@ export class ChancelariaEfemerides implements OnInit {
         if (res && res.ok) {
           this.showHistoriaForm.set(false);
           this.carregarDashboard();
-          this.setFeedback('Fato historico salvo com sucesso.', 'success');
+          this.setFeedback('Fato histórico salvo com sucesso.', 'success');
         } else {
-          this.setFeedback(res?.erro || 'Erro ao salvar fato historico.', 'error');
+          this.setFeedback(res?.erro || 'Erro ao salvar fato histórico.', 'error');
         }
       },
-      error: () => this.setFeedback('Erro de rede ao salvar fato historico.', 'error')
+      error: () => this.setFeedback('Erro de rede ao salvar fato histórico.', 'error')
     });
   }
 
   protected excluirHistoria(id: number): void {
-    if (!confirm('Deseja excluir permanentemente este fato historico?')) return;
+    if (!confirm('Deseja excluir permanentemente este fato histórico?')) return;
     const headers = this.supabaseService.getAuthHeaders();
     this.http.post<any>(`${environment.apiUrl}/api/chancelaria/historias/excluir`, { id }, { headers }).subscribe({
       next: (res) => {
         if (res && res.ok) {
           this.carregarDashboard();
-          this.setFeedback('Fato historico excluido com sucesso.', 'success');
+          this.setFeedback('Fato histórico excluído com sucesso.', 'success');
         } else {
-          this.setFeedback(res?.erro || 'Erro ao excluir fato historico.', 'error');
+          this.setFeedback(res?.erro || 'Erro ao excluir fato histórico.', 'error');
         }
       },
-      error: () => this.setFeedback('Erro de rede ao excluir fato historico.', 'error')
+      error: () => this.setFeedback('Erro de rede ao excluir fato histórico.', 'error')
     });
   }
 
@@ -563,16 +563,16 @@ export class ChancelariaEfemerides implements OnInit {
 
   protected getTipoLabel(tipo: string): string {
     const labels: Record<string, string> = {
-      'Aniversario': 'Aniversario',
-      'Iniciacao': 'Iniciacao',
-      'Elevacao': 'Elevacao',
-      'Exaltacao': 'Exaltacao',
-      'Instalacao': 'Instalacao',
+      'Aniversario': 'Aniversário',
+      'Iniciacao': 'Iniciação',
+      'Elevacao': 'Elevação',
+      'Exaltacao': 'Exaltação',
+      'Instalacao': 'Instalação',
       'Oriente Eterno': 'Oriente Eterno',
-      'Historia': 'Historia',
-      'Posse Grao Mestre': 'Posse Grao-Mestre',
-      'Concessao de Membro Honorario': 'Membro Honorario',
-      'Filiacao': 'Filiacao',
+      'Historia': 'História',
+      'Posse Grao Mestre': 'Posse Grão-Mestre',
+      'Concessao de Membro Honorario': 'Membro Honorário',
+      'Filiacao': 'Filiação',
     };
     return labels[tipo] || tipo;
   }

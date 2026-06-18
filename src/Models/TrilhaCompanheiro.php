@@ -14,12 +14,14 @@ class TrilhaCompanheiro
     private const ETAPAS = [
         1 => 'Entrega das impressões da elevação',
         2 => 'Passar a 1ª instrução',
-        3 => 'Passar e receber o trabalho da 1ª instrução',
-        4 => 'Passar e receber o trabalho da 2ª instrução',
-        5 => 'Passar e receber o trabalho da 3ª instrução',
-        6 => 'Registrar a docência',
-        7 => 'Solicitar o certificado de conclusão da docência',
-        8 => 'Indicar para exaltação ao grau de Mestre',
+        3 => 'Receber o trabalho da 1ª instrução',
+        4 => 'Passar a 2ª instrução',
+        5 => 'Receber o trabalho da 2ª instrução',
+        6 => 'Passar a 3ª instrução',
+        7 => 'Receber o trabalho da 3ª instrução',
+        8 => 'Registrar a docência',
+        9 => 'Solicitar o certificado de conclusão da docência',
+        10 => 'Indicar para exaltação ao grau de Mestre',
     ];
 
     public function __construct()
@@ -30,6 +32,11 @@ class TrilhaCompanheiro
     public static function etapas(): array
     {
         return self::ETAPAS;
+    }
+
+    public static function isEtapaOral(int $etapaOrdem): bool
+    {
+        return in_array($etapaOrdem, [2, 4, 6, 8, 9, 10], true);
     }
 
     public function trilhaDisponivel(): bool
@@ -254,7 +261,9 @@ class TrilhaCompanheiro
         int $etapaOrdem,
         string $status,
         ?string $observacao = null,
-        ?string $revisadoPor = null
+        ?string $revisadoPor = null,
+        ?string $arquivoEntrega = null,
+        bool $publicarBiblioteca = false
     ): bool {
         if (!$this->trilhaDisponivel()) {
             return false;
@@ -264,7 +273,7 @@ class TrilhaCompanheiro
         $status = trim($status);
         $revisadoPor = trim((string) $revisadoPor) ?: null;
 
-        if ($companheiroId === '' || $etapaOrdem < 1 || $etapaOrdem > 8) {
+        if ($companheiroId === '' || $etapaOrdem < 1 || $etapaOrdem > 10) {
             return false;
         }
 
@@ -296,6 +305,11 @@ class TrilhaCompanheiro
             'observacao' => $observacao !== null && trim($observacao) !== '' ? trim($observacao) : null,
         ];
 
+        if ($arquivoEntrega !== null) {
+            $campos[] = 'arquivo_entrega = :arquivo_entrega';
+            $params['arquivo_entrega'] = $arquivoEntrega !== '' ? trim($arquivoEntrega) : null;
+        }
+
         if (in_array($status, ['disponibilizado', 'aguardando_entrega'], true)) {
             $campos[] = 'data_disponibilizacao = COALESCE(data_disponibilizacao, NOW())';
         }
@@ -316,6 +330,43 @@ class TrilhaCompanheiro
         ";
 
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute($params);
+        $sucesso = $stmt->execute($params);
+
+        if ($sucesso && $status === 'concluido' && $publicarBiblioteca) {
+            $stmtObreiro = $this->db->prepare("SELECT nome, loja_id FROM obreiros WHERE id = :id LIMIT 1");
+            $stmtObreiro->execute(['id' => $companheiroId]);
+            $obreiro = $stmtObreiro->fetch(PDO::FETCH_ASSOC);
+            $nomeObreiro = $obreiro ? $obreiro['nome'] : 'Obreiro';
+            $lojaId = $obreiro ? (int) $obreiro['loja_id'] : null;
+
+            $stmtEtapa = $this->db->prepare("SELECT titulo_etapa, arquivo_entrega FROM trilha_companheiro WHERE companheiro_id = :companheiro_id AND etapa_ordem = :etapa_ordem LIMIT 1");
+            $stmtEtapa->execute([
+                'companheiro_id' => $companheiroId,
+                'etapa_ordem' => $etapaOrdem
+            ]);
+            $etapaDb = $stmtEtapa->fetch(PDO::FETCH_ASSOC);
+            $tituloEtapa = $etapaDb ? $etapaDb['titulo_etapa'] : "Etapa {$etapaOrdem}";
+            $arquivoFinal = $arquivoEntrega ?? ($etapaDb ? $etapaDb['arquivo_entrega'] : null);
+
+            if ($arquivoFinal !== null && trim($arquivoFinal) !== '') {
+                $notaInstrucao = "trilha_companheiro:{$companheiroId}:{$etapaOrdem}";
+                $acervoModel = new \App\Models\Acervo();
+                if (!$acervoModel->existePorNotaInstrucao($notaInstrucao)) {
+                    $acervoModel->adicionar([
+                        'titulo' => "Trabalho: " . $tituloEtapa,
+                        'autor' => $nomeObreiro,
+                        'resumo' => "Trabalho de instrução do Grau de Companheiro - " . $tituloEtapa,
+                        'tipo' => 'Trabalho de Instrucao',
+                        'grau_restricao' => 2,
+                        'grau_recomendado' => 'Companheiro',
+                        'arquivo_url' => $arquivoFinal,
+                        'nota_instrucao' => $notaInstrucao,
+                        'loja_id' => $lojaId,
+                    ]);
+                }
+            }
+        }
+
+        return $sucesso;
     }
 }

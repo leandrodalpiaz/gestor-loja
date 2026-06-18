@@ -238,7 +238,7 @@ class SegundoVigilanteAcompanhamento
                     'momento' => (string) $acompanhamento['certificado_solicitado_em'],
                     'tipo' => 'certificado_solicitado',
                     'titulo' => 'Certificado solicitado',
-                    'descricao' => (string) ($acompanhamento['certificado_observacao'] ?? 'Solicitacao formal registrada pelo 2o Vigilante.'),
+                    'descricao' => (string) ($acompanhamento['certificado_observacao'] ?? 'Solicitação formal registrada pelo 2º Vigilante.'),
                 ];
             }
             if (!empty($acompanhamento['exaltacao_recomendada_em'])) {

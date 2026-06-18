@@ -35,7 +35,7 @@
                 <button id="btn-gostei" class="rounded-xl bg-blue-700 px-3 py-3 text-sm font-medium text-white">Gostei</button>
                 <button id="btn-nao-gostei" class="rounded-xl bg-rose-700 px-3 py-3 text-sm font-medium text-white">Não gostei</button>
             </div>
-            <textarea id="novo-comentario" rows="3" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Compartilhe sua opiniao sobre a leitura..."></textarea>
+            <textarea id="novo-comentario" rows="3" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Compartilhe sua opinião sobre a leitura..."></textarea>
     <button id="btn-comentar" class="w-full rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Publicar comentário</button>
         </div>
 
@@ -43,23 +43,23 @@
             <div class="text-sm font-semibold">Resumo do acervo</div>
             <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Titulos</div>
+                    <div class="text-gray-500">Títulos</div>
                     <div id="meta-titulos" class="mt-1 text-lg font-semibold"></div>
                 </div>
                 <div class="rounded-xl bg-white/70 p-3">
-                    <div class="text-gray-500">Disponiveis</div>
+                    <div class="text-gray-500">Disponíveis</div>
                     <div id="meta-disponiveis" class="mt-1 text-lg font-semibold"></div>
                 </div>
             </div>
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Comentarios recentes</div>
+            <div class="text-sm font-semibold">Comentários recentes</div>
             <div id="lista-comentarios" class="mt-3 space-y-2 text-sm"></div>
         </div>
 
         <div class="card rounded-2xl p-4">
-            <div class="text-sm font-semibold">Meus emprestimos</div>
+            <div class="text-sm font-semibold">Meus empréstimos</div>
             <div id="lista-meus-emprestimos" class="mt-3 space-y-2 text-sm"></div>
         </div>
 
@@ -67,8 +67,8 @@
             <div class="text-sm font-semibold">Operação do bibliotecário</div>
             <div id="lista-pendentes" class="mt-3 space-y-2 text-sm"></div>
             <div class="mt-3 grid grid-cols-2 gap-2">
-                <button id="atalho-catalogo" class="rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Abrir catalogo web</button>
-                <button id="atalho-gerenciar" class="rounded-xl bg-amber-700 px-3 py-3 text-sm font-medium text-white">Gerenciar emprestimos</button>
+                <button id="atalho-catalogo" class="rounded-xl bg-slate-900 px-3 py-3 text-sm font-medium text-white">Abrir catálogo web</button>
+                <button id="atalho-gerenciar" class="rounded-xl bg-amber-700 px-3 py-3 text-sm font-medium text-white">Gerenciar empréstimos</button>
                 <button id="atalho-cadastrar" class="rounded-xl bg-emerald-700 px-3 py-3 text-sm font-medium text-white">Cadastrar manual</button>
                 <button id="atalho-isbn" class="rounded-xl bg-indigo-700 px-3 py-3 text-sm font-medium text-white">Cadastrar por ISBN</button>
             </div>
@@ -185,7 +185,7 @@ function render() {
         <div class="font-medium">${esc(foco.titulo || 'Sem livro selecionado')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(foco.autor || '')}</div>
         ${(scopeAtual === 'rede' && (foco.loja_nome || foco.numero_loja)) ? `<div class="mt-1 text-xs text-gray-500">Loja ${esc(foco.numero_loja || '')}${foco.loja_sigla ? '-' + esc(foco.loja_sigla) : ''} · ${esc(foco.loja_nome || '')}</div>` : ''}
-        <div class="mt-2 text-xs text-gray-500">Codigo ${esc(foco.codigo_acervo || '-')} · ISBN ${esc(foco.isbn || '-')}</div>
+        <div class="mt-2 text-xs text-gray-500">Código ${esc(foco.codigo_acervo || '-')} · ISBN ${esc(foco.isbn || '-')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(foco.resumo || 'Sem resumo informado.')}</div>
         <div class="mt-2 text-xs text-gray-500">Grau ${esc(foco.grau_recomendado || 'Livre')} · ${esc(foco.quantidade_disponivel || 0)} exemplar(es)</div>
         <div class="mt-2 text-xs text-gray-500">${esc(foco.total_gostei_sim || 0)} gostei · ${esc(foco.total_gostei_nao || 0)} não gostei</div>
@@ -195,22 +195,22 @@ function render() {
     document.getElementById('btn-solicitar').disabled = !podeSolicitar || bloquearCross;
     document.getElementById('btn-solicitar').classList.toggle('opacity-50', !podeSolicitar || bloquearCross);
 
-    renderLista('lista-comentarios', dashboard.comentarios, 'Nenhum comentario recente para o livro em foco.', item => `
+    renderLista('lista-comentarios', dashboard.comentarios, 'Nenhum comentário recente para o livro em foco.', item => `
         <div class="font-medium">${esc(item.obreiro_nome || 'Irmão')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.criado_em || '')}</div>
         <div class="mt-2 text-sm text-gray-700">${esc(item.comentario || '')}</div>
     `);
 
-    renderLista('lista-meus-emprestimos', dashboard.meus_emprestimos, 'Nenhum emprestimo registrado.', item => `
+    renderLista('lista-meus-emprestimos', dashboard.meus_emprestimos, 'Nenhum empréstimo registrado.', item => `
         <div class="font-medium">${esc(item.titulo || 'Livro')}</div>
-        <div class="mt-1 text-xs text-gray-500">Codigo ${esc(item.codigo_acervo || '-')} · ${esc(item.status || '-')}</div>
+        <div class="mt-1 text-xs text-gray-500">Código ${esc(item.codigo_acervo || '-')} · ${esc(item.status || '-')}</div>
         <div class="mt-2 text-sm text-gray-700">Previsto para ${esc(item.data_devolucao_prevista || '-')}</div>
     `);
 
-    renderLista('lista-pendentes', dashboard.emprestimos_pendentes, 'Nenhum emprestimo pendente ou atrasado.', item => `
+    renderLista('lista-pendentes', dashboard.emprestimos_pendentes, 'Nenhum empréstimo pendente ou atrasado.', item => `
         <div class="font-medium">${esc(item.titulo || 'Livro')}</div>
         <div class="mt-1 text-xs text-gray-500">${esc(item.obreiro_nome || 'Obreiro')} · ${esc(item.status || '-')}</div>
-        <div class="mt-2 text-sm text-gray-700">Devolucao prevista ${esc(item.data_devolucao_prevista || '-')}</div>
+        <div class="mt-2 text-sm text-gray-700">Devolução prevista ${esc(item.data_devolucao_prevista || '-')}</div>
     `);
 }
 
@@ -264,10 +264,10 @@ document.getElementById('atalho-catalogo').addEventListener('click', () => abrir
 document.getElementById('atalho-gerenciar').addEventListener('click', () => abrirDestino('/biblioteca/emprestimos'));
 document.getElementById('atalho-cadastrar').addEventListener('click', () => abrirDestino('/biblioteca/novo'));
 document.getElementById('atalho-isbn').addEventListener('click', () => abrirDestino('/biblioteca/scanner'));
-document.getElementById('btn-solicitar').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/solicitar', { acervo_id: dashboard?.item_foco?.id || 0, loja_id: dashboard?.item_foco?.loja_id || 0, scope: scopeAtual }, 'Emprestimo solicitado com sucesso.'));
+document.getElementById('btn-solicitar').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/solicitar', { acervo_id: dashboard?.item_foco?.id || 0, loja_id: dashboard?.item_foco?.loja_id || 0, scope: scopeAtual }, 'Empréstimo solicitado com sucesso.'));
 document.getElementById('btn-gostei').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/reagir', { acervo_id: dashboard?.item_foco?.id || 0, gostei: true }, 'Reação registrada.'));
 document.getElementById('btn-nao-gostei').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/reagir', { acervo_id: dashboard?.item_foco?.id || 0, gostei: false }, 'Reação registrada.'));
-document.getElementById('btn-comentar').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/comentar', { acervo_id: dashboard?.item_foco?.id || 0, comentario: document.getElementById('novo-comentario').value }, 'Comentario publicado.'));
+document.getElementById('btn-comentar').addEventListener('click', () => operarLivro('/api/miniapp/biblioteca/comentar', { acervo_id: dashboard?.item_foco?.id || 0, comentario: document.getElementById('novo-comentario').value }, 'Comentário publicado.'));
 
 carregar();
 </script>

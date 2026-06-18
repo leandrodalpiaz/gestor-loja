@@ -37,3 +37,11 @@
 - Para tarefas complexas, planeje antes de implementar.
 - Antes de editar, liste arquivos impactados.
 - Depois de editar, resuma o diff e proponha validação local.
+
+## Regras de Docência e Biblioteca (Acervo)
+- **Trilhas de Estudo:** A trilha de Aprendiz (1º Vigilante) possui 13 etapas e a de Companheiro (2º Vigilante) possui 10 etapas, separando passos orais de passos com entrega de trabalho.
+- **Instruções Orais (Sem anexo):** Não possuem card expansível e são controladas/marcadas diretamente por um checkbox na timeline principal (primeira camada visual).
+- **Publicação Manual na Biblioteca:** A publicação de trabalhos formativos na biblioteca deve ser uma ação puramente manual e intencional do Vigilante. É iniciada por meio dos atalhos `📤 Publicar` na timeline principal (com stop-propagation no clique) ou `📤 Publicar na Biblioteca` nos detalhes da etapa (quando o status é Concluído).
+- **Biblioteca Dividida (Acervo):** Organizada em três sub-abas: **Livros**, **Peças de Arquitetura** e **Trabalhos de Instrução**.
+- **Controle de Acesso por Grau:** Peças e Trabalhos de Instrução possuem bloqueio físico de visualização/download para graus inferiores ao grau de restrição da obra (Aprendiz=1, Companheiro=2, Mestre=3). O backend altera a propriedade `arquivo_url` para `null` por segurança se o usuário for de grau menor. Livros exibem recomendação de leitura, mas não sofrem bloqueio.
+- **Visualizador Confortável de PDFs:** Utiliza um leitor fullscreen em overlay com cabeçalho limpo, botões de download e de fechar rápido, integrando iframes com sanitização (`DomSanitizer`).

@@ -90,7 +90,13 @@ require __DIR__ . '/../partials/erp_shell_open.php';
                                 <option value="Livro Fisico">Livro Físico</option>
                                 <option value="Digital (PDF)">Digital (PDF)</option>
                                 <option value="Ritual">Ritual / Livro de Loja</option>
+                                <option value="Peca de Arquitetura">Peça de Arquitetura</option>
+                                <option value="Trabalho de Instrucao">Trabalho de Instrução</option>
                             </select>
+                        </div>
+                        <div>
+                            <label for="arquivo_url" class="form-label">URL do Arquivo PDF (para Peças e Trabalhos)</label>
+                            <input type="text" id="arquivo_url" name="arquivo_url" class="form-input w-full" placeholder="Ex: /assets/uploads/trabalhos/trabalho.pdf">
                         </div>
                         <div>
                             <label for="quantidade_disponivel" class="form-label">Quantidade de Exemplares *</label>

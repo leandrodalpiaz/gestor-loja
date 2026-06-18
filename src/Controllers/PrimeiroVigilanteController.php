@@ -24,8 +24,8 @@ class PrimeiroVigilanteController
         ));
 
         usort($aprendizes, static function (array $a, array $b): int {
-            $nomeA = (string) ($a['nome_historico'] ?? $a['nome'] ?? '');
-            $nomeB = (string) ($b['nome_historico'] ?? $b['nome'] ?? '');
+            $nomeA = trim((string) ($a['nome_historico'] ?? '')) !== '' ? (string) $a['nome_historico'] : (string) ($a['nome'] ?? '');
+            $nomeB = trim((string) ($b['nome_historico'] ?? '')) !== '' ? (string) $b['nome_historico'] : (string) ($b['nome'] ?? '');
             return strcasecmp($nomeA, $nomeB);
         });
 
@@ -158,6 +158,7 @@ class PrimeiroVigilanteController
         $etapaOrdem = (int) ($_POST['etapa_ordem'] ?? 0);
         $status = trim((string) ($_POST['status'] ?? ''));
         $observacao = trim((string) ($_POST['observacao_vigilante'] ?? ''));
+        $publicarBiblioteca = !empty($_POST['publicar_biblioteca']);
         $retorno = '/primeiro-vigilante/aprendiz?id=' . urlencode($aprendizId);
 
         if ($aprendizId === '' || $etapaOrdem <= 0 || $status === '') {
@@ -178,7 +179,9 @@ class PrimeiroVigilanteController
             $etapaOrdem,
             $status,
             $observacao !== '' ? $observacao : null,
-            (string) ($_SESSION['usuario_id'] ?? '')
+            (string) ($_SESSION['usuario_id'] ?? ''),
+            null,
+            $publicarBiblioteca
         );
 
         $_SESSION[$ok ? 'mensagem_sucesso' : 'mensagem_erro'] = $ok
@@ -361,7 +364,7 @@ class PrimeiroVigilanteController
         return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível registrar a solicitação do certificado.'];
     }
 
-    public function atualizarEtapaMiniapp(string $aprendizId, int $etapaOrdem, string $status, ?string $observacao = null, ?string $autorId = null): array
+    public function atualizarEtapaMiniapp(string $aprendizId, int $etapaOrdem, string $status, ?string $observacao = null, ?string $autorId = null, bool $publicarBiblioteca = false): array
     {
         $aprendizId = trim($aprendizId);
         if ($aprendizId === '' || $etapaOrdem <= 0 || trim($status) === '') {
@@ -373,8 +376,68 @@ class PrimeiroVigilanteController
             return ['ok' => false, 'erro' => 'A trilha ainda não foi criada no banco.'];
         }
 
-        $ok = $trilhaModel->atualizarEtapa($aprendizId, $etapaOrdem, trim($status), $observacao, $autorId);
+        $arquivoEntrega = null;
+        if (isset($_FILES['trabalho']) && (int) ($_FILES['trabalho']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+            $file = $_FILES['trabalho'];
+            
+            // Validar extensões
+            $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp'];
+            $fileInfo = pathinfo((string) $file['name']);
+            $extension = strtolower((string) ($fileInfo['extension'] ?? ''));
+            
+            if (!in_array($extension, $allowedExtensions, true)) {
+                return ['ok' => false, 'erro' => 'Formato de arquivo inválido. Permitido: PDF ou Imagem.'];
+            }
+            
+            // Diretório de destino
+            $targetDir = __DIR__ . '/../../public/assets/uploads/trabalhos/';
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0755, true);
+            }
+            
+            $newFileName = 'trabalho_aprendiz_' . $aprendizId . '_' . $etapaOrdem . '_' . time() . '.' . $extension;
+            $targetPath = $targetDir . $newFileName;
+            
+            if (move_uploaded_file((string) $file['tmp_name'], $targetPath)) {
+                $arquivoEntrega = '/assets/uploads/trabalhos/' . $newFileName;
+            } else {
+                return ['ok' => false, 'erro' => 'Falha ao salvar o arquivo enviado.'];
+            }
+        }
+
+        $ok = $trilhaModel->atualizarEtapa($aprendizId, $etapaOrdem, trim($status), $observacao, $autorId, $arquivoEntrega, $publicarBiblioteca);
         return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível atualizar a etapa da trilha.'];
+    }
+
+    public function enviarMensagemMiniapp(string $obreiroId, int $etapaOrdem, string $mensagem, ?string $autorId = null): array
+    {
+        $obreiroId = trim($obreiroId);
+        $mensagem = trim($mensagem);
+        if ($obreiroId === '' || $etapaOrdem <= 0 || $mensagem === '') {
+            return ['ok' => false, 'erro' => 'Dados inválidos para enviar mensagem.'];
+        }
+
+        $autorId = $autorId ?: (string) ($_SESSION['usuario_id'] ?? '');
+        if ($autorId === '') {
+            return ['ok' => false, 'erro' => 'Autor não identificado.'];
+        }
+
+        $model = new \App\Models\MensagemTrilha();
+        $ok = $model->enviar($obreiroId, 1, $etapaOrdem, $autorId, $mensagem);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível enviar a mensagem.'];
+    }
+
+    public function recomendarElevacaoMiniapp(string $aprendizId, ?string $observacao = null, ?string $autorId = null): array
+    {
+        $aprendizId = trim($aprendizId);
+        if ($aprendizId === '') {
+            return ['ok' => false, 'erro' => 'Aprendiz inválido.'];
+        }
+
+        $autorId = $autorId ?: (string) ($_SESSION['usuario_id'] ?? '');
+        $model = new PrimeiroVigilanteAcompanhamento();
+        $ok = $model->recomendarElevacao($aprendizId, $observacao, $autorId);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível recomendar a elevação.'];
     }
 
     private function resolverProximaAcao(int $etapa, string $status): string
@@ -448,10 +511,15 @@ class PrimeiroVigilanteController
         $acompanhamento = $acompanhamentoModel->obterPorAprendiz($aprendizId);
         $historicoFormativo = $acompanhamentoModel->listarHistoricoFormativo($aprendizId);
 
+        $db = \App\Config\Database::getConnection();
+        $stmtPub = $db->prepare("SELECT nota_instrucao FROM acervo WHERE nota_instrucao LIKE :pattern AND ativo = TRUE");
+        $stmtPub->execute(['pattern' => "trilha_aprendiz:{$aprendizId}:%"]);
+        $publicados = $stmtPub->fetchAll(\PDO::FETCH_COLUMN) ?: [];
+
         return [
             'aprendiz' => [
                 'id' => (string) ($aprendiz['id'] ?? ''),
-                'nome' => (string) ($aprendiz['nome_historico'] ?? $aprendiz['nome'] ?? 'Aprendiz'),
+                'nome' => trim((string) ($aprendiz['nome_historico'] ?? '')) !== '' ? (string) $aprendiz['nome_historico'] : (string) ($aprendiz['nome'] ?? 'Aprendiz'),
                 'cim' => (string) ($aprendiz['cim'] ?? ''),
                 'data_iniciacao' => (string) ($aprendiz['data_iniciacao'] ?? ''),
             ],
@@ -465,15 +533,28 @@ class PrimeiroVigilanteController
                     'status' => (string) ($etapaAtual['status'] ?? ''),
                 ] : null,
             ],
-            'etapas' => array_map(static function (array $etapa): array {
+            'etapas' => array_map(static function (array $etapa) use ($aprendizId, $publicados): array {
+                $mensagens = (new \App\Models\MensagemTrilha())->obterPorEtapa($aprendizId, (int) ($etapa['etapa_ordem'] ?? 0));
                 return [
                     'ordem' => (int) ($etapa['etapa_ordem'] ?? 0),
                     'titulo' => (string) ($etapa['titulo_etapa'] ?? ''),
                     'status' => (string) ($etapa['status'] ?? ''),
+                    'is_oral' => \App\Models\TrilhaAprendiz::isEtapaOral((int) ($etapa['etapa_ordem'] ?? 0)),
+                    'publicado_biblioteca' => in_array("trilha_aprendiz:{$aprendizId}:" . ($etapa['etapa_ordem'] ?? 0), $publicados, true),
                     'data_disponibilizacao' => (string) ($etapa['data_disponibilizacao'] ?? ''),
                     'data_entrega' => (string) ($etapa['data_entrega'] ?? ''),
                     'data_revisao' => (string) ($etapa['data_revisao'] ?? ''),
                     'observacao_vigilante' => (string) ($etapa['observacao_vigilante'] ?? ''),
+                    'arquivo_entrega' => (string) ($etapa['arquivo_entrega'] ?? ''),
+                    'chat' => array_map(static function (array $msg): array {
+                        return [
+                            'id' => (int) ($msg['id'] ?? 0),
+                            'mensagem' => (string) ($msg['mensagem'] ?? ''),
+                            'autor_id' => (string) ($msg['autor_id'] ?? ''),
+                            'autor_name' => (string) ($msg['autor_nome'] ?? 'Obreiro'),
+                            'created_at' => (string) ($msg['created_at'] ?? ''),
+                        ];
+                    }, $mensagens),
                 ];
             }, $resumoTrilha['etapas'] ?? []),
             'leitura_sugerida' => [
@@ -486,6 +567,11 @@ class PrimeiroVigilanteController
                 'status' => (string) ($acompanhamento['certificado_status'] ?? 'nao_solicitado'),
                 'observacao' => (string) ($acompanhamento['certificado_observacao'] ?? ''),
                 'solicitado_em' => (string) ($acompanhamento['certificado_solicitado_em'] ?? ''),
+            ],
+            'elevacao' => [
+                'status' => (string) ($acompanhamento['elevacao_status'] ?? 'nao_indicada'),
+                'observacao' => (string) ($acompanhamento['elevacao_observacao'] ?? ''),
+                'autorizada_em' => (string) ($acompanhamento['elevacao_autorizada_em'] ?? ''),
             ],
             'historico_formativo' => $historicoFormativo,
         ];
@@ -501,7 +587,9 @@ class PrimeiroVigilanteController
             static fn (array $obreiro): bool => strtolower(trim((string) ($obreiro['grau'] ?? ''))) === 'aprendiz'
         ));
         usort($aprendizes, static function (array $a, array $b): int {
-            return strcasecmp((string) ($a['nome_historico'] ?? $a['nome'] ?? ''), (string) ($b['nome_historico'] ?? $b['nome'] ?? ''));
+            $nomeA = trim((string) ($a['nome_historico'] ?? '')) !== '' ? (string) $a['nome_historico'] : (string) ($a['nome'] ?? '');
+            $nomeB = trim((string) ($b['nome_historico'] ?? '')) !== '' ? (string) $b['nome_historico'] : (string) ($b['nome'] ?? '');
+            return strcasecmp($nomeA, $nomeB);
         });
 
         $aprendizFocoId = trim((string) ($aprendizId ?? ''));
@@ -513,7 +601,7 @@ class PrimeiroVigilanteController
             'aprendizes' => array_map(static function (array $aprendiz): array {
                 return [
                     'id' => (string) ($aprendiz['id'] ?? ''),
-                    'nome' => (string) ($aprendiz['nome_historico'] ?? $aprendiz['nome'] ?? 'Aprendiz'),
+                    'nome' => trim((string) ($aprendiz['nome_historico'] ?? '')) !== '' ? (string) $aprendiz['nome_historico'] : (string) ($aprendiz['nome'] ?? 'Aprendiz'),
                     'cim' => (string) ($aprendiz['cim'] ?? ''),
                 ];
             }, $aprendizes),

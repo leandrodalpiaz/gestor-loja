@@ -468,12 +468,18 @@ class MiniappApiRoutes
         if ($requestUri === '/api/miniapp/primeiro-vigilante/trilha/atualizar' && $method === 'POST') {
             $controller = new \App\Controllers\PrimeiroVigilanteController();
             $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
+            $aprendizId = trim((string) ($body['aprendiz_id'] ?? $_POST['aprendiz_id'] ?? ''));
+            $etapaOrdem = (int) ($body['etapa_ordem'] ?? $_POST['etapa_ordem'] ?? 0);
+            $status = trim((string) ($body['status'] ?? $_POST['status'] ?? ''));
+            $observacao = trim((string) ($body['observacao_vigilante'] ?? $_POST['observacao_vigilante'] ?? ''));
+            $publicarBiblioteca = !empty($body['publicar_biblioteca']) || !empty($_POST['publicar_biblioteca']);
             JsonResponse::send($controller->atualizarEtapaMiniapp(
-                trim((string) ($body['aprendiz_id'] ?? '')),
-                (int) ($body['etapa_ordem'] ?? 0),
-                trim((string) ($body['status'] ?? '')),
-                trim((string) ($body['observacao_vigilante'] ?? '')) ?: null,
-                $autorId !== '' ? $autorId : null
+                $aprendizId,
+                $etapaOrdem,
+                $status,
+                $observacao !== '' ? $observacao : null,
+                $autorId !== '' ? $autorId : null,
+                $publicarBiblioteca
             ));
         }
 
@@ -483,6 +489,27 @@ class MiniappApiRoutes
             JsonResponse::send($controller->solicitarCertificadoMiniapp(
                 trim((string) ($body['aprendiz_id'] ?? '')),
                 trim((string) ($body['observacao_certificado'] ?? '')) ?: null,
+                $autorId !== '' ? $autorId : null
+            ));
+        }
+
+        if ($requestUri === '/api/miniapp/primeiro-vigilante/trilha/mensagem' && $method === 'POST') {
+            $controller = new \App\Controllers\PrimeiroVigilanteController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
+            JsonResponse::send($controller->enviarMensagemMiniapp(
+                trim((string) ($body['aprendiz_id'] ?? $body['obreiro_id'] ?? '')),
+                (int) ($body['etapa_ordem'] ?? 0),
+                trim((string) ($body['mensagem'] ?? '')),
+                $autorId !== '' ? $autorId : null
+            ));
+        }
+
+        if ($requestUri === '/api/miniapp/primeiro-vigilante/elevacao/recomendar' && $method === 'POST') {
+            $controller = new \App\Controllers\PrimeiroVigilanteController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
+            JsonResponse::send($controller->recomendarElevacaoMiniapp(
+                trim((string) ($body['aprendiz_id'] ?? '')),
+                trim((string) ($body['observacao_elevacao'] ?? $body['observacao'] ?? '')) ?: null,
                 $autorId !== '' ? $autorId : null
             ));
         }
@@ -513,12 +540,18 @@ class MiniappApiRoutes
         if ($requestUri === '/api/miniapp/segundo-vigilante/trilha/atualizar' && $method === 'POST') {
             $controller = new \App\Controllers\SegundoVigilanteController();
             $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
+            $companheiroId = trim((string) ($body['companheiro_id'] ?? $_POST['companheiro_id'] ?? ''));
+            $etapaOrdem = (int) ($body['etapa_ordem'] ?? $_POST['etapa_ordem'] ?? 0);
+            $status = trim((string) ($body['status'] ?? $_POST['status'] ?? ''));
+            $observacao = trim((string) ($body['observacao_vigilante'] ?? $_POST['observacao_vigilante'] ?? ''));
+            $publicarBiblioteca = !empty($body['publicar_biblioteca']) || !empty($_POST['publicar_biblioteca']);
             JsonResponse::send($controller->atualizarEtapaMiniapp(
-                trim((string) ($body['companheiro_id'] ?? '')),
-                (int) ($body['etapa_ordem'] ?? 0),
-                trim((string) ($body['status'] ?? '')),
-                trim((string) ($body['observacao_vigilante'] ?? '')) ?: null,
-                $autorId !== '' ? $autorId : null
+                $companheiroId,
+                $etapaOrdem,
+                $status,
+                $observacao !== '' ? $observacao : null,
+                $autorId !== '' ? $autorId : null,
+                $publicarBiblioteca
             ));
         }
 
@@ -549,6 +582,17 @@ class MiniappApiRoutes
             JsonResponse::send($controller->recomendarExaltacaoMiniapp(
                 trim((string) ($body['companheiro_id'] ?? '')),
                 trim((string) ($body['observacao_exaltacao'] ?? '')) ?: null,
+                $autorId !== '' ? $autorId : null
+            ));
+        }
+
+        if ($requestUri === '/api/miniapp/segundo-vigilante/trilha/mensagem' && $method === 'POST') {
+            $controller = new \App\Controllers\SegundoVigilanteController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
+            JsonResponse::send($controller->enviarMensagemMiniapp(
+                trim((string) ($body['companheiro_id'] ?? $body['obreiro_id'] ?? '')),
+                (int) ($body['etapa_ordem'] ?? 0),
+                trim((string) ($body['mensagem'] ?? '')),
                 $autorId !== '' ? $autorId : null
             ));
         }

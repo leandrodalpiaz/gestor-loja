@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { trigger, transition, style, animate, query, stagger, state } from '@angular/animations';
 import { environment } from '../../../environments/environment';
 import { SupabaseService } from '../../services/supabase.service';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 type BibliotecaTab = 'acervo' | 'meus' | 'gestao' | 'classificacao';
 
@@ -48,6 +49,7 @@ export class BibliotecaAcervo implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   protected supabaseService = inject(SupabaseService);
+  private sanitizer = inject(DomSanitizer);
 
   protected loading = signal(true);
   protected errorMsg = signal<string | null>(null);
@@ -60,6 +62,12 @@ export class BibliotecaAcervo implements OnInit {
   protected novoComentario = '';
   protected classificacao = { livro_id: 0, grau_recomendado: 'Livre', nota_instrucao: '' };
 
+  protected subTab = signal<'livros' | 'pecas' | 'trabalhos'>('livros');
+  protected pdfLeituraUrl = signal<SafeResourceUrl | null>(null);
+  protected pdfLeituraTitulo = signal<string>('');
+  protected pdfLeituraAutor = signal<string>('');
+  protected pdfRawUrl = signal<string | null>(null);
+
   ngOnInit(): void {
     this.tab.set((this.route.snapshot.data['bibliotecaTab'] as BibliotecaTab) || 'acervo');
     this.carregar();
@@ -67,7 +75,18 @@ export class BibliotecaAcervo implements OnInit {
 
   protected get livrosFiltrados(): any[] {
     const q = this.filtroBusca.toLowerCase().trim();
-    const livros = this.dados()?.acervo || [];
+    let livros = this.dados()?.acervo || [];
+    
+    const st = this.subTab();
+    livros = livros.filter((livro: any) => {
+      const t = (livro.tipo || '').toLowerCase();
+      const isBook = t !== 'peca de arquitetura' && t !== 'trabalho de instrucao';
+      if (st === 'livros') return isBook;
+      if (st === 'pecas') return t === 'peca de arquitetura';
+      if (st === 'trabalhos') return t === 'trabalho de instrucao';
+      return true;
+    });
+
     return q === '' ? livros : livros.filter((livro: any) =>
       `${livro.titulo} ${livro.autor} ${livro.codigo_acervo}`.toLowerCase().includes(q)
     );
@@ -142,6 +161,28 @@ export class BibliotecaAcervo implements OnInit {
     this.novoComentario = '';
   }
 
+  protected abrirLeitorPdf(url: string, titulo: string, autor: string): void {
+    if (!url) return;
+    const fullUrl = url.startsWith('http') ? url : `${environment.apiUrl}${url}`;
+    this.pdfRawUrl.set(fullUrl);
+    this.pdfLeituraUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(fullUrl));
+    this.pdfLeituraTitulo.set(titulo);
+    this.pdfLeituraAutor.set(autor);
+  }
+
+  protected fecharLeitorPdf(): void {
+    this.pdfLeituraUrl.set(null);
+    this.pdfRawUrl.set(null);
+    this.pdfLeituraTitulo.set('');
+    this.pdfLeituraAutor.set('');
+  }
+
+  protected baixarPdf(url: string): void {
+    if (!url) return;
+    const fullUrl = url.startsWith('http') ? url : `${environment.apiUrl}${url}`;
+    window.open(fullUrl, '_blank');
+  }
+
   protected reagir(acervoId: number, gostei: boolean): void {
     this.post('/api/miniapp/biblioteca/reagir', { acervo_id: acervoId, gostei: gostei ? 1 : 0 }, 'Obrigado por registrar seu voto.');
   }
@@ -211,5 +252,12 @@ export class BibliotecaAcervo implements OnInit {
         this.errorMsg.set(err.error?.erro || 'Erro ao concluir a operação.');
       }
     });
+  }
+
+  protected formatarTipo(tipo: string): string {
+    if (!tipo) return 'Livro';
+    if (tipo === 'Peca de Arquitetura') return 'Peça de Arquitetura';
+    if (tipo === 'Trabalho de Instrucao') return 'Trabalho de Instrução';
+    return tipo;
   }
 }

@@ -87,6 +87,21 @@ class Acervo
         return $result ?: null;
     }
 
+    public function existePorNotaInstrucao(string $notaInstrucao): bool
+    {
+        $notaInstrucao = trim($notaInstrucao);
+        if ($notaInstrucao === '') {
+            return false;
+        }
+        $sql = "SELECT COUNT(*) FROM acervo WHERE nota_instrucao = :nota_instrucao AND loja_id = :loja_id AND ativo = TRUE";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'nota_instrucao' => $notaInstrucao,
+            'loja_id' => $this->buscarLojaAtualId(),
+        ]);
+        return ((int) $stmt->fetchColumn()) > 0;
+    }
+
     public function buscarDetalhes(int $id, ?string $obreiroId = null, ?int $lojaId = null): ?array
     {
         $lojaId = $lojaId ?? $this->buscarLojaAtualId();
@@ -163,6 +178,13 @@ class Acervo
             return false;
         }
 
+        $grauRecomendado = $this->normalizarGrau((string) ($dados['grau_recomendado'] ?? 'Livre'));
+        $grauRestricao = isset($dados['grau_restricao']) ? max(1, (int) $dados['grau_restricao']) : match ($grauRecomendado) {
+            'Mestre' => 3,
+            'Companheiro' => 2,
+            default => 1,
+        };
+
         $sql = "INSERT INTO acervo (
                     codigo_acervo,
                     loja_id,
@@ -205,12 +227,12 @@ class Acervo
             'autor' => $autor,
             'resumo' => $resumo !== '' ? $resumo : null,
             'tipo' => $this->normalizarTipo((string) ($dados['tipo'] ?? 'Livro Fisico')),
-            'grau_restricao' => max(1, (int) ($dados['grau_restricao'] ?? 1)),
+            'grau_restricao' => $grauRestricao,
             'arquivo_url' => $this->nuloSeVazio((string) ($dados['arquivo_url'] ?? '')),
             'quantidade_disponivel' => max(0, (int) ($dados['quantidade_disponivel'] ?? 0)),
             'isbn' => $isbn !== '' ? $isbn : null,
             'capa_url' => $capaUrl !== '' ? $capaUrl : null,
-            'grau_recomendado' => $this->normalizarGrau((string) ($dados['grau_recomendado'] ?? 'Livre')),
+            'grau_recomendado' => $grauRecomendado,
             'nota_instrucao' => $this->nuloSeVazio((string) ($dados['nota_instrucao'] ?? '')),
             'curador_id' => $dados['curador_id'] ?? null,
         ]);
@@ -218,6 +240,13 @@ class Acervo
 
     public function atualizar(int $id, array $dados): bool
     {
+        $grauRecomendado = $this->normalizarGrau((string) ($dados['grau_recomendado'] ?? 'Livre'));
+        $grauRestricao = isset($dados['grau_restricao']) ? max(1, (int) $dados['grau_restricao']) : match ($grauRecomendado) {
+            'Mestre' => 3,
+            'Companheiro' => 2,
+            default => 1,
+        };
+
         $sql = "UPDATE acervo SET
                     titulo = :titulo,
                     autor = :autor,
@@ -240,12 +269,12 @@ class Acervo
             'autor' => trim((string) ($dados['autor'] ?? '')),
             'resumo' => $this->nuloSeVazio((string) ($dados['resumo'] ?? '')),
             'tipo' => $this->normalizarTipo((string) ($dados['tipo'] ?? 'Livro Fisico')),
-            'grau_restricao' => max(1, (int) ($dados['grau_restricao'] ?? 1)),
+            'grau_restricao' => $grauRestricao,
             'arquivo_url' => $this->nuloSeVazio((string) ($dados['arquivo_url'] ?? '')),
             'quantidade_disponivel' => max(0, (int) ($dados['quantidade_disponivel'] ?? 0)),
             'isbn' => $this->nuloSeVazio((string) ($dados['isbn'] ?? '')),
             'capa_url' => $this->nuloSeVazio((string) ($dados['capa_url'] ?? '')),
-            'grau_recomendado' => $this->normalizarGrau((string) ($dados['grau_recomendado'] ?? 'Livre')),
+            'grau_recomendado' => $grauRecomendado,
             'nota_instrucao' => $this->nuloSeVazio((string) ($dados['nota_instrucao'] ?? '')),
             'curador_id' => $dados['curador_id'] ?? null,
             'id' => $id,
@@ -255,9 +284,17 @@ class Acervo
 
     public function atualizarClassificacao($id, $grau, $nota, ?string $curadorId): bool
     {
+        $grauNorm = $this->normalizarGrau((string) $grau);
+        $grauRestricao = match ($grauNorm) {
+            'Mestre' => 3,
+            'Companheiro' => 2,
+            default => 1,
+        };
+
         $stmt = $this->db->prepare(
             "UPDATE acervo
              SET grau_recomendado = :grau,
+                 grau_restricao = :grau_restricao,
                  nota_instrucao = :nota,
                  curador_id = :curador,
                  atualizado_em = CURRENT_TIMESTAMP
@@ -265,7 +302,8 @@ class Acervo
                AND loja_id = :loja_id"
         );
         return $stmt->execute([
-            'grau' => $this->normalizarGrau((string) $grau),
+            'grau' => $grauNorm,
+            'grau_restricao' => $grauRestricao,
             'nota' => $this->nuloSeVazio((string) $nota),
             'curador' => $curadorId,
             'id' => $id,
@@ -332,6 +370,12 @@ class Acervo
             'digital' => 'Digital (PDF)',
             'Ritual' => 'Ritual',
             'ritual' => 'Ritual',
+            'Peca de Arquitetura' => 'Peca de Arquitetura',
+            'Peça de Arquitetura' => 'Peca de Arquitetura',
+            'peca_de_arquitetura' => 'Peca de Arquitetura',
+            'Trabalho de Instrucao' => 'Trabalho de Instrucao',
+            'Trabalho de Instrução' => 'Trabalho de Instrucao',
+            'trabalho_de_instrucao' => 'Trabalho de Instrucao',
         ];
 
         return $map[$tipo] ?? 'Livro Fisico';

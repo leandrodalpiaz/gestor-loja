@@ -345,15 +345,15 @@
       <div class="lg:col-span-4 erp-panel">
         <div class="erp-panel-header">
           <div>
-            <h2 class="erp-panel-title">{{ isNovaHistoria() ? 'Nova Memoria da Loja' : 'Editar Fato Historico' }}</h2>
-            <p class="erp-panel-subtitle">Registros historicos tambem alimentam cards do dia.</p>
+            <h2 class="erp-panel-title">{{ isNovaHistoria() ? 'Nova Memória da Loja' : 'Editar Fato Histórico' }}</h2>
+            <p class="erp-panel-subtitle">Registros históricos também alimentam cards do dia.</p>
           </div>
         </div>
 
         <div class="space-y-4 text-xs text-slate-300">
           <div>
             <label class="erp-label">Titulo *</label>
-            <input type="text" [(ngModel)]="formHistoria().titulo" placeholder="Ex: Fundacao da Oficina" class="erp-input">
+            <input type="text" [(ngModel)]="formHistoria().titulo" placeholder="Ex: Fundação da Oficina" class="erp-input">
           </div>
           <div class="grid grid-cols-3 gap-3">
             <div>
@@ -361,7 +361,7 @@
               <input type="number" min="1" max="31" [(ngModel)]="formHistoria().dia" class="erp-input text-center">
             </div>
             <div>
-              <label class="erp-label">Mes *</label>
+              <label class="erp-label">Mês *</label>
               <input type="number" min="1" max="12" [(ngModel)]="formHistoria().mes" class="erp-input text-center">
             </div>
             <div>
@@ -371,16 +371,16 @@
           </div>
           <div>
             <label class="erp-label">Texto do fato *</label>
-            <textarea rows="7" [(ngModel)]="formHistoria().texto" placeholder="Descreva o fato historico..." class="erp-input leading-relaxed"></textarea>
+            <textarea rows="7" [(ngModel)]="formHistoria().texto" placeholder="Descreva o fato histórico..." class="erp-input leading-relaxed"></textarea>
           </div>
           <div>
             <label class="erp-label">Fonte</label>
-            <input type="text" [(ngModel)]="formHistoria().fonte" placeholder="Livro, ata, tradicao oral..." class="erp-input">
+            <input type="text" [(ngModel)]="formHistoria().fonte" placeholder="Livro, ata, tradição oral..." class="erp-input">
           </div>
           <div class="flex flex-col gap-2 pt-2">
-            <button (click)="salvarHistoria()" class="erp-btn-primary w-full">{{ isNovaHistoria() ? 'Publicar Memoria' : 'Salvar Alteracoes' }}</button>
+            <button (click)="salvarHistoria()" class="erp-btn-primary w-full">{{ isNovaHistoria() ? 'Publicar Memória' : 'Salvar Alterações' }}</button>
             @if (!isNovaHistoria()) {
-              <button (click)="abrirFormHistoria()" class="erp-btn-secondary w-full">Cancelar Edicao</button>
+              <button (click)="abrirFormHistoria()" class="erp-btn-secondary w-full">Cancelar Edição</button>
             }
           </div>
         </div>
@@ -389,13 +389,13 @@
       <div class="lg:col-span-8 erp-panel">
         <div class="erp-panel-header">
           <div>
-            <h2 class="erp-panel-title">Acervo da Memoria da Oficina</h2>
-            <p class="erp-panel-subtitle">Linha do tempo cadastrada para consulta e publicacoes historicas.</p>
+            <h2 class="erp-panel-title">Acervo da Memória da Oficina</h2>
+            <p class="erp-panel-subtitle">Linha do tempo cadastrada para consulta e publicações históricas.</p>
           </div>
         </div>
 
         @if (stories().length === 0) {
-          <div class="text-xs text-slate-500 italic text-center py-6">Nenhum fato historico catalogado no acervo.</div>
+          <div class="text-xs text-slate-500 italic text-center py-6">Nenhum fato histórico catalogado no acervo.</div>
         } @else {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             @for (s of stories(); track s.id) {
@@ -411,7 +411,7 @@
                     <h3 class="text-xs font-bold text-white uppercase tracking-wider">{{ s.titulo }}</h3>
                     <p class="text-[11px] text-slate-300 leading-relaxed line-clamp-4">{{ s.texto }}</p>
                     <div class="flex justify-between items-center border-t border-white/5 pt-2">
-                      <span class="text-[10px] text-amber-500/80">Fonte: {{ s.fonte || 'Tradicao oral' }}</span>
+                      <span class="text-[10px] text-amber-500/80">Fonte: {{ s.fonte || 'Tradição oral' }}</span>
                       <button (click)="abrirFormHistoria(s)" class="text-[10px] font-bold text-liturgical-gold uppercase tracking-wider">Editar</button>
                     </div>
                   </div>
@@ -440,7 +440,7 @@
       <div class="bg-liturgical-surface border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
         <div class="p-6 border-b border-white/5 flex justify-between items-center">
           <h2 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest">
-            {{ isNovo() ? 'Novo Registro de Efemeride' : 'Editar Efemeride' }}
+            {{ isNovo() ? 'Novo Registro de Efeméride' : 'Editar Efeméride' }}
           </h2>
           <button (click)="showModal.set(false)" class="p-2 text-slate-400 hover:text-white transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -453,7 +453,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="erp-label">Nome do Registro *</label>
-              <input type="text" [(ngModel)]="formEfemeride().nome" placeholder="Ex: Joao da Silva" class="erp-input">
+              <input type="text" [(ngModel)]="formEfemeride().nome" placeholder="Ex: João da Silva" class="erp-input">
             </div>
             <div>
               <label class="erp-label">Tipo *</label>
@@ -468,20 +468,20 @@
               <input type="date" [(ngModel)]="formEfemeride().data_evento" class="erp-input">
             </div>
             <div>
-              <label class="erp-label">Vinculo</label>
-              <input type="text" [(ngModel)]="formEfemeride().vinculo" placeholder="Irmao, esposa, filho..." class="erp-input">
+              <label class="erp-label">Vínculo</label>
+              <input type="text" [(ngModel)]="formEfemeride().vinculo" placeholder="Irmão, esposa, filho..." class="erp-input">
             </div>
             <div>
-              <label class="erp-label">Irmao relacionado</label>
-              <input type="text" [(ngModel)]="formEfemeride().parentesco" placeholder="Nome do irmao relacionado" class="erp-input">
+              <label class="erp-label">Irmão relacionado</label>
+              <input type="text" [(ngModel)]="formEfemeride().parentesco" placeholder="Nome do irmão relacionado" class="erp-input">
             </div>
             <div>
               <label class="erp-label">Local</label>
-              <input type="text" [(ngModel)]="formEfemeride().local" placeholder="Loja, oriente, referencia..." class="erp-input">
+              <input type="text" [(ngModel)]="formEfemeride().local" placeholder="Loja, oriente, referência..." class="erp-input">
             </div>
             <div class="md:col-span-2">
               <label class="erp-label">Mensagem personalizada</label>
-              <textarea rows="3" [(ngModel)]="formEfemeride().mensagem_custom" placeholder="Mensagem que sera exibida no lembrete diario..." class="erp-input resize-none"></textarea>
+              <textarea rows="3" [(ngModel)]="formEfemeride().mensagem_custom" placeholder="Mensagem que será exibida no lembrete diário..." class="erp-input resize-none"></textarea>
             </div>
           </div>
         </div>

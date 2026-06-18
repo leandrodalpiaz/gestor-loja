@@ -15,45 +15,270 @@
   </div>
 
   <!-- SEÇÃO 1: TRILHA DE PROGRESSÃO DO GRAU -->
-  <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 space-y-4">
-    <div class="border-b border-white/5 pb-3">
-      <h2 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest">Sua Trilha de Evolução</h2>
-      <p class="text-[10px] text-slate-400 mt-0.5">Requisitos cadastrais e pedagógicos para a sua progressão ritualística</p>
-    </div>
+  @if (trilhaPedagogica(); as pedagogica) {
+    <!-- INTERSTÍCIO E PROGRESSO PEDAGÓGICO DO OBREIRO -->
+    <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 space-y-4 animate-fade-in">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
+        <div>
+          <span class="text-liturgical-gold text-[10px] font-bold uppercase tracking-widest block">Sua Trilha de Evolução</span>
+          <h2 class="font-cinzel text-lg font-bold text-white uppercase tracking-widest mt-1">Formação Individual</h2>
+          <p class="text-[10px] text-slate-400 mt-0.5 font-bold">Acompanhe suas instruções e submeta seus trabalhos pedagógicos</p>
+        </div>
 
-    <!-- Lista de Passos / Checklist -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      @for (etapa of trilhaEtapas(); track etapa.label; let idx = $index) {
-        <div class="bg-black/10 border rounded-xl p-4 flex items-start gap-3 transition-colors"
-             [class.border-emerald-500/20]="etapa.concluido"
-             [class.border-white/5]="!etapa.concluido">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
-               [class.bg-emerald-500/10]="etapa.concluido"
-               [class.text-emerald-400]="etapa.concluido"
-               [class.bg-white/5]="!etapa.concluido"
-               [class.text-slate-400]="!etapa.concluido">
-            @if (etapa.concluido) {
-              ?
-            } @else {
-              {{ idx + 1 }}
+        <!-- Barra de Progresso do Interstício -->
+        @if (pedagogica.aprendiz; as ap) {
+          <!-- Aprendiz Interstício -->
+          <div class="flex flex-col gap-1.5 w-full md:w-64 shrink-0">
+            @if (calcularProgressoIntersticio(ap.data_iniciacao, 18); as inst) {
+              <div class="flex justify-between items-center text-[9px]">
+                <span class="text-slate-400 font-bold uppercase tracking-wider">Interstício de Aprendiz (18m)</span>
+                <span class="font-bold uppercase tracking-wider"
+                      [class.text-amber-400]="inst.concluido"
+                      [class.text-slate-400]="!inst.concluido">
+                  {{ inst.textoProgresso }}
+                </span>
+              </div>
+              <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-amber-500 to-amber-300 rounded-full transition-all duration-500"
+                     [style.width.%]="inst.percentual"></div>
+              </div>
+              @if (inst.concluido) {
+                <div class="flex justify-between items-center mt-1">
+                  <span class="inline-flex items-center gap-1 text-[8px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-400 animate-pulse">
+                    ✨ Interstício Cumprido
+                  </span>
+                  <span class="text-[8px] text-slate-400 font-bold uppercase tracking-widest">
+                    {{ pedagogica.elevacao?.status === 'recomendada' ? 'Indicado para Elevação' : 'Aguardando Indicação' }}
+                  </span>
+                </div>
+              }
             }
           </div>
-          <div class="space-y-0.5">
-            <p [class.text-slate-300]="etapa.concluido"
-               [class.text-slate-400]="!etapa.concluido"
-               class="text-xs font-bold leading-normal">
-              {{ etapa.label }}
-            </p>
-            <p class="text-[9px]"
-               [class.text-emerald-500]="etapa.concluido"
-               [class.text-slate-500]="!etapa.concluido">
-              {{ etapa.concluido ? 'Concluído' : 'Pendente ou Em revisão' }}
-            </p>
+        } @else if (pedagogica.companheiro; as co) {
+          <!-- Companheiro Interstício -->
+          <div class="flex flex-col gap-1.5 w-full md:w-64 shrink-0">
+            @if (calcularProgressoIntersticio(co.data_elevacao, 12); as inst) {
+              <div class="flex justify-between items-center text-[9px]">
+                <span class="text-slate-400 font-bold uppercase tracking-wider">Interstício de Companheiro (12m)</span>
+                <span class="font-bold uppercase tracking-wider"
+                      [class.text-amber-400]="inst.concluido"
+                      [class.text-slate-400]="!inst.concluido">
+                  {{ inst.textoProgresso }}
+                </span>
+              </div>
+              <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-amber-500 to-amber-300 rounded-full transition-all duration-500"
+                     [style.width.%]="inst.percentual"></div>
+              </div>
+              @if (inst.concluido) {
+                <div class="flex justify-between items-center mt-1">
+                  <span class="inline-flex items-center gap-1 text-[8px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-400 animate-pulse">
+                    ✨ Interstício Cumprido
+                  </span>
+                  <span class="text-[8px] text-slate-400 font-bold uppercase tracking-widest">
+                    {{ pedagogica.exaltacao?.status === 'recomendada' ? 'Indicado para Exaltação' : 'Aguardando Indicação' }}
+                  </span>
+                </div>
+              }
+            }
           </div>
+        }
+      </div>
+
+      <!-- Resumos de Progresso Geral -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="rounded-xl bg-[#111a31]/25 border border-white/5 p-3">
+          <small class="text-slate-500 text-[9px] font-bold uppercase block tracking-wider mb-0.5">Progresso de Instruções</small>
+          <p class="text-lg font-bold text-white">{{pedagogica.resumo?.percentual_conclusao||0}}%</p>
         </div>
-      }
+        <div class="rounded-xl bg-[#111a31]/25 border border-white/5 p-3">
+          <small class="text-slate-500 text-[9px] font-bold uppercase block tracking-wider mb-0.5">Instruções Concluídas</small>
+          <p class="text-lg font-bold text-white">{{pedagogica.resumo?.total_concluidas||0}} de {{pedagogica.resumo?.total_etapas||0}}</p>
+        </div>
+        <div class="rounded-xl bg-[#111a31]/25 border border-white/5 p-3">
+          <small class="text-slate-500 text-[9px] font-bold uppercase block tracking-wider mb-0.5">Leitura Orientada</small>
+          <p class="text-xs font-bold text-white mt-1 leading-snug truncate">
+            {{ pedagogica.leitura_sugerida?.titulo || 'Nenhuma leitura pendente' }}
+          </p>
+        </div>
+        <div class="rounded-xl bg-[#111a31]/25 border border-white/5 p-3">
+          <small class="text-slate-500 text-[9px] font-bold uppercase block tracking-wider mb-0.5">Certificado de Docência</small>
+          <p class="text-xs font-bold text-white mt-1 uppercase">
+            {{ pedagogica.certificado?.status === 'solicitado' ? 'Solicitado' : pedagogica.certificado?.status || 'Não solicitado' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- TIMELINE FORMATIVA -->
+      <div class="relative border-l border-white/10 pl-6 ml-3 space-y-6 mt-6 pt-2">
+        @for(e of (pedagogica.etapas||[]); track e.ordem) {
+          <div class="relative">
+            <!-- Indicador de Nó da Timeline -->
+            <div class="absolute -left-[31px] top-2 w-2.5 h-2.5 rounded-full border bg-[#121b2d] flex items-center justify-center transition-all duration-300"
+                 [ngClass]="{
+                   'border-emerald-500 bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20': e.status === 'concluido' || e.status === 'certificado_solicitado' || e.status === 'exaltacao_recomendada',
+                   'border-amber-500 bg-[#121b2d] text-amber-400 ring-4 ring-amber-500/10': e.status === 'recebido' || e.status === 'revisado' || e.status === 'apto_para_exaltacao',
+                   'border-white/20 text-slate-500': e.status !== 'concluido' && e.status !== 'certificado_solicitado' && e.status !== 'exaltacao_recomendada' && e.status !== 'recebido' && e.status !== 'revisado' && e.status !== 'apto_para_exaltacao'
+                 }">
+            </div>
+            
+            <!-- Card da Etapa -->
+            <div class="rounded-xl border bg-white/[0.01] transition-all hover:bg-white/[0.02]"
+                 [class.border-white/5]="expandedEtapa() !== e.ordem"
+                 [class.border-white/10]="expandedEtapa() === e.ordem">
+              
+              <div class="p-4 flex w-full justify-between items-center cursor-pointer select-none" (click)="toggleExpandirEtapa(e)">
+                <div class="space-y-1">
+                  <span class="flex items-center gap-2">
+                    <b class="text-xs text-white uppercase tracking-wider font-cinzel">{{e.ordem}}. {{e.titulo}}</b>
+                    @if (e.is_oral) {
+                      <span class="text-[8px] bg-slate-500/10 border border-slate-500/20 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase">Oral</span>
+                    }
+                  </span>
+                  @if (e.observacao_vigilante) {
+                    <p class="text-[10px] text-slate-400 line-clamp-1 leading-normal">{{e.observacao_vigilante}}</p>
+                  } @else {
+                    <p class="text-[10px] text-slate-500 italic leading-normal font-bold">Nenhum feedback do Vigilante ainda.</p>
+                  }
+                </div>
+                
+                <div class="flex items-center gap-3 shrink-0">
+                  <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border"
+                        [ngClass]="{
+                          'bg-slate-500/5 border-slate-500/20 text-slate-400': e.status === 'nao_iniciado',
+                          'bg-blue-500/5 border-blue-500/20 text-blue-400': e.status === 'disponibilizado' || e.status === 'aguardando_entrega',
+                          'bg-amber-500/5 border-amber-500/20 text-amber-400': e.status === 'recebido' || e.status === 'revisado' || e.status === 'apto_para_exaltacao',
+                          'bg-emerald-500/5 border-emerald-500/20 text-emerald-400': e.status === 'concluido' || e.status === 'certificado_solicitado' || e.status === 'exaltacao_recomendada'
+                        }">
+                    {{ e.status === 'nao_iniciado' ? 'Bloqueada' : 
+                       e.status === 'disponibilizado' ? 'Liberada' :
+                       e.status === 'aguardando_entrega' ? 'Pendente de Trabalho' :
+                       e.status === 'recebido' ? 'Em Avaliação' :
+                       e.status === 'revisado' ? 'Recomendações Pendentes' :
+                       e.status === 'concluido' ? 'Concluída' :
+                       e.status === 'apto_para_exaltacao' ? 'Apto Exaltação' :
+                       e.status === 'exaltacao_recomendada' ? 'Recomendada' : e.status }}
+                  </span>
+                  <span class="text-slate-400 transition-transform duration-200 text-[8px]" [class.rotate-180]="expandedEtapa() === e.ordem">▼</span>
+                </div>
+              </div>
+
+              @if (expandedEtapa() === e.ordem) {
+                <div class="p-4 border-t border-white/5 bg-black/10 rounded-b-xl space-y-4">
+                  <!-- SEÇÃO DE SUBMISSÃO DE TRABALHO -->
+                  @if (e.is_oral) {
+                    <div class="text-[10px] text-slate-400 italic">
+                      ℹ️ Esta etapa formativa é puramente oral ou administrativa e será avaliada/concluída diretamente pelo Vigilante responsável.
+                    </div>
+                  } @else {
+                    <div class="space-y-3">
+                      <div class="flex flex-col gap-1">
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block font-bold">Enviar Trabalho (PDF / Imagem)</span>
+                        <div class="flex flex-col md:flex-row gap-3">
+                          <input type="file" (change)="onFileSelected($event)" accept="application/pdf,image/*" class="flex-1 rounded-xl border border-white/10 bg-[#111a31] p-1.5 text-[10px] text-white file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-semibold file:bg-liturgical-gold/20 file:text-liturgical-gold hover:file:bg-liturgical-gold/30" />
+                          <button (click)="salvarEtapa(e.ordem)" [disabled]="salvandoEtapa()" class="px-4 py-2 bg-liturgical-gold hover:bg-yellow-600 disabled:opacity-50 text-slate-950 text-xs font-bold uppercase tracking-wider rounded-xl transition-all">
+                            {{ salvandoEtapa() ? 'Enviando...' : 'Submeter Trabalho' }}
+                          </button>
+                        </div>
+                      </div>
+
+                      @if (e.arquivo_entrega) {
+                        <div class="flex items-center gap-2 rounded-xl bg-white/[0.02] border border-white/5 p-3 text-[10px] text-slate-300">
+                          <span>Seu trabalho enviado:</span>
+                          <a [href]="apiUrl + e.arquivo_entrega" target="_blank" class="text-liturgical-gold hover:underline font-bold flex items-center gap-1">
+                            📄 Baixar/Visualizar PDF
+                          </a>
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <!-- CHAT DE MENSAGENS DA ETAPA -->
+                  <div class="border-t border-white/5 pt-4 mt-4 space-y-3">
+                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Mensagens e Recados com o Vigilante</span>
+                    
+                    <!-- Balões do Chat -->
+                    <div class="max-h-48 overflow-y-auto space-y-2 p-3 bg-black/25 rounded-xl flex flex-col">
+                      @if ((e.chat || []).length === 0) {
+                        <p class="text-[10px] text-slate-500 text-center py-4">Nenhuma mensagem registrada. Mande um recado ou tire dúvidas com seu Vigilante.</p>
+                      } @else {
+                        @for (msg of e.chat; track msg.id) {
+                          <div class="flex flex-col max-w-[80%] rounded-xl px-3 py-2 text-[10px] mb-1"
+                               [ngClass]="{
+                                 'bg-liturgical-gold/10 border border-liturgical-gold/20 text-slate-200 self-end ml-auto': msg.autor_id === supabaseService.profile()?.id,
+                                 'bg-white/5 border border-white/10 text-slate-300 self-start': msg.autor_id !== supabaseService.profile()?.id
+                               }">
+                            <div class="flex justify-between items-center gap-3 mb-0.5 border-b border-white/5 pb-0.5">
+                              <span class="font-bold text-[9px]"
+                                    [class.text-liturgical-gold]="msg.autor_id === supabaseService.profile()?.id"
+                                    [class.text-slate-400]="msg.autor_id !== supabaseService.profile()?.id">
+                                {{ msg.autor_name }}
+                              </span>
+                              <span class="text-[8px] text-slate-500 font-mono">{{ msg.created_at | date:'dd/MM HH:mm' }}</span>
+                            </div>
+                            <p class="leading-relaxed break-words text-slate-200">{{ msg.mensagem }}</p>
+                          </div>
+                        }
+                      }
+                    </div>
+
+                    <!-- Input do Chat -->
+                    <div class="flex gap-2">
+                      <input type="text" [(ngModel)]="msgTexto" (keyup.enter)="enviarMensagem(e.ordem)" placeholder="Digite sua dúvida ou comentário para o Vigilante..." class="flex-1 bg-[#111a31] border border-white/10 focus:border-liturgical-gold/30 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none" />
+                      <button (click)="enviarMensagem(e.ordem)" [disabled]="enviandoMensagem()" class="px-3 py-1.5 bg-white/10 hover:bg-white/15 disabled:opacity-50 text-slate-300 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all border border-white/5">
+                        {{ enviandoMensagem() ? '...' : 'Enviar' }}
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
     </div>
-  </div>
+  } @else {
+    <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 space-y-4 animate-fade-in">
+      <div class="border-b border-white/5 pb-3">
+        <h2 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest">Sua Trilha de Evolução</h2>
+        <p class="text-[10px] text-slate-400 mt-0.5 font-bold">Requisitos cadastrais e pedagógicos para a sua progressão ritualística</p>
+      </div>
+
+      <!-- Lista de Passos / Checklist -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (etapa of trilhaEtapas(); track etapa.label; let idx = $index) {
+          <div class="bg-black/10 border rounded-xl p-4 flex items-start gap-3 transition-colors"
+               [class.border-emerald-500/20]="etapa.concluido"
+               [class.border-white/5]="!etapa.concluido">
+            <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
+                 [class.bg-emerald-500/10]="etapa.concluido"
+                 [class.text-emerald-400]="etapa.concluido"
+                 [class.bg-white/5]="!etapa.concluido"
+                 [class.text-slate-400]="!etapa.concluido">
+              @if (etapa.concluido) {
+                ✓
+              } @else {
+                {{ idx + 1 }}
+              }
+            </div>
+            <div class="space-y-0.5">
+              <p [class.text-slate-300]="etapa.concluido"
+                 [class.text-slate-400]="!etapa.concluido"
+                 class="text-xs font-bold leading-normal">
+                {{ etapa.label }}
+              </p>
+              <p class="text-[9px]"
+                 [class.text-emerald-500]="etapa.concluido"
+                 [class.text-slate-500]="!etapa.concluido">
+                {{ etapa.concluido ? 'Concluído' : 'Pendente ou Em revisão' }}
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
 
   <!-- AVISOS E MENSAGENS -->
   @if (successMsg(); as msg) {

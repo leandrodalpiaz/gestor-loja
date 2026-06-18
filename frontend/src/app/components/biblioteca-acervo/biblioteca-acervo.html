@@ -92,6 +92,25 @@
     <!-- Tab 1: Acervo -->
     @if (!loading() && tab() === 'acervo') {
       <div class="space-y-6">
+        <!-- Sub Tabs for Acervo category -->
+        <div class="flex flex-wrap gap-2 border-b border-white/5 pb-2">
+          <button (click)="subTab.set('livros')"
+                  [class]="subTab() === 'livros' ? 'border-b-2 border-liturgical-gold text-liturgical-gold bg-white/[0.02]' : 'border-b-2 border-transparent text-slate-400 hover:text-white'"
+                  class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200">
+            📚 Livros
+          </button>
+          <button (click)="subTab.set('pecas')"
+                  [class]="subTab() === 'pecas' ? 'border-b-2 border-liturgical-gold text-liturgical-gold bg-white/[0.02]' : 'border-b-2 border-transparent text-slate-400 hover:text-white'"
+                  class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200">
+            📐 Peças de Arquitetura
+          </button>
+          <button (click)="subTab.set('trabalhos')"
+                  [class]="subTab() === 'trabalhos' ? 'border-b-2 border-liturgical-gold text-liturgical-gold bg-white/[0.02]' : 'border-b-2 border-transparent text-slate-400 hover:text-white'"
+                  class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200">
+            ✍️ Trabalhos de Instrução
+          </button>
+        </div>
+
         <!-- Search Bar with SVG Icon -->
         <div class="relative w-full">
           <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
@@ -109,7 +128,16 @@
           @for (livro of livrosFiltrados; track livro.id) {
             <article (click)="selecionarLivro(livro)" class="group cursor-pointer flex gap-5 rounded-2xl border border-white/5 bg-liturgical-surface/40 p-5 transition-all duration-300 hover:border-liturgical-gold/25 hover:bg-liturgical-surface/70 hover:shadow-lg hover:shadow-black/20">
               <!-- Book Jacket Block -->
-              <div class="h-32 w-24 shrink-0 overflow-hidden rounded-xl bg-black/40 shadow-md transition-transform duration-300 group-hover:scale-105 group-hover:shadow-liturgical-gold/5">
+              <div class="h-32 w-24 shrink-0 overflow-hidden rounded-xl bg-black/40 shadow-md relative transition-transform duration-300 group-hover:scale-105 group-hover:shadow-liturgical-gold/5">
+                @if (livro.bloqueado) {
+                  <div class="absolute inset-0 bg-black/75 backdrop-blur-xs flex flex-col items-center justify-center z-10 text-slate-400 gap-1.5 p-2">
+                    <svg class="w-6 h-6 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <span class="text-[7px] font-bold uppercase tracking-widest text-center text-rose-400">Grau {{ livro.grau_recomendado }}</span>
+                  </div>
+                }
+                
                 @if (livro.capa_url) {
                   <img [src]="livro.capa_url" [alt]="livro.titulo" class="h-full w-full object-cover">
                 } @else {
@@ -147,14 +175,27 @@
                 </div>
 
                 <div class="mt-4 flex items-center justify-between gap-2 border-t border-white/5 pt-3">
-                  <div class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
-                    {{ livro.quantidade_disponivel }} disp.
-                  </div>
-                  <button (click)="solicitar(livro); $event.stopPropagation()" 
-                          [disabled]="!livro.disponivel" 
-                          class="rounded-lg bg-liturgical-gold px-3.5 py-2 text-[9px] font-bold uppercase tracking-widest text-liturgical-bg transition-all duration-300 hover:bg-yellow-500 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-liturgical-gold">
-                    {{ livro.disponivel ? 'Solicitar' : 'Indisponível' }}
-                  </button>
+                  @if (livro.bloqueado) {
+                    <span class="text-[9px] text-rose-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                      🔒 Acesso Restrito
+                    </span>
+                  } @else {
+                    <div class="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                      {{ (livro.tipo === 'Peca de Arquitetura' || livro.tipo === 'Trabalho de Instrucao') ? 'Digital (PDF)' : (livro.quantidade_disponivel + ' disp.') }}
+                    </div>
+                    @if (livro.tipo !== 'Peca de Arquitetura' && livro.tipo !== 'Trabalho de Instrucao') {
+                      <button (click)="solicitar(livro); $event.stopPropagation()" 
+                              [disabled]="!livro.disponivel" 
+                              class="rounded-lg bg-liturgical-gold px-3.5 py-2 text-[9px] font-bold uppercase tracking-widest text-liturgical-bg transition-all duration-300 hover:bg-yellow-500 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-liturgical-gold">
+                        Solicitar
+                      </button>
+                    } @else {
+                      <button (click)="abrirLeitorPdf(livro.arquivo_url, livro.titulo, livro.autor); $event.stopPropagation()" 
+                              class="rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 px-3.5 py-2 text-[9px] font-bold uppercase tracking-widest transition-all duration-300 hover:bg-emerald-500/35 hover:scale-105 active:scale-95">
+                        Ler em Tela
+                      </button>
+                    }
+                  }
                 </div>
               </div>
             </article>
@@ -189,7 +230,7 @@
                   <h4 class="font-cinzel text-sm font-bold text-white truncate">{{ item.titulo }}</h4>
                   <div class="space-y-0.5">
                     <p class="text-[11px] text-slate-400">Empréstimo: <b class="text-slate-300">{{ item.data_emprestimo || '-' }}</b></p>
-                    <p class="text-[11px] text-slate-400">Previsão devolução: <b class="text-slate-300">{{ item.data_devolucao_prevista || '-' }}</b></p>
+                    <p class="text-[11px] text-slate-400">Previsão de devolução: <b class="text-slate-300">{{ item.data_devolucao_prevista || '-' }}</b></p>
                   </div>
                 </div>
                 
@@ -400,7 +441,6 @@
         </div>
       </div>
     }
-
   </div>
 
   <!-- Sliding Side Drawer for Book Details & Reviews -->
@@ -440,8 +480,8 @@
             <!-- Book metadata -->
             <div class="grid grid-cols-2 gap-3 bg-white/[0.02] border border-white/5 rounded-xl p-4 text-[10px] text-slate-300">
               <div>
-                <span class="block text-slate-500 uppercase font-bold tracking-wider">Código</span>
-                <span class="font-mono text-white text-xs mt-0.5 block">{{ livro.codigo_acervo || '-' }}</span>
+                <span class="block text-slate-500 uppercase font-bold tracking-wider">Código / Tipo</span>
+                <span class="text-white text-xs mt-0.5 block truncate">{{ livro.codigo_acervo || '-' }} ({{ formatarTipo(livro.tipo) }})</span>
               </div>
               <div>
                 <span class="block text-slate-500 uppercase font-bold tracking-wider">ISBN</span>
@@ -450,10 +490,30 @@
             </div>
 
             <!-- Reading Recommendation Alert (Color Theory / Affordance) -->
-            <div class="rounded-xl border border-sky-500/10 bg-sky-500/5 p-4 text-[10px] leading-relaxed text-sky-300">
-              <span class="block font-bold mb-0.5 uppercase tracking-wider">Grau Recomendado</span>
-              A classificação é uma recomendação de leitura para formação litúrgica do irmão em seu respectivo grau. <b>Não constitui limitação ou impedimento de empréstimo.</b>
-            </div>
+            @if (livro.tipo === 'Peca de Arquitetura' || livro.tipo === 'Trabalho de Instrucao') {
+              @if (livro.bloqueado) {
+                <div class="rounded-xl border border-rose-500/20 bg-rose-500/5 p-4 text-[10px] leading-relaxed text-rose-300 flex items-start gap-2">
+                  <span class="text-rose-500 text-base">🔒</span>
+                  <div>
+                    <span class="block font-bold mb-0.5 uppercase tracking-wider">Acesso Restrito</span>
+                    O acesso a esta Peça de Arquitetura / Trabalho de Instrução é restrito a obreiros que possuam o Grau de <b>{{ livro.grau_recomendado }}</b> ou superior.
+                  </div>
+                </div>
+              } @else {
+                <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-[10px] leading-relaxed text-emerald-300 flex items-start gap-2">
+                  <span class="text-emerald-400 text-base">🔓</span>
+                  <div>
+                    <span class="block font-bold mb-0.5 uppercase tracking-wider">Documento Digital</span>
+                    Esta obra é digital (PDF) e está liberada para o seu Grau ({{ livro.grau_recomendado }}). Você pode visualizá-la diretamente no navegador ou realizar o download.
+                  </div>
+                </div>
+              }
+            } @else {
+              <div class="rounded-xl border border-sky-500/10 bg-sky-500/5 p-4 text-[10px] leading-relaxed text-sky-300">
+                <span class="block font-bold mb-0.5 uppercase tracking-wider">Grau Recomendado</span>
+                A classificação é uma recomendação de leitura para formação litúrgica do irmão em seu respectivo grau. <b>Não constitui limitação ou impedimento de empréstimo.</b>
+              </div>
+            }
 
             <!-- Note of formation/curator note -->
             @if (livro.nota_instrucao) {
@@ -467,7 +527,7 @@
             <div class="space-y-1.5">
               <h4 class="text-[10px] font-bold text-white uppercase tracking-widest">Resumo Editorial</h4>
               <p class="text-slate-300 text-xs leading-relaxed whitespace-pre-wrap bg-white/[0.01] border border-white/5 rounded-xl p-4">
-                {{ livro.resumo || 'Nenhum resumo ou sinopse cadastrados para esta obra.' }}
+                {{ livro.resumo || 'Nenhuma sinopse ou resumo cadastrado para esta obra.' }}
               </p>
             </div>
 
@@ -529,11 +589,35 @@
 
       <!-- Bottom Actions (Fixed at bottom) -->
       <div class="border-t border-white/5 pt-4 mt-6 flex flex-col gap-2">
-        <button (click)="solicitar(livro); $event.stopPropagation()" 
-                [disabled]="!livro.pode_solicitar && !livro.disponivel" 
-                class="w-full rounded-xl bg-liturgical-gold py-3 text-xs font-bold uppercase tracking-widest text-liturgical-bg transition-all duration-300 hover:bg-yellow-500 disabled:opacity-40">
-          {{ (livro.pode_solicitar || livro.disponivel) ? 'Solicitar Empréstimo' : 'Indisponível para Empréstimo' }}
-        </button>
+        @if (livro.bloqueado) {
+          <div class="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-400 font-semibold flex items-center gap-2 justify-center">
+            🔒 Acesso Bloqueado ao Grau {{ livro.grau_recomendado }}
+          </div>
+        } @else {
+          @if (livro.tipo === 'Peca de Arquitetura' || livro.tipo === 'Trabalho de Instrucao') {
+            <button (click)="abrirLeitorPdf(livro.arquivo_url, livro.titulo, livro.autor); $event.stopPropagation()"
+                    class="w-full rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 py-3 text-xs font-bold uppercase tracking-widest transition-all duration-300 hover:bg-emerald-500/30 flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              Ler em Tela (Visualizador)
+            </button>
+            <button (click)="baixarPdf(livro.arquivo_url); $event.stopPropagation()"
+                    class="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-300 hover:bg-white/10 flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Baixar Arquivo PDF
+            </button>
+          } @else {
+            <button (click)="solicitar(livro); $event.stopPropagation()" 
+                    [disabled]="!livro.pode_solicitar && !livro.disponivel" 
+                    class="w-full rounded-xl bg-liturgical-gold py-3 text-xs font-bold uppercase tracking-widest text-liturgical-bg transition-all duration-300 hover:bg-yellow-500 disabled:opacity-40">
+              {{ (livro.pode_solicitar || livro.disponivel) ? 'Solicitar Empréstimo' : 'Indisponível para Empréstimo' }}
+            </button>
+          }
+        }
         
         @if (pode('biblioteca.classificar')) {
           <button (click)="prepararClassificacao(livro); abrirTab('classificacao'); $event.stopPropagation()" 
@@ -543,5 +627,40 @@
         }
       </div>
     </aside>
+  }
+
+  <!-- Cozy Fullscreen PDF Reader Overlay (Premium UX) -->
+  @if (pdfLeituraUrl(); as pdfUrl) {
+    <div [@fadeInOut] class="fixed inset-0 z-[100] bg-slate-950/98 flex flex-col backdrop-blur-md">
+      <!-- Top control bar -->
+      <header class="flex items-center justify-between border-b border-white/10 bg-slate-900/60 px-6 py-4 backdrop-blur-md">
+        <div class="min-w-0">
+          <h2 class="font-cinzel text-sm font-bold text-white uppercase tracking-wider truncate leading-tight">{{ pdfLeituraTitulo() }}</h2>
+          <p class="text-[10px] text-slate-400 font-medium truncate mt-0.5">{{ pdfLeituraAutor() }}</p>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <button (click)="baixarPdf(pdfRawUrl()!)" class="flex items-center gap-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/35 transition duration-200">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Baixar PDF
+          </button>
+          
+          <button (click)="fecharLeitorPdf()" class="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-400 hover:text-white hover:bg-white/10 transition duration-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </header>
+      
+      <!-- Main Reader Area -->
+      <main class="flex-1 w-full max-w-5xl mx-auto p-4 md:p-8 flex justify-center items-center">
+        <div class="w-full h-full bg-slate-900/40 rounded-2xl border border-white/5 overflow-hidden shadow-2xl relative">
+          <iframe [src]="pdfUrl" class="w-full h-full border-0 rounded-2xl"></iframe>
+        </div>
+      </main>
+    </div>
   }
 </div>

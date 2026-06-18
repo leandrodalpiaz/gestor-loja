@@ -14,12 +14,17 @@ class TrilhaAprendiz
     private const ETAPAS = [
         1 => 'Entrega das impressões de iniciação',
         2 => 'Passar o complemento à iniciação',
-        3 => 'Passar e receber o trabalho da 1ª instrução',
-        4 => 'Passar e receber o trabalho da 2ª instrução',
-        5 => 'Passar e receber o trabalho da 3ª instrução',
-        6 => 'Passar e receber o trabalho da 4ª instrução',
-        7 => 'Passar e receber o trabalho da 5ª instrução',
-        8 => 'Solicitar o certificado de conclusão da docência maçônica',
+        3 => 'Passar a 1ª instrução',
+        4 => 'Receber o trabalho da 1ª instrução',
+        5 => 'Passar a 2ª instrução',
+        6 => 'Receber o trabalho da 2ª instrução',
+        7 => 'Passar a 3ª instrução',
+        8 => 'Receber o trabalho da 3ª instrução',
+        9 => 'Passar a 4ª instrução',
+        10 => 'Receber o trabalho da 4ª instrução',
+        11 => 'Passar a 5ª instrução',
+        12 => 'Receber o trabalho da 5ª instrução',
+        13 => 'Solicitar o certificado de conclusão da docência maçônica',
     ];
 
     public function __construct()
@@ -30,6 +35,11 @@ class TrilhaAprendiz
     public static function etapas(): array
     {
         return self::ETAPAS;
+    }
+
+    public static function isEtapaOral(int $etapaOrdem): bool
+    {
+        return in_array($etapaOrdem, [2, 3, 5, 7, 9, 11, 13], true);
     }
 
     public function garantirTrilhaBaseParaAprendizes(array $aprendizIds): void
@@ -237,7 +247,9 @@ class TrilhaAprendiz
         int $etapaOrdem,
         string $status,
         ?string $observacao = null,
-        ?string $revisadoPor = null
+        ?string $revisadoPor = null,
+        ?string $arquivoEntrega = null,
+        bool $publicarBiblioteca = false
     ): bool {
         if (!$this->trilhaDisponivel()) {
             return false;
@@ -247,7 +259,7 @@ class TrilhaAprendiz
         $status = trim($status);
         $revisadoPor = trim((string) $revisadoPor) ?: null;
 
-        if ($aprendizId === '' || $etapaOrdem < 1 || $etapaOrdem > 8) {
+        if ($aprendizId === '' || $etapaOrdem < 1 || $etapaOrdem > 13) {
             return false;
         }
 
@@ -277,6 +289,11 @@ class TrilhaAprendiz
             'observacao' => $observacao !== null && trim($observacao) !== '' ? trim($observacao) : null,
         ];
 
+        if ($arquivoEntrega !== null) {
+            $campos[] = 'arquivo_entrega = :arquivo_entrega';
+            $params['arquivo_entrega'] = $arquivoEntrega !== '' ? trim($arquivoEntrega) : null;
+        }
+
         if (in_array($status, ['disponibilizado', 'aguardando_entrega'], true)) {
             $campos[] = 'data_disponibilizacao = COALESCE(data_disponibilizacao, NOW())';
         }
@@ -297,7 +314,44 @@ class TrilhaAprendiz
         ";
 
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute($params);
+        $sucesso = $stmt->execute($params);
+
+        if ($sucesso && $status === 'concluido' && $publicarBiblioteca) {
+            $stmtObreiro = $this->db->prepare("SELECT nome, loja_id FROM obreiros WHERE id = :id LIMIT 1");
+            $stmtObreiro->execute(['id' => $aprendizId]);
+            $obreiro = $stmtObreiro->fetch(PDO::FETCH_ASSOC);
+            $nomeObreiro = $obreiro ? $obreiro['nome'] : 'Obreiro';
+            $lojaId = $obreiro ? (int) $obreiro['loja_id'] : null;
+
+            $stmtEtapa = $this->db->prepare("SELECT titulo_etapa, arquivo_entrega FROM trilha_aprendiz WHERE aprendiz_id = :aprendiz_id AND etapa_ordem = :etapa_ordem LIMIT 1");
+            $stmtEtapa->execute([
+                'aprendiz_id' => $aprendizId,
+                'etapa_ordem' => $etapaOrdem
+            ]);
+            $etapaDb = $stmtEtapa->fetch(PDO::FETCH_ASSOC);
+            $tituloEtapa = $etapaDb ? $etapaDb['titulo_etapa'] : "Etapa {$etapaOrdem}";
+            $arquivoFinal = $arquivoEntrega ?? ($etapaDb ? $etapaDb['arquivo_entrega'] : null);
+
+            if ($arquivoFinal !== null && trim($arquivoFinal) !== '') {
+                $notaInstrucao = "trilha_aprendiz:{$aprendizId}:{$etapaOrdem}";
+                $acervoModel = new \App\Models\Acervo();
+                if (!$acervoModel->existePorNotaInstrucao($notaInstrucao)) {
+                    $acervoModel->adicionar([
+                        'titulo' => "Trabalho: " . $tituloEtapa,
+                        'autor' => $nomeObreiro,
+                        'resumo' => "Trabalho de instrução do Grau de Aprendiz - " . $tituloEtapa,
+                        'tipo' => 'Trabalho de Instrucao',
+                        'grau_restricao' => 1,
+                        'grau_recomendado' => 'Aprendiz',
+                        'arquivo_url' => $arquivoFinal,
+                        'nota_instrucao' => $notaInstrucao,
+                        'loja_id' => $lojaId,
+                    ]);
+                }
+            }
+        }
+
+        return $sucesso;
     }
 
     public function trilhaDisponivel(): bool

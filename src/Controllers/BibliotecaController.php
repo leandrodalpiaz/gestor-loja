@@ -298,7 +298,7 @@ class BibliotecaController
         }
         fclose($handle);
 
-        $_SESSION['mensagem_sucesso'] = sprintf('Importacao concluida: %d livro(s) importado(s), %d linha(s) ignorada(s).', $importados, $ignorados);
+        $_SESSION['mensagem_sucesso'] = sprintf('Importação concluída: %d livro(s) importado(s), %d linha(s) ignorada(s).', $importados, $ignorados);
         header('Location: /biblioteca');
         exit;
     }
@@ -516,14 +516,63 @@ class BibliotecaController
         }
 
         $itens = $this->acervoModel->listarTodos($lojasIds);
+
+        // Obter grau do obreiro logado para filtragem
+        $isSystemAdmin = !empty($_SESSION['is_system_admin']) || !empty($_SESSION['force_system_admin']) || $obreiroId === '0' || $obreiroId === '';
+        $grauLeitor = 1; // Padrão
+        if ($obreiroId && !$isSystemAdmin) {
+            $obreiro = (new Obreiro())->findById($obreiroId);
+            $grauStr = strtolower((string) ($obreiro ? ($obreiro['grau'] ?? '') : ''));
+            if (str_contains($grauStr, 'mestre')) {
+                $grauLeitor = 3;
+            } elseif (str_contains($grauStr, 'companheiro')) {
+                $grauLeitor = 2;
+            } else {
+                $grauLeitor = 1;
+            }
+        } elseif ($isSystemAdmin) {
+            $grauLeitor = 3;
+        }
+
+        $itensFiltrados = [];
+        foreach ($itens as $item) {
+            $tipo = (string) ($item['tipo'] ?? '');
+            $grauRestricao = max(1, (int) ($item['grau_restricao'] ?? 1));
+            $isBook = !in_array($tipo, ['Peca de Arquitetura', 'Trabalho de Instrucao'], true);
+            
+            if ($isBook) {
+                $item['bloqueado'] = false;
+                $itensFiltrados[] = $item;
+            } else {
+                if ($grauLeitor >= $grauRestricao) {
+                    $item['bloqueado'] = false;
+                    $itensFiltrados[] = $item;
+                } else {
+                    $item['bloqueado'] = true;
+                    $item['arquivo_url'] = null;
+                    $itensFiltrados[] = $item;
+                }
+            }
+        }
+        $itens = $itensFiltrados;
+
         $itemFoco = null;
         if ($acervoId !== null && $acervoId > 0) {
             $itemFoco = $this->acervoModel->buscarDetalhes($acervoId, $obreiroId, $scope === 'rede' ? $lojaId : null);
         }
-        if (!$itemFoco && $itens !== []) {
-            $primeiroId = (int) ($itens[0]['id'] ?? 0);
-            if ($primeiroId > 0) {
-                $itemFoco = $this->acervoModel->buscarDetalhes($primeiroId, $obreiroId, $scope === 'rede' ? (int) ($itens[0]['loja_id'] ?? 0) : null);
+
+        if ($itemFoco) {
+            $tipoFoco = (string) ($itemFoco['tipo'] ?? '');
+            $grauRestricaoFoco = max(1, (int) ($itemFoco['grau_restricao'] ?? 1));
+            $isBookFoco = !in_array($tipoFoco, ['Peca de Arquitetura', 'Trabalho de Instrucao'], true);
+            
+            if (!$isBookFoco && $grauLeitor < $grauRestricaoFoco) {
+                $itemFoco['bloqueado'] = true;
+                $itemFoco['arquivo_url'] = null;
+                $itemFoco['resumo'] = 'Acesso restrito ao grau ' . ($grauRestricaoFoco === 3 ? 'Mestre' : 'Companheiro') . '.';
+                $itemFoco['pode_solicitar'] = false;
+            } else {
+                $itemFoco['bloqueado'] = false;
             }
         }
 
@@ -567,6 +616,9 @@ class BibliotecaController
                     'total_comentarios' => (int) ($item['total_comentarios'] ?? 0),
                     'total_gostei_sim' => (int) ($item['total_gostei_sim'] ?? 0),
                     'total_gostei_nao' => (int) ($item['total_gostei_nao'] ?? 0),
+                    'tipo' => (string) ($item['tipo'] ?? ''),
+                    'arquivo_url' => !empty($item['bloqueado']) ? null : (string) ($item['arquivo_url'] ?? ''),
+                    'bloqueado' => !empty($item['bloqueado']),
                 ];
             }, $itens),
             'item_foco' => $itemFoco ? [
@@ -587,7 +639,10 @@ class BibliotecaController
                 'total_comentarios' => (int) ($itemFoco['total_comentarios'] ?? 0),
                 'total_gostei_sim' => (int) ($itemFoco['total_gostei_sim'] ?? 0),
                 'total_gostei_nao' => (int) ($itemFoco['total_gostei_nao'] ?? 0),
-                'pode_solicitar' => ((int) ($itemFoco['quantidade_disponivel'] ?? 0)) > 0,
+                'pode_solicitar' => empty($itemFoco['bloqueado']) && ((int) ($itemFoco['quantidade_disponivel'] ?? 0)) > 0,
+                'tipo' => (string) ($itemFoco['tipo'] ?? ''),
+                'arquivo_url' => !empty($itemFoco['bloqueado']) ? null : (string) ($itemFoco['arquivo_url'] ?? ''),
+                'bloqueado' => !empty($itemFoco['bloqueado']),
             ] : null,
             'comentarios' => array_map(static function (array $comentario): array {
                 return [

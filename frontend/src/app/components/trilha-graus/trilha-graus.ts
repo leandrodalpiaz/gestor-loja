@@ -42,6 +42,15 @@ export class TrilhaGraus implements OnInit {
   protected trabalhos = signal<TrabalhoSubmissao[]>([]);
   protected sessoes = signal<SessaoFutura[]>([]);
 
+  // Trilha Formativa Pedagógica (1º e 2º Vigilantes)
+  protected trilhaPedagogica = signal<any>(null);
+  protected expandedEtapa = signal<number | null>(null);
+  protected msgTexto: string = '';
+  protected enviandoMensagem = signal<boolean>(false);
+  protected selectedFile: File | null = null;
+  protected salvandoEtapa = signal<boolean>(false);
+  protected apiUrl = environment.apiUrl;
+
   // Formulário de Rascunho
   protected showForm = signal(false);
   protected formTrabalho = signal({
@@ -126,6 +135,31 @@ export class TrilhaGraus implements OnInit {
         console.error('[Trilha] Erro ao carregar sessões futuras:', err);
       }
     });
+
+    // Busca trilha formativa pedagógica (se Aprendiz ou Companheiro)
+    const profile = this.supabaseService.profile();
+    if (profile) {
+      const grau = (profile.grau || '').toLowerCase();
+      let path = '';
+      if (grau.includes('aprendiz')) {
+        path = '/api/miniapp/aprendizado';
+      } else if (grau.includes('companheiro')) {
+        path = '/api/miniapp/companheirismo';
+      }
+
+      if (path !== '') {
+        this.http.get<any>(`${environment.apiUrl}${path}`, { headers }).subscribe({
+          next: (res) => {
+            if (res && res.ok) {
+              this.trilhaPedagogica.set(res.dados || res);
+            }
+          },
+          error: (err) => {
+            console.error('[Trilha Pedagógica] Erro ao carregar:', err);
+          }
+        });
+      }
+    }
   }
 
   private hasSubmittedWork(): boolean {
@@ -233,5 +267,141 @@ export class TrilhaGraus implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  protected toggleExpandirEtapa(etapa: any): void {
+    if (this.expandedEtapa() === etapa.ordem) {
+      this.expandedEtapa.set(null);
+      this.selectedFile = null;
+    } else {
+      this.expandedEtapa.set(etapa.ordem);
+      this.selectedFile = null;
+    }
+  }
+
+  protected onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+    }
+  }
+
+  protected enviarMensagem(etapaOrdem: number): void {
+    const msg = this.msgTexto.trim();
+    if (!msg) return;
+
+    const profile = this.supabaseService.profile();
+    if (!profile) return;
+
+    const isAprendiz = (profile.grau || '').toLowerCase().includes('aprendiz');
+    const path = isAprendiz 
+      ? '/api/miniapp/primeiro-vigilante/trilha/mensagem' 
+      : '/api/miniapp/segundo-vigilante/trilha/mensagem';
+
+    const body: any = {
+      etapa_ordem: etapaOrdem,
+      mensagem: msg
+    };
+    if (isAprendiz) {
+      body.aprendiz_id = profile.id;
+    } else {
+      body.companheiro_id = profile.id;
+    }
+
+    this.enviandoMensagem.set(true);
+    this.http.post<any>(`${environment.apiUrl}${path}`, body, {
+      headers: this.supabaseService.getAuthHeaders()
+    }).subscribe({
+      next: (res) => {
+        this.enviandoMensagem.set(false);
+        if (res?.ok) {
+          this.msgTexto = '';
+          this.carregarDados();
+        } else {
+          this.errorMsg.set(res?.erro || 'Erro ao enviar mensagem.');
+        }
+      },
+      error: (err) => {
+        this.enviandoMensagem.set(false);
+        this.errorMsg.set(err.error?.erro || 'Erro na conexão com o servidor.');
+      }
+    });
+  }
+
+  protected salvarEtapa(ordem: number): void {
+    const profile = this.supabaseService.profile();
+    if (!profile) return;
+
+    this.salvandoEtapa.set(true);
+    this.errorMsg.set(null);
+    this.successMsg.set(null);
+
+    const isAprendiz = (profile.grau || '').toLowerCase().includes('aprendiz');
+    const path = isAprendiz 
+      ? '/api/miniapp/primeiro-vigilante/trilha/atualizar' 
+      : '/api/miniapp/segundo-vigilante/trilha/atualizar';
+
+    const formData = new FormData();
+    if (isAprendiz) {
+      formData.append('aprendiz_id', profile.id);
+    } else {
+      formData.append('companheiro_id', profile.id);
+    }
+    formData.append('etapa_ordem', String(ordem));
+    formData.append('status', 'recebido'); // Obreiro envia sempre como 'recebido' (Aguardando Vigilante)
+    formData.append('observacao_vigilante', '');
+
+    if (this.selectedFile) {
+      formData.append('trabalho', this.selectedFile);
+    }
+
+    const headers = this.supabaseService.getAuthHeaders();
+
+    this.http.post<any>(`${environment.apiUrl}${path}`, formData, {
+      headers
+    }).subscribe({
+      next: (res) => {
+        this.salvandoEtapa.set(false);
+        if (res?.ok) {
+          this.successMsg.set('Trabalho da instrução enviado com sucesso para análise do Vigilante.');
+          this.expandedEtapa.set(null);
+          this.selectedFile = null;
+          this.carregarDados();
+        } else {
+          this.errorMsg.set(res?.erro || 'Não foi possível enviar o trabalho.');
+        }
+      },
+      error: (err) => {
+        this.salvandoEtapa.set(false);
+        this.errorMsg.set(err.error?.erro || 'Erro ao enviar o trabalho.');
+      }
+    });
+  }
+
+  protected calcularProgressoIntersticio(dataInicioStr: string, mesesNecessarios: number): { percentual: number, concluido: boolean, mesesRestantes: number, textoProgresso: string } {
+    if (!dataInicioStr) {
+      return { percentual: 0, concluido: false, mesesRestantes: mesesNecessarios, textoProgresso: 'Início do Grau não registrado' };
+    }
+    const inicio = new Date(dataInicioStr);
+    if (isNaN(inicio.getTime())) {
+      return { percentual: 0, concluido: false, mesesRestantes: mesesNecessarios, textoProgresso: 'Data inválida' };
+    }
+    const hoje = new Date();
+    
+    let diffMeses = (hoje.getFullYear() - inicio.getFullYear()) * 12 + (hoje.getMonth() - inicio.getMonth());
+    if (hoje.getDate() < inicio.getDate()) {
+      diffMeses--;
+    }
+    if (diffMeses < 0) diffMeses = 0;
+    
+    const percentual = Math.min(100, Math.floor((diffMeses / mesesNecessarios) * 100));
+    const concluido = percentual >= 100;
+    const mesesRestantes = Math.max(0, mesesNecessarios - diffMeses);
+    
+    const textoProgresso = concluido 
+      ? 'Interstício cumprido!' 
+      : `${diffMeses} de ${mesesNecessarios} meses completos (${percentual}%)`;
+
+    return { percentual, concluido, mesesRestantes, textoProgresso };
   }
 }

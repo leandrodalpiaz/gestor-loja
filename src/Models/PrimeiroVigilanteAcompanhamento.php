@@ -142,6 +142,54 @@ class PrimeiroVigilanteAcompanhamento
         ]);
     }
 
+    public function recomendarElevacao(string $aprendizId, ?string $observacao, ?string $autorId = null): bool
+    {
+        if (!$this->garantirEstrutura()) {
+            return false;
+        }
+
+        $aprendizId = trim($aprendizId);
+        if ($aprendizId === '') {
+            return false;
+        }
+
+        $stmt = $this->db->prepare("
+            INSERT INTO primeiro_vigilante_acompanhamentos (
+                aprendiz_id,
+                elevacao_status,
+                elevacao_observacao,
+                elevacao_autorizada_em,
+                elevacao_autorizada_por,
+                updated_by,
+                created_at,
+                updated_at
+            ) VALUES (
+                :aprendiz_id,
+                'recomendada',
+                :elevacao_observacao,
+                NOW(),
+                :elevacao_autorizada_por,
+                :updated_by,
+                NOW(),
+                NOW()
+            )
+            ON CONFLICT (aprendiz_id) DO UPDATE SET
+                elevacao_status = 'recomendada',
+                elevacao_observacao = EXCLUDED.elevacao_observacao,
+                elevacao_autorizada_em = NOW(),
+                elevacao_autorizada_por = EXCLUDED.elevacao_autorizada_por,
+                updated_by = EXCLUDED.updated_by,
+                updated_at = NOW()
+        ");
+
+        return $stmt->execute([
+            'aprendiz_id' => $aprendizId,
+            'elevacao_observacao' => $this->nuloSeVazio($observacao),
+            'elevacao_autorizada_por' => $this->nuloSeVazio($autorId),
+            'updated_by' => $this->nuloSeVazio($autorId),
+        ]);
+    }
+
     public function listarHistoricoFormativo(string $aprendizId): array
     {
         $historico = [];
@@ -190,7 +238,15 @@ class PrimeiroVigilanteAcompanhamento
                     'momento' => (string) $acompanhamento['certificado_solicitado_em'],
                     'tipo' => 'certificado_solicitado',
                     'titulo' => 'Certificado solicitado',
-                    'descricao' => (string) ($acompanhamento['certificado_observacao'] ?? 'Solicitacao formal registrada pelo 1o Vigilante.'),
+                    'descricao' => (string) ($acompanhamento['certificado_observacao'] ?? 'Solicitação formal registrada pelo 1º Vigilante.'),
+                ];
+            }
+            if (!empty($acompanhamento['elevacao_autorizada_em'])) {
+                $historico[] = [
+                    'momento' => (string) $acompanhamento['elevacao_autorizada_em'],
+                    'tipo' => 'elevacao_recomendada',
+                    'titulo' => 'Elevação recomendada',
+                    'descricao' => (string) ($acompanhamento['elevacao_observacao'] ?? 'Obreiro indicado para Elevação pelo 1º Vigilante.'),
                 ];
             }
         }
@@ -220,10 +276,18 @@ class PrimeiroVigilanteAcompanhamento
                     certificado_observacao TEXT NULL,
                     certificado_solicitado_em TIMESTAMP NULL,
                     certificado_solicitado_por VARCHAR(50) NULL,
+                    elevacao_status VARCHAR(30) NOT NULL DEFAULT 'nao_indicada',
+                    elevacao_observacao TEXT NULL,
+                    elevacao_autorizada_em TIMESTAMP NULL,
+                    elevacao_autorizada_por VARCHAR(50) NULL,
                     updated_by VARCHAR(50) NULL,
                     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
                     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-                )
+                );
+                ALTER TABLE primeiro_vigilante_acompanhamentos ADD COLUMN IF NOT EXISTS elevacao_status VARCHAR(30) NOT NULL DEFAULT 'nao_indicada';
+                ALTER TABLE primeiro_vigilante_acompanhamentos ADD COLUMN IF NOT EXISTS elevacao_observacao TEXT NULL;
+                ALTER TABLE primeiro_vigilante_acompanhamentos ADD COLUMN IF NOT EXISTS elevacao_autorizada_em TIMESTAMP NULL;
+                ALTER TABLE primeiro_vigilante_acompanhamentos ADD COLUMN IF NOT EXISTS elevacao_autorizada_por VARCHAR(50) NULL;
             ");
             $this->estruturaDisponivel = true;
         } catch (PDOException) {

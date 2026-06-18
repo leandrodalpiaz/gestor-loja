@@ -41,7 +41,7 @@ export class SecretariaRelatorioAnual implements OnInit {
       next: (res) => {
         this.loading.set(false);
         if (!res?.ok) {
-          this.errorMsg.set(res?.erro || 'Falha ao carregar relatorio.');
+          this.errorMsg.set(res?.erro || 'Falha ao carregar relatório.');
           return;
         }
         this.relatorioset(res.relatorio || null);
@@ -49,7 +49,7 @@ export class SecretariaRelatorioAnual implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        this.errorMsg.set(err.error?.erro || 'Erro ao consultar relatorio.');
+        this.errorMsg.set(err.error?.erro || 'Erro ao consultar relatório.');
       }
     });
   }
