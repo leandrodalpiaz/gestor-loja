@@ -1,89 +1,310 @@
 <div class="space-y-6 animate-fade-in">
-  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-    <div>
-      <span class="block text-[10px] font-bold uppercase tracking-widest text-liturgical-gold">Painel de Oficiais</span>
-      <h1 class="mt-1 font-cinzel text-2xl font-bold tracking-widest text-white md:text-3xl">Mestre de Banquetes</h1>
-      <p class="mt-1 text-xs uppercase tracking-wider text-slate-400">Planejamento, custos, receitas e logística do ágape fraternal</p>
+  <!-- Cabeçalho Principal -->
+  <div class="relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-r from-[#111a31] to-[#16223f] p-6 shadow-xl">
+    <div class="absolute right-0 top-0 h-32 w-32 -translate-y-6 translate-x-6 rounded-full bg-liturgical-gold/5 blur-2xl"></div>
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div class="flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-liturgical-gold/10 border border-liturgical-gold/20 text-liturgical-gold">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25M3 14.25h15v-2.25H3v2.25z" />
+          </svg>
+        </div>
+        <div>
+          <span class="block text-[10px] font-bold uppercase tracking-widest text-liturgical-gold">Painel de Oficiais</span>
+          <h1 class="mt-1 font-cinzel text-xl font-bold tracking-widest text-white md:text-2xl">Mestre de Banquetes</h1>
+          <p class="mt-1 text-xs text-slate-400">Planejamento, custos, receitas e logística do ágape fraternal.</p>
+        </div>
+      </div>
     </div>
   </div>
 
   @if (successMsg(); as msg) {
-    <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-400">{{ msg }}</div>
+    <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-400 transition-all">{{ msg }}</div>
   }
 
   @if (errorMsg(); as msg) {
-    <div class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-400">{{ msg }}</div>
+    <div class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-400 transition-all">{{ msg }}</div>
   }
 
   @if (loading()) {
     <div class="flex flex-col items-center justify-center space-y-4 py-20 text-slate-400">
       <div class="h-8 w-8 animate-spin rounded-full border-4 border-liturgical-gold border-t-transparent"></div>
-      <p class="text-[10px] font-bold uppercase tracking-wider">Carregando painel...</p>
+      <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Sincronizando dados...</p>
     </div>
   } @else {
     @if (dataBanquetes(); as ban) {
-      <div class="space-y-6">
-        <div class="rounded-2xl border border-white/5 bg-white/[0.01] p-6">
-          <label class="mb-2 block text-[9px] font-bold uppercase tracking-widest text-slate-500">Sessão e ágape em foco</label>
-          <select [value]="selectedBanqueteSessaoId() || ''" (change)="selecionarBanqueteSessao($event)" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
-            @for (s of (ban.sessoes || []); track s.id) {
-              <option [value]="s.id">{{ s.titulo || s.tipo_sessao }} · {{ s.data_hora_inicio }} · {{ s.descricao_agape }}</option>
-            }
-          </select>
-        </div>
+      
+      <!-- Foco da Sessão e Ágape (Visível globalmente) -->
+      <div class="rounded-2xl border border-white/5 bg-white/[0.01] p-6">
+        <label class="mb-2 block text-[9px] font-bold uppercase tracking-widest text-slate-500">Sessão e ágape em foco</label>
+        <select [value]="selectedBanqueteSessaoId() || ''" (change)="selecionarBanqueteSessao($event)" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white focus:border-liturgical-gold/40 focus:outline-none">
+          @for (s of (ban.sessoes || []); track s.id) {
+            <option [value]="s.id">{{ s.titulo || s.tipo_sessao }} · {{ s.data_hora_inicio | date:'dd/MM/yyyy' }} · {{ s.descricao_agape || 'Sem descrição' }}</option>
+          }
+        </select>
+      </div>
 
-        <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <div class="rounded-xl border border-white/5 bg-white/[0.01] p-5"><small class="text-slate-500">Confirmados</small><p class="text-3xl font-bold text-white">{{ (ban.confirmados || []).length }}</p></div>
-          <div class="rounded-xl border border-white/5 bg-white/[0.01] p-5"><small class="text-slate-500">Com ágape</small><p class="text-3xl font-bold text-white">{{ (ban.participantes_agape || []).length }}</p></div>
-          <div class="rounded-xl border border-white/5 bg-white/[0.01] p-5"><small class="text-slate-500">Estimativa</small><p class="text-xl font-bold text-emerald-400">{{ ban.sessao_foco?.financeiro_banquete?.valor_estimado | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</p></div>
-          <div class="rounded-xl border border-white/5 bg-white/[0.01] p-5"><small class="text-slate-500">Resultado real</small><p class="text-xl font-bold text-white">{{ ban.sessao_foco?.financeiro_banquete?.resultado_real | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</p></div>
-        </div>
+      <!-- Cards de KPIs Rápidos (Visível globalmente) -->
+      <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div class="rounded-xl border border-white/5 bg-white/[0.01] p-5"><small class="text-[10px] uppercase font-bold tracking-wider text-slate-500">Confirmados</small><p class="text-3xl font-bold text-white mt-1">{{ (ban.confirmados || []).length }}</p></div>
+        <div class="rounded-xl border border-white/5 bg-white/[0.01] p-5"><small class="text-[10px] uppercase font-bold tracking-wider text-slate-500">Com ágape</small><p class="text-3xl font-bold text-white mt-1">{{ (ban.participantes_agape || []).length }}</p></div>
+        <div class="rounded-xl border border-white/5 bg-white/[0.01] p-5"><small class="text-[10px] uppercase font-bold tracking-wider text-slate-500">Estimativa</small><p class="text-2xl font-bold text-emerald-400 mt-1">{{ ban.sessao_foco?.financeiro_banquete?.valor_estimado | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</p></div>
+        <div class="rounded-xl border border-white/5 bg-white/[0.01] p-5"><small class="text-[10px] uppercase font-bold tracking-wider text-slate-500">Resultado real</small><p class="text-2xl font-bold text-white mt-1">{{ ban.sessao_foco?.financeiro_banquete?.resultado_real | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</p></div>
+      </div>
 
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <!-- Barra de Navegação por Abas (Tabs) -->
+      <div class="flex border-b border-white/10 gap-2 overflow-x-auto pb-px scrollbar-thin">
+        <button
+          (click)="setTab('logistica')"
+          [class]="activeTab() === 'logistica' ? 'border-liturgical-gold text-liturgical-gold bg-white/[0.02]' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/[0.01]'"
+          class="border-b-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition outline-none rounded-t-xl flex items-center gap-2 shrink-0">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25M3 14.25h15v-2.25H3v2.25z" />
+          </svg>
+          Logística & Consumo
+        </button>
+        <button
+          (click)="setTab('rateio')"
+          [class]="activeTab() === 'rateio' ? 'border-liturgical-gold text-liturgical-gold bg-white/[0.02]' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/[0.01]'"
+          class="border-b-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition outline-none rounded-t-xl flex items-center gap-2 shrink-0">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-6 15h9m-9-3h9m-9-3h9m-9-3h9" />
+          </svg>
+          Rateio & Pagamento Pix
+        </button>
+      </div>
+
+      <!-- ABA 1: LOGÍSTICA & CONSUMO -->
+      @if (activeTab() === 'logistica') {
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-3 animate-fade-in">
           <form (submit)="salvarOperacaoBanquete(); $event.preventDefault()" class="space-y-3 rounded-2xl border border-white/5 bg-white/[0.01] p-6 xl:col-span-2">
-            <h3 class="mb-2 font-cinzel text-xs font-bold uppercase tracking-widest text-white">Operação do banquete</h3>
+            <h3 class="mb-4 font-cinzel text-xs font-bold uppercase tracking-widest text-white border-b border-white/5 pb-2">Operação do banquete</h3>
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <select [(ngModel)]="banqueteForm.status_operacional" name="status" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white"><option value="planejamento">Planejamento</option><option value="preparacao">Preparação</option><option value="abastecimento">Abastecimento</option><option value="fechado">Fechado</option></select>
-              <input [(ngModel)]="banqueteForm.fornecedor" name="fornecedor" placeholder="Fornecedor" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
-              <input type="number" [(ngModel)]="banqueteForm.previsao_participantes" name="quantidade" placeholder="Previsão de participantes" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
-              <input type="number" step=".01" [(ngModel)]="banqueteForm.valor_unitario_previsto" name="unitario" placeholder="Valor unitário" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
-              <input type="number" step=".01" [(ngModel)]="banqueteForm.custo_previsto" name="custoPrevisto" placeholder="Custo previsto" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
-              <input type="number" step=".01" [(ngModel)]="banqueteForm.valor_arrecadado" name="arrecadado" placeholder="Valor arrecadado" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
-              <input type="number" step=".01" [(ngModel)]="banqueteForm.custo_real" name="custoReal" placeholder="Custo real" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
-              <input [(ngModel)]="banqueteForm.forma_pagamento" name="formaPagamento" placeholder="Forma de pagamento" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
-              <select [(ngModel)]="banqueteForm.fluxo_financeiro" name="fluxoFinanceiro" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white"><option value="rateio_particular">Rateio particular</option><option value="caixa_loja">Caixa da Loja</option><option value="dispensa_ressarcimento">Dispensa de ressarcimento</option></select>
-              <select [(ngModel)]="banqueteForm.financeiro_status" name="financeiroStatus" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white"><option value="planejado">Planejado</option><option value="a_receber">A receber</option><option value="a_pagar">A pagar</option><option value="conciliado">Conciliado</option></select>
-              <input [(ngModel)]="banqueteForm.responsavel_pagamento" name="responsavelPagamento" placeholder="Responsável pelo pagamento" class="rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Status Operacional</label>
+                <select [(ngModel)]="banqueteForm.status_operacional" name="status" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-white focus:outline-none"><option value="planejamento">Planejamento</option><option value="preparacao">Preparação</option><option value="abastecimento">Abastecimento</option><option value="fechado">Fechado</option></select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Fornecedor</label>
+                <input [(ngModel)]="banqueteForm.fornecedor" name="fornecedor" placeholder="Ex: Churrascaria Silva" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Previsão de Participantes</label>
+                <input type="number" [(ngModel)]="banqueteForm.previsao_participantes" name="quantidade" placeholder="Previsão" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Valor Unitário Previsto (R$)</label>
+                <input type="number" step=".01" [(ngModel)]="banqueteForm.valor_unitario_previsto" name="unitario" placeholder="Valor unitário" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Custo Previsto (R$)</label>
+                <input type="number" step=".01" [(ngModel)]="banqueteForm.custo_previsto" name="custoPrevisto" placeholder="Custo previsto" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Valor Arrecadado (R$)</label>
+                <input type="number" step=".01" [(ngModel)]="banqueteForm.valor_arrecadado" name="arrecadado" placeholder="Valor arrecadado" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Custo Real (R$)</label>
+                <input type="number" step=".01" [(ngModel)]="banqueteForm.custo_real" name="custoReal" placeholder="Custo real" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Forma de Pagamento</label>
+                <input [(ngModel)]="banqueteForm.forma_pagamento" name="formaPagamento" placeholder="Ex: Pix, Dinheiro, Cartão" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Fluxo Financeiro</label>
+                <select [(ngModel)]="banqueteForm.fluxo_financeiro" name="fluxoFinanceiro" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-white focus:outline-none"><option value="rateio_particular">Rateio particular</option><option value="caixa_loja">Caixa da Loja</option><option value="dispensa_ressarcimento">Dispensa de ressarcimento</option></select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Status Financeiro</label>
+                <select [(ngModel)]="banqueteForm.financeiro_status" name="financeiroStatus" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-white focus:outline-none"><option value="planejado">Planejado</option><option value="a_receber">A receber</option><option value="a_pagar">A pagar</option><option value="conciliado">Conciliado</option></select>
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Responsável pelo Pagamento</label>
+                <input [(ngModel)]="banqueteForm.responsavel_pagamento" name="responsavelPagamento" placeholder="Nome do irmão ou fornecedor" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-white focus:outline-none">
+              </div>
             </div>
-            <textarea [(ngModel)]="banqueteForm.financeiro_observacoes" name="financeiroObservacoes" placeholder="Observações financeiras" class="min-h-20 w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white focus:outline-none"></textarea>
-            <textarea [(ngModel)]="banqueteForm.observacoes" name="observacoes" placeholder="Observações operacionais" class="min-h-24 w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white focus:outline-none"></textarea>
-            <button type="submit" class="mt-2 rounded-xl bg-liturgical-gold px-4 py-3 text-xs font-bold uppercase text-slate-950">Salvar operação</button>
+            <div class="mt-3">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Observações Financeiras</label>
+              <textarea [(ngModel)]="banqueteForm.financeiro_observacoes" name="financeiroObservacoes" placeholder="Histórico de transações, rateios especiais ou isenções..." class="min-h-20 w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-slate-200 focus:outline-none resize-none"></textarea>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Observações Operacionais / Logística</label>
+              <textarea [(ngModel)]="banqueteForm.observacoes" name="observacoes" placeholder="Informações de cardápio, entrega, insumos, compras de bebidas..." class="min-h-24 w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-slate-200 focus:outline-none resize-none"></textarea>
+            </div>
+            <button type="submit" class="mt-2 rounded-xl bg-gradient-to-r from-amber-500 to-liturgical-gold hover:from-amber-600 hover:to-liturgical-gold/90 px-5 py-3 text-xs font-bold uppercase text-slate-950 transition outline-none shadow-md shadow-amber-500/10">Salvar operação</button>
           </form>
 
           <div class="space-y-6">
             <div class="space-y-3 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
-              <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Participantes do ágape</h3>
-              @for (p of (ban.participantes_agape || []); track p.id || p.nome) {
-                <div class="rounded-xl bg-white/[0.03] p-3">
-                  <b class="text-sm text-white">{{ p.nome }}</b>
-                  <small class="block text-slate-400">CIM {{ p.cim || '-' }}</small>
-                </div>
-              } @empty {
-                <p class="text-xs text-slate-400">Nenhum participante.</p>
-              }
+              <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white border-b border-white/5 pb-2">Confirmados com Ágape</h3>
+              <div class="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
+                @for (p of (ban.participantes_agape || []); track p.id || p.nome) {
+                  <div class="rounded-xl bg-white/[0.02] border border-white/5 p-3 flex justify-between items-center">
+                    <div>
+                      <b class="text-xs text-white block">{{ p.nome }}</b>
+                      <small class="text-[9px] text-slate-500">CIM {{ p.cim || '-' }}</small>
+                    </div>
+                    <span class="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[8px] font-bold uppercase text-emerald-400">Ágape</span>
+                  </div>
+                } @empty {
+                  <p class="text-xs text-slate-400">Nenhum participante confirmado.</p>
+                }
+              </div>
             </div>
 
             <div class="space-y-3 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
-              <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Confirmados sem ágape</h3>
-              @for (p of (ban.confirmados_sem_agape || []); track p.id || p.nome) {
-                <div class="rounded-xl bg-white/[0.03] p-3 text-sm text-white">{{ p.nome }}</div>
-              } @empty {
-                <p class="text-xs text-emerald-400">Nenhuma divergência.</p>
+              <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white border-b border-white/5 pb-2">Confirmados sem Ágape</h3>
+              <div class="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
+                @for (p of (ban.confirmados_sem_agape || []); track p.id || p.nome) {
+                  <div class="rounded-xl bg-white/[0.02] border border-white/5 p-3 text-xs text-white">{{ p.nome }}</div>
+                } @empty {
+                  <p class="text-xs text-emerald-400 flex items-center gap-1">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Nenhuma divergência. Todos vão ao ágape.</span>
+                  </p>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ABA 2: RATEIO & PAGAMENTO PIX -->
+      @if (activeTab() === 'rateio') {
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-3 animate-fade-in">
+          
+          <!-- Coluna de Configuração (Esquerda) -->
+          <div class="space-y-6 xl:col-span-1">
+            <div class="premium-card p-6">
+              <div class="flex items-center gap-3 border-b border-white/5 pb-3 mb-4">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-liturgical-gold/10 border border-liturgical-gold/20 text-liturgical-gold">
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.43l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.991l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.645-.869l.214-1.28z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Dados da Conta</h3>
+                  <p class="text-[10px] text-slate-400">Defina o destinatário e a chave Pix.</p>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Chave Pix</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="pixChave"
+                    (ngModelChange)="onPixChange()"
+                    placeholder="Ex: CPF, CNPJ, Celular, E-mail ou Chave Aleatória"
+                    class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-slate-200 placeholder-slate-500 transition focus:border-liturgical-gold/40 focus:outline-none">
+                </div>
+
+                <div>
+                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Nome do Beneficiário</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="pixBeneficiario"
+                    (ngModelChange)="onPixChange()"
+                    placeholder="Ex: Joao Silva (Apenas letras e espacos)"
+                    class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-slate-200 placeholder-slate-500 transition focus:border-liturgical-gold/40 focus:outline-none">
+                </div>
+
+                <div>
+                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Cidade do Beneficiário</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="pixCidade"
+                    (ngModelChange)="onPixChange()"
+                    placeholder="Ex: Porto Alegre"
+                    class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-xs text-slate-200 placeholder-slate-500 transition focus:border-liturgical-gold/40 focus:outline-none">
+                </div>
+
+                <div>
+                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Valor Individual (R$)</label>
+                  <div class="relative">
+                    <input
+                      type="number"
+                      step="0.01"
+                      [value]="pixValor() !== null ? pixValor() : ''"
+                      (input)="setPixValor($event)"
+                      placeholder="Deixe em branco para valor livre"
+                      class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 pr-8 text-xs text-slate-200 placeholder-slate-500 transition focus:border-liturgical-gold/40 focus:outline-none">
+                    @if (pixValor() !== null) {
+                      <button
+                        (click)="pixValor.set(null); gerarPix()"
+                        class="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition outline-none">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Caixa de Exibição do QR Code (Direita - 2/3) -->
+          <div class="space-y-6 xl:col-span-2">
+            <div class="premium-card p-6 flex flex-col items-center">
+              <div class="w-full border-b border-white/5 pb-3 mb-6 flex justify-between items-center">
+                <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">QR Code & Copia e Cola</h3>
+                <span class="rounded-full bg-liturgical-gold/10 border border-liturgical-gold/20 px-2.5 py-1 text-[10px] font-bold text-liturgical-gold">
+                  {{ pixValor() !== null ? (pixValor() | currency:'BRL':'symbol':'1.2-2':'pt-BR') : 'Valor Livre' }}
+                </span>
+              </div>
+
+              @if (pixCopiaCola()) {
+                <div class="flex flex-col items-center gap-6 w-full max-w-md">
+                  
+                  <!-- QR Code Glow Box -->
+                  <div class="relative p-4 rounded-2xl bg-white/5 border border-white/10 shadow-2xl flex items-center justify-center overflow-hidden group">
+                    <div class="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-liturgical-gold rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
+                    <div class="relative bg-[#111a31] p-3 rounded-xl border border-white/10">
+                      <img [src]="pixQrCodeUrl()" alt="Pix QR Code" class="h-56 w-56 object-contain block transition-transform group-hover:scale-105 duration-300">
+                    </div>
+                  </div>
+
+                  <!-- Copia e Cola Field -->
+                  <div class="w-full space-y-2">
+                    <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Pix Copia e Cola</label>
+                    <div class="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readonly
+                        [value]="pixCopiaCola()"
+                        class="w-full rounded-xl border border-white/5 bg-[#111a31] p-3 text-[10px] font-mono text-slate-300 outline-none select-all overflow-hidden text-ellipsis whitespace-nowrap">
+                      <button
+                        (click)="copiarPix()"
+                        class="h-10 px-4 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-liturgical-gold hover:from-amber-600 hover:to-liturgical-gold/90 text-slate-950 text-xs font-bold uppercase tracking-wider transition shrink-0 shadow-md shadow-amber-500/10 outline-none">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                        <span>Copiar</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="rounded-xl border border-white/5 bg-white/[0.01] p-4 text-xs text-slate-400 text-center leading-relaxed">
+                    Apresente este QR Code em tela para que todos os irmãos façam o escaneamento simultâneo, ou envie o código Copia e Cola para pagamento à distância.
+                  </div>
+
+                </div>
+              } @else {
+                <div class="rounded-xl border border-dashed border-white/10 bg-white/[0.01] py-16 text-center text-xs text-slate-500 w-full">
+                  Preencha a Chave Pix na lateral esquerda para gerar o QR Code.
+                </div>
               }
             </div>
           </div>
         </div>
-      </div>
+      }
+
     }
   }
 </div>

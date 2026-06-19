@@ -74,7 +74,7 @@ class PresencaSessao
                 ps.presente,
                 ps.observacao,
                 ps.registrado_em,
-                COALESCE(o.nome_historico, o.nome) AS nome,
+                COALESCE(NULLIF(TRIM(o.nome_historico), ''), o.nome) AS nome,
                 o.cim
             FROM presencas_sessao ps
             JOIN sessoes s ON s.id = ps.sessao_id
@@ -82,6 +82,8 @@ class PresencaSessao
             WHERE ps.sessao_id = :sessao_id
               AND s.loja_id = :loja_id
               AND ps.presente = TRUE
+              AND o.is_system_admin = FALSE
+              AND o.excluir_em_listas = FALSE
             ORDER BY nome ASC
         ");
         $stmt->execute([
@@ -97,7 +99,7 @@ class PresencaSessao
         $stmt = $this->db->prepare("
             SELECT
                 o.id,
-                COALESCE(o.nome_historico, o.nome) AS nome,
+                COALESCE(NULLIF(TRIM(o.nome_historico), ''), o.nome) AS nome,
                 o.cim,
                 o.grau,
                 COALESCE(ps.presente, FALSE) AS presente,
@@ -109,6 +111,8 @@ class PresencaSessao
             JOIN sessoes s
               ON s.id = :sessao_id
             WHERE o.ativo = TRUE
+              AND o.is_system_admin = FALSE
+              AND o.excluir_em_listas = FALSE
               AND o.loja_id = s.loja_id
               AND s.loja_id = :loja_id
             ORDER BY nome ASC
@@ -131,7 +135,7 @@ class PresencaSessao
                 ps.presente,
                 ps.presente_agape,
                 ps.observacao,
-                COALESCE(o.nome_historico, o.nome) AS nome,
+                COALESCE(NULLIF(TRIM(o.nome_historico), ''), o.nome) AS nome,
                 o.cim,
                 o.grau
             FROM presencas_sessao ps
@@ -140,6 +144,8 @@ class PresencaSessao
             WHERE ps.sessao_id = :sessao_id
               AND s.loja_id = :loja_id
               AND ps.presente = TRUE
+              AND o.is_system_admin = FALSE
+              AND o.excluir_em_listas = FALSE
             ORDER BY nome ASC
         ");
         $stmt->execute([

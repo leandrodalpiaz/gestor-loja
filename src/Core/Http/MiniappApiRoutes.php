@@ -52,7 +52,7 @@ class MiniappApiRoutes
             $jwtObreiro = $identity['obreiro'];
             $_SESSION['usuario_logado'] = $jwtObreiro;
             $_SESSION['usuario_id'] = $jwtObreiro['id'] ?? null;
-            $_SESSION['usuario_nome'] = $jwtObreiro['nome_historico'] ?? $jwtObreiro['nome'] ?? null;
+            $_SESSION['usuario_nome'] = trim((string) ($jwtObreiro['nome_historico'] ?? '')) !== '' ? $jwtObreiro['nome_historico'] : ($jwtObreiro['nome'] ?? null);
             $_SESSION['is_system_admin'] = !empty($jwtObreiro['is_system_admin']);
 
             $rolesSource = $jwtObreiro['cargos'] ?? null;
@@ -233,7 +233,7 @@ class MiniappApiRoutes
                     return array_map(static function (array $item): array {
                         return [
                             'id' => (string) ($item['id'] ?? ''),
-                            'nome' => (string) ($item['nome_historico'] ?? $item['nome'] ?? ''),
+                            'nome' => trim((string) ($item['nome_historico'] ?? '')) !== '' ? (string) $item['nome_historico'] : (string) ($item['nome'] ?? ''),
                             'cim' => (string) ($item['cim'] ?? ''),
                         ];
                     }, $ativos);
@@ -857,6 +857,24 @@ class MiniappApiRoutes
             $sessaoId = (int) ($_GET['sessao_id'] ?? 0);
             $controller = new \App\Controllers\OradorController();
             JsonResponse::send(['ok' => true, 'dados' => $controller->montarPayloadMiniapp($sessaoId > 0 ? $sessaoId : null)]);
+        }
+
+        if ($requestUri === '/api/miniapp/orador/reconhecimentos' && $method === 'GET') {
+            $controller = new \App\Controllers\OradorController();
+            JsonResponse::send($controller->listarReconhecimentos());
+        }
+
+        if ($requestUri === '/api/miniapp/orador/reconhecimentos' && $method === 'POST') {
+            $controller = new \App\Controllers\OradorController();
+            $oradorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
+            JsonResponse::send($controller->salvarReconhecimento($body, $oradorId));
+        }
+
+        if ($requestUri === '/api/miniapp/orador/reconhecimentos' && $method === 'DELETE') {
+            $controller = new \App\Controllers\OradorController();
+            $id = trim((string) ($_GET['id'] ?? ''));
+            $oradorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
+            JsonResponse::send($controller->deletarReconhecimento($id, $oradorId));
         }
 
         if ($requestUri === '/api/miniapp/veneravel/dashboard' && $method === 'GET') {

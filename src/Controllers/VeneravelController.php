@@ -96,7 +96,7 @@ class VeneravelController
         ));
         $obreirosPendentesCriticos = array_map(function (array $item): array {
             return [
-                'nome' => (string) ($item['nome_historico'] ?? $item['nome'] ?? 'Obreiro'),
+                'nome' => trim((string) ($item['nome_historico'] ?? '')) !== '' ? (string) $item['nome_historico'] : (string) ($item['nome'] ?? 'Obreiro'),
                 'cim' => (string) ($item['cim'] ?? ''),
                 'alertas' => array_values($item['alertas_cadastro'] ?? []),
             ];
@@ -498,7 +498,8 @@ class VeneravelController
             'resumo_cadastros' => $resumoCadastros,
             'obreiros_pendentes_criticos' => array_map(static function (array $item): array {
                 return [
-                    'nome' => (string) ($item['nome_historico'] ?? $item['nome'] ?? 'Obreiro'),
+                    'id' => (string) ($item['id'] ?? ''),
+                    'nome' => trim((string) ($item['nome_historico'] ?? '')) !== '' ? (string) $item['nome_historico'] : (string) ($item['nome'] ?? 'Obreiro'),
                     'cim' => (string) ($item['cim'] ?? ''),
                     'alertas' => array_values($item['alertas_cadastro'] ?? []),
                 ];
@@ -580,7 +581,7 @@ class VeneravelController
             if (!empty($item['financeiro_pendente']) || !empty($item['pendencias_financeiras'])) {
                 $atrasos[] = [
                     'id' => (string) ($item['id'] ?? ''),
-                    'nome' => (string) ($item['nome_historico'] ?? $item['nome'] ?? 'Obreiro'),
+                    'nome' => trim((string) ($item['nome_historico'] ?? '')) !== '' ? (string) $item['nome_historico'] : (string) ($item['nome'] ?? 'Obreiro'),
                 ];
             }
         }

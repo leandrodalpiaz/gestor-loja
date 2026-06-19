@@ -1,7 +1,11 @@
 {
-  "name": "frontend",
-  "short_name": "frontend",
+  "name": "Átrio - Gestor de Loja",
+  "short_name": "Átrio",
+  "description": "Sistema de Gestão Interna de Loja Maçônica",
   "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#050B14",
+  "background_color": "#050B14",
   "scope": "./",
   "start_url": "./",
   "icons": [

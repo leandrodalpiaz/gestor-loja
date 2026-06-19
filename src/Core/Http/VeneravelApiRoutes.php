@@ -27,6 +27,7 @@ final class VeneravelApiRoutes
 
         header('Content-Type: application/json; charset=utf-8');
         $requireVeneravelApiAccess();
+        $session = $_SESSION;
         $autorId = trim((string) ($session['usuario_id'] ?? '')) ?: null;
 
         // --- GET /api/veneravel/dashboard ---
@@ -107,7 +108,7 @@ final class VeneravelApiRoutes
             ));
             $obreirosPendentesCriticos = array_map(function (array $item): array {
                 return [
-                    'nome' => (string) ($item['nome_historico'] ?? $item['nome'] ?? 'Obreiro'),
+                    'nome' => trim((string) ($item['nome_historico'] ?? '')) !== '' ? (string) $item['nome_historico'] : (string) ($item['nome'] ?? 'Obreiro'),
                     'cim' => (string) ($item['cim'] ?? ''),
                     'alertas' => array_values($item['alertas_cadastro'] ?? []),
                 ];

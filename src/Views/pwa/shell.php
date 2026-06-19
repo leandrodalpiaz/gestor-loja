@@ -76,7 +76,7 @@ $pwaNavTabs = [
     <meta name="apple-mobile-web-app-title" content="Gestor Loja">
     <title><?= htmlspecialchars($pwaPageTitle) ?> — Gestor Loja</title>
     <link rel="manifest" href="/manifest.php">
-    <link rel="stylesheet" href="/assets/css/tailwind.generated.css">
+    <link rel="stylesheet" href="/assets/css/tailwind.generated.css?v=<?= @filemtime(__DIR__ . '/../../../public/assets/css/tailwind.generated.css') ?: time() ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -546,6 +546,94 @@ $pwaNavTabs = [
         .pwa-list-item:last-child { border-bottom: none; }
         .pwa-list-item:active {
             background: var(--pwa-surface-2);
+        }
+
+        /* ─── Lightbox Modal for Efemérides (PWA) ─── */
+        .efemeride-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .efemeride-modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .efemeride-modal-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+        }
+        .efemeride-modal-image-wrapper {
+            position: relative;
+            max-width: 90vw;
+            max-height: 80vh;
+            aspect-ratio: 9 / 16;
+            border-radius: var(--pwa-radius);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .efemeride-modal-overlay.active .efemeride-modal-image-wrapper {
+            transform: scale(1);
+        }
+        .efemeride-modal-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            border-radius: var(--pwa-radius);
+        }
+        .efemeride-modal-close-btn {
+            position: absolute;
+            top: env(safe-area-inset-top, 1rem);
+            right: 1.25rem;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10000;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .efemeride-modal-close-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.92);
+        }
+        .pwa-list-item-celebration {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            padding: 0.75rem 1rem;
+            background: var(--pwa-surface);
+            border: 1px solid var(--pwa-border);
+            border-radius: var(--pwa-radius-sm);
+            text-decoration: none;
+            transition: background 0.2s, transform 0.1s;
+            cursor: pointer;
+        }
+        .pwa-list-item-celebration:active {
+            background: var(--pwa-surface-2);
+            transform: scale(0.98);
         }
     </style>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>

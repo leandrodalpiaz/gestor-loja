@@ -1,10 +1,22 @@
-<div class="space-y-6">
+<div class="space-y-6 animate-fade-in">
   
   <!-- CABEÇALHO DA TELA -->
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-      <h1 class="font-cinzel text-2xl md:text-3xl font-bold tracking-widest text-white">Configurações do Sistema</h1>
-      <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Sistema - Parametros de Configuração da Loja e Tenant</p>
+  <div class="relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-r from-[#111a31] to-[#16223f] p-6 shadow-xl">
+    <div class="absolute right-0 top-0 h-32 w-32 -translate-y-6 translate-x-6 rounded-full bg-liturgical-gold/5 blur-2xl"></div>
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div class="flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-liturgical-gold/10 border border-liturgical-gold/20 text-liturgical-gold">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.43l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.991l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.645-.869l.214-1.28z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <div>
+          <span class="block text-[10px] font-bold uppercase tracking-widest text-liturgical-gold">Painel de Configuração</span>
+          <h1 class="mt-1 font-cinzel text-xl font-bold tracking-widest text-white md:text-2xl">Gerenciamento do Sistema</h1>
+          <p class="mt-1 text-xs text-slate-400">Parametrização institucional, diagnóstico de infraestrutura e status de implantação.</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -20,115 +32,365 @@
     </div>
   }
 
+  <!-- TABS DE NAVEGAÇÃO -->
+  <div class="flex border-b border-white/10 gap-2 overflow-x-auto pb-px scrollbar-thin">
+    <button
+      (click)="setTab('institucional')"
+      [class]="activeTab() === 'institucional' ? 'border-liturgical-gold text-liturgical-gold bg-white/[0.02]' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/[0.01]'"
+      class="border-b-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition outline-none rounded-t-xl flex items-center gap-2 shrink-0">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h18v3H3V3z" />
+      </svg>
+      Dados Institucionais
+    </button>
+    
+    @if (isSystemAdmin()) {
+      <button
+        (click)="setTab('tecnico')"
+        [class]="activeTab() === 'tecnico' ? 'border-liturgical-gold text-liturgical-gold bg-white/[0.02]' : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/[0.01]'"
+        class="border-b-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition outline-none rounded-t-xl flex items-center gap-2 shrink-0">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
+        </svg>
+        Painel Técnico (Implantação)
+      </button>
+    }
+  </div>
+
   <!-- CARREGANDO -->
-  @if (loading()) {
+  @if (loading() && activeTab() === 'institucional') {
     <div class="flex flex-col items-center justify-center py-20 text-slate-400 space-y-4">
       <div class="w-10 h-10 border-4 border-liturgical-gold border-t-transparent rounded-full animate-spin"></div>
-      <p class="text-sm font-bold uppercase tracking-wider">Carregando parâmetros do sistema...</p>
+      <p class="text-sm font-bold uppercase tracking-wider text-slate-500">Sincronizando parâmetros...</p>
     </div>
   } @else {
 
-    <!-- FORMULÁRIO DE CONFIGURAÇÕES -->
-    <div class="bg-liturgical-surface/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 space-y-6">
-      <div class="border-b border-white/5 pb-3">
-        <h2 class="font-cinzel text-sm font-bold text-white uppercase tracking-widest">Informações Institucionais da Loja</h2>
-        <p class="text-[10px] text-slate-400 mt-0.5">Parâmetros transversais para relatórios e documentos</p>
+    <!-- ABA 1: DADOS INSTITUCIONAIS -->
+    @if (activeTab() === 'institucional') {
+      <div class="premium-card p-6 space-y-6 animate-fade-in">
+        <div class="border-b border-white/5 pb-3">
+          <h2 class="font-cinzel text-xs font-bold text-white uppercase tracking-widest">Cadastro da Loja</h2>
+          <p class="text-[10px] text-slate-400 mt-0.5">Definições para emissão de documentos e relatórios oficiais</p>
+        </div>
+
+        <form (submit)="salvarConfig(); $event.preventDefault()" class="space-y-4 text-xs">
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Nome da Loja *</label>
+              <input type="text" [(ngModel)]="config().nome_loja" name="nome_loja" required
+                     class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl px-3 py-3 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Número da Loja *</label>
+              <input type="text" [(ngModel)]="config().numero_loja" name="numero_loja" required
+                     class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl px-3 py-3 text-xs text-white focus:outline-none transition-colors">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Cidade *</label>
+              <input type="text" [(ngModel)]="config().cidade" name="cidade" required
+                     class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl px-3 py-3 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">UF (Estado) *</label>
+              <input type="text" [(ngModel)]="config().uf" name="uf" required maxlength="2"
+                     class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl px-3 py-3 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Oriente *</label>
+              <input type="text" [(ngModel)]="config().oriente" name="oriente" required
+                     class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl px-3 py-3 text-xs text-white focus:outline-none transition-colors">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Nome da Potência *</label>
+              <input type="text" [(ngModel)]="config().potencia_nome" name="potencia_nome" required
+                     class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl px-3 py-3 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Sigla da Potência *</label>
+              <input type="text" [(ngModel)]="config().potencia_sigla" name="potencia_sigla" required
+                     class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl px-3 py-3 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Rito *</label>
+              <input type="text" [(ngModel)]="config().rito" name="rito" required
+                     class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl px-3 py-3 text-xs text-white focus:outline-none transition-colors">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">E-mail Oficial</label>
+              <input type="email" [(ngModel)]="config().email_oficial" name="email_oficial"
+                     class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl px-3 py-3 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Telefone Oficial</label>
+              <input type="text" [(ngModel)]="config().telefone_oficial" name="telefone_oficial"
+                     class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl px-3 py-3 text-xs text-white focus:outline-none transition-colors">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2 flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Endereço da Loja</label>
+              <input type="text" [(ngModel)]="config().endereco" name="endereco"
+                     class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl px-3 py-3 text-xs text-white focus:outline-none transition-colors">
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">CEP</label>
+              <input type="text" [(ngModel)]="config().cep" name="cep"
+                     class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl px-3 py-3 text-xs text-white focus:outline-none transition-colors">
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-white/5 flex justify-end">
+            <button type="submit" [disabled]="salvando()"
+                    class="px-5 py-3 bg-gradient-to-r from-amber-500 to-liturgical-gold hover:from-amber-600 hover:to-liturgical-gold/90 text-slate-950 font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg transition-all">
+              {{ salvando() ? 'Salvando...' : 'Gravar Alterações' }}
+            </button>
+          </div>
+
+        </form>
       </div>
+    }
 
-      <form (submit)="salvarConfig(); $event.preventDefault()" class="space-y-4 text-xs">
+    <!-- ABA 2: PAINEL TÉCNICO DE IMPLANTAÇÃO -->
+    @if (activeTab() === 'tecnico' && isSystemAdmin()) {
+      <div class="grid grid-cols-1 gap-6 xl:grid-cols-3 animate-fade-in">
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Nome da Loja *</label>
-            <input type="text" [(ngModel)]="config().nome_loja" name="nome_loja" required
-                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+        <!-- Coluna Esquerda: Status do Sistema & Mensagens -->
+        <div class="space-y-6 xl:col-span-2">
+          
+          <div class="premium-card p-6 space-y-6">
+            <div class="border-b border-white/5 pb-3 flex justify-between items-center">
+              <div>
+                <h2 class="font-cinzel text-xs font-bold text-white uppercase tracking-widest">Status da Implantação</h2>
+                <p class="text-[10px] text-slate-400 mt-0.5">Controle de conectividade e disponibilidade da Loja no ar</p>
+              </div>
+              <span class="rounded-full px-2.5 py-1 text-[9px] font-bold uppercase"
+                    [class.bg-emerald-500/10]="tecnicoConfig().sistema_status === 'online'"
+                    [class.text-emerald-400]="tecnicoConfig().sistema_status === 'online'"
+                    [class.border-emerald-500/20]="tecnicoConfig().sistema_status === 'online'"
+                    [class.bg-amber-500/10]="tecnicoConfig().sistema_status === 'manutencao'"
+                    [class.text-amber-400]="tecnicoConfig().sistema_status === 'manutencao'"
+                    [class.border-amber-500/20]="tecnicoConfig().sistema_status === 'manutencao'"
+                    [class.bg-rose-500/10]="tecnicoConfig().sistema_status === 'suspenso'"
+                    [class.text-rose-400]="tecnicoConfig().sistema_status === 'suspenso'"
+                    [class.border-rose-500/20]="tecnicoConfig().sistema_status === 'suspenso'">
+                {{ tecnicoConfig().sistema_status }}
+              </span>
+            </div>
+
+            <form (submit)="salvarTecnicoConfig(); $event.preventDefault()" class="space-y-4 text-xs">
+              <div class="flex flex-col gap-1.5">
+                <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Status Geral do Servidor</label>
+                <select [(ngModel)]="tecnicoConfig().sistema_status" name="sistema_status"
+                        class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl p-3 text-xs text-white focus:outline-none">
+                  <option value="online">🟢 Loja Online (Ativa e Operacional)</option>
+                  <option value="manutencao">🟡 Modo Manutenção (Acesso somente a Admins Técnicos)</option>
+                  <option value="suspenso">🔴 Fora do Ar / Suspensa (Desativada completamente)</option>
+                </select>
+              </div>
+
+              @if (tecnicoConfig().sistema_status === 'manutencao') {
+                <div class="flex flex-col gap-1.5 animate-fade-in">
+                  <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Mensagem de Manutenção</label>
+                  <textarea [(ngModel)]="tecnicoConfig().manutencao_mensagem" name="manutencao_mensagem" rows="3"
+                            class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl p-3 text-xs text-white focus:outline-none resize-none"></textarea>
+                  <p class="text-[9px] text-slate-500">Exibida em tela cheia para todos os obreiros que tentarem se conectar.</p>
+                </div>
+              }
+
+              @if (tecnicoConfig().sistema_status === 'suspenso') {
+                <div class="flex flex-col gap-1.5 animate-fade-in">
+                  <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Mensagem de Suspensão / Desativação</label>
+                  <textarea [(ngModel)]="tecnicoConfig().suspenso_mensagem" name="suspenso_mensagem" rows="3"
+                            class="bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl p-3 text-xs text-white focus:outline-none resize-none"></textarea>
+                  <p class="text-[9px] text-slate-500">Exibida em tela de bloqueio quando a Loja for removida do ar.</p>
+                </div>
+              }
+
+              <div class="pt-4 border-t border-white/5 flex justify-end">
+                <button type="submit" [disabled]="salvandoTecnico()"
+                        class="px-5 py-3 bg-gradient-to-r from-amber-500 to-liturgical-gold hover:from-amber-600 hover:to-liturgical-gold/90 text-slate-950 font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg transition-all">
+                  {{ salvandoTecnico() ? 'Gravando Status...' : 'Aplicar Alterações de Rede' }}
+                </button>
+              </div>
+            </form>
           </div>
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Número da Loja *</label>
-            <input type="text" [(ngModel)]="config().numero_loja" name="numero_loja" required
-                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          <!-- Parâmetros de Implantação e Variáveis de Ambiente -->
+          <div class="premium-card p-6 space-y-4">
+            <div class="border-b border-white/5 pb-3">
+              <h2 class="font-cinzel text-xs font-bold text-white uppercase tracking-widest">Configurações do Tenant & Ambiente</h2>
+              <p class="text-[10px] text-slate-400 mt-0.5">Leitura de parâmetros operacionais do servidor (.env)</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div class="space-y-1.5 p-3 rounded-xl bg-white/[0.01] border border-white/5">
+                <span class="block text-[8px] font-bold uppercase text-slate-500">APP ENVIRONMENT</span>
+                <b class="text-white font-mono text-[11px]">{{ env().app_env || '-' }}</b>
+              </div>
+              <div class="space-y-1.5 p-3 rounded-xl bg-white/[0.01] border border-white/5">
+                <span class="block text-[8px] font-bold uppercase text-slate-500">APP URL</span>
+                <b class="text-white font-mono text-[11px] overflow-hidden text-ellipsis block">{{ env().app_url || '-' }}</b>
+              </div>
+              <div class="space-y-1.5 p-3 rounded-xl bg-white/[0.01] border border-white/5">
+                <span class="block text-[8px] font-bold uppercase text-slate-500">DATABASE SCHEMA</span>
+                <b class="text-white font-mono text-[11px]">{{ env().db_schema || '-' }}</b>
+              </div>
+              <div class="space-y-1.5 p-3 rounded-xl bg-white/[0.01] border border-white/5">
+                <span class="block text-[8px] font-bold uppercase text-slate-500">DATABASE HOST / BASE</span>
+                <b class="text-white font-mono text-[11px] overflow-hidden text-ellipsis block">{{ env().db_host || '-' }} · {{ env().db_name || '-' }}</b>
+              </div>
+              <div class="space-y-1.5 p-3 rounded-xl bg-white/[0.01] border border-white/5 md:col-span-2">
+                <span class="block text-[8px] font-bold uppercase text-slate-500">SUPABASE ENDPOINT</span>
+                <b class="text-white font-mono text-[10px] overflow-hidden text-ellipsis block">{{ env().supabase_url || '-' }}</b>
+              </div>
+              <div class="space-y-1.5 p-3 rounded-xl bg-white/[0.01] border border-white/5 md:col-span-2">
+                <span class="block text-[8px] font-bold uppercase text-slate-500">SUPABASE SERVICE KEY</span>
+                <b class="text-slate-400 font-mono text-[10px] overflow-hidden text-ellipsis block">{{ env().supabase_key || 'Não configurada' }}</b>
+              </div>
+              <div class="space-y-1.5 p-3 rounded-xl bg-white/[0.01] border border-white/5 md:col-span-2">
+                <span class="block text-[8px] font-bold uppercase text-slate-500">TELEGRAM BOT API KEY</span>
+                <b class="text-slate-400 font-mono text-[10px] overflow-hidden text-ellipsis block">{{ env().telegram_bot_token || 'Não configurada' }}</b>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Cidade *</label>
-            <input type="text" [(ngModel)]="config().cidade" name="cidade" required
-                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+        <!-- Coluna Direita: Diagnósticos de Conexão & Ações de Manutenção -->
+        <div class="space-y-6 xl:col-span-1">
+          
+          <!-- Diagnóstico das Conexões -->
+          <div class="premium-card p-6 space-y-4">
+            <div class="border-b border-white/5 pb-2">
+              <h3 class="font-cinzel text-xs font-bold text-white uppercase tracking-widest">Status da Conexão</h3>
+              <p class="text-[10px] text-slate-400 mt-0.5">Diagnósticos e latência dos serviços conectados</p>
+            </div>
+
+            <div class="space-y-3">
+              <!-- DB check -->
+              <div class="p-3 rounded-xl bg-white/[0.01] border border-white/5 flex items-center justify-between">
+                <div>
+                  <small class="block text-[8px] uppercase font-bold text-slate-500">Banco de Dados</small>
+                  <span class="text-xs text-white font-bold">{{ health().db.ok ? 'PostgreSQL Ativo' : 'Erro de Conexão' }}</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  @if (health().db.ok) {
+                    <span class="text-[10px] text-slate-400 font-mono">{{ health().db.latency }}ms</span>
+                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  } @else {
+                    <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+                  }
+                </div>
+              </div>
+
+              <!-- Supabase check -->
+              <div class="p-3 rounded-xl bg-white/[0.01] border border-white/5 flex items-center justify-between">
+                <div>
+                  <small class="block text-[8px] uppercase font-bold text-slate-500">Autenticação Supabase</small>
+                  <span class="text-xs text-white font-bold">{{ health().supabase.msg }}</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="h-2 w-2 rounded-full" [class.bg-emerald-500]="health().supabase.ok" [class.bg-rose-500]="!health().supabase.ok"></span>
+                </div>
+              </div>
+
+              <!-- Telegram check -->
+              <div class="p-3 rounded-xl bg-white/[0.01] border border-white/5 space-y-2">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <small class="block text-[8px] uppercase font-bold text-slate-500">Telegram Bot API</small>
+                    <span class="text-xs text-white font-bold">{{ health().telegram.msg }}</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="h-2 w-2 rounded-full" [class.bg-emerald-500]="health().telegram.ok" [class.bg-rose-500]="!health().telegram.ok"></span>
+                  </div>
+                </div>
+                @if (health().telegram.ok && health().telegram.webhook; as wh) {
+                  <div class="text-[10px] text-slate-400 space-y-1 pt-1 border-t border-white/5 font-mono leading-tight">
+                    <div class="overflow-hidden text-ellipsis block"><b>Webhook URL:</b> {{ wh.url || 'Não registrado' }}</div>
+                    @if (wh.pending_update_count > 0) {
+                      <div class="text-amber-400"><b>Atualizações pendentes:</b> {{ wh.pending_update_count }}</div>
+                    }
+                    @if (wh.last_error_date) {
+                      <div class="text-rose-400"><b>Último erro:</b> {{ wh.last_error_message }}</div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
           </div>
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">UF (Estado) *</label>
-            <input type="text" [(ngModel)]="config().uf" name="uf" required maxlength="2"
-                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
+          <!-- Ações e Utilidades Técnicas -->
+          <div class="premium-card p-6 space-y-4">
+            <div class="border-b border-white/5 pb-2">
+              <h3 class="font-cinzel text-xs font-bold text-white uppercase tracking-widest">Ferramentas de Manutenção</h3>
+              <p class="text-[10px] text-slate-400 mt-0.5">Utilitários para depuração e atualização do ambiente</p>
+            </div>
+
+            <div class="space-y-3">
+              <button
+                (click)="executarAcao('clear_cache')"
+                [disabled]="executandoAcao() !== null"
+                class="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 p-3 flex items-center justify-between transition text-left text-xs font-bold text-white outline-none">
+                <div class="flex items-center gap-3">
+                  <div class="text-slate-400">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </div>
+                  <div>
+                    <span>Limpar Cache do Servidor</span>
+                    <small class="block text-[9px] text-slate-500 font-normal">Força a sincronização limpa do ambiente</small>
+                  </div>
+                </div>
+                @if (executandoAcao() === 'clear_cache') {
+                  <div class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                }
+              </button>
+
+              <button
+                (click)="executarAcao('run_migrations')"
+                [disabled]="executandoAcao() !== null"
+                class="w-full rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 p-3 flex items-center justify-between transition text-left text-xs font-bold text-white outline-none">
+                <div class="flex items-center gap-3">
+                  <div class="text-slate-400">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.228 9H18.02" />
+                    </svg>
+                  </div>
+                  <div>
+                    <span>Validar Banco de Dados</span>
+                    <small class="block text-[9px] text-slate-500 font-normal">Revisar schemas e aplicar migrations pendentes</small>
+                  </div>
+                </div>
+                @if (executandoAcao() === 'run_migrations') {
+                  <div class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                }
+              </button>
+            </div>
           </div>
 
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Oriente *</label>
-            <input type="text" [(ngModel)]="config().oriente" name="oriente" required
-                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
-          </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Nome da Potência *</label>
-            <input type="text" [(ngModel)]="config().potencia_nome" name="potencia_nome" required
-                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
-          </div>
-
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Sigla da Potência *</label>
-            <input type="text" [(ngModel)]="config().potencia_sigla" name="potencia_sigla" required
-                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
-          </div>
-
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Rito *</label>
-            <input type="text" [(ngModel)]="config().rito" name="rito" required
-                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">E-mail Oficial</label>
-            <input type="email" [(ngModel)]="config().email_oficial" name="email_oficial"
-                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
-          </div>
-
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Telefone Oficial</label>
-            <input type="text" [(ngModel)]="config().telefone_oficial" name="telefone_oficial"
-                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="md:col-span-2 flex flex-col gap-1.5">
-            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Endereço da Loja</label>
-            <input type="text" [(ngModel)]="config().endereco" name="endereco"
-                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
-          </div>
-
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">CEP</label>
-            <input type="text" [(ngModel)]="config().cep" name="cep"
-                   class="bg-black/25 border border-white/5 focus:border-liturgical-gold/30 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-colors">
-          </div>
-        </div>
-
-        <div class="pt-4 border-t border-white/5 flex justify-end">
-          <button type="submit" [disabled]="salvando()"
-                  class="px-5 py-2.5 bg-gradient-to-r from-liturgical-gold/80 to-liturgical-gold text-liturgical-bg font-bold uppercase tracking-wider text-xs rounded-xl shadow-lg transition-all hover:scale-[1.01]">
-            {{ salvando() ? 'Salvando...' : 'Gravar Alterações' }}
-          </button>
-        </div>
-
-      </form>
-
-    </div>
+      </div>
+    }
 
   }
 </div>

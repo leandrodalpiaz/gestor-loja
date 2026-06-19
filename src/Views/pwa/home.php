@@ -181,47 +181,55 @@ ob_start();
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════
-         SECTION 2 — EFEMÉRIDES DO DIA (Carousel)
+         SECTION 2 — EFEMÉRIDES DO DIA (Lista Compacta + Modal)
          ══════════════════════════════════════════════════════════════ -->
     <?php if (!empty($efemerides_reais)): ?>
-    <div class="mt-5">
-        <div class="flex items-center justify-between px-4 mb-2.5">
-            <p class="pwa-eyebrow text-slate-500">
+    <div class="mt-5 px-4">
+        <div class="flex items-center justify-between mb-3">
+            <p class="text-[10px] font-bold tracking-wider uppercase text-slate-500">
                 Efemérides de hoje
             </p>
-            <a href="/pwa/chancelaria/efemerides" class="text-[11px] font-semibold text-slate-400 no-underline">
+            <a href="/pwa/chancelaria/efemerides" class="text-[11px] font-semibold text-slate-400 no-underline hover:text-white">
                 Gerenciar →
             </a>
         </div>
 
-        <!-- Carousel horizontal de cards de efemérides -->
-        <div class="pwa-carousel px-4">
+        <div class="space-y-2">
             <?php foreach ($efemerides_reais as $card): ?>
-            <div class="flex-shrink-0 w-[72vw] max-w-[280px] rounded-2xl overflow-hidden relative scroll-snap-align-start aspect-[3/4] border border-white/10 bg-slate-900">
-                <img src="<?= htmlspecialchars($card['url_imagem']) ?>"
-                     alt="Efeméride"
-                     class="w-full h-full object-cover block">
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
-                <div class="absolute bottom-3.5 left-3.5 right-3.5">
-                    <p class="text-[10px] font-bold tracking-wider uppercase text-amber-300 mb-1">
+            <?php 
+                $tipoLower = strtolower($card['legenda_tipo']);
+                // Ícone SVG temático com base na categoria/tipo da efeméride
+                $iconSvg = match(true) {
+                    str_contains($tipoLower, 'anivers') => '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75-1.011-.035A11.64 11.64 0 0 0 12 16.5c-2.738 0-5.347.94-7.424 2.665L3.5 19.5m17-3.75V19.5m0-3.75a11.64 11.64 0 0 1-3.424-1.885 11.64 11.64 0 0 0-3.424 1.885 11.64 11.64 0 0 1-3.424-1.885 11.64 11.64 0 0 0-3.424 1.885M3.5 19.5v-3.75m0 3.75 1.01-.035A11.64 11.64 0 0 1 12 18c2.738 0 5.347.94 7.424 2.665l1.076-.035M12 12v-1.5" /></svg>',
+                    str_contains($tipoLower, 'casament') => '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" /></svg>',
+                    default => '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499c.151-.577.98-.577 1.132 0l1.458 5.564a.75.75 0 0 0 .713.518h5.848c.613 0 .868.796.37 1.186l-4.73 3.719a.75.75 0 0 0-.272.838l1.79 5.595c.19.594-.482 1.082-1.002.68L12 17.202l-4.73 3.69c-.52.402-1.192-.086-1.002-.68l1.79-5.595a.75.75 0 0 0-.272-.838L3.056 10.77c-.498-.39-.243-1.186.37-1.186h5.848a.75.75 0 0 0 .713-.518L11.48 3.5Z" /></svg>'
+                };
+            ?>
+            <div onclick="abrirModalEfemeride('<?= htmlspecialchars($card['url_imagem']) ?>')"
+                 class="pwa-list-item-celebration">
+                <!-- Ícone da Categoria -->
+                <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 flex-shrink-0">
+                    <?= $iconSvg ?>
+                </div>
+                <!-- Detalhes do Homenageado -->
+                <div class="flex-1 min-w-0">
+                    <p class="text-[9px] font-bold tracking-wider uppercase text-amber-500 mb-0.5">
                         <?= htmlspecialchars($card['legenda_tipo']) ?>
                     </p>
-                    <p class="text-sm font-bold text-white leading-snug">
+                    <p class="text-xs font-semibold text-slate-100 truncate">
                         <?= htmlspecialchars($card['titulo_homenagem']) ?>
                     </p>
+                </div>
+                <!-- Indicador de visualização -->
+                <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 flex-shrink-0">
+                    <span>Ver Homenagem</span>
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
-
-        <!-- Dots de paginação -->
-        <?php if (count($efemerides_reais) > 1): ?>
-        <div class="flex justify-center gap-1.5 mt-2">
-            <?php foreach ($efemerides_reais as $i => $_): ?>
-            <div class="h-1.5 rounded-full transition-all duration-300 <?= $i === 0 ? 'w-4 bg-amber-500' : 'w-1.5 bg-white/20' ?>"></div>
-            <?php endforeach; ?>
-        </div>
-        <?php endif; ?>
     </div>
     <?php endif; ?>
 
@@ -271,7 +279,15 @@ ob_start();
             <div class="flex-1 h-[1px] bg-white/5"></div>
         </div>
 
-        <div class="grid grid-cols-4 gap-2.5">
+        <?php 
+        $colsClass = match(count($atalhosFiltrados)) {
+            1       => 'grid-cols-1 max-w-[150px] mx-auto',
+            2       => 'grid-cols-2 max-w-[320px] mx-auto',
+            3       => 'grid-cols-3 max-w-[480px] mx-auto',
+            default => 'grid-cols-4'
+        };
+        ?>
+        <div class="grid <?= $colsClass ?> gap-2.5">
             <?php foreach ($atalhosFiltrados as $a): ?>
             <a href="<?= htmlspecialchars($a['href']) ?>"
                id="atalho-<?= htmlspecialchars($a['id']) ?>"
@@ -322,6 +338,54 @@ ob_start();
     </div>
     <?php endif; ?>
 
+    <!-- ══════════════════════════════════════════════════════════════
+         LIGHTBOX MODAL FOR EFEMÉRIDES (TAP TO EXPAND)
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="efemeride-modal" class="efemeride-modal-overlay" onclick="fecharModalEfemeride()">
+        <button type="button" class="efemeride-modal-close-btn" onclick="fecharModalEfemeride(event)">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+        </button>
+        <div class="efemeride-modal-container">
+            <div class="efemeride-modal-image-wrapper" onclick="event.stopPropagation()">
+                <img id="efemeride-modal-img" src="" alt="Cartão de Homenagem" class="efemeride-modal-img">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function abrirModalEfemeride(imageUrl) {
+            const modal = document.getElementById('efemeride-modal');
+            const img = document.getElementById('efemeride-modal-img');
+            if (modal && img) {
+                img.src = imageUrl;
+                modal.classList.add('active');
+                
+                // Desativa scroll do conteúdo de fundo para experiência nativa
+                const contentArea = document.querySelector('.app-content');
+                if (contentArea) {
+                    contentArea.style.overflowY = 'hidden';
+                }
+            }
+        }
+
+        function fecharModalEfemeride(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            const modal = document.getElementById('efemeride-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                
+                // Reativa scroll do conteúdo de fundo
+                const contentArea = document.querySelector('.app-content');
+                if (contentArea) {
+                    contentArea.style.overflowY = 'auto';
+                }
+            }
+        }
+    </script>
 </div>
 
 <?php

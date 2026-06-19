@@ -90,7 +90,7 @@ class TesourariaRoutes
                 $selectedObreiroNome = 'Selecione um obreiro';
                 foreach ($obreirosCadastro as $obreiroCadastro) {
                     if ((string) ($obreiroCadastro['id'] ?? '') === $selectedObreiroId) {
-                        $selectedObreiroNome = (string) ($obreiroCadastro['nome_historico'] ?? $obreiroCadastro['nome'] ?? 'Obreiro');
+                        $selectedObreiroNome = trim((string) ($obreiroCadastro['nome_historico'] ?? '')) !== '' ? (string) $obreiroCadastro['nome_historico'] : (string) ($obreiroCadastro['nome'] ?? 'Obreiro');
                         break;
                     }
                 }
@@ -179,7 +179,7 @@ class TesourariaRoutes
                     exit;
                 }
                 $configuracaoLoja = (new ConfiguracaoLoja())->obter();
-                $tesoureiroNome = (string) ($session['usuario_nome'] ?? ($session['usuario_logado']['nome_historico'] ?? 'Tesoureiro'));
+                $tesoureiroNome = (string) ($session['usuario_nome'] ?? (trim((string) ($session['usuario_logado']['nome_historico'] ?? '')) !== '' ? $session['usuario_logado']['nome_historico'] : ($session['usuario_logado']['nome'] ?? 'Tesoureiro')));
                 require __DIR__ . '/../../Views/tesouraria_recibo.php';
                 exit;
 

@@ -13,3 +13,71 @@
     transform: translateY(0);
   }
 }
+
+/* Premium styling for layout cards */
+.premium-card {
+  background: rgba(17, 26, 49, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.premium-card:hover {
+  border-color: rgba(201, 162, 39, 0.2);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3), 0 0 15px rgba(201, 162, 39, 0.03);
+}
+
+/* Theme color utilities (Liturgical Gold) */
+.text-liturgical-gold {
+  color: #C9A227 !important;
+}
+
+.border-liturgical-gold {
+  border-color: #C9A227 !important;
+}
+
+.border-liturgical-gold\/20 {
+  border-color: rgba(201, 162, 39, 0.2) !important;
+}
+
+.border-liturgical-gold\/40 {
+  border-color: rgba(201, 162, 39, 0.4) !important;
+}
+
+.bg-liturgical-gold\/10 {
+  background-color: rgba(201, 162, 39, 0.10) !important;
+}
+
+.bg-liturgical-gold\/5 {
+  background-color: rgba(201, 162, 39, 0.05) !important;
+}
+
+/* Custom Scrollbars */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(201, 162, 39, 0.2);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 162, 39, 0.4);
+}
+
+/* Custom focus visual feedback */
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(201, 162, 39, 0.4) !important;
+  box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.1);
+}

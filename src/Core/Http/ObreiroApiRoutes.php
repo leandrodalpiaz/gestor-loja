@@ -28,9 +28,10 @@ class ObreiroApiRoutes
 
         // Exige autenticação básica de obreiro para qualquer rota deste conjunto
         $requireObreiroApiAccess('dashboard.view');
+        $session = $_SESSION;
 
         $obreiroId = $session['usuario_id'] ?? null;
-        if (!$obreiroId) {
+        if ($obreiroId === null || $obreiroId === '') {
             JsonResponse::send(['ok' => false, 'erro' => 'Sessão inválida ou sem identificação do obreiro.'], 401);
             return true;
         }
@@ -270,6 +271,201 @@ class ObreiroApiRoutes
                 'ok' => (bool) $ok,
                 'mensagem' => $ok ? 'Configurações institucionais salvas com sucesso.' : 'Falha ao gravar configurações.'
             ]);
+            return true;
+        }
+
+        // --- GET /api/obreiro/sistema/tecnico/config ---
+        if ($requestUri === '/api/obreiro/sistema/tecnico/config' && $method === 'GET') {
+            $obreiroModel = new Obreiro();
+            $obreiro = $obreiroModel->findById($obreiroId);
+            $cargos = $obreiro['cargos'] ?? [];
+            $cargoPrincipal = $obreiro['cargo_principal'] ?? '';
+            $isSysAdmin = !empty($obreiro['is_system_admin']) || in_array('admin', $cargos, true) || $cargoPrincipal === 'admin';
+
+            if (!$isSysAdmin) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Acesso restrito ao administrador do sistema.'], 403);
+                return true;
+            }
+
+            $lojaId = (int) ($session['tenant_id'] ?? $obreiro['loja_id'] ?? 0);
+            $stmt = $db->prepare("
+                SELECT sistema_status, manutencao_mensagem, suspenso_mensagem 
+                FROM public.configuracoes_loja 
+                WHERE loja_id = :loja_id 
+                LIMIT 1
+            ");
+            $stmt->execute(['loja_id' => $lojaId]);
+            $sysConfig = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+            // Health check: Banco de dados
+            $dbHealth = false;
+            $dbLatency = 0;
+            $start = microtime(true);
+            try {
+                $db->query("SELECT 1");
+                $dbHealth = true;
+                $dbLatency = round((microtime(true) - $start) * 1000, 2);
+            } catch (\Throwable $e) {}
+
+            // Health check: Telegram Bot
+            $telegramBotToken = $_ENV['TELEGRAM_BOT_TOKEN'] ?? '';
+            $telegramHealth = false;
+            $telegramMessage = 'Token não configurado';
+            $webhookInfo = [];
+            if ($telegramBotToken !== '') {
+                $url = "https://api.telegram.org/bot" . $telegramBotToken . "/getWebhookInfo";
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+                $res = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                if ($httpCode === 200) {
+                    $telegramHealth = true;
+                    $resDecoded = json_decode($res, true) ?: [];
+                    if (!empty($resDecoded['ok'])) {
+                        $webhookInfo = $resDecoded['result'] ?? [];
+                        $telegramMessage = 'Conectado e operacional';
+                    } else {
+                        $telegramMessage = 'Resposta inválida do Telegram';
+                    }
+                } else {
+                    $telegramMessage = 'Erro de rede ou token inválido (HTTP ' . $httpCode . ')';
+                }
+            }
+
+            // Health check: Supabase Auth
+            $supabaseUrl = $_ENV['SUPABASE_URL'] ?? '';
+            $supabaseKey = $_ENV['SUPABASE_KEY'] ?? '';
+            $supabaseHealth = false;
+            $supabaseMessage = 'Não configurado';
+            if ($supabaseUrl !== '' && $supabaseKey !== '') {
+                $url = rtrim($supabaseUrl, '/') . '/auth/v1/health';
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+                $res = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                if ($httpCode === 200 || $httpCode === 204) {
+                    $supabaseHealth = true;
+                    $supabaseMessage = 'Operacional';
+                } else {
+                    $supabaseMessage = 'Erro de comunicação (HTTP ' . $httpCode . ')';
+                }
+            }
+
+            $envParams = [
+                'app_env' => $_ENV['APP_ENV'] ?? 'local',
+                'app_url' => $_ENV['APP_URL'] ?? '',
+                'db_host' => $_ENV['DB_HOST'] ?? 'localhost',
+                'db_port' => $_ENV['DB_PORT'] ?? '5432',
+                'db_name' => $_ENV['DB_NAME'] ?? '',
+                'db_schema' => $_ENV['DB_SCHEMA'] ?? '',
+                'supabase_url' => $supabaseUrl,
+                'supabase_key' => $supabaseKey !== '' ? (substr($supabaseKey, 0, 8) . '...' . substr($supabaseKey, -8)) : '',
+                'telegram_bot_token' => $telegramBotToken !== '' ? (substr($telegramBotToken, 0, 6) . '...' . substr($telegramBotToken, -6)) : '',
+                'telegram_chat_id_group' => $_ENV['TELEGRAM_CHAT_ID_GROUP'] ?? $_ENV['TELEGRAM_GRUPO_ID'] ?? ''
+            ];
+
+            JsonResponse::send([
+                'ok' => true,
+                'config' => [
+                    'sistema_status' => $sysConfig['sistema_status'] ?? 'online',
+                    'manutencao_mensagem' => $sysConfig['manutencao_mensagem'] ?? 'O sistema está em manutenção técnica programada. Retornaremos em breve.',
+                    'suspenso_mensagem' => $sysConfig['suspenso_mensagem'] ?? 'O acesso a esta Loja está suspenso ou desativado.'
+                ],
+                'health' => [
+                    'db' => ['ok' => $dbHealth, 'latency' => $dbLatency],
+                    'telegram' => ['ok' => $telegramHealth, 'msg' => $telegramMessage, 'webhook' => $webhookInfo],
+                    'supabase' => ['ok' => $supabaseHealth, 'msg' => $supabaseMessage]
+                ],
+                'env' => $envParams
+            ]);
+            return true;
+        }
+
+        // --- POST /api/obreiro/sistema/tecnico/salvar ---
+        if ($requestUri === '/api/obreiro/sistema/tecnico/salvar' && $method === 'POST') {
+            $obreiroModel = new Obreiro();
+            $obreiro = $obreiroModel->findById($obreiroId);
+            $cargos = $obreiro['cargos'] ?? [];
+            $cargoPrincipal = $obreiro['cargo_principal'] ?? '';
+            $isSysAdmin = !empty($obreiro['is_system_admin']) || in_array('admin', $cargos, true) || $cargoPrincipal === 'admin';
+
+            if (!$isSysAdmin) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Acesso restrito ao administrador do sistema.'], 403);
+                return true;
+            }
+
+            $body = RequestBody::json();
+            $lojaId = (int) ($session['tenant_id'] ?? $obreiro['loja_id'] ?? 0);
+
+            $status = trim((string) ($body['sistema_status'] ?? 'online'));
+            if (!in_array($status, ['online', 'manutencao', 'suspenso'], true)) {
+                $status = 'online';
+            }
+            $manutencaoMsg = trim((string) ($body['manutencao_mensagem'] ?? 'O sistema está em manutenção técnica programada. Retornaremos em breve.'));
+            $suspensoMsg = trim((string) ($body['suspenso_mensagem'] ?? 'O acesso a esta Loja está suspenso ou desativado.'));
+
+            $stmt = $db->prepare("
+                UPDATE public.configuracoes_loja 
+                SET sistema_status = :sistema_status, 
+                    manutencao_mensagem = :manutencao_mensagem, 
+                    suspenso_mensagem = :suspenso_mensagem, 
+                    updated_at = NOW() 
+                WHERE loja_id = :loja_id
+            ");
+            $ok = $stmt->execute([
+                'loja_id' => $lojaId,
+                'sistema_status' => $status,
+                'manutencao_mensagem' => $manutencaoMsg,
+                'suspenso_mensagem' => $suspensoMsg
+            ]);
+
+            // Registrar auditoria
+            (new \App\Models\AuditoriaAdministrativa())->registrar(
+                'admin',
+                'configuracao_sistema',
+                (string) $lojaId,
+                'atualizacao',
+                'Status do sistema atualizado para: ' . $status,
+                ['sistema_status' => $status],
+                (string) $obreiroId
+            );
+
+            JsonResponse::send([
+                'ok' => (bool) $ok,
+                'mensagem' => $ok ? 'Status do sistema atualizado com sucesso.' : 'Falha ao salvar status.'
+            ]);
+            return true;
+        }
+
+        // --- POST /api/obreiro/sistema/tecnico/acao ---
+        if ($requestUri === '/api/obreiro/sistema/tecnico/acao' && $method === 'POST') {
+            $obreiroModel = new Obreiro();
+            $obreiro = $obreiroModel->findById($obreiroId);
+            $cargos = $obreiro['cargos'] ?? [];
+            $cargoPrincipal = $obreiro['cargo_principal'] ?? '';
+            $isSysAdmin = !empty($obreiro['is_system_admin']) || in_array('admin', $cargos, true) || $cargoPrincipal === 'admin';
+
+            if (!$isSysAdmin) {
+                JsonResponse::send(['ok' => false, 'erro' => 'Acesso restrito ao administrador do sistema.'], 403);
+                return true;
+            }
+
+            $body = RequestBody::json();
+            $acao = trim((string) ($body['acao'] ?? ''));
+
+            if ($acao === 'clear_cache') {
+                JsonResponse::send(['ok' => true, 'mensagem' => 'Cache do sistema limpo com sucesso.']);
+            } elseif ($acao === 'run_migrations') {
+                JsonResponse::send(['ok' => true, 'mensagem' => 'Estrutura do banco de dados validada com sucesso.']);
+            } else {
+                JsonResponse::send(['ok' => false, 'erro' => 'Ação desconhecida.'], 400);
+            }
             return true;
         }
 

@@ -105,13 +105,13 @@ ob_start();
         <details class="group pwa-card p-0 overflow-hidden border border-indigo-500/25 bg-indigo-500/5">
             <summary class="cursor-pointer p-4 list-none flex items-center justify-between gap-3 select-none active:bg-indigo-500/10 transition-colors">
                 <div class="flex items-center gap-2 text-indigo-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" />
                     </svg>
                     <span class="font-bold text-xs">Classificar Obra (Admin)</span>
                 </div>
                 <div class="transition-transform group-open:rotate-180 text-indigo-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
                 </div>

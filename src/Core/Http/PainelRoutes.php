@@ -383,7 +383,7 @@ class PainelRoutes
                         $recados = (new \App\Models\PublicacaoSecretaria())->listarRecentes(10);
 
                         $dados_cadastro = [
-                            'nome' => (string) ($obreiro['nome_historico'] ?? $obreiro['nome'] ?? ''),
+                            'nome' => trim((string) ($obreiro['nome_historico'] ?? '')) !== '' ? (string) $obreiro['nome_historico'] : (string) ($obreiro['nome'] ?? ''),
                             'cim' => (string) ($obreiro['cim'] ?? ''),
                             'email' => (string) ($obreiro['email'] ?? ''),
                             'telefone' => (string) ($obreiro['telefone'] ?? ''),

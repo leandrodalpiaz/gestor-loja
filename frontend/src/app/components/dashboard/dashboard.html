@@ -1,67 +1,73 @@
 <div class="relative flex min-h-screen flex-col overflow-hidden bg-liturgical-bg font-inter text-slate-300 md:flex-row">
-  <div class="pointer-events-none absolute inset-0 opacity-[0.03] mix-blend-overlay" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
+  <!-- Soft noise overlay for parchment-like antiquity feel -->
+  <div class="pointer-events-none absolute inset-0 opacity-[0.015] mix-blend-overlay" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
 
+  <!-- Header for mobile -->
   <header class="z-40 flex h-16 w-full shrink-0 items-center justify-between border-b border-white/5 bg-liturgical-surface/90 px-6 backdrop-blur-md md:hidden">
     <div class="flex items-center gap-2">
       <img src="/assets/logo-renascenca.png" alt="Logo" class="h-11 w-11 object-contain">
       <span class="font-cinzel text-base font-bold tracking-widest text-white">ÁTRIO</span>
     </div>
-    <button type="button" (click)="toggleMobileSidebar()" class="p-2 text-slate-400 hover:text-white">
+    <button type="button" (click)="toggleMobileSidebar()" class="p-2 text-slate-400 hover:text-white transition-colors duration-200">
       <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
       </svg>
     </button>
   </header>
 
+  <!-- Sidebar layout (Minimal and borderless) -->
   <aside
     [class.translate-x-0]="mobileSidebarOpen"
     [class.-translate-x-full]="!mobileSidebarOpen"
-    class="fixed inset-y-0 left-0 z-50 flex w-72 shrink-0 flex-col border-r border-white/5 bg-liturgical-surface/95 backdrop-blur-lg transition-transform duration-300 md:static md:translate-x-0 md:bg-liturgical-surface/50 md:backdrop-blur-none">
-    <div class="flex min-h-0 flex-1 flex-col">
+    class="sidebar-aside fixed inset-y-0 left-0 z-50 flex w-72 shrink-0 flex-col border-r border-white/5 bg-[#070c16]/95 backdrop-blur-lg transition-transform duration-300 md:static md:translate-x-0 md:bg-[#060a12]/40 md:backdrop-blur-none animate-sidebar-load">
+    
+    <!-- Background Watermark Seal for Sidebar -->
+    <div class="pointer-events-none absolute right-2 bottom-20 z-0 h-48 w-48 opacity-[0.015] mix-blend-screen bg-contain bg-no-repeat bg-center select-none" style="background-image: url('/assets/logo-renascenca.png'); filter: grayscale(1) brightness(1.2);"></div>
+
+    <div class="relative z-10 flex min-h-0 flex-1 flex-col">
+      <!-- Sidebar Header / Logo -->
       <div class="flex h-24 shrink-0 items-center justify-between border-b border-white/5 px-6">
         <div class="flex items-center gap-3">
-          <img src="/assets/logo-renascenca.png" alt="Logo" class="h-14 w-14 object-contain">
+          <img src="/assets/logo-renascenca.png" alt="Logo" class="h-11 w-11 object-contain shadow-sm">
           <div>
             <span class="block font-cinzel text-base font-bold tracking-widest text-white">ÁTRIO</span>
-            <span class="text-[9px] font-bold uppercase tracking-widest text-liturgical-gold">Gestão Interna</span>
+            <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-liturgical-gold leading-none">Gestão Interna</span>
           </div>
         </div>
-        <button type="button" (click)="toggleMobileSidebar()" class="p-1 text-slate-400 hover:text-white md:hidden">
+        <button type="button" (click)="toggleMobileSidebar()" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 md:hidden transition-colors duration-200">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </button>
       </div>
 
-      <nav class="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
+      <!-- Navigation menus -->
+      <nav class="min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3 custom-sidebar-nav">
+        
+        <!-- Início (Root Link) - Styled matching section titles without borders/boxes -->
         <a
           routerLink="/dashboard"
-          routerLinkActive="border-liturgical-gold/50 bg-white/5 text-liturgical-gold"
+          routerLinkActive="active-nav-section"
           [routerLinkActiveOptions]="{ exact: true }"
-          class="flex items-center gap-3 rounded-xl border border-transparent px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-400 transition-all hover:bg-white/5 hover:text-white">
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          class="home-nav-link flex items-center justify-between gap-3 rounded-lg px-4 py-2 text-xs font-semibold text-slate-400 transition-all duration-200 hover:bg-white/[0.03] hover:text-white">
+          <span class="font-cinzel tracking-wider">Início</span>
+          <svg class="h-3.5 w-3.5 text-slate-500 hover-gold-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l9-9 9 9M5 10v10h14V10M9 20v-6h6v6"></path>
           </svg>
-          Início
         </a>
 
         @for (section of navigationSections(); track section.id) {
-          <section class="overflow-hidden rounded-xl border transition-all duration-300"
-            [class.border-white/10]="isSectionExpanded(section.id)"
-            [class.border-white/5]="!isSectionExpanded(section.id)"
-            [class.bg-white/[0.03]]="isSectionExpanded(section.id)"
-            [class.bg-white/[0.015]]="!isSectionExpanded(section.id)"
-            [class.shadow-md]="isSectionExpanded(section.id)">
+          <div class="nav-section-group py-0.5">
+            <!-- Section Header (Borderless trigger link) -->
             <button
               type="button"
               (click)="toggleSection(section.id)"
-              class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.16em] transition-all duration-200"
-              [class.text-white]="isSectionExpanded(section.id)"
-              [class.bg-white/[0.02]]="isSectionExpanded(section.id)"
+              class="nav-section-btn flex w-full items-center justify-between gap-3 rounded-lg px-4 py-2 text-left text-xs font-semibold transition-all duration-200"
+              [class.text-liturgical-gold]="isSectionExpanded(section.id)"
               [class.text-slate-400]="!isSectionExpanded(section.id)"
-              class="hover:bg-white/5 hover:text-white">
-              <span>{{ section.label }}</span>
-              <svg class="h-3.5 w-3.5 transition-transform duration-300 ease-in-out" 
+              class="hover:bg-white/[0.03] hover:text-white">
+              <span class="font-cinzel tracking-wider">{{ section.label }}</span>
+              <svg class="h-3 w-3 transition-transform duration-300 ease-in-out text-slate-500" 
                    [class.rotate-180]="isSectionExpanded(section.id)" 
                    [class.text-liturgical-gold]="isSectionExpanded(section.id)"
                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,35 +75,42 @@
               </svg>
             </button>
 
-            <div [@expandCollapse]="isSectionExpanded(section.id) ? 'expanded' : 'collapsed'" class="space-y-1 border-t border-white/5 p-2">
+            <!-- Submenu Items with Tree Affordance (Recessed and Borderless) -->
+            <div [@expandCollapse]="isSectionExpanded(section.id) ? 'expanded' : 'collapsed'" 
+                 class="nav-section-body space-y-0.5 pl-6 pr-2 py-1 relative">
+              <!-- Extremely sutil vertical connector line -->
+              <div class="absolute left-4 top-0 bottom-3 w-[1px] bg-liturgical-gold/10"></div>
+              
               @for (item of section.items; track item.path + item.label) {
                 <button
                   type="button"
                   (click)="navigate(item)"
-                  [class.active-nav-item]="item.target === 'angular' && (router.url === item.path || router.url.split('?')[0] === item.path)"
+                  [class.active-sub-item]="item.target === 'angular' && (router.url === item.path || router.url.split('?')[0] === item.path)"
                   [class.text-slate-400]="item.target !== 'angular' || (router.url !== item.path && router.url.split('?')[0] !== item.path)"
-                  class="flex w-full items-center justify-between gap-2 rounded-lg border border-transparent px-3 py-2.5 text-left text-xs font-semibold transition-all hover:bg-white/5 hover:text-white">
-                  <span class="truncate">{{ item.label }}</span>
+                  class="nav-sub-item relative flex w-full items-center justify-between gap-2 rounded-md py-1.5 pl-4 pr-2 text-left text-xs font-medium transition-all duration-200 hover:text-white">
+                  
+                  <span class="truncate font-lora tracking-wide">{{ item.label }}</span>
                   @if (item.target === 'integration') {
                     <span class="shrink-0 rounded border border-sky-400/20 bg-sky-400/10 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-sky-300">Integração</span>
                   }
                 </button>
               }
             </div>
-          </section>
+          </div>
         }
       </nav>
     </div>
 
-    <div class="shrink-0 space-y-3 border-t border-white/5 p-4">
+    <!-- User Profile Footer (Cleaned up, borderless wrapper) -->
+    <div class="relative z-10 shrink-0 space-y-3 p-4 bg-gradient-to-t from-[#060a12]/80 to-transparent">
       @if (supabaseService.profile(); as prof) {
-        <div class="flex items-center gap-3 px-2">
-          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-liturgical-gold/20 bg-liturgical-gold/10 font-cinzel text-sm font-bold text-liturgical-gold">
+        <div class="flex items-center gap-3 px-2 py-1 rounded-xl bg-white/[0.01] border border-white/5 shadow-inner">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-liturgical-gold/30 bg-gradient-to-br from-liturgical-gold/20 to-transparent font-cinzel text-xs font-bold text-liturgical-gold shadow-sm">
             {{ prof.nome_historico?.substring(0,2)?.toUpperCase() || prof.nome?.substring(0,2)?.toUpperCase() }}
           </div>
           <div class="overflow-hidden">
-            <div class="truncate text-xs font-bold leading-tight text-white">{{ prof.nome_historico || prof.nome }}</div>
-            <div class="mt-0.5 truncate text-[9px] font-bold uppercase tracking-widest text-liturgical-gold">{{ prof.cargo_principal }}</div>
+            <div class="truncate text-xs font-bold leading-tight text-white font-lora">{{ prof.nome_historico || prof.nome }}</div>
+            <div class="mt-0.5 truncate text-[9px] font-bold uppercase tracking-widest text-liturgical-gold/80">{{ prof.cargo_principal }}</div>
           </div>
         </div>
       } @else {
@@ -107,18 +120,45 @@
       <button
         type="button"
         (click)="logout()"
-        class="flex w-full items-center justify-center gap-2 rounded-xl border border-white/5 bg-white/5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-400 transition-all hover:border-rose-500/20 hover:bg-rose-500/10 hover:text-rose-400">
+        class="flex w-full items-center justify-center gap-2 rounded-xl border border-white/5 bg-white/5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-400 transition-all duration-200 hover:border-rose-500/20 hover:bg-rose-500/10 hover:text-rose-400 active:scale-[0.98]">
         Desconectar
       </button>
     </div>
   </aside>
 
+  <!-- Mobile Sidebar Overlay Backdrop -->
   @if (mobileSidebarOpen) {
-    <div (click)="toggleMobileSidebar()" class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"></div>
+    <div (click)="toggleMobileSidebar()" class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"></div>
   }
 
-  <main class="flex min-w-0 flex-grow flex-col">
-    <div class="mx-auto w-full max-w-7xl flex-grow p-6 md:p-10">
+  <!-- Main View Container -->
+  <main class="relative flex min-w-0 flex-grow flex-col">
+    <!-- Huge Centered Watermark of Lodge Seal Behind View Content -->
+    <div class="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 opacity-[0.012] mix-blend-screen bg-contain bg-no-repeat bg-center select-none" style="background-image: url('/assets/logo-renascenca.png'); filter: grayscale(1) brightness(1.5);"></div>
+    
+    <!-- Desktop Top Header Bar -->
+    <header class="hidden md:flex z-30 h-16 w-full shrink-0 items-center justify-between border-b border-white/5 bg-[#060a12]/20 px-8 backdrop-blur-sm select-none">
+      <div class="flex items-center gap-2">
+        <span class="font-cinzel text-xs font-semibold tracking-[0.15em] text-slate-400">Templo Interno</span>
+        <span class="text-slate-600">/</span>
+        <span class="font-lora text-xs text-slate-300">Área de Trabalho</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <!-- PWA Mode Switcher Button -->
+        <button 
+          type="button" 
+          (click)="openIntegration('/pwa')" 
+          class="flex items-center gap-2 rounded-lg border border-liturgical-gold/20 bg-liturgical-gold/5 px-3.5 py-1.5 text-xs font-semibold text-liturgical-gold transition-all duration-200 hover:bg-liturgical-gold/10 hover:border-liturgical-gold/40 active:scale-[0.98] shadow-sm shadow-black/20">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+          </svg>
+          <span class="font-cinzel tracking-wider">Acessar Modo PWA</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Rendered views -->
+    <div class="relative z-10 mx-auto w-full max-w-7xl flex-grow p-6 md:p-10 animate-fade-in-view">
       <router-outlet></router-outlet>
     </div>
   </main>

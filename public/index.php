@@ -362,6 +362,140 @@ $authorizer = new Authorizer($currentUser, $permissionMap, $bypassRoleChecks);
 $GLOBALS['gestor_loja_normalize_role'] = $normalizeRole;
 $GLOBALS['gestor_loja_permission_map'] = $permissionMap;
 
+// --- GLOBAL SYSTEM STATUS GATE CHECK (Maintenance / Suspended) ---
+$bypassStatusCheck = false;
+$uriPath = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
+if (
+    in_array($uriPath, ['/login', '/logout', '/health', '/webhook'], true) ||
+    str_starts_with($uriPath, '/assets/') ||
+    str_starts_with($uriPath, '/api/auth/') ||
+    $uriPath === '/api/obreiro/sistema/tecnico/config' ||
+    $uriPath === '/api/obreiro/sistema/tecnico/salvar' ||
+    $uriPath === '/api/obreiro/sistema/config' ||
+    $uriPath === '/api/obreiro/sistema/config/salvar'
+) {
+    $bypassStatusCheck = true;
+}
+
+if (!$bypassStatusCheck && $tenantResolved) {
+    $sistemaStatus = 'online';
+    $manutencaoMsg = 'O sistema está em manutenção técnica programada. Retornaremos em breve.';
+    $suspensoMsg = 'O acesso a esta Loja está suspenso ou desativado.';
+
+    try {
+        $stmtStatus = Database::getConnection()->prepare("
+            SELECT sistema_status, manutencao_mensagem, suspenso_mensagem 
+            FROM public.configuracoes_loja 
+            WHERE loja_id = :loja_id 
+            LIMIT 1
+        ");
+        $stmtStatus->execute(['loja_id' => $_SESSION['tenant_id']]);
+        $sysStatusData = $stmtStatus->fetch(PDO::FETCH_ASSOC);
+        if ($sysStatusData) {
+            $sistemaStatus = $sysStatusData['sistema_status'] ?? 'online';
+            $manutencaoMsg = $sysStatusData['manutencao_mensagem'] ?? $manutencaoMsg;
+            $suspensoMsg = $sysStatusData['suspenso_mensagem'] ?? $suspensoMsg;
+        }
+    } catch (\Throwable $e) {}
+
+    if ($sistemaStatus !== 'online') {
+        // Resolve if current request is system admin
+        $isSystemAdminRequest = !empty($_SESSION['is_system_admin']) || !empty($_SESSION['force_system_admin']);
+        if (!$isSystemAdminRequest) {
+            $authHeader = getAuthorizationHeader();
+            if (preg_match('/Bearer\s(\S+)/i', $authHeader, $matches)) {
+                $token = $matches[1];
+                try {
+                    $identity = \App\Core\Auth\SupabaseIdentityResolver::resolve($token);
+                    if ($identity && !empty($identity['obreiro']['is_system_admin'])) {
+                        $isSystemAdminRequest = true;
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+
+        // If not system admin, block!
+        if (!$isSystemAdminRequest) {
+            if (str_starts_with($uriPath, '/api/')) {
+                header('Content-Type: application/json; charset=utf-8');
+                http_response_code(503);
+                echo json_encode([
+                    'ok' => false,
+                    'erro' => $sistemaStatus === 'manutencao' ? $manutencaoMsg : $suspensoMsg,
+                    'sistema_status' => $sistemaStatus
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            } else {
+                http_response_code(503);
+                ?>
+                <!DOCTYPE html>
+                <html lang="pt-BR">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title><?= $sistemaStatus === 'manutencao' ? 'Manutenção do Sistema' : 'Acesso Suspenso' ?></title>
+                    <style>
+                        body {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            background-color: #0F172A;
+                            color: #E2E8F0;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            min-height: 100vh;
+                            margin: 0;
+                            text-align: center;
+                            padding: 24px;
+                        }
+                        .card {
+                            background: rgba(30, 41, 59, 0.45);
+                            backdrop-filter: blur(16px);
+                            -webkit-backdrop-filter: blur(16px);
+                            border: 1px solid rgba(255, 255, 255, 0.05);
+                            padding: 40px;
+                            border-radius: 16px;
+                            max-width: 500px;
+                            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+                        }
+                        .title {
+                            font-size: 24px;
+                            font-weight: 700;
+                            margin-bottom: 16px;
+                            color: #C9A227;
+                            letter-spacing: 1px;
+                            font-family: 'Cinzel', serif;
+                        }
+                        .message {
+                            font-size: 14px;
+                            color: #94A3B8;
+                            line-height: 1.6;
+                            margin-bottom: 24px;
+                        }
+                        .icon {
+                            font-size: 48px;
+                            margin-bottom: 20px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <div class="icon"><?= $sistemaStatus === 'manutencao' ? '⚙️' : '🚫' ?></div>
+                        <div class="title"><?= $sistemaStatus === 'manutencao' ? 'Manutenção do Sistema' : 'Acesso Suspenso' ?></div>
+                        <div class="message"><?= htmlspecialchars($sistemaStatus === 'manutencao' ? $manutencaoMsg : $suspensoMsg) ?></div>
+                        <div style="font-size: 10px; color: #64748B; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px; margin-top: 16px;">
+                            Se você é o administrador técnico, <a href="/login" style="color: #C9A227; text-decoration: none; font-weight: bold;">clique aqui para entrar</a>.
+                        </div>
+                    </div>
+                </body>
+                </html>
+                <?php
+                exit;
+            }
+        }
+    }
+}
+
+
 if (isset($_SESSION['usuario_logado']) && !in_array($requestUri, ['/login', '/logout', '/health'], true)) {
     $statusSessao = strtolower(trim((string) ($_SESSION['usuario_logado']['acesso_status'] ?? '')));
     if ($statusSessao === '') {
@@ -1905,6 +2039,46 @@ if (MiniappApiRoutes::dispatch(
 }
 
 switch ($requestUri) {
+    case "/auth/bridge":
+        $token = $_GET['token'] ?? '';
+        $redirect = $_GET['redirect'] ?? '/pwa';
+
+        if (empty($token)) {
+            http_response_code(400);
+            echo "Token de autenticação não fornecido.";
+            exit;
+        }
+
+        try {
+            $identity = \App\Core\Auth\SupabaseIdentityResolver::resolve($token);
+            if (!$identity) {
+                http_response_code(401);
+                echo "Erro ao autenticar: Token inválido ou expirado.";
+                exit;
+            }
+
+            $usuario = $identity['obreiro'];
+            $cargo = $normalizeRole((string) ($usuario['cargo_principal'] ?? $usuario['cargo'] ?? ''));
+
+            $_SESSION["usuario_logado"] = $usuario;
+            $_SESSION["usuario_id"] = $usuario["id"];
+            $_SESSION["usuario_nome"] = $resolvePublicUserName($usuario);
+
+            $syncTenantSessionFromObreiro($usuario);
+            $syncSessionRoles($usuario);
+
+            if (!str_starts_with($redirect, '/')) {
+                $redirect = '/' . $redirect;
+            }
+
+            header("Location: " . $redirect);
+            exit;
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo "Erro interno ao processar a ponte de autenticação: " . htmlspecialchars($e->getMessage());
+            exit;
+        }
+
     case "/api/assistente/interpretar":
         header('Content-Type: application/json; charset=utf-8');
         WebGuards::requireJsonLogin($openTestAccess, $_SESSION);
@@ -2141,6 +2315,36 @@ switch ($requestUri) {
                 'mode' => 'legacy',
                 'redirect' => '/dashboard',
             ]);
+        }
+        // Se o sistema não estiver online, e o login for de um obreiro comum (não o admin do sistema), rejeita.
+        $sistemaStatus = 'online';
+        $manutencaoMsg = 'O sistema está em manutenção técnica programada. Retornaremos em breve.';
+        $suspensoMsg = 'O acesso a esta Loja está suspenso ou desativado.';
+
+        if ($tenantResolved) {
+            try {
+                $stmtStatus = Database::getConnection()->prepare("
+                    SELECT sistema_status, manutencao_mensagem, suspenso_mensagem 
+                    FROM public.configuracoes_loja 
+                    WHERE loja_id = :loja_id 
+                    LIMIT 1
+                ");
+                $stmtStatus->execute(['loja_id' => $_SESSION['tenant_id']]);
+                $sysStatusData = $stmtStatus->fetch(PDO::FETCH_ASSOC);
+                if ($sysStatusData) {
+                    $sistemaStatus = $sysStatusData['sistema_status'] ?? 'online';
+                    $manutencaoMsg = $sysStatusData['manutencao_mensagem'] ?? $manutencaoMsg;
+                    $suspensoMsg = $sysStatusData['suspenso_mensagem'] ?? $suspensoMsg;
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        if ($sistemaStatus !== 'online') {
+            JsonResponse::send([
+                'ok' => false,
+                'erro' => $sistemaStatus === 'manutencao' ? $manutencaoMsg : $suspensoMsg
+            ], 503);
+            exit;
         }
 
         $obreiroModel = new \App\Models\Obreiro();

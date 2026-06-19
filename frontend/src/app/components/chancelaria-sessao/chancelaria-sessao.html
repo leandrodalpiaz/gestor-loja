@@ -138,19 +138,23 @@
                 </div>
                 <div class="flex gap-2 border-t border-white/5 pt-3">
                   <button (click)="marcar(p, true)" 
-                          [class.bg-emerald-500]="p.presente" 
-                          [class.text-slate-950]="p.presente"
-                          [class.bg-white/5]="!p.presente"
-                          [class.text-slate-400]="!p.presente"
-                          class="flex-1 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
+                          [class.bg-emerald-500/10]="p.presente" 
+                          [class.text-emerald-400]="p.presente"
+                          [class.border-emerald-500/20]="p.presente"
+                          [class.bg-white/[0.02]]="!p.presente"
+                          [class.text-slate-500]="!p.presente"
+                          [class.border-white/5]="!p.presente"
+                          class="flex-1 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border">
                     Presente
                   </button>
                   <button (click)="marcar(p, false)" 
-                          [class.bg-rose-500]="!p.presente" 
-                          [class.text-slate-950]="!p.presente"
-                          [class.bg-white/5]="p.presente"
-                          [class.text-slate-400]="p.presente"
-                          class="flex-1 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
+                          [class.bg-rose-500/10]="!p.presente" 
+                          [class.text-rose-400]="!p.presente"
+                          [class.border-rose-500/20]="!p.presente"
+                          [class.bg-white/[0.02]]="p.presente"
+                          [class.text-slate-500]="p.presente"
+                          [class.border-white/5]="p.presente"
+                          class="flex-1 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border">
                     Ausente
                   </button>
                 </div>

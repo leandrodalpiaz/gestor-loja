@@ -44,6 +44,7 @@ class SecretariaApiRoutes
 
         // Executa validação de JWT/Sessão e Permissão
         $requireSecretariaApiAccess($permissaoRequerida);
+        $session = $_SESSION;
 
         $usuarioId = $session['usuario_id'] ?? null;
 

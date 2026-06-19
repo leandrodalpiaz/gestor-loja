@@ -190,6 +190,15 @@ class MestreBanquetesController
             $sessaoFoco['financeiro_banquete'] = $this->montarResumoFinanceiro($sessaoFoco, count($participantesAgape), $operacao);
         }
 
+        $configuracao = (new \App\Models\ConfiguracaoLoja())->obter();
+        $configPayload = [
+            'nome_loja' => (string) ($configuracao['nome_loja'] ?? ''),
+            'numero_loja' => (string) ($configuracao['numero_loja'] ?? ''),
+            'cidade' => (string) ($configuracao['cidade'] ?? 'Porto Alegre'),
+            'pix_chave_tipo' => (string) ($configuracao['pix_chave_tipo'] ?? 'CNPJ'),
+            'pix_chave_valor' => (string) ($configuracao['pix_chave_valor'] ?? ''),
+        ];
+
         return [
             'proxima_sessao' => $proximaSessao,
             'sessao_foco' => $sessaoFoco,
@@ -201,6 +210,7 @@ class MestreBanquetesController
             'participantes_agape' => $participantesAgape,
             'confirmados_sem_agape' => $confirmadosSemAgape,
             'operacao' => $operacao,
+            'configuracao' => $configPayload,
         ];
     }
 

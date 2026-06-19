@@ -127,7 +127,7 @@ class Presenca
                 cs.participara_agape,
                 cs.observacao,
                 cs.respondido_em,
-                COALESCE(o.nome_historico, o.nome) AS nome,
+                COALESCE(NULLIF(TRIM(o.nome_historico), ''), o.nome) AS nome,
                 o.cim
             FROM confirmacoes_sessao cs
             JOIN sessoes s ON s.id = cs.sessao_id
@@ -135,6 +135,8 @@ class Presenca
             WHERE cs.sessao_id = :sessao_id
               AND s.loja_id = :loja_id
               AND cs.status_confirmacao = 'confirmado'
+              AND o.is_system_admin = FALSE
+              AND o.excluir_em_listas = FALSE
             ORDER BY nome ASC
         ");
         $stmt->execute([
@@ -172,7 +174,7 @@ class Presenca
                 cs.obreiro_id,
                 cs.observacao,
                 cs.respondido_em,
-                COALESCE(o.nome_historico, o.nome) AS nome,
+                COALESCE(NULLIF(TRIM(o.nome_historico), ''), o.nome) AS nome,
                 o.cim
             FROM confirmacoes_sessao cs
             JOIN sessoes s ON s.id = cs.sessao_id
@@ -181,6 +183,8 @@ class Presenca
               AND s.loja_id = :loja_id
               AND cs.status_confirmacao = 'confirmado'
               AND cs.participara_agape = TRUE
+              AND o.is_system_admin = FALSE
+              AND o.excluir_em_listas = FALSE
             ORDER BY nome ASC
         ");
         $stmt->execute([

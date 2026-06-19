@@ -2,60 +2,151 @@
   font-family: 'Cinzel', serif;
 }
 
+.font-lora {
+  font-family: 'Lora', serif;
+}
+
 .font-inter {
   font-family: 'Inter', sans-serif;
 }
 
-/* Base page liturgical bg */
+/* Premium radial gradient liturgical background */
 .bg-liturgical-bg {
-  background-color: #050B14;
-}
-
-/* Premium radial gradients background */
-.bg-premium-radial {
-  background-color: #050B14;
+  background-color: #030712;
   background-image: 
-    radial-gradient(circle at 10% 15%, rgba(201, 162, 39, 0.07) 0%, transparent 40%),
-    radial-gradient(circle at 85% 85%, rgba(28, 77, 138, 0.25) 0%, transparent 55%),
-    radial-gradient(circle at 50% 50%, rgba(11, 19, 43, 0.5) 0%, #050B14 100%);
+    radial-gradient(circle at 50% 0%, rgba(28, 77, 138, 0.12) 0%, transparent 60%),
+    radial-gradient(circle at 10% 20%, rgba(201, 162, 39, 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(11, 19, 43, 0.8) 0%, #030712 100%);
 }
 
-/* Liturgical surface panel background */
-.bg-liturgical-surface\/50 {
-  background-color: rgba(11, 19, 43, 0.5);
-}
-
-.bg-liturgical-surface\/90 {
-  background-color: rgba(11, 19, 43, 0.9);
-}
-
-.bg-liturgical-surface\/95 {
-  background-color: rgba(11, 19, 43, 0.95);
-}
-
-/* Custom gold text and bg highlights */
+/* Liturgical gold accents */
 .text-liturgical-gold {
   color: #C9A227;
 }
 
-.bg-liturgical-gold\/10 {
-  background-color: rgba(201, 162, 39, 0.1);
+.bg-liturgical-gold\/20 {
+  background-color: rgba(201, 162, 39, 0.2);
 }
 
-.border-liturgical-gold\/20 {
-  border-color: rgba(201, 162, 39, 0.2);
+.border-liturgical-gold\/30 {
+  border-color: rgba(201, 162, 39, 0.3);
 }
 
-.border-liturgical-gold\/50 {
-  border-color: rgba(201, 162, 39, 0.5);
+/* Sidebar structure styling */
+.sidebar-aside {
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.4);
 }
 
-/* Active navigation item styling for premium UI/UX */
-.active-nav-item {
+/* Home button state matches the clean text style */
+.active-nav-section {
   color: #C9A227 !important;
-  background-color: rgba(201, 162, 39, 0.08) !important;
-  border-color: rgba(201, 162, 39, 0.3) !important;
-  border-left: 3px solid #C9A227 !important;
-  box-shadow: inset 4px 0 12px rgba(201, 162, 39, 0.05);
-  padding-left: calc(0.75rem - 3px) !important; /* Prevent layout shift by compensating for border */
+  background-color: rgba(201, 162, 39, 0.05) !important;
+}
+
+.active-nav-section .hover-gold-icon {
+  color: #C9A227 !important;
+}
+
+/* Section expand triggers (Parent links) */
+.nav-section-btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.nav-section-btn:hover {
+  color: #FFFFFF !important;
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Navigation child items inside expanded tree drawers */
+.nav-sub-item {
+  position: relative;
+  padding-left: 1.25rem !important; /* Space for the node indicator */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Node indicator dot next to child links */
+.nav-sub-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: rgba(201, 162, 39, 0.2);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Active child link state */
+.active-sub-item {
+  color: #C9A227 !important;
+  background-color: rgba(201, 162, 39, 0.04) !important;
+  font-weight: 600 !important;
+}
+
+.active-sub-item::before {
+  background-color: #C9A227 !important;
+  width: 4px;
+  height: 4px;
+  box-shadow: 0 0 6px rgba(201, 162, 39, 0.6);
+}
+
+/* Hover transitions for child links (slight indentation slide + highlight) */
+.nav-sub-item:hover {
+  color: #FFFFFF !important;
+  background-color: rgba(255, 255, 255, 0.02);
+  transform: translateX(3px);
+}
+
+.nav-sub-item:hover::before {
+  background-color: rgba(201, 162, 39, 0.6);
+  box-shadow: 0 0 4px rgba(201, 162, 39, 0.4);
+}
+
+/* Custom scrollbars inside the sidebar navigation */
+.custom-sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(201, 162, 39, 0.15);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+.custom-sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 162, 39, 0.4);
+}
+
+/* Base layouts and generic animations */
+@keyframes fadeInView {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-view {
+  animation: fadeInView 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes sidebarLoad {
+  from {
+    transform: translateX(-15px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-sidebar-load {
+  animation: sidebarLoad 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

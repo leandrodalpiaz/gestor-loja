@@ -289,7 +289,7 @@ class HospitaleiroController
             'obreiros' => array_map(static function (array $obreiro): array {
                 return [
                     'id' => (string) ($obreiro['id'] ?? ''),
-                    'nome' => (string) ($obreiro['nome_historico'] ?? $obreiro['nome'] ?? 'Obreiro'),
+                    'nome' => trim((string) ($obreiro['nome_historico'] ?? '')) !== '' ? (string) $obreiro['nome_historico'] : (string) ($obreiro['nome'] ?? 'Obreiro'),
                     'cim' => (string) ($obreiro['cim'] ?? ''),
                 ];
             }, $obreiroModel->getAllAtivos()),

@@ -33,6 +33,7 @@ class TesourariaApiRoutes
 
         header('Content-Type: application/json; charset=utf-8');
         $requireTesourariaApiAccess();
+        $session = $_SESSION;
 
         $usuarioId = $session['usuario_id'] ?? 0;
 

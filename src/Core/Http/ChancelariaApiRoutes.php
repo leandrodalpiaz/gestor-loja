@@ -39,6 +39,7 @@ class ChancelariaApiRoutes
 
         header('Content-Type: application/json; charset=utf-8');
         $requireChancelariaApiAccess();
+        $session = $_SESSION;
         $autorId = trim((string) ($session['usuario_id'] ?? '')) ?: null;
 
         if ($requestUri === '/api/chancelaria/sessao' && $method === 'GET') {
@@ -76,7 +77,7 @@ class ChancelariaApiRoutes
             if ($presencas === []) {
                 $presencas = array_map(static fn(array $item): array => [
                     'id' => (string) ($item['id'] ?? ''),
-                    'nome' => (string) ($item['nome_historico'] ?? $item['nome'] ?? 'Obreiro'),
+                    'nome' => trim((string) ($item['nome_historico'] ?? '')) !== '' ? (string) $item['nome_historico'] : (string) ($item['nome'] ?? 'Obreiro'),
                     'cim' => (string) ($item['cim'] ?? ''),
                     'grau' => (string) ($item['grau'] ?? ''),
                     'presente' => false,

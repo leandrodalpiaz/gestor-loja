@@ -289,7 +289,7 @@ class AdminController
             'obreiros' => array_map(static function (array $item): array {
                 return [
                     'id' => (string) ($item['id'] ?? ''),
-                    'nome' => (string) ($item['nome_historico'] ?? $item['nome'] ?? ''),
+                    'nome' => trim((string) ($item['nome_historico'] ?? '')) !== '' ? (string) $item['nome_historico'] : (string) ($item['nome'] ?? ''),
                     'cim' => (string) ($item['cim'] ?? ''),
                 ];
             }, $obreiros),

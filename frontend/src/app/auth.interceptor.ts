@@ -26,6 +26,9 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
       return next(cloned);
     }),
     catchError((error: HttpErrorResponse) => {
+      if (error.status === 503) {
+        window.location.href = '/';
+      }
       if (error.status === 401 && isAuthHandshake) {
         void supabaseClient.auth.signOut({ scope: 'local' });
         void router.navigate(['/login']);

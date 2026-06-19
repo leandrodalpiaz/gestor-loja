@@ -2,8 +2,51 @@
 
 @import 'tailwindcss';
 
+@theme {
+  --font-cinzel: 'Cinzel', serif;
+  --font-lora: 'Lora', serif;
+  --font-inter: 'Inter', sans-serif;
+  
+  --color-liturgical-bg: #030712;
+  --color-liturgical-surface: #0a0f1d;
+  --color-liturgical-surface-hover: #121b33;
+  --color-liturgical-gold: #c9a227;
+  --color-liturgical-gold-light: #e6c762;
+  --color-liturgical-gold-dark: #8a6d1c;
+  --color-liturgical-blue-deep: #060c18;
+  --color-liturgical-blue-bright: #1c4d8b;
+}
+
+/* Custom scrollbars global style */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(3, 7, 18, 0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 162, 39, 0.25);
+  border-radius: 9999px;
+  transition: background 0.3s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 162, 39, 0.55);
+}
+
 /* Style native select options to ensure readability in dark mode */
 select option {
   background-color: #0c1220 !important;
   color: #ffffff !important;
+}
+
+/* Disable selection and tap highlight for app-like feeling on mobile */
+a, button, select, input, textarea, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Sidebar elements and header should not be selectable to prevent blue highlight blocks on tap-hold */
+.sidebar-aside, header {
+  user-select: none;
+  -webkit-user-select: none;
 }
