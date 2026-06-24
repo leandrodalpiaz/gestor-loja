@@ -12,5 +12,6 @@
   ],
   "css.lint.unknownAtRules": "warning",
   "scss.lint.unknownAtRules": "warning",
-  "less.lint.unknownAtRules": "warning"
+  "less.lint.unknownAtRules": "warning",
+  "angular.enable-strict-mode-prompt": false
 }

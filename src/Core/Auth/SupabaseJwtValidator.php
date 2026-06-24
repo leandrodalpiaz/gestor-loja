@@ -146,7 +146,8 @@ class SupabaseJwtValidator
      */
     private static function getJwks(): ?array
     {
-        $cachePath = __DIR__ . '/../../../../storage/jwks_cache.json';
+        $basePath = realpath(__DIR__ . '/../../..') ?: __DIR__;
+        $cachePath = $basePath . '/storage/jwks_cache.json';
         $cacheTime = 24 * 3600; // 24 horas
         $appEnv = strtolower(trim((string) (Env::get('APP_ENV') ?: 'local')));
 

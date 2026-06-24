@@ -135,8 +135,10 @@ class EfemeridesCardService
         if (str_contains($tipo, 'historia') || str_contains($tipo, 'história')) {
             $titulo = trim((string) ($registro['nome'] ?? ''));
             $corpo = trim((string) ($registro['mensagem_custom'] ?? $registro['texto'] ?? ''));
-            if ($titulo !== '' && $corpo !== '') {
-                return $this->limparTextoCard($titulo . "\n\n" . $corpo);
+            // Evita duplicação quando título e corpo são idênticos
+            if ($titulo !== '' && $corpo !== '' && $titulo !== $corpo) {
+                // Título em negrito, seguido de linha decorativa e corpo em itálico pergaminho
+                return $this->limparTextoCard('**' . $titulo . "**\n\n─── ◆ ───\n\n" . $corpo);
             }
 
             return $this->limparTextoCard($corpo !== '' ? $corpo : $titulo);

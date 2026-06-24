@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { SupabaseService } from '../../services/supabase.service';
 import { environment } from '../../../environments/environment';
 import { DASHBOARD_NAVIGATION } from '../../navigation/dashboard-navigation';
-import { trigger, transition, style, animate } from '@angular/animations';
+import { trigger, transition, style, animate, query, stagger, keyframes, state, group } from '@angular/animations';
 
 @Component({
   selector: 'app-dashboard-home',
@@ -14,10 +14,44 @@ import { trigger, transition, style, animate } from '@angular/animations';
   templateUrl: './dashboard-home.html',
   styleUrl: './dashboard-home.css',
   animations: [
+    // Carousel slide transitions with direction awareness
     trigger('cardTransition', [
-      transition('* => *', [
-        style({ opacity: 0, transform: 'scale(0.97) translateY(4px)' }),
-        animate('350ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'scale(1) translateY(0)' }))
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateX(40px) scale(0.96) rotateY(4deg)' }),
+        animate('450ms cubic-bezier(0.22, 1, 0.36, 1)',
+          style({ opacity: 1, transform: 'translateX(0) scale(1) rotateY(0deg)' }))
+      ]),
+      transition(':leave', [
+        animate('300ms cubic-bezier(0.4, 0, 0.2, 1)',
+          style({ opacity: 0, transform: 'translateX(-20px) scale(0.97)' }))
+      ])
+    ]),
+    // Staggered text reveal for content cards
+    trigger('textReveal', [
+      transition(':enter', [
+        query('.reveal-item', [
+          style({ opacity: 0, transform: 'translateY(12px)' }),
+          stagger(120, [
+            animate('400ms cubic-bezier(0.22, 1, 0.36, 1)',
+              style({ opacity: 1, transform: 'translateY(0)' }))
+          ])
+        ], { optional: true })
+      ])
+    ]),
+    // Gold line animation
+    trigger('lineGrow', [
+      transition(':enter', [
+        style({ width: '0%' }),
+        animate('600ms 200ms cubic-bezier(0.22, 1, 0.36, 1)',
+          style({ width: '100%' }))
+      ])
+    ]),
+    // Pulse glow for active dot
+    trigger('dotPulse', [
+      state('active', style({ transform: 'scale(1)', opacity: 1 })),
+      state('inactive', style({ transform: 'scale(1)', opacity: 0.3 })),
+      transition('inactive => active', [
+        animate('300ms cubic-bezier(0.22, 1, 0.36, 1)')
       ])
     ])
   ]
@@ -40,6 +74,7 @@ export class DashboardHome implements OnInit, OnDestroy {
   // Highlights & Ephemerides unified carousel
   protected displayCards = signal<any[]>([]);
   protected activeCardIndex = signal(0);
+  protected slideDirection = signal<'next' | 'prev'>('next');
   private cycleTimer: any;
 
   ngOnInit(): void {
@@ -66,7 +101,8 @@ export class DashboardHome implements OnInit, OnDestroy {
     const url = `${environment.apiUrl}/api/obreiro/dashboard`;
 
     this.http.get<any>(url, {
-      headers: this.supabaseService.getAuthHeaders()
+      headers: this.supabaseService.getAuthHeaders(),
+      withCredentials: true
     }).subscribe({
       next: (res) => {
         this.loading.set(false);
@@ -112,7 +148,7 @@ export class DashboardHome implements OnInit, OnDestroy {
 
     for (let d = 1; d <= totalDays; d++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      
+
       const daySessions = sessoes.filter((s: any) => {
         if (!s.data_hora_inicio) return false;
         return s.data_hora_inicio.startsWith(dateStr);
@@ -175,6 +211,7 @@ export class DashboardHome implements OnInit, OnDestroy {
     if (totalCards <= 1) return;
 
     this.cycleTimer = setInterval(() => {
+      this.slideDirection.set('next');
       this.activeCardIndex.update(idx => (idx + 1) % totalCards);
     }, 7000); // Auto rotate every 7 seconds
   }
@@ -182,6 +219,7 @@ export class DashboardHome implements OnInit, OnDestroy {
   protected nextCard(): void {
     const total = this.displayCards().length;
     if (total <= 1) return;
+    this.slideDirection.set('next');
     this.activeCardIndex.update(idx => (idx + 1) % total);
     this.startCardCycle(total);
   }
@@ -189,12 +227,15 @@ export class DashboardHome implements OnInit, OnDestroy {
   protected prevCard(): void {
     const total = this.displayCards().length;
     if (total <= 1) return;
+    this.slideDirection.set('prev');
     this.activeCardIndex.update(idx => (idx === 0 ? total - 1 : idx - 1));
     this.startCardCycle(total);
   }
 
   protected selectCard(index: number): void {
     const total = this.displayCards().length;
+    const current = this.activeCardIndex();
+    this.slideDirection.set(index > current ? 'next' : 'prev');
     this.activeCardIndex.set(index);
     this.startCardCycle(total);
   }

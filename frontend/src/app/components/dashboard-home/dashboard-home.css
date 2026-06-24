@@ -1,4 +1,91 @@
-/* Glassmorphic cards */
+/* ===================================================
+   Destaques & Efemérides — Enhanced Carousel Styles
+   =================================================== */
+
+/* --- Carousel Container --- */
+.carousel-container {
+  perspective: 1200px;
+}
+
+/* --- Card Image Link --- */
+.card-image-link {
+  border-radius: inherit;
+}
+.card-image-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(12, 24, 44, 0.4) 100%);
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+.card-image-link:hover::after {
+  opacity: 0;
+}
+
+/* --- Text Card --- */
+.text-card {
+  position: relative;
+}
+
+/* Subtle floating particles (CSS-only shimmer) */
+.text-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 20%, rgba(201, 162, 39, 0.04) 0%, transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(201, 162, 39, 0.03) 0%, transparent 50%);
+  animation: shimmer 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(2px, -2px) rotate(0.5deg); }
+  50% { transform: translate(0, 2px) rotate(0deg); }
+  75% { transform: translate(-2px, -1px) rotate(-0.5deg); }
+}
+
+/* --- Navigation Arrows --- */
+.carousel-arrow {
+  opacity: 0;
+  transform: translateY(-50%) scale(0.9);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.carousel-container:hover .carousel-arrow {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* --- Pulse animation for section indicator --- */
+@keyframes pulseGold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(201, 162, 39, 0); }
+}
+.animate-pulse-gold {
+  animation: pulseGold 2.5s ease-in-out infinite;
+}
+
+/* --- Text reveal items --- */
+.reveal-item {
+  will-change: transform, opacity;
+}
+
+/* --- Gold line gradient --- */
+.bg-gradient-to-r.from-liturgical-gold\/60 {
+  --tw-gradient-from: rgba(201, 162, 39, 0.6);
+}
+.via-liturgical-gold\/30 {
+  --tw-gradient-stops: rgba(201, 162, 39, 0.3);
+}
+.to-transparent {
+  --tw-gradient-to: transparent;
+}
+
+/* --- Glass Card base --- */
 .glass-card {
   background: rgba(11, 19, 43, 0.45);
   backdrop-filter: blur(16px);
@@ -15,6 +102,10 @@
   background-color: rgba(201, 162, 39, 0.15);
 }
 
+.bg-liturgical-gold\/10 {
+  background-color: rgba(201, 162, 39, 0.10);
+}
+
 .border-liturgical-gold\/20 {
   border-color: rgba(201, 162, 39, 0.2);
 }
@@ -23,61 +114,32 @@
   border-color: rgba(201, 162, 39, 0.3);
 }
 
-.bg-liturgical-gold\/10 {
-  background-color: rgba(201, 162, 39, 0.10);
-}
-
-/* Animations */
+/* --- Animations --- */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
 
-/* Custom Scrollbars */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(201, 162, 39, 0.3);
-  border-radius: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(201, 162, 39, 0.6);
-}
+/* --- Custom Scrollbars --- */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.3); border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(201,162,39,0.6); }
 
-/* Hover glow effect */
+/* --- Hover glow --- */
 .hover-glow:hover {
   box-shadow: 0 0 15px rgba(201, 162, 39, 0.25);
   border-color: rgba(201, 162, 39, 0.4) !important;
 }
 
-/* Slide transitions */
+/* --- Slide transitions --- */
+@keyframes slideActive {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
 .carousel-slide-active {
   animation: slideActive 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-@keyframes slideActive {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
 }

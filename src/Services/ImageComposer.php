@@ -51,14 +51,41 @@ class ImageComposer
             $fontCursive = $fontNormal;
         }
 
+        $fontBoldRaw = dirname(__DIR__, 2) . '/public/assets/fonts/Inter-Bold.ttf';
+        $fontBoldInter = realpath($fontBoldRaw) ?: $fontBoldRaw;
+        if (!is_file($fontBoldInter)) {
+            $fontBoldInter = $fontNormal;
+        }
+
+        $fontPlayfairRaw = dirname(__DIR__, 2) . '/public/assets/fonts/PlayfairDisplay-Italic.ttf';
+        $fontPlayfair = realpath($fontPlayfairRaw) ?: $fontPlayfairRaw;
+        if (!is_file($fontPlayfair)) {
+            $fontPlayfair = $fontNormal;
+        }
+
         // Determina se é um evento festivo/aniversário
         $profile = $this->resolveVisualProfile($templateFile, (string) ($cardPayload['categoria'] ?? ''), $isGold, $width, $height);
         $isCelebration = (bool) $profile['celebration'];
         $isAffectionateBirthday = $profile['kind'] === 'birthday_affectionate';
 
-        $fontHeader = $profile['headerFont'] === 'cursive' ? $fontCursive : $fontNormal;
-        $fontBody = $profile['bodyFont'] === 'cursive' ? $fontCursive : $fontNormal;
-        $fontBold = $profile['boldFont'] === 'cursive' ? $fontCursive : $fontNormal;
+        $fontHeader = match ($profile['headerFont']) {
+            'cursive' => $fontCursive,
+            'inter-bold' => $fontBoldInter,
+            'playfair-italic' => $fontPlayfair,
+            default => $fontNormal,
+        };
+        $fontBody = match ($profile['bodyFont']) {
+            'cursive' => $fontCursive,
+            'inter-bold' => $fontBoldInter,
+            'playfair-italic' => $fontPlayfair,
+            default => $fontNormal,
+        };
+        $fontBold = match ($profile['boldFont']) {
+            'cursive' => $fontCursive,
+            'inter-bold' => $fontBoldInter,
+            'playfair-italic' => $fontPlayfair,
+            default => $fontNormal,
+        };
 
         $colorArr = $profile['color'];
         $shadowArr = $profile['shadow'];
@@ -469,18 +496,21 @@ class ImageComposer
         if (str_contains($template, 'historia') || str_contains($template, 'sepia') || str_contains($categoria, 'historia')) {
             return array_replace($profile, [
                 'kind' => 'history',
-                'color' => [78, 52, 32],
-                'fontSizeBase' => $width * 0.040,
-                'maxFontMultiplier' => 1.02,
-                'minFontMultiplier' => 0.50,
-                'paddingX' => (int) round($width * 0.085),
-                'textTop' => (int) round($height * 0.095),
-                'textBottom' => (int) round($height * 0.705),
-                'lineSpacingFactor' => 1.22,
+                'headerFont' => 'normal',
+                'bodyFont' => 'normal',
+                'boldFont' => 'normal',
+                'color' => [60, 42, 28],
+                'fontSizeBase' => $width * 0.048,
+                'maxFontMultiplier' => 1.10,
+                'minFontMultiplier' => 0.58,
+                'paddingX' => (int) round($width * 0.078),
+                'textTop' => (int) round($height * 0.065),
+                'textBottom' => (int) round($height * 0.725),
+                'lineSpacingFactor' => 1.32,
                 'align' => 'left',
                 'panelStyle' => 'history',
-                'headerMultiplier' => 1.08,
-                'headerGapMultiplier' => 1.8,
+                'headerMultiplier' => 1.0,
+                'headerGapMultiplier' => 1.0,
             ]);
         }
 
@@ -568,14 +598,16 @@ class ImageComposer
     {
         imagealphablending($img, true);
 
+        // Painel sutil sem fundo sólido — apenas moldura fina e linha decorativa
         $panelLeft = (int) round($width * 0.055);
         $panelTop = (int) round($height * 0.055);
         $panelRight = (int) round($width * 0.945);
         $panelBottom = (int) round($height * 0.735);
 
-        imagefilledrectangle($img, $panelLeft, $panelTop, $panelRight, $panelBottom, imagecolorallocatealpha($img, 255, 245, 222, 64));
-        imagerectangle($img, $panelLeft, $panelTop, $panelRight, $panelBottom, imagecolorallocatealpha($img, 105, 72, 38, 70));
-        imageline($img, $panelLeft + 22, $panelTop + 70, $panelRight - 22, $panelTop + 70, imagecolorallocatealpha($img, 105, 72, 38, 82));
+        // Moldura externa muito sutil (apenas borda, sem preenchimento)
+        imagerectangle($img, $panelLeft, $panelTop, $panelRight, $panelBottom, imagecolorallocatealpha($img, 105, 72, 38, 90));
+        // Linha decorativa horizontal fina
+        imageline($img, $panelLeft + 22, $panelTop + 50, $panelRight - 22, $panelTop + 50, imagecolorallocatealpha($img, 105, 72, 38, 100));
     }
 
     private function drawMasonicPanel($img, int $width, int $height): void
@@ -626,7 +658,7 @@ class ImageComposer
             return 'EM MEMÓRIA';
         }
         if (str_contains($templateFile, 'historia') || str_contains($templateFile, 'sepia') || $categoria === 'nossa história' || $categoria === 'nossa historia') {
-            return 'NOSSA HISTÓRIA';
+            return ''; // Cartões de história não precisam de cabeçalho — o título já está no corpo
         }
         if (str_contains($templateFile, 'solar') || str_contains($templateFile, 'kids') || str_contains($templateFile, 'sobrinh') || str_contains($templateFile, 'bedrock') || str_contains($templateFile, 'simpsons') || $categoria === 'aniversario' || $categoria === 'aniversário' || $categoria === 'cunhada') {
             return 'FELIZ ANIVERSÁRIO!';
