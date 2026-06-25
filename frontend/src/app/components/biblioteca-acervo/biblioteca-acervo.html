@@ -7,7 +7,7 @@
     </div>
 
     <!-- Quick Stats Summary -->
-    <div class="grid grid-cols-2 gap-4 sm:flex shrink-0">
+    <div class="grid grid-cols-2 gap-4 sm:flex shrink-0 items-center">
       <div class="glass-surface border border-white/5 bg-white/[0.01] px-4 py-2.5 rounded-2xl flex items-center gap-3">
         <div class="w-8 h-8 rounded-xl bg-liturgical-gold/10 text-liturgical-gold flex items-center justify-center">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,34 +31,42 @@
           <div class="text-xs font-bold text-white font-cinzel">{{ dados()?.meus_emprestimos?.length || 0 }}</div>
         </div>
       </div>
+
+      @if (pode('biblioteca.manage')) {
+        <button (click)="abrirFormNovo()"
+                class="flex items-center gap-2 px-4 py-2.5 bg-liturgical-gold text-slate-950 font-extrabold uppercase tracking-wider text-xs rounded-xl transition hover:bg-white">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Adicionar Obra
+        </button>
+      }
     </div>
   </div>
 
   <!-- Modern Pill Tabs -->
   <div class="flex flex-wrap gap-2 border-b border-white/5 pb-2">
-    <button (click)="abrirTab('acervo')" 
-            [class.active-pill-tab]="tab() === 'acervo'" 
+    <button (click)="abrirTab('acervo')"
+            [class.active-pill-tab]="tab() === 'acervo'"
             [class.inactive-pill-tab]="tab() !== 'acervo'"
             class="rounded-xl border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-300">
       Acervo
     </button>
-    <button (click)="abrirTab('meus')" 
-            [class.active-pill-tab]="tab() === 'meus'" 
+    <button (click)="abrirTab('meus')"
+            [class.active-pill-tab]="tab() === 'meus'"
             [class.inactive-pill-tab]="tab() !== 'meus'"
             class="rounded-xl border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-300">
       Meus Empréstimos
     </button>
     @if (pode('biblioteca.manage')) {
-      <button (click)="abrirTab('gestao')" 
-              [class.active-pill-tab]="tab() === 'gestao'" 
+      <button (click)="abrirTab('gestao')"
+              [class.active-pill-tab]="tab() === 'gestao'"
               [class.inactive-pill-tab]="tab() !== 'gestao'"
               class="rounded-xl border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-300">
         Gestão Geral
       </button>
     }
     @if (pode('biblioteca.classificar')) {
-      <button (click)="abrirTab('classificacao')" 
-              [class.active-pill-tab]="tab() === 'classificacao'" 
+      <button (click)="abrirTab('classificacao')"
+              [class.active-pill-tab]="tab() === 'classificacao'"
               [class.inactive-pill-tab]="tab() !== 'classificacao'"
               class="rounded-xl border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-300">
         Curadoria
@@ -67,28 +75,28 @@
   </div>
 
   <!-- Error/Success Feedbacks with animations -->
-  @if (successMsg(); as msg) { 
+  @if (successMsg(); as msg) {
     <div [@fadeInOut] class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3.5 text-xs font-semibold text-emerald-400 flex items-center gap-2">
       <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
       {{msg}}
-    </div> 
+    </div>
   }
-  @if (errorMsg(); as msg) { 
+  @if (errorMsg(); as msg) {
     <div [@fadeInOut] class="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3.5 text-xs font-semibold text-rose-400 flex items-center gap-2">
       <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
       {{msg}}
-    </div> 
+    </div>
   }
-  @if (loading() && !selectedBook()) { 
+  @if (loading() && !selectedBook()) {
     <div [@fadeInOut] class="py-24 text-center">
       <div class="inline-block w-8 h-8 rounded-full border-2 border-white/5 border-t-liturgical-gold animate-spin mb-4"></div>
       <p class="text-xs uppercase tracking-widest text-slate-500">Sincronizando acervo litúrgico...</p>
-    </div> 
+    </div>
   }
 
   <!-- Tab Content Area -->
   <div [@tabTransition]="tab()" class="min-h-[300px]">
-    
+
     <!-- Tab 1: Acervo -->
     @if (!loading() && tab() === 'acervo') {
       <div class="space-y-6">
@@ -118,8 +126,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <input [(ngModel)]="filtroBusca" 
-                 placeholder="Pesquisar por título, autor, código ou grau..." 
+          <input [(ngModel)]="filtroBusca"
+                 placeholder="Pesquisar por título, autor, código ou grau..."
                  class="w-full rounded-xl border border-white/10 bg-white/5 pl-11 pr-4 py-3.5 text-sm text-white placeholder-slate-500 transition-all duration-200 focus:border-liturgical-gold/60 focus:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-liturgical-gold/10">
         </div>
 
@@ -137,7 +145,7 @@
                     <span class="text-[7px] font-bold uppercase tracking-widest text-center text-rose-400">Grau {{ livro.grau_recomendado }}</span>
                   </div>
                 }
-                
+
                 @if (livro.capa_url) {
                   <img [src]="livro.capa_url" [alt]="livro.titulo" class="h-full w-full object-cover">
                 } @else {
@@ -161,14 +169,14 @@
               <div class="min-w-0 flex-1 flex flex-col justify-between">
                 <div>
                   <!-- Degree Badge -->
-                  <span class="inline-block px-2.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider badge-degree" 
+                  <span class="inline-block px-2.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider badge-degree"
                         [attr.data-degree]="livro.grau_recomendado || 'Livre'">
                     {{ livro.grau_recomendado || 'Livre' }}
                   </span>
-                  
+
                   <h2 class="mt-2 font-cinzel text-sm font-bold text-white leading-tight truncate-2-lines group-hover:text-liturgical-gold transition-colors">{{ livro.titulo }}</h2>
                   <p class="mt-1 text-[11px] text-slate-400 font-medium truncate">{{ livro.autor }}</p>
-                  
+
                   @if (livro.nota_instrucao) {
                     <p class="mt-2 text-[10px] text-slate-500 italic line-clamp-2 leading-relaxed">"{{ livro.nota_instrucao }}"</p>
                   }
@@ -184,27 +192,42 @@
                       {{ (livro.tipo === 'Peca de Arquitetura' || livro.tipo === 'Trabalho de Instrucao') ? 'Digital (PDF)' : (livro.quantidade_disponivel + ' disp.') }}
                     </div>
                     @if (livro.tipo !== 'Peca de Arquitetura' && livro.tipo !== 'Trabalho de Instrucao') {
-                      <button (click)="solicitar(livro); $event.stopPropagation()" 
-                              [disabled]="!livro.disponivel" 
+                      <button (click)="solicitar(livro); $event.stopPropagation()"
+                              [disabled]="!livro.disponivel"
                               class="rounded-lg bg-liturgical-gold px-3.5 py-2 text-[9px] font-bold uppercase tracking-widest text-liturgical-bg transition-all duration-300 hover:bg-yellow-500 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-liturgical-gold">
                         Solicitar
                       </button>
                     } @else {
-                      <button (click)="abrirLeitorPdf(livro.arquivo_url, livro.titulo, livro.autor); $event.stopPropagation()" 
+                      <button (click)="abrirLeitorPdf(livro.arquivo_url, livro.titulo, livro.autor); $event.stopPropagation()"
                               class="rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 px-3.5 py-2 text-[9px] font-bold uppercase tracking-widest transition-all duration-300 hover:bg-emerald-500/35 hover:scale-105 active:scale-95">
                         Ler em Tela
                       </button>
                     }
                   }
                 </div>
+                <!-- CRUD actions (only for biblioteca.manage) -->
+                @if (pode('biblioteca.manage')) {
+                  <div class="mt-2 flex gap-1.5 border-t border-white/5 pt-2">
+                    <button (click)="abrirFormEditar(livro); $event.stopPropagation()"
+                            class="flex-1 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-300 hover:bg-white/10 transition-all">
+                      <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                      Editar
+                    </button>
+                    <button (click)="excluirLivro(livro); $event.stopPropagation()"
+                            class="flex-1 rounded-lg border border-rose-500/20 bg-rose-500/5 px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-rose-400 hover:bg-rose-500/15 transition-all">
+                      <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                      Excluir
+                    </button>
+                  </div>
+                }
               </div>
             </article>
-          } @empty { 
+          } @empty {
             <div class="col-span-full py-16 text-center text-slate-500">
               <svg class="w-12 h-12 mx-auto opacity-20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p class="text-sm font-medium">Nenhuma obra litúrgica foi encontrada no acervo.</p> 
+              <p class="text-sm font-medium">Nenhuma obra litúrgica foi encontrada no acervo.</p>
             </div>
           }
         </div>
@@ -233,15 +256,15 @@
                     <p class="text-[11px] text-slate-400">Previsão de devolução: <b class="text-slate-300">{{ item.data_devolucao_prevista || '-' }}</b></p>
                   </div>
                 </div>
-                
+
                 <div class="shrink-0 w-8 h-8 rounded-full bg-liturgical-gold/5 text-liturgical-gold flex items-center justify-center">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </article>
-            } @empty { 
-              <p class="text-xs text-slate-500 py-4 italic">Você não possui empréstimos locais em andamento.</p> 
+            } @empty {
+              <p class="text-xs text-slate-500 py-4 italic">Você não possui empréstimos locais em andamento.</p>
             }
           </div>
         </div>
@@ -262,15 +285,15 @@
                   <h4 class="font-cinzel text-sm font-bold text-white truncate">{{ item.titulo }}</h4>
                   <p class="text-[11px] text-slate-400">Origem: <b class="text-sky-300">{{ item.loja_origem_nome }}</b></p>
                 </div>
-                
+
                 <div class="shrink-0 w-8 h-8 rounded-full bg-sky-500/10 text-sky-400 flex items-center justify-center">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                   </svg>
                 </div>
               </article>
-            } @empty { 
-              <p class="text-xs text-slate-500 py-4 italic">Sem solicitações de outras lojas no momento.</p> 
+            } @empty {
+              <p class="text-xs text-slate-500 py-4 italic">Sem solicitações de outras lojas no momento.</p>
             }
           </div>
         </div>
@@ -286,7 +309,7 @@
             <span class="w-1 h-4 bg-amber-400 rounded"></span>
             <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Devoluções Pendentes (Local)</h3>
           </div>
-          
+
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             @for (item of (dados().emprestimos_pendentes || []); track item.id) {
               <article class="glass-surface rounded-2xl border border-white/5 bg-liturgical-surface/30 p-5 flex flex-col justify-between gap-4 transition-all hover:border-white/10 hover:bg-liturgical-surface/40">
@@ -299,21 +322,21 @@
                     <p class="text-[11px] text-slate-400 mt-1">Obreiro: <b class="text-slate-200">{{ item.obreiro_nome }}</b></p>
                     <p class="text-[10px] text-slate-500">Previsão: {{ item.data_devolucao_prevista || '-' }}</p>
                   </div>
-                  
+
                   <div class="w-7 h-7 rounded-full bg-amber-400/10 text-amber-400 flex items-center justify-center text-xs font-bold">
                     {{ item.obreiro_nome?.substring(0, 1)?.toUpperCase() }}
                   </div>
                 </div>
 
-                <button (click)="devolver(item)" 
+                <button (click)="devolver(item)"
                         class="w-full text-center rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-emerald-400 transition-all hover:bg-emerald-500/10 hover:scale-101 active:scale-99">
                   Registrar Devolução
                 </button>
               </article>
-            } @empty { 
+            } @empty {
               <div class="col-span-full py-8 text-center border border-dashed border-white/5 rounded-2xl text-slate-500 text-xs">
                 Não há empréstimos locais com devolução pendente.
-              </div> 
+              </div>
             }
           </div>
         </div>
@@ -324,7 +347,7 @@
             <span class="w-1 h-4 bg-sky-400 rounded"></span>
             <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Requisições de Rede (Interlojas)</h3>
           </div>
-          
+
           <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             @for (item of (dados().pedidos_interloja_recebidos || []); track item.id) {
               <article class="glass-surface rounded-2xl border border-white/5 bg-liturgical-surface/30 p-5 flex flex-col justify-between gap-4 transition-all hover:border-white/10 hover:bg-liturgical-surface/40">
@@ -341,21 +364,21 @@
 
                 @if (item.status === 'solicitado') {
                   <div class="flex gap-2">
-                    <button (click)="decidir(item, 'aprovado')" 
+                    <button (click)="decidir(item, 'aprovado')"
                             class="flex-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 py-2 text-[9px] font-bold uppercase tracking-widest text-emerald-400 transition-all hover:bg-emerald-500/20 hover:scale-102">
                       Aprovar
                     </button>
-                    <button (click)="decidir(item, 'negado')" 
+                    <button (click)="decidir(item, 'negado')"
                             class="flex-1 rounded-lg bg-rose-500/10 border border-rose-500/30 py-2 text-[9px] font-bold uppercase tracking-widest text-rose-400 transition-all hover:bg-rose-500/20 hover:scale-102">
                       Negar
                     </button>
                   </div>
                 }
               </article>
-            } @empty { 
+            } @empty {
               <div class="col-span-full py-8 text-center border border-dashed border-white/5 rounded-2xl text-slate-500 text-xs">
                 Nenhuma solicitação de rede recebida.
-              </div> 
+              </div>
             }
           </div>
         </div>
@@ -374,7 +397,7 @@
 
           <div class="max-h-[500px] overflow-y-auto space-y-2 pr-2 scrollbar-hide border border-white/5 rounded-2xl p-2 bg-white/[0.005]">
             @for (livro of (dados().acervo || []); track livro.id) {
-              <button (click)="prepararClassificacao(livro)" 
+              <button (click)="prepararClassificacao(livro)"
                       [class.active-curator-card]="classificacao.livro_id === livro.id"
                       class="w-full text-left rounded-xl border border-white/5 bg-liturgical-surface/30 p-4 transition-all duration-300 hover:border-white/15 hover:bg-liturgical-surface/50">
                 <span class="inline-block px-2 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider badge-degree" [attr.data-degree]="livro.grau_recomendado || 'Livre'">
@@ -391,9 +414,9 @@
 
         <!-- Curatorship Curation Workspace Form -->
         <div class="lg:col-span-7">
-          <form (submit)="salvarClassificacao(); $event.preventDefault()" 
+          <form (submit)="salvarClassificacao(); $event.preventDefault()"
                 class="glass-surface border border-white/5 bg-liturgical-surface/40 p-6 rounded-2xl space-y-6 shadow-xl relative overflow-hidden">
-            
+
             <div class="absolute -right-12 -top-12 w-28 h-28 bg-liturgical-gold/[0.03] rounded-full blur-2xl"></div>
 
             <div class="flex items-center gap-3">
@@ -411,8 +434,8 @@
             <!-- Degree Selector -->
             <div class="space-y-2">
               <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400">Recomendação de Grau</label>
-              <select [(ngModel)]="classificacao.grau_recomendado" 
-                      name="grau" 
+              <select [(ngModel)]="classificacao.grau_recomendado"
+                      name="grau"
                       [disabled]="!classificacao.livro_id"
                       class="w-full rounded-xl border border-white/10 bg-white/5 p-3.5 text-xs text-white placeholder-slate-500 transition-all duration-200 focus:border-liturgical-gold/60 focus:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-liturgical-gold/10 disabled:opacity-40">
                 <option value="Livre">Livre (Acesso Geral)</option>
@@ -425,14 +448,14 @@
             <!-- Notes Textarea -->
             <div class="space-y-2">
               <label class="block text-[10px] font-bold uppercase tracking-widest text-slate-400">Nota de Instrução Litúrgica</label>
-              <textarea [(ngModel)]="classificacao.nota_instrucao" 
-                        name="nota" 
+              <textarea [(ngModel)]="classificacao.nota_instrucao"
+                        name="nota"
                         [disabled]="!classificacao.livro_id"
-                        placeholder="Recomendações de estudo, relevância litúrgica ou regras especiais..." 
+                        placeholder="Recomendações de estudo, relevância litúrgica ou regras especiais..."
                         class="min-h-[160px] w-full rounded-xl border border-white/10 bg-white/5 p-3.5 text-xs text-white placeholder-slate-500 transition-all duration-200 focus:border-liturgical-gold/60 focus:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-liturgical-gold/10 disabled:opacity-40"></textarea>
             </div>
 
-            <button type="submit" 
+            <button type="submit"
                     [disabled]="!classificacao.livro_id"
                     class="w-full rounded-xl bg-liturgical-gold py-3.5 text-xs font-bold uppercase tracking-widest text-liturgical-bg transition-all duration-300 hover:bg-yellow-500 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-liturgical-gold">
               Salvar Classificação
@@ -450,7 +473,7 @@
 
     <!-- Drawer Panel (Slides in from the right) -->
     <aside [@fadeInOut] class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-slate-950 border-l border-white/10 shadow-2xl p-6 overflow-y-auto flex flex-col justify-between scrollbar-hide">
-      
+
       <!-- Top Header & Close Button -->
       <div>
         <div class="flex items-start justify-between gap-4 border-b border-white/5 pb-4 mb-5">
@@ -461,7 +484,7 @@
             <h2 class="font-cinzel text-lg font-bold text-white leading-snug">{{ livro.titulo }}</h2>
             <p class="text-xs text-slate-400 font-medium mt-1">{{ livro.autor }}</p>
           </div>
-          
+
           <button (click)="fecharDetalhes()" class="text-slate-400 hover:text-white rounded-lg p-1.5 hover:bg-white/5 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -537,7 +560,7 @@
               <div class="grid grid-cols-2 gap-3">
                 <button (click)="reagir(livro.id, true)" class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 py-2.5 text-xs font-bold transition flex items-center justify-center gap-2">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v5a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                   </svg>
                   Recomendo ({{ livro.total_gostei_sim || 0 }})
                 </button>
@@ -553,7 +576,7 @@
             <!-- Reviews / Comments list -->
             <div class="border-t border-white/5 pt-4 space-y-4">
               <h4 class="text-[10px] font-bold text-white uppercase tracking-widest">Resenhas dos Irmãos ({{ dados().comentarios?.length || 0 }})</h4>
-              
+
               <!-- Review input -->
               <div class="space-y-2">
                 <textarea [(ngModel)]="novoComentario" rows="2" placeholder="Escreva sua recomendação ou percepção da obra..." class="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-white placeholder-slate-500 transition-all focus:border-liturgical-gold/60 focus:bg-white/[0.07] focus:outline-none"></textarea>
@@ -611,16 +634,16 @@
               Baixar Arquivo PDF
             </button>
           } @else {
-            <button (click)="solicitar(livro); $event.stopPropagation()" 
-                    [disabled]="!livro.pode_solicitar && !livro.disponivel" 
+            <button (click)="solicitar(livro); $event.stopPropagation()"
+                    [disabled]="!livro.pode_solicitar && !livro.disponivel"
                     class="w-full rounded-xl bg-liturgical-gold py-3 text-xs font-bold uppercase tracking-widest text-liturgical-bg transition-all duration-300 hover:bg-yellow-500 disabled:opacity-40">
               {{ (livro.pode_solicitar || livro.disponivel) ? 'Solicitar Empréstimo' : 'Indisponível para Empréstimo' }}
             </button>
           }
         }
-        
+
         @if (pode('biblioteca.classificar')) {
-          <button (click)="prepararClassificacao(livro); abrirTab('classificacao'); $event.stopPropagation()" 
+          <button (click)="prepararClassificacao(livro); abrirTab('classificacao'); $event.stopPropagation()"
                   class="w-full rounded-xl border border-purple-500/30 py-2.5 text-[10px] font-bold uppercase tracking-widest text-purple-400 hover:bg-purple-500/10">
             Ajustar Classificação (Curadoria)
           </button>
@@ -638,7 +661,7 @@
           <h2 class="font-cinzel text-sm font-bold text-white uppercase tracking-wider truncate leading-tight">{{ pdfLeituraTitulo() }}</h2>
           <p class="text-[10px] text-slate-400 font-medium truncate mt-0.5">{{ pdfLeituraAutor() }}</p>
         </div>
-        
+
         <div class="flex items-center gap-3">
           <button (click)="baixarPdf(pdfRawUrl()!)" class="flex items-center gap-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/35 transition duration-200">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -646,7 +669,7 @@
             </svg>
             Baixar PDF
           </button>
-          
+
           <button (click)="fecharLeitorPdf()" class="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-400 hover:text-white hover:bg-white/10 transition duration-200">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -654,7 +677,7 @@
           </button>
         </div>
       </header>
-      
+
       <!-- Main Reader Area -->
       <main class="flex-1 w-full max-w-5xl mx-auto p-4 md:p-8 flex justify-center items-center">
         <div class="w-full h-full bg-slate-900/40 rounded-2xl border border-white/5 overflow-hidden shadow-2xl relative">
@@ -664,3 +687,165 @@
     </div>
   }
 </div>
+
+<!-- ─── Modal CRUD: Adicionar / Editar Obra ───────────────────────── -->
+  @if (showFormModal()) {
+    <div [@fadeInOut] class="fixed inset-0 z-[110] flex items-start justify-center pt-16 px-4 bg-black/75 backdrop-blur-sm" (click)="fecharForm()">
+      <div (click)="$event.stopPropagation()" class="w-full max-w-lg bg-slate-900 border border-white/10 rounded-2xl shadow-2xl max-h-[85vh] overflow-y-auto">
+
+        <div class="sticky top-0 bg-slate-900 border-b border-white/5 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+          <h2 class="font-cinzel text-base font-bold text-white">
+            {{ formMode() === 'add' ? 'Adicionar Obra' : 'Editar Obra' }}
+          </h2>
+          <button (click)="fecharForm()" class="text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <form (submit)="salvarForm(); $event.preventDefault()" class="p-6 space-y-4">
+          <!-- ─── QR Code Scanner + ISBN ─── -->
+          <div class="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
+            <div>
+              <h3 class="text-xs font-bold text-amber-200 uppercase tracking-wider flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h.01M16 20h2M4 4h16v16H4V4z"/></svg>
+                Cadastro Rapido por ISBN
+              </h3>
+              <p class="text-[10px] text-amber-300/70 mt-0.5">Escaneie o QR code do livro ou digite o ISBN manualmente.</p>
+            </div>
+
+            <!-- Scanner Area -->
+            @if (!scannerAtivo()) {
+              <div class="flex gap-2">
+                <button type="button" (click)="abrirScanner()"
+                        class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs font-bold uppercase tracking-wider hover:bg-amber-500/25 transition-all">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  Escanear QR Code
+                </button>
+                <span class="text-[10px] text-amber-400/50 self-center">ou</span>
+              </div>
+            } @else {
+              <div>
+                <div id="qr-reader" class="w-full rounded-xl overflow-hidden" style="min-height: 280px;"></div>
+                @if (scannerErro()) {
+                  <p class="text-[10px] text-rose-400 mt-2">{{ scannerErro() }}</p>
+                }
+                <button type="button" (click)="fecharScanner()"
+                        class="mt-2 w-full py-1.5 rounded-lg border border-white/10 text-slate-400 text-[10px] font-bold uppercase tracking-wider hover:bg-white/5 transition-all">
+                  Fechar Camera
+                </button>
+              </div>
+            }
+
+            <!-- Manual ISBN input -->
+            <div class="flex gap-2 pt-1 border-t border-amber-500/10">
+              <input [(ngModel)]="form().isbn" name="isbn_lookup"
+                     placeholder="Ou digite o ISBN..."
+                     class="flex-1 bg-black/25 border border-amber-500/20 rounded-xl px-3 py-2 text-sm text-white placeholder-amber-400/30 focus:border-amber-400/40 focus:outline-none">
+              <button type="button" (click)="buscarIsbn()" [disabled]="isbnBuscando()"
+                      class="px-4 py-2 rounded-xl border border-amber-500/30 text-amber-300 text-xs font-bold uppercase tracking-wider hover:bg-amber-500/10 disabled:opacity-50 transition-all">
+                {{ isbnBuscando() ? 'Buscando...' : 'Consultar' }}
+              </button>
+            </div>
+            @if (isbnStatus()) {
+              <p class="text-[10px]" [class.text-emerald-400]="isbnStatusTipo() === 'success'" [class.text-rose-400]="isbnStatusTipo() === 'error'" [class.text-amber-300]="isbnStatusTipo() === 'info'">{{ isbnStatus() }}</p>
+            }
+          </div>
+
+          <!-- Título -->
+          <div>
+            <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Título *</label>
+            <input [(ngModel)]="form().titulo" name="titulo" required
+                   class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-liturgical-gold/40 focus:outline-none">
+          </div>
+
+          <!-- Autor + Tipo -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Autor</label>
+              <input [(ngModel)]="form().autor" name="autor"
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-liturgical-gold/40 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tipo</label>
+              <select [(ngModel)]="form().tipo" name="tipo"
+                      class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-liturgical-gold/40 focus:outline-none">
+                @for (t of TIPOS_OBRA; track t) { <option [value]="t">{{ t }}</option> }
+              </select>
+            </div>
+          </div>
+
+          <!-- ISBN + Capa URL -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">ISBN</label>
+              <input [(ngModel)]="form().isbn" name="isbn"
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-liturgical-gold/40 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">URL da Capa</label>
+              <input [(ngModel)]="form().capa_url" name="capa_url"
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-liturgical-gold/40 focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Resumo -->
+          <div>
+            <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Resumo / Sinopse</label>
+            <textarea [(ngModel)]="form().resumo" name="resumo" rows="3"
+                      class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-liturgical-gold/40 focus:outline-none resize-y"></textarea>
+          </div>
+
+          <!-- Quantidade + Grau Restrição -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Qtd. Disponível</label>
+              <input [(ngModel)]="form().quantidade_disponivel" name="quantidade" type="number" min="0"
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-liturgical-gold/40 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Grau Restrição</label>
+              <select [(ngModel)]="form().grau_restricao" name="grau_restricao"
+                      class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-liturgical-gold/40 focus:outline-none">
+                @for (g of GRAUS_RESTRICAO; track g.value) { <option [value]="g.value">{{ g.label }}</option> }
+              </select>
+            </div>
+          </div>
+
+          <!-- Grau Recomendado + Nota -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Grau Recomendado</label>
+              <select [(ngModel)]="form().grau_recomendado" name="grau_recomendado"
+                      class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-liturgical-gold/40 focus:outline-none">
+                @for (g of GRAUS_RECOMENDADOS; track g) { <option [value]="g">{{ g }}</option> }
+              </select>
+            </div>
+            <div>
+              <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nota Instrução</label>
+              <input [(ngModel)]="form().nota_instrucao" name="nota"
+                     class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-liturgical-gold/40 focus:outline-none">
+            </div>
+          </div>
+
+          <!-- URL do PDF -->
+          <div>
+            <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">URL do PDF (opcional)</label>
+            <input [(ngModel)]="form().arquivo_url" name="arquivo_url"
+                   class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-liturgical-gold/40 focus:outline-none">
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-2 pt-2 border-t border-white/5">
+            <button type="button" (click)="fecharForm()"
+                    class="flex-1 py-2.5 rounded-xl border border-white/10 text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-white/5">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="formSaving()"
+                    class="flex-1 py-2.5 rounded-xl bg-liturgical-gold text-slate-950 text-xs font-extrabold uppercase tracking-wider hover:bg-white disabled:opacity-50">
+              {{ formSaving() ? 'Salvando...' : (formMode() === 'add' ? 'Adicionar' : 'Salvar Alterações') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }

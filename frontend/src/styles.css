@@ -6,7 +6,7 @@
   --font-cinzel: 'Cinzel', serif;
   --font-lora: 'Lora', serif;
   --font-inter: 'Inter', sans-serif;
-  
+
   --color-liturgical-bg: #030712;
   --color-liturgical-surface: #0a0f1d;
   --color-liturgical-surface-hover: #121b33;
@@ -49,4 +49,18 @@ a, button, select, input, textarea, [role="button"] {
 .sidebar-aside, header {
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* PWA Native App: Safe area & overscroll behavior */
+html {
+  overscroll-behavior: none;
+}
+
+body {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Bottom nav safe-area aware container */
+app-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 8px);
 }

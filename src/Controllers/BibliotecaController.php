@@ -752,6 +752,97 @@ class BibliotecaController
         return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível atualizar a classificação.'];
     }
 
+    public function buscarIsbnMiniapp(string $isbn): array
+    {
+        $isbn = trim($isbn);
+        if ($isbn === '') {
+            return ['ok' => false, 'erro' => 'Informe o ISBN para buscar.'];
+        }
+        $metadata = (new LivroMetadataService())->buscarPorIsbn($isbn);
+        if (!$metadata) {
+            return ['ok' => false, 'erro' => 'ISBN não encontrado nos servidores literários.'];
+        }
+        return ['ok' => true, 'dados' => $metadata];
+    }
+
+    // ─── CRUD de obras (Miniapp/Angular) ────────────────────────────────
+
+    public function adicionarMiniapp(array $dados, ?string $autorId): array
+    {
+        $titulo = trim((string) ($dados['titulo'] ?? ''));
+        if ($titulo === '') {
+            return ['ok' => false, 'erro' => 'O título da obra é obrigatório.'];
+        }
+
+        $payload = [
+            'titulo' => $titulo,
+            'autor' => trim((string) ($dados['autor'] ?? '')),
+            'resumo' => trim((string) ($dados['resumo'] ?? '')),
+            'tipo' => trim((string) ($dados['tipo'] ?? 'Livro Físico')),
+            'grau_restricao' => (int) ($dados['grau_restricao'] ?? 1),
+            'arquivo_url' => trim((string) ($dados['arquivo_url'] ?? '')),
+            'quantidade_disponivel' => (int) ($dados['quantidade_disponivel'] ?? 1),
+            'isbn' => trim((string) ($dados['isbn'] ?? '')),
+            'capa_url' => trim((string) ($dados['capa_url'] ?? '')),
+            'grau_recomendado' => trim((string) ($dados['grau_recomendado'] ?? 'Livre')),
+            'nota_instrucao' => trim((string) ($dados['nota_instrucao'] ?? '')),
+            'curador_id' => $autorId,
+        ];
+
+        $id = $this->acervoModel->adicionar($payload);
+        if ($id) {
+            return ['ok' => true, 'id' => $id, 'dados' => $this->acervoModel->buscarPorId($id)];
+        }
+        return ['ok' => false, 'erro' => 'Não foi possível adicionar a obra.'];
+    }
+
+    public function editarMiniapp(int $id, array $dados): array
+    {
+        if ($id <= 0) {
+            return ['ok' => false, 'erro' => 'ID da obra inválido.'];
+        }
+
+        $obra = $this->acervoModel->buscarPorId($id);
+        if (!$obra) {
+            return ['ok' => false, 'erro' => 'Obra não encontrada.'];
+        }
+
+        $payload = [
+            'titulo' => trim((string) ($dados['titulo'] ?? $obra['titulo'])),
+            'autor' => trim((string) ($dados['autor'] ?? $obra['autor'])),
+            'resumo' => trim((string) ($dados['resumo'] ?? $obra['resumo'])),
+            'tipo' => trim((string) ($dados['tipo'] ?? $obra['tipo'])),
+            'grau_restricao' => (int) ($dados['grau_restricao'] ?? $obra['grau_restricao']),
+            'arquivo_url' => trim((string) ($dados['arquivo_url'] ?? $obra['arquivo_url'])),
+            'quantidade_disponivel' => (int) ($dados['quantidade_disponivel'] ?? $obra['quantidade_disponivel']),
+            'isbn' => trim((string) ($dados['isbn'] ?? $obra['isbn'])),
+            'capa_url' => trim((string) ($dados['capa_url'] ?? $obra['capa_url'])),
+            'grau_recomendado' => trim((string) ($dados['grau_recomendado'] ?? $obra['grau_recomendado'])),
+            'nota_instrucao' => trim((string) ($dados['nota_instrucao'] ?? $obra['nota_instrucao'])),
+        ];
+
+        $ok = $this->acervoModel->atualizar($id, $payload);
+        if ($ok) {
+            return ['ok' => true, 'dados' => $this->acervoModel->buscarPorId($id)];
+        }
+        return ['ok' => false, 'erro' => 'Não foi possível atualizar a obra.'];
+    }
+
+    public function excluirMiniapp(int $id): array
+    {
+        if ($id <= 0) {
+            return ['ok' => false, 'erro' => 'ID da obra inválido.'];
+        }
+
+        $obra = $this->acervoModel->buscarPorId($id);
+        if (!$obra) {
+            return ['ok' => false, 'erro' => 'Obra não encontrada.'];
+        }
+
+        $ok = $this->acervoModel->deletar($id);
+        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível excluir a obra.'];
+    }
+
     private function resolverPermissoes(): array
     {
         if (!empty($_SESSION['is_system_admin']) || !empty($_SESSION['force_system_admin']) || (string) ($_SESSION['usuario_id'] ?? '') === '0') {

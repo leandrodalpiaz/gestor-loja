@@ -131,7 +131,7 @@
                   <td class="py-3 font-semibold">Saldo Inicial</td>
                   <td class="py-3 text-right">{{ (fechamentoAnterior()?.saldo_inicial || 0) | currency:'BRL' }}</td>
                   <td class="py-3 text-right font-semibold text-white">{{ f.saldo_inicial | currency:'BRL' }}</td>
-                  <td class="py-3 text-right font-medium" 
+                  <td class="py-3 text-right font-medium"
                       [class.text-emerald-400]="f.saldo_inicial - (fechamentoAnterior()?.saldo_inicial || 0) >= 0"
                       [class.text-rose-400]="f.saldo_inicial - (fechamentoAnterior()?.saldo_inicial || 0) < 0">
                     {{ f.saldo_inicial - (fechamentoAnterior()?.saldo_inicial || 0) | currency:'BRL' }}
@@ -141,7 +141,7 @@
                   <td class="py-3 font-semibold">Receitas (Entradas)</td>
                   <td class="py-3 text-right">{{ (fechamentoAnterior()?.total_entradas || 0) | currency:'BRL' }}</td>
                   <td class="py-3 text-right font-semibold text-emerald-400">{{ f.total_entradas | currency:'BRL' }}</td>
-                  <td class="py-3 text-right font-medium" 
+                  <td class="py-3 text-right font-medium"
                       [class.text-emerald-400]="f.total_entradas - (fechamentoAnterior()?.total_entradas || 0) >= 0"
                       [class.text-rose-400]="f.total_entradas - (fechamentoAnterior()?.total_entradas || 0) < 0">
                     {{ f.total_entradas - (fechamentoAnterior()?.total_entradas || 0) | currency:'BRL' }}
@@ -151,7 +151,7 @@
                   <td class="py-3 font-semibold">Despesas (Saídas)</td>
                   <td class="py-3 text-right">{{ (fechamentoAnterior()?.total_saidas || 0) | currency:'BRL' }}</td>
                   <td class="py-3 text-right font-semibold text-rose-400">{{ f.total_saidas | currency:'BRL' }}</td>
-                  <td class="py-3 text-right font-medium" 
+                  <td class="py-3 text-right font-medium"
                       [class.text-rose-400]="f.total_saidas - (fechamentoAnterior()?.total_saidas || 0) >= 0"
                       [class.text-emerald-400]="f.total_saidas - (fechamentoAnterior()?.total_saidas || 0) < 0">
                     {{ (fechamentoAnterior()?.total_saidas || 0) - f.total_saidas | currency:'BRL' }}
@@ -161,7 +161,7 @@
                   <td class="py-3 text-white">Saldo Líquido</td>
                   <td class="py-3 text-right">{{ (fechamentoAnterior()?.saldo_final || 0) | currency:'BRL' }}</td>
                   <td class="py-3 text-right text-liturgical-gold">{{ f.saldo_final | currency:'BRL' }}</td>
-                  <td class="py-3 text-right" 
+                  <td class="py-3 text-right"
                       [class.text-emerald-400]="f.saldo_final - (fechamentoAnterior()?.saldo_final || 0) >= 0"
                       [class.text-rose-400]="f.saldo_final - (fechamentoAnterior()?.saldo_final || 0) < 0">
                     {{ f.saldo_final - (fechamentoAnterior()?.saldo_final || 0) | currency:'BRL' }}
@@ -185,15 +185,15 @@
           <div class="mt-6 flex justify-between items-center bg-white/2 border border-white/5 rounded-2xl p-4">
             <div>
               <span class="text-[8px] text-slate-500 uppercase tracking-widest block">Receita Estimada</span>
-              <span class="font-mono text-emerald-400 font-bold text-sm">+ R$ {{ (f.total_entradas * 1.05).toFixed(2) }}</span>
+              <span class="font-mono text-emerald-400 font-bold text-sm">+ R$ {{ ((f.total_entradas || 0) * 1.05).toFixed(2) }}</span>
             </div>
             <div>
               <span class="text-[8px] text-slate-500 uppercase tracking-widest block">Despesa Estimada</span>
-              <span class="font-mono text-rose-400 font-bold text-sm">- R$ {{ f.total_saidas.toFixed(2) }}</span>
+              <span class="font-mono text-rose-400 font-bold text-sm">- R$ {{ (f.total_saidas || 0).toFixed(2) }}</span>
             </div>
             <div>
               <span class="text-[8px] text-slate-500 uppercase tracking-widest block">Saldo Sugerido</span>
-              <span class="font-mono text-white font-bold text-sm">R$ {{ f.saldo_final.toFixed(2) }}</span>
+              <span class="font-mono text-white font-bold text-sm">R$ {{ (f.saldo_final || 0).toFixed(2) }}</span>
             </div>
           </div>
         </div>
@@ -205,7 +205,7 @@
             <p class="text-xs text-slate-400 mt-1">Feche a competência após auditar todos os lançamentos de caixa. Isso impedirá novos lançamentos retroativos.</p>
           </div>
           <div class="mt-6 flex justify-end">
-            <button [disabled]="f.status === 'fechado' || salvando()" 
+            <button [disabled]="f.status === 'fechado' || salvando()"
                     (click)="fechar()"
                     class="w-full md:w-auto px-6 py-3 bg-liturgical-gold hover:bg-liturgical-goldHover disabled:bg-slate-700 disabled:text-slate-400 disabled:opacity-50 text-[#050B14] rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-liturgical-gold/10">
               {{ f.status === 'fechado' ? 'Competência Encerrada' : 'Fechar Competência' }}
@@ -220,13 +220,13 @@
   <!-- MODO IMPRESSÃO (A4 OFICIAL - 3 PÁGINAS)     -->
   <!-- ========================================== -->
   <div class="hidden print:block font-sans text-black bg-white w-[21cm] mx-auto text-xs leading-relaxed">
-    
+
     <!-- PÁGINA 1: CAPA OFICIAL -->
     <div class="print-page flex flex-col justify-between h-[28.7cm] p-16 text-center border-box">
       <!-- Cabeçalho Brasão -->
       <div class="space-y-3">
         <h2 class="text-base font-extrabold uppercase tracking-widest text-black">Estado do Rio Grande do Sul</h2>
-        
+
         <!-- Brasão Maçônico SVG -->
         <div class="py-6">
           <svg class="w-24 h-24 mx-auto text-black" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2">
@@ -332,7 +332,7 @@
               <td class="p-1.5 border-r border-black text-right">0,00</td>
               <td class="p-1.5 text-right">0,00%</td>
             </tr>
-            
+
             <tr class="bg-slate-50 border-b border-black font-bold">
               <td class="p-2 border-r border-black pl-4 uppercase text-slate-700">Indiretos</td>
               <td class="p-2 border-r border-black text-right">110,77</td>
@@ -385,7 +385,7 @@
               <td class="p-1.5 border-r border-black text-right">121,50</td>
               <td class="p-1.5 text-right">2,66%</td>
             </tr>
-            
+
             <tr class="bg-slate-50 border-b border-black font-bold">
               <td class="p-2 border-r border-black pl-4 uppercase text-slate-700">Fornecedores</td>
               <td class="p-2 border-r border-black text-right">122,00</td>
@@ -455,7 +455,7 @@
           <div class="space-y-2">
             <h4 class="text-[10px] font-bold uppercase border-l-2 border-black pl-2">Movimento do Tronco de Solidariedade</h4>
             <p class="text-[8px] text-slate-600">Período de 01/12/2025 a 31/11/2026 (Exercício Corrente)</p>
-            
+
             <table class="w-full text-[9px] border border-black border-collapse">
               <thead>
                 <tr class="bg-slate-100 border-b border-black text-[8px] font-bold uppercase text-slate-700">

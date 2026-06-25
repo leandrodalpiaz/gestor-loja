@@ -2,11 +2,45 @@
 
 ## Contexto do projeto
 - ERP interno para Loja Maçônica.
-- Stack atual: PHP 8.2 server-rendered, Tailwind CSS, Supabase Postgres.
+- Stack atual: PHP 8.2 (Docker ou nativo Windows), Angular 22 SPA, Tailwind CSS, Supabase Postgres.
 - Layout desktop-first com adaptação mobile inteligente.
 - O painel web é Desktop-First e PWA (Progressive Web App) secundário. O bot Telegram é mantido atualizado, mas não é mais o canal principal.
-- O projeto está operacional localmente. Múltiplos deploys para separar Front-end e Back-end podem ser considerados conforme a arquitetura evolui.
+- O backend pode rodar em Docker (`docker compose up -d app`) ou nativamente no Windows (`php -S localhost:8000 -t public public/router.php`) como fallback quando Docker falha.
 - Integrações com Telegram e miniapps existem e não devem ser quebradas.
+
+## Regras do Administrador Técnico (login sistema)
+- O admin técnico (cim=adm) NÃO é um cargo da loja maçônica. É acesso puramente técnico ao sistema.
+- O login admin deve ser INVISÍVEL como cargo: não aparece como "Ir.", não exibe badge de cargo no dashboard nem sidebar.
+- O dashboard para admin mostra "Console Técnico" — nunca "Saudações, Ir.".
+- O admin tem acesso total (permissão `*` / `is_system_admin`) para manutenção do sistema.
+- Nunca expor o admin como "Administrador", "Ir. Administrador Técnico" ou qualquer título maçônico.
+
+## Como subir servidores locais
+Ver instruções completas em `/memories/repo/gestor-loja-notes.md` (seção "COMO SUBIR OS SERVIDORES").
+Resumo rápido:
+```bash
+# Backend (Docker - recomendado)
+docker compose up --build -d app
+
+# Backend (PHP nativo - fallback quando Docker falha)
+# Antes: matar wslrelay/php antigos na porta 8000
+php -S localhost:8000 -t public public/router.php
+
+# Frontend (Angular)
+cd frontend && npm start
+```
+Acessar: http://localhost:4300/login
+Health check: http://localhost:8000/health.php → {"status":"ok"}
+Login admin: cim=adm, senha=Adm#1702
+Diagnóstico rápido: health → login-cim → /api/auth/me → dashboard
+
+## Problemas comuns e soluções
+- **Docker "failed to connect at npipe"**: Docker Desktop não iniciou. Abrir Docker Desktop.
+- **"could not translate host name" (DNS)**: Container Docker sem DNS. Usar PHP nativo (fallback).
+- **"Loja não identificada"**: Tenant não resolvido. Verificar APP_DEFAULT_TENANT_SLUG no .env.
+- **Porta 8000 ocupada por wslrelay**: Docker caiu mas WSL ficou. Matar processo e subir PHP nativo.
+- **Erro 500 no login**: Backend sem conexão com Supabase. Testar /health.php primeiro.
+- **Cookies PHPSESSID=0**: Proxy Angular não está forwarding. Verificar proxy.conf.json e angular.json.
 
 ## Regras de front-end
 - Desktop-first: telas de gestão completa priorizam desktop com sidebar fixa e tabelas ricas.

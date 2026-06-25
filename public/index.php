@@ -125,6 +125,24 @@ if ($method === 'HEAD') {
     $method = 'GET';
 }
 
+// ── Redirecionamento do front-end PHP legado para o Angular SPA ──
+// Todas as requisições de página (não-API) são redirecionadas para o Angular.
+// API, webhook, health e assets estáticos continuam servidos pelo PHP.
+$isApiOrSystemRoute = str_starts_with($requestUri, '/api/')
+    || str_starts_with($requestUri, '/assets/')
+    || in_array($requestUri, ['/webhook', '/health'], true);
+
+if ($method === 'GET' && !$isApiOrSystemRoute) {
+    $angularPort = trim((string) ($_ENV['ANGULAR_DEV_PORT'] ?? '4200'));
+    $angularUrl = "http://127.0.0.1:{$angularPort}" . $requestUri;
+    $qs = $_SERVER['QUERY_STRING'] ?? '';
+    if ($qs !== '') {
+        $angularUrl .= '?' . $qs;
+    }
+    header("Location: {$angularUrl}", true, 302);
+    exit;
+}
+
 $shouldNormalizeHtmlOutput = !str_starts_with($requestUri, '/api/')
     && !in_array($requestUri, ['/webhook', '/health'], true);
 if ($shouldNormalizeHtmlOutput) {
@@ -341,7 +359,7 @@ if (!$tenantResolved) {
         exit;
     }
 
-    $allowedWithoutTenant = in_array($requestUri, ['/login', '/health'], true);
+    $allowedWithoutTenant = in_array($requestUri, ['/login', '/health', '/api/public/landing'], true);
     if (!$allowedWithoutTenant) {
         if (str_starts_with($requestUri, '/api/')) {
             header('Content-Type: application/json; charset=utf-8');

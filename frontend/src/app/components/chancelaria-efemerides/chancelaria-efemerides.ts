@@ -30,6 +30,7 @@ export class ChancelariaEfemerides implements OnInit {
   private supabaseService = inject(SupabaseService);
 
   protected activeTab = signal<string>('diaria');
+  protected subtabDiaria = signal<'cards' | 'mensagem' | 'registros'>('cards');
 
   protected efemeridesHoje = signal<any[]>([]);
   protected efemerides = signal<any[]>([]);
@@ -478,6 +479,109 @@ export class ChancelariaEfemerides implements OnInit {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  // ─── WHATSAPP / COMPARTILHAMENTO ───────────────────────────────────
+
+  /** Copia a mensagem compilada do dia para a área de transferência */
+  protected async copiarMensagem(): Promise<void> {
+    const texto = this.mensagemPreview();
+    if (!texto) {
+      this.setFeedback('Nenhuma mensagem para copiar.', 'error');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(texto);
+      this.setFeedback('✅ Mensagem copiada! Cole no WhatsApp do grupo oficial.', 'success');
+    } catch {
+      // Fallback para navegadores antigos
+      const ta = document.createElement('textarea');
+      ta.value = texto;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      this.setFeedback('✅ Mensagem copiada!', 'success');
+    }
+  }
+
+  /** Abre WhatsApp Web/App com a mensagem compilada */
+  protected compartilharWhatsApp(): void {
+    const texto = this.mensagemPreview();
+    if (!texto) {
+      this.setFeedback('Nenhuma mensagem para compartilhar.', 'error');
+      return;
+    }
+    const encoded = encodeURIComponent(texto);
+    window.open(`https://wa.me/?text=${encoded}`, '_blank');
+  }
+
+  /** Compartilha um card individual via Web Share API (mobile) ou copia URL */
+  protected async compartilharCard(card: any): Promise<void> {
+    const imageUrl = this.cardImageUrl(card);
+    const titulo = card.titulo || card.nome || 'Efeméride';
+
+    // Tenta Web Share API (funciona em mobile/PWA)
+    if (navigator.share && navigator.canShare) {
+      try {
+        const shareData: any = {
+          title: titulo,
+          text: card.texto_custom_card || card.mensagem || titulo,
+        };
+        // Se a imagem for acessível, tenta incluir
+        if (imageUrl && !imageUrl.startsWith('data:')) {
+          try {
+            const blob = await fetch(imageUrl).then(r => r.blob());
+            const file = new File([blob], `${titulo}.png`, { type: 'image/png' });
+            shareData.files = [file];
+          } catch {
+            shareData.url = imageUrl;
+          }
+        }
+        if (navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+          this.setFeedback('Card compartilhado!', 'success');
+          return;
+        }
+      } catch {
+        // Fallback abaixo
+      }
+    }
+
+    // Fallback: copia URL da imagem
+    if (imageUrl) {
+      try {
+        await navigator.clipboard.writeText(imageUrl);
+        this.setFeedback('📋 Link do card copiado!', 'success');
+      } catch {
+        window.open(imageUrl, '_blank');
+      }
+    }
+  }
+
+  /** Copia o texto de um card individual */
+  protected async copiarTextoCard(card: any): Promise<void> {
+    const texto = card.texto_custom_card || card.mensagem || card.titulo || '';
+    if (!texto) {
+      this.setFeedback('Nenhum texto no card para copiar.', 'error');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(texto);
+      this.setFeedback('📋 Texto do card copiado!', 'success');
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = texto;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      this.setFeedback('📋 Texto copiado!', 'success');
+    }
   }
 
   protected abrirFormHistoria(h?: any): void {

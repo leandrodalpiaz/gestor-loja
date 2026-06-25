@@ -7,10 +7,21 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
+      <button (click)="copiarMensagem()"
+              class="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/10 border border-white/10 text-white font-bold uppercase tracking-wider text-xs rounded-xl transition hover:bg-white/20">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        Copiar
+      </button>
+      <button (click)="compartilharWhatsApp()"
+              class="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-200 font-bold uppercase tracking-wider text-xs rounded-xl transition hover:bg-emerald-500/30">
+        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp
+      </button>
       <button (click)="aprovarEEnviarTudo()"
               [disabled]="publicandoTudo()"
-              class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-extrabold uppercase tracking-wider text-xs rounded-xl transition hover:bg-white disabled:opacity-60">
-        {{ publicandoTudo() ? 'Publicando...' : 'Aprovar e Enviar Tudo' }}
+              class="px-5 py-2.5 bg-sky-500/20 border border-sky-500/30 text-sky-200 font-extrabold uppercase tracking-wider text-xs rounded-xl transition hover:bg-sky-500/30 disabled:opacity-60">
+        <svg class="w-3.5 h-3.5 inline-block mr-1.5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+        {{ publicandoTudo() ? 'Publicando...' : 'Telegram' }}
       </button>
       <button (click)="abrirModalNovo()"
               id="btn-novo-efemeride"
@@ -49,191 +60,79 @@
   }
 
   @if (activeTab() === 'diaria') {
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-      <div class="xl:col-span-7 space-y-6">
+
+    <!-- Sub-tabs internas: Cards | Mensagem | Registros -->
+    <div class="flex border-b border-white/5 gap-1 bg-white/[0.01] rounded-xl p-1">
+      <button (click)="subtabDiaria.set('cards')"
+              class="flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5"
+              [class.bg-liturgical-gold]="subtabDiaria() === 'cards'"
+              [class.text-slate-950]="subtabDiaria() === 'cards'"
+              [class.text-slate-400]="subtabDiaria() !== 'cards'"
+              [class.hover:text-white]="subtabDiaria() !== 'cards'">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Cards
+      </button>
+      <button (click)="subtabDiaria.set('mensagem')"
+              class="flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5"
+              [class.bg-liturgical-gold]="subtabDiaria() === 'mensagem'"
+              [class.text-slate-950]="subtabDiaria() === 'mensagem'"
+              [class.text-slate-400]="subtabDiaria() !== 'mensagem'"
+              [class.hover:text-white]="subtabDiaria() !== 'mensagem'">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+        Mensagem
+      </button>
+      <button (click)="subtabDiaria.set('registros')"
+              class="flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5"
+              [class.bg-liturgical-gold]="subtabDiaria() === 'registros'"
+              [class.text-slate-950]="subtabDiaria() === 'registros'"
+              [class.text-slate-400]="subtabDiaria() !== 'registros'"
+              [class.hover:text-white]="subtabDiaria() !== 'registros'">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        Registros
+      </button>
+    </div>
+
+    <!-- ─── ABA: CARDS ─── -->
+    @if (subtabDiaria() === 'cards') {
+      <div class="space-y-4">
+
+        <!-- Template config + cards grid -->
         <section class="erp-panel">
           <div class="erp-panel-header">
             <div>
-              <h2 class="erp-panel-title">Revisar Mensagem do Dia</h2>
-              <p class="erp-panel-subtitle">A edicao altera apenas a previa de hoje. Os registros oficiais permanecem preservados.</p>
+              <h2 class="erp-panel-title">Cards do Dia</h2>
+              <p class="erp-panel-subtitle">{{ cards().length }} card(s) gerado(s) para hoje. Revise e compartilhe.</p>
             </div>
-            <span class="erp-pill bg-blue-500/15 text-blue-200 border-blue-500/25">Hoje as 08:00</span>
+            <div class="flex gap-2">
+              <button (click)="copiarMensagem()"
+                      class="erp-btn-secondary flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                Copiar
+              </button>
+              <button (click)="compartilharWhatsApp()"
+                      class="erp-btn-secondary flex items-center gap-1 bg-emerald-500/10 border-emerald-500/20 text-emerald-200">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp
+              </button>
+              <button (click)="cardsAprovarTodos()"
+                      [disabled]="gerandoCards()"
+                      class="erp-btn-secondary flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                {{ gerandoCards() ? 'Gerando...' : 'Gerar' }}
+              </button>
+            </div>
           </div>
 
-          <div class="telegram-preview" [innerHTML]="previewHtml()"></div>
-
-          <div class="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-amber-100">
-            Edite o texto limpo em cada card quando quiser ajustar a imagem. A edicao avancada abaixo mexe diretamente na mensagem compilada do Telegram.
-          </div>
-
-          <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <!-- Template por categoria -->
+          <div class="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-3">
             <div>
-              <h3 class="text-sm font-bold text-emerald-200 uppercase tracking-wider">Publicacao consolidada</h3>
-              <p class="text-xs text-slate-300 mt-1">Aprova o texto final e dispara texto + imagens para o grupo oficial.</p>
-            </div>
-            <button (click)="aprovarEEnviarTudo()"
-                    [disabled]="publicandoTudo()"
-                    class="px-5 py-3 rounded-xl bg-emerald-400 text-slate-950 text-xs font-extrabold uppercase tracking-wider hover:bg-white disabled:opacity-60">
-              {{ publicandoTudo() ? 'Enviando...' : 'Aprovar e Enviar Tudo' }}
-            </button>
-          </div>
-
-          <div class="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
-            <button type="button"
-                    (click)="edicaoAvancadaAberta.set(!edicaoAvancadaAberta())"
-                    class="w-full flex items-center justify-between p-4 text-left text-xs font-bold uppercase tracking-wider text-slate-300 hover:text-white">
-              <span>Edicao avancada do Telegram</span>
-              <span [class.rotate-180]="edicaoAvancadaAberta()" class="transition">v</span>
-            </button>
-            @if (edicaoAvancadaAberta()) {
-              <div class="border-t border-white/10 p-4 space-y-3">
-                <textarea [(ngModel)]="mensagemPreview"
-                          rows="12"
-                          class="w-full bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl p-3 text-xs text-slate-200 focus:outline-none resize-y font-mono leading-relaxed"
-                          placeholder="A mensagem gerada aparecera aqui para revisao..."></textarea>
-                <div class="flex flex-wrap gap-2">
-                  <button (click)="salvarPrevia()"
-                          [disabled]="salvandoCompilada()"
-                          class="erp-btn-primary">
-                    {{ salvandoCompilada() ? 'Salvando...' : 'Salvar Modificacao Manual' }}
-                  </button>
-                  <button (click)="enviarPrevia()"
-                          [disabled]="enviandoPrevia()"
-                          class="erp-btn-secondary">
-                    {{ enviandoPrevia() ? 'Enviando...' : 'Enviar Previa Privada' }}
-                  </button>
-                  <button (click)="enviarGrupo()"
-                          [disabled]="enviandoGrupo()"
-                          class="erp-btn-secondary">
-                    {{ enviandoGrupo() ? 'Enviando...' : 'Enviar Apenas Texto no Grupo' }}
-                  </button>
-                </div>
-              </div>
-            }
-          </div>
-        </section>
-
-        <section class="erp-panel">
-          <div class="erp-panel-header">
-            <div>
-              <h2 class="erp-panel-title">Registros de Efemerides</h2>
-              <p class="erp-panel-subtitle">Consulta e manutencao dos registros que alimentam a mensagem diaria.</p>
-            </div>
-            <span class="erp-pill bg-white/5 text-slate-300 border-white/10">{{ efemerides().length }} registros</span>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div class="md:col-span-2">
-              <label class="erp-label">Pesquisar</label>
-              <input type="text"
-                     [(ngModel)]="filtroTermo"
-                     (ngModelChange)="carregarEfemerides()"
-                     placeholder="Nome, vinculo, local..."
-                     class="erp-input">
-            </div>
-            <div>
-              <label class="erp-label">Tipo</label>
-              <select [(ngModel)]="filtroTipo" (change)="carregarEfemerides()" class="erp-input">
-                <option value="">Todos</option>
-                @for (t of tiposEfemeride; track t) {
-                  <option [value]="t">{{ getTipoLabel(t) }}</option>
-                }
-              </select>
-            </div>
-            <div>
-              <label class="erp-label">Status</label>
-              <select [(ngModel)]="filtroAtivo" (change)="carregarEfemerides()" class="erp-input">
-                <option value="1">Ativos</option>
-                <option value="0">Inativos</option>
-                <option value="">Todos</option>
-              </select>
-            </div>
-          </div>
-
-          @if (errorMsg(); as erro) {
-            <div class="rounded-xl border border-rose-500/25 bg-rose-500/10 p-3 text-sm text-rose-200">{{ erro }}</div>
-          }
-
-          <div class="hidden md:block rounded-2xl border border-white/5 overflow-hidden">
-            <table class="w-full text-left">
-              <thead class="bg-white/[0.02]">
-                <tr class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                  <th class="px-4 py-3">Nome / Vinculo</th>
-                  <th class="px-4 py-3">Data</th>
-                  <th class="px-4 py-3">Tipo</th>
-                  <th class="px-4 py-3">Status</th>
-                  <th class="px-4 py-3 text-right">Acoes</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-white/5 text-xs text-slate-300">
-                @for (e of efemerides(); track e.id) {
-                  <tr class="hover:bg-white/[0.02]">
-                    <td class="px-4 py-3">
-                      <div class="font-bold text-white">{{ e.nome }}</div>
-                      @if (e.vinculo) {
-                        <div class="text-[10px] text-liturgical-gold/70 mt-0.5">{{ e.vinculo }}</div>
-                      }
-                    </td>
-                    <td class="px-4 py-3">{{ formatarData(e.data_evento) }}</td>
-                    <td class="px-4 py-3">
-                      <span class="px-2 py-1 rounded-full text-[10px] font-bold" [ngClass]="getTipoBadgeClass(e.tipo)">{{ getTipoLabel(e.tipo) }}</span>
-                    </td>
-                    <td class="px-4 py-3">{{ e.ativo === false ? 'Inativo' : 'Ativo' }}</td>
-                    <td class="px-4 py-3">
-                      <div class="flex items-center justify-end gap-2">
-                        <button (click)="abrirModalEditar(e)" class="erp-icon-btn" title="Editar">Editar</button>
-                        <button (click)="desativar(e.id)" class="erp-icon-btn" title="Desativar">Desativar</button>
-                      </div>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-
-          <div class="md:hidden space-y-3">
-            @for (e of efemerides(); track e.id) {
-              <article class="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
-                <div class="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 class="text-sm font-bold text-white">{{ e.nome }}</h3>
-                    <p class="text-xs text-slate-400">{{ formatarData(e.data_evento) }} - {{ getTipoLabel(e.tipo) }}</p>
-                  </div>
-                  <span class="px-2 py-1 rounded-full text-[10px] font-bold" [ngClass]="getTipoBadgeClass(e.tipo)">{{ e.ativo === false ? 'Inativo' : 'Ativo' }}</span>
-                </div>
-                <div class="flex gap-2">
-                  <button (click)="abrirModalEditar(e)" class="erp-btn-secondary flex-1">Editar</button>
-                  <button (click)="desativar(e.id)" class="erp-btn-secondary flex-1">Desativar</button>
-                </div>
-              </article>
-            }
-          </div>
-        </section>
-      </div>
-
-      <div class="xl:col-span-5 space-y-6">
-        <section class="erp-panel">
-          <div class="erp-panel-header">
-            <div>
-              <h2 class="erp-panel-title">Esteira de Homologacao de Cards</h2>
-              <p class="erp-panel-subtitle">Um evento do dia gera um card revisavel antes da publicacao.</p>
-            </div>
-            <button (click)="cardsAprovarTodos()"
-                    [disabled]="gerandoCards()"
-                    class="erp-btn-secondary">
-              {{ gerandoCards() ? 'Gerando...' : 'Gerar Novamente' }}
-            </button>
-          </div>
-
-          <div class="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-4">
-            <div>
-              <p class="text-xs font-bold uppercase tracking-wider text-white mb-2">Template padrao por categoria</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-white mb-2">Template por categoria</p>
               @if (categoriasCards().length === 0) {
-                <p class="text-xs text-slate-500">Nenhuma categoria encontrada para hoje.</p>
+                <p class="text-xs text-slate-500">Nenhuma categoria para hoje.</p>
               } @else {
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div class="flex flex-wrap gap-1.5">
                   @for (categoria of categoriasCards(); track categoria) {
-                    <label class="inline-flex items-center gap-2 rounded-lg border border-white/5 bg-black/15 px-3 py-2 text-xs text-slate-300">
+                    <label class="inline-flex items-center gap-1.5 rounded-lg border border-white/5 bg-black/15 px-2.5 py-1.5 text-[10px] text-slate-300">
                       <input type="checkbox"
                              [checked]="isCategoriaSelecionada(categoria)"
                              (change)="toggleCategoria(categoria, $any($event.target).checked)"
@@ -245,29 +144,31 @@
               }
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
-              <select [(ngModel)]="templateConfig" class="erp-input">
-                <option value="">Escolher template...</option>
+              <select [(ngModel)]="templateConfig" class="erp-input text-xs">
+                <option value="">Template...</option>
                 @for (tpl of templateOpcoes; track tpl.value) {
                   <option [value]="tpl.value">{{ tpl.label }}</option>
                 }
               </select>
               <button (click)="aplicarTemplateConfig()"
                       [disabled]="salvandoTemplateCategoria()"
-                      class="erp-btn-primary">
+                      class="erp-btn-primary text-xs">
                 {{ salvandoTemplateCategoria() ? 'Aplicando...' : 'Aplicar' }}
               </button>
             </div>
           </div>
 
+          <!-- Cards grid -->
           @if (cards().length === 0) {
-            <div class="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-xl py-12 text-center text-slate-500">
-              <svg class="w-10 h-10 text-slate-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-xl py-16 text-center text-slate-500">
+              <svg class="w-12 h-12 text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
               </svg>
               <p class="text-xs">Nenhum card gerado para hoje.</p>
+              <p class="text-[10px] text-slate-600 mt-1">Clique em "Gerar" para criar os cards.</p>
             </div>
           } @else {
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               @for (card of cards(); track card.registro_id) {
                 <article class="card-workflow-item">
                   <div class="aspect-[9/16] rounded-xl bg-black/30 flex items-center justify-center overflow-hidden">
@@ -278,66 +179,222 @@
                     }
                   </div>
 
-                  <div class="space-y-3">
+                  <div class="space-y-2">
                     <div>
-                      <div class="flex items-start justify-between gap-3">
+                      <div class="flex items-start justify-between gap-2">
                         <h3 class="text-sm font-bold text-white leading-snug">{{ card.titulo || '-' }}</h3>
-                        <span class="erp-pill bg-emerald-500/10 text-emerald-200 border-emerald-500/20">{{ cardStatus(card) }}</span>
+                        <span class="erp-pill bg-emerald-500/10 text-emerald-200 border-emerald-500/20 text-[9px]">{{ cardStatus(card) }}</span>
                       </div>
-                      <p class="text-[11px] text-slate-400 mt-1">{{ card.template || card.template_slug || '-' }}</p>
+                      <p class="text-[10px] text-slate-400 mt-0.5">{{ card.template || card.template_slug || '-' }}</p>
                     </div>
 
-                    <label class="inline-flex items-center gap-2 text-xs text-slate-300">
+                    <label class="inline-flex items-center gap-1.5 text-[10px] text-slate-300">
                       <input type="checkbox" [(ngModel)]="card.ocultar_idade" class="accent-liturgical-gold">
                       <span>Ocultar idade</span>
                     </label>
 
                     <div>
-                      <label class="erp-label">Texto para este card</label>
+                      <label class="erp-label text-[9px]">Texto do card</label>
                       <textarea [(ngModel)]="card.texto_custom_card"
-                                rows="5"
-                                class="erp-input min-h-28 leading-snug"
-                                placeholder="Texto customizado para este card..."></textarea>
+                                rows="3"
+                                class="erp-input min-h-20 text-[10px] leading-snug"
+                                placeholder="Texto customizado..."></textarea>
                     </div>
 
                     <div>
-                      <label class="erp-label">Template visual</label>
-                      <select [(ngModel)]="card.template_slug" class="erp-input">
+                      <label class="erp-label text-[9px]">Template</label>
+                      <select [(ngModel)]="card.template_slug" class="erp-input text-[10px]">
                         @for (tpl of templateOpcoes; track tpl.value) {
                           <option [value]="tpl.value">{{ tpl.label }}</option>
                         }
                       </select>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-2 gap-1.5">
                       <button (click)="configurarCard(card)"
                               [disabled]="salvandoCardId() === card.registro_id"
-                              class="erp-btn-primary col-span-2">
-                        {{ salvandoCardId() === card.registro_id ? 'Salvando...' : 'Salvar e Atualizar' }}
+                              class="erp-btn-primary text-[10px] py-2 col-span-2">
+                        {{ salvandoCardId() === card.registro_id ? 'Salvando...' : 'Salvar' }}
                       </button>
-                      <button (click)="zoomCard(cardImageUrl(card))" class="erp-btn-secondary">Ampliar</button>
-                      <button (click)="baixarCard(card)" class="erp-btn-secondary">Baixar</button>
+                      <button (click)="zoomCard(cardImageUrl(card))" class="erp-btn-secondary text-[10px] py-1.5" title="Ampliar">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                      </button>
+                      <button (click)="baixarCard(card)" class="erp-btn-secondary text-[10px] py-1.5" title="Baixar">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                      </button>
+                      <button (click)="copiarTextoCard(card)" class="erp-btn-secondary text-[10px] py-1.5 col-span-2 flex items-center justify-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Copiar Texto
+                      </button>
+                      <button (click)="compartilharCard(card)" class="erp-btn-secondary text-[10px] py-1.5 col-span-2 flex items-center justify-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                        Compartilhar
+                      </button>
                     </div>
                   </div>
                 </article>
               }
             </div>
           }
+        </section>
+      </div>
+    }
 
-          <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <!-- ─── ABA: MENSAGEM ─── -->
+    @if (subtabDiaria() === 'mensagem') {
+      <div class="space-y-4">
+        <section class="erp-panel">
+          <div class="erp-panel-header">
             <div>
-              <h3 class="text-sm font-bold text-emerald-200 uppercase tracking-wider">Conferencia concluida?</h3>
-              <p class="text-xs text-slate-300 mt-1">Dispare a aprovacao definitiva de texto + imagens.</p>
+              <h2 class="erp-panel-title">Mensagem do Dia</h2>
+              <p class="erp-panel-subtitle">Revise o texto compilado antes de copiar para o WhatsApp.</p>
             </div>
-            <button (click)="aprovarEEnviarTudo()"
-                    [disabled]="publicandoTudo()"
-                    class="px-5 py-3 rounded-xl bg-emerald-400 text-slate-950 text-xs font-extrabold uppercase tracking-wider hover:bg-white disabled:opacity-60">
-              {{ publicandoTudo() ? 'Enviando...' : 'Publicar Tudo no Grupo' }}
+            <span class="erp-pill bg-blue-500/15 text-blue-200 border-blue-500/25">Hoje</span>
+          </div>
+
+          <div class="telegram-preview" [innerHTML]="previewHtml()"></div>
+
+          <!-- WhatsApp actions -->
+          <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 space-y-2">
+            <p class="text-xs font-bold text-emerald-200 uppercase tracking-wider flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Compartilhar
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <button (click)="copiarMensagem()"
+                      class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-white/20 transition-all">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                Copiar
+              </button>
+              <button (click)="compartilharWhatsApp()"
+                      class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-200 text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-500/30 transition-all">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp
+              </button>
+            </div>
+          </div>
+
+          <!-- Edicao avancada -->
+          <div class="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
+            <button type="button"
+                    (click)="edicaoAvancadaAberta.set(!edicaoAvancadaAberta())"
+                    class="w-full flex items-center justify-between p-3 text-left text-[10px] font-bold uppercase tracking-wider text-slate-300 hover:text-white">
+              <span>Edicao avancada</span>
+              <span [class.rotate-180]="edicaoAvancadaAberta()" class="transition">▾</span>
             </button>
+            @if (edicaoAvancadaAberta()) {
+              <div class="border-t border-white/10 p-3 space-y-2">
+                <textarea [(ngModel)]="mensagemPreview"
+                          rows="10"
+                          class="w-full bg-black/25 border border-white/10 focus:border-liturgical-gold/40 rounded-xl p-3 text-xs text-slate-200 focus:outline-none resize-y font-mono leading-relaxed"
+                          placeholder="A mensagem gerada aparecera aqui..."></textarea>
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="salvarPrevia()" [disabled]="salvandoCompilada()" class="erp-btn-primary text-[10px]">
+                    {{ salvandoCompilada() ? 'Salvando...' : 'Salvar' }}
+                  </button>
+                  <button (click)="enviarPrevia()" [disabled]="enviandoPrevia()" class="erp-btn-secondary text-[10px]">
+                    {{ enviandoPrevia() ? 'Enviando...' : 'Enviar Telegram Privado' }}
+                  </button>
+                </div>
+              </div>
+            }
           </div>
         </section>
       </div>
-    </div>
+    }
+
+    <!-- ─── ABA: REGISTROS ─── -->
+    @if (subtabDiaria() === 'registros') {
+      <div class="space-y-4">
+        <section class="erp-panel">
+          <div class="erp-panel-header">
+            <div>
+              <h2 class="erp-panel-title">Registros de Efemerides</h2>
+              <p class="erp-panel-subtitle">Gerencie os registros que alimentam os cards diarios.</p>
+            </div>
+            <span class="erp-pill bg-white/5 text-slate-300 border-white/10">{{ efemerides().length }} registros</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+            <div class="sm:col-span-2">
+              <input type="text"
+                     [(ngModel)]="filtroTermo"
+                     (ngModelChange)="carregarEfemerides()"
+                     placeholder="Pesquisar nome, vinculo..."
+                     class="erp-input text-xs">
+            </div>
+            <select [(ngModel)]="filtroTipo" (change)="carregarEfemerides()" class="erp-input text-xs">
+              <option value="">Todos os tipos</option>
+              @for (t of tiposEfemeride; track t) {
+                <option [value]="t">{{ getTipoLabel(t) }}</option>
+              }
+            </select>
+            <select [(ngModel)]="filtroAtivo" (change)="carregarEfemerides()" class="erp-input text-xs">
+              <option value="1">Ativos</option>
+              <option value="0">Inativos</option>
+              <option value="">Todos</option>
+            </select>
+          </div>
+
+          @if (errorMsg(); as erro) {
+            <div class="rounded-xl border border-rose-500/25 bg-rose-500/10 p-3 text-xs text-rose-200">{{ erro }}</div>
+          }
+
+          <!-- Desktop table -->
+          <div class="hidden md:block rounded-2xl border border-white/5 overflow-hidden">
+            <table class="w-full text-left">
+              <thead class="bg-white/[0.02]">
+                <tr class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <th class="px-3 py-2">Nome</th>
+                  <th class="px-3 py-2">Data</th>
+                  <th class="px-3 py-2">Tipo</th>
+                  <th class="px-3 py-2 text-right">Acoes</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-white/5 text-xs text-slate-300">
+                @for (e of efemerides(); track e.id) {
+                  <tr class="hover:bg-white/[0.02]">
+                    <td class="px-3 py-2">
+                      <div class="font-bold text-white">{{ e.nome }}</div>
+                      @if (e.vinculo) { <div class="text-[10px] text-liturgical-gold/70">{{ e.vinculo }}</div> }
+                    </td>
+                    <td class="px-3 py-2">{{ formatarData(e.data_evento) }}</td>
+                    <td class="px-3 py-2">
+                      <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold" [ngClass]="getTipoBadgeClass(e.tipo)">{{ getTipoLabel(e.tipo) }}</span>
+                    </td>
+                    <td class="px-3 py-2">
+                      <div class="flex justify-end gap-1">
+                        <button (click)="abrirModalEditar(e)" class="erp-icon-btn text-[9px]">Editar</button>
+                        <button (click)="desativar(e.id)" class="erp-icon-btn text-[9px]">Desativar</button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile cards -->
+          <div class="md:hidden space-y-2">
+            @for (e of efemerides(); track e.id) {
+              <article class="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-2">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 class="text-sm font-bold text-white">{{ e.nome }}</h3>
+                    <p class="text-[10px] text-slate-400">{{ formatarData(e.data_evento) }} · {{ getTipoLabel(e.tipo) }}</p>
+                  </div>
+                  <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold" [ngClass]="getTipoBadgeClass(e.tipo)">{{ e.ativo === false ? 'Inativo' : 'Ativo' }}</span>
+                </div>
+                <div class="flex gap-1.5">
+                  <button (click)="abrirModalEditar(e)" class="erp-btn-secondary flex-1 text-[10px]">Editar</button>
+                  <button (click)="desativar(e.id)" class="erp-btn-secondary flex-1 text-[10px]">Desativar</button>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      </div>
+    }
   }
 
   @if (activeTab() === 'historia') {

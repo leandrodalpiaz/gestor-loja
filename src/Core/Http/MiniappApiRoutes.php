@@ -822,6 +822,37 @@ class MiniappApiRoutes
             ));
         }
 
+        // ─── CRUD de obras (gerenciamento do acervo) ──────────────────────
+        if ($requestUri === '/api/miniapp/biblioteca/adicionar' && $method === 'POST') {
+            if (!$sessionHasPermission('biblioteca.manage')) {
+                JsonResponse::error('Acesso restrito à gestão da Biblioteca.', 403);
+            }
+            $controller = new \App\Controllers\BibliotecaController();
+            $autorId = trim((string) ($miniappObreiro['id'] ?? $session['usuario_id'] ?? ''));
+            JsonResponse::send($controller->adicionarMiniapp($body, $autorId !== '' ? $autorId : null));
+        }
+
+        if ($requestUri === '/api/miniapp/biblioteca/editar' && $method === 'POST') {
+            if (!$sessionHasPermission('biblioteca.manage')) {
+                JsonResponse::error('Acesso restrito à gestão da Biblioteca.', 403);
+            }
+            $controller = new \App\Controllers\BibliotecaController();
+            JsonResponse::send($controller->editarMiniapp((int) ($body['id'] ?? 0), $body));
+        }
+
+        if ($requestUri === '/api/miniapp/biblioteca/excluir' && $method === 'POST') {
+            if (!$sessionHasPermission('biblioteca.manage')) {
+                JsonResponse::error('Acesso restrito à gestão da Biblioteca.', 403);
+            }
+            $controller = new \App\Controllers\BibliotecaController();
+            JsonResponse::send($controller->excluirMiniapp((int) ($body['id'] ?? 0)));
+        }
+
+        if ($requestUri === '/api/miniapp/biblioteca/isbn' && $method === 'GET') {
+            $controller = new \App\Controllers\BibliotecaController();
+            JsonResponse::send($controller->buscarIsbnMiniapp((string) ($_GET['isbn'] ?? '')));
+        }
+
         if ($requestUri === '/api/miniapp/admin/dashboard' && $method === 'GET') {
             $controller = new \App\Controllers\AdminController();
             JsonResponse::send(['ok' => true, 'dados' => $controller->montarPayloadMiniapp()]);
