@@ -293,9 +293,27 @@ export class SecretariaObreiros implements OnInit {
       case 'Companheiro': return 'Companheiro';
       case '3':
       case 'Mestre': return 'Mestre';
-      case 'Mestre Instalado': return 'Mestre Instalado';
+      case 'Mestre Instalado': return 'Mestre'; // normalizado: instalado é status, não grau
       default: return String(grau || '-');
     }
+  }
+
+  protected getCargoLabel(codigo: string): string {
+    const map: Record<string, string> = {
+      veneravel: 'Venerável Mestre',
+      primeiro_vigilante: '1º Vigilante',
+      segundo_vigilante: '2º Vigilante',
+      secretario: 'Secretário',
+      tesoureiro: 'Tesoureiro',
+      chanceler: 'Chanceler',
+      hospitaleiro: 'Hospitaleiro',
+      mestre_de_harmonia: 'Mestre de Harmonia',
+      mestre_banquetes: 'Mestre de Banquetes',
+      bibliotecario: 'Bibliotecário',
+      orador: 'Orador',
+      admin: 'Admin Técnico',
+    };
+    return map[codigo] || codigo;
   }
 
   protected getSituacaoBadgeClass(situacao: string): string {

