@@ -359,7 +359,8 @@ if (!$tenantResolved) {
         exit;
     }
 
-    $allowedWithoutTenant = in_array($requestUri, ['/login', '/health', '/api/public/landing'], true);
+    $allowedWithoutTenant = in_array($requestUri, ['/login', '/health', '/api/public/landing'], true)
+        || str_starts_with($requestUri, '/api/cron/');
     if (!$allowedWithoutTenant) {
         if (str_starts_with($requestUri, '/api/')) {
             header('Content-Type: application/json; charset=utf-8');
@@ -387,6 +388,7 @@ if (
     in_array($uriPath, ['/login', '/logout', '/health', '/webhook'], true) ||
     str_starts_with($uriPath, '/assets/') ||
     str_starts_with($uriPath, '/api/auth/') ||
+    str_starts_with($uriPath, '/api/cron/') ||
     $uriPath === '/api/obreiro/sistema/tecnico/config' ||
     $uriPath === '/api/obreiro/sistema/tecnico/salvar' ||
     $uriPath === '/api/obreiro/sistema/config' ||
@@ -1440,6 +1442,8 @@ if (!function_exists('requireMiniappAuth')) {
 // ==========================================
 // Endpoint para preparar previa de efemerides (Chanceler e Admin)
 if ($requestUri === '/api/cron/preparar-previa') {
+    error_log('[cron:preparar-previa] Endpoint acionado via ' . $method);
+    
     if ($_SERVER['REQUEST_METHOD'] === 'HEAD') {
         exit;
     }
@@ -1453,11 +1457,13 @@ if ($requestUri === '/api/cron/preparar-previa') {
         $tokenEsperado = 'SUA_SENHA_SECRETA';
     }
     if ($token !== $tokenEsperado) {
+        error_log('[cron:preparar-previa] Token inválido. Recebido: ' . substr($token, 0, 4) . '***');
         http_response_code(403);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['status' => 'erro', 'mensagem' => 'Token invalido'], JSON_UNESCAPED_UNICODE);
         exit;
     }
+    error_log('[cron:preparar-previa] Token validado, iniciando processamento...');
 
     require_once __DIR__ . '/../src/Models/EfemerideRegistro.php';
     require_once __DIR__ . '/../src/Models/EfemeridePreviaDiaria.php';
@@ -1637,18 +1643,20 @@ if ($requestUri === '/api/cron/preparar-previa') {
         }
     }
 
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode([
-        'status' => 'ok',
-        'mensagem' => 'Previa de efemerides preparada com sucesso',
-        'disparos' => $disparos
-    ], JSON_UNESCAPED_UNICODE);
+    // Marcar como disparado para evitar reenvio pelo piggyback do dashboard no mesmo dia
+    $previaModel->marcarComoDisparado();
+
+    // Resposta já foi enviada antes do envio Telegram (fastcgi_finish_request ou flush manual).
+    // Apenas regista o resultado no log e termina.
+    error_log('[cron:preparar-previa] Disparos concluídos: ' . json_encode($disparos, JSON_UNESCAPED_UNICODE));
     exit;
 }
 
 // ==========================================
 // Endpoint para envio automatico de efemerides (Cron Job)
 if ($requestUri === '/api/cron/efemerides-diarias') {
+    error_log('[cron:efemerides-diarias] Endpoint acionado via ' . $method);
+    
     if ($_SERVER['REQUEST_METHOD'] === 'HEAD') {
         exit;
     }
@@ -1662,6 +1670,7 @@ if ($requestUri === '/api/cron/efemerides-diarias') {
         $tokenEsperado = 'SUA_SENHA_SECRETA';
     }
     if ($token !== $tokenEsperado) {
+        error_log('[cron:efemerides-diarias] Token inválido. Recebido: ' . substr($token, 0, 4) . '***');
         http_response_code(403);
         echo json_encode(['status' => 'erro', 'mensagem' => 'Token invalido']);
         exit;
@@ -1677,6 +1686,7 @@ if ($requestUri === '/api/cron/efemerides-diarias') {
     $telegram = new \App\Bot\TelegramClient();
     $grupoId = $resolveTelegramGroupId();
     if (!$grupoId) {
+        error_log('[cron:efemerides-diarias] ID do grupo Telegram não configurado (verifique TELEGRAM_CHAT_ID_GROUP)');
         http_response_code(500);
         echo json_encode(['status' => 'erro', 'mensagem' => 'ID do grupo nao configurado']);
         exit;
@@ -1690,6 +1700,8 @@ if ($requestUri === '/api/cron/efemerides-diarias') {
     // Compor a mensagem consolidada em texto
     $composer = new \App\Services\EfemeridesComposer();
     $mensagem = trim($composer->composeDailyPreview($registros));
+    
+    error_log('[cron:efemerides-diarias] Registros do dia: ' . count($registros) . ', cards gerados: ' . count($listaCards) . ', grupo: ' . $grupoId);
 
     // 1. Enviar mensagem de texto consolidada se não estiver vazia
     $okMsg = true;
@@ -1710,6 +1722,7 @@ if ($requestUri === '/api/cron/efemerides-diarias') {
         }
     }
 
+    error_log('[cron:efemerides-diarias] Concluído: msg=' . ($okMsg ? 'ok' : 'falha') . ', fotos=' . $contagemFotos);
     echo json_encode(['status' => 'ok', 'mensagem_enviada' => $okMsg, 'cards_enviados' => $contagemFotos]);
     exit;
 }

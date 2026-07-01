@@ -1184,6 +1184,17 @@ class PainelRoutes
             error_log('Falha ao carregar efemerides no dashboard: ' . $e->getMessage());
         }
 
+        // ─── Piggyback: disparo automático para Chanceler + Admin (Render Free wake-up) ───
+        if (function_exists('register_shutdown_function')) {
+            register_shutdown_function(static function (): void {
+                try {
+                    \App\Services\EfemeridesDispatcher::dispatchIfNeeded();
+                } catch (\Throwable $e) {
+                    error_log('PainelRoutes piggyback: falha: ' . $e->getMessage());
+                }
+            });
+        }
+
         require __DIR__ . '/../../Views/dashboard.php';
         exit;
     }

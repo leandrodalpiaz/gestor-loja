@@ -194,9 +194,31 @@ export class DashboardHome implements OnInit, OnDestroy {
   protected setupDisplayCards(data: any): void {
     const cards: any[] = [];
 
-    // Add Efemérides cards
+    // Add Efemérides cards (com imagem gerada)
     if (data?.efemerides_cards && data.efemerides_cards.length > 0) {
       cards.push(...data.efemerides_cards);
+    }
+
+    // Fallback: se não há cards com imagem, criar um card textual com a Palavra do Irmão
+    // para que a secção "Destaques & Efemérides" nunca fique vazia.
+    if (cards.length === 0) {
+      const palavra = (data?.palavra_irmao || '').trim();
+      if (palavra) {
+        cards.push({
+          categoria: 'Mensagem do Dia',
+          titulo: 'Palavra do Irmão',
+          mensagem: palavra,
+          image_url: null,
+        });
+      } else {
+        // Fallback último: card genérico quando não há nada
+        cards.push({
+          categoria: 'Loja',
+          titulo: 'Nenhuma efeméride hoje',
+          mensagem: 'Não há registos de efemérides para o dia de hoje. Aceda à Chancelaria para cadastrar aniversários, iniciações e outras datas especiais.',
+          image_url: null,
+        });
+      }
     }
 
     this.displayCards.set(cards);

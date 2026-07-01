@@ -23,12 +23,20 @@ class EfemeridePreviaDiaria
                 data_ref DATE NOT NULL UNIQUE,
                 mensagem TEXT NOT NULL,
                 gerada_automaticamente BOOLEAN NOT NULL DEFAULT true,
+                disparado_em TIMESTAMP NULL,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
         ";
 
         $this->db->exec($sql);
+
+        // Adiciona a coluna disparado_em se a tabela já existia sem ela
+        try {
+            $this->db->exec("ALTER TABLE efemerides_previas_diarias ADD COLUMN IF NOT EXISTS disparado_em TIMESTAMP NULL");
+        } catch (\Throwable $e) {
+            // Silencioso — a coluna já existe ou o SGBD não suporta ADD COLUMN IF NOT EXISTS
+        }
     }
 
     public function buscarPorData(string $dataRef): ?array
@@ -82,6 +90,31 @@ class EfemeridePreviaDiaria
 
         $this->salvarOuAtualizar($hoje, $mensagemBase, true);
         return $mensagemBase;
+    }
+
+    /**
+     * Verifica se o disparo automático (Telegram) já foi feito hoje.
+     */
+    public function foiDisparadoHoje(): bool
+    {
+        $hoje = $this->today()->format('Y-m-d');
+        $stmt = $this->db->prepare(
+            "SELECT disparado_em FROM efemerides_previas_diarias WHERE data_ref = :data_ref AND disparado_em IS NOT NULL LIMIT 1"
+        );
+        $stmt->execute(['data_ref' => $hoje]);
+        return (bool) $stmt->fetchColumn();
+    }
+
+    /**
+     * Marca que o disparo automático do dia já foi realizado.
+     */
+    public function marcarComoDisparado(): bool
+    {
+        $hoje = $this->today()->format('Y-m-d');
+        $stmt = $this->db->prepare(
+            "UPDATE efemerides_previas_diarias SET disparado_em = CURRENT_TIMESTAMP WHERE data_ref = :data_ref"
+        );
+        return $stmt->execute(['data_ref' => $hoje]);
     }
 
     public function prepararAutomaticaDoDia(string $mensagemBase): bool

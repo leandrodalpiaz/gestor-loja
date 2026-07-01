@@ -326,16 +326,15 @@
         <!-- RIGHT COLUMN (5 COLUMNS) - CAROUSEL & STATS -->
         <div class="lg:col-span-5 space-y-8 flex flex-col items-center lg:items-stretch">
 
-          <!-- UNIFIED HIGHLIGHTS & EFEMÉRIDES MURAL (SINGLE CAROUSEL DECK) -->
+          <!-- UNIFIED HIGHLIGHTS & EFEMÉRIDES MURAL (SINGLE CAROUSEL DECK) — SEMPRE VISÍVEL -->
           @if (displayCards(); as cards) {
-            @if (cards.length > 0) {
-              <section class="space-y-4 font-sans w-full">
-                <div class="flex items-center gap-2 border-b border-white/5 pb-2">
-                  <span class="w-1.5 h-4 bg-liturgical-gold rounded-full animate-pulse-gold"></span>
-                  <h2 class="font-cinzel text-lg font-bold tracking-wider text-white uppercase">Destaques & Efemérides</h2>
-                </div>
+            <section class="space-y-4 font-sans w-full">
+              <div class="flex items-center gap-2 border-b border-white/5 pb-2">
+                <span class="w-1.5 h-4 bg-liturgical-gold rounded-full animate-pulse-gold"></span>
+                <h2 class="font-cinzel text-lg font-bold tracking-wider text-white uppercase">Destaques & Efemérides</h2>
+              </div>
 
-                <div class="carousel-container relative w-full max-w-[340px] mx-auto min-h-[420px]">
+              <div class="carousel-container relative w-full max-w-[340px] mx-auto min-h-[420px]">
 
                   <!-- Slide Frame with Directional Transition -->
                   <div class="relative w-full aspect-[9/16] min-h-[400px] rounded-3xl overflow-hidden border border-white/10 hover:border-liturgical-gold/40 transition-colors duration-700 shadow-2xl bg-[#0c182c]">
@@ -445,7 +444,6 @@
                 </div>
 
               </section>
-            }
           }
 
           <!-- MINI-MÉTRICAS / LODGE METRICS -->

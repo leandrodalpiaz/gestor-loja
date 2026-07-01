@@ -155,6 +155,17 @@ class PwaHomeController
             }
         }
 
+        // ─── Piggyback: disparo automático para Chanceler + Admin (Render Free wake-up) ───
+        if (function_exists('register_shutdown_function')) {
+            register_shutdown_function(static function (): void {
+                try {
+                    \App\Services\EfemeridesDispatcher::dispatchIfNeeded();
+                } catch (\Throwable $e) {
+                    error_log('PWA Home piggyback: falha: ' . $e->getMessage());
+                }
+            });
+        }
+
         require __DIR__ . '/../Views/pwa/home.php';
     }
 

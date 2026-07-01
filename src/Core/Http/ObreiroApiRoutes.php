@@ -644,6 +644,22 @@ class ObreiroApiRoutes
                 error_log('Falha ao carregar efemerides no api dashboard: ' . $e->getMessage());
             }
 
+            // ─── Piggyback: disparo automático para Chanceler + Admin (Render Free wake-up) ───
+            // O servidor Render Free dorme após 15 min de inatividade; CRONs internos não funcionam.
+            // Aproveitamos o primeiro acesso ao dashboard do dia para disparar a prévia em background.
+            if (function_exists('register_shutdown_function')) {
+                register_shutdown_function(static function (): void {
+                    try {
+                        $result = \App\Services\EfemeridesDispatcher::dispatchIfNeeded();
+                        if ($result['disparado']) {
+                            error_log('Dashboard piggyback: prévia enviada para ' . $result['destinatarios'] . ' destinatário(s).');
+                        }
+                    } catch (\Throwable $e) {
+                        error_log('Dashboard piggyback: falha: ' . $e->getMessage());
+                    }
+                });
+            }
+
             JsonResponse::send([
                 'ok' => true,
                 'configuracao_loja' => $configuracaoLoja,
