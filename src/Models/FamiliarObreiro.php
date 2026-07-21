@@ -79,6 +79,7 @@ class FamiliarObreiro
                 UPDATE efemerides_registros
                 SET data_evento = :data_evento,
                     vinculo = :vinculo,
+                    obreiro_id = :obreiro_id,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = :id
                   AND loja_id = :loja_id
@@ -88,15 +89,16 @@ class FamiliarObreiro
                 'loja_id' => (int) $this->lojaId(),
                 'data_evento' => $dataNascimento,
                 'vinculo' => $parentesco,
+                'obreiro_id' => $obreiroId,
             ]);
             return;
         }
 
         $ins = $this->db->prepare("
             INSERT INTO efemerides_registros (
-                loja_id, nome, tipo, data_evento, cod_vinculo, vinculo, parentesco, local, mensagem_custom, ativo, created_by
+                loja_id, nome, tipo, data_evento, cod_vinculo, vinculo, parentesco, local, mensagem_custom, ativo, created_by, obreiro_id
             ) VALUES (
-                :loja_id, :nome, 'Familia', :data_evento, :cod_vinculo, :vinculo, :parentesco, NULL, NULL, true, NULL
+                :loja_id, :nome, 'Familia', :data_evento, :cod_vinculo, :vinculo, :parentesco, NULL, NULL, true, NULL, :obreiro_id
             )
         ");
         $ins->execute([
@@ -106,6 +108,7 @@ class FamiliarObreiro
             'cod_vinculo' => $cod,
             'vinculo' => $parentesco,
             'parentesco' => $nomeIrmao,
+            'obreiro_id' => $obreiroId,
         ]);
     }
 

@@ -26,7 +26,7 @@ class EfemeridesCardService
                 $card['template_file'] = $categoriaTemplateMap[$categoria];
                 $card['template_slug'] = $categoriaTemplateMap[$categoria];
                 $card['gold_theme'] = $this->isGoldTheme($categoriaTemplateMap[$categoria]);
-                $card['cache_key'] = sha1(json_encode([$card['template'], $card['mensagem'], $card['ocultar_idade'], 'v7'], JSON_UNESCAPED_UNICODE) ?: uniqid('', true));
+                $card['cache_key'] = sha1(json_encode([$card['template'], $card['mensagem'], $card['ocultar_idade'], 'v8'], JSON_UNESCAPED_UNICODE) ?: uniqid('', true));
                 $card['card_hash'] = $card['cache_key'];
             }
             $compose = $imageComposer->compose($card);
@@ -43,16 +43,20 @@ class EfemeridesCardService
 
     private function buildCardPayload(array $registro, string $templateDir): array
     {
-        $categoria = strtolower(trim((string) ($registro['vinculo'] ?? $registro['tipo'] ?? '')));
+        $categoria = strtolower(trim((string) ($registro['vinculo'] ?? '')));
         if ($categoria === 'esposa') {
             $categoria = 'cunhada';
+        }
+        if ($categoria === '' && $this->normalizarTipo((string) ($registro['tipo'] ?? '')) === 'aniversario') {
+            // Sem vínculo familiar registrado: é aniversário do próprio Irmão do quadro.
+            $categoria = 'irmao';
         }
         $idade = $this->calcularIdade((string) ($registro['data_evento'] ?? ''));
         $ocultar = $this->defaultOcultarIdade($categoria, $idade);
         $template = $this->resolverTemplate($categoria, $idade, (string) ($registro['tipo'] ?? ''));
         $mensagem = $this->resolverMensagem($registro, $idade, $ocultar);
         $goldTheme = $this->isGoldTheme($template);
-        $hash = sha1(json_encode([$template, $mensagem, $ocultar, 'v7'], JSON_UNESCAPED_UNICODE) ?: uniqid('', true));
+        $hash = sha1(json_encode([$template, $mensagem, $ocultar, 'v8'], JSON_UNESCAPED_UNICODE) ?: uniqid('', true));
 
         return [
             'registro_id' => (int) ($registro['id'] ?? 0),
@@ -91,7 +95,7 @@ class EfemeridesCardService
             $card['gold_theme'] = $this->isGoldTheme(trim($templateOverride));
         }
         $card['idade_exibida'] = !$card['ocultar_idade'] && !empty($card['idade_exibida']);
-        $card['cache_key'] = sha1(json_encode([$card['template'], $card['mensagem'], $card['ocultar_idade'], 'v7'], JSON_UNESCAPED_UNICODE) ?: uniqid('', true));
+        $card['cache_key'] = sha1(json_encode([$card['template'], $card['mensagem'], $card['ocultar_idade'], 'v8'], JSON_UNESCAPED_UNICODE) ?: uniqid('', true));
         $card['card_hash'] = $card['cache_key'];
         $compose = (new ImageComposer())->compose($card);
         if (!empty($compose['ok'])) {

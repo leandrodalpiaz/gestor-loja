@@ -1070,7 +1070,8 @@ class Obreiro
                      telegram_id = NULL,
                      updated_at = NOW()
                  WHERE id = :id
-                   AND loja_id = :loja_id"
+                   AND loja_id = :loja_id
+                 RETURNING nome"
             );
             $stmt->execute([
                 'id' => $id,
@@ -1084,12 +1085,41 @@ class Obreiro
                      acesso_status = 'inativo',
                      telegram_id = NULL,
                      updated_at = NOW()
-                 WHERE id = :id"
+                 WHERE id = :id
+                 RETURNING nome"
             );
             $stmt->execute(['id' => $id]);
         }
 
-        return $stmt->rowCount() > 0;
+        $nome = $stmt->fetchColumn();
+        $ok = $stmt->rowCount() > 0;
+        if ($ok && is_string($nome) && $nome !== '') {
+            $this->desativarEfemeridesDoObreiro($id, $nome);
+        }
+
+        return $ok;
+    }
+
+    private function desativarEfemeridesDoObreiro(string $id, string $nomeObreiro): void
+    {
+        // Caminho confiável: registros já vinculados pelo obreiro_id real.
+        $stmtPorId = $this->db->prepare(
+            "UPDATE efemerides_registros
+                SET ativo = false
+              WHERE ativo = true
+                AND obreiro_id = :obreiro_id"
+        );
+        $stmtPorId->execute(['obreiro_id' => $id]);
+
+        // Reforço para registros legados ainda não vinculados (obreiro_id NULL).
+        $stmtPorNome = $this->db->prepare(
+            "UPDATE efemerides_registros
+                SET ativo = false
+              WHERE ativo = true
+                AND obreiro_id IS NULL
+                AND (nome = :nome OR parentesco = :nome)"
+        );
+        $stmtPorNome->execute(['nome' => $nomeObreiro]);
     }
 
     public function excluirPorId(string $id): bool
@@ -1109,7 +1139,8 @@ class Obreiro
                          telegram_id = NULL,
                          updated_at = NOW()
                      WHERE id = :id
-                       AND loja_id = :loja_id"
+                       AND loja_id = :loja_id
+                     RETURNING nome"
                 );
                 $stmt->execute([
                     'id' => $id,
@@ -1124,13 +1155,25 @@ class Obreiro
                          acesso_status = 'inativo',
                          telegram_id = NULL,
                          updated_at = NOW()
-                     WHERE id = :id"
+                     WHERE id = :id
+                     RETURNING nome"
                 );
                 $stmt->execute(['id' => $id]);
             }
 
-            return $stmt->rowCount() > 0;
+            $nome = $stmt->fetchColumn();
+            $ok = $stmt->rowCount() > 0;
+            if ($ok && is_string($nome) && $nome !== '') {
+                $this->desativarEfemeridesDoObreiro($id, $nome);
+            }
+
+            return $ok;
         }
+
+        $nome = null;
+        $stmtNome = $this->db->prepare("SELECT nome FROM public.obreiros WHERE id = :id");
+        $stmtNome->execute(['id' => $id]);
+        $nome = $stmtNome->fetchColumn();
 
         if ($this->suportaLojaId()) {
             $stmt = $this->db->prepare("DELETE FROM public.obreiros WHERE id = :id AND loja_id = :loja_id");
@@ -1143,7 +1186,12 @@ class Obreiro
             $stmt->execute(['id' => $id]);
         }
 
-        return $stmt->rowCount() > 0;
+        $ok = $stmt->rowCount() > 0;
+        if ($ok && is_string($nome) && $nome !== '') {
+            $this->desativarEfemeridesDoObreiro($id, $nome);
+        }
+
+        return $ok;
     }
 
     public function autenticar(string $matricula, string $senha): ?array

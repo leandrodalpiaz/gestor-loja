@@ -463,7 +463,7 @@ class ImageComposer
             return array_replace($profile, [
                 'kind' => 'birthday_child',
                 'celebration' => true,
-                'headerFont' => 'cursive',
+                'headerFont' => 'normal',
                 'bodyFont' => 'normal',
                 'boldFont' => 'cursive',
                 'color' => [20, 80, 160],
@@ -473,6 +473,7 @@ class ImageComposer
                 'panelStyle' => 'birthday',
                 'headerMultiplier' => 1.38,
                 'headerGapMultiplier' => 1.3,
+                'headerBold' => true,
             ]);
         }
 
@@ -480,7 +481,7 @@ class ImageComposer
             return array_replace($profile, [
                 'kind' => 'birthday_brother',
                 'celebration' => true,
-                'headerFont' => 'cursive',
+                'headerFont' => 'normal',
                 'bodyFont' => 'normal',
                 'boldFont' => 'cursive',
                 'color' => [255, 255, 255],
@@ -490,6 +491,7 @@ class ImageComposer
                 'textBottom' => (int) round($height * 0.57),
                 'headerMultiplier' => 1.55,
                 'headerGapMultiplier' => 1.3,
+                'headerBold' => true,
             ]);
         }
 

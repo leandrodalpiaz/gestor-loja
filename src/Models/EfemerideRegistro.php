@@ -58,12 +58,14 @@ class EfemerideRegistro
         }
 
         $stmt = $this->db->prepare("
-            SELECT *
-            FROM efemerides_registros
-            WHERE loja_id = :loja_id
-              AND ativo = true
-              AND TO_CHAR(data_evento, 'DD/MM') = :dia_mes
-            ORDER BY tipo, nome
+            SELECT e.*
+            FROM efemerides_registros e
+            LEFT JOIN public.obreiros o ON o.id = e.obreiro_id
+            WHERE e.loja_id = :loja_id
+              AND e.ativo = true
+              AND (e.obreiro_id IS NULL OR o.ativo = true)
+              AND TO_CHAR(e.data_evento, 'DD/MM') = :dia_mes
+            ORDER BY e.tipo, e.nome
         ");
         $stmt->execute([
             'loja_id' => $this->obterLojaAtualId(),
@@ -76,12 +78,14 @@ class EfemerideRegistro
     public function getRegistrosPorDiaMes(string $diaMes): array
     {
         $stmt = $this->db->prepare("
-            SELECT *
-            FROM efemerides_registros
-            WHERE loja_id = :loja_id
-              AND ativo = true
-              AND TO_CHAR(data_evento, 'DD/MM') = :dia_mes
-            ORDER BY tipo, nome
+            SELECT e.*
+            FROM efemerides_registros e
+            LEFT JOIN public.obreiros o ON o.id = e.obreiro_id
+            WHERE e.loja_id = :loja_id
+              AND e.ativo = true
+              AND (e.obreiro_id IS NULL OR o.ativo = true)
+              AND TO_CHAR(e.data_evento, 'DD/MM') = :dia_mes
+            ORDER BY e.tipo, e.nome
         ");
         $stmt->execute([
             'loja_id' => $this->obterLojaAtualId(),
