@@ -43,6 +43,8 @@ export class SecretariaBalaustres implements OnInit {
   protected previewTexto = signal<string>('');
   protected currentBalaustreStatus = signal<string>('');
   protected activeTab: BalaustreTab = 'blocos';
+  protected activeBlocoIndex = signal<number>(0);
+  protected blocoTransitionDir = signal<'next' | 'prev'>('next');
 
   protected blocos: Record<string, string> = this.buildEmptyBlocos();
 
@@ -124,6 +126,41 @@ export class SecretariaBalaustres implements OnInit {
     };
   }
 
+  protected get blocoAtual() {
+    return this.blocosConfig[this.activeBlocoIndex()];
+  }
+
+  protected get blocoProgresso(): number {
+    return Math.round(((this.activeBlocoIndex() + 1) / this.blocosConfig.length) * 100);
+  }
+
+  protected blocoEstaPreenchido(campo: string): boolean {
+    return (this.blocos[campo] || '').trim().length > 0;
+  }
+
+  protected blocoDotClass(idx: number, campo: string): string {
+    if (idx === this.activeBlocoIndex()) {
+      return 'bg-liturgical-gold';
+    }
+    return this.blocoEstaPreenchido(campo) ? 'bg-emerald-600/60' : 'bg-white/10';
+  }
+
+  protected irParaBloco(index: number): void {
+    if (index < 0 || index >= this.blocosConfig.length || index === this.activeBlocoIndex()) {
+      return;
+    }
+    this.blocoTransitionDir.set(index > this.activeBlocoIndex() ? 'next' : 'prev');
+    this.activeBlocoIndex.set(index);
+  }
+
+  protected proximoBloco(): void {
+    this.irParaBloco(this.activeBlocoIndex() + 1);
+  }
+
+  protected blocoAnterior(): void {
+    this.irParaBloco(this.activeBlocoIndex() - 1);
+  }
+
   protected carregarBalaustre(sessaoId: number): void {
     this.loading.set(true);
     this.errorMsg.set(null);
@@ -190,6 +227,7 @@ export class SecretariaBalaustres implements OnInit {
           });
         }
         this.palavraVisitantes.set(visitantes);
+        this.activeBlocoIndex.set(0);
       },
       error: (err) => {
         this.loading.set(false);
@@ -393,6 +431,7 @@ export class SecretariaBalaustres implements OnInit {
     this.cargosSessao.set(this.getBaseCargos());
     this.palavraObreiros.set([]);
     this.palavraVisitantes.set([]);
+    this.activeBlocoIndex.set(0);
   }
 
   private buildEmptyBlocos(): Record<string, string> {
