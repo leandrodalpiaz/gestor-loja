@@ -362,7 +362,7 @@
         <p class="text-[10px] text-slate-500 font-medium tracking-widest uppercase mt-0.5">Determine Jóias e Biblioteca por Obreiro</p>
       </div>
 
-      <form (submit)="salvarAgendamento(); $event.preventDefault()" class="space-y-6 text-xs">
+      <form (submit)="$event.preventDefault(); salvarAgendamento()" class="space-y-6 text-xs">
         
         <!-- Obreiro Selection -->
         <div class="space-y-2">
@@ -606,7 +606,7 @@
         </div>
       }
 
-      <form (submit)="salvarConfiguracaoValores(); $event.preventDefault()" class="space-y-6">
+      <form (submit)="$event.preventDefault(); salvarConfiguracaoValores()" class="space-y-6">
         <!-- Seção: Contribuições Ordinárias -->
         <div class="space-y-4">
           <h4 class="text-[10px] font-bold text-liturgical-gold uppercase tracking-widest border-b border-white/5 pb-2">Contribuições Ordinárias</h4>
@@ -711,7 +711,7 @@
       <div class="w-full max-w-md glass-card-gold rounded-3xl p-6 md:p-8 relative overflow-hidden animate-fade-in border border-liturgical-gold/25">
         <h3 class="font-cinzel text-xl font-bold tracking-wider text-white mb-6">Novo Lançamento</h3>
         
-        <form (submit)="salvarNovoLancamento(); $event.preventDefault()" class="space-y-4">
+        <form (submit)="$event.preventDefault(); salvarNovoLancamento()" class="space-y-4">
           
           <!-- Tipo -->
           <div class="grid grid-cols-2 gap-3">

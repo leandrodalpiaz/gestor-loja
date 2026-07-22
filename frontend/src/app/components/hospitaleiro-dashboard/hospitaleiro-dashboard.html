@@ -59,7 +59,7 @@
             @for (o of (hosp.pendencias_visita || []); track o.id) { <div class="flex items-center justify-between gap-3 rounded-xl bg-white/[0.02] border border-white/5 p-4"><div><p class="font-bold text-white">{{ o.obreiro_nome || o.nome_familiar }}</p><p class="text-xs text-slate-400">{{ o.descricao }}</p></div><button (click)="registrarVisita(o.id)" class="rounded-lg bg-liturgical-gold px-3 py-2 text-xs font-bold text-slate-950">Registrar visita</button></div> } @empty { <p class="text-xs text-emerald-400">Nenhuma visita pendente.</p> }
           </div>
         </div>
-        <form (submit)="salvarOcorrencia(); $event.preventDefault()" class="h-max space-y-3 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
+        <form (submit)="$event.preventDefault(); salvarOcorrencia()" class="h-max space-y-3 rounded-2xl border border-white/5 bg-white/[0.01] p-6">
           <h3 class="font-cinzel text-xs font-bold uppercase tracking-widest text-white">Nova ocorrência</h3>
           <select [(ngModel)]="ocorrenciaForm.obreiro_id" name="obreiro" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white"><option value="">Não vincular obreiro</option>@for(o of (hosp.obreiros || []);track o.id){<option [value]="o.id">{{o.nome}} · CIM {{o.cim||'-'}}</option>}</select>
           <input [(ngModel)]="ocorrenciaForm.nome_familiar" name="familiar" placeholder="Nome de familiar, se aplicável" class="w-full rounded-xl border border-white/10 bg-[#111a31] p-3 text-sm text-white">

@@ -77,7 +77,7 @@
       <!-- ABA 1: LOGÍSTICA & CONSUMO -->
       @if (activeTab() === 'logistica') {
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-3 animate-fade-in">
-          <form (submit)="salvarOperacaoBanquete(); $event.preventDefault()" class="space-y-3 rounded-2xl border border-white/5 bg-white/[0.01] p-6 xl:col-span-2">
+          <form (submit)="$event.preventDefault(); salvarOperacaoBanquete()" class="space-y-3 rounded-2xl border border-white/5 bg-white/[0.01] p-6 xl:col-span-2">
             <h3 class="mb-4 font-cinzel text-xs font-bold uppercase tracking-widest text-white border-b border-white/5 pb-2">Operação do banquete</h3>
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>

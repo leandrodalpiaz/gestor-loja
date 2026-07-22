@@ -317,7 +317,7 @@
           </button>
         </div>
 
-        <form (submit)="enviarComprovante(); $event.preventDefault()" class="space-y-4 text-xs">
+        <form (submit)="$event.preventDefault(); enviarComprovante()" class="space-y-4 text-xs">
           
           <div class="flex flex-col gap-1.5">
             <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Valor Pago (R$) *</label>
@@ -370,7 +370,7 @@
           </button>
         </div>
 
-        <form (submit)="enviarComprovanteAvulso(); $event.preventDefault()" class="space-y-4 text-xs">
+        <form (submit)="$event.preventDefault(); enviarComprovanteAvulso()" class="space-y-4 text-xs">
           
           <div class="flex flex-col gap-1.5">
             <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Valor Pago (R$) *</label>

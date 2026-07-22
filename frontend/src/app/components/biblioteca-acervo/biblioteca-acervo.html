@@ -414,7 +414,7 @@
 
         <!-- Curatorship Curation Workspace Form -->
         <div class="lg:col-span-7">
-          <form (submit)="salvarClassificacao(); $event.preventDefault()"
+          <form (submit)="$event.preventDefault(); salvarClassificacao()"
                 class="glass-surface border border-white/5 bg-liturgical-surface/40 p-6 rounded-2xl space-y-6 shadow-xl relative overflow-hidden">
 
             <div class="absolute -right-12 -top-12 w-28 h-28 bg-liturgical-gold/[0.03] rounded-full blur-2xl"></div>
@@ -702,7 +702,7 @@
           </button>
         </div>
 
-        <form (submit)="salvarForm(); $event.preventDefault()" class="p-6 space-y-4">
+        <form (submit)="$event.preventDefault(); salvarForm()" class="p-6 space-y-4">
           <!-- ─── QR Code Scanner + ISBN ─── -->
           <div class="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
             <div>

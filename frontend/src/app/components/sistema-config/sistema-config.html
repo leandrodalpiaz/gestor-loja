@@ -73,7 +73,7 @@
           <p class="text-[10px] text-slate-400 mt-0.5">Definições para emissão de documentos e relatórios oficiais</p>
         </div>
 
-        <form (submit)="salvarConfig(); $event.preventDefault()" class="space-y-4 text-xs">
+        <form (submit)="$event.preventDefault(); salvarConfig()" class="space-y-4 text-xs">
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="flex flex-col gap-1.5">
@@ -195,7 +195,7 @@
               </span>
             </div>
 
-            <form (submit)="salvarTecnicoConfig(); $event.preventDefault()" class="space-y-4 text-xs">
+            <form (submit)="$event.preventDefault(); salvarTecnicoConfig()" class="space-y-4 text-xs">
               <div class="flex flex-col gap-1.5">
                 <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Status Geral do Servidor</label>
                 <select [(ngModel)]="tecnicoConfig().sistema_status" name="sistema_status"

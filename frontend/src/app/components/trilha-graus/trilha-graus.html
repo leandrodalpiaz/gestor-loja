@@ -385,7 +385,7 @@
           </button>
         </div>
 
-        <form (submit)="salvarRascunho(); $event.preventDefault()" class="p-6 space-y-4 text-xs">
+        <form (submit)="$event.preventDefault(); salvarRascunho()" class="p-6 space-y-4 text-xs">
           
           <div class="flex flex-col gap-1.5">
             <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Título da Peça de Arquitetura *</label>

@@ -72,7 +72,7 @@
   <!-- VALIDATION BACKDROP MODAL -->
   @if (selecionado(); as c) {
     <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-      <form (submit)="aprovar(); $event.preventDefault()" 
+      <form (submit)="$event.preventDefault(); aprovar()" 
             class="w-full max-w-lg glass-card-gold rounded-3xl p-6 md:p-8 relative overflow-y-auto max-h-[90vh] animate-fade-in border border-liturgical-gold/25 space-y-4">
         
         <div>
