@@ -1,13 +1,16 @@
 <?php
+// O frontend (Cloudflare Pages) e o backend (Render) vivem em domínios
+// diferentes. Usado tanto para decidir os atributos do cookie de sessão
+// quanto para saber se estamos em produção (atrás do proxy HTTPS do
+// Render) ou em dev local (HTTP puro).
+$isHttpsRequest = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+
 if (session_status() !== PHP_SESSION_ACTIVE) {
-    // O frontend (Cloudflare Pages) e o backend (Render) vivem em domínios
-    // diferentes — sem SameSite=None; Secure, o navegador descarta o cookie
-    // de sessão em toda chamada cross-site (login parece funcionar no
-    // servidor, mas a sessão nunca gruda no cliente). Em HTTP puro (dev
-    // local) o atributo Secure quebraria o cookie, então só habilita
-    // SameSite=None quando a requisição já é HTTPS.
-    $isHttpsRequest = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+    // Sem SameSite=None; Secure, o navegador descarta o cookie de sessão em
+    // toda chamada cross-site (login parece funcionar no servidor, mas a
+    // sessão nunca gruda no cliente). Em HTTP puro (dev local) o atributo
+    // Secure quebraria o cookie, então só habilita SameSite=None em HTTPS.
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => '/',
@@ -141,32 +144,32 @@ if ($method === 'HEAD') {
     $method = 'GET';
 }
 
-// ── Redirecionamento do front-end PHP legado para o Angular SPA ──
-// Todas as requisições de página (não-API) são redirecionadas para o Angular.
-// API, webhook, health e assets estáticos continuam servidos pelo PHP.
+// ── Redirecionamento de páginas para o Angular SPA ──
+// O Angular é publicado no Cloudflare Pages (frontend oficial, único).
+// Este backend serve só API/webhook/health/assets — qualquer requisição
+// de página que cair aqui (link antigo, bookmark, etc.) é redirecionada
+// para o Cloudflare Pages em produção, ou para o `ng serve` local em dev.
 $isApiOrSystemRoute = str_starts_with($requestUri, '/api/')
     || str_starts_with($requestUri, '/assets/')
     || in_array($requestUri, ['/webhook', '/health'], true);
 
 if ($method === 'GET' && !$isApiOrSystemRoute) {
-    $angularBuildIndex = __DIR__ . '/index.html';
-    if (is_file($angularBuildIndex)) {
-        // Produção: serve o build estático do Angular (gerado no Docker build),
-        // com fallback de rota SPA — qualquer caminho não-API cai aqui.
-        header('Content-Type: text/html; charset=UTF-8');
-        readfile($angularBuildIndex);
-        exit;
+    $qs = $_SERVER['QUERY_STRING'] ?? '';
+
+    if ($isHttpsRequest) {
+        $frontendUrl = trim((string) Env::get('FRONTEND_URL', 'https://gestor-loja-frontend.pages.dev'));
+        $targetUrl = rtrim($frontendUrl, '/') . $requestUri;
+    } else {
+        // Dev local: redireciona para o `ng serve` rodando na máquina do
+        // desenvolvedor (fora do container).
+        $angularPort = trim((string) Env::get('ANGULAR_DEV_PORT', '4300'));
+        $targetUrl = "http://127.0.0.1:{$angularPort}" . $requestUri;
     }
 
-    // Dev local sem build embutido: redireciona para o `ng serve` rodando na
-    // máquina do desenvolvedor (fora do container).
-    $angularPort = trim((string) Env::get('ANGULAR_DEV_PORT', '4300'));
-    $angularUrl = "http://127.0.0.1:{$angularPort}" . $requestUri;
-    $qs = $_SERVER['QUERY_STRING'] ?? '';
     if ($qs !== '') {
-        $angularUrl .= '?' . $qs;
+        $targetUrl .= '?' . $qs;
     }
-    header("Location: {$angularUrl}", true, 302);
+    header("Location: {$targetUrl}", true, 302);
     exit;
 }
 

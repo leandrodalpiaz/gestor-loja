@@ -1,11 +1,3 @@
-FROM node:22-bookworm AS frontend-build
-
-WORKDIR /frontend
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
-COPY frontend/ ./
-RUN npm run build
-
 FROM php:8.2-apache
 
 # Habilitar modulos essenciais do Apache
@@ -35,13 +27,6 @@ RUN apt-get update && apt-get install -y \
 
 # Copiar todos os arquivos para dentro do container
 COPY . /var/www/html/
-
-# Copiar o build de produção do Angular (gerado no estágio anterior) por
-# cima de public/ — o Angular espera <base href="/">. Único arquivo em
-# comum é assets/logo-renascenca.png (mesma logo nos dois lados); não há
-# colisão com index.php, api/, health.php, webhook.php nem com o restante
-# de public/assets usado pelo backend (fontes, templates de efemérides).
-COPY --from=frontend-build /frontend/dist/cloudflare /var/www/html/public
 
 # Dar as permissões corretas para o apache ler os arquivos
 RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html/public
