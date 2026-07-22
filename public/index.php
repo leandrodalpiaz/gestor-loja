@@ -1,5 +1,21 @@
 <?php
 if (session_status() !== PHP_SESSION_ACTIVE) {
+    // O frontend (Cloudflare Pages) e o backend (Render) vivem em domínios
+    // diferentes — sem SameSite=None; Secure, o navegador descarta o cookie
+    // de sessão em toda chamada cross-site (login parece funcionar no
+    // servidor, mas a sessão nunca gruda no cliente). Em HTTP puro (dev
+    // local) o atributo Secure quebraria o cookie, então só habilita
+    // SameSite=None quando a requisição já é HTTPS.
+    $isHttpsRequest = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => $isHttpsRequest,
+        'httponly' => true,
+        'samesite' => $isHttpsRequest ? 'None' : 'Lax',
+    ]);
     @session_start();
 }
 
