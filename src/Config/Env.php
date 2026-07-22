@@ -16,7 +16,7 @@ class Env
             'APP_ALLOW_ENV_TENANT_FALLBACK', 'APP_TEST_OPEN_ACCESS', 'APP_TEST_ALLOW_ALL_PANELS',
             'SYSTEM_ADMIN_TELEGRAM_IDS', 'SUPABASE_JWT_SECRET', 'SUPABASE_PROJECT_REF',
             'FRONTEND_ALLOWED_ORIGINS', 'CRON_EFEMERIDES_TOKEN', 'CRON_SECRET_TOKEN', 'TELEGRAM_DRY_RUN',
-            'ANGULAR_DEV_PORT'
+            'ANGULAR_DEV_PORT', 'TEST_USER_LOGIN', 'TEST_USER_PASSWORD'
         ];
         foreach ($chavesConhecidas as $envKey) {
             if (!isset($_ENV[$envKey]) || $_ENV[$envKey] === '') {

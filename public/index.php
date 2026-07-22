@@ -2384,11 +2384,13 @@ switch ($requestUri) {
         }
 
         // ──────────────────────────────────────────────
-        // USUÁRIO DE TESTE TEMPORÁRIO (full access)
-        // Desativar: mudar $TEST_USER_ENABLED para false
+        // USUÁRIO DE TESTE (full access, para testadores convidados)
+        // Login/senha configurados via env — nunca hardcoded no código.
+        // Desativar: deixar TEST_USER_LOGIN ou TEST_USER_PASSWORD vazios.
         // ──────────────────────────────────────────────
-        $TEST_USER_ENABLED = true;
-        if ($TEST_USER_ENABLED && $matricula === 'teste' && $password === 'teste') {
+        $testUserLogin = trim((string) ($_ENV['TEST_USER_LOGIN'] ?? getenv('TEST_USER_LOGIN') ?: ''));
+        $testUserPassword = trim((string) ($_ENV['TEST_USER_PASSWORD'] ?? getenv('TEST_USER_PASSWORD') ?: ''));
+        if ($testUserLogin !== '' && $testUserPassword !== '' && $matricula === $testUserLogin && hash_equals($testUserPassword, $password)) {
             $_SESSION['force_system_admin'] = true;
             $_SESSION['usuario_logado'] = [
                 'id' => 999999,

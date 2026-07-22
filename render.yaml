@@ -35,4 +35,11 @@ services:
         sync: false
       - key: CRON_EFEMERIDES_TOKEN
         sync: false
+      - key: TEST_USER_LOGIN
+        sync: false
+      - key: TEST_USER_PASSWORD
+        sync: false
 # Crons desativados no plano Render Free (devem ser disparados via cron-job.org / monitor HTTP externo).
+# TEST_USER_LOGIN/TEST_USER_PASSWORD: credencial de acesso total (admin) para testadores convidados,
+# usando o AMBIENTE REAL de produção — combine sempre com um restore de backup do Supabase após cada
+# rodada de testes. Deixe qualquer uma das duas vazia para desativar esse login por completo.
