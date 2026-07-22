@@ -517,15 +517,23 @@ if (!$bypassStatusCheck && $tenantResolved) {
 
 
 if (isset($_SESSION['usuario_logado']) && !in_array($requestUri, ['/login', '/logout', '/health'], true)) {
-    $statusSessao = strtolower(trim((string) ($_SESSION['usuario_logado']['acesso_status'] ?? '')));
-    if ($statusSessao === '') {
-        $statusSessao = !empty($_SESSION['usuario_logado']['ativo']) ? 'ativo' : 'inativo';
-    }
+    $isSystemAdminSession = !empty($_SESSION['force_system_admin']) || !empty($_SESSION['is_system_admin']);
+    $obreiroIdSessao = trim((string) ($_SESSION['usuario_logado']['id'] ?? ''));
 
-    if ($statusSessao !== 'ativo') {
-        session_destroy();
-        header('Location: /login');
-        exit;
+    if (!$isSystemAdminSession && $obreiroIdSessao !== '') {
+        // Revalida sempre no banco (não confia em snapshot cacheado na sessão),
+        // para que a inativação/exclusão de um obreiro derrube o acesso imediatamente.
+        $obreiroAtual = (new Obreiro())->findById($obreiroIdSessao);
+        $statusSessao = $obreiroAtual ? strtolower(trim((string) ($obreiroAtual['acesso_status'] ?? ''))) : 'inativo';
+        if ($statusSessao === '') {
+            $statusSessao = ($obreiroAtual && !empty($obreiroAtual['ativo'])) ? 'ativo' : 'inativo';
+        }
+
+        if (!$obreiroAtual || empty($obreiroAtual['ativo']) || $statusSessao !== 'ativo') {
+            session_destroy();
+            header('Location: /login');
+            exit;
+        }
     }
 }
 
