@@ -133,7 +133,18 @@ $isApiOrSystemRoute = str_starts_with($requestUri, '/api/')
     || in_array($requestUri, ['/webhook', '/health'], true);
 
 if ($method === 'GET' && !$isApiOrSystemRoute) {
-    $angularPort = trim((string) ($_ENV['ANGULAR_DEV_PORT'] ?? '4200'));
+    $angularBuildIndex = __DIR__ . '/index.html';
+    if (is_file($angularBuildIndex)) {
+        // Produção: serve o build estático do Angular (gerado no Docker build),
+        // com fallback de rota SPA — qualquer caminho não-API cai aqui.
+        header('Content-Type: text/html; charset=UTF-8');
+        readfile($angularBuildIndex);
+        exit;
+    }
+
+    // Dev local sem build embutido: redireciona para o `ng serve` rodando na
+    // máquina do desenvolvedor (fora do container).
+    $angularPort = trim((string) Env::get('ANGULAR_DEV_PORT', '4300'));
     $angularUrl = "http://127.0.0.1:{$angularPort}" . $requestUri;
     $qs = $_SERVER['QUERY_STRING'] ?? '';
     if ($qs !== '') {
