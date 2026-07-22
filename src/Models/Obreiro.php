@@ -1381,9 +1381,10 @@ class Obreiro
         );
 
         // System admin (fora do RBAC da loja): flag tecnica, nao e cargo oficial.
-        $telegramId = isset($obreiro['telegram_id']) ? (int) $obreiro['telegram_id'] : null;
-        $obreiro['is_system_admin'] = (bool) ($obreiro['is_system_admin'] ?? false)
-            || (bool) ($telegramId && $this->isSystemAdminTelegramId($telegramId));
+        // Vem só da coluna is_system_admin (conta técnica dedicada) — nunca
+        // inferida por telegram_id, que pode coincidir com o telegram pessoal
+        // de um obreiro real e marcaria o perfil dele como admin por engano.
+        $obreiro['is_system_admin'] = (bool) ($obreiro['is_system_admin'] ?? false);
 
         return $obreiro;
     }
@@ -1413,30 +1414,12 @@ class Obreiro
                 $this->normalizarCargoLegado((string) ($obreiro['cargo'] ?? ''))
             );
 
-            $telegramId = isset($obreiro['telegram_id']) ? (int) $obreiro['telegram_id'] : null;
-            $obreiro['is_system_admin'] = (bool) ($obreiro['is_system_admin'] ?? false)
-                || (bool) ($telegramId && $this->isSystemAdminTelegramId($telegramId));
+            // Idem: is_system_admin vem só da coluna, nunca de telegram_id.
+            $obreiro['is_system_admin'] = (bool) ($obreiro['is_system_admin'] ?? false);
         }
         unset($obreiro);
 
         return $obreiros;
-    }
-
-    private function isSystemAdminTelegramId(int $telegramId): bool
-    {
-        $raw = trim((string) (getenv('SYSTEM_ADMIN_TELEGRAM_IDS') ?: ''));
-        if ($raw === '') {
-            return false;
-        }
-
-        $ids = preg_split('/\s*,\s*/', $raw, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-        foreach ($ids as $id) {
-            if ((int) trim((string) $id) === $telegramId) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private function buscarCodigosAtivosPorObreiroIds(array $ids): array

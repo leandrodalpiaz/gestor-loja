@@ -20,9 +20,14 @@ class SupabaseIdentityResolver
 
         $obreiro = (new Obreiro())->findByAuthUserId($authUserId);
         if (!$obreiro) {
+            // Login administrativo/técnico é feito exclusivamente pelo CIM "adm"
+            // (ver /api/auth/login-cim). Esse fallback por e-mail só existe se
+            // SYSTEM_ADMIN_EMAIL for explicitamente configurado — sem valor
+            // padrão hardcoded, para nunca colidir com o e-mail pessoal de
+            // nenhum obreiro real.
             $email = strtolower(trim((string) ($payload['email'] ?? '')));
-            $adminEmail = strtolower(trim((string) ($_ENV['SYSTEM_ADMIN_EMAIL'] ?? getenv('SYSTEM_ADMIN_EMAIL') ?: 'lsdalpiaz@gmail.com')));
-            if ($email !== '' && ($email === $adminEmail || $email === 'lsdalpiaz@gmail.com')) {
+            $adminEmail = strtolower(trim((string) ($_ENV['SYSTEM_ADMIN_EMAIL'] ?? getenv('SYSTEM_ADMIN_EMAIL') ?: '')));
+            if ($email !== '' && $adminEmail !== '' && $email === $adminEmail) {
                 $obreiro = [
                     'id' => '00000000-0000-0000-0000-000000000000',
                     'nome' => 'Administrador Técnico',

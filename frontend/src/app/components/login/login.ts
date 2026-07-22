@@ -72,7 +72,7 @@ export class Login implements OnInit {
     const passwordVal = this.password().trim();
 
     if (!identifierVal || !passwordVal) {
-      this.errorMsg.set('Informe o C.I.M. ou e-mail tecnico e a senha para acessar.');
+      this.errorMsg.set('Informe o C.I.M. ou e-mail e a senha para acessar.');
       return;
     }
 
