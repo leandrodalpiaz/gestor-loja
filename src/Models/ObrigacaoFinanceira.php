@@ -153,8 +153,15 @@ class ObrigacaoFinanceira
             );
         }
 
+        // PDO não suporta transações aninhadas: se o chamador já abriu uma
+        // (ex: aprovação de comprovante PIX vinculado a esta parcela), só
+        // participamos dela — quem abriu é responsável por commit/rollback.
+        $transacaoPropria = !$this->db->inTransaction();
+
         try {
-            $this->db->beginTransaction();
+            if ($transacaoPropria) {
+                $this->db->beginTransaction();
+            }
 
             $lancamentoModel = new LancamentoFinanceiro();
             $lancamentoOk = $lancamentoModel->criar([
@@ -211,13 +218,19 @@ class ObrigacaoFinanceira
                 );
             }
 
-            $this->db->commit();
+            if ($transacaoPropria) {
+                $this->db->commit();
+            }
             return true;
         } catch (Throwable $e) {
-            if ($this->db->inTransaction()) {
+            if ($transacaoPropria && $this->db->inTransaction()) {
                 $this->db->rollBack();
             }
             error_log('Falha ao quitar parcela financeira: ' . $e->getMessage());
+            if (!$transacaoPropria) {
+                // Propaga para que o chamador (que abriu a transação) decida o rollback.
+                throw $e;
+            }
             return false;
         }
     }
