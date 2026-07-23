@@ -31,9 +31,13 @@ class SupabaseJwtValidator
             // Obtém o segredo do JWT do Supabase a partir das variáveis de ambiente
             $secret = trim((string) (Env::get('SUPABASE_JWT_SECRET') ?: Env::get('JWT_SECRET') ?: ''));
             if ($secret === '') {
-                // Se for ambiente local, podemos ter um fallback para facilitar testes, mas alertar
-                $appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? 'local')));
-                if ($appEnv === 'local' || $appEnv === 'development' || $appEnv === 'dev') {
+                // Fallback de teste só quando APP_ENV está EXPLICITAMENTE setado
+                // para um valor de dev — nunca por omissão. Se APP_ENV não
+                // estiver configurado (esquecimento comum em deploy), falha
+                // fechado em vez de aceitar um segredo conhecido publicamente
+                // no repositório.
+                $appEnv = strtolower(trim((string) (Env::get('APP_ENV') ?: '')));
+                if (in_array($appEnv, ['local', 'development', 'dev'], true)) {
                     $secret = 'super-secret-jwt-key-for-local-testing-only-1234567890';
                     error_log('[JWT Validator] AVISO: SUPABASE_JWT_SECRET não configurado. Usando chave de teste local.');
                 } else {

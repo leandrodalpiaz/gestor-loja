@@ -1218,7 +1218,7 @@ class Obreiro
         // Se o obreiro não tem senha cadastrada (primeiro acesso)
         // Verificamos se ele usou a senha provisória padrão
         $senhaProvisoria = trim((string) ($_ENV['APP_DEFAULT_PROVISORY_PASSWORD'] ?? getenv('APP_DEFAULT_PROVISORY_PASSWORD') ?: ''));
-        if ($senhaProvisoria !== '' && $senha === $senhaProvisoria) {
+        if ($senhaProvisoria !== '' && hash_equals($senhaProvisoria, $senha)) {
             $usuario['primeiro_acesso_provisorio'] = true;
             return $usuario;
         }
