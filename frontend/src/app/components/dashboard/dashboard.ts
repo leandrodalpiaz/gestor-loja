@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, effect, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, OnInit, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterOutlet, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { trigger, state, style, transition, animate } from '@angular/animations';
@@ -14,6 +14,7 @@ import { BottomNav, BottomNavTab } from '../bottom-nav/bottom-nav';
   imports: [CommonModule, RouterLink, RouterOutlet, RouterLinkActive, BottomNav],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('expandCollapse', [
       state('collapsed', style({ height: '0px', opacity: 0, overflow: 'hidden', padding: '0px', visibility: 'hidden' })),
@@ -27,6 +28,7 @@ import { BottomNav, BottomNavTab } from '../bottom-nav/bottom-nav';
 export class Dashboard implements OnInit {
   protected supabaseService = inject(SupabaseService);
   protected router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   // Estado da barra lateral móvel
   protected mobileSidebarOpen = false;
@@ -76,7 +78,10 @@ export class Dashboard implements OnInit {
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe(() => {
+        // Mutação fora de um evento do próprio template: com OnPush isso não
+        // marcaria a view como suja sozinho, então força o recheck aqui.
         this.mobileSidebarOpen = false;
+        this.cdr.markForCheck();
       });
   }
 

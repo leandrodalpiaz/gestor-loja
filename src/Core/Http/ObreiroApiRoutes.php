@@ -583,13 +583,19 @@ class ObreiroApiRoutes
                 $presencaModel = new \App\Models\Presenca();
                 $sessoesFuturas = $sessaoModel->listarFuturas(4);
 
+                // Uma unica consulta em lote para as contagens/resposta de todas as sessoes
+                // futuras, em vez de ate 3 consultas por sessao dentro do loop (evita N+1).
+                $sessaoIdsFuturas = array_map(static fn (array $s): int => (int) ($s['id'] ?? 0), $sessoesFuturas);
+                $resumoPresencas = $presencaModel->obterResumoPorSessoes($sessaoIdsFuturas, (string) $obreiroId);
+
                 foreach ($sessoesFuturas as $sessao) {
                     $sessaoId = (int) ($sessao['id'] ?? 0);
                     if ($sessaoId <= 0) {
                         continue;
                     }
 
-                    $respostaUsuario = $presencaModel->obterResposta($sessaoId, (string)$obreiroId);
+                    $resumoSessao = $resumoPresencas[$sessaoId] ?? ['resposta_usuario' => null, 'total_confirmados' => 0, 'total_agape' => 0];
+                    $respostaUsuario = $resumoSessao['resposta_usuario'];
 
                     // Determina a rota de detalhe/sessão correspondente para o obreiro
                     $cargos = $session['usuario_cargos'] ?? [$session['usuario_cargo'] ?? ''];
@@ -619,8 +625,8 @@ class ObreiroApiRoutes
                         'tipo_sessao' => (string) ($sessao['tipo_sessao'] ?? ''),
                         'grau_sessao' => (string) ($sessao['grau_sessao'] ?? ''),
                         'descricao_agape' => $sessaoModel->obterDescricaoAgape($sessao),
-                        'total_confirmados' => $presencaModel->contarConfirmadosPorSessao($sessaoId),
-                        'total_agape' => $presencaModel->contarParticipantesAgapePorSessao($sessaoId),
+                        'total_confirmados' => $resumoSessao['total_confirmados'],
+                        'total_agape' => $resumoSessao['total_agape'],
                         'resposta_usuario' => is_array($respostaUsuario) ? (string) ($respostaUsuario['status_confirmacao'] ?? '') : '',
                         'confirmado' => is_array($respostaUsuario) && (string) ($respostaUsuario['status_confirmacao'] ?? '') === 'confirmado',
                         'detalhe_href' => $rotaDetalheSessao,

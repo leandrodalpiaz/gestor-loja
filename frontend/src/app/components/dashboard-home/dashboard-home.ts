@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -13,6 +13,7 @@ import { trigger, transition, style, animate, query, stagger, keyframes, state, 
   imports: [CommonModule, RouterLink],
   templateUrl: './dashboard-home.html',
   styleUrl: './dashboard-home.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     // Carousel slide transitions with direction awareness
     trigger('cardTransition', [

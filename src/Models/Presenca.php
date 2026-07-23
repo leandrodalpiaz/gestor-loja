@@ -214,6 +214,75 @@ class Presenca
         return (int) $stmt->fetchColumn();
     }
 
+    /**
+     * Versao em lote de obterResposta()/contarConfirmadosPorSessao()/contarParticipantesAgapePorSessao()
+     * para uma lista de sessoes: 2 queries no total em vez de ate 3 por sessao (evita N+1 no dashboard).
+     *
+     * @param int[] $sessaoIds
+     * @return array<int, array{resposta_usuario: array|null, total_confirmados: int, total_agape: int}>
+     */
+    public function obterResumoPorSessoes(array $sessaoIds, string $obreiroId): array
+    {
+        $sessaoIds = array_values(array_unique(array_filter(array_map('intval', $sessaoIds), static fn (int $id) => $id > 0)));
+        $resumo = [];
+        foreach ($sessaoIds as $id) {
+            $resumo[$id] = ['resposta_usuario' => null, 'total_confirmados' => 0, 'total_agape' => 0];
+        }
+        if ($sessaoIds === []) {
+            return $resumo;
+        }
+
+        $lojaId = $this->obterLojaAtualId();
+        $placeholders = [];
+        $params = ['loja_id' => $lojaId];
+        foreach ($sessaoIds as $i => $id) {
+            $key = "sid{$i}";
+            $placeholders[] = ":{$key}";
+            $params[$key] = $id;
+        }
+        $inClause = implode(', ', $placeholders);
+
+        $stmtContagens = $this->db->prepare("
+            SELECT
+                cs.sessao_id,
+                COUNT(*) FILTER (WHERE cs.status_confirmacao = 'confirmado') AS total_confirmados,
+                COUNT(*) FILTER (WHERE cs.status_confirmacao = 'confirmado' AND cs.participara_agape = TRUE) AS total_agape
+            FROM confirmacoes_sessao cs
+            JOIN sessoes s ON s.id = cs.sessao_id
+            WHERE cs.sessao_id IN ({$inClause})
+              AND s.loja_id = :loja_id
+            GROUP BY cs.sessao_id
+        ");
+        $stmtContagens->execute($params);
+        foreach ($stmtContagens->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $sid = (int) $row['sessao_id'];
+            if (isset($resumo[$sid])) {
+                $resumo[$sid]['total_confirmados'] = (int) $row['total_confirmados'];
+                $resumo[$sid]['total_agape'] = (int) $row['total_agape'];
+            }
+        }
+
+        $paramsResposta = $params;
+        $paramsResposta['obreiro_id'] = $obreiroId;
+        $stmtResposta = $this->db->prepare("
+            SELECT cs.*
+            FROM confirmacoes_sessao cs
+            JOIN sessoes s ON s.id = cs.sessao_id
+            WHERE cs.sessao_id IN ({$inClause})
+              AND cs.obreiro_id = :obreiro_id
+              AND s.loja_id = :loja_id
+        ");
+        $stmtResposta->execute($paramsResposta);
+        foreach ($stmtResposta->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $sid = (int) $row['sessao_id'];
+            if (isset($resumo[$sid])) {
+                $resumo[$sid]['resposta_usuario'] = $row;
+            }
+        }
+
+        return $resumo;
+    }
+
     public function contarConfirmadosPorSessao(int $sessaoId): int
     {
         $stmt = $this->db->prepare("
