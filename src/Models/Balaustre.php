@@ -83,6 +83,7 @@ class Balaustre
             } else {
                 $stmt = $this->db->prepare("
             INSERT INTO balaustres (
+                loja_id,
                 sessao_id,
                 numero_balaustre,
                 template_versao,
@@ -93,6 +94,7 @@ class Balaustre
                 status,
                 updated_at
             ) VALUES (
+                :loja_id,
                 :sessao_id,
                 :numero_balaustre,
                 :template_versao,
@@ -106,6 +108,7 @@ class Balaustre
         ");
 
                 $okBalaustre = $stmt->execute([
+                    'loja_id' => $lojaId,
                     'sessao_id' => $sessaoId > 0 ? $sessaoId : null,
                     'numero_balaustre' => trim((string) ($data['numero_balaustre'] ?? '')) ?: null,
                     'template_versao' => trim((string) ($data['template_versao'] ?? 'oficial-v1')) ?: 'oficial-v1',
@@ -208,15 +211,16 @@ class Balaustre
 
         $stmt = $this->db->prepare("
             INSERT INTO balaustres (
-                sessao_id, template_versao, dados_capturados, preparado_por,
+                loja_id, sessao_id, template_versao, dados_capturados, preparado_por,
                 preparado_em, status, updated_at
             ) VALUES (
-                :sessao_id, 'oficial-v1', CAST(:dados AS jsonb), :autor,
+                :loja_id, :sessao_id, 'oficial-v1', CAST(:dados AS jsonb), :autor,
                 NOW(), 'rascunho', NOW()
             )
         ");
 
         return $stmt->execute([
+            'loja_id' => $this->obterLojaAtualId(),
             'sessao_id' => $sessaoId,
             'dados' => json_encode($dados, JSON_UNESCAPED_UNICODE),
             'autor' => $autorId,
@@ -942,7 +946,7 @@ class Balaustre
                    FROM balaustres b
                    LEFT JOIN sessoes s ON s.id = b.sessao_id
                    WHERE b.id = :id
-                     AND (s.id IS NULL OR s.loja_id = :loja_id)
+                     AND b.loja_id = :loja_id
                )
         ");
 
@@ -970,7 +974,7 @@ class Balaustre
                 ) AS total_votantes_abertos
             FROM balaustres b
             LEFT JOIN sessoes s ON s.id = b.sessao_id
-            WHERE (s.loja_id = :loja_id OR s.id IS NULL)
+            WHERE b.loja_id = :loja_id
             ORDER BY b.updated_at DESC, b.id DESC
             LIMIT :limite
         ");
@@ -997,7 +1001,7 @@ class Balaustre
             LEFT JOIN sessoes s ON s.id = b.sessao_id
             JOIN balaustre_votantes bv ON bv.votacao_id = v.id
             WHERE v.status = 'aberta'
-              AND (s.loja_id = ? OR s.id IS NULL)
+              AND b.loja_id = ?
               AND v.balaustre_id IN ({$placeholders})
               AND bv.obreiro_id = ?
         ";
@@ -1040,7 +1044,7 @@ class Balaustre
             LEFT JOIN balaustre_votantes bv ON bv.votacao_id = v.id
             " . ($uuidValido ? "AND bv.obreiro_id = :obreiro_id" : "AND 1 = 0") . "
             WHERE b.status = 'em_votacao'
-              AND (s.loja_id = :loja_id OR s.id IS NULL)
+              AND b.loja_id = :loja_id
         ";
 
         if (!$incluirSemElegibilidade) {
@@ -1172,7 +1176,7 @@ class Balaustre
                        FROM balaustres b
                        LEFT JOIN sessoes s ON s.id = b.sessao_id
                        WHERE b.id = :id
-                         AND (s.loja_id = :loja_id OR s.id IS NULL)
+                         AND b.loja_id = :loja_id
                    )
             ")->execute([
                 'status' => $statusBalaustre,
@@ -1197,9 +1201,10 @@ class Balaustre
                 SELECT b.*
                 FROM balaustres b
                 WHERE b.sessao_id IS NULL
+                  AND b.loja_id = :loja_id
                 LIMIT 1
             ");
-            $stmt->execute();
+            $stmt->execute(['loja_id' => $this->obterLojaAtualId()]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             return $row ?: null;
         }
@@ -1287,7 +1292,7 @@ class Balaustre
             FROM balaustres b
             LEFT JOIN sessoes s ON s.id = b.sessao_id
             WHERE b.id = :id
-              AND (s.loja_id = :loja_id OR s.loja_id IS NULL)
+              AND b.loja_id = :loja_id
             LIMIT 1
         ");
         $stmt->execute([
