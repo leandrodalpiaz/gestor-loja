@@ -5,16 +5,21 @@ telegram_efemerides/ultima_mensagem_preview.txt
 telegram_efemerides/__pycache__/
 scripts/bin/
 scripts/tmp/
+scripts/__pycache__/
 
 # Root-level local temp artifacts
 .tmp_cookie*.txt
 .tmp_mini_cookie*.txt
+*.log
 
 # Editor/backup artifacts
 *.bak
 node_modules/
+.idea/
 
 public/assets/images/efemerides_geradas/*
+storage/app/public/efemerides_geradas/*
+storage/jwks_cache.json
 
 # Backups locais do banco (dados reais de producao - nunca versionar)
 .backups/

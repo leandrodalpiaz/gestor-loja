@@ -37,20 +37,11 @@ use App\Config\Env;
 use App\Config\Database;
 use App\Core\Auth\CurrentUser;
 use App\Core\Auth\AccountGate;
-use App\Core\Http\AdminRoutes;
-use App\Core\Http\AssistenciaRoutes;
-use App\Core\Http\VidaLojaRoutes;
-use App\Core\Http\BibliotecaRoutes;
-use App\Core\Http\ChancelariaRoutes;
 use App\Core\Http\JsonResponse;
 use App\Core\Http\MestreHarmoniaRoutes;
 use App\Core\Http\MiniappApiRoutes;
-use App\Core\Http\MiniappPageRoutes;
 use App\Core\Http\ModuleGuards;
-use App\Core\Http\ObreirosRoutes;
-use App\Core\Http\PainelRoutes;
 use App\Core\Http\RequestBody;
-use App\Core\Http\SecretariaRoutes;
 use App\Core\Http\SecretariaApiRoutes;
 use App\Core\Http\TesourariaApiRoutes;
 use App\Core\Http\ChancelariaApiRoutes;
@@ -58,8 +49,6 @@ use App\Core\Http\HarmoniaApiRoutes;
 use App\Core\Http\AdminApiRoutes;
 use App\Core\Http\ObreiroApiRoutes;
 use App\Core\Http\VeneravelApiRoutes;
-use App\Core\Http\TesourariaRoutes;
-use App\Core\Http\VigilanciaRoutes;
 use App\Core\Http\WebGuards;
 use App\Core\Authorization\Authorizer;
 use App\Core\Authorization\PermissionMap;
@@ -578,14 +567,6 @@ if (!empty($_SESSION['exigir_nova_senha']) && !in_array($requestUri, ['/definir-
     exit;
 }
 
-$appToday = static function (): \DateTimeImmutable {
-    $timezone = trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo'));
-    try {
-        return new \DateTimeImmutable('today', new \DateTimeZone($timezone));
-    } catch (\Throwable $e) {
-        return new \DateTimeImmutable('today', new \DateTimeZone('America/Sao_Paulo'));
-    }
-};
 
 $buildEfemeridesPreview = static function (): array {
     $registroModel = new \App\Models\EfemerideRegistro();
@@ -748,17 +729,6 @@ $mergeHistoricosFixos = static function (array $registros, array $filtros): arra
     return $registros;
 };
 
-$redirectEfemerides = static function (array $params = []): void {
-    $params = array_filter(
-        $params,
-        static fn ($value) => $value !== null && $value !== ''
-    );
-    $query = http_build_query($params);
-    $url = '/chancelaria/efemerides' . ($query !== '' ? '?' . $query : '');
-    header('Location: ' . $url);
-    exit;
-};
-
 $buildTestSessionUser = static function () use ($normalizeRole, $testDisplayName, $testRole): array {
     $role = $normalizeRole($testRole);
 
@@ -899,62 +869,8 @@ $sessionHasRole = static function (string ...$roles) use (&$authorizer, $normali
     return $authorizer->hasRole(...$roles);
 };
 
-$getSessionRoles = static function () use (&$authorizer): array {
-    return $authorizer->roles();
-};
-
 $sessionHasPermission = static function (string $permission) use (&$authorizer): bool {
     return $authorizer->hasPermission($permission);
-};
-
-$requirePermission = static function (string $permission, string $message = 'Esta ação segue regras de responsabilidade da Loja.') use ($sessionHasPermission): void {
-    WebGuards::requirePermission($sessionHasPermission($permission), $message);
-};
-
-$requireLogin = static function () use ($openTestAccess): void {
-    WebGuards::requireLogin($openTestAccess, $_SESSION);
-};
-
-$requireBibliotecaAccess = static function () use (
-    $openTestAccess,
-    $authorizer
-): void {
-    ModuleGuards::requireBibliotecaAccess($openTestAccess, $_SESSION, $authorizer);
-};
-
-$requireBibliotecaManageAccess = static function () use (
-    $openTestAccess,
-    $authorizer
-): void {
-    ModuleGuards::requireBibliotecaManageAccess($openTestAccess, $_SESSION, $authorizer);
-};
-
-$requireSecretariaAccess = static function () use (
-    $openTestAccess,
-    $authorizer
-): void {
-    ModuleGuards::requireSecretariaAccess($openTestAccess, $_SESSION, $authorizer);
-};
-
-$requireObreirosViewAccess = static function () use (
-    $openTestAccess,
-    $authorizer
-): void {
-    ModuleGuards::requireObreirosViewAccess($openTestAccess, $_SESSION, $authorizer);
-};
-
-$requireObreirosManageAccess = static function () use (
-    $openTestAccess,
-    $authorizer
-): void {
-    ModuleGuards::requireObreirosManageAccess($openTestAccess, $_SESSION, $authorizer);
-};
-
-$requireAssistenciaAccess = static function () use (
-    $openTestAccess,
-    $authorizer
-): void {
-    ModuleGuards::requireAssistenciaAccess($openTestAccess, $_SESSION, $authorizer);
 };
 
 $contentPermissionService = static function (): \App\Services\ConteudoPermissaoService {
@@ -963,14 +879,6 @@ $contentPermissionService = static function (): \App\Services\ConteudoPermissaoS
         $service = new \App\Services\ConteudoPermissaoService();
     }
     return $service;
-};
-
-$canManageContentCategory = static function (string $categoria) use ($bypassRoleChecks, $getSessionRoles, $contentPermissionService): bool {
-    if ($bypassRoleChecks) {
-        return true;
-    }
-
-    return $contentPermissionService()->canManage($categoria, $getSessionRoles());
 };
 
 $resolveAuthorizedTelegramObreiro = static function (string ...$roles) use ($normalizeRole): ?array {
@@ -1027,25 +935,6 @@ $loginTelegramObreiroInSession = static function (array $obreiro) use ($syncSess
     $syncTenantSessionFromObreiro($usuario);
 
     $syncSessionRoles($usuario);
-};
-
-$requireTesourariaAccess = static function () use (
-    $openTestAccess,
-    $resolveAuthorizedTelegramObreiro,
-    $loginTelegramObreiroInSession,
-    $requirePermission
-): void {
-    if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
-        $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
-        if (!$telegramObreiro) {
-            header("Location: /login");
-            exit;
-        }
-
-        $loginTelegramObreiroInSession($telegramObreiro);
-    }
-
-    $requirePermission('tesouraria.manage', "Esta ação é realizada pela Tesouraria.");
 };
 
 $requireTesourariaApiAccess = static function () use (
@@ -1837,44 +1726,6 @@ if ($requestUri === '/chancelaria/certificado' && $method === 'GET') {
     exit;
 }
 
-if (BibliotecaRoutes::dispatch($requestUri, $method, $openTestAccess, $_SESSION, $authorizer)) {
-    return;
-}
-
-if (AdminRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $authorizer)) {
-    return;
-}
-
-if (SecretariaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $authorizer, $sessionHasRole)) {
-    return;
-}
-
-if (ObreirosRoutes::dispatch($requestUri, $method, $openTestAccess, $_SESSION, $authorizer)) {
-    return;
-}
-
-if (AssistenciaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $authorizer)) {
-    return;
-}
-
-if (VidaLojaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $authorizer)) {
-    return;
-}
-
-if (TesourariaRoutes::dispatch(
-    $requestUri,
-    $method,
-    $openTestAccess,
-    $_SESSION,
-    $authorizer,
-    $requireTesourariaAccess,
-    $resolveObreiroByInitData,
-    $loginTelegramObreiroInSession,
-    $requirePermission
-)) {
-    return;
-}
-
 if (TesourariaApiRoutes::dispatch(
     $requestUri,
     $method,
@@ -2045,44 +1896,7 @@ if (HarmoniaApiRoutes::dispatch(
     return;
 }
 
-if (VigilanciaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $sessionHasPermission)) {
-    return;
-}
-
 if (MestreHarmoniaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $sessionHasPermission, $requireJsonLogin)) {
-    return;
-}
-
-if (MiniappPageRoutes::dispatch($requestUri)) {
-    return;
-}
-
-if (PainelRoutes::dispatch(
-    $requestUri,
-    $method,
-    $openTestAccess,
-    $_SESSION,
-    $authorizer,
-    $sessionHasRole,
-    $sessionHasPermission,
-    $buildEfemeridesPreview,
-    $canManageContentCategory
-)) {
-    return;
-}
-
-if (ChancelariaRoutes::dispatch(
-    $requestUri,
-    $method,
-    $openTestAccess,
-    $_SESSION,
-    $sessionHasPermission,
-    $appToday,
-    $buildEfemeridesPreview,
-    $redirectEfemerides,
-    $contentPermissionService,
-    $canManageContentCategory
-)) {
     return;
 }
 

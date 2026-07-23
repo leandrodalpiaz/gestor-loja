@@ -14,20 +14,6 @@ class MestreHarmoniaRoutes
         callable $requireJsonLogin
     ): bool {
         switch ($requestUri) {
-            case '/mestre-harmonia':
-                WebGuards::requireLogin($openTestAccess, $session);
-                WebGuards::requirePermission(
-                    $sessionHasPermission('mestre_harmonia.manage'),
-                    'Acesso restrito ao Mestre de Harmonia, Veneravel Mestre ou Administrador.'
-                );
-                (new MestreHarmoniaController())->index();
-                return true;
-
-            case '/miniapp/mestre-harmonia':
-                requireMiniappAuth(['mestre_harmonia', 'veneravel', 'admin'], 'mestre_harmonia.manage');
-                require __DIR__ . '/../../Views/miniapp/mestre_harmonia.php';
-                return true;
-
             case '/api/mestre-harmonia/scan':
                 $requireJsonLogin();
                 if (!$sessionHasPermission('mestre_harmonia.manage')) {

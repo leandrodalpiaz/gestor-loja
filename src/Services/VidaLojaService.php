@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Obreiro;
-use App\Models\Sessao;
 use App\Models\VidaLojaSinal;
 use App\Config\Database;
 use App\Core\Tenant\ResolvesStoreTenant;

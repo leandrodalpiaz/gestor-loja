@@ -2,7 +2,6 @@
 
 namespace App\Core\Http;
 
-use App\Config\Database;
 use App\Models\Obreiro;
 use App\Models\Sessao;
 use App\Models\Balaustre;
@@ -14,7 +13,6 @@ use App\Models\PublicacaoSecretaria;
 use App\Models\ConfiguracaoLoja;
 use App\Models\Cargo;
 use App\Models\ConviteExterno;
-use PDO;
 
 class SecretariaApiRoutes
 {

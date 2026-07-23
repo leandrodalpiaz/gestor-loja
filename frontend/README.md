@@ -1,16 +1,16 @@
-# Frontend
+# Frontend — Gestor de Loja
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.1.
+SPA Angular 22 (standalone components) do Gestor de Loja. Publicado no Cloudflare Pages; o backend PHP (`../public`) serve só API/webhook/health.
 
 ## Development server
 
-To start a local development server, run:
+Este projeto roda na porta 4300 (não a 4200 padrão do Angular CLI), configurada em `package.json`:
 
 ```bash
-ng serve
+npm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Isso executa `ng serve --host 0.0.0.0 --port 4300 --configuration development`, que usa `proxy.conf.json` para encaminhar `/api` e `/assets` para o backend local em `http://localhost:8000`. Abra `http://localhost:4300/`.
 
 ## Code scaffolding
 
