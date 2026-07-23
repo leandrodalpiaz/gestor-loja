@@ -94,13 +94,16 @@ export class TesourariaComprovantes implements OnInit {
         obrigacao_parcela_id: this.parcelaId
       },
       { headers: this.auth.getAuthHeaders() }
-    ).subscribe(r => {
-      if (r.ok) {
-        this.selecionado.set(null);
-        this.carregar();
-      } else {
-        this.erro.set(r.erro || 'Falha ao aprovar comprovante.');
-      }
+    ).subscribe({
+      next: r => {
+        if (r.ok) {
+          this.selecionado.set(null);
+          this.carregar();
+        } else {
+          this.erro.set(r.erro || 'Falha ao aprovar comprovante.');
+        }
+      },
+      error: e => this.erro.set(e.error?.erro || 'Falha de conexão ao aprovar comprovante.')
     });
   }
 
@@ -115,13 +118,16 @@ export class TesourariaComprovantes implements OnInit {
       `${environment.apiUrl}/api/tesouraria/comprovantes/rejeitar`,
       { id: c.id, motivo },
       { headers: this.auth.getAuthHeaders() }
-    ).subscribe(r => {
-      if (r.ok) {
-        this.selecionado.set(null);
-        this.carregar();
-      } else {
-        this.erro.set(r.erro || 'Falha ao rejeitar comprovante.');
-      }
+    ).subscribe({
+      next: r => {
+        if (r.ok) {
+          this.selecionado.set(null);
+          this.carregar();
+        } else {
+          this.erro.set(r.erro || 'Falha ao rejeitar comprovante.');
+        }
+      },
+      error: e => this.erro.set(e.error?.erro || 'Falha de conexão ao rejeitar comprovante.')
     });
   }
 }

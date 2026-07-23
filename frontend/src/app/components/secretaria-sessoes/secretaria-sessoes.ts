@@ -508,11 +508,14 @@ export class SecretariaSessoes implements OnInit {
           this.http.get<any>(
             `${environment.apiUrl}/api/secretaria/sessoes/${sessao.id}/balaustre`,
             { headers }
-          ).subscribe(r => {
-            if (r.ok) {
-              this.previewTexto.set(r.preview || '');
-              this.balaustre.set(r.balaustre);
-            }
+          ).subscribe({
+            next: r => {
+              if (r.ok) {
+                this.previewTexto.set(r.preview || '');
+                this.balaustre.set(r.balaustre);
+              }
+            },
+            error: () => console.error('Falha ao atualizar a prévia do balaústre após salvar.')
           });
         } else {
           alert(res.erro || 'Falha ao salvar rascunho.');

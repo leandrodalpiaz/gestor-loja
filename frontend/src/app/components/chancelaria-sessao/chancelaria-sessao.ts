@@ -49,7 +49,7 @@ export class ChancelariaSessao implements OnInit {
   
   protected abrirData(){this.carregar(0,this.dataSessao)} 
   
-  protected marcar(p:any,presente:boolean){this.http.post<any>(`${environment.apiUrl}/api/chancelaria/sessao/presenca`,{sessao_id:this.sessaoId,obreiro_id:p.id,presente},{headers:this.auth.getAuthHeaders()}).subscribe(r=>r.ok?this.carregar(this.sessaoId):this.erro.set(r.erro))}
+  protected marcar(p:any,presente:boolean){this.http.post<any>(`${environment.apiUrl}/api/chancelaria/sessao/presenca`,{sessao_id:this.sessaoId,obreiro_id:p.id,presente},{headers:this.auth.getAuthHeaders()}).subscribe({next:r=>r.ok?this.carregar(this.sessaoId):this.erro.set(r.erro),error:e=>this.erro.set(e.error?.erro||'Falha de conexão ao marcar presença.')})}
   
   protected preencherVisitante(): void {
     const partes = this.visitanteTextoLivre.split(',').map(p => p.trim()).filter(Boolean);
@@ -61,12 +61,12 @@ export class ChancelariaSessao implements OnInit {
     if (partes[5]) this.visitante.potencia = partes[5];
   }
 
-  protected salvarVisitante(){if(!this.visitante.nome.trim()){this.erro.set('Informe o nome do visitante.');return}this.http.post<any>(`${environment.apiUrl}/api/chancelaria/sessao/visitante`,{sessao_id:this.sessaoId,...this.visitante},{headers:this.auth.getAuthHeaders()}).subscribe(r=>{if(r.ok){this.visitante={nome:'',grau:'',loja:'',numero_loja:'',oriente:'',potencia:'',numero_certificado:'',certificado_emitido_em:'',fala_resumida:''};this.visitanteTextoLivre='';this.carregar(this.sessaoId)}else this.erro.set(r.erro)})}
+  protected salvarVisitante(){if(!this.visitante.nome.trim()){this.erro.set('Informe o nome do visitante.');return}this.http.post<any>(`${environment.apiUrl}/api/chancelaria/sessao/visitante`,{sessao_id:this.sessaoId,...this.visitante},{headers:this.auth.getAuthHeaders()}).subscribe({next:r=>{if(r.ok){this.visitante={nome:'',grau:'',loja:'',numero_loja:'',oriente:'',potencia:'',numero_certificado:'',certificado_emitido_em:'',fala_resumida:''};this.visitanteTextoLivre='';this.carregar(this.sessaoId)}else this.erro.set(r.erro)},error:e=>this.erro.set(e.error?.erro||'Falha de conexão ao salvar visitante.')})}
   
   protected cancelar(id:number){if(confirm('Cancelar esta sessão?'))this.acao(id,'cancelar')} 
   
   protected excluir(id:number){if(confirm('Excluir definitivamente esta sessão e seus registros?'))this.acao(id,'excluir')} 
   
-  private acao(id:number,acao:string){this.http.post<any>(`${environment.apiUrl}/api/chancelaria/sessao/${id}/${acao}`,{},{headers:this.auth.getAuthHeaders()}).subscribe(r=>r.ok?this.carregar():this.erro.set(r.erro))}
+  private acao(id:number,acao:string){this.http.post<any>(`${environment.apiUrl}/api/chancelaria/sessao/${id}/${acao}`,{},{headers:this.auth.getAuthHeaders()}).subscribe({next:r=>r.ok?this.carregar():this.erro.set(r.erro),error:e=>this.erro.set(e.error?.erro||'Falha de conexão ao processar a ação.')})}
 }
 

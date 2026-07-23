@@ -114,12 +114,15 @@ export class TesourariaFechamento implements OnInit {
       `${environment.apiUrl}/api/tesouraria/fechamento/saldo-inicial`,
       { fechamento_id: f.id, novo_saldo: Number(valor), justificativa },
       { headers: this.auth.getAuthHeaders() }
-    ).subscribe(r => {
-      if (r && r.ok) {
-        this.carregar();
-      } else {
-        this.erro.set(r.erro || 'Falha ao atualizar saldo.');
-      }
+    ).subscribe({
+      next: r => {
+        if (r && r.ok) {
+          this.carregar();
+        } else {
+          this.erro.set(r.erro || 'Falha ao atualizar saldo.');
+        }
+      },
+      error: e => this.erro.set(e.error?.erro || 'Falha de conexão ao atualizar saldo.')
     });
   }
 
