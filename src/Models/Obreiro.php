@@ -1061,43 +1061,62 @@ class Obreiro
             return false;
         }
 
-        if ($this->suportaLojaId()) {
-            $stmt = $this->db->prepare(
-                "UPDATE public.obreiros
-                 SET ativo = false,
-                     situacao_quadro = 'inativo',
-                     acesso_status = 'inativo',
-                     telegram_id = NULL,
-                     updated_at = NOW()
-                 WHERE id = :id
-                   AND loja_id = :loja_id
-                 RETURNING nome"
-            );
-            $stmt->execute([
-                'id' => $id,
-                'loja_id' => $this->obterLojaAtualId(),
-            ]);
-        } else {
-            $stmt = $this->db->prepare(
-                "UPDATE public.obreiros
-                 SET ativo = false,
-                     situacao_quadro = 'inativo',
-                     acesso_status = 'inativo',
-                     telegram_id = NULL,
-                     updated_at = NOW()
-                 WHERE id = :id
-                 RETURNING nome"
-            );
-            $stmt->execute(['id' => $id]);
+        $transacaoPropria = !$this->db->inTransaction();
+        if ($transacaoPropria) {
+            $this->db->beginTransaction();
         }
 
-        $nome = $stmt->fetchColumn();
-        $ok = $stmt->rowCount() > 0;
-        if ($ok && is_string($nome) && $nome !== '') {
-            $this->desativarEfemeridesDoObreiro($id, $nome);
-        }
+        try {
+            if ($this->suportaLojaId()) {
+                $stmt = $this->db->prepare(
+                    "UPDATE public.obreiros
+                     SET ativo = false,
+                         situacao_quadro = 'inativo',
+                         acesso_status = 'inativo',
+                         telegram_id = NULL,
+                         updated_at = NOW()
+                     WHERE id = :id
+                       AND loja_id = :loja_id
+                     RETURNING nome"
+                );
+                $stmt->execute([
+                    'id' => $id,
+                    'loja_id' => $this->obterLojaAtualId(),
+                ]);
+            } else {
+                $stmt = $this->db->prepare(
+                    "UPDATE public.obreiros
+                     SET ativo = false,
+                         situacao_quadro = 'inativo',
+                         acesso_status = 'inativo',
+                         telegram_id = NULL,
+                         updated_at = NOW()
+                     WHERE id = :id
+                     RETURNING nome"
+                );
+                $stmt->execute(['id' => $id]);
+            }
 
-        return $ok;
+            $nome = $stmt->fetchColumn();
+            $ok = $stmt->rowCount() > 0;
+            if ($ok && is_string($nome) && $nome !== '') {
+                $this->desativarEfemeridesDoObreiro($id, $nome);
+            }
+
+            if ($transacaoPropria) {
+                $this->db->commit();
+            }
+            return $ok;
+        } catch (\Throwable $e) {
+            if ($transacaoPropria && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log('Falha ao inativar obreiro: ' . $e->getMessage());
+            if (!$transacaoPropria) {
+                throw $e;
+            }
+            return false;
+        }
     }
 
     private function desativarEfemeridesDoObreiro(string $id, string $nomeObreiro): void
@@ -1128,70 +1147,92 @@ class Obreiro
             return false;
         }
 
-        if ($this->suportaColuna('excluir_em_listas')) {
+        $transacaoPropria = !$this->db->inTransaction();
+        if ($transacaoPropria) {
+            $this->db->beginTransaction();
+        }
+
+        try {
+            if ($this->suportaColuna('excluir_em_listas')) {
+                if ($this->suportaLojaId()) {
+                    $stmt = $this->db->prepare(
+                        "UPDATE public.obreiros
+                         SET excluir_em_listas = true,
+                             ativo = false,
+                             situacao_quadro = 'inativo',
+                             acesso_status = 'inativo',
+                             telegram_id = NULL,
+                             updated_at = NOW()
+                         WHERE id = :id
+                           AND loja_id = :loja_id
+                         RETURNING nome"
+                    );
+                    $stmt->execute([
+                        'id' => $id,
+                        'loja_id' => $this->obterLojaAtualId(),
+                    ]);
+                } else {
+                    $stmt = $this->db->prepare(
+                        "UPDATE public.obreiros
+                         SET excluir_em_listas = true,
+                             ativo = false,
+                             situacao_quadro = 'inativo',
+                             acesso_status = 'inativo',
+                             telegram_id = NULL,
+                             updated_at = NOW()
+                         WHERE id = :id
+                         RETURNING nome"
+                    );
+                    $stmt->execute(['id' => $id]);
+                }
+
+                $nome = $stmt->fetchColumn();
+                $ok = $stmt->rowCount() > 0;
+                if ($ok && is_string($nome) && $nome !== '') {
+                    $this->desativarEfemeridesDoObreiro($id, $nome);
+                }
+
+                if ($transacaoPropria) {
+                    $this->db->commit();
+                }
+                return $ok;
+            }
+
+            $nome = null;
+            $stmtNome = $this->db->prepare("SELECT nome FROM public.obreiros WHERE id = :id");
+            $stmtNome->execute(['id' => $id]);
+            $nome = $stmtNome->fetchColumn();
+
             if ($this->suportaLojaId()) {
-                $stmt = $this->db->prepare(
-                    "UPDATE public.obreiros
-                     SET excluir_em_listas = true,
-                         ativo = false,
-                         situacao_quadro = 'inativo',
-                         acesso_status = 'inativo',
-                         telegram_id = NULL,
-                         updated_at = NOW()
-                     WHERE id = :id
-                       AND loja_id = :loja_id
-                     RETURNING nome"
-                );
+                $stmt = $this->db->prepare("DELETE FROM public.obreiros WHERE id = :id AND loja_id = :loja_id");
                 $stmt->execute([
                     'id' => $id,
                     'loja_id' => $this->obterLojaAtualId(),
                 ]);
             } else {
-                $stmt = $this->db->prepare(
-                    "UPDATE public.obreiros
-                     SET excluir_em_listas = true,
-                         ativo = false,
-                         situacao_quadro = 'inativo',
-                         acesso_status = 'inativo',
-                         telegram_id = NULL,
-                         updated_at = NOW()
-                     WHERE id = :id
-                     RETURNING nome"
-                );
+                $stmt = $this->db->prepare("DELETE FROM public.obreiros WHERE id = :id");
                 $stmt->execute(['id' => $id]);
             }
 
-            $nome = $stmt->fetchColumn();
             $ok = $stmt->rowCount() > 0;
             if ($ok && is_string($nome) && $nome !== '') {
                 $this->desativarEfemeridesDoObreiro($id, $nome);
             }
 
+            if ($transacaoPropria) {
+                $this->db->commit();
+            }
             return $ok;
+        } catch (\Throwable $e) {
+            if ($transacaoPropria && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log('Falha ao excluir obreiro: ' . $e->getMessage());
+            if (!$transacaoPropria) {
+                throw $e;
+            }
+            return false;
         }
-
-        $nome = null;
-        $stmtNome = $this->db->prepare("SELECT nome FROM public.obreiros WHERE id = :id");
-        $stmtNome->execute(['id' => $id]);
-        $nome = $stmtNome->fetchColumn();
-
-        if ($this->suportaLojaId()) {
-            $stmt = $this->db->prepare("DELETE FROM public.obreiros WHERE id = :id AND loja_id = :loja_id");
-            $stmt->execute([
-                'id' => $id,
-                'loja_id' => $this->obterLojaAtualId(),
-            ]);
-        } else {
-            $stmt = $this->db->prepare("DELETE FROM public.obreiros WHERE id = :id");
-            $stmt->execute(['id' => $id]);
-        }
-
-        $ok = $stmt->rowCount() > 0;
-        if ($ok && is_string($nome) && $nome !== '') {
-            $this->desativarEfemeridesDoObreiro($id, $nome);
-        }
-
-        return $ok;
     }
 
     public function autenticar(string $matricula, string $senha): ?array

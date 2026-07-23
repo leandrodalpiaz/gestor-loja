@@ -142,38 +142,57 @@ class FamiliarObreiro
             return false;
         }
 
-        $stmt = $this->db->prepare("
-            INSERT INTO public.familiares_obreiro (
-                loja_id, obreiro_id, nome_completo, parentesco,
-                data_nascimento, data_casamento, falecido, observacao_secretaria,
-                status_revisao
-            ) VALUES (
-                :loja_id, :obreiro_id, :nome_completo, :parentesco,
-                :data_nascimento, :data_casamento, :falecido, NULL,
-                'pendente'
-            )
-        ");
-
-        $ok = (bool) $stmt->execute([
-            'loja_id' => (int) $this->lojaId(),
-            'obreiro_id' => $obreiroId,
-            'nome_completo' => $nome,
-            'parentesco' => $parentesco,
-            'data_nascimento' => ($dados['data_nascimento'] ?? null) ?: null,
-            'data_casamento' => ($dados['data_casamento'] ?? null) ?: null,
-            'falecido' => !empty($dados['falecido']),
-        ]);
-
-        if ($ok) {
-            $this->sincronizarEfemerideFamilia(
-                $obreiroId,
-                $nome,
-                $parentesco,
-                (($dados['data_nascimento'] ?? null) ?: null)
-            );
+        $transacaoPropria = !$this->db->inTransaction();
+        if ($transacaoPropria) {
+            $this->db->beginTransaction();
         }
 
-        return $ok;
+        try {
+            $stmt = $this->db->prepare("
+                INSERT INTO public.familiares_obreiro (
+                    loja_id, obreiro_id, nome_completo, parentesco,
+                    data_nascimento, data_casamento, falecido, observacao_secretaria,
+                    status_revisao
+                ) VALUES (
+                    :loja_id, :obreiro_id, :nome_completo, :parentesco,
+                    :data_nascimento, :data_casamento, :falecido, NULL,
+                    'pendente'
+                )
+            ");
+
+            $ok = (bool) $stmt->execute([
+                'loja_id' => (int) $this->lojaId(),
+                'obreiro_id' => $obreiroId,
+                'nome_completo' => $nome,
+                'parentesco' => $parentesco,
+                'data_nascimento' => ($dados['data_nascimento'] ?? null) ?: null,
+                'data_casamento' => ($dados['data_casamento'] ?? null) ?: null,
+                'falecido' => !empty($dados['falecido']) ? 't' : 'f',
+            ]);
+
+            if ($ok) {
+                $this->sincronizarEfemerideFamilia(
+                    $obreiroId,
+                    $nome,
+                    $parentesco,
+                    (($dados['data_nascimento'] ?? null) ?: null)
+                );
+            }
+
+            if ($transacaoPropria) {
+                $this->db->commit();
+            }
+            return $ok;
+        } catch (\Throwable $e) {
+            if ($transacaoPropria && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log('Falha ao criar familiar do obreiro: ' . $e->getMessage());
+            if (!$transacaoPropria) {
+                throw $e;
+            }
+            return false;
+        }
     }
 
     public function atualizar(string $familiarId, array $dados, string $obreiroId): bool
@@ -189,40 +208,59 @@ class FamiliarObreiro
             return false;
         }
 
-        $stmt = $this->db->prepare("
-            UPDATE public.familiares_obreiro
-            SET nome_completo = :nome_completo,
-                parentesco = :parentesco,
-                data_nascimento = :data_nascimento,
-                data_casamento = :data_casamento,
-                falecido = :falecido,
-                status_revisao = 'pendente',
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = :id
-              AND loja_id = :loja_id
-              AND obreiro_id = :obreiro_id
-        ");
-
-        $ok = (bool) $stmt->execute([
-            'id' => $familiarId,
-            'loja_id' => (int) $this->lojaId(),
-            'obreiro_id' => $obreiroId,
-            'nome_completo' => $nome,
-            'parentesco' => $parentesco,
-            'data_nascimento' => ($dados['data_nascimento'] ?? null) ?: null,
-            'data_casamento' => ($dados['data_casamento'] ?? null) ?: null,
-            'falecido' => !empty($dados['falecido']),
-        ]);
-
-        if ($ok) {
-            $this->sincronizarEfemerideFamilia(
-                $obreiroId,
-                $nome,
-                $parentesco,
-                (($dados['data_nascimento'] ?? null) ?: null)
-            );
+        $transacaoPropria = !$this->db->inTransaction();
+        if ($transacaoPropria) {
+            $this->db->beginTransaction();
         }
 
-        return $ok;
+        try {
+            $stmt = $this->db->prepare("
+                UPDATE public.familiares_obreiro
+                SET nome_completo = :nome_completo,
+                    parentesco = :parentesco,
+                    data_nascimento = :data_nascimento,
+                    data_casamento = :data_casamento,
+                    falecido = :falecido,
+                    status_revisao = 'pendente',
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = :id
+                  AND loja_id = :loja_id
+                  AND obreiro_id = :obreiro_id
+            ");
+
+            $ok = (bool) $stmt->execute([
+                'id' => $familiarId,
+                'loja_id' => (int) $this->lojaId(),
+                'obreiro_id' => $obreiroId,
+                'nome_completo' => $nome,
+                'parentesco' => $parentesco,
+                'data_nascimento' => ($dados['data_nascimento'] ?? null) ?: null,
+                'data_casamento' => ($dados['data_casamento'] ?? null) ?: null,
+                'falecido' => !empty($dados['falecido']) ? 't' : 'f',
+            ]);
+
+            if ($ok) {
+                $this->sincronizarEfemerideFamilia(
+                    $obreiroId,
+                    $nome,
+                    $parentesco,
+                    (($dados['data_nascimento'] ?? null) ?: null)
+                );
+            }
+
+            if ($transacaoPropria) {
+                $this->db->commit();
+            }
+            return $ok;
+        } catch (\Throwable $e) {
+            if ($transacaoPropria && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log('Falha ao atualizar familiar do obreiro: ' . $e->getMessage());
+            if (!$transacaoPropria) {
+                throw $e;
+            }
+            return false;
+        }
     }
 }
