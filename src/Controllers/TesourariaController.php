@@ -2,9 +2,11 @@
 
 namespace App\Controllers;
 
+use App\Config\Database;
 use App\Models\ComprovantePix;
 use App\Models\FechamentoMensal;
 use App\Models\LancamentoFinanceiro;
+use App\Models\MensalidadeStatus;
 use App\Models\ObrigacaoFinanceira;
 use App\Models\Presenca;
 use App\Models\RegularidadeObreiro;
@@ -205,17 +207,58 @@ class TesourariaController
         $ano = (int) ($input['ano'] ?? ($comprovante['ano_ref_informado'] ?? date('Y')));
         $rotulo = trim((string) ($input['rotulo_pagamento'] ?? ($comprovante['rotulo_pagamento'] ?? $comprovante['descricao_usuario'] ?? 'Pagamento via PIX')));
 
-        $ok = $comprovanteModel->aprovar($comprovanteId, [
-            'valor' => $valor,
-            'mes' => $mes,
-            'ano' => $ano,
-            'rotulo_pagamento' => $rotulo !== '' ? $rotulo : 'Pagamento via PIX',
-            'categoria_id' => null,
-            'obrigacao_parcela_id' => null,
-            'validado_por' => $usuarioId,
-        ]);
+        $db = Database::getConnection();
+        $db->beginTransaction();
+        try {
+            $ok = $comprovanteModel->aprovar($comprovanteId, [
+                'valor' => $valor,
+                'mes' => $mes,
+                'ano' => $ano,
+                'rotulo_pagamento' => $rotulo !== '' ? $rotulo : 'Pagamento via PIX',
+                'categoria_id' => null,
+                'obrigacao_parcela_id' => null,
+                'validado_por' => $usuarioId,
+            ]);
 
-        return ['ok' => $ok, 'erro' => $ok ? null : 'Não foi possível aprovar o comprovante.'];
+            if (!$ok) {
+                $db->rollBack();
+                return ['ok' => false, 'erro' => 'Não foi possível aprovar o comprovante.'];
+            }
+
+            // ComprovantePix::aprovar() só atualiza o status do comprovante — o
+            // lançamento financeiro precisa ser criado aqui, igual ao caminho
+            // da API principal (TesourariaApiRoutes::validarComprovante), senão
+            // o pagamento fica aprovado mas nunca aparece no caixa/fechamento.
+            $lancamentoOk = (new LancamentoFinanceiro())->criar([
+                'tipo' => 'entrada',
+                'categoria_id' => 1,
+                'valor' => $valor,
+                'data_lancamento' => date('Y-m-d'),
+                'descricao' => $rotulo !== '' ? $rotulo : 'Comprovante PIX validado',
+                'obreiro_id' => $comprovante['obreiro_id'] ?? null,
+                'mes_ref' => $mes,
+                'ano_ref' => $ano,
+                'created_by' => $usuarioId,
+            ]);
+
+            if (!$lancamentoOk) {
+                $db->rollBack();
+                return ['ok' => false, 'erro' => 'Comprovante aprovado, mas falhou ao registrar o lançamento financeiro.'];
+            }
+
+            if (!empty($comprovante['obreiro_id'])) {
+                (new MensalidadeStatus())->registrar((string) $comprovante['obreiro_id'], $mes, $ano, 'pago');
+            }
+
+            $db->commit();
+            return ['ok' => true, 'erro' => null];
+        } catch (\Throwable $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            error_log('[TesourariaController] Falha ao aprovar comprovante via miniapp: ' . $e->getMessage());
+            return ['ok' => false, 'erro' => 'Falha ao validar comprovante. Operação revertida.'];
+        }
     }
 
     public function rejeitarComprovanteMiniapp(int $id, string $motivo, ?string $usuarioId): array
