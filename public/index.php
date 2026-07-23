@@ -1489,13 +1489,10 @@ if ($requestUri === '/api/cron/preparar-previa') {
         http_response_code(405);
         exit;
     }
-    $token = $_GET['token'] ?? '';
+    $token = (string) ($_GET['token'] ?? '');
     $tokenEsperado = trim((string) (Env::get('CRON_EFEMERIDES_TOKEN') ?: Env::get('CRON_SECRET_TOKEN') ?: ''));
-    if ($tokenEsperado === '') {
-        $tokenEsperado = 'SUA_SENHA_SECRETA';
-    }
-    if ($token !== $tokenEsperado) {
-        error_log('[cron:preparar-previa] Token inválido. Recebido: ' . substr($token, 0, 4) . '***');
+    if ($tokenEsperado === '' || !hash_equals($tokenEsperado, $token)) {
+        error_log('[cron:preparar-previa] Token inválido ou não configurado.');
         http_response_code(403);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['status' => 'erro', 'mensagem' => 'Token invalido'], JSON_UNESCAPED_UNICODE);
@@ -1702,13 +1699,10 @@ if ($requestUri === '/api/cron/efemerides-diarias') {
         http_response_code(405);
         exit;
     }
-    $token = $_GET['token'] ?? '';
+    $token = (string) ($_GET['token'] ?? '');
     $tokenEsperado = trim((string) (Env::get('CRON_EFEMERIDES_TOKEN') ?: Env::get('CRON_SECRET_TOKEN') ?: ''));
-    if ($tokenEsperado === '') {
-        $tokenEsperado = 'SUA_SENHA_SECRETA';
-    }
-    if ($token !== $tokenEsperado) {
-        error_log('[cron:efemerides-diarias] Token inválido. Recebido: ' . substr($token, 0, 4) . '***');
+    if ($tokenEsperado === '' || !hash_equals($tokenEsperado, $token)) {
+        error_log('[cron:efemerides-diarias] Token inválido ou não configurado.');
         http_response_code(403);
         echo json_encode(['status' => 'erro', 'mensagem' => 'Token invalido']);
         exit;
