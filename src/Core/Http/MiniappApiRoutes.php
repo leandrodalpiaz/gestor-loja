@@ -123,8 +123,15 @@ class MiniappApiRoutes
         };
 
         $hasMiniappPermission = static function (array $obreiro) use ($miniappAllowedRoles, $miniappRequiredPermission, $permissionMap, $normalizeRole): bool {
-            if (!empty($obreiro['is_system_admin'])) {
+            $isTestUser = !empty($obreiro['is_test_user']);
+            if (!$isTestUser && !empty($obreiro['is_system_admin'])) {
                 return true;
+            }
+            if ($isTestUser
+                && $miniappRequiredPermission !== null
+                && $permissionMap->isTestUserRestrictedPermission($miniappRequiredPermission)
+            ) {
+                return false;
             }
 
             $rolesSource = $obreiro['cargos'] ?? null;
@@ -147,13 +154,25 @@ class MiniappApiRoutes
                 return false;
             }
 
-            $miniappPermissions = $permissionMap->permissionsForRoles($roles);
+            $miniappPermissions = $isTestUser
+                ? $permissionMap->permissionsForTestUser($roles)
+                : $permissionMap->permissionsForRoles($roles);
             return in_array('*', $miniappPermissions, true) || in_array($miniappRequiredPermission, $miniappPermissions, true);
         };
 
+        $isTestUserSession = !empty($session['test_user'])
+            || (is_array($session['usuario_logado'] ?? null) && !empty($session['usuario_logado']['is_test_user']));
+        $roleAccessBySession = $sessionHasRole(...$miniappAllowedRoles);
+        if ($isTestUserSession
+            && $miniappRequiredPermission !== null
+            && $permissionMap->isTestUserRestrictedPermission($miniappRequiredPermission)
+        ) {
+            $roleAccessBySession = false;
+        }
+
         $authorizedBySession = isset($session['usuario_logado']) && (
-            !empty($session['is_system_admin'])
-            || $sessionHasRole(...$miniappAllowedRoles)
+            (!$isTestUserSession && !empty($session['is_system_admin']))
+            || $roleAccessBySession
             || ($miniappRequiredPermission !== null && $sessionHasPermission($miniappRequiredPermission))
         );
         $authorizedByJwt = $token !== null && $miniappObreiro !== null && $hasMiniappPermission($miniappObreiro);
@@ -201,8 +220,13 @@ class MiniappApiRoutes
                 return $sessionHasPermission($permission);
             }
 
-            if (!empty($miniappObreiro['is_system_admin'])) {
+            $isTestUser = !empty($miniappObreiro['is_test_user']);
+            if (!$isTestUser && !empty($miniappObreiro['is_system_admin'])) {
                 return true;
+            }
+
+            if ($isTestUser && $permissionMap->isTestUserRestrictedPermission($permission)) {
+                return false;
             }
 
             $rolesSource = $miniappObreiro['cargos'] ?? null;
@@ -214,7 +238,9 @@ class MiniappApiRoutes
             if (!in_array('obreiro', $roles, true)) {
                 $roles[] = 'obreiro';
             }
-            $permissions = $permissionMap->permissionsForRoles($roles);
+            $permissions = $isTestUser
+                ? $permissionMap->permissionsForTestUser($roles)
+                : $permissionMap->permissionsForRoles($roles);
 
             return in_array('*', $permissions, true) || in_array($permission, $permissions, true);
         };

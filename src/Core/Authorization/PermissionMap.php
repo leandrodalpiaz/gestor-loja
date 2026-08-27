@@ -5,6 +5,22 @@ namespace App\Core\Authorization;
 class PermissionMap
 {
     /**
+     * Permissões que pertencem exclusivamente ao administrador técnico.
+     *
+     * Alguns cargos operacionais (como Venerável e Secretário) ainda carregam
+     * permissões administrativas por compatibilidade histórica. O usuário de
+     * teste pode acumular esses cargos para navegar por todas as áreas da Loja,
+     * mas não deve receber estas áreas técnicas.
+     */
+    private const TEST_USER_RESTRICTED_PERMISSIONS = [
+        '*',
+        'admin',
+        'admin.loja.view',
+        'admin.loja.manage',
+        'admin.auditoria.view',
+    ];
+
+    /**
      * Primeira matriz RBAC em modo compatível.
      * Papéis operacionais existentes continuam convivendo com papéis-base.
      */
@@ -218,6 +234,21 @@ class PermissionMap
         }
 
         return array_values(array_unique($permissions));
+    }
+
+    public function permissionsForTestUser(array $roles): array
+    {
+        return array_values(array_filter(
+            $this->permissionsForRoles($roles),
+            fn (string $permission): bool => !$this->isTestUserRestrictedPermission($permission)
+        ));
+    }
+
+    public function isTestUserRestrictedPermission(string $permission): bool
+    {
+        return str_starts_with($permission, 'admin.loja.')
+            || str_starts_with($permission, 'admin.auditoria.')
+            || in_array($permission, self::TEST_USER_RESTRICTED_PERMISSIONS, true);
     }
 
     public function permissionForRoute(string $route): ?string

@@ -20,7 +20,10 @@ export class SupabaseService {
 
   constructor() {
     this.supabase.auth.onAuthStateChange((event, session) => {
-      if (this.isLegacySessionActive() && !session) {
+      // A sessão CIM é mantida pelo cookie PHP. Enquanto ela estiver ativa,
+      // eventos de um JWT Supabase antigo não podem substituir o estado
+      // legado em memória.
+      if (this.isLegacySessionActive()) {
         return;
       }
 
@@ -39,6 +42,18 @@ export class SupabaseService {
     });
 
     this.supabase.auth.getSession().then(({ data: { session } }) => {
+      if (this.isLegacySessionActive()) {
+        this.ensureLegacySession().subscribe({
+          next: (authenticated) => {
+            if (!authenticated) {
+              this.loading.set(false);
+            }
+          },
+          error: () => this.loading.set(false)
+        });
+        return;
+      }
+
       if (session) {
         this.session.set(session);
         this.user.set(session.user);
@@ -69,6 +84,10 @@ export class SupabaseService {
   }
 
   private loginWithEmail(email: string, password: string): Observable<any> {
+    // Permite trocar de uma sessão CIM/PHP para uma sessão Supabase sem que
+    // o interceptor reutilize o cookie legado no carregamento do perfil.
+    this.clearLegacySessionMarker();
+
     return from(this.supabase.auth.signInWithPassword({ email, password })).pipe(
       switchMap(response => {
         if (response.error) {
@@ -104,6 +123,7 @@ export class SupabaseService {
         this.markLegacySessionActive();
         this.session.set({ mode: 'legacy' });
         this.user.set(null);
+        void this.supabase.auth.signOut({ scope: 'local' });
         return this.fetchProfile(null);
       })
     );
@@ -149,6 +169,10 @@ export class SupabaseService {
     this.loading.set(true);
     return from(this.supabase.auth.getSession()).pipe(
       switchMap(({ data, error }) => {
+        if (this.isLegacySessionActive()) {
+          return this.ensureLegacySession();
+        }
+
         const session = error ? null : data.session;
         if (session) {
           this.session.set(session);

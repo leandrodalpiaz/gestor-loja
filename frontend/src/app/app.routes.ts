@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { Login } from './components/login/login';
 import { Dashboard } from './components/dashboard/dashboard';
-import { authGuard, guestGuard } from './auth.guard';
+import { authGuard, guestGuard, permissionGuard } from './auth.guard';
 
 export const routes: Routes = [
   { path: 'login', component: Login, canActivate: [guestGuard] },
@@ -22,11 +22,11 @@ export const routes: Routes = [
       { path: 'secretaria/sessoes', loadComponent: () => import('./components/secretaria-sessoes/secretaria-sessoes').then(m => m.SecretariaSessoes) },
       { path: 'secretaria/trabalhos-publicacoes', loadComponent: () => import('./components/secretaria-trabalhos-publicacoes/secretaria-trabalhos-publicacoes').then(m => m.SecretariaTrabalhosPublicacoes) },
       { path: 'secretaria/votacao', loadComponent: () => import('./components/secretaria-votacao/secretaria-votacao').then(m => m.SecretariaVotacao) },
-      { path: 'secretaria/nominata', loadComponent: () => import('./components/secretaria-nominata/secretaria-nominata').then(m => m.SecretariaNominata) },
-      { path: 'secretaria/convites', loadComponent: () => import('./components/secretaria-convites/secretaria-convites').then(m => m.SecretariaConvites) },
+      { path: 'secretaria/nominata', loadComponent: () => import('./components/secretaria-nominata/secretaria-nominata').then(m => m.SecretariaNominata), canActivate: [permissionGuard('admin.cargos.view')] },
+      { path: 'secretaria/convites', loadComponent: () => import('./components/secretaria-convites/secretaria-convites').then(m => m.SecretariaConvites), canActivate: [permissionGuard('access.manage')] },
       { path: 'secretaria/convites-externos', loadComponent: () => import('./components/secretaria-convites-externos/secretaria-convites-externos').then(m => m.SecretariaConvitesExternos) },
-      { path: 'secretaria/acessos', loadComponent: () => import('./components/secretaria-acessos/secretaria-acessos').then(m => m.SecretariaAcessos) },
-      { path: 'secretaria/conteudo-publico', loadComponent: () => import('./components/secretaria-conteudo-publico/secretaria-conteudo-publico').then(m => m.SecretariaConteudoPublico) },
+      { path: 'secretaria/acessos', loadComponent: () => import('./components/secretaria-acessos/secretaria-acessos').then(m => m.SecretariaAcessos), canActivate: [permissionGuard('access.manage')] },
+      { path: 'secretaria/conteudo-publico', loadComponent: () => import('./components/secretaria-conteudo-publico/secretaria-conteudo-publico').then(m => m.SecretariaConteudoPublico), canActivate: [permissionGuard('public_content.manage')] },
       { path: 'secretaria/relatorio-anual', loadComponent: () => import('./components/secretaria-relatorio-anual/secretaria-relatorio-anual').then(m => m.SecretariaRelatorioAnual) },
       { path: 'secretaria/relatorio-gestao', loadComponent: () => import('./components/secretaria-relatorio-anual/secretaria-relatorio-anual').then(m => m.SecretariaRelatorioAnual) },
       { path: 'chancelaria/efemerides', loadComponent: () => import('./components/chancelaria-efemerides/chancelaria-efemerides').then(m => m.ChancelariaEfemerides) },
@@ -52,7 +52,7 @@ export const routes: Routes = [
       { path: 'biblioteca/emprestimos', loadComponent: () => import('./components/biblioteca-acervo/biblioteca-acervo').then(m => m.BibliotecaAcervo), data: { bibliotecaTab: 'meus' } },
       { path: 'biblioteca/gestao', loadComponent: () => import('./components/biblioteca-acervo/biblioteca-acervo').then(m => m.BibliotecaAcervo), data: { bibliotecaTab: 'gestao' } },
       { path: 'biblioteca/classificacao', loadComponent: () => import('./components/biblioteca-acervo/biblioteca-acervo').then(m => m.BibliotecaAcervo), data: { bibliotecaTab: 'classificacao' } },
-      { path: 'sistema', loadComponent: () => import('./components/sistema-config/sistema-config').then(m => m.SistemaConfig) }
+      { path: 'sistema', loadComponent: () => import('./components/sistema-config/sistema-config').then(m => m.SistemaConfig), canActivate: [permissionGuard('*')] }
     ]
   },
   { path: '', redirectTo: 'login', pathMatch: 'full' }

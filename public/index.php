@@ -38,17 +38,28 @@ use App\Config\Database;
 use App\Core\Auth\CurrentUser;
 use App\Core\Auth\AccountGate;
 use App\Core\Http\JsonResponse;
+use App\Core\Http\AdminRoutes;
+use App\Core\Http\AssistenciaRoutes;
+use App\Core\Http\BibliotecaRoutes;
+use App\Core\Http\ChancelariaRoutes;
 use App\Core\Http\MestreHarmoniaRoutes;
 use App\Core\Http\MiniappApiRoutes;
+use App\Core\Http\MiniappPageRoutes;
 use App\Core\Http\ModuleGuards;
 use App\Core\Http\RequestBody;
+use App\Core\Http\ObreirosRoutes;
+use App\Core\Http\PainelRoutes;
 use App\Core\Http\SecretariaApiRoutes;
+use App\Core\Http\SecretariaRoutes;
 use App\Core\Http\TesourariaApiRoutes;
+use App\Core\Http\TesourariaRoutes;
 use App\Core\Http\ChancelariaApiRoutes;
 use App\Core\Http\HarmoniaApiRoutes;
 use App\Core\Http\AdminApiRoutes;
 use App\Core\Http\ObreiroApiRoutes;
 use App\Core\Http\VeneravelApiRoutes;
+use App\Core\Http\VidaLojaRoutes;
+use App\Core\Http\VigilanciaRoutes;
 use App\Core\Http\WebGuards;
 use App\Core\Authorization\Authorizer;
 use App\Core\Authorization\PermissionMap;
@@ -135,11 +146,19 @@ if ($method === 'HEAD') {
 
 // ── Redirecionamento de páginas para o Angular SPA ──
 // O Angular é publicado no Cloudflare Pages (frontend oficial, único).
-// Este backend serve só API/webhook/health/assets — qualquer requisição
-// de página que cair aqui (link antigo, bookmark, etc.) é redirecionada
-// para o Cloudflare Pages em produção, ou para o `ng serve` local em dev.
+// O backend serve API/webhook/health/assets e mantém as páginas de
+// compatibilidade do PWA/Telegram. As demais requisições de página (link
+// antigo, bookmark, etc.) são redirecionadas para o frontend oficial em
+// produção, ou para o `ng serve` local em dev.
+$isLegacyPageRoute = $requestUri === '/auth/bridge'
+    || preg_match(
+        '~^/(admin(?:-suporte)?|assistencia|biblioteca|chanceler|chancelaria|financeiro|meu-aprendizado|meu-cadastro|meu-companheirismo|miniapp|mestre-banquetes|mestre-harmonia|minha-loja|obreiros|orador|primeiro-vigilante|pwa|secretaria|segundo-vigilante|sistema|tesouraria|veneravel|vida-loja)(?:/|$)~',
+        $requestUri
+    ) === 1;
+
 $isApiOrSystemRoute = str_starts_with($requestUri, '/api/')
     || str_starts_with($requestUri, '/assets/')
+    || $isLegacyPageRoute
     || in_array($requestUri, ['/webhook', '/health'], true);
 
 if ($method === 'GET' && !$isApiOrSystemRoute) {
@@ -207,8 +226,25 @@ $testLogin = trim((string) Env::get("APP_TEST_DEFAULT_LOGIN", ""));
 $testPassword = (string) Env::get("APP_TEST_DEFAULT_PASSWORD", "");
 $testRole = trim((string) Env::get("APP_TEST_DEFAULT_ROLE", "tesoureiro"));
 $testDisplayName = trim((string) Env::get("APP_TEST_DEFAULT_NAME", "Modo Teste"));
+$testUserRoles = [
+    'obreiro',
+    'veneravel',
+    'secretario',
+    'tesoureiro',
+    'chanceler',
+    'primeiro_vigilante',
+    'segundo_vigilante',
+    'hospitaleiro',
+    'orador',
+    'mestre_banquetes',
+    'mestre_harmonia',
+    'mestre_de_harmonia',
+    'bibliotecario',
+];
+$isTestUserSession = !empty($_SESSION['test_user']);
 $isTestSession = isset($_SESSION["usuario_id"]) && (string) $_SESSION["usuario_id"] === '0';
-$bypassRoleChecks = $openTestAccess || $isTestSession || ($allowAllPanels && isset($_SESSION["usuario_logado"]));
+$bypassRoleChecks = !$isTestUserSession
+    && ($openTestAccess || $isTestSession || ($allowAllPanels && isset($_SESSION["usuario_logado"])));
 $appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? '')));
 if ($appEnv === '') {
     $appUrlHost = strtolower(trim((string) parse_url((string) ($_ENV['APP_URL'] ?? ''), PHP_URL_HOST)));
@@ -539,7 +575,8 @@ if (isset($_SESSION['usuario_logado']) && !in_array($requestUri, ['/login', '/lo
     $isSystemAdminSession = !empty($_SESSION['force_system_admin']) || !empty($_SESSION['is_system_admin']);
     $obreiroIdSessao = trim((string) ($_SESSION['usuario_logado']['id'] ?? ''));
 
-    if (!$isSystemAdminSession && $obreiroIdSessao !== '') {
+    // O usuário de teste é sintético e não existe na tabela de obreiros.
+    if (!$isSystemAdminSession && !$isTestUserSession && $obreiroIdSessao !== '') {
         // Revalida sempre no banco (não confia em snapshot cacheado na sessão),
         // para que a inativação/exclusão de um obreiro derrube o acesso imediatamente.
         $obreiroAtual = (new Obreiro())->findById($obreiroIdSessao);
@@ -567,6 +604,15 @@ if (!empty($_SESSION['exigir_nova_senha']) && !in_array($requestUri, ['/definir-
     exit;
 }
 
+
+$appToday = static function (): \DateTimeImmutable {
+    $timezone = trim((string) ($_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo'));
+    try {
+        return new \DateTimeImmutable('today', new \DateTimeZone($timezone));
+    } catch (\Throwable $e) {
+        return new \DateTimeImmutable('today', new \DateTimeZone('America/Sao_Paulo'));
+    }
+};
 
 $buildEfemeridesPreview = static function (): array {
     $registroModel = new \App\Models\EfemerideRegistro();
@@ -729,6 +775,17 @@ $mergeHistoricosFixos = static function (array $registros, array $filtros): arra
     return $registros;
 };
 
+$redirectEfemerides = static function (array $params = []): void {
+    $params = array_filter(
+        $params,
+        static fn ($value) => $value !== null && $value !== ''
+    );
+    $query = http_build_query($params);
+    $url = '/chancelaria/efemerides' . ($query !== '' ? '?' . $query : '');
+    header('Location: ' . $url);
+    exit;
+};
+
 $buildTestSessionUser = static function () use ($normalizeRole, $testDisplayName, $testRole): array {
     $role = $normalizeRole($testRole);
 
@@ -762,15 +819,21 @@ $resolvePublicUserName = static function (array $usuario = []) use ($testDisplay
     return $testDisplayName !== '' ? $testDisplayName : 'Irmao';
 };
 
-$syncSessionRoles = static function (?array $usuario = null) use ($normalizeRole): array {
+$syncSessionRoles = static function (?array $usuario = null) use ($normalizeRole, $testUserRoles): array {
     $usuario = $usuario ?? ($_SESSION['usuario_logado'] ?? null);
     $fallback = $normalizeRole($usuario['cargo'] ?? $_SESSION['usuario_cargo'] ?? '');
+    $isTestUser = !empty($_SESSION['test_user']) || !empty($usuario['is_test_user']);
 
     $slugs = [];
     $codigos = [];
     $usuarioId = (string) ($usuario['id'] ?? $_SESSION['usuario_id'] ?? '');
 
-    if ($usuarioId !== '' && $usuarioId !== '0') {
+    if ($isTestUser) {
+        $configuredRoles = is_array($usuario['cargos'] ?? null) && $usuario['cargos'] !== []
+            ? $usuario['cargos']
+            : $testUserRoles;
+        $slugs = array_values(array_unique(array_filter(array_map($normalizeRole, $configuredRoles))));
+    } elseif ($usuarioId !== '' && $usuarioId !== '0') {
         try {
             $cargoModel = new Cargo();
             $codigos = $cargoModel->getCodigosAtivosDoObreiro($usuarioId);
@@ -786,7 +849,8 @@ $syncSessionRoles = static function (?array $usuario = null) use ($normalizeRole
 
     // "Admin tecnico" (fora do RBAC da loja) so existe via login tecnico (SYSTEM_ADMIN_WEB_*) ou via flag de Telegram.
     // Obreiros nunca devem herdar "admin" por cadastro/cargo, para evitar vinculo do admin a um membro.
-    $isSystemAdmin = !empty($_SESSION['force_system_admin']) || !empty($usuario['is_system_admin']) || !empty($_SESSION['is_system_admin']);
+    $isSystemAdmin = !$isTestUser
+        && (!empty($_SESSION['force_system_admin']) || !empty($usuario['is_system_admin']) || !empty($_SESSION['is_system_admin']));
     $_SESSION['is_system_admin'] = $isSystemAdmin;
 
     $slugsEfetivos = array_values(array_unique($slugs));
@@ -816,7 +880,9 @@ $syncSessionRoles = static function (?array $usuario = null) use ($normalizeRole
         $slugsEfetivos = [$fallbackEfetivo];
     }
 
-    $principal = Cargo::resolverCargoPrincipal($slugsEfetivos, $fallbackEfetivo);
+    $principal = $isTestUser
+        ? 'obreiro'
+        : Cargo::resolverCargoPrincipal($slugsEfetivos, $fallbackEfetivo);
 
     if (isset($_SESSION['usuario_logado']) && is_array($_SESSION['usuario_logado'])) {
         $_SESSION['usuario_logado']['cargo'] = $principal;
@@ -869,8 +935,16 @@ $sessionHasRole = static function (string ...$roles) use (&$authorizer, $normali
     return $authorizer->hasRole(...$roles);
 };
 
+$getSessionRoles = static function () use (&$authorizer): array {
+    return $authorizer->roles();
+};
+
 $sessionHasPermission = static function (string $permission) use (&$authorizer): bool {
     return $authorizer->hasPermission($permission);
+};
+
+$requirePermission = static function (string $permission, string $message = 'Esta ação segue regras de responsabilidade da Loja.') use ($sessionHasPermission): void {
+    WebGuards::requirePermission($sessionHasPermission($permission), $message);
 };
 
 $contentPermissionService = static function (): \App\Services\ConteudoPermissaoService {
@@ -879,6 +953,14 @@ $contentPermissionService = static function (): \App\Services\ConteudoPermissaoS
         $service = new \App\Services\ConteudoPermissaoService();
     }
     return $service;
+};
+
+$canManageContentCategory = static function (string $categoria) use ($bypassRoleChecks, $getSessionRoles, $contentPermissionService): bool {
+    if ($bypassRoleChecks) {
+        return true;
+    }
+
+    return $contentPermissionService()->canManage($categoria, $getSessionRoles());
 };
 
 $resolveAuthorizedTelegramObreiro = static function (string ...$roles) use ($normalizeRole): ?array {
@@ -929,12 +1011,32 @@ $loginTelegramObreiroInSession = static function (array $obreiro) use ($syncSess
     $usuario['cargo'] = $principal;
     $usuario['cargos'] = $cargos;
 
+    unset($_SESSION['test_user'], $_SESSION['force_system_admin'], $_SESSION['is_system_admin']);
     $_SESSION['usuario_logado'] = $usuario;
     $_SESSION['usuario_id'] = $usuario['id'] ?? null;
     $_SESSION['usuario_nome'] = $resolvePublicUserName($usuario);
     $syncTenantSessionFromObreiro($usuario);
 
     $syncSessionRoles($usuario);
+};
+
+$requireTesourariaAccess = static function () use (
+    $openTestAccess,
+    $resolveAuthorizedTelegramObreiro,
+    $loginTelegramObreiroInSession,
+    $requirePermission
+): void {
+    if (!$openTestAccess && !isset($_SESSION["usuario_logado"])) {
+        $telegramObreiro = $resolveAuthorizedTelegramObreiro('tesoureiro', 'veneravel', 'admin');
+        if (!$telegramObreiro) {
+            header("Location: /login");
+            exit;
+        }
+
+        $loginTelegramObreiroInSession($telegramObreiro);
+    }
+
+    $requirePermission('tesouraria.manage', "Esta ação é realizada pela Tesouraria.");
 };
 
 $requireTesourariaApiAccess = static function () use (
@@ -1275,10 +1377,12 @@ if (!function_exists('requireMiniappAuth')) {
         $normalizeRole = $GLOBALS['gestor_loja_normalize_role'] ?? static fn ($role) => strtolower(trim((string) $role));
         /** @var PermissionMap|null $permissionMap */
         $permissionMap = $GLOBALS['gestor_loja_permission_map'] ?? null;
+        $isTestUser = !empty($_SESSION['test_user'])
+            || (is_array($_SESSION['usuario_logado'] ?? null) && !empty($_SESSION['usuario_logado']['is_test_user']));
 
         // Admin do sistema não é cargo oficial, mas deve ter acesso total aos miniapps.
         // Mantemos isso via flag tecnica is_system_admin (sem "admin" aparecer como cargo).
-        if (!empty($_SESSION['is_system_admin']) && isset($_SESSION['usuario_logado'])) {
+        if (!$isTestUser && !empty($_SESSION['is_system_admin']) && isset($_SESSION['usuario_logado'])) {
             return is_array($_SESSION['usuario_logado']) ? $_SESSION['usuario_logado'] : [];
         }
 
@@ -1291,17 +1395,26 @@ if (!function_exists('requireMiniappAuth')) {
             $sessionRoles[] = 'obreiro';
         }
 
+        $testPermissionBlocked = $isTestUser
+            && $requiredPermission !== null
+            && $permissionMap instanceof PermissionMap
+            && $permissionMap->isTestUserRestrictedPermission($requiredPermission);
+
         $hasRoleAccess = false;
-        foreach ($allowedRoles as $allowedRole) {
-            if (in_array($allowedRole, $sessionRoles, true)) {
-                $hasRoleAccess = true;
-                break;
+        if (!$testPermissionBlocked) {
+            foreach ($allowedRoles as $allowedRole) {
+                if (in_array($allowedRole, $sessionRoles, true)) {
+                    $hasRoleAccess = true;
+                    break;
+                }
             }
         }
 
         $hasPermissionAccess = false;
         if ($requiredPermission !== null && $permissionMap instanceof PermissionMap) {
-            $sessionPermissions = $permissionMap->permissionsForRoles($sessionRoles);
+            $sessionPermissions = $isTestUser
+                ? $permissionMap->permissionsForTestUser($sessionRoles)
+                : $permissionMap->permissionsForRoles($sessionRoles);
             $hasPermissionAccess = in_array('*', $sessionPermissions, true) || in_array($requiredPermission, $sessionPermissions, true);
         }
 
@@ -1331,7 +1444,8 @@ if (!function_exists('requireMiniappAuth')) {
             exit;
         }
 
-        if (!empty($miniappObreiro['is_system_admin'])) {
+        $miniappIsTestUser = !empty($miniappObreiro['is_test_user']);
+        if (!$miniappIsTestUser && !empty($miniappObreiro['is_system_admin'])) {
             return $miniappObreiro;
         }
 
@@ -1343,16 +1457,25 @@ if (!function_exists('requireMiniappAuth')) {
             $miniappRoles[] = 'obreiro';
         }
 
+        $miniappPermissionBlocked = $miniappIsTestUser
+            && $requiredPermission !== null
+            && $permissionMap instanceof PermissionMap
+            && $permissionMap->isTestUserRestrictedPermission($requiredPermission);
+
         $temPermissaoMiniapp = false;
-        foreach ($allowedRoles as $allowedRole) {
-            if (in_array($allowedRole, $miniappRoles, true)) {
-                $temPermissaoMiniapp = true;
-                break;
+        if (!$miniappPermissionBlocked) {
+            foreach ($allowedRoles as $allowedRole) {
+                if (in_array($allowedRole, $miniappRoles, true)) {
+                    $temPermissaoMiniapp = true;
+                    break;
+                }
             }
         }
 
         if (!$temPermissaoMiniapp && $requiredPermission !== null && $permissionMap instanceof PermissionMap) {
-            $miniappPermissions = $permissionMap->permissionsForRoles($miniappRoles);
+            $miniappPermissions = $miniappIsTestUser
+                ? $permissionMap->permissionsForTestUser($miniappRoles)
+                : $permissionMap->permissionsForRoles($miniappRoles);
             $temPermissaoMiniapp = in_array('*', $miniappPermissions, true) || in_array($requiredPermission, $miniappPermissions, true);
         }
 
@@ -1726,6 +1849,48 @@ if ($requestUri === '/chancelaria/certificado' && $method === 'GET') {
     exit;
 }
 
+// Compatibilidade: estas rotas continuam sendo usadas pelos links legados,
+// pelo PWA antigo e pelos atalhos WebApp do Telegram. O Angular permanece a
+// interface oficial, mas a remoção desses bridges quebraria integrações ainda
+// ativas.
+if (BibliotecaRoutes::dispatch($requestUri, $method, $openTestAccess, $_SESSION, $authorizer)) {
+    return;
+}
+
+if (AdminRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $authorizer)) {
+    return;
+}
+
+if (SecretariaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $authorizer, $sessionHasRole)) {
+    return;
+}
+
+if (ObreirosRoutes::dispatch($requestUri, $method, $openTestAccess, $_SESSION, $authorizer)) {
+    return;
+}
+
+if (AssistenciaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $authorizer)) {
+    return;
+}
+
+if (VidaLojaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $authorizer)) {
+    return;
+}
+
+if (TesourariaRoutes::dispatch(
+    $requestUri,
+    $method,
+    $openTestAccess,
+    $_SESSION,
+    $authorizer,
+    $requireTesourariaAccess,
+    $resolveObreiroByInitData,
+    $loginTelegramObreiroInSession,
+    $requirePermission
+)) {
+    return;
+}
+
 if (TesourariaApiRoutes::dispatch(
     $requestUri,
     $method,
@@ -1896,7 +2061,44 @@ if (HarmoniaApiRoutes::dispatch(
     return;
 }
 
+if (VigilanciaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $sessionHasPermission)) {
+    return;
+}
+
 if (MestreHarmoniaRoutes::dispatch($requestUri, $openTestAccess, $_SESSION, $sessionHasPermission, $requireJsonLogin)) {
+    return;
+}
+
+if (MiniappPageRoutes::dispatch($requestUri)) {
+    return;
+}
+
+if (PainelRoutes::dispatch(
+    $requestUri,
+    $method,
+    $openTestAccess,
+    $_SESSION,
+    $authorizer,
+    $sessionHasRole,
+    $sessionHasPermission,
+    $buildEfemeridesPreview,
+    $canManageContentCategory
+)) {
+    return;
+}
+
+if (ChancelariaRoutes::dispatch(
+    $requestUri,
+    $method,
+    $openTestAccess,
+    $_SESSION,
+    $sessionHasPermission,
+    $appToday,
+    $buildEfemeridesPreview,
+    $redirectEfemerides,
+    $contentPermissionService,
+    $canManageContentCategory
+)) {
     return;
 }
 
@@ -2172,6 +2374,7 @@ switch ($requestUri) {
         ));
 
         if ($systemAdminPassword !== '' && $matricula === $systemAdminLogin && hash_equals($systemAdminPassword, $password)) {
+            unset($_SESSION['test_user']);
             $_SESSION['force_system_admin'] = true;
             $_SESSION['usuario_logado'] = [
                 'id' => 0,
@@ -2195,23 +2398,24 @@ switch ($requestUri) {
         }
 
         // ──────────────────────────────────────────────
-        // USUÁRIO DE TESTE (full access, para testadores convidados)
+        // USUÁRIO DE TESTE (acesso operacional amplo, sem privilégio técnico)
         // Login/senha configurados via env — nunca hardcoded no código.
         // Desativar: deixar TEST_USER_LOGIN ou TEST_USER_PASSWORD vazios.
         // ──────────────────────────────────────────────
         $testUserLogin = trim((string) ($_ENV['TEST_USER_LOGIN'] ?? getenv('TEST_USER_LOGIN') ?: ''));
         $testUserPassword = trim((string) ($_ENV['TEST_USER_PASSWORD'] ?? getenv('TEST_USER_PASSWORD') ?: ''));
         if ($testUserLogin !== '' && $testUserPassword !== '' && $matricula === $testUserLogin && hash_equals($testUserPassword, $password)) {
-            $_SESSION['force_system_admin'] = true;
+            unset($_SESSION['force_system_admin'], $_SESSION['is_system_admin']);
+            $_SESSION['test_user'] = true;
             $_SESSION['usuario_logado'] = [
                 'id' => 999999,
                 'nome_historico' => 'teste',
                 'nome_completo' => 'Usuário de Teste',
-                'cargo' => 'admin',
-                'cargo_principal' => 'admin',
-                'cargos' => ['admin'],
+                'cargo' => 'obreiro',
+                'cargo_principal' => 'obreiro',
+                'cargos' => $testUserRoles,
                 'ativo' => true,
-                'is_system_admin' => true,
+                'is_test_user' => true,
             ];
             $_SESSION['usuario_id'] = 999999;
             $_SESSION['usuario_nome'] = 'teste';
@@ -2275,6 +2479,7 @@ switch ($requestUri) {
             JsonResponse::error('C.I.M. ou senha inválidos.', 401);
         }
 
+        unset($_SESSION['test_user'], $_SESSION['force_system_admin'], $_SESSION['is_system_admin']);
         $cargo = $normalizeRole((string) ($usuario['cargo_principal'] ?? $usuario['cargo'] ?? ''));
         $cargosAtivos = array_values(array_unique(array_filter(array_map(
             $normalizeRole,
@@ -2328,14 +2533,17 @@ switch ($requestUri) {
             }
 
             $obreiro = $usuarioSessao;
-            $sessionRoles = !empty($obreiro['is_system_admin']) || !empty($_SESSION['force_system_admin'])
+            $isTestUser = !empty($_SESSION['test_user']) || !empty($obreiro['is_test_user']);
+            $sessionRoles = !$isTestUser && (!empty($obreiro['is_system_admin']) || !empty($_SESSION['force_system_admin']))
                 ? ['admin']
                 : array_values(array_unique(array_filter(array_map(
                     $normalizeRole,
                     $obreiro['cargos'] ?? [$obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? 'obreiro']
                 ))));
             $sessionPermissionMap = new \App\Core\Authorization\PermissionMap();
-            $sessionPermissions = $sessionPermissionMap->permissionsForRoles($sessionRoles);
+            $sessionPermissions = $isTestUser
+                ? $sessionPermissionMap->permissionsForTestUser($sessionRoles)
+                : $sessionPermissionMap->permissionsForRoles($sessionRoles);
             unset($obreiro['senha'], $obreiro['password'], $obreiro['cpf']);
 
             JsonResponse::send([
@@ -2348,11 +2556,14 @@ switch ($requestUri) {
                     'email' => $obreiro['email'] ?? null,
                     'grau' => $obreiro['grau'] ?? null,
                     'cargo_principal' => $obreiro['cargo_principal'] ?? $obreiro['cargo'] ?? null,
-                    'cargos' => !empty($obreiro['is_system_admin'])
+                    'cargos' => !$isTestUser && !empty($obreiro['is_system_admin'])
                         ? array_values(array_unique(array_merge($obreiro['cargos'] ?? [], ['admin'])))
                         : ($obreiro['cargos'] ?? []),
                     'permissions' => $sessionPermissions,
-                    'is_system_admin' => (bool) ($obreiro['is_system_admin'] ?? !empty($_SESSION['force_system_admin'])),
+                    'is_system_admin' => $isTestUser
+                        ? false
+                        : (bool) ($obreiro['is_system_admin'] ?? !empty($_SESSION['force_system_admin'])),
+                    'is_test_user' => $isTestUser,
                     'ativo' => (bool) ($obreiro['ativo'] ?? true),
                     'situacao_quadro' => $obreiro['situacao_quadro'] ?? 'ativo',
                 ]

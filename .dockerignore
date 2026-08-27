@@ -1,0 +1,17 @@
+.git/
+.github/
+.claude/
+.playwright-cli/
+.backups/
+.venv/
+.env
+.env.*
+node_modules/
+frontend/node_modules/
+frontend/dist/
+scripts/bin/
+scripts/tmp/
+scripts/__pycache__/
+storage/jwks_cache.json
+storage/app/public/efemerides_geradas/
+*.log

@@ -36,11 +36,17 @@ class Authorizer
 
     public function hasPermission(string $permission): bool
     {
+        if ($this->currentUser->isTestUser() && $this->permissionMap->isTestUserRestrictedPermission($permission)) {
+            return false;
+        }
+
         if ($this->bypass) {
             return true;
         }
 
-        $permissions = $this->permissionMap->permissionsForRoles($this->roles());
+        $permissions = $this->currentUser->isTestUser()
+            ? $this->permissionMap->permissionsForTestUser($this->roles())
+            : $this->permissionMap->permissionsForRoles($this->roles());
         return in_array('*', $permissions, true) || in_array($permission, $permissions, true);
     }
 

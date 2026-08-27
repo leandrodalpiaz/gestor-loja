@@ -16,6 +16,8 @@ scripts/__pycache__/
 *.bak
 node_modules/
 .idea/
+.claude/settings.local.json
+.playwright-cli/
 
 public/assets/images/efemerides_geradas/*
 storage/app/public/efemerides_geradas/*

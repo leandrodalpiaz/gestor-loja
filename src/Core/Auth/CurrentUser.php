@@ -31,6 +31,14 @@ class CurrentUser
         return is_array($user) ? $user : null;
     }
 
+    public function isTestUser(): bool
+    {
+        $user = $this->session['usuario_logado'] ?? null;
+
+        return !empty($this->session['test_user'])
+            || (is_array($user) && !empty($user['is_test_user']));
+    }
+
     public function primaryRole(): string
     {
         return $this->normalizeRole((string) ($this->session['usuario_cargo'] ?? ''));

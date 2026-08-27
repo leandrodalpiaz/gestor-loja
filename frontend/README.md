@@ -1,6 +1,6 @@
 # Frontend — Gestor de Loja
 
-SPA Angular 22 (standalone components) do Gestor de Loja. Publicado no Cloudflare Pages; o backend PHP (`../public`) serve só API/webhook/health.
+SPA Angular 22 (standalone components) do Gestor de Loja. Publicado no Cloudflare Pages; o backend PHP (`../public`) serve API/webhook/health e mantém as pontes legadas do PWA/Telegram.
 
 ## Development server
 
